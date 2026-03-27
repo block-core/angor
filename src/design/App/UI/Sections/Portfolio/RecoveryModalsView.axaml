@@ -174,7 +174,7 @@
                                     <TextBlock Text="Amount to Recover" FontSize="13"
                                                Foreground="{DynamicResource TextMuted}" />
                                     <TextBlock FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryGreenBrush}">
-                                        <Run Text="{Binding AmountToRecover, Mode=OneWay}" /><Run Text=" BTC" />
+                                        <Run Text="{Binding AmountToRecover, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" />
                                     </TextBlock>
                                 </StackPanel>
                             </Border>
@@ -201,7 +201,7 @@
                                     <TextBlock Text="Miner Fee" FontSize="13"
                                                Foreground="{DynamicResource TextMuted}" />
                                     <TextBlock FontSize="20" FontWeight="Bold" Foreground="#F7931A">
-                                        <Run Text="{Binding MinerFee, Mode=OneWay}" /><Run Text=" BTC" />
+                                        <Run Text="{Binding MinerFee, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" />
                                     </TextBlock>
                                 </StackPanel>
                             </Border>
@@ -305,7 +305,7 @@
                             <!-- Amount in penalty -->
                             <TextBlock Grid.Column="0" FontSize="14" FontWeight="SemiBold"
                                        Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center">
-                                <Run Text="{Binding PenaltyAmount, Mode=OneWay}" /><Run Text=" BTC" />
+                                <Run Text="{Binding PenaltyAmount, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" />
                             </TextBlock>
                             <!-- Days remaining -->
                             <TextBlock Grid.Column="1" FontSize="14"
@@ -475,7 +475,7 @@
                                 <TextBlock Text="Amount to Release" FontSize="13"
                                            Foreground="{DynamicResource TextMuted}" />
                                 <TextBlock FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryGreenBrush}">
-                                    <Run Text="{Binding AmountToRecover, Mode=OneWay}" /><Run Text=" BTC" />
+                                    <Run Text="{Binding AmountToRecover, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" />
                                 </TextBlock>
                             </StackPanel>
                         </Border>
@@ -505,7 +505,7 @@
                                 <TextBlock Text="Miner Fee" FontSize="13"
                                            Foreground="{DynamicResource TextMuted}" />
                                 <TextBlock FontSize="20" FontWeight="Bold" Foreground="#F7931A">
-                                    <Run Text="{Binding MinerFee, Mode=OneWay}" /><Run Text=" BTC" />
+                                    <Run Text="{Binding MinerFee, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" />
                                 </TextBlock>
                             </StackPanel>
                         </Border>

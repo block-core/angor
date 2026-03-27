@@ -234,6 +234,8 @@ public class InvestmentViewModel : INotifyPropertyChanged
     public string TotalRaised { get; set; } = "0.0000";
     /// <summary>Total investor count</summary>
     public int TotalInvestors { get; set; }
+    /// <summary>Currency symbol for display (e.g. "BTC", "TBTC")</summary>
+    public string CurrencySymbol { get; set; } = "BTC";
     /// <summary>Start date of the investment</summary>
     public string StartDate { get; set; } = "";
     /// <summary>End date of the investment</summary>
@@ -443,6 +445,7 @@ public partial class PortfolioViewModel : ReactiveObject
     private readonly IInvestmentAppService _investmentAppService;
     private readonly IWalletAppService _walletAppService;
     private readonly SignatureStore _signatureStore;
+    private readonly ICurrencyService _currencyService;
 
     [Reactive] private bool hasInvestments;
     [Reactive] private InvestmentViewModel? selectedInvestment;
@@ -458,14 +461,19 @@ public partial class PortfolioViewModel : ReactiveObject
     // ── Right panel investments ──
     public ObservableCollection<InvestmentViewModel> Investments { get; } = new();
 
+    /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
+    public string CurrencySymbol => _currencyService.Symbol;
+
     public PortfolioViewModel(
         IInvestmentAppService investmentAppService,
         IWalletAppService walletAppService,
-        SignatureStore signatureStore)
+        SignatureStore signatureStore,
+        ICurrencyService currencyService)
     {
         _investmentAppService = investmentAppService;
         _walletAppService = walletAppService;
         _signatureStore = signatureStore;
+        _currencyService = currencyService;
 
         // Listen for signature status changes to update investment steps
         _signatureStore.SignatureStatusChanged += OnSignatureStatusChanged;
@@ -530,7 +538,7 @@ public partial class PortfolioViewModel : ReactiveObject
                         ProjectName = dto.Name ?? "Unknown Project",
                         ShortDescription = dto.Description ?? "",
                         TotalInvested = investedBtc.ToString("F8", CultureInfo.InvariantCulture),
-                        FundingAmount = $"{investedBtc:F4} BTC",
+                        FundingAmount = $"{investedBtc:F4} {_currencyService.Symbol}",
                         FundingDate = DateTime.Now.ToString("M/dd/yyyy"),
                         TypeLabel = "Investment",
                         StatusText = statusText,
@@ -547,7 +555,8 @@ public partial class PortfolioViewModel : ReactiveObject
                         AvatarUrl = dto.LogoUri?.ToString(),
                         ProjectIdentifier = dto.Id ?? "",
                         InvestmentWalletId = meta.Id.Value,
-                        InvestmentTransactionId = dto.InvestmentId ?? ""
+                        InvestmentTransactionId = dto.InvestmentId ?? "",
+                        CurrencySymbol = _currencyService.Symbol
                     };
 
                     Investments.Add(vm);
@@ -946,7 +955,7 @@ public partial class PortfolioViewModel : ReactiveObject
         {
             ProjectName = project.ProjectName,
             ShortDescription = project.ShortDescription,
-            FundingAmount = $"{investmentAmount} BTC",
+            FundingAmount = $"{investmentAmount} {_currencyService.Symbol}",
             FundingDate = DateTime.Now.ToString("M/dd/yyyy"),
             TypeLabel = typeLabel,
             StatusText = isAutoApproved ? $"{typeLabel} Active" : "Awaiting Approval",
@@ -973,7 +982,8 @@ public partial class PortfolioViewModel : ReactiveObject
             TransactionDate = DateTime.Now.ToString("MMM dd, yyyy"),
             ApprovalStatus = isAutoApproved ? "Approved" : "Pending",
             ProjectIdentifier = project.ProjectId,
-            Stages = stages
+            Stages = stages,
+            CurrencySymbol = _currencyService.Symbol
         };
 
         var sig = _signatureStore.AddSignature(

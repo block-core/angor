@@ -12,6 +12,8 @@ using ReactiveUI;
 
 namespace App.UI.Sections.MyProjects.Deploy;
 
+
+
 /// <summary>Which screen the deploy overlay is showing.</summary>
 public enum DeployScreen
 {
@@ -25,7 +27,7 @@ public partial class WalletItem : ReactiveObject
 {
     public string Name { get; set; } = "";
     public string Network { get; set; } = "Bitcoin";
-    public string Balance { get; set; } = "0.00000000 BTC";
+    public string Balance { get; set; } = "0.00000000";
     /// <summary>SDK WalletId for operations</summary>
     public string WalletId { get; set; } = "";
 
@@ -42,6 +44,7 @@ public partial class DeployFlowViewModel : ReactiveObject
     private readonly IWalletAppService _walletAppService;
     private readonly IProjectAppService _projectAppService;
     private readonly IFounderAppService _founderAppService;
+    private readonly ICurrencyService _currencyService;
     private CancellationTokenSource? _invoiceMonitorCts;
 
     // ── State ──
@@ -61,7 +64,10 @@ public partial class DeployFlowViewModel : ReactiveObject
         ? $"Pay with {SelectedWallet.Name}"
         : "Choose Wallet";
 
-    public string DeployFee { get; } = "0.0001 BTC";
+    public string DeployFee => $"0.0001 {_currencyService.Symbol}";
+
+    /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
+    public string CurrencySymbol => _currencyService.Symbol;
     public string InvoiceString { get; } = Constants.InvoiceString;
 
     public string ProjectName { get; set; } = "My Project";
@@ -78,11 +84,13 @@ public partial class DeployFlowViewModel : ReactiveObject
     public DeployFlowViewModel(
         IWalletAppService walletAppService,
         IProjectAppService projectAppService,
-        IFounderAppService founderAppService)
+        IFounderAppService founderAppService,
+        ICurrencyService currencyService)
     {
         _walletAppService = walletAppService;
         _projectAppService = projectAppService;
         _founderAppService = founderAppService;
+        _currencyService = currencyService;
         // Initialize ReactiveCommands for async payment operations
         PayWithWalletCommand = ReactiveCommand.CreateFromTask(PayWithWalletAsync);
         PayViaInvoiceCommand = ReactiveCommand.CreateFromTask(PayViaInvoiceAsync);
@@ -138,7 +146,7 @@ public partial class DeployFlowViewModel : ReactiveObject
                 {
                     Name = meta.Name,
                     Network = "Bitcoin",
-                    Balance = $"{balanceBtc:F8} BTC",
+                    Balance = $"{balanceBtc:F8} {_currencyService.Symbol}",
                     WalletId = meta.Id.Value
                 });
             }

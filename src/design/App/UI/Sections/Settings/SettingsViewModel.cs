@@ -6,7 +6,9 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.Services;
+using App.UI.Shared;
 using App.UI.Shell;
+using Microsoft.Extensions.Logging;
 
 namespace App.UI.Sections.Settings;
 
@@ -22,6 +24,8 @@ public partial class SettingsViewModel : ReactiveObject
     private readonly INetworkStorage _networkStorage;
     private readonly IWalletAppService _walletAppService;
     private readonly IDatabaseManagementService _databaseManagementService;
+    private readonly ICurrencyService _currencyService;
+    private readonly ILogger<SettingsViewModel> _logger;
 
     [Reactive] private string networkType;
     [Reactive] private bool isNetworkModalOpen;
@@ -41,10 +45,19 @@ public partial class SettingsViewModel : ReactiveObject
     [Reactive] private string newRelayUrl = "";
 
     // Currency Display
-    [Reactive] private string currencyDisplay = "BTC";
+    [Reactive] private string currencyDisplay;
+
+    /// <summary>Display name for the currency dropdown, e.g. "Bitcoin (BTC)" or "Bitcoin (TBTC)".</summary>
+    public string CurrencyDisplayName => $"Bitcoin ({_currencyService.Symbol})";
+
+    /// <summary>Help text below currency dropdown, e.g. "Bitcoin-only application - currency display is fixed to BTC".</summary>
+    public string CurrencyHelpText => $"Bitcoin-only application - currency display is fixed to {_currencyService.Symbol}";
 
     // Wipe data modal
     [Reactive] private bool isWipeDataModalOpen;
+
+    // Debug mode (testnet only)
+    [Reactive] private bool isTestnet;
 
     private readonly PrototypeSettings _prototypeSettings;
 
@@ -55,6 +68,21 @@ public partial class SettingsViewModel : ReactiveObject
         set
         {
             _prototypeSettings.ShowPopulatedApp = value;
+            this.RaisePropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// Debug mode toggle — only effective on testnet networks.
+    /// Delegates to PrototypeSettings and syncs to INetworkConfiguration.SetDebugMode().
+    /// </summary>
+    public bool IsDebugMode
+    {
+        get => _prototypeSettings.IsDebugMode;
+        set
+        {
+            _prototypeSettings.IsDebugMode = value;
+            _networkConfig.SetDebugMode(value);
             this.RaisePropertyChanged();
         }
     }
@@ -80,7 +108,9 @@ public partial class SettingsViewModel : ReactiveObject
         INetworkStorage networkStorage,
         IWalletAppService walletAppService,
         IDatabaseManagementService databaseManagementService,
-        PrototypeSettings prototypeSettings)
+        PrototypeSettings prototypeSettings,
+        ICurrencyService currencyService,
+        ILogger<SettingsViewModel> logger)
     {
         _networkService = networkService;
         _networkConfig = networkConfig;
@@ -88,12 +118,23 @@ public partial class SettingsViewModel : ReactiveObject
         _walletAppService = walletAppService;
         _databaseManagementService = databaseManagementService;
         _prototypeSettings = prototypeSettings;
+        _currencyService = currencyService;
+        _logger = logger;
+
+        // Initialize currency display from the network configuration
+        currencyDisplay = _currencyService.Symbol;
 
         // Ensure default settings exist
         _networkService.AddSettingsIfNotExist();
 
         // Load current network
         networkType = _networkStorage.GetNetwork() ?? "Angornet";
+
+        // Debug mode is only available on testnet networks
+        isTestnet = networkType != "Mainnet";
+
+        // Sync initial debug mode state to INetworkConfiguration
+        _networkConfig.SetDebugMode(_prototypeSettings.IsDebugMode);
 
         // Load settings from SDK storage
         LoadSettingsFromSdk();
@@ -212,6 +253,15 @@ public partial class SettingsViewModel : ReactiveObject
         NetworkType = newNetwork;
         IsNetworkModalOpen = false;
 
+        // Update testnet state (debug mode only available on testnet)
+        IsTestnet = newNetwork != "Mainnet";
+
+        // If switching to mainnet, disable debug mode
+        if (!IsTestnet && IsDebugMode)
+        {
+            IsDebugMode = false;
+        }
+
         // Reload settings from SDK for the new network
         LoadSettingsFromSdk();
 
@@ -306,6 +356,7 @@ public partial class SettingsViewModel : ReactiveObject
 
     public async void ConfirmWipeData()
     {
+        _logger.LogInformation("Wipe data requested — clearing settings and deleting all wallets");
         IsWipeDataModalOpen = false;
 
         // Delete all document collections (projects, investments, sync data, etc.)
@@ -315,6 +366,7 @@ public partial class SettingsViewModel : ReactiveObject
         _networkStorage.SetSettings(new SettingsInfo());
         _networkService.AddSettingsIfNotExist();
         LoadSettingsFromSdk();
+        _logger.LogInformation("Network settings cleared and defaults re-initialized");
 
         // Delete all wallets
         try
@@ -322,18 +374,31 @@ public partial class SettingsViewModel : ReactiveObject
             var metadatas = await _walletAppService.GetMetadatas();
             if (metadatas.IsSuccess)
             {
-                foreach (var meta in metadatas.Value)
+                var walletList = metadatas.Value.ToList();
+                _logger.LogInformation("Found {Count} wallet(s) to delete", walletList.Count);
+
+                foreach (var meta in walletList)
                 {
+                    _logger.LogInformation("Deleting wallet {WalletId} (Name: '{WalletName}')", meta.Id, meta.Name);
                     await _walletAppService.DeleteWallet(meta.Id);
+                    _logger.LogInformation("Wallet {WalletId} deleted successfully", meta.Id);
                 }
             }
+            else
+            {
+                _logger.LogWarning("Failed to get wallet metadatas for wipe: {Error}", metadatas.Error);
+            }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while deleting wallets during wipe");
+        }
 
         // Clear cached views so sections reload with fresh data
         var shellVm = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions
             .GetService<ShellViewModel>(App.Services);
         shellVm?.ClearViewCache();
+        _logger.LogInformation("Wipe data completed — view cache cleared");
     }
 }
 

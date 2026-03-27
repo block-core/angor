@@ -24,6 +24,9 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
     private string _walletId = "";
     private string _lastTxId = "";
 
+    private ICurrencyService CurrencyService =>
+        App.Services.GetRequiredService<ICurrencyService>();
+
     public SendFundsModal()
     {
         InitializeComponent();
@@ -54,7 +57,7 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         FromWalletName.Text = name;
         FromWalletType.Text = type;
         FromBalance.Text = balance;
-        _walletBalance = balance.Replace(" BTC", "").Trim();
+        _walletBalance = balance.Replace($" {CurrencyService.Symbol}", "").Trim();
         _walletId = walletId ?? "";
     }
 
@@ -148,7 +151,8 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         if (success && txId != null)
         {
             _lastTxId = txId;
-            SummaryAmount.Text = $"{amount:F8} BTC";
+            SummaryAmount.Text = CurrencyService.FormatBtc(amount);
+            SummaryFee.Text = $"0.00001200 {CurrencyService.Symbol}";
             SummaryTxid.Text = txId;
             ShowStep("success");
         }
@@ -212,7 +216,7 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
 
         if (amount < 0.00001)
         {
-            AmountError.Text = "Minimum 0.00001 BTC";
+            AmountError.Text = $"Minimum 0.00001 {CurrencyService.Symbol}";
             AmountError.IsVisible = true;
             return false;
         }

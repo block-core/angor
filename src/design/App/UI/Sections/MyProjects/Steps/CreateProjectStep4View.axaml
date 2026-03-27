@@ -41,14 +41,14 @@
                         <StackPanel Spacing="16" Margin="24">
                             <!-- Target Amount field -->
                             <StackPanel Spacing="8">
-                                <TextBlock Text="Target Amount (BTC) *" FontSize="14" FontWeight="Bold"
+                                <TextBlock Text="{Binding TargetAmountLabel}" FontSize="14" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" />
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBox Text="{Binding TargetAmount, Mode=TwoWay}"
                                              Watermark="0.00000000"
                                              FontSize="20" FontWeight="Bold"
                                              Padding="12,12,16,12" CornerRadius="8" />
-                                    <TextBlock Grid.Column="1" Text="BTC" FontSize="14" FontWeight="Bold"
+                                    <TextBlock Grid.Column="1" Text="{Binding CurrencySymbol}" FontSize="14" FontWeight="Bold"
                                                Foreground="{DynamicResource TextMuted}"
                                                VerticalAlignment="Center" Margin="12,0,0,0" />
                                 </Grid>
@@ -67,19 +67,19 @@
                                 <ListBoxItem Tag="0.5">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
                                         <TextBlock Text="0.5" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                        <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Tag="1">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
                                         <TextBlock Text="1" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                        <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Tag="2.5">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
                                         <TextBlock Text="2.5" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                        <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
                                     </StackPanel>
                                 </ListBoxItem>
                             </ListBox>
@@ -173,14 +173,14 @@
                         <StackPanel Spacing="16" Margin="24">
                             <!-- Goal Amount field -->
                             <StackPanel Spacing="8">
-                                <TextBlock Text="Goal (BTC) *" FontSize="14" FontWeight="Bold"
+                                <TextBlock Text="{Binding GoalLabel}" FontSize="14" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" />
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBox Text="{Binding TargetAmount, Mode=TwoWay}"
                                              Watermark="0.00000000"
                                              FontSize="20" FontWeight="Bold"
                                              Padding="12,12,16,12" CornerRadius="8" />
-                                    <TextBlock Grid.Column="1" Text="BTC" FontSize="14" FontWeight="Bold"
+                                    <TextBlock Grid.Column="1" Text="{Binding CurrencySymbol}" FontSize="14" FontWeight="Bold"
                                                Foreground="{DynamicResource TextMuted}"
                                                VerticalAlignment="Center" Margin="12,0,0,0" />
                                 </Grid>
@@ -199,19 +199,19 @@
                                 <ListBoxItem Tag="0.5">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
                                         <TextBlock Text="0.5" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                        <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Tag="1">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
                                         <TextBlock Text="1" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                        <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Tag="2.5">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
                                         <TextBlock Text="2.5" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                        <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
                                     </StackPanel>
                                 </ListBoxItem>
                             </ListBox>
@@ -243,14 +243,14 @@
                                          Watermark="0.001"
                                          FontSize="20" FontWeight="Bold"
                                          Padding="12,12,16,12" CornerRadius="8" />
-                                <TextBlock Grid.Column="1" Text="BTC" FontSize="14" FontWeight="Bold"
+                                <TextBlock Grid.Column="1" Text="{Binding CurrencySymbol}" FontSize="14" FontWeight="Bold"
                                            Foreground="{DynamicResource TextMuted}"
                                            VerticalAlignment="Center" Margin="12,0,0,0" />
                             </Grid>
                             <TextBlock FontSize="12" Foreground="#3B82F6" TextWrapping="Wrap">
                                 <Run Text="Supporters who contribute over " />
                                 <Run Text="{Binding ApprovalThreshold, Mode=OneWay}" FontWeight="SemiBold" />
-                                <Run Text=" BTC will require approval by you" />
+                                <Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" /><Run Text=" will require approval by you" />
                             </TextBlock>
                         </StackPanel>
                     </StackPanel>
@@ -282,14 +282,14 @@
                         </Border>
                         <StackPanel Spacing="16" Margin="24">
                             <StackPanel Spacing="8">
-                                <TextBlock Text="Price per period (BTC) *" FontSize="14" FontWeight="Bold"
+                                <TextBlock Text="{Binding PricePerPeriodLabel}" FontSize="14" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" />
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBox Text="{Binding SubscriptionPrice, Mode=TwoWay}"
                                              Watermark="0.00000000"
                                              FontSize="20" FontWeight="Bold"
                                              Padding="12,12,16,12" CornerRadius="8" />
-                                    <TextBlock Grid.Column="1" Text="BTC" FontSize="14" FontWeight="Bold"
+                                    <TextBlock Grid.Column="1" Text="{Binding CurrencySymbol}" FontSize="14" FontWeight="Bold"
                                                Foreground="{DynamicResource TextMuted}"
                                                VerticalAlignment="Center" Margin="12,0,0,0" />
                                 </Grid>
@@ -308,25 +308,25 @@
                                 <ListBoxItem Tag="0.00001">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
                                         <TextBlock Text="0.00001" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                        <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Tag="0.00005">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
                                         <TextBlock Text="0.00005" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                        <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Tag="0.0001">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
                                         <TextBlock Text="0.0001" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                        <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Tag="0.0005">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
                                         <TextBlock Text="0.0005" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                        <TextBlock Text="BTC" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
                                     </StackPanel>
                                 </ListBoxItem>
                             </ListBox>

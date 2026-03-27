@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Threading;
+using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Application;
 using App.UI.Sections.FindProjects;
 using App.UI.Sections.MyProjects;
@@ -8,6 +9,8 @@ using App.UI.Sections.Portfolio;
 using App.UI.Shared;
 
 namespace App.UI.Shell;
+
+// ICurrencyService is resolved from DI and threaded through to sub-types that need it.
 
 /// <summary>
 /// A wallet item for the header wallet-switcher modal.
@@ -23,10 +26,12 @@ public partial class WalletSwitcherItem : ReactiveObject
     public double Balance { get; set; }
     /// <summary>Subtitle: "{TypeLabel} • {SeedGroupName}".</summary>
     public string Subtitle { get; set; } = "";
+    /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
+    public string CurrencySymbol { get; set; } = "BTC";
 
     [Reactive] private bool isSelected;
 
-    public string FormattedBalance => Balance.ToString("F4", CultureInfo.InvariantCulture) + " BTC";
+    public string FormattedBalance => Balance.ToString("F4", CultureInfo.InvariantCulture) + " " + CurrencySymbol;
 }
 
 /// <summary>
@@ -68,12 +73,18 @@ public class SharedSignature
 public class SignatureStore
 {
     private int _nextId = 100;
+    private readonly ICurrencyService _currencyService;
 
     /// <summary>All signatures across all projects.</summary>
     public ObservableCollection<SharedSignature> AllSignatures { get; } = new();
 
     /// <summary>Event raised when a signature's status changes (approve/reject).</summary>
     public event Action<SharedSignature>? SignatureStatusChanged;
+
+    public SignatureStore(ICurrencyService currencyService)
+    {
+        _currencyService = currencyService;
+    }
 
     /// <summary>
     /// Add a new signature for an investment.
@@ -95,7 +106,7 @@ public class SignatureStore
             ProjectId = projectId,
             ProjectTitle = projectTitle,
             Amount = amount,
-            Currency = "BTC",
+            Currency = _currencyService.Symbol,
             Date = now.ToString("MMM dd, yyyy"),
             Time = now.ToString("HH:mm"),
             Status = requiresApproval ? SignatureStatus.Waiting.ToLowerString() : SignatureStatus.Approved.ToLowerString(),
@@ -156,6 +167,13 @@ public partial class PrototypeSettings : ReactiveObject
     /// Default = true so the app starts populated for demos.
     /// </summary>
     [Reactive] private bool showPopulatedApp = true;
+
+    /// <summary>
+    /// When true (and on a testnet network), enables debug features:
+    /// prepopulate project creation wizard data, bypass some validations, etc.
+    /// Synced to <see cref="INetworkConfiguration.SetDebugMode"/>.
+    /// </summary>
+    [Reactive] private bool isDebugMode;
 }
 
 /// <summary>
@@ -180,6 +198,7 @@ public partial class ShellViewModel : ReactiveObject
     private readonly PortfolioViewModel _portfolioVm;
     private readonly Func<string, object?> _viewFactory;
     private readonly IWalletAppService _walletAppService;
+    private readonly ICurrencyService _currencyService;
 
     [Reactive] private NavItem? selectedNavItem;
     [Reactive] private bool isSettingsOpen;
@@ -225,20 +244,34 @@ public partial class ShellViewModel : ReactiveObject
     /// <summary>Display name for the header button. Shows "Select Wallet" if none selected.</summary>
     public string SelectedWalletName => SelectedWallet?.Name ?? "Select Wallet";
 
+    /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
+    public string CurrencySymbol => _currencyService.Symbol;
+
     /// <summary>Invested balance display string for the header. Uses PortfolioViewModel total.</summary>
-    public string InvestedBalanceDisplay => _portfolioVm.TotalInvested + " BTC";
+    public string InvestedBalanceDisplay => _portfolioVm.TotalInvested + " " + _currencyService.Symbol;
 
     /// <summary>Available balance display string for the header. Uses selected wallet balance.</summary>
     public string AvailableBalanceDisplay =>
         SelectedWallet != null
-            ? SelectedWallet.Balance.ToString("F4", CultureInfo.InvariantCulture) + " BTC"
-            : "0.0000 BTC";
+            ? SelectedWallet.Balance.ToString("F4", CultureInfo.InvariantCulture) + " " + _currencyService.Symbol
+            : "0.0000 " + _currencyService.Symbol;
 
-    public ShellViewModel(PortfolioViewModel portfolioVm, Func<string, object?> viewFactory, IWalletAppService walletAppService)
+    /// <summary>
+    /// Profile name shown in the header tag. Null when running the "Default" profile (tag hidden).
+    /// </summary>
+    public string? ProfileName { get; }
+
+    public ShellViewModel(PortfolioViewModel portfolioVm, Func<string, object?> viewFactory, IWalletAppService walletAppService, ICurrencyService currencyService, ProfileContext profileContext)
     {
         _portfolioVm = portfolioVm;
         _viewFactory = viewFactory;
         _walletAppService = walletAppService;
+        _currencyService = currencyService;
+
+        // Hide profile tag for the default profile, show for all others
+        var profile = profileContext.ProfileName;
+        ProfileName = string.Equals(profile, "Default", StringComparison.OrdinalIgnoreCase) ? null : profile;
+
         NavEntries = new ObservableCollection<NavEntry>
         {
             // Ungrouped
@@ -403,7 +436,8 @@ public partial class ShellViewModel : ReactiveObject
                     Name = meta.Name,
                     WalletType = "bitcoin",
                     Balance = balanceBtc,
-                    Subtitle = $"Bitcoin • {meta.Name}"
+                    Subtitle = $"Bitcoin • {meta.Name}",
+                    CurrencySymbol = _currencyService.Symbol
                 });
             }
 

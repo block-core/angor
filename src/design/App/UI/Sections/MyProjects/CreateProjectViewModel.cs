@@ -131,9 +131,23 @@ public partial class CreateProjectViewModel : ReactiveObject
     /// <summary>The deploy flow overlay ViewModel.</summary>
     public DeployFlowViewModel DeployFlow { get; }
 
-    public CreateProjectViewModel(DeployFlowViewModel deployFlow)
+    private readonly ICurrencyService _currencyService;
+
+    public string CurrencySymbol => _currencyService.Symbol;
+
+    /// <summary>e.g. "Target Amount (BTC) *"</summary>
+    public string TargetAmountLabel => _currencyService.TargetAmountLabel;
+
+    /// <summary>e.g. "Goal (BTC) *"</summary>
+    public string GoalLabel => _currencyService.GoalLabel;
+
+    /// <summary>e.g. "Price per period (BTC) *"</summary>
+    public string PricePerPeriodLabel => _currencyService.PricePerPeriodLabel;
+
+    public CreateProjectViewModel(DeployFlowViewModel deployFlow, ICurrencyService currencyService)
     {
         DeployFlow = deployFlow;
+        _currencyService = currencyService;
         // Default start date to today
         StartDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
         InvestStartDate = DateTime.Now;
@@ -668,7 +682,7 @@ public partial class CreateProjectViewModel : ReactiveObject
                 ReleaseDate = FormatReleaseDateOrdinal(releaseDate),
                 AmountBtc = btcAmount.ToString("F4"),
                 StageLabel = "Stage",
-                DisplayText = $"{pct}% ({btcAmount:F4} BTC) released on {FormatReleaseDateOrdinal(releaseDate)}"
+                DisplayText = $"{pct}% ({btcAmount:F4} {_currencyService.Symbol}) released on {FormatReleaseDateOrdinal(releaseDate)}"
             });
         }
 

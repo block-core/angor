@@ -27,6 +27,12 @@ public class WalletCard : TemplatedControl
     public static readonly StyledProperty<string?> WalletIdProperty =
         AvaloniaProperty.Register<WalletCard, string?>(nameof(WalletId));
 
+    /// <summary>
+    /// When true, shows the "Get Testnet Coins" faucet button (testnet only).
+    /// </summary>
+    public static readonly StyledProperty<bool> ShowFaucetProperty =
+        AvaloniaProperty.Register<WalletCard, bool>(nameof(ShowFaucet));
+
     public string? WalletName
     {
         get => GetValue(WalletNameProperty);
@@ -55,5 +61,11 @@ public class WalletCard : TemplatedControl
     {
         get => GetValue(WalletIdProperty);
         set => SetValue(WalletIdProperty, value);
+    }
+
+    public bool ShowFaucet
+    {
+        get => GetValue(ShowFaucetProperty);
+        set => SetValue(ShowFaucetProperty, value);
     }
 }

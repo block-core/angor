@@ -474,7 +474,7 @@
                                                        FontWeight="SemiBold"
                                                        Foreground="White"
                                                        VerticalAlignment="Center">
-                                                <Run Text="{Binding ActionVerb, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding TotalInvested, Mode=OneWay}" /><Run Text=" BTC" />
+                                                <Run Text="{Binding ActionVerb, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding TotalInvested, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" />
                                             </TextBlock>
                                         </StackPanel>
                                     </Button>
@@ -623,7 +623,7 @@
                                            FontSize="24"
                                            FontWeight="Bold"
                                            Foreground="{DynamicResource StatsDetailValue}" />
-                                <TextBlock Text="BTC"
+                                <TextBlock Text="{Binding CurrencySymbol}"
                                            FontSize="11"
                                            Foreground="{DynamicResource StatsDetailSubtext}" />
                             </StackPanel>
@@ -646,7 +646,7 @@
                                            FontSize="24"
                                            FontWeight="Bold"
                                            Foreground="{DynamicResource StatsDetailValue}" />
-                                <TextBlock Text="BTC"
+                                <TextBlock Text="{Binding CurrencySymbol}"
                                            FontSize="11"
                                            Foreground="{DynamicResource StatsDetailSubtext}" />
                             </StackPanel>
@@ -693,7 +693,7 @@
                                            FontSize="24"
                                            FontWeight="Bold"
                                            Foreground="{DynamicResource StatsDetailValue}" />
-                                <TextBlock Text="BTC"
+                                <TextBlock Text="{Binding CurrencySymbol}"
                                            FontSize="11"
                                            Foreground="{DynamicResource StatsDetailSubtext}" />
                             </StackPanel>
@@ -713,7 +713,7 @@
                                        FontWeight="Bold"
                                        Foreground="{DynamicResource ProgressPercentage}"
                                        HorizontalAlignment="Right">
-                                <Run Text="{Binding TotalRaised, Mode=OneWay}" /><Run Text=" / " /><Run Text="{Binding TargetAmount, Mode=OneWay}" /><Run Text=" BTC" />
+                                <Run Text="{Binding TotalRaised, Mode=OneWay}" /><Run Text=" / " /><Run Text="{Binding TargetAmount, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" />
                             </TextBlock>
                         </DockPanel>
                         <!-- Progress bar: Vue .progress-bar-large h:12px, border-radius:6px -->
@@ -1053,7 +1053,7 @@
                                                    Foreground="{DynamicResource StageAmountGreen}"
                                                    VerticalAlignment="Center"
                                                    HorizontalAlignment="Right">
-                                            <Run Text="{Binding Amount, Mode=OneWay}" /><Run Text=" BTC" />
+                                            <Run Text="{Binding Amount, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding $parent[UserControl].DataContext.CurrencySymbol, Mode=OneWay}" />
                                         </TextBlock>
                                     </Grid>
                                 </Border>

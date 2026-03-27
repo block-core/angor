@@ -2,8 +2,10 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
+using App.UI.Shared;
 using App.UI.Shell;
 using App.UI.Shared.Controls;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace App.UI.Sections.Funds;
 
@@ -61,6 +63,16 @@ public partial class FundsView : UserControl
                 OpenWalletDetailModal(btn);
                 e.Handled = true;
                 return;
+
+            case "BtnFaucet":
+                _ = RequestTestCoinsAsync(btn);
+                e.Handled = true;
+                return;
+
+            case "BtnRefresh":
+                RefreshWalletBalance(btn);
+                e.Handled = true;
+                return;
         }
 
         // EmptyState or seed group "Add Wallet" button
@@ -79,6 +91,9 @@ public partial class FundsView : UserControl
         return btn.FindAncestorOfType<WalletCard>();
     }
 
+    private ICurrencyService CurrencyService =>
+        App.Services.GetRequiredService<ICurrencyService>();
+
     /// <summary>
     /// Extract wallet info from a WalletCard and open the Send modal.
     /// </summary>
@@ -94,7 +109,7 @@ public partial class FundsView : UserControl
             modal.SetWallet(
                 card.WalletName ?? "Wallet",
                 card.WalletType ?? "On-Chain",
-                card.Balance ?? "0.0000 BTC",
+                card.Balance ?? $"0.0000 {CurrencyService.Symbol}",
                 card.WalletId);
             shellVm.ShowModal(modal);
         }
@@ -135,10 +150,57 @@ public partial class FundsView : UserControl
             modal.SetWallet(
                 card.WalletName ?? "Wallet",
                 card.WalletType ?? "On-Chain",
-                card.Balance ?? "0.0000 BTC",
+                card.Balance ?? $"0.0000 {CurrencyService.Symbol}",
                 card.WalletId ?? "");
             shellVm.ShowModal(modal);
         }
+    }
+
+    /// <summary>
+    /// Request testnet coins for a single wallet via its WalletCard.
+    /// Awaits the result and shows a toast notification on success or failure.
+    /// </summary>
+    private async Task RequestTestCoinsAsync(Button btn)
+    {
+        var card = FindParentWalletCard(btn);
+        if (card?.WalletId == null) return;
+        if (DataContext is not FundsViewModel vm) return;
+
+        btn.IsEnabled = false;
+        try
+        {
+            var (success, error) = await vm.GetTestCoinsAsync(card.WalletId);
+
+            var shellView = this.FindAncestorOfType<ShellView>();
+            if (shellView?.DataContext is ShellViewModel shellVm)
+            {
+                if (success)
+                    shellVm.ShowToast("Testnet coins sent to your wallet. Balance will update shortly.");
+                else
+                    shellVm.ShowToast($"Faucet failed: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            var shellView = this.FindAncestorOfType<ShellView>();
+            if (shellView?.DataContext is ShellViewModel shellVm)
+                shellVm.ShowToast($"Error: {ex.Message}");
+        }
+        finally
+        {
+            btn.IsEnabled = true;
+        }
+    }
+
+    /// <summary>
+    /// Refresh balance for a single wallet via its WalletCard.
+    /// </summary>
+    private void RefreshWalletBalance(Button btn)
+    {
+        var card = FindParentWalletCard(btn);
+        if (card?.WalletId == null) return;
+        if (DataContext is FundsViewModel vm)
+            _ = vm.RefreshBalanceAsync(card.WalletId);
     }
 
     /// <summary>

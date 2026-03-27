@@ -10,7 +10,7 @@ namespace App.Composition.Adapters;
 /// </summary>
 public class SimplePasswordProvider : IPasswordProvider
 {
-    private string _defaultKey = "default-encryption-key";
+    private string _defaultKey = "default-key";
 
     public void SetKey(string key) => _defaultKey = key;
 

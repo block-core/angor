@@ -89,8 +89,9 @@
                                    Foreground="{DynamicResource TextStrong}" FontWeight="Bold"
                                    HorizontalAlignment="Right">
                             <TextBlock.Text>
-                                <MultiBinding StringFormat="{}{0} BTC">
+                                <MultiBinding StringFormat="{}{0} {1}">
                                     <Binding Path="TargetAmount" />
+                                    <Binding Path="CurrencySymbol" />
                                 </MultiBinding>
                             </TextBlock.Text>
                         </TextBlock>
@@ -128,7 +129,7 @@
                         <TextBlock Grid.Column="1" FontSize="14"
                                    Foreground="{DynamicResource TextStrong}" FontWeight="Bold"
                                    HorizontalAlignment="Right">
-                            <Run Text="{Binding ApprovalThreshold, Mode=OneWay}" /><Run Text=" BTC" />
+                            <Run Text="{Binding ApprovalThreshold, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" />
                         </TextBlock>
                     </Grid>
                 </StackPanel>

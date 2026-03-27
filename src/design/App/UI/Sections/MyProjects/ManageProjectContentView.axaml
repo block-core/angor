@@ -146,9 +146,15 @@
                             <TextBlock Text="Total Investment"
                                        FontSize="13" FontWeight="Medium"
                                        Foreground="{DynamicResource StatsCardTitle}" />
-                            <TextBlock Text="{Binding TotalInvestment, StringFormat={}{0} BTC}"
-                                       FontSize="20" FontWeight="Bold"
-                                       Foreground="{DynamicResource StatsCardTitle}" />
+                            <TextBlock FontSize="20" FontWeight="Bold"
+                                       Foreground="{DynamicResource StatsCardTitle}">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}{0} {1}">
+                                        <Binding Path="TotalInvestment" />
+                                        <Binding Path="CurrencySymbol" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
                         </StackPanel>
                     </Border>
 
@@ -163,9 +169,15 @@
                             <TextBlock Text="Available Balance"
                                        FontSize="13" FontWeight="Medium"
                                        Foreground="{DynamicResource StatsCardTitle}" />
-                            <TextBlock Text="{Binding AvailableBalance, StringFormat={}{0} BTC}"
-                                       FontSize="20" FontWeight="Bold"
-                                       Foreground="{DynamicResource StatsCardTitle}" />
+                            <TextBlock FontSize="20" FontWeight="Bold"
+                                       Foreground="{DynamicResource StatsCardTitle}">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}{0} {1}">
+                                        <Binding Path="AvailableBalance" />
+                                        <Binding Path="CurrencySymbol" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
                         </StackPanel>
                     </Border>
 
@@ -180,9 +192,15 @@
                             <TextBlock Text="Withdrawable"
                                        FontSize="13" FontWeight="Medium"
                                        Foreground="{DynamicResource StatsCardTitle}" />
-                            <TextBlock Text="{Binding Withdrawable, StringFormat={}{0} BTC}"
-                                       FontSize="20" FontWeight="Bold"
-                                       Foreground="{DynamicResource StatsCardTitle}" />
+                            <TextBlock FontSize="20" FontWeight="Bold"
+                                       Foreground="{DynamicResource StatsCardTitle}">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}{0} {1}">
+                                        <Binding Path="Withdrawable" />
+                                        <Binding Path="CurrencySymbol" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
                         </StackPanel>
                     </Border>
 
@@ -448,9 +466,15 @@
                                                             BorderThickness="1"
                                                             CornerRadius="16"
                                                             Padding="12,4">
-                                                        <TextBlock Text="{Binding AmountLeft, StringFormat={}{0} BTC}"
-                                                                   FontSize="12" FontWeight="SemiBold"
-                                                                   Foreground="{DynamicResource StagePillText}" />
+                                                        <TextBlock FontSize="12" FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource StagePillText}">
+                                                            <TextBlock.Text>
+                                                                <MultiBinding StringFormat="{}{0} {1}">
+                                                                    <Binding Path="AmountLeft" />
+                                                                    <Binding Path="$parent[UserControl].DataContext.CurrencySymbol" />
+                                                                </MultiBinding>
+                                                            </TextBlock.Text>
+                                                        </TextBlock>
                                                     </Border>
 
                                                     <!-- UTXO count pill -->

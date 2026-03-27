@@ -44,7 +44,8 @@
                 <!-- STEP 1: Add Wallet Choice (Import or Generate)         -->
                 <!-- Vue: lines 437-470                                     -->
                 <!-- ═══════════════════════════════════════════════════════ -->
-                <StackPanel Name="ChoicePanel" Spacing="24">
+                <StackPanel Name="ChoicePanel" Spacing="24"
+                            AutomationProperties.AutomationId="ChoicePanel">
                     <!-- Header: "Add Wallet" centered, close X top-right -->
                     <!-- Vue: mb-6, text-xl font-bold text-center -->
                     <Panel>
@@ -63,6 +64,7 @@
                         <!-- Import button: outlined -->
                         <!-- Vue: border-2 border-gray-300/border-[#404040], text-gray-600/text-gray-300 -->
                         <Button Name="BtnImport" HorizontalAlignment="Stretch"
+                                AutomationProperties.AutomationId="BtnImport"
                                 HorizontalContentAlignment="Center"
                                 Padding="16,12"
                                 CornerRadius="8"
@@ -84,6 +86,7 @@
                         <!-- Generate New button: solid green -->
                         <!-- Vue: bg-[#4B7C5A] text-white hover:bg-[#3d6448] -->
                         <Button Name="BtnGenerate" HorizontalAlignment="Stretch"
+                                AutomationProperties.AutomationId="BtnGenerate"
                                 HorizontalContentAlignment="Center"
                                 Padding="16,12"
                                 CornerRadius="8"
@@ -111,7 +114,8 @@
                 <!-- STEP 2a: Import Wallet                                 -->
                 <!-- Vue: lines 473-515                                     -->
                 <!-- ═══════════════════════════════════════════════════════ -->
-                <StackPanel Name="ImportPanel" IsVisible="False" Spacing="16">
+                <StackPanel Name="ImportPanel" IsVisible="False" Spacing="16"
+                            AutomationProperties.AutomationId="ImportPanel">
                     <!-- Header: "Import Wallet" centered + close X -->
                     <!-- Vue: mb-4, text-xl font-bold text-center -->
                     <Panel>
@@ -134,6 +138,7 @@
                     <!-- Seed phrase textarea -->
                     <!-- Vue: rows=4, px-4 py-3, rounded-lg, bg-gray-50/bg-[#111], border-gray-200/border-[#333], focus:ring-[#4B7C5A] -->
                     <TextBox Name="SeedPhraseInput"
+                             AutomationProperties.AutomationId="SeedPhraseInput"
                              MinHeight="100"
                              TextWrapping="Wrap"
                              AcceptsReturn="True"
@@ -162,6 +167,7 @@
                     <StackPanel Spacing="12" Margin="0,8,0,0">
                         <!-- Import Wallet (solid green) -->
                         <Button Name="BtnSubmitImport" HorizontalAlignment="Stretch"
+                                AutomationProperties.AutomationId="BtnSubmitImport"
                                 HorizontalContentAlignment="Center"
                                 Padding="16,12"
                                 CornerRadius="8"
@@ -203,7 +209,8 @@
                 <!-- STEP 2b: Generate Wallet — Backup Seed Phrase          -->
                 <!-- Vue: lines 523-561 (generateStep === 'backup')         -->
                 <!-- ═══════════════════════════════════════════════════════ -->
-                <StackPanel Name="BackupPanel" IsVisible="False" Spacing="16">
+                <StackPanel Name="BackupPanel" IsVisible="False" Spacing="16"
+                            AutomationProperties.AutomationId="BackupPanel">
                     <!-- Amber warning circle: 80x80 -->
                     <!-- Vue: w-20 h-20 rounded-full, bg-amber-900/bg-amber-100 -->
                     <Border Width="80" Height="80" CornerRadius="40"
@@ -252,6 +259,7 @@
                         <!-- Download Seed (amber) -->
                         <!-- Vue: bg-amber-800/bg-amber-500, text-white -->
                         <Button Name="BtnDownloadSeed" HorizontalAlignment="Stretch"
+                                AutomationProperties.AutomationId="BtnDownloadSeed"
                                 HorizontalContentAlignment="Center"
                                 Padding="16,12"
                                 CornerRadius="8"
@@ -273,6 +281,7 @@
                         <!-- Vue: border-2 border-[#4B7C5A] text-[#4B7C5A] when enabled, 
                              border-[#404040]/border-gray-300 text-gray-500/text-gray-400 when disabled -->
                         <Button Name="BtnContinueBackup" HorizontalAlignment="Stretch"
+                                AutomationProperties.AutomationId="BtnContinueBackup"
                                 HorizontalContentAlignment="Center"
                                 Padding="16,12"
                                 CornerRadius="8"
@@ -307,7 +316,8 @@
                 <!-- Vue: lines 563-581 (generateStep === 'success')        -->
                 <!-- Also used after successful import.                     -->
                 <!-- ═══════════════════════════════════════════════════════ -->
-                <StackPanel Name="SuccessPanel" IsVisible="False" Spacing="16">
+                <StackPanel Name="SuccessPanel" IsVisible="False" Spacing="16"
+                            AutomationProperties.AutomationId="CreateWalletSuccessPanel">
                     <!-- Green checkmark circle: 80x80 -->
                     <!-- Vue: w-20 h-20 rounded-full, bg-green-900/bg-green-100 -->
                     <Border Width="80" Height="80" CornerRadius="40"
@@ -338,6 +348,7 @@
                     <!-- Done button (green gradient) -->
                     <!-- Vue: bg-gradient-to-r from-[#4B7C5A] to-[#3d6448], shadow-lg -->
                     <Button Name="BtnDone" HorizontalAlignment="Stretch"
+                            AutomationProperties.AutomationId="BtnCreateWalletDone"
                             HorizontalContentAlignment="Center"
                             Padding="16,12"
                             CornerRadius="8"

@@ -59,7 +59,8 @@
                             ProjectType="{Binding ProjectType}"
                             Status="{Binding Status}"
                             Banner="{Binding BannerUrl}"
-                            Avatar="{Binding AvatarUrl}" />
+                            Avatar="{Binding AvatarUrl}"
+                            CurrencySymbol="{Binding $parent[UserControl].DataContext.CurrencySymbol}" />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>

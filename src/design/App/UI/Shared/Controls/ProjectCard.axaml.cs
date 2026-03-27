@@ -86,6 +86,13 @@ public class ProjectCard : TemplatedControl
     public static readonly StyledProperty<bool> ShowAmountsProperty =
         AvaloniaProperty.Register<ProjectCard, bool>(nameof(ShowAmounts), true);
 
+    /// <summary>
+    /// Currency symbol displayed next to amounts (e.g. "BTC", "TBTC", "LBTC").
+    /// Bound from the parent ViewModel's CurrencySymbol property.
+    /// </summary>
+    public static readonly StyledProperty<string> CurrencySymbolProperty =
+        AvaloniaProperty.Register<ProjectCard, string>(nameof(CurrencySymbol), "BTC");
+
     public string? Banner
     {
         get => GetValue(BannerProperty);
@@ -180,5 +187,11 @@ public class ProjectCard : TemplatedControl
     {
         get => GetValue(ShowAmountsProperty);
         set => SetValue(ShowAmountsProperty, value);
+    }
+
+    public string CurrencySymbol
+    {
+        get => GetValue(CurrencySymbolProperty);
+        set => SetValue(CurrencySymbolProperty, value);
     }
 }
