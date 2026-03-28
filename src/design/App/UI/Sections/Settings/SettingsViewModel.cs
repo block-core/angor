@@ -89,15 +89,10 @@ public partial class SettingsViewModel : ReactiveObject
 
     public bool IsDarkThemeEnabled
     {
-        get => Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
+        get => _prototypeSettings.IsDarkTheme;
         set
         {
-            if (Application.Current != null)
-            {
-                Application.Current.RequestedThemeVariant = value
-                    ? Avalonia.Styling.ThemeVariant.Dark
-                    : Avalonia.Styling.ThemeVariant.Light;
-            }
+            _prototypeSettings.IsDarkTheme = value;
             this.RaisePropertyChanged();
         }
     }

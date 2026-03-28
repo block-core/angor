@@ -531,7 +531,7 @@ public partial class CreateProjectViewModel : ReactiveObject
         var targetSats = long.TryParse(TargetAmount, out var tSats) ? tSats
             : double.TryParse(TargetAmount, System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture, out var tBtc)
-                ? (long)Math.Round(tBtc * 100_000_000)
+                ? ((decimal)tBtc).ToUnitSatoshi()
                 : 0L;
 
         // Map UI project type to SDK ProjectType

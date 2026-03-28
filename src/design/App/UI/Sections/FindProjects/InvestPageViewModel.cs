@@ -10,6 +10,7 @@ using Angor.Sdk.Wallet.Application;
 using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Sections.Portfolio;
 using App.UI.Shared;
+using Microsoft.Extensions.Logging;
 using MonitorOp = Angor.Sdk.Funding.Investor.Operations.MonitorAddressForFunds;
 using ReactiveUI;
 
@@ -82,6 +83,7 @@ public partial class InvestPageViewModel : ReactiveObject
     private readonly IInvestmentAppService _investmentAppService;
     private readonly PortfolioViewModel _portfolioVm;
     private readonly ICurrencyService _currencyService;
+    private readonly ILogger<InvestPageViewModel> _logger;
     private CancellationTokenSource? _invoiceMonitorCts;
 
     // ── Project Reference ──
@@ -99,6 +101,9 @@ public partial class InvestPageViewModel : ReactiveObject
     [Reactive] private bool isProcessing;
     [Reactive] private string paymentStatusText = "Awaiting payment...";
     [Reactive] private bool paymentReceived;
+
+    /// <summary>Fee rate in sat/vB, set by FeeSelectionPopup before payment.</summary>
+    [Reactive] private long selectedFeeRate = 20;
 
     // ── Subscription State ──
     [Reactive] private string? selectedSubscriptionPattern;
@@ -196,13 +201,18 @@ public partial class InvestPageViewModel : ReactiveObject
         IWalletAppService walletAppService,
         IInvestmentAppService investmentAppService,
         PortfolioViewModel portfolioVm,
-        ICurrencyService currencyService)
+        ICurrencyService currencyService,
+        ILogger<InvestPageViewModel> logger)
     {
         Project = project;
         _walletAppService = walletAppService;
         _investmentAppService = investmentAppService;
         _portfolioVm = portfolioVm;
         _currencyService = currencyService;
+        _logger = logger;
+
+        _logger.LogInformation("InvestPageViewModel created for project '{ProjectName}' (ID: {ProjectId}, Type: {ProjectType})",
+            project.ProjectName, project.ProjectId, project.ProjectType);
 
         // Initialize quick amounts with dynamic currency label
         var symbol = currencyService.Symbol;
@@ -275,10 +285,15 @@ public partial class InvestPageViewModel : ReactiveObject
     /// </summary>
     private async Task LoadWalletsAsync()
     {
+        _logger.LogInformation("Loading wallets for invest flow...");
         try
         {
             var metadatasResult = await _walletAppService.GetMetadatas();
-            if (metadatasResult.IsFailure) return;
+            if (metadatasResult.IsFailure)
+            {
+                _logger.LogWarning("GetMetadatas failed: {Error}", metadatasResult.Error);
+                return;
+            }
 
             Wallets.Clear();
             foreach (var meta in metadatasResult.Value)
@@ -290,27 +305,30 @@ public partial class InvestPageViewModel : ReactiveObject
                     balanceSats = balanceInfoResult.Value.TotalBalance + balanceInfoResult.Value.TotalUnconfirmedBalance;
                 }
 
-                var balanceBtc = balanceSats / 100_000_000.0;
+                var balanceBtc = (double)balanceSats.ToUnitBtc();
 
                 Wallets.Add(new WalletItem
                 {
                     Name = meta.Name,
                     Network = "Bitcoin",
                     Balance = $"{balanceBtc:F8} {_currencyService.Symbol}",
+                    BalanceSats = balanceSats,
                     WalletId = meta.Id.Value
                 });
             }
+
+            _logger.LogInformation("Loaded {Count} wallet(s) for invest flow", Wallets.Count);
         }
-        catch
+        catch (Exception ex)
         {
-            // Wallet loading failed — list stays empty
+            _logger.LogError(ex, "Failed to load wallets for invest flow");
         }
     }
 
     // ── Subscription helpers ──
 
-    private static long BtcToSats(double btc) => (long)Math.Round(btc * 100_000_000);
-    private static double SatsToBtc(long sats) => sats / 100_000_000.0;
+    private static long BtcToSats(double btc) => ((decimal)btc).ToUnitSatoshi();
+    private static double SatsToBtc(long sats) => (double)sats.ToUnitBtc();
 
     private long CalculateSubscriptionPrice(string pattern)
     {
@@ -501,13 +519,20 @@ public partial class InvestPageViewModel : ReactiveObject
     /// Vue ref: proceedToPayment() checks balances, opens wallet modal.</summary>
     public void Submit()
     {
-        if (!CanSubmit) return;
+        if (!CanSubmit)
+        {
+            _logger.LogWarning("Submit rejected: CanSubmit is false (amount: {Amount})", InvestmentAmount);
+            return;
+        }
+        _logger.LogInformation("Invest form submitted — amount: {Amount}, advancing to WalletSelector", InvestmentAmount);
         CurrentScreen = InvestScreen.WalletSelector;
     }
 
     /// <summary>Select a wallet from the list.</summary>
     public void SelectWallet(WalletItem wallet)
     {
+        _logger.LogInformation("Wallet selected for investment: '{WalletName}' (ID: {WalletId}, Balance: {Balance})",
+            wallet.Name, wallet.WalletId, wallet.Balance);
         foreach (var w in Wallets) w.IsSelected = false;
         wallet.IsSelected = true;
         SelectedWallet = wallet;
@@ -523,11 +548,26 @@ public partial class InvestPageViewModel : ReactiveObject
         if (SelectedWallet == null || string.IsNullOrEmpty(SelectedWallet.WalletId))
         {
             PaymentStatusText = "No wallet selected.";
+            _logger.LogWarning("PayWithWallet called with no wallet selected");
+            return;
+        }
+
+        // Balance check: ensure wallet has enough funds for the investment
+        var amountBtc = ParseAmount();
+        var requiredSats = ((decimal)amountBtc).ToUnitSatoshi();
+        if (SelectedWallet.BalanceSats < requiredSats)
+        {
+            var walletBtc = SelectedWallet.BalanceSats.ToUnitBtc();
+            PaymentStatusText = $"Insufficient balance. Wallet has {walletBtc:F8} {_currencyService.Symbol}, but {amountBtc:F8} {_currencyService.Symbol} is required.";
+            _logger.LogWarning("Insufficient balance: wallet {WalletId} has {BalanceSats} sats, need {RequiredSats} sats",
+                SelectedWallet.WalletId, SelectedWallet.BalanceSats, requiredSats);
             return;
         }
 
         IsProcessing = true;
         PaymentStatusText = "Building investment transaction...";
+        _logger.LogInformation("PayWithWallet starting — wallet: {WalletId}, project: {ProjectId}, amount: {Amount} BTC",
+            SelectedWallet.WalletId, Project.ProjectId, InvestmentAmount);
 
         // Yield to let the UI render the spinner before blocking on SDK calls
         await Task.Yield();
@@ -536,7 +576,7 @@ public partial class InvestPageViewModel : ReactiveObject
         {
             var walletId = new WalletId(SelectedWallet.WalletId);
             var projectId = new ProjectId(Project.ProjectId);
-            var amountSats = (long)Math.Round(ParseAmount() * 100_000_000);
+            var amountSats = ((decimal)ParseAmount()).ToUnitSatoshi();
 
             // Determine pattern index for Fund/Subscription projects
             byte? patternIndex = null;
@@ -550,18 +590,22 @@ public partial class InvestPageViewModel : ReactiveObject
                 walletId,
                 projectId,
                 new Amount(amountSats),
-                new DomainFeerate(20),
+                new DomainFeerate(SelectedFeeRate),
                 patternIndex);
 
+            _logger.LogInformation("Building investment draft: wallet={WalletId}, project={ProjectId}, amount={AmountSats} sats, feeRate={FeeRate}, patternIndex={PatternIndex}",
+                walletId.Value, projectId.Value, amountSats, SelectedFeeRate, patternIndex);
             var buildResult = await _investmentAppService.BuildInvestmentDraft(buildRequest);
             if (buildResult.IsFailure)
             {
+                _logger.LogError("BuildInvestmentDraft failed: {Error}", buildResult.Error);
                 PaymentStatusText = "Failed to build transaction.";
                 IsProcessing = false;
                 return;
             }
 
             var draft = buildResult.Value.InvestmentDraft;
+            _logger.LogInformation("Investment draft built successfully");
             PaymentStatusText = "Checking investment threshold...";
 
             // Check penalty threshold
@@ -574,6 +618,7 @@ public partial class InvestPageViewModel : ReactiveObject
             if (thresholdResult.IsSuccess && thresholdResult.Value.IsAboveThreshold)
             {
                 // Above threshold: request founder signatures
+                _logger.LogInformation("Investment is above penalty threshold — requesting founder signatures");
                 PaymentStatusText = "Requesting founder approval...";
                 var submitRequest = new RequestInvestmentSignatures.RequestFounderSignaturesRequest(
                     walletId,
@@ -583,14 +628,17 @@ public partial class InvestPageViewModel : ReactiveObject
                 var submitResult = await _investmentAppService.SubmitInvestment(submitRequest);
                 if (submitResult.IsFailure)
                 {
+                    _logger.LogError("SubmitInvestment (founder signatures) failed: {Error}", submitResult.Error);
                     PaymentStatusText = "Failed to submit investment.";
                     IsProcessing = false;
                     return;
                 }
+                _logger.LogInformation("Investment submitted for founder approval");
             }
             else
             {
                 // Below threshold: publish directly
+                _logger.LogInformation("Investment is below penalty threshold — publishing directly");
                 PaymentStatusText = "Publishing transaction...";
                 var publishRequest = new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(
                     walletId.Value,
@@ -600,12 +648,15 @@ public partial class InvestPageViewModel : ReactiveObject
                 var publishResult = await _investmentAppService.SubmitTransactionFromDraft(publishRequest);
                 if (publishResult.IsFailure)
                 {
+                    _logger.LogError("SubmitTransactionFromDraft failed: {Error}", publishResult.Error);
                     PaymentStatusText = "Failed to publish transaction.";
                     IsProcessing = false;
                     return;
                 }
+                _logger.LogInformation("Investment transaction published successfully");
             }
 
+            _logger.LogInformation("Investment flow completed — advancing to Success screen");
             CurrentScreen = InvestScreen.Success;
         }
         catch (Exception ex)
@@ -654,7 +705,7 @@ public partial class InvestPageViewModel : ReactiveObject
         try
         {
             var walletId = new WalletId(wallet.WalletId);
-            var amountSats = (long)Math.Round(ParseAmount() * 100_000_000);
+            var amountSats = ((decimal)ParseAmount()).ToUnitSatoshi();
 
             // Get a receive address to monitor
             PaymentStatusText = "Generating invoice address...";
@@ -695,7 +746,8 @@ public partial class InvestPageViewModel : ReactiveObject
                 walletId,
                 projectId,
                 new Amount(amountSats),
-                new DomainFeerate(20));
+                new DomainFeerate(SelectedFeeRate),
+                FundingAddress: addressResult.Value.Value);
 
             var buildResult = await _investmentAppService.BuildInvestmentDraft(buildRequest);
             if (buildResult.IsFailure)
@@ -781,6 +833,8 @@ public partial class InvestPageViewModel : ReactiveObject
     /// </summary>
     public void AddToPortfolio()
     {
+        _logger.LogInformation("Adding investment to portfolio: project='{ProjectName}', amount={Amount}",
+            Project.ProjectName, FormattedAmount);
         _portfolioVm.AddInvestmentFromProject(Project, FormattedAmount);
     }
 }

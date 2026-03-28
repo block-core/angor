@@ -120,7 +120,7 @@ public partial class MyProjectsViewModel : ReactiveObject
 
                 foreach (var dto in projectsResult.Value.Projects)
                 {
-                    var targetBtc = dto.TargetAmount / 100_000_000.0;
+                    var targetBtc = (double)dto.TargetAmount.ToUnitBtc();
                     var projectType = dto.ProjectType switch
                     {
                         Angor.Shared.Models.ProjectType.Fund => "fund",

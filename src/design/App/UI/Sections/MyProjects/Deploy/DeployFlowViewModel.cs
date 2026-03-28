@@ -28,6 +28,8 @@ public partial class WalletItem : ReactiveObject
     public string Name { get; set; } = "";
     public string Network { get; set; } = "Bitcoin";
     public string Balance { get; set; } = "0.00000000";
+    /// <summary>Balance in satoshis for programmatic comparison (e.g. balance checks before payment).</summary>
+    public long BalanceSats { get; set; }
     /// <summary>SDK WalletId for operations</summary>
     public string WalletId { get; set; } = "";
 
@@ -140,7 +142,7 @@ public partial class DeployFlowViewModel : ReactiveObject
             foreach (var meta in metadatasResult.Value)
             {
                 var balanceResult = await _walletAppService.GetBalance(meta.Id);
-                var balanceBtc = balanceResult.IsSuccess ? balanceResult.Value.Sats / 100_000_000.0 : 0;
+                var balanceBtc = balanceResult.IsSuccess ? (double)balanceResult.Value.Sats.ToUnitBtc() : 0;
 
                 Wallets.Add(new WalletItem
                 {

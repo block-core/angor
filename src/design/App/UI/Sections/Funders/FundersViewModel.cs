@@ -170,7 +170,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
                             _ => SignatureStatus.Waiting.ToLowerString()
                         };
 
-                        var amountBtc = investment.Amount / 100_000_000.0;
+                        var amountBtc = (double)investment.Amount.ToUnitBtc();
 
                         _sdkSignatures.Add(new SignatureRequestViewModel
                         {

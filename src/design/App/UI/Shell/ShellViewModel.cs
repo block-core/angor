@@ -178,6 +178,12 @@ public partial class PrototypeSettings : ReactiveObject
     /// </summary>
     [Reactive] private bool isDebugMode;
 
+    /// <summary>
+    /// When true, the app uses the Dark theme; otherwise Light.
+    /// Persisted to disk so the choice survives restarts.
+    /// </summary>
+    [Reactive] private bool isDarkTheme;
+
     public PrototypeSettings(IStore store)
     {
         _store = store;
@@ -187,17 +193,43 @@ public partial class PrototypeSettings : ReactiveObject
         if (result.IsSuccess)
         {
             isDebugMode = result.Value.IsDebugMode;
+            isDarkTheme = result.Value.IsDarkTheme;
+        }
+
+        // Apply persisted theme immediately
+        if (Application.Current != null)
+        {
+            Application.Current.RequestedThemeVariant = isDarkTheme
+                ? Avalonia.Styling.ThemeVariant.Dark
+                : Avalonia.Styling.ThemeVariant.Light;
         }
 
         // Persist on changes
-        this.WhenAnyValue(x => x.IsDebugMode)
+        this.WhenAnyValue(x => x.IsDebugMode, x => x.IsDarkTheme)
             .Skip(1)
-            .Subscribe(async value =>
+            .Subscribe(async _ =>
             {
-                var saveResult = await _store.Save(SettingsKey, new PrototypeSettingsData { IsDebugMode = value });
+                var saveResult = await _store.Save(SettingsKey, new PrototypeSettingsData
+                {
+                    IsDebugMode = IsDebugMode,
+                    IsDarkTheme = IsDarkTheme,
+                });
                 if (saveResult.IsFailure)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[PrototypeSettings] Failed to save debug mode: {saveResult.Error}");
+                    System.Diagnostics.Debug.WriteLine($"[PrototypeSettings] Failed to save settings: {saveResult.Error}");
+                }
+            });
+
+        // Apply theme whenever IsDarkTheme changes
+        this.WhenAnyValue(x => x.IsDarkTheme)
+            .Skip(1)
+            .Subscribe(dark =>
+            {
+                if (Application.Current != null)
+                {
+                    Application.Current.RequestedThemeVariant = dark
+                        ? Avalonia.Styling.ThemeVariant.Dark
+                        : Avalonia.Styling.ThemeVariant.Light;
                 }
             });
     }
@@ -205,6 +237,7 @@ public partial class PrototypeSettings : ReactiveObject
     private class PrototypeSettingsData
     {
         public bool IsDebugMode { get; set; }
+        public bool IsDarkTheme { get; set; }
     }
 }
 
@@ -231,6 +264,7 @@ public partial class ShellViewModel : ReactiveObject
     private readonly Func<string, object?> _viewFactory;
     private readonly IWalletAppService _walletAppService;
     private readonly ICurrencyService _currencyService;
+    private readonly PrototypeSettings _prototypeSettings;
 
     [Reactive] private NavItem? selectedNavItem;
     [Reactive] private bool isSettingsOpen;
@@ -293,12 +327,13 @@ public partial class ShellViewModel : ReactiveObject
     /// </summary>
     public string? ProfileName { get; }
 
-    public ShellViewModel(PortfolioViewModel portfolioVm, Func<string, object?> viewFactory, IWalletAppService walletAppService, ICurrencyService currencyService, ProfileContext profileContext)
+    public ShellViewModel(PortfolioViewModel portfolioVm, Func<string, object?> viewFactory, IWalletAppService walletAppService, ICurrencyService currencyService, ProfileContext profileContext, PrototypeSettings prototypeSettings)
     {
         _portfolioVm = portfolioVm;
         _viewFactory = viewFactory;
         _walletAppService = walletAppService;
         _currencyService = currencyService;
+        _prototypeSettings = prototypeSettings;
 
         // Hide profile tag for the default profile, show for all others
         var profile = profileContext.ProfileName;
@@ -460,7 +495,7 @@ public partial class ShellViewModel : ReactiveObject
                 var balanceInfoResult = await _walletAppService.GetAccountBalanceInfo(meta.Id);
                 if (balanceInfoResult.IsSuccess)
                     balanceSats = balanceInfoResult.Value.TotalBalance + balanceInfoResult.Value.TotalUnconfirmedBalance + balanceInfoResult.Value.TotalBalanceReserved;
-                var balanceBtc = balanceSats / 100_000_000.0;
+                var balanceBtc = (double)balanceSats.ToUnitBtc();
 
                 SwitcherWallets.Add(new WalletSwitcherItem
                 {
@@ -549,15 +584,10 @@ public partial class ShellViewModel : ReactiveObject
 
     public bool IsDarkThemeEnabled
     {
-        get => Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
+        get => _prototypeSettings.IsDarkTheme;
         set
         {
-            if (Application.Current != null)
-            {
-                Application.Current.RequestedThemeVariant = value
-                    ? Avalonia.Styling.ThemeVariant.Dark
-                    : Avalonia.Styling.ThemeVariant.Light;
-            }
+            _prototypeSettings.IsDarkTheme = value;
             this.RaisePropertyChanged();
         }
     }
