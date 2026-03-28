@@ -6,6 +6,7 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Dtos;
 using Angor.Sdk.Funding.Founder.Operations;
+using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Nostr.Client.Utils;
@@ -103,6 +104,7 @@ public class ManageStageViewModel
 public partial class ManageProjectViewModel : ReactiveObject
 {
     private readonly IFounderAppService _founderAppService;
+    private readonly IProjectAppService _projectAppService;
     private readonly IProjectService _projectService;
     private readonly ICurrencyService _currencyService;
 
@@ -175,10 +177,12 @@ public partial class ManageProjectViewModel : ReactiveObject
     public ManageProjectViewModel(
         MyProjectItemViewModel project,
         IFounderAppService founderAppService,
+        IProjectAppService projectAppService,
         IProjectService projectService,
         ICurrencyService currencyService)
     {
         _founderAppService = founderAppService;
+        _projectAppService = projectAppService;
         _projectService = projectService;
         _currencyService = currencyService;
         Project = project;
@@ -195,6 +199,7 @@ public partial class ManageProjectViewModel : ReactiveObject
         // Load claimable transactions and project keys from SDK
         _ = LoadClaimableTransactionsAsync();
         _ = LoadProjectKeysAsync();
+        _ = LoadProjectStatisticsAsync();
     }
 
     /// <summary>
@@ -221,6 +226,44 @@ public partial class ManageProjectViewModel : ReactiveObject
         catch
         {
             // Key loading failed — properties remain empty
+        }
+    }
+
+    /// <summary>
+    /// Load project statistics from the SDK (total invested, investor count, etc.).
+    /// Provides more accurate header stats than manual computation from claimable transactions.
+    /// </summary>
+    private async Task LoadProjectStatisticsAsync()
+    {
+        if (string.IsNullOrEmpty(Project.ProjectIdentifier)) return;
+
+        try
+        {
+            var projectId = new ProjectId(Project.ProjectIdentifier);
+            var statsResult = await _projectAppService.GetProjectStatistics(projectId);
+            if (statsResult.IsFailure) return;
+
+            var stats = statsResult.Value;
+
+            TotalInvestment = (stats.TotalInvested / 100_000_000.0).ToString("F8", CultureInfo.InvariantCulture);
+            AvailableBalance = (stats.AvailableBalance / 100_000_000.0).ToString("F8", CultureInfo.InvariantCulture);
+            Withdrawable = (stats.WithdrawableAmount / 100_000_000.0).ToString("F8", CultureInfo.InvariantCulture);
+            TotalStages = stats.TotalStages;
+            TransactionTotal = stats.TotalTransactions;
+            TransactionSpent = stats.SpentTransactions;
+            TransactionAvailable = stats.AvailableTransactions;
+
+            this.RaisePropertyChanged(nameof(TotalInvestment));
+            this.RaisePropertyChanged(nameof(AvailableBalance));
+            this.RaisePropertyChanged(nameof(Withdrawable));
+            this.RaisePropertyChanged(nameof(TotalStages));
+            this.RaisePropertyChanged(nameof(TransactionTotal));
+            this.RaisePropertyChanged(nameof(TransactionSpent));
+            this.RaisePropertyChanged(nameof(TransactionAvailable));
+        }
+        catch
+        {
+            // Statistics loading failed — values remain from claimable transactions computation
         }
     }
 

@@ -3,7 +3,10 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
+using App.UI.Shared;
+using App.UI.Shell;
 
 namespace App.UI.Sections.MyProjects.Modals;
 
@@ -214,11 +217,15 @@ public partial class ManageProjectModalsView : UserControl
         var selectedTxs = stage.AvailableTransactions.Where(t => t.IsSelected).ToList();
         if (selectedTxs.Count == 0) return;
 
+        // Show fee selection popup before claiming
+        var feeRate = await AskForFeeRateAsync();
+        if (feeRate == null) return; // User cancelled
+
         Vm.IsClaiming = true;
         var confirmText = this.FindControl<TextBlock>("ConfirmClaimText");
         if (confirmText != null) confirmText.Text = "Claiming...";
 
-        var success = await Vm.ClaimStageFundsAsync(stage.Number, selectedTxs);
+        var success = await Vm.ClaimStageFundsAsync(stage.Number, selectedTxs, feeRate.Value);
 
         Vm.IsClaiming = false;
         if (confirmText != null) confirmText.Text = "Confirm";
@@ -282,6 +289,36 @@ public partial class ManageProjectModalsView : UserControl
             Vm.ShowReleaseFundsPasswordModal = false;
             Vm.ShowReleaseFundsSuccessModal = true;
         }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    //  FEE SELECTION
+    // ─────────────────────────────────────────────────────────────────
+
+    private ShellViewModel? GetShellVm()
+    {
+        var shellView = this.FindAncestorOfType<ShellView>();
+        return shellView?.DataContext as ShellViewModel;
+    }
+
+    /// <summary>
+    /// Show the reusable FeeSelectionPopup and return the selected fee rate,
+    /// or null if the user cancelled. Re-shows this modal on cancel.
+    /// </summary>
+    private async Task<long?> AskForFeeRateAsync()
+    {
+        var shellVm = GetShellVm();
+        if (shellVm == null) return null;
+
+        var feeRate = await FeeSelectionPopup.ShowAsync(shellVm);
+
+        if (feeRate == null)
+        {
+            // User cancelled — re-show the manage project modals
+            shellVm.ShowModal(this);
+        }
+
+        return feeRate;
     }
 
     // ─────────────────────────────────────────────────────────────────

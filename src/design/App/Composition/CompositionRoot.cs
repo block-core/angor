@@ -117,12 +117,14 @@ public static class CompositionRoot
                 sp.GetRequiredService<IWalletAppService>(),
                 sp.GetRequiredService<IInvestmentAppService>(),
                 sp.GetRequiredService<PortfolioViewModel>(),
-                sp.GetRequiredService<ICurrencyService>()));
+                sp.GetRequiredService<ICurrencyService>(),
+                sp.GetRequiredService<ILoggerFactory>().CreateLogger<InvestPageViewModel>()));
 
         services.AddSingleton<Func<MyProjectItemViewModel, ManageProjectViewModel>>(sp =>
             project => new ManageProjectViewModel(
                 project,
                 sp.GetRequiredService<IFounderAppService>(),
+                sp.GetRequiredService<IProjectAppService>(),
                 sp.GetRequiredService<IProjectService>(),
                 sp.GetRequiredService<ICurrencyService>()));
 

@@ -4,6 +4,7 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
 using App.UI.Sections.MyProjects.Deploy;
+using App.UI.Shared;
 using App.UI.Shared.Helpers;
 using App.UI.Shell;
 
@@ -74,7 +75,7 @@ public partial class InvestModalsView : UserControl, IBackdropCloseable
                 break;
 
             case "PayWithWalletButton":
-                Vm?.PayWithWallet();
+                _ = PayWithWalletViaFeePopupAsync();
                 break;
 
             case "PayInvoiceInsteadButton":
@@ -101,6 +102,29 @@ public partial class InvestModalsView : UserControl, IBackdropCloseable
     {
         var shellView = this.FindAncestorOfType<ShellView>();
         return shellView?.DataContext as ShellViewModel;
+    }
+
+    /// <summary>
+    /// Show fee selection popup, then proceed with wallet payment using the selected fee rate.
+    /// Follows the same hide-modal/show-popup/re-show-modal pattern used in DeployFlowOverlay and SendFundsModal.
+    /// </summary>
+    private async Task PayWithWalletViaFeePopupAsync()
+    {
+        var shellVm = GetShellVm();
+        if (shellVm == null || Vm == null) return;
+
+        var feeRate = await FeeSelectionPopup.ShowAsync(shellVm);
+
+        if (feeRate == null)
+        {
+            // User cancelled — re-show the invest modals
+            shellVm.ShowModal(this);
+            return;
+        }
+
+        Vm.SelectedFeeRate = feeRate.Value;
+        shellVm.ShowModal(this);
+        Vm.PayWithWallet();
     }
 
     private void OnBorderPressed(object? sender, PointerPressedEventArgs e)
