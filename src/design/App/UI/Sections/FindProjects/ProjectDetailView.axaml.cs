@@ -5,6 +5,7 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using Angor.Shared;
 using Angor.Shared.Services;
 using App.UI.Shared.Controls;
 using App.UI.Shared.Helpers;
@@ -222,10 +223,12 @@ public partial class ProjectDetailView : UserControl
 
     private void OnExplorerLinkPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (DataContext is ProjectItemViewModel project)
+        if (DataContext is ProjectItemViewModel project && !string.IsNullOrEmpty(project.ProjectId))
         {
             var networkService = App.Services.GetRequiredService<INetworkService>();
-            ExplorerHelper.OpenAddress(networkService, project.ProjectId);
+            var derivation = App.Services.GetRequiredService<IDerivationOperations>();
+            var bitcoinAddress = derivation.ConvertAngorKeyToBitcoinAddress(project.ProjectId);
+            ExplorerHelper.OpenAddress(networkService, bitcoinAddress);
         }
         e.Handled = true;
     }
