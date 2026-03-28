@@ -1,0 +1,95 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:a="clr-namespace:AsyncImageLoader;assembly=AsyncImageLoader.Avalonia"
+             xmlns:c="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:investmentProject="clr-namespace:AngorApp.Model.ProjectsV2.InvestmentProject;assembly=AngorApp.Model"
+             xmlns:fundProject="clr-namespace:AngorApp.Model.ProjectsV2.FundProject;assembly=AngorApp.Model"
+             xmlns:findProjects="clr-namespace:AngorApp.UI.Sections.FindProjects"
+             mc:Ignorable="d" d:DesignWidth="240" d:DesignHeight="400"
+             x:Class="AngorApp.UI.Sections.FindProjects.FindProjectItemView"
+             x:DataType="findProjects:IFindProjectItem">
+
+    <Design.DataContext>
+        <findProjects:FindProjectItemSample />
+    </Design.DataContext>
+    
+    <Interaction.Behaviors>
+        <TappedEventTrigger>
+            <InvokeCommandAction Command="{Binding GoToDetails}" />
+        </TappedEventTrigger>
+        <DataContextChangedTrigger>
+            <EnqueueCommandAction Command="{Binding Project.Refresh}"
+                                  PoolName="ProjectDetails"
+                                  MaxConcurrency="3"
+                                  DelayBetweenSeconds="0.5" />
+        </DataContextChangedTrigger>
+    </Interaction.Behaviors>
+
+    <Border Margin="10" Classes="Panel Elevate Shadow" Cursor="Hand">
+        <StackPanel Classes="Gap-XL">
+            <a:AdvancedImage CornerRadius="10 10 0 0" Margin="-20 -20 -20 0" Stretch="UniformToFill" Height="140"
+                             Source="{Binding Project.BannerUrl}" />
+            <Border Height="60" Width="60" Margin="0 -50 0 0" HorizontalAlignment="Left" CornerRadius="30"
+                    ClipToBounds="True" Background="{DynamicResource AppBackground}">
+                <a:AdvancedImage Source="{Binding Project.LogoUrl}" />
+            </Border>
+
+            <StackPanel Orientation="Horizontal" Classes="Gap-S">
+                <c:ProjectTypePill DataContext="{Binding Project}" />
+                <c:ProjectStatusPill DataContext="{Binding Project}" />
+            </StackPanel>
+
+            <TextBlock Classes="Header" DockPanel.Dock="Top" Text="{Binding Project.Name}" />
+            <TextBlock Text="{Binding Project.Description}" MaxLines="2" TextWrapping="Wrap"
+                       TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" />
+
+            <ContentControl Content="{Binding Project}">
+                <ContentControl.DataTemplates>
+                    <DataTemplate DataType="investmentProject:IInvestmentProject">
+                        <Grid>
+                            <TextBlock
+                                Text="{Binding InvestorCount^, TargetNullValue='', StringFormat='{}{0} Investors'}" />
+                            <TextBlock Classes="Strong" HorizontalAlignment="Right"
+                                       Text="{Binding Raised^.DecimalString, FallbackValue='...'}" MaxLines="2"
+                                       TextWrapping="Wrap" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" />
+                        </Grid>
+                    </DataTemplate>
+                    <DataTemplate DataType="fundProject:IFundProject">
+                        <Grid>
+                            <TextBlock Text="{Binding FunderCount^, TargetNullValue='', StringFormat='{}{0} Funders'}" />
+                            <TextBlock Classes="Strong" HorizontalAlignment="Right"
+                                       Text="{Binding Goal.DecimalString, FallbackValue='...'}" MaxLines="2"
+                                       TextWrapping="Wrap" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" />
+                        </Grid>
+                    </DataTemplate>
+                </ContentControl.DataTemplates>
+            </ContentControl>
+
+            <ContentControl Content="{Binding Project}">
+                <ContentControl.DataTemplates>
+                    <DataTemplate DataType="investmentProject:IInvestmentProject">
+                        <Grid>
+                            <TextBlock Text="Target" />
+                            <TextBlock Classes="Strong" HorizontalAlignment="Right"
+                                       Text="{Binding Target.DecimalString}" MaxLines="2" TextWrapping="Wrap"
+                                       TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" />
+                        </Grid>
+                    </DataTemplate>
+                    <DataTemplate DataType="fundProject:IFundProject">
+                        <Grid>
+                            <TextBlock Text="Goal" />
+                            <TextBlock Classes="Strong" HorizontalAlignment="Right" Text="{Binding Goal.DecimalString}"
+                                       MaxLines="2" TextWrapping="Wrap"
+                                       TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" />
+                        </Grid>
+                    </DataTemplate>
+                </ContentControl.DataTemplates>
+            </ContentControl>
+
+            <c:ProjectProgress DataContext="{Binding Project}" />
+        </StackPanel>
+    </Border>
+
+</UserControl>

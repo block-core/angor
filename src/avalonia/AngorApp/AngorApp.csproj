@@ -39,6 +39,12 @@
         <ProjectReference Include="../AngorApp.Model/AngorApp.Model.csproj"/>
         <ProjectReference Include="../../sdk/Angor.Data.Documents.LiteDb/Angor.Data.Documents.LiteDb.csproj"/>
     </ItemGroup>
+    <ItemGroup>
+      <Compile Update="UI\Sections\FindProjects\FindProjectItemView.axaml.cs">
+        <DependentUpon>FindProjectItemView.axaml</DependentUpon>
+        <SubType>Code</SubType>
+      </Compile>
+    </ItemGroup>
     <PropertyGroup>
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
         <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)generated</CompilerGeneratedFilesOutputPath>
