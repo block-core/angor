@@ -262,14 +262,24 @@
                                 <Border Background="{DynamicResource ModalInputBg}"
                                         CornerRadius="6" Padding="10,8">
                                     <DockPanel>
-                                        <Button Name="BtnCopyTxid" DockPanel.Dock="Right"
-                                                Background="Transparent" BorderThickness="0"
-                                                Padding="4" Cursor="Hand"
-                                                VerticalAlignment="Center">
-                                            <i:Icon Value="fa-regular fa-copy"
-                                                   FontSize="14"
-                                                   Foreground="{DynamicResource TextMuted}" />
-                                        </Button>
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                            <Button Name="BtnExploreTxid"
+                                                    Background="Transparent" BorderThickness="0"
+                                                    Padding="4" Cursor="Hand"
+                                                    ToolTip.Tip="View in explorer">
+                                                <i:Icon Value="fa-solid fa-arrow-up-right-from-square"
+                                                       FontSize="14"
+                                                       Foreground="{DynamicResource TextMuted}" />
+                                            </Button>
+                                            <Button Name="BtnCopyTxid"
+                                                    Background="Transparent" BorderThickness="0"
+                                                    Padding="4" Cursor="Hand"
+                                                    ToolTip.Tip="Copy to clipboard">
+                                                <i:Icon Value="fa-regular fa-copy"
+                                                       FontSize="14"
+                                                       Foreground="{DynamicResource TextMuted}" />
+                                            </Button>
+                                        </StackPanel>
                                         <TextBlock Name="SummaryTxid" Text=""
                                AutomationProperties.AutomationId="SummaryTxid"
                                                    FontSize="13"

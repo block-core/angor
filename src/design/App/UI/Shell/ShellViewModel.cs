@@ -2,7 +2,9 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Threading;
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Wallet.Application;
+using Angor.Sdk.Wallet.Domain;
 using App.UI.Sections.FindProjects;
 using App.UI.Sections.MyProjects;
 using App.UI.Sections.Portfolio;
@@ -263,6 +265,7 @@ public partial class ShellViewModel : ReactiveObject
     private readonly PortfolioViewModel _portfolioVm;
     private readonly Func<string, object?> _viewFactory;
     private readonly IWalletAppService _walletAppService;
+    private readonly IInvestmentAppService _investmentAppService;
     private readonly ICurrencyService _currencyService;
     private readonly PrototypeSettings _prototypeSettings;
 
@@ -313,8 +316,8 @@ public partial class ShellViewModel : ReactiveObject
     /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
     public string CurrencySymbol => _currencyService.Symbol;
 
-    /// <summary>Invested balance display string for the header. Uses PortfolioViewModel total.</summary>
-    public string InvestedBalanceDisplay => _portfolioVm.TotalInvested + " " + _currencyService.Symbol;
+    /// <summary>Invested balance display string for the header. Updated from SDK GetTotalInvested.</summary>
+    [Reactive] private string investedBalanceDisplay = "0.0000";
 
     /// <summary>Available balance display string for the header. Uses selected wallet balance.</summary>
     public string AvailableBalanceDisplay =>
@@ -327,11 +330,12 @@ public partial class ShellViewModel : ReactiveObject
     /// </summary>
     public string? ProfileName { get; }
 
-    public ShellViewModel(PortfolioViewModel portfolioVm, Func<string, object?> viewFactory, IWalletAppService walletAppService, ICurrencyService currencyService, ProfileContext profileContext, PrototypeSettings prototypeSettings)
+    public ShellViewModel(PortfolioViewModel portfolioVm, Func<string, object?> viewFactory, IWalletAppService walletAppService, IInvestmentAppService investmentAppService, ICurrencyService currencyService, ProfileContext profileContext, PrototypeSettings prototypeSettings)
     {
         _portfolioVm = portfolioVm;
         _viewFactory = viewFactory;
         _walletAppService = walletAppService;
+        _investmentAppService = investmentAppService;
         _currencyService = currencyService;
         _prototypeSettings = prototypeSettings;
 
@@ -383,10 +387,11 @@ public partial class ShellViewModel : ReactiveObject
 
         // When selected wallet changes, update header display properties
         this.WhenAnyValue(x => x.SelectedWallet)
-            .Subscribe(_ =>
+            .Subscribe(wallet =>
             {
                 this.RaisePropertyChanged(nameof(SelectedWalletName));
                 this.RaisePropertyChanged(nameof(AvailableBalanceDisplay));
+                _ = LoadTotalInvestedAsync(wallet);
             });
 
         // When toast message changes, notify HasToast
@@ -525,6 +530,36 @@ public partial class ShellViewModel : ReactiveObject
         finally
         {
             _isLoadingSwitcherWallets = false;
+        }
+    }
+
+    /// <summary>
+    /// Load the total invested amount for the given wallet from the SDK.
+    /// Updates the InvestedBalanceDisplay header property.
+    /// </summary>
+    private async Task LoadTotalInvestedAsync(WalletSwitcherItem? wallet)
+    {
+        if (wallet == null)
+        {
+            InvestedBalanceDisplay = "0.0000 " + _currencyService.Symbol;
+            return;
+        }
+
+        try
+        {
+            var result = await _investmentAppService.GetTotalInvested(
+                new Angor.Sdk.Funding.Investor.Operations.GetTotalInvested.GetTotalInvestedRequest(
+                    new WalletId(wallet.Id)));
+
+            if (result.IsSuccess)
+            {
+                var btc = result.Value.TotalInvestedSats.ToUnitBtc();
+                InvestedBalanceDisplay = btc.ToString("F4", CultureInfo.InvariantCulture) + " " + _currencyService.Symbol;
+            }
+        }
+        catch
+        {
+            // SDK call failed — keep existing display
         }
     }
 

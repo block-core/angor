@@ -224,6 +224,29 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
         copyBtn.Content = iconControl;
         txidRow.Children.Add(copyBtn);
 
+        // Explorer button — open txid in block explorer
+        var exploreBtn = new Button
+        {
+            Padding = new Thickness(6),
+            Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        exploreBtn.Classes.Add("ModalBtn");
+        var exploreIcon = new Icon
+        {
+            Value = "fa-solid fa-arrow-up-right-from-square",
+            FontSize = 14,
+        };
+        exploreIcon.Classes.Add("TextMuted");
+        exploreBtn.Content = exploreIcon;
+        var capturedTxid = txid; // capture for closure
+        exploreBtn.Click += (_, _) =>
+        {
+            var networkService = App.Services.GetRequiredService<Angor.Shared.Services.INetworkService>();
+            ExplorerHelper.OpenTransaction(networkService, capturedTxid);
+        };
+        txidRow.Children.Add(exploreBtn);
+
         txidSection.Children.Add(txidRow);
         infoStack.Children.Add(txidSection);
 

@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
+using Angor.Shared.Services;
 using App.UI.Shared;
 using App.UI.Shared.Helpers;
 using App.UI.Shell;
@@ -100,6 +101,11 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
 
             case "BtnCopyTxid":
                 ClipboardHelper.CopyToClipboard(this, _lastTxId);
+                break;
+
+            case "BtnExploreTxid":
+                var networkService = App.Services.GetRequiredService<INetworkService>();
+                ExplorerHelper.OpenTransaction(networkService, _lastTxId);
                 break;
 
             case "BtnDone":
