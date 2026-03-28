@@ -782,10 +782,12 @@
                         <StackPanel Spacing="6">
                             <TextBlock Text="Explorer" FontSize="13" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextMuted}" />
-                            <Border Background="{DynamicResource SurfaceMedium}"
+                            <Border Name="ExplorerLink"
+                                    Background="{DynamicResource SurfaceMedium}"
                                     BorderBrush="{DynamicResource Stroke}"
                                     BorderThickness="1"
-                                    CornerRadius="8" Padding="12,10">
+                                    CornerRadius="8" Padding="12,10"
+                                    Cursor="Hand">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <i:Icon Value="fa-solid fa-arrow-up-right-from-square"
                                            FontSize="18"

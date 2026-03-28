@@ -1,12 +1,15 @@
 using System;
 using System.Linq;
+using Angor.Shared.Services;
+using App.UI.Shared;
+using App.UI.Shared.Helpers;
+using App.UI.Shell;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
-using App.UI.Shared;
-using App.UI.Shell;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace App.UI.Sections.MyProjects.Modals;
 
@@ -68,6 +71,9 @@ public partial class ManageProjectModalsView : UserControl
         // ── UTXO item toggle (click on row toggles selection in claim modal) ──
         var claimList = this.FindControl<ItemsControl>("ClaimUtxoList");
         claimList?.AddHandler(PointerPressedEvent, OnClaimUtxoItemPressed, RoutingStrategies.Tunnel);
+
+        // ── Explorer link clicks (bubbled from any TextBlock with ExplorerTxLink class) ──
+        AddHandler(PointerPressedEvent, OnExplorerTxLinkPressed, RoutingStrategies.Bubble);
     }
 
     // ─────────────────────────────────────────────────────────────────
@@ -319,6 +325,24 @@ public partial class ManageProjectModalsView : UserControl
         }
 
         return feeRate;
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    //  EXPLORER LINK (click TxId → open in browser)
+    // ─────────────────────────────────────────────────────────────────
+
+    private void OnExplorerTxLinkPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (e.Source is not TextBlock tb || !tb.Classes.Contains("ExplorerTxLink"))
+            return;
+
+        var txid = tb.Text;
+        if (string.IsNullOrWhiteSpace(txid)) return;
+
+        var networkService = App.Services.GetRequiredService<INetworkService>();
+        ExplorerHelper.OpenTransaction(networkService, txid);
+
+        e.Handled = true;
     }
 
     // ─────────────────────────────────────────────────────────────────

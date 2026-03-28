@@ -5,9 +5,11 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using Angor.Shared.Services;
 using App.UI.Shared.Controls;
 using App.UI.Shared.Helpers;
 using App.UI.Shell;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace App.UI.Sections.FindProjects;
 
@@ -115,6 +117,11 @@ public partial class ProjectDetailView : UserControl
                 ev.Handled = true;
             };
 
+        // Explorer link — open project txid in block explorer
+        var explorerLink = this.FindControl<Border>("ExplorerLink");
+        if (explorerLink != null)
+            explorerLink.PointerPressed += OnExplorerLinkPressed;
+
         // Set progress bar width after loaded
         Loaded += OnLoaded;
     }
@@ -211,6 +218,16 @@ public partial class ProjectDetailView : UserControl
                 e.Handled = true;
             }
         }
+    }
+
+    private void OnExplorerLinkPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (DataContext is ProjectItemViewModel project)
+        {
+            var networkService = App.Services.GetRequiredService<INetworkService>();
+            ExplorerHelper.OpenTransaction(networkService, project.ProjectId);
+        }
+        e.Handled = true;
     }
 
     /// <summary>

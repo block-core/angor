@@ -97,7 +97,9 @@
                                                                FontSize="12"
                                                                Foreground="{DynamicResource UtxoTxidText}"
                                                                FontFamily="Courier New, monospace"
-                                                               TextWrapping="Wrap" />
+                                                               TextWrapping="Wrap"
+                                                               Cursor="Hand"
+                                                               Classes="ExplorerTxLink" />
                                                 </StackPanel>
                                                 <!-- Right: checkbox toggle -->
                                                 <!-- Vue: .settings-toggle-button 24x24, border 2px -->
@@ -408,7 +410,9 @@
                                                                FontSize="12"
                                                                Foreground="{DynamicResource UtxoTxidText}"
                                                                FontFamily="Courier New, monospace"
-                                                               TextWrapping="Wrap" />
+                                                               TextWrapping="Wrap"
+                                                               Cursor="Hand"
+                                                               Classes="ExplorerTxLink" />
                                                 </StackPanel>
                                                 <!-- Disabled checkbox (always checked, green bg/border) -->
                                                 <Border Grid.Column="1"
@@ -708,7 +712,9 @@
                                                                FontSize="12"
                                                                Foreground="{DynamicResource UtxoTxidText}"
                                                                FontFamily="Courier New, monospace"
-                                                               TextWrapping="Wrap" />
+                                                               TextWrapping="Wrap"
+                                                               Cursor="Hand"
+                                                               Classes="ExplorerTxLink" />
                                                 </StackPanel>
                                                 <!-- Spent badge (amber) -->
                                                 <!-- Vue: text-xs, bg-amber-100/bg-amber-900 bg-opacity-30, text-amber-700/text-amber-300, opacity-60 -->
