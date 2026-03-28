@@ -528,10 +528,10 @@ public partial class PortfolioViewModel : ReactiveObject
 
                 foreach (var dto in investmentsResult.Value.Projects)
                 {
-                    var investedBtc = dto.Investment.Sats / 100_000_000.0;
-                    var raisedBtc = dto.Raised.Sats / 100_000_000.0;
-                    var targetBtc = dto.Target.Sats / 100_000_000.0;
-                    var inRecoveryBtc = dto.InRecovery.Sats / 100_000_000.0;
+                    var investedBtc = (double)dto.Investment.Sats.ToUnitBtc();
+                    var raisedBtc = (double)dto.Raised.Sats.ToUnitBtc();
+                    var targetBtc = (double)dto.Target.Sats.ToUnitBtc();
+                    var inRecoveryBtc = (double)dto.InRecovery.Sats.ToUnitBtc();
 
                     totalInvested += investedBtc;
                     if (dto.InRecovery.Sats > 0)
@@ -657,7 +657,7 @@ public partial class PortfolioViewModel : ReactiveObject
                 investment.Stages.Add(new InvestmentStageViewModel
                 {
                     StageNumber = item.StageIndex + 1,
-                    Amount = (item.Amount / 100_000_000.0).ToString("F8", CultureInfo.InvariantCulture),
+                    Amount = item.Amount.ToUnitBtc().ToString("F8", CultureInfo.InvariantCulture),
                     Status = item.IsSpent ? "Released" : (recovery.HasSpendableItemsInPenalty ? "Pending" : "Not Spent")
                 });
             }

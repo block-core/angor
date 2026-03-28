@@ -91,7 +91,7 @@ public class ProjectItemViewModel : INotifyPropertyChanged
     public long SubscriptionPrice { get; set; } = 20000;
 
     /// <summary>Formatted subscription price display, e.g. "0.0002 BTC"</summary>
-    public string SubscriptionPriceDisplay => $"{SubscriptionPrice / 100_000_000.0:G} {CurrencySymbol}";
+    public string SubscriptionPriceDisplay => $"{SubscriptionPrice.ToUnitBtc():G} {CurrencySymbol}";
 
     public ObservableCollection<InvestmentStageViewModel> Stages { get; set; } = new();
 
@@ -118,7 +118,7 @@ public class ProjectItemViewModel : INotifyPropertyChanged
     /// </summary>
     public static ProjectItemViewModel FromDto(ProjectDto dto)
     {
-        var targetBtc = dto.TargetAmount / 100_000_000.0;
+        var targetBtc = (double)dto.TargetAmount.ToUnitBtc();
         var projectType = dto.ProjectType switch
         {
             Angor.Shared.Models.ProjectType.Fund => "Fund",
@@ -148,7 +148,7 @@ public class ProjectItemViewModel : INotifyPropertyChanged
                     StageNumber = stage.Index + 1,
                     Percentage = $"{stage.RatioOfTotal * 100:F0}%",
                     ReleaseDate = stage.ReleaseDate.ToString("dd MMM yyyy"),
-                    Amount = (stage.Amount / 100_000_000.0).ToString("F8", CultureInfo.InvariantCulture),
+                    Amount = stage.Amount.ToUnitBtc().ToString("F8", CultureInfo.InvariantCulture),
                     Status = "Pending"
                 });
             }
@@ -302,7 +302,7 @@ public partial class FindProjectsViewModel : ReactiveObject
                     if (statsResult.IsSuccess)
                     {
                         var stats = statsResult.Value;
-                        var raisedBtc = stats.TotalInvested / 100_000_000.0;
+                        var raisedBtc = (double)stats.TotalInvested.ToUnitBtc();
                         project.Raised = raisedBtc.ToString("F5", CultureInfo.InvariantCulture);
                         project.InvestorCount = stats.TotalInvestors ?? 0;
 

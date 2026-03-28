@@ -180,12 +180,12 @@ public partial class FundsViewModel : ReactiveObject
                 totalSats += balanceSats;
                 btcSats += balanceSats;
 
-                double balanceBtc = balanceSats / 100_000_000.0;
+                double balanceBtc = (double)balanceSats.ToUnitBtc();
                 string pendingStr = pendingSats > 0
-                    ? $"{pendingSats / 100_000_000.0:F8} {_currencyService.Symbol}"
+                    ? $"{pendingSats.ToUnitBtc():F8} {_currencyService.Symbol}"
                     : "";
                 string reservedStr = reservedSats > 0
-                    ? $"{reservedSats / 100_000_000.0:F8} {_currencyService.Symbol}"
+                    ? $"{reservedSats.ToUnitBtc():F8} {_currencyService.Symbol}"
                     : "";
 
                 group.Wallets.Add(new WalletItemViewModel
@@ -201,8 +201,8 @@ public partial class FundsViewModel : ReactiveObject
                 });
             }
 
-            double totalBtc = totalSats / 100_000_000.0;
-            double btcBtc = btcSats / 100_000_000.0;
+            double totalBtc = (double)totalSats.ToUnitBtc();
+            double btcBtc = (double)btcSats.ToUnitBtc();
 
             group.GroupBalance = totalBtc.ToString("F4", CultureInfo.InvariantCulture);
 
@@ -288,7 +288,7 @@ public partial class FundsViewModel : ReactiveObject
     {
         try
         {
-            var sats = (long)(amountBtc * 100_000_000);
+            var sats = ((decimal)amountBtc).ToUnitSatoshi();
             var result = await _walletAppService.SendAmount(
                 new WalletId(walletId),
                 new Amount(sats),

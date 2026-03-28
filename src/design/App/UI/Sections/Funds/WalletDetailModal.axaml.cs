@@ -231,7 +231,7 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
         var statsRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 16 };
 
         // Amount (value is in satoshis, convert to BTC)
-        double amountBtc = utxo.value / 100_000_000.0;
+        double amountBtc = (double)utxo.value.ToUnitBtc();
         var amountPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
         var amountLabel = new TextBlock { Text = "Amount:", FontSize = 13 };
         amountLabel.Classes.Add("TextMuted");
@@ -362,7 +362,7 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
             var totalSats = _utxos
                 .Where(u => _selectedUtxos.Contains(u.outpoint?.ToString() ?? ""))
                 .Sum(u => u.value);
-            sendModal.PrefillAmount(totalSats / 100_000_000.0);
+            sendModal.PrefillAmount((double)totalSats.ToUnitBtc());
         }
 
         shellVm.ShowModal(sendModal);

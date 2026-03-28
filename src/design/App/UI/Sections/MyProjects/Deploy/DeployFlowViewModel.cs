@@ -142,7 +142,7 @@ public partial class DeployFlowViewModel : ReactiveObject
             foreach (var meta in metadatasResult.Value)
             {
                 var balanceResult = await _walletAppService.GetBalance(meta.Id);
-                var balanceBtc = balanceResult.IsSuccess ? balanceResult.Value.Sats / 100_000_000.0 : 0;
+                var balanceBtc = balanceResult.IsSuccess ? (double)balanceResult.Value.Sats.ToUnitBtc() : 0;
 
                 Wallets.Add(new WalletItem
                 {

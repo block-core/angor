@@ -245,9 +245,9 @@ public partial class ManageProjectViewModel : ReactiveObject
 
             var stats = statsResult.Value;
 
-            TotalInvestment = (stats.TotalInvested / 100_000_000.0).ToString("F8", CultureInfo.InvariantCulture);
-            AvailableBalance = (stats.AvailableBalance / 100_000_000.0).ToString("F8", CultureInfo.InvariantCulture);
-            Withdrawable = (stats.WithdrawableAmount / 100_000_000.0).ToString("F8", CultureInfo.InvariantCulture);
+            TotalInvestment = stats.TotalInvested.ToUnitBtc().ToString("F8", CultureInfo.InvariantCulture);
+            AvailableBalance = stats.AvailableBalance.ToUnitBtc().ToString("F8", CultureInfo.InvariantCulture);
+            Withdrawable = stats.WithdrawableAmount.ToUnitBtc().ToString("F8", CultureInfo.InvariantCulture);
             TotalStages = stats.TotalStages;
             TransactionTotal = stats.TotalTransactions;
             TransactionSpent = stats.SpentTransactions;
@@ -297,20 +297,20 @@ public partial class ManageProjectViewModel : ReactiveObject
             foreach (var group in stageGroups)
             {
                 var stageTransactions = group.ToList();
-                var stageAmount = stageTransactions.Sum(t => t.Amount.Sats / 100_000_000.0);
+                var stageAmount = (double)stageTransactions.Sum(t => t.Amount.Sats.ToUnitBtc());
                 totalAmount += stageAmount;
 
                 var claimable = stageTransactions.Where(t => t.ClaimStatus == Angor.Sdk.Funding.Founder.Dtos.ClaimStatus.Unspent).ToList();
                 var spent = stageTransactions.Where(t => t.ClaimStatus == Angor.Sdk.Funding.Founder.Dtos.ClaimStatus.SpentByFounder).ToList();
 
-                availableAmount += claimable.Sum(t => t.Amount.Sats / 100_000_000.0);
+                availableAmount += (double)claimable.Sum(t => t.Amount.Sats.ToUnitBtc());
                 availableCount += claimable.Count;
                 spentCount += spent.Count;
 
                 var stage = new ManageStageViewModel
                 {
                     Number = group.Key,
-                    AmountLeft = claimable.Sum(t => t.Amount.Sats / 100_000_000.0).ToString("F8", CultureInfo.InvariantCulture),
+                    AmountLeft = claimable.Sum(t => t.Amount.Sats.ToUnitBtc()).ToString("F8", CultureInfo.InvariantCulture),
                     UtxoCount = stageTransactions.Count,
                     CompletionDate = stageTransactions.FirstOrDefault()?.DynamicReleaseDate?.ToString("dd MMMM yyyy") ?? "",
                     Available = claimable.Count > 0,
@@ -324,7 +324,7 @@ public partial class ManageProjectViewModel : ReactiveObject
                     stage.AvailableTransactions.Add(new UtxoTransactionViewModel
                     {
                         TxId = tx.InvestorAddress,
-                        Amount = (tx.Amount.Sats / 100_000_000.0).ToString("F8", CultureInfo.InvariantCulture),
+                        Amount = tx.Amount.Sats.ToUnitBtc().ToString("F8", CultureInfo.InvariantCulture),
                         IsSpent = false
                     });
                 }
@@ -334,7 +334,7 @@ public partial class ManageProjectViewModel : ReactiveObject
                     stage.SpentTransactions.Add(new UtxoTransactionViewModel
                     {
                         TxId = tx.InvestorAddress,
-                        Amount = (tx.Amount.Sats / 100_000_000.0).ToString("F8", CultureInfo.InvariantCulture),
+                        Amount = tx.Amount.Sats.ToUnitBtc().ToString("F8", CultureInfo.InvariantCulture),
                         IsSpent = true
                     });
                 }

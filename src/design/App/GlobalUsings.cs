@@ -10,5 +10,6 @@ global using System.Threading.Tasks;
 global using Avalonia;
 global using Avalonia.Controls;
 global using CSharpFunctionalExtensions;
+global using Angor.Shared.Utilities;
 global using ReactiveUI;
 global using ReactiveUI.SourceGenerators;

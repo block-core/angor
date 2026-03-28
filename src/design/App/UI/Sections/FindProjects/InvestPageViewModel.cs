@@ -305,7 +305,7 @@ public partial class InvestPageViewModel : ReactiveObject
                     balanceSats = balanceInfoResult.Value.TotalBalance + balanceInfoResult.Value.TotalUnconfirmedBalance;
                 }
 
-                var balanceBtc = balanceSats / 100_000_000.0;
+                var balanceBtc = (double)balanceSats.ToUnitBtc();
 
                 Wallets.Add(new WalletItem
                 {
@@ -327,8 +327,8 @@ public partial class InvestPageViewModel : ReactiveObject
 
     // ── Subscription helpers ──
 
-    private static long BtcToSats(double btc) => (long)Math.Round(btc * 100_000_000);
-    private static double SatsToBtc(long sats) => sats / 100_000_000.0;
+    private static long BtcToSats(double btc) => ((decimal)btc).ToUnitSatoshi();
+    private static double SatsToBtc(long sats) => (double)sats.ToUnitBtc();
 
     private long CalculateSubscriptionPrice(string pattern)
     {
@@ -554,10 +554,10 @@ public partial class InvestPageViewModel : ReactiveObject
 
         // Balance check: ensure wallet has enough funds for the investment
         var amountBtc = ParseAmount();
-        var requiredSats = (long)Math.Round(amountBtc * 100_000_000);
+        var requiredSats = ((decimal)amountBtc).ToUnitSatoshi();
         if (SelectedWallet.BalanceSats < requiredSats)
         {
-            var walletBtc = SelectedWallet.BalanceSats / 100_000_000.0;
+            var walletBtc = SelectedWallet.BalanceSats.ToUnitBtc();
             PaymentStatusText = $"Insufficient balance. Wallet has {walletBtc:F8} {_currencyService.Symbol}, but {amountBtc:F8} {_currencyService.Symbol} is required.";
             _logger.LogWarning("Insufficient balance: wallet {WalletId} has {BalanceSats} sats, need {RequiredSats} sats",
                 SelectedWallet.WalletId, SelectedWallet.BalanceSats, requiredSats);
@@ -576,7 +576,7 @@ public partial class InvestPageViewModel : ReactiveObject
         {
             var walletId = new WalletId(SelectedWallet.WalletId);
             var projectId = new ProjectId(Project.ProjectId);
-            var amountSats = (long)Math.Round(ParseAmount() * 100_000_000);
+            var amountSats = ((decimal)ParseAmount()).ToUnitSatoshi();
 
             // Determine pattern index for Fund/Subscription projects
             byte? patternIndex = null;
@@ -705,7 +705,7 @@ public partial class InvestPageViewModel : ReactiveObject
         try
         {
             var walletId = new WalletId(wallet.WalletId);
-            var amountSats = (long)Math.Round(ParseAmount() * 100_000_000);
+            var amountSats = ((decimal)ParseAmount()).ToUnitSatoshi();
 
             // Get a receive address to monitor
             PaymentStatusText = "Generating invoice address...";
