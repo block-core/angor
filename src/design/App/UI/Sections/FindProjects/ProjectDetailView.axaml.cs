@@ -225,7 +225,7 @@ public partial class ProjectDetailView : UserControl
         if (DataContext is ProjectItemViewModel project)
         {
             var networkService = App.Services.GetRequiredService<INetworkService>();
-            ExplorerHelper.OpenTransaction(networkService, project.ProjectId);
+            ExplorerHelper.OpenAddress(networkService, project.ProjectId);
         }
         e.Handled = true;
     }

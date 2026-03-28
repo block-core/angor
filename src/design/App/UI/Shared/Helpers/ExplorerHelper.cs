@@ -3,22 +3,40 @@ using Angor.Shared.Services;
 namespace App.UI.Shared.Helpers;
 
 /// <summary>
-/// Builds block-explorer URLs from transaction IDs using the primary explorer
+/// Builds block-explorer URLs using the primary indexer (mempool-style)
 /// configured in <see cref="INetworkService"/>, and opens them in the default browser.
 /// </summary>
 public static class ExplorerHelper
 {
     /// <summary>
-    /// Build a full explorer URL for the given transaction ID.
-    /// Returns null if the txid is empty or no explorer is configured.
+    /// Build a full indexer URL for the given transaction ID.
+    /// Returns null if the txid is empty or no indexer is configured.
     /// </summary>
     public static string? GetTransactionUrl(INetworkService networkService, string? txid)
     {
         if (string.IsNullOrEmpty(txid)) return null;
         try
         {
-            var explorer = networkService.GetPrimaryExplorer();
-            return $"{explorer.Url.TrimEnd('/')}/tx/{txid}";
+            var indexer = networkService.GetPrimaryIndexer();
+            return $"{indexer.Url.TrimEnd('/')}/tx/{txid}";
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Build a full indexer URL for the given address.
+    /// Returns null if the address is empty or no indexer is configured.
+    /// </summary>
+    public static string? GetAddressUrl(INetworkService networkService, string? address)
+    {
+        if (string.IsNullOrEmpty(address)) return null;
+        try
+        {
+            var indexer = networkService.GetPrimaryIndexer();
+            return $"{indexer.Url.TrimEnd('/')}/address/{address}";
         }
         catch
         {
@@ -33,6 +51,17 @@ public static class ExplorerHelper
     public static void OpenTransaction(INetworkService networkService, string? txid)
     {
         var url = GetTransactionUrl(networkService, txid);
+        if (url == null) return;
+        OpenUrl(url);
+    }
+
+    /// <summary>
+    /// Open an address in the system's default browser.
+    /// No-ops silently if the address is empty or the browser cannot be launched.
+    /// </summary>
+    public static void OpenAddress(INetworkService networkService, string? address)
+    {
+        var url = GetAddressUrl(networkService, address);
         if (url == null) return;
         OpenUrl(url);
     }
