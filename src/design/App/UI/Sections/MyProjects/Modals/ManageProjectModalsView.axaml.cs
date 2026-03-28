@@ -9,6 +9,8 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
+using App.UI.Shared;
+using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace App.UI.Sections.MyProjects.Modals;
