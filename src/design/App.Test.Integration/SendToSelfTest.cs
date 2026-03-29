@@ -58,6 +58,7 @@ public class SendToSelfTest
     [AvaloniaFact]
     public async Task FullSendToSelfFlow()
     {
+        using var profileScope = TestProfileScope.For(nameof(SendToSelfTest));
         Log("========== STARTING FullSendToSelfFlow ==========");
 
         // ──────────────────────────────────────────────────────────────

@@ -36,6 +36,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
     private IShellViewModel? shell;
     private string? generatedAddress;
     private byte? patternId;
+    private bool usesPenaltyThreshold;
 
     [Reactive] private IEnumerable<IInvoiceType> invoiceTypes = [new InvoiceTypeSample { Name = "Loading...", Address = "" }];
     [Reactive] private IInvoiceType? selectedInvoiceType;
@@ -48,7 +49,8 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         IAmountUI amount,
         ProjectId projectId,
         IShellViewModel shell,
-        byte? patternId = null)
+        byte? patternId = null,
+        bool usesPenaltyThreshold = false)
     {
         // Store dependencies for lazy loading
         this.wallet = wallet;
@@ -57,6 +59,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         this.projectId = projectId;
         this.shell = shell;
         this.patternId = patternId;
+        this.usesPenaltyThreshold = usesPenaltyThreshold;
         
         Amount = amount;
         PaymentReceived = paymentReceivedSubject.AsObservable();
@@ -463,24 +466,26 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
 
             var investmentDraft = buildResult.Value.InvestmentDraft;
 
-            // Check if the investment is above the penalty threshold
-            var thresholdRequest = new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(
-                projectId,
-                new Amount(Amount.Sats));
-
-            var thresholdResult = await investmentAppService.IsInvestmentAbovePenaltyThreshold(thresholdRequest);
-
-            if (thresholdResult.IsFailure)
+            var isAboveThreshold = false;
+            if (usesPenaltyThreshold)
             {
-                await uiServices.NotificationService.Show(
-                    thresholdResult.Error,
-                    "Threshold Check Failed");
-                return;
+                var thresholdRequest = new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(
+                    projectId,
+                    new Amount(Amount.Sats));
+
+                var thresholdResult = await investmentAppService.IsInvestmentAbovePenaltyThreshold(thresholdRequest);
+
+                if (thresholdResult.IsFailure)
+                {
+                    await uiServices.NotificationService.Show(
+                        thresholdResult.Error,
+                        "Threshold Check Failed");
+                    return;
+                }
+
+                cancellationToken.ThrowIfCancellationRequested();
+                isAboveThreshold = thresholdResult.Value.IsAboveThreshold;
             }
-
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var isAboveThreshold = thresholdResult.Value.IsAboveThreshold;
 
             if (isAboveThreshold)
             {

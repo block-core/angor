@@ -4,8 +4,8 @@ using Angor.Sdk.Common;
 namespace App.Composition.Adapters;
 
 /// <summary>
-/// Application storage implementation for App.
-/// Mirrors AngorApp's ApplicationStorage but uses "App" as the app name.
+/// Application storage implementation for the design app.
+/// Mirrors AngorApp's ApplicationStorage and stores profiles under the shared Angor app root.
 /// </summary>
 public class AppApplicationStorage : IApplicationStorage
 {

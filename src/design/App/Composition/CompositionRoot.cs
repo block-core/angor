@@ -36,12 +36,12 @@ namespace App.Composition;
 /// </summary>
 public static class CompositionRoot
 {
-    public static IServiceProvider BuildServiceProvider(string profileName = "Default")
+    public static IServiceProvider BuildServiceProvider(string profileName = "Default", bool enableConsoleLogging = true)
     {
         var services = new ServiceCollection();
 
         var applicationStorage = new AppApplicationStorage();
-        var profileContext = new ProfileContext("App", applicationStorage.SanitizeProfileName(profileName));
+        var profileContext = new ProfileContext("Angor", applicationStorage.SanitizeProfileName(profileName));
 
         var store = new FileStore(applicationStorage, profileContext);
         var networkStorage = new NetworkStorage(store);
@@ -54,7 +54,11 @@ public static class CompositionRoot
         // Logging — Microsoft.Extensions.Logging with console output
         services.AddLogging(builder =>
         {
-            builder.AddConsole();
+            if (enableConsoleLogging)
+            {
+                builder.AddConsole();
+            }
+
             // Suppress noisy per-request HTTP diagnostics (Sending/Received for every call)
             builder.AddFilter("System.Net.Http.HttpClient", LogLevel.Warning);
             // Suppress verbose per-address balance/utxo and derivation logs
@@ -67,6 +71,7 @@ public static class CompositionRoot
 
         // Core infrastructure
         services.AddSingleton<IApplicationStorage>(applicationStorage);
+        services.AddSingleton(profileContext);
         services.AddLiteDbDocumentStorage(profileContext);
         services.AddKeyedSingleton<IStore>("file", store);
         services.AddSingleton<IStore>(provider => provider.GetKeyedService<IStore>("file")!);

@@ -79,12 +79,13 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
         )
         {
             var patternId = GetCurrentPatternId();
+            var usesPenaltyThreshold = fullProject.ProjectType == ProjectType.Fund;
 
             if (walletContext.Wallets.Count == 0)
             {
                 return await walletContext.GetOrCreate().Map(async wallet =>
                 {
-                    using var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId, shell, patternId);
+                    using var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId, shell, patternId, usesPenaltyThreshold);
                     bool result = await uiServices.Dialog.Show(
                         invoiceViewModel,
                         "Select Wallet",
@@ -101,7 +102,7 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
 
             if (HasEnoughBalance(wallet))
             {
-                using var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId, shell, patternId);
+                using var invoiceViewModel = new InvoiceViewModel(wallet, investmentAppService, uiServices, AmountToInvest.Value, fullProject.ProjectId, shell, patternId, usesPenaltyThreshold);
                 bool show = await uiServices.Dialog.Show(invoiceViewModel, "Select Wallet", (model, closeable) =>
                 {
                     model.SetCloseable(closeable);
@@ -111,7 +112,7 @@ namespace AngorApp.UI.Flows.InvestV2.Footer
             }
 
             return await uiServices.Dialog.ShowAndGetResult(
-                new PaymentSelectorViewModel(fullProject.ProjectId, uiServices, shell, investmentAppService, walletContext, AmountToInvest.Value, patternId, wallet),
+                new PaymentSelectorViewModel(fullProject.ProjectId, uiServices, shell, investmentAppService, walletContext, AmountToInvest.Value, patternId, usesPenaltyThreshold, wallet),
                 "Select Wallet",
                 (model, closeable) => model.Options(closeable),
                 _ => "");

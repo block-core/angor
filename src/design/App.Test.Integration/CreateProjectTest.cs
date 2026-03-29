@@ -74,6 +74,7 @@ public class CreateProjectTest
     [AvaloniaFact]
     public async Task FullCreateInvestmentProjectFlow()
     {
+        using var profileScope = TestProfileScope.For(nameof(CreateProjectTest));
         Log("========== STARTING FullCreateInvestmentProjectFlow ==========");
 
         // Generate a unique run ID so we can precisely identify *our* project
