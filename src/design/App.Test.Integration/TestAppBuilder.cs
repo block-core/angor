@@ -53,7 +53,7 @@ public class TestApp : Application
         });
 
         // Build the real DI container with test profile isolation
-        var services = CompositionRoot.BuildServiceProvider(TestProfileName);
+        var services = CompositionRoot.BuildServiceProvider(TestProfileName, enableConsoleLogging: false);
 
         // App.Services has a private setter — use reflection to set it from the test.
         // This is safe because integration tests intentionally exercise the real app.

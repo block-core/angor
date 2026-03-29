@@ -7,6 +7,14 @@ public static class PenaltyThresholdHelper
 {
     public static bool IsInvestmentAbovePenaltyThreshold(ProjectInfo projectInfo, long investmentAmount)
     {
+        // Penalty threshold only applies to Fund projects.
+        // Callers must check the project type before invoking this method.
+        if (projectInfo.ProjectType != ProjectType.Fund)
+        {
+            throw new InvalidOperationException(
+                $"Penalty threshold check is only valid for Fund projects, but was called for project type '{projectInfo.ProjectType}'.");
+        }
+
         if (!projectInfo.PenaltyThreshold.HasValue)
         {
             return true;

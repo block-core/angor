@@ -606,16 +606,29 @@ public partial class InvestPageViewModel : ReactiveObject
 
             var draft = buildResult.Value.InvestmentDraft;
             _logger.LogInformation("Investment draft built successfully");
-            PaymentStatusText = "Checking investment threshold...";
 
-            // Check penalty threshold
-            var thresholdRequest = new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(
-                projectId,
-                new Amount(amountSats));
+            var isAboveThreshold = false;
+            if (Project.ProjectType == "Fund")
+            {
+                PaymentStatusText = "Checking investment threshold...";
 
-            var thresholdResult = await _investmentAppService.IsInvestmentAbovePenaltyThreshold(thresholdRequest);
+                var thresholdRequest = new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(
+                    projectId,
+                    new Amount(amountSats));
 
-            if (thresholdResult.IsSuccess && thresholdResult.Value.IsAboveThreshold)
+                var thresholdResult = await _investmentAppService.IsInvestmentAbovePenaltyThreshold(thresholdRequest);
+                if (thresholdResult.IsFailure)
+                {
+                    _logger.LogError("CheckPenaltyThreshold failed: {Error}", thresholdResult.Error);
+                    PaymentStatusText = "Failed to check investment threshold.";
+                    IsProcessing = false;
+                    return;
+                }
+
+                isAboveThreshold = thresholdResult.Value.IsAboveThreshold;
+            }
+
+            if (isAboveThreshold)
             {
                 // Above threshold: request founder signatures
                 _logger.LogInformation("Investment is above penalty threshold — requesting founder signatures");
@@ -759,14 +772,27 @@ public partial class InvestPageViewModel : ReactiveObject
 
             var draft = buildResult.Value.InvestmentDraft;
 
-            // Check threshold and submit
-            var thresholdRequest = new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(
-                projectId,
-                new Amount(amountSats));
+            var isAboveThreshold = false;
+            if (Project.ProjectType == "Fund")
+            {
+                PaymentStatusText = "Checking investment threshold...";
 
-            var thresholdResult = await _investmentAppService.IsInvestmentAbovePenaltyThreshold(thresholdRequest);
+                var thresholdRequest = new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(
+                    projectId,
+                    new Amount(amountSats));
 
-            if (thresholdResult.IsSuccess && thresholdResult.Value.IsAboveThreshold)
+                var thresholdResult = await _investmentAppService.IsInvestmentAbovePenaltyThreshold(thresholdRequest);
+                if (thresholdResult.IsFailure)
+                {
+                    PaymentStatusText = "Failed to check investment threshold.";
+                    IsProcessing = false;
+                    return;
+                }
+
+                isAboveThreshold = thresholdResult.Value.IsAboveThreshold;
+            }
+
+            if (isAboveThreshold)
             {
                 PaymentStatusText = "Requesting founder approval...";
                 var submitRequest = new RequestInvestmentSignatures.RequestFounderSignaturesRequest(

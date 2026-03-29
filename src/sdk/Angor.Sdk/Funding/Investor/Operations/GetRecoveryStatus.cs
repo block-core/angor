@@ -169,10 +169,10 @@ public static class GetRecoveryStatus
             // Calculate total investment amount
             var totalInvestmentAmount = stageItems.Sum(a => a.Amount);
             
-            // Check if investment is above penalty threshold
-            var isAboveThreshold = investorTransactionActions.IsInvestmentAbovePenaltyThreshold(
-                projectInfo, 
-                totalInvestmentAmount);
+            // Check if investment is above penalty threshold.
+            // Penalty threshold only applies to Fund projects — Invest/Subscribe always treat as below threshold.
+            var isAboveThreshold = projectInfo.ProjectType == ProjectType.Fund
+                && investorTransactionActions.IsInvestmentAbovePenaltyThreshold(projectInfo, totalInvestmentAmount);
             
             var isEndOfProject = projectInfo.ExpiryDate < DateTime.Now;
 

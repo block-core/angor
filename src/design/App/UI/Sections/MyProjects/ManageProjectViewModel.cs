@@ -366,15 +366,18 @@ public partial class ManageProjectViewModel : ReactiveObject
     /// Claim (spend) stage funds for selected transactions.
     /// Builds a spending transaction and broadcasts it via the SDK.
     /// </summary>
-    public async Task<bool> ClaimStageFundsAsync(int stageIndex, IEnumerable<UtxoTransactionViewModel> selectedTransactions, long feeRateSatsPerVByte = 20)
+    public async Task<bool> ClaimStageFundsAsync(int stageNumber, IEnumerable<UtxoTransactionViewModel> selectedTransactions, long feeRateSatsPerVByte = 20)
     {
         if (string.IsNullOrEmpty(Project.ProjectIdentifier) ||
             string.IsNullOrEmpty(Project.OwnerWalletId)) return false;
+
+        if (stageNumber <= 0) return false;
 
         try
         {
             var walletId = new WalletId(Project.OwnerWalletId);
             var projectId = new ProjectId(Project.ProjectIdentifier);
+            var stageIndex = stageNumber - 1;
 
             var toSpend = selectedTransactions.Select(t => new SpendTransactionDto
             {

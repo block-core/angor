@@ -36,7 +36,7 @@ namespace App.Composition;
 /// </summary>
 public static class CompositionRoot
 {
-    public static IServiceProvider BuildServiceProvider(string profileName = "Default")
+    public static IServiceProvider BuildServiceProvider(string profileName = "Default", bool enableConsoleLogging = true)
     {
         var services = new ServiceCollection();
 
@@ -54,7 +54,11 @@ public static class CompositionRoot
         // Logging — Microsoft.Extensions.Logging with console output
         services.AddLogging(builder =>
         {
-            builder.AddConsole();
+            if (enableConsoleLogging)
+            {
+                builder.AddConsole();
+            }
+
             // Suppress noisy per-request HTTP diagnostics (Sending/Received for every call)
             builder.AddFilter("System.Net.Http.HttpClient", LogLevel.Warning);
             // Suppress verbose per-address balance/utxo and derivation logs

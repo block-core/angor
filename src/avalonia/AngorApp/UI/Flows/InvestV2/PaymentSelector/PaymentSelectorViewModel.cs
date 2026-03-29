@@ -19,16 +19,18 @@ namespace AngorApp.UI.Flows.InvestV2.PaymentSelector
         private readonly ProjectId projectId;
         private readonly UIServices uiServices;
         private readonly byte? patternId;
+        private readonly bool usesPenaltyThreshold;
 
         [Reactive] private IWallet? selectedWallet;
 
-        public PaymentSelectorViewModel(ProjectId projectId, UIServices uiServices, IShellViewModel shell, IInvestmentAppService investmentAppService, IWalletContext walletContext, IAmountUI amountToInvest, byte? patternId = null, IWallet? preSelectedWallet = null)
+        public PaymentSelectorViewModel(ProjectId projectId, UIServices uiServices, IShellViewModel shell, IInvestmentAppService investmentAppService, IWalletContext walletContext, IAmountUI amountToInvest, byte? patternId = null, bool usesPenaltyThreshold = false, IWallet? preSelectedWallet = null)
         {
             this.projectId = projectId;
             this.uiServices = uiServices;
             this.shell = shell;
             this.investmentAppService = investmentAppService;
             this.patternId = patternId;
+            this.usesPenaltyThreshold = usesPenaltyThreshold;
             AmountToInvest = amountToInvest;
 
             Wallets = walletContext.Wallets;
@@ -53,7 +55,7 @@ namespace AngorApp.UI.Flows.InvestV2.PaymentSelector
             IEnhancedCommand<Unit> command = EnhancedCommand.Create(async () =>
             {
                 closeable.Close();
-                using var invoiceViewModel = new InvoiceViewModel(SelectedWallet!, investmentAppService, uiServices, AmountToInvest, projectId, shell, patternId);
+                using var invoiceViewModel = new InvoiceViewModel(SelectedWallet!, investmentAppService, uiServices, AmountToInvest, projectId, shell, patternId, usesPenaltyThreshold);
                 await uiServices.Dialog.Show(
                     invoiceViewModel,
                     "Pay Invoice to Invest",
@@ -120,14 +122,17 @@ namespace AngorApp.UI.Flows.InvestV2.PaymentSelector
 
             var investmentDraft = draftResult.Value.InvestmentDraft;
 
-            // Check if the investment is above the penalty threshold
-            var thresholdResult = await investmentAppService.IsInvestmentAbovePenaltyThreshold(
-                new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(projectId, new Amount(AmountToInvest.Sats)));
+            var isAboveThreshold = false;
+            if (usesPenaltyThreshold)
+            {
+                var thresholdResult = await investmentAppService.IsInvestmentAbovePenaltyThreshold(
+                    new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(projectId, new Amount(AmountToInvest.Sats)));
 
-            if (thresholdResult.IsFailure)
-                return Result.Failure<bool>(thresholdResult.Error);
+                if (thresholdResult.IsFailure)
+                    return Result.Failure<bool>(thresholdResult.Error);
 
-            var isAboveThreshold = thresholdResult.Value.IsAboveThreshold;
+                isAboveThreshold = thresholdResult.Value.IsAboveThreshold;
+            }
 
             if (isAboveThreshold)
             {
