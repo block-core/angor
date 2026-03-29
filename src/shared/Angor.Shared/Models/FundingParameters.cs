@@ -146,11 +146,7 @@ public class FundingParameters
 
         DateTime? expiryDateOverride = null;
 
-        if (projectInfo.ProjectType == ProjectType.Invest)
-        {
-            expiryDateOverride = PenaltyThresholdHelper.GetExpiryDateOverride(projectInfo, totalInvestmentAmount);
-        }
-        else if (projectInfo.ProjectType == ProjectType.Fund)
+        if (projectInfo.ProjectType == ProjectType.Fund)
         {
             expiryDateOverride = PenaltyThresholdHelper.GetExpiryDateOverride(projectInfo, totalInvestmentAmount);
         }

@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Markup.Xaml.Styling;
 using App.Composition;
+using App.Test.Integration.Helpers;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
 
@@ -15,6 +16,18 @@ public class TestAppBuilder
 {
     public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<TestApp>()
         .UseHeadless(new AvaloniaHeadlessPlatformOptions());
+
+    public static void RefreshServicesForCurrentProfile()
+    {
+        ConfigureServices(TestProfileNameProvider.Current);
+    }
+
+    private static void ConfigureServices(string profileName)
+    {
+        var services = CompositionRoot.BuildServiceProvider(profileName, enableConsoleLogging: false);
+        var prop = typeof(global::App.App).GetProperty("Services", BindingFlags.Public | BindingFlags.Static)!;
+        prop.SetValue(null, services);
+    }
 }
 
 /// <summary>
@@ -26,8 +39,7 @@ public class TestAppBuilder
 public class TestApp : Application
 {
     /// <summary>
-    /// The profile name used for integration test isolation.
-    /// Data stored under ~/.local/share/App/Profiles/test-send-receive/
+    /// Default test profile used when a test does not override args.
     /// </summary>
     public const string TestProfileName = "test-send-receive";
 
@@ -52,12 +64,6 @@ public class TestApp : Application
             Source = new Uri("avares://App/UI/Themes/V2/Theme.axaml")
         });
 
-        // Build the real DI container with test profile isolation
-        var services = CompositionRoot.BuildServiceProvider(TestProfileName, enableConsoleLogging: false);
-
-        // App.Services has a private setter — use reflection to set it from the test.
-        // This is safe because integration tests intentionally exercise the real app.
-        var prop = typeof(global::App.App).GetProperty("Services", BindingFlags.Public | BindingFlags.Static)!;
-        prop.SetValue(null, services);
+        TestAppBuilder.RefreshServicesForCurrentProfile();
     }
 }

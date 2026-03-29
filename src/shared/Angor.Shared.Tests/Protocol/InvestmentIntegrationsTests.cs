@@ -718,14 +718,22 @@ namespace Angor.Test.Protocol
             var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
             var projectInvestmentInfo = new ProjectInfo();
+            projectInvestmentInfo.ProjectType = ProjectType.Fund;
             projectInvestmentInfo.TargetAmount = Money.Coins(3).Satoshi;
             projectInvestmentInfo.StartDate = DateTime.UtcNow.Date;
             projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.Date.AddDays(5);
-            projectInvestmentInfo.Stages = new List<Stage>
+            projectInvestmentInfo.DynamicStagePatterns = new List<DynamicStagePattern>
             {
-                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.Date.AddDays(1) },
-                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.Date.AddDays(2) },
-                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.Date.AddDays(3) }
+                new()
+                {
+                    PatternId = 0,
+                    Name = "3 daily fund",
+                    Description = "3 daily fund",
+                    Frequency = StageFrequency.Weekly,
+                    StageCount = 3,
+                    PayoutDayType = PayoutDayType.FromStartDate,
+                    PayoutDay = 1
+                }
             };
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
             projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, projectInvestmentInfo.FounderKey);
@@ -750,8 +758,9 @@ namespace Angor.Test.Protocol
             // Create investment transaction with amount BELOW the penalty threshold (1.5 BTC < 2 BTC)
             long investmentAmountBelowThreshold = Money.Coins(1.5m).Satoshi;
 
-            var investorInvTrx = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo, investorContext.InvestorKey,
-             investmentAmountBelowThreshold);
+            var investorInvTrx = _investorTransactionActions.CreateInvestmentTransaction(
+                projectInvestmentInfo,
+                FundingParameters.CreateForFund(projectInvestmentInfo, investorContext.InvestorKey, investmentAmountBelowThreshold, 0, projectInvestmentInfo.StartDate));
 
             // Verify the investment is below the threshold
             var isAboveThreshold = _investorTransactionActions.IsInvestmentAbovePenaltyThreshold(projectInvestmentInfo, PenaltyThresholdHelper.GetTotalInvestmentAmount(investorInvTrx));
@@ -783,14 +792,22 @@ namespace Angor.Test.Protocol
             var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
 
             var projectInvestmentInfo = new ProjectInfo();
+            projectInvestmentInfo.ProjectType = ProjectType.Fund;
             projectInvestmentInfo.TargetAmount = Money.Coins(3).Satoshi;
             projectInvestmentInfo.StartDate = DateTime.UtcNow.Date;
             projectInvestmentInfo.ExpiryDate = DateTime.UtcNow.Date.AddDays(5);
-            projectInvestmentInfo.Stages = new List<Stage>
+            projectInvestmentInfo.DynamicStagePatterns = new List<DynamicStagePattern>
             {
-                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.Date.AddDays(1) },
-                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.Date.AddDays(2) },
-                 new Stage { AmountToRelease = 1, ReleaseDate = DateTime.UtcNow.Date.AddDays(3) }
+                new()
+                {
+                    PatternId = 0,
+                    Name = "3 daily fund",
+                    Description = "3 daily fund",
+                    Frequency = StageFrequency.Weekly,
+                    StageCount = 3,
+                    PayoutDayType = PayoutDayType.FromStartDate,
+                    PayoutDay = 1
+                }
             };
             projectInvestmentInfo.FounderKey = derivationOperations.DeriveFounderKey(words, 1);
             projectInvestmentInfo.FounderRecoveryKey = derivationOperations.DeriveFounderRecoveryKey(words, projectInvestmentInfo.FounderKey);
@@ -815,8 +832,9 @@ namespace Angor.Test.Protocol
             // Create investment transaction with amount ABOVE the penalty threshold (2.1 BTC <= 2 BTC)
             long investmentAmountBelowThreshold = Money.Coins(2.1m).Satoshi;
 
-            var investorInvTrx = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo, investorContext.InvestorKey,
-             investmentAmountBelowThreshold);
+            var investorInvTrx = _investorTransactionActions.CreateInvestmentTransaction(
+                projectInvestmentInfo,
+                FundingParameters.CreateForFund(projectInvestmentInfo, investorContext.InvestorKey, investmentAmountBelowThreshold, 0, projectInvestmentInfo.StartDate));
 
             // Verify the investment is below the threshold
             var isAboveThreshold = _investorTransactionActions.IsInvestmentAbovePenaltyThreshold(projectInvestmentInfo, PenaltyThresholdHelper.GetTotalInvestmentAmount(investorInvTrx));

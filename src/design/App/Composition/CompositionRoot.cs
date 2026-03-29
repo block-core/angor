@@ -41,7 +41,7 @@ public static class CompositionRoot
         var services = new ServiceCollection();
 
         var applicationStorage = new AppApplicationStorage();
-        var profileContext = new ProfileContext("App", applicationStorage.SanitizeProfileName(profileName));
+        var profileContext = new ProfileContext("Angor", applicationStorage.SanitizeProfileName(profileName));
 
         var store = new FileStore(applicationStorage, profileContext);
         var networkStorage = new NetworkStorage(store);
@@ -71,6 +71,7 @@ public static class CompositionRoot
 
         // Core infrastructure
         services.AddSingleton<IApplicationStorage>(applicationStorage);
+        services.AddSingleton(profileContext);
         services.AddLiteDbDocumentStorage(profileContext);
         services.AddKeyedSingleton<IStore>("file", store);
         services.AddSingleton<IStore>(provider => provider.GetKeyedService<IStore>("file")!);

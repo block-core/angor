@@ -25,6 +25,11 @@ public static class PenaltyThresholdHelper
 
     public static DateTime? GetExpiryDateOverride(ProjectInfo projectInfo, long investmentAmount)
     {
+        if (projectInfo.ProjectType != ProjectType.Fund)
+        {
+            return null;
+        }
+
         if (!IsInvestmentAbovePenaltyThreshold(projectInfo, investmentAmount))
         {
             return projectInfo.StartDate;

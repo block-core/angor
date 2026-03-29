@@ -83,6 +83,7 @@ public class FundAndRecoverTest
     [AvaloniaFact]
     public async Task FullFundAndRecoverFlow()
     {
+        using var profileScope = TestProfileScope.For(nameof(FundAndRecoverTest));
         Log("========== STARTING FullFundAndRecoverFlow ==========");
 
         // Generate a unique run ID so we can precisely identify *our* project
