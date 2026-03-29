@@ -6,9 +6,9 @@ Full end-to-end integration test for a **Fund** project with three isolated app 
 
 ## Profiles
 
-- Founder profile: `MultiFundClaimAndRecover-Investor1`
-- Investor profile 1 (below threshold): `MultiFundClaimAndRecover-Investor2`
-- Investor profile 2 (above threshold): `MultiFundClaimAndRecover-Investor3`
+- Founder profile: `MultiFundClaimAndRecover-Founder`
+- Investor1 profile (below threshold): `MultiFundClaimAndRecover-Investor1`
+- Investor2 profile (above threshold): `MultiFundClaimAndRecover-Investor2`
 
 All profiles are created under:
 
@@ -35,6 +35,8 @@ All profiles are created under:
 - It logs the active profile directory before each phase so profile isolation is explicit.
 - It adds recovery diagnostics only in the test layer. No SDK/shared behavior was changed for this flow.
 - Recovery actions need fee funds in the investor wallet, so the test proactively refreshes/faucet-funds the wallet before each recovery step.
+- The faucet amount used by the app test flow is now `2 BTC`, which is enough for this scenario without overfunding every wallet.
+- The test validates more than success states: project metadata, project type, staged plan visibility in the invest flow, and stored invested amount after each investment are asserted explicitly.
 
 ## Run
 

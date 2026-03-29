@@ -22,15 +22,16 @@ using App.UI.Sections.Portfolio;
 using App.UI.Sections.Settings;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
+using System.Globalization;
 
 namespace App.Test.Integration;
 
 public class MultiFundClaimAndRecoverTest
 {
     private const string TestName = "MultiFundClaimAndRecover";
-    private const string FounderProfile = TestName + "-Investor1";
-    private const string BelowThresholdInvestorProfile = TestName + "-Investor2";
-    private const string AboveThresholdInvestorProfile = TestName + "-Investor3";
+        private const string FounderProfile = TestName + "-Founder";
+        private const string BelowThresholdInvestorProfile = TestName + "-Investor1";
+        private const string AboveThresholdInvestorProfile = TestName + "-Investor2";
 
     private static readonly TimeSpan FaucetBalanceTimeout = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan TransactionTimeout = TimeSpan.FromMinutes(2);
@@ -57,8 +58,8 @@ public class MultiFundClaimAndRecoverTest
         Log(null, $"========== STARTING {nameof(MultiFundClaimAndRecover)} ==========");
         Log(null, $"Run ID: {runId}");
         Log(null, $"Founder profile: {FounderProfile}");
-        Log(null, $"Below-threshold investor profile: {BelowThresholdInvestorProfile}");
-        Log(null, $"Above-threshold investor profile: {AboveThresholdInvestorProfile}");
+        Log(null, $"Investor1 profile (below threshold): {BelowThresholdInvestorProfile}");
+        Log(null, $"Investor2 profile (above threshold): {AboveThresholdInvestorProfile}");
 
         ProjectHandle? project = null;
 
@@ -236,12 +237,16 @@ public class MultiFundClaimAndRecoverTest
         Log(profileName, $"Setting project metadata: {projectName}");
         wizardVm.ProjectName = projectName;
         wizardVm.ProjectAbout = projectAbout;
+        wizardVm.ProjectName.Should().Be(projectName);
+        wizardVm.ProjectAbout.Should().Be(projectAbout);
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
         Log(profileName, "Setting project images...");
         wizardVm.BannerUrl = bannerImageUrl;
         wizardVm.ProfileUrl = profileImageUrl;
+        wizardVm.BannerUrl.Should().Be(bannerImageUrl);
+        wizardVm.ProfileUrl.Should().Be(profileImageUrl);
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
@@ -249,6 +254,9 @@ public class MultiFundClaimAndRecoverTest
         wizardVm.TargetAmount = "1.0";
         wizardVm.ApprovalThreshold = thresholdAmountBtc;
         wizardVm.PenaltyDays = 0;
+        wizardVm.TargetAmount.Should().Be("1.0");
+        wizardVm.ApprovalThreshold.Should().Be(thresholdAmountBtc);
+        wizardVm.PenaltyDays.Should().Be(0);
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
@@ -261,6 +269,7 @@ public class MultiFundClaimAndRecoverTest
         wizardVm.WeeklyPayoutDay = payoutDay;
         wizardVm.GeneratePayoutSchedule();
         wizardVm.Stages.Count.Should().Be(3);
+        wizardVm.Stages.Select(s => s.StageNumber).Should().ContainInOrder(1, 2, 3);
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
@@ -310,6 +319,9 @@ public class MultiFundClaimAndRecoverTest
         project.Should().NotBeNull();
         project!.ProjectIdentifier.Should().NotBeNullOrEmpty();
         project.OwnerWalletId.Should().NotBeNullOrEmpty();
+        project.Name.Should().Be(projectName);
+        project.Description.Should().Contain(runId);
+        project.ProjectType.Should().Be("fund");
 
         Log(profileName, $"Project deployed. ProjectId={project.ProjectIdentifier}, OwnerWalletId={project.OwnerWalletId}");
         return new ProjectHandle(runId, projectName, project.ProjectIdentifier!, project.OwnerWalletId!);
@@ -349,6 +361,8 @@ public class MultiFundClaimAndRecoverTest
         investVm!.Wallets.Count.Should().BeGreaterThan(0);
         investVm.InvestmentAmount = amountBtc;
         investVm.CanSubmit.Should().BeTrue();
+        investVm.Stages.Count.Should().BeGreaterThanOrEqualTo(3, "fund project should expose at least the configured stage outputs to investors");
+        investVm.Stages.Select(s => s.LabelText).Should().Contain(label => label.Contains("Stage 1"));
         investVm.Submit();
         Dispatcher.UIThread.RunJobs();
         investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector);
@@ -374,6 +388,16 @@ public class MultiFundClaimAndRecoverTest
 
         investVm.CurrentScreen.Should().Be(InvestScreen.Success,
             $"Invest should reach success. Last status: {investVm.PaymentStatusText}");
+        investVm.FormattedAmount.Should().Be(decimal.Parse(amountBtc, CultureInfo.InvariantCulture).ToString("F8", CultureInfo.InvariantCulture));
+
+        var portfolioVm = global::App.App.Services.GetRequiredService<PortfolioViewModel>();
+        investVm.AddToPortfolio();
+        Dispatcher.UIThread.RunJobs();
+
+        var addedInvestment = portfolioVm.Investments.FirstOrDefault(i => i.ProjectIdentifier == project.ProjectIdentifier);
+        addedInvestment.Should().NotBeNull();
+        addedInvestment.ProjectName.Should().Be(project.ProjectName);
+        addedInvestment.TotalInvested.Should().Be(decimal.Parse(amountBtc, CultureInfo.InvariantCulture).ToString("F8", CultureInfo.InvariantCulture));
         Log(profileName, $"Investment completed. Founder approval expected: {expectFounderApproval}");
     }
 
@@ -394,6 +418,8 @@ public class MultiFundClaimAndRecoverTest
             Dispatcher.UIThread.RunJobs();
             fundersVm.SetFilter("waiting");
             Dispatcher.UIThread.RunJobs();
+
+            Log(profileName, $"Funders waiting count: {fundersVm.WaitingCount}, approved count: {fundersVm.ApprovedCount}");
 
             pendingSignature = fundersVm.FilteredSignatures.FirstOrDefault(s =>
                 string.Equals(s.ProjectIdentifier, project.ProjectIdentifier, StringComparison.Ordinal));
@@ -438,6 +464,7 @@ public class MultiFundClaimAndRecoverTest
         var investment = portfolioVm.Investments.First(i => i.ProjectIdentifier == project.ProjectIdentifier);
 
         Log(profileName, $"Confirming approved investment. Step={investment.Step}, Status={investment.StatusText}");
+        investment.ApprovalStatus.Should().Be("Approved");
         var confirmResult = await portfolioVm.ConfirmInvestmentAsync(investment);
         confirmResult.Should().BeTrue("founder-approved investment should be confirmable by the investor");
 
@@ -531,6 +558,8 @@ public class MultiFundClaimAndRecoverTest
     {
         var portfolioVm = await WaitForPortfolioInvestmentAsync(window, profileName, project, investment => investment.Step == 3);
         var investment = portfolioVm.Investments.First(i => i.ProjectIdentifier == project.ProjectIdentifier);
+        investment.InvestmentWalletId.Should().NotBeNullOrEmpty();
+        investment.InvestmentTransactionId.Should().NotBeNullOrEmpty();
 
         var recoveryState = await WaitForRecoveryActionAsync(portfolioVm, investment, profileName, expectedActionKey: "recovery");
         recoveryState.ActionKey.Should().Be("recovery");
@@ -561,6 +590,8 @@ public class MultiFundClaimAndRecoverTest
     {
         var portfolioVm = await WaitForPortfolioInvestmentAsync(window, profileName, project, investment => investment.Step == 3);
         var investment = portfolioVm.Investments.First(i => i.ProjectIdentifier == project.ProjectIdentifier);
+        investment.InvestmentWalletId.Should().NotBeNullOrEmpty();
+        investment.InvestmentTransactionId.Should().NotBeNullOrEmpty();
 
         var recoveryState = await WaitForRecoveryActionAsync(portfolioVm, investment, profileName, expectedActionKey: "endOfProject");
         recoveryState.ActionKey.Should().Be("endOfProject");

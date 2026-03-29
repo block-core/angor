@@ -30,7 +30,7 @@ public class TestAppBuilder
             disposable.Dispose();
         }
 
-        var services = CompositionRoot.BuildServiceProvider(profileName, enableConsoleLogging: false);
+        var services = CompositionRoot.BuildServiceProvider(profileName, enableConsoleLogging: true);
         var prop = typeof(global::App.App).GetProperty("Services", BindingFlags.Public | BindingFlags.Static)!;
         prop.SetValue(null, services);
     }
