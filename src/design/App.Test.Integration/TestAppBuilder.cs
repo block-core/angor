@@ -24,6 +24,12 @@ public class TestAppBuilder
 
     private static void ConfigureServices(string profileName)
     {
+        var existingServices = global::App.App.Services;
+        if (existingServices is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
+
         var services = CompositionRoot.BuildServiceProvider(profileName, enableConsoleLogging: false);
         var prop = typeof(global::App.App).GetProperty("Services", BindingFlags.Public | BindingFlags.Static)!;
         prop.SetValue(null, services);
