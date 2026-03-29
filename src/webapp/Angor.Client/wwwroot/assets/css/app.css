@@ -602,6 +602,33 @@ tr[style*="cursor: pointer;"]:hover {
     color: #e3f8fc !important;
 }
 
+/* Keep InvestView cards readable in dark mode. */
+.invest-view-page .invest-stage-card,
+.invest-view-page .invest-project-id-box {
+    background-color: #f5fdff;
+    border: 1px solid var(--form-border);
+}
+
+.dark .invest-view-page .invest-stage-card,
+.dark .invest-view-page .invest-project-id-box {
+    background-color: rgba(8, 59, 70, 0.88) !important;
+    border: 1px solid rgba(10, 140, 167, 0.35) !important;
+    color: #e3f8fc !important;
+}
+
+.dark .invest-view-page .invest-stage-card .fw-bold,
+.dark .invest-view-page .invest-stage-card .small,
+.dark .invest-view-page .invest-project-id-box .fw-bold,
+.dark .invest-view-page .invest-project-id-box .small,
+.dark .invest-view-page .invest-project-id-box .text-break {
+    color: #e3f8fc !important;
+}
+
+.dark .invest-view-page .invest-stage-card .text-muted,
+.dark .invest-view-page .invest-project-id-box .text-muted {
+    color: #a8c7ce !important;
+}
+
 .card-header-img {
     height: 250px;
     overflow: hidden;
