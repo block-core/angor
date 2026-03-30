@@ -107,7 +107,7 @@ public static class CompositionRoot
         services.AddSingleton<PortfolioViewModel>();
 
         // ── Section VMs (transient — fresh per navigation) ──
-        services.AddTransient<ShellViewModel>();
+        services.AddSingleton<ShellViewModel>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<FundsViewModel>();
         services.AddTransient<FindProjectsViewModel>();

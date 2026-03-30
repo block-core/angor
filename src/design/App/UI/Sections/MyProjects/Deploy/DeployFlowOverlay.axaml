@@ -165,6 +165,27 @@
                 <!-- Wallet list: p-6, space-y-3 (Vue: 12px gap) -->
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="24" Spacing="0">
+                        <Border IsVisible="{Binding HasDeployError}"
+                                Margin="0,0,0,16"
+                                Padding="12"
+                                CornerRadius="8"
+                                Background="{DynamicResource ErrorBannerBg}"
+                                BorderBrush="{DynamicResource ErrorBannerBorder}"
+                                BorderThickness="1">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <i:Icon Value="fa-solid fa-circle-exclamation"
+                                        FontSize="14"
+                                        Foreground="{DynamicResource ErrorBannerText}"
+                                        VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding DeployErrorMessage}"
+                                           FontSize="13"
+                                           FontWeight="Medium"
+                                           Foreground="{DynamicResource ErrorBannerText}"
+                                           TextWrapping="Wrap"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
                         <ItemsControl ItemsSource="{Binding Wallets}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="deploy:WalletItem">

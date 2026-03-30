@@ -56,12 +56,14 @@ public partial class DeployFlowViewModel : ReactiveObject
     [Reactive] private bool isDeploying;
     [Reactive] private string deployStatusText = "Waiting for payment...";
     [Reactive] private long selectedFeeRate = 20;
+    [Reactive] private string? deployErrorMessage;
 
     // ── Derived visibility ──
     public bool IsWalletSelector => CurrentScreen == DeployScreen.WalletSelector;
     public bool IsPayFee => CurrentScreen == DeployScreen.PayFee;
     public bool IsSuccess => CurrentScreen == DeployScreen.Success;
     public bool HasSelectedWallet => SelectedWallet != null;
+    public bool HasDeployError => !string.IsNullOrWhiteSpace(DeployErrorMessage);
     public string PayButtonText => SelectedWallet != null
         ? $"Pay with {SelectedWallet.Name}"
         : "Choose Wallet";
@@ -106,6 +108,9 @@ public partial class DeployFlowViewModel : ReactiveObject
                 this.RaisePropertyChanged(nameof(IsSuccess));
             });
 
+        this.WhenAnyValue(x => x.DeployErrorMessage)
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(HasDeployError)));
+
         this.WhenAnyValue(x => x.SelectedWallet)
             .Subscribe(_ =>
             {
@@ -124,6 +129,7 @@ public partial class DeployFlowViewModel : ReactiveObject
         foreach (var w in Wallets) w.IsSelected = false;
         IsDeploying = false;
         DeployStatusText = "Waiting for payment...";
+        DeployErrorMessage = null;
         IsVisible = true;
 
         // Load wallets from SDK
@@ -136,7 +142,11 @@ public partial class DeployFlowViewModel : ReactiveObject
         try
         {
             var metadatasResult = await _walletAppService.GetMetadatas();
-            if (metadatasResult.IsFailure) return;
+            if (metadatasResult.IsFailure)
+            {
+                DeployErrorMessage = metadatasResult.Error;
+                return;
+            }
 
             Wallets.Clear();
             foreach (var meta in metadatasResult.Value)
@@ -153,9 +163,9 @@ public partial class DeployFlowViewModel : ReactiveObject
                 });
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // Wallet loading failed
+            DeployErrorMessage = ex.Message;
         }
     }
 
@@ -166,6 +176,7 @@ public partial class DeployFlowViewModel : ReactiveObject
     public void Close()
     {
         _invoiceMonitorCts?.Cancel();
+        DeployErrorMessage = null;
         IsVisible = false;
     }
 
@@ -189,10 +200,12 @@ public partial class DeployFlowViewModel : ReactiveObject
         if (ProjectData == null)
         {
             DeployStatusText = "No project data available.";
+            DeployErrorMessage = "No project data available.";
             return;
         }
 
         IsDeploying = true;
+        DeployErrorMessage = null;
 
         try
         {
@@ -205,6 +218,7 @@ public partial class DeployFlowViewModel : ReactiveObject
             if (keysResult.IsFailure)
             {
                 DeployStatusText = $"Failed to create project keys: {keysResult.Error}";
+                DeployErrorMessage = keysResult.Error;
                 IsDeploying = false;
                 return;
             }
@@ -217,6 +231,7 @@ public partial class DeployFlowViewModel : ReactiveObject
             if (profileResult.IsFailure)
             {
                 DeployStatusText = $"Failed to create profile: {profileResult.Error}";
+                DeployErrorMessage = profileResult.Error;
                 IsDeploying = false;
                 return;
             }
@@ -227,6 +242,7 @@ public partial class DeployFlowViewModel : ReactiveObject
             if (infoResult.IsFailure)
             {
                 DeployStatusText = $"Failed to create project info: {infoResult.Error}";
+                DeployErrorMessage = infoResult.Error;
                 IsDeploying = false;
                 return;
             }
@@ -239,6 +255,7 @@ public partial class DeployFlowViewModel : ReactiveObject
             if (txResult.IsFailure)
             {
                 DeployStatusText = $"Failed to create transaction: {txResult.Error}";
+                DeployErrorMessage = txResult.Error;
                 IsDeploying = false;
                 return;
             }
@@ -252,15 +269,18 @@ public partial class DeployFlowViewModel : ReactiveObject
             if (publishResult.IsFailure)
             {
                 DeployStatusText = $"Failed to publish: {publishResult.Error}";
+                DeployErrorMessage = publishResult.Error;
                 IsDeploying = false;
                 return;
             }
 
+            DeployErrorMessage = null;
             CurrentScreen = DeployScreen.Success;
         }
         catch (Exception ex)
         {
             DeployStatusText = $"Deployment error: {ex.Message}";
+            DeployErrorMessage = ex.Message;
         }
         finally
         {
@@ -292,6 +312,7 @@ public partial class DeployFlowViewModel : ReactiveObject
         if (ProjectData == null)
         {
             DeployStatusText = "No project data available.";
+            DeployErrorMessage = "No project data available.";
             return;
         }
 
@@ -300,10 +321,12 @@ public partial class DeployFlowViewModel : ReactiveObject
         if (wallet == null || string.IsNullOrEmpty(wallet.WalletId))
         {
             DeployStatusText = "No wallet available for invoice monitoring.";
+            DeployErrorMessage = "No wallet available for invoice monitoring.";
             return;
         }
 
         IsDeploying = true;
+        DeployErrorMessage = null;
         _invoiceMonitorCts?.Cancel();
         _invoiceMonitorCts = new CancellationTokenSource();
 
@@ -318,6 +341,7 @@ public partial class DeployFlowViewModel : ReactiveObject
             if (keysResult.IsFailure)
             {
                 DeployStatusText = $"Failed to create project keys: {keysResult.Error}";
+                DeployErrorMessage = keysResult.Error;
                 IsDeploying = false;
                 return;
             }
@@ -333,6 +357,7 @@ public partial class DeployFlowViewModel : ReactiveObject
             if (profileResult.IsFailure)
             {
                 DeployStatusText = $"Failed to create profile: {profileResult.Error}";
+                DeployErrorMessage = profileResult.Error;
                 IsDeploying = false;
                 return;
             }
@@ -343,6 +368,7 @@ public partial class DeployFlowViewModel : ReactiveObject
             if (infoResult.IsFailure)
             {
                 DeployStatusText = $"Failed to create project info: {infoResult.Error}";
+                DeployErrorMessage = infoResult.Error;
                 IsDeploying = false;
                 return;
             }
@@ -355,6 +381,7 @@ public partial class DeployFlowViewModel : ReactiveObject
             if (txResult.IsFailure)
             {
                 DeployStatusText = $"Failed to create transaction: {txResult.Error}";
+                DeployErrorMessage = txResult.Error;
                 IsDeploying = false;
                 return;
             }
@@ -366,19 +393,23 @@ public partial class DeployFlowViewModel : ReactiveObject
             if (publishResult.IsFailure)
             {
                 DeployStatusText = $"Failed to publish: {publishResult.Error}";
+                DeployErrorMessage = publishResult.Error;
                 IsDeploying = false;
                 return;
             }
 
+            DeployErrorMessage = null;
             CurrentScreen = DeployScreen.Success;
         }
         catch (OperationCanceledException)
         {
             DeployStatusText = "Invoice monitoring cancelled.";
+            DeployErrorMessage = "Invoice monitoring cancelled.";
         }
         catch (Exception ex)
         {
             DeployStatusText = $"Deployment error: {ex.Message}";
+            DeployErrorMessage = ex.Message;
         }
         finally
         {

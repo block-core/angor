@@ -162,118 +162,7 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ═══ 3. Explorer ═══ -->
-                <!-- Vue: input + Add button, then table with Link/Default/Delete columns -->
-                <Border Background="{DynamicResource CardSurface}"
-                        BorderBrush="{DynamicResource Stroke}"
-                        BorderThickness="1"
-                        CornerRadius="16"
-                        ClipToBounds="True"
-                        BoxShadow="{DynamicResource ItemShadow}">
-                    <StackPanel>
-                        <Border Background="{DynamicResource SurfaceHigh}"
-                                CornerRadius="15,15,0,0"
-                                BorderBrush="{DynamicResource Stroke}"
-                                BorderThickness="0,0,0,1"
-                                Padding="24,20">
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <i:Icon Value="fa-solid fa-link"
-                                       FontSize="20"
-                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
-                                <TextBlock Text="Explorer"
-                                           FontSize="18"
-                                           FontWeight="Bold"
-                                           Foreground="{DynamicResource TextStrong}"
-                                           VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Border>
-                        <Border Padding="24">
-                            <StackPanel Spacing="20">
-                                <!-- Add input group: Vue .settings-input-group -->
-                                <DockPanel>
-                                    <Button DockPanel.Dock="Right"
-                                            Margin="12,0,0,0"
-                                            Padding="20,14"
-                                            Background="{DynamicResource PrimaryGreenBrush}"
-                                            Foreground="White"
-                                            BorderThickness="0"
-                                            CornerRadius="8"
-                                            FontWeight="SemiBold"
-                                            FontSize="14"
-                                            Click="OnAddExplorer">
-                                        <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <i:Icon Value="fa-solid fa-plus"
-                                                    FontSize="14"
-                                                    Foreground="White"
-                                                    VerticalAlignment="Center" />
-                                            <TextBlock Text="Add" VerticalAlignment="Center" />
-                                        </StackPanel>
-                                    </Button>
-                                    <TextBox Text="{Binding NewExplorerUrl, Mode=TwoWay}"
-                                             Watermark="Enter new explorer link"
-                                             Padding="12,12,16,12" />
-                                </DockPanel>
-
-                                <!-- Table: Link | Default | Delete -->
-                                <ItemsControl ItemsSource="{Binding ExplorerLinks}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="settings:ExplorerItem">
-                                            <Border BorderBrush="{DynamicResource TableRowBorder}"
-                                                    BorderThickness="0,0,0,1"
-                                                    Padding="0,12">
-                                                <DockPanel>
-                                                    <!-- Delete button -->
-                                                    <Button DockPanel.Dock="Right"
-                                                            Padding="6"
-                                                            Background="Transparent"
-                                                            BorderThickness="0"
-                                                            CornerRadius="6"
-                                                            Click="OnRemoveExplorer">
-                                                        <i:Icon Value="fa-solid fa-trash"
-                                                               FontSize="16"
-                                                               Foreground="#EF4444" />
-                                                    </Button>
-                                                    <!-- Default toggle -->
-                                                    <!-- Vue: settings-toggle-button — 24x24, border-radius 4, click toggles default -->
-                                                    <!-- Active: bg #4B7C5A, border #4B7C5A, white checkmark -->
-                                                    <Border DockPanel.Dock="Right"
-                                                            Classes="SettingsCheckbox"
-                                                            Classes.SettingsCheckboxChecked="{Binding IsDefault}"
-                                                            Margin="12,0"
-                                                            Width="24" Height="24"
-                                                            CornerRadius="4"
-                                                            BorderThickness="2"
-                                                            VerticalAlignment="Center"
-                                                            Cursor="Hand"
-                                                            PointerPressed="OnToggleDefaultExplorer">
-                                                        <Path Data="{StaticResource Checkmark}"
-                                                              Stroke="White"
-                                                              StrokeThickness="2"
-                                                              StrokeLineCap="Round"
-                                                              Width="14" Height="14"
-                                                              Stretch="Uniform"
-                                                              IsVisible="{Binding IsDefault}"
-                                                              HorizontalAlignment="Center"
-                                                              VerticalAlignment="Center" />
-                                                    </Border>
-                                                    <!-- Link URL -->
-                                                    <TextBlock Text="{Binding Url}"
-                                                               FontSize="14"
-                                                               FontWeight="Medium"
-                                                               Foreground="{DynamicResource SettingsLinkFg}"
-                                                               VerticalAlignment="Center"
-                                                               TextTrimming="CharacterEllipsis" />
-                                                </DockPanel>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </Border>
-
-                <!-- ═══ 4. Indexer ═══ -->
+                <!-- ═══ 3. Indexer ═══ -->
                 <!-- Vue: input + Add, Refresh button in header, table with Link/Status/Default/Delete -->
                 <Border Background="{DynamicResource CardSurface}"
                         BorderBrush="{DynamicResource Stroke}"
@@ -411,7 +300,7 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ═══ 5. Nostr Relays ═══ -->
+                <!-- ═══ 4. Nostr Relays ═══ -->
                 <Border Background="{DynamicResource CardSurface}"
                         BorderBrush="{DynamicResource Stroke}"
                         BorderThickness="1"
@@ -516,7 +405,7 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ═══ 6. Currency Display ═══ -->
+                <!-- ═══ 5. Currency Display ═══ -->
                 <!-- Vue: header has "Current: BTC" description, body has disabled select + help text -->
                 <Border Background="{DynamicResource CardSurface}"
                         BorderBrush="{DynamicResource Stroke}"
@@ -575,7 +464,7 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ═══ 7. Backup Account ═══ -->
+                <!-- ═══ 6. Backup Account ═══ -->
                 <Border Background="{DynamicResource CardSurface}"
                         BorderBrush="{DynamicResource Stroke}"
                         BorderThickness="1"
@@ -628,7 +517,7 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ═══ 8. Prototype Settings ═══ -->
+                <!-- ═══ 7. Prototype Settings ═══ -->
                 <!-- Toggle between populated and empty states for development/testing -->
                 <Border Background="{DynamicResource CardSurface}"
                         BorderBrush="{DynamicResource Stroke}"
@@ -673,7 +562,7 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ═══ 9. Debug Mode (testnet only) ═══ -->
+                <!-- ═══ 8. Debug Mode (testnet only) ═══ -->
                 <!-- Visible only on testnet networks. Enables debug features like project wizard
                      data prepopulation and relaxed validation for easier testing. -->
                 <Border Background="{DynamicResource CardSurface}"
