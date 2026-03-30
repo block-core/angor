@@ -54,6 +54,8 @@ public static class CompositionRoot
         // Logging — Microsoft.Extensions.Logging with console output
         services.AddLogging(builder =>
         {
+            builder.ClearProviders();
+
             if (enableConsoleLogging)
             {
                 builder.AddConsole();

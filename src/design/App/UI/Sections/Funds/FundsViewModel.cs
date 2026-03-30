@@ -403,7 +403,7 @@ public partial class FundsViewModel : ReactiveObject
             // Call faucet API directly
             _logger.LogInformation("Calling faucet API for address {Address}", address);
             var httpClient = _httpClientFactory.CreateClient();
-            var response = await httpClient.GetAsync($"https://faucettmp.angor.io/api/faucet/send/{address}/10");
+            var response = await httpClient.GetAsync($"https://faucettmp.angor.io/api/faucet/send/{address}/2");
 
             if (!response.IsSuccessStatusCode)
             {
