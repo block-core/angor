@@ -229,9 +229,9 @@ public partial class ManageProjectViewModel : ReactiveObject
                 NostrNpub = NostrConverter.ToNpub(project.NostrPubKey) ?? project.NostrPubKey;
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // Key loading failed — properties remain empty
+            _logger.LogError(ex, "Failed to load project keys for project {ProjectId}", Project.ProjectIdentifier);
         }
     }
 
@@ -267,9 +267,9 @@ public partial class ManageProjectViewModel : ReactiveObject
             this.RaisePropertyChanged(nameof(TransactionSpent));
             this.RaisePropertyChanged(nameof(TransactionAvailable));
         }
-        catch
+        catch (Exception ex)
         {
-            // Statistics loading failed — values remain from claimable transactions computation
+            _logger.LogError(ex, "Failed to load project statistics for project {ProjectId}", Project.ProjectIdentifier);
         }
     }
 
@@ -362,9 +362,9 @@ public partial class ManageProjectViewModel : ReactiveObject
             this.RaisePropertyChanged(nameof(TransactionSpent));
             this.RaisePropertyChanged(nameof(TransactionAvailable));
         }
-        catch
+        catch (Exception ex)
         {
-            // SDK call failed
+            _logger.LogError(ex, "Failed to load claimable transactions for project {ProjectId}", Project.ProjectIdentifier);
         }
     }
 

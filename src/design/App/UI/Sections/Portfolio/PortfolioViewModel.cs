@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;
@@ -544,6 +545,28 @@ public partial class PortfolioViewModel : ReactiveObject
 
                     var (statusText, statusClass, step) = MapInvestmentStatus(dto.InvestmentStatus, dto.FounderStatus);
 
+                    var existingInvestment = Investments.FirstOrDefault(i =>
+                        (!string.IsNullOrEmpty(dto.Id) && i.ProjectIdentifier == dto.Id) ||
+                        (!string.IsNullOrEmpty(dto.InvestmentId) && i.InvestmentTransactionId == dto.InvestmentId));
+
+                    var serverStatus = dto.InvestmentStatus;
+                    if (existingInvestment != null)
+                    {
+                        var localStatus = MapUiStepToInvestmentStatus(existingInvestment);
+                        if (localStatus != serverStatus && IsStaleResponse(localStatus, serverStatus))
+                        {
+                            _logger.LogInformation(
+                                "Keeping optimistic local status {LocalStatus} for project {ProjectId}; server still reports {ServerStatus}",
+                                localStatus,
+                                dto.Id,
+                                serverStatus);
+
+                            statusText = existingInvestment.StatusText;
+                            statusClass = existingInvestment.StatusClass;
+                            step = existingInvestment.Step;
+                        }
+                    }
+
                     var vm = new InvestmentViewModel
                     {
                         ProjectName = dto.Name ?? "Unknown Project",
@@ -619,6 +642,31 @@ public partial class PortfolioViewModel : ReactiveObject
                 ("Cancelled", "recovered", 3),
             _ => ("Unknown", "waiting", 1)
         };
+    }
+
+    private static InvestmentStatus MapUiStepToInvestmentStatus(InvestmentViewModel investment)
+    {
+        if (investment.Status == "Cancelled" || investment.StatusText == "Cancelled")
+            return InvestmentStatus.Cancelled;
+
+        return investment.Step switch
+        {
+            3 => InvestmentStatus.Invested,
+            2 => InvestmentStatus.FounderSignaturesReceived,
+            _ => InvestmentStatus.PendingFounderSignatures
+        };
+    }
+
+    private static bool IsStaleResponse(InvestmentStatus local, InvestmentStatus server)
+    {
+        if (local == InvestmentStatus.Invested && server == InvestmentStatus.FounderSignaturesReceived)
+            return true;
+
+        if (local == InvestmentStatus.Cancelled &&
+            (server == InvestmentStatus.PendingFounderSignatures || server == InvestmentStatus.FounderSignaturesReceived))
+            return true;
+
+        return false;
     }
 
     /// <summary>
