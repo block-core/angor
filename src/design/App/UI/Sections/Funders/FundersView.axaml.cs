@@ -4,6 +4,8 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
+using Avalonia.VisualTree;
+using App.UI.Shell;
 using App.UI.Shared.Helpers;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -66,6 +68,15 @@ public partial class FundersView : UserControl
         var tabSub = vm.WhenAnyValue(x => x.CurrentFilter)
           .Subscribe(filter => UpdateTabVisuals(filter));
         _subscriptions.Add(tabSub);
+
+        _subscriptions.Add(Disposable.Create(() => vm.ToastRequested -= OnToastRequested));
+        vm.ToastRequested += OnToastRequested;
+    }
+
+    private void OnToastRequested(string message)
+    {
+        var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
+        shellVm?.ShowToast(message);
     }
 
     protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)

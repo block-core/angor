@@ -29,6 +29,8 @@ public partial class ManageProjectModalsView : UserControl
     public ManageProjectModalsView()
     {
         InitializeComponent();
+        DataContextChanged += (_, _) => SubscribeToVmEvents();
+        SubscribeToVmEvents();
 
         // ── Claim Flow ──
         WireClick("ClaimModalCloseBtn", () => { if (Vm != null) Vm.ShowClaimModal = false; });
@@ -76,6 +78,24 @@ public partial class ManageProjectModalsView : UserControl
 
         // ── Explorer link clicks (bubbled from any TextBlock with ExplorerTxLink class) ──
         AddHandler(PointerPressedEvent, OnExplorerTxLinkPressed, RoutingStrategies.Bubble);
+    }
+
+    private ManageProjectViewModel? _subscribedVm;
+
+    private void SubscribeToVmEvents()
+    {
+        if (_subscribedVm != null)
+            _subscribedVm.ToastRequested -= OnToastRequested;
+
+        _subscribedVm = Vm;
+
+        if (_subscribedVm != null)
+            _subscribedVm.ToastRequested += OnToastRequested;
+    }
+
+    private void OnToastRequested(string message)
+    {
+        GetShellVm()?.ShowToast(message);
     }
 
     // ─────────────────────────────────────────────────────────────────
