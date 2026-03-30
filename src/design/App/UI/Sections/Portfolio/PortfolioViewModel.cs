@@ -449,6 +449,8 @@ public partial class PortfolioViewModel : ReactiveObject
     private readonly ICurrencyService _currencyService;
     private readonly ILogger<PortfolioViewModel> _logger;
 
+    public event Action<string>? ToastRequested;
+
     [Reactive] private bool hasInvestments;
     [Reactive] private InvestmentViewModel? selectedInvestment;
     [Reactive] private bool isLoading;
@@ -911,8 +913,19 @@ public partial class PortfolioViewModel : ReactiveObject
                 investment.Status = "Active";
                 return true;
             }
+
+            _logger.LogError("ConfirmInvestment failed for project {ProjectId} and investment {InvestmentId}: {Error}",
+                investment.ProjectIdentifier,
+                investment.InvestmentTransactionId,
+                result.Error);
+            ToastRequested?.Invoke("Failed to confirm investment. Please try again.");
         }
-        catch { }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ConfirmInvestmentAsync threw exception for project {ProjectId}",
+                investment.ProjectIdentifier);
+            ToastRequested?.Invoke("Failed to confirm investment. Please try again.");
+        }
 
         return false;
     }
@@ -944,8 +957,19 @@ public partial class PortfolioViewModel : ReactiveObject
                 investment.Status = "Cancelled";
                 return true;
             }
+
+            _logger.LogError("CancelInvestmentRequest failed for project {ProjectId} and investment {InvestmentId}: {Error}",
+                investment.ProjectIdentifier,
+                investment.InvestmentTransactionId,
+                result.Error);
+            ToastRequested?.Invoke("Failed to cancel investment. Please try again.");
         }
-        catch { }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "CancelInvestmentAsync threw exception for project {ProjectId}",
+                investment.ProjectIdentifier);
+            ToastRequested?.Invoke("Failed to cancel investment. Please try again.");
+        }
 
         return false;
     }

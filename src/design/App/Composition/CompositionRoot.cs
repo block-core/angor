@@ -131,7 +131,8 @@ public static class CompositionRoot
                 sp.GetRequiredService<IFounderAppService>(),
                 sp.GetRequiredService<IProjectAppService>(),
                 sp.GetRequiredService<IProjectService>(),
-                sp.GetRequiredService<ICurrencyService>()));
+                sp.GetRequiredService<ICurrencyService>(),
+                sp.GetRequiredService<ILoggerFactory>().CreateLogger<ManageProjectViewModel>()));
 
         // ── Section Views (transient — each receives its VM via constructor injection) ──
         services.AddTransient<HomeView>();

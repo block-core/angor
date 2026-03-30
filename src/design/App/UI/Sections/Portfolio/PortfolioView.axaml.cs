@@ -40,10 +40,14 @@ public partial class PortfolioView : UserControl
 
         if (DataContext is PortfolioViewModel vm)
         {
+            vm.ToastRequested -= OnToastRequested;
+            _visibilitySubscription = System.Reactive.Disposables.Disposable.Create(() => vm.ToastRequested -= OnToastRequested);
+            vm.ToastRequested += OnToastRequested;
+
             // Portfolio list is visible when: HasInvestments AND no detail selected.
             // HasInvestments is handled by XAML binding; here we also hide when
             // SelectedInvestment is set (drill-down to detail view).
-            _visibilitySubscription = vm.WhenAnyValue(
+            var visibilitySub = vm.WhenAnyValue(
                 x => x.HasInvestments,
                 x => x.SelectedInvestment,
                 (hasInvestments, selected) => hasInvestments && selected == null)
@@ -52,7 +56,15 @@ public partial class PortfolioView : UserControl
                   if (PortfolioListPanel != null)
                       PortfolioListPanel.IsVisible = visible;
               });
+
+            _visibilitySubscription = new System.Reactive.Disposables.CompositeDisposable(_visibilitySubscription, visibilitySub);
         }
+    }
+
+    private void OnToastRequested(string message)
+    {
+        var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
+        shellVm?.ShowToast(message);
     }
 
     protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)

@@ -10,6 +10,7 @@ using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Nostr.Client.Utils;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ReactiveUI.SourceGenerators;
 using App.UI.Shared;
@@ -107,6 +108,9 @@ public partial class ManageProjectViewModel : ReactiveObject
     private readonly IProjectAppService _projectAppService;
     private readonly IProjectService _projectService;
     private readonly ICurrencyService _currencyService;
+    private readonly ILogger<ManageProjectViewModel> _logger;
+
+    public event Action<string>? ToastRequested;
 
     /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
     public string CurrencySymbol => _currencyService.Symbol;
@@ -179,12 +183,14 @@ public partial class ManageProjectViewModel : ReactiveObject
         IFounderAppService founderAppService,
         IProjectAppService projectAppService,
         IProjectService projectService,
-        ICurrencyService currencyService)
+        ICurrencyService currencyService,
+        ILogger<ManageProjectViewModel> logger)
     {
         _founderAppService = founderAppService;
         _projectAppService = projectAppService;
         _projectService = projectService;
         _currencyService = currencyService;
+        _logger = logger;
         Project = project;
         WalletPassword = "";
         ClaimedAmount = "0";
@@ -390,7 +396,13 @@ public partial class ManageProjectViewModel : ReactiveObject
             var spendResult = await _founderAppService.SpendStageFunds(
                 new SpendStageFunds.SpendStageFundsRequest(walletId, projectId, fee, toSpend));
 
-            if (spendResult.IsFailure) return false;
+            if (spendResult.IsFailure)
+            {
+                _logger.LogError("SpendStageFunds failed for project {ProjectId}: {Error}", Project.ProjectIdentifier,
+                    spendResult.Error);
+                ToastRequested?.Invoke("Failed to claim stage funds. Please try again.");
+                return false;
+            }
 
             var publishResult = await _founderAppService.SubmitTransactionFromDraft(
                 new PublishFounderTransaction.PublishFounderTransactionRequest(spendResult.Value.TransactionDraft));
@@ -400,8 +412,17 @@ public partial class ManageProjectViewModel : ReactiveObject
                 await LoadClaimableTransactionsAsync();
                 return true;
             }
+
+            _logger.LogError("SubmitTransactionFromDraft failed while claiming stage funds for project {ProjectId}: {Error}",
+                Project.ProjectIdentifier,
+                publishResult.Error);
+            ToastRequested?.Invoke("Failed to claim stage funds. Please try again.");
         }
-        catch { }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ClaimStageFundsAsync threw exception for project {ProjectId}", Project.ProjectIdentifier);
+            ToastRequested?.Invoke("Failed to claim stage funds. Please try again.");
+        }
 
         return false;
     }
@@ -423,14 +444,27 @@ public partial class ManageProjectViewModel : ReactiveObject
             var releasableResult = await _founderAppService.GetReleasableTransactions(
                 new GetReleasableTransactions.GetReleasableTransactionsRequest(walletId, projectId));
 
-            if (releasableResult.IsFailure) return false;
+            if (releasableResult.IsFailure)
+            {
+                _logger.LogError("GetReleasableTransactions failed for project {ProjectId}: {Error}",
+                    Project.ProjectIdentifier,
+                    releasableResult.Error);
+                ToastRequested?.Invoke("Failed to release funds to investors. Please try again.");
+                return false;
+            }
 
             var eventIds = releasableResult.Value.Transactions
                 .Where(t => t.Released == null)
                 .Select(t => t.InvestmentEventId)
                 .ToList();
 
-            if (eventIds.Count == 0) return false;
+            if (eventIds.Count == 0)
+            {
+                _logger.LogWarning("ReleaseFundsToInvestorsAsync found no releasable transactions for project {ProjectId}",
+                    Project.ProjectIdentifier);
+                ToastRequested?.Invoke("No releasable investor funds were found.");
+                return false;
+            }
 
             var releaseResult = await _founderAppService.ReleaseFunds(
                 new ReleaseFunds.ReleaseFundsRequest(walletId, projectId, eventIds));
@@ -441,8 +475,17 @@ public partial class ManageProjectViewModel : ReactiveObject
                 await LoadClaimableTransactionsAsync();
                 return true;
             }
+
+            _logger.LogError("ReleaseFunds failed for project {ProjectId}: {Error}", Project.ProjectIdentifier,
+                releaseResult.Error);
+            ToastRequested?.Invoke("Failed to release funds to investors. Please try again.");
         }
-        catch { }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ReleaseFundsToInvestorsAsync threw exception for project {ProjectId}",
+                Project.ProjectIdentifier);
+            ToastRequested?.Invoke("Failed to release funds to investors. Please try again.");
+        }
 
         return false;
     }
