@@ -58,6 +58,8 @@ public partial class FundsViewModel : ReactiveObject
     private readonly ILogger<FundsViewModel> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
 
+    public event Action? WalletsChanged;
+
     /// <summary>True when wallets exist and populated state should show.</summary>
     [Reactive] private bool hasWallets;
 
@@ -172,7 +174,7 @@ public partial class FundsViewModel : ReactiveObject
                 {
                     var info = balanceInfoResult.Value;
                     _walletBalanceInfos[walletId.Value] = info;
-                    balanceSats = info.TotalBalance + info.TotalUnconfirmedBalance + info.TotalBalanceReserved;
+                    balanceSats = info.TotalBalance;
                     pendingSats = info.TotalUnconfirmedBalance;
                     reservedSats = info.TotalBalanceReserved;
                 }
@@ -215,6 +217,7 @@ public partial class FundsViewModel : ReactiveObject
                 BitcoinBalance = btcBtc.ToString("F4", CultureInfo.InvariantCulture);
                 HasWallets = true;
                 _logger.LogInformation("Wallets loaded — TotalBalance: {TotalBalance} BTC ({TotalSats} sats)", TotalBalance, totalSats);
+                WalletsChanged?.Invoke();
             });
         }
         catch (Exception ex)
@@ -385,7 +388,7 @@ public partial class FundsViewModel : ReactiveObject
             }
 
             // Guard: don't request coins if balance > 100 BTC
-            long totalSats = balanceInfo.TotalBalance + balanceInfo.TotalUnconfirmedBalance + balanceInfo.TotalBalanceReserved;
+            long totalSats = balanceInfo.TotalBalance + balanceInfo.TotalUnconfirmedBalance;
             if (totalSats > 100_00000000)
             {
                 _logger.LogInformation("Wallet {WalletId} already has {Sats} sats, exceeds 100 BTC limit", walletId, totalSats);
@@ -430,12 +433,14 @@ public partial class FundsViewModel : ReactiveObject
     {
         Dispatcher.UIThread.Post(() =>
         {
+            _walletBalanceInfos.Clear();
             SeedGroups.Clear();
             TotalBalance = "0.0000";
             TotalInvested = "0.0000";
             BitcoinBalance = "0.0000";
             LiquidBalance = "0.0000";
             HasWallets = false;
+            WalletsChanged?.Invoke();
         });
     }
 

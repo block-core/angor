@@ -40,6 +40,7 @@ public partial class CreateProjectStep5View : UserControl
     private Button? _selectedDurationPresetBtn;
 
     private IDisposable? _durationValueSubscription;
+    private bool _handlersWired;
 
     public CreateProjectStep5View()
     {
@@ -50,6 +51,8 @@ public partial class CreateProjectStep5View : UserControl
     {
         base.OnLoaded(e);
         ResolveNamedElements();
+        UpdatePayoutFreqVisuals();
+        UpdateInstallmentVisuals();
 
         // Clear duration preset selection when user manually types a non-matching value,
         // or when the duration unit changes (items get regenerated)
@@ -115,6 +118,9 @@ public partial class CreateProjectStep5View : UserControl
         _installmentText6 = this.FindControl<TextBlock>("InstallmentText6");
         _installmentText9 = this.FindControl<TextBlock>("InstallmentText9");
 
+        if (_handlersWired)
+            return;
+
         // Wire up Step 5 ListBox selection changed handlers (Investment)
         if (_investFrequencyPresets != null)
             _investFrequencyPresets.SelectionChanged += (_, _) => OnInvestFrequencySelected();
@@ -131,6 +137,8 @@ public partial class CreateProjectStep5View : UserControl
         WireInstallmentBorder(_installment3, 3);
         WireInstallmentBorder(_installment6, 6);
         WireInstallmentBorder(_installment9, 9);
+
+        _handlersWired = true;
     }
 
     #region Duration Preset Handler

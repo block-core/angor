@@ -6,6 +6,7 @@ using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Wallet.Application;
 using Angor.Sdk.Wallet.Domain;
 using App.UI.Sections.FindProjects;
+using App.UI.Sections.Funds;
 using App.UI.Sections.MyProjects;
 using App.UI.Sections.Portfolio;
 using App.UI.Shared;
@@ -263,6 +264,8 @@ public record NavGroupHeader(string Title) : NavEntry;
 public partial class ShellViewModel : ReactiveObject
 {
     private readonly PortfolioViewModel _portfolioVm;
+    private readonly SignatureStore _signatureStore;
+    private readonly FundsViewModel _fundsVm;
     private readonly Func<string, object?> _viewFactory;
     private readonly IWalletAppService _walletAppService;
     private readonly IInvestmentAppService _investmentAppService;
@@ -330,9 +333,11 @@ public partial class ShellViewModel : ReactiveObject
     /// </summary>
     public string? ProfileName { get; }
 
-    public ShellViewModel(PortfolioViewModel portfolioVm, Func<string, object?> viewFactory, IWalletAppService walletAppService, IInvestmentAppService investmentAppService, ICurrencyService currencyService, ProfileContext profileContext, PrototypeSettings prototypeSettings)
+    public ShellViewModel(PortfolioViewModel portfolioVm, SignatureStore signatureStore, FundsViewModel fundsVm, Func<string, object?> viewFactory, IWalletAppService walletAppService, IInvestmentAppService investmentAppService, ICurrencyService currencyService, ProfileContext profileContext, PrototypeSettings prototypeSettings)
     {
         _portfolioVm = portfolioVm;
+        _signatureStore = signatureStore;
+        _fundsVm = fundsVm;
         _viewFactory = viewFactory;
         _walletAppService = walletAppService;
         _investmentAppService = investmentAppService;
@@ -384,6 +389,7 @@ public partial class ShellViewModel : ReactiveObject
 
         // ── Initialize wallet switcher data from SDK ──
         _ = LoadSwitcherWalletsAsync();
+        _fundsVm.WalletsChanged += OnFundsWalletsChanged;
 
         // When selected wallet changes, update header display properties
         this.WhenAnyValue(x => x.SelectedWallet)
@@ -499,7 +505,7 @@ public partial class ShellViewModel : ReactiveObject
                 long balanceSats = 0;
                 var balanceInfoResult = await _walletAppService.GetAccountBalanceInfo(meta.Id);
                 if (balanceInfoResult.IsSuccess)
-                    balanceSats = balanceInfoResult.Value.TotalBalance + balanceInfoResult.Value.TotalUnconfirmedBalance + balanceInfoResult.Value.TotalBalanceReserved;
+                    balanceSats = balanceInfoResult.Value.TotalBalance + balanceInfoResult.Value.TotalUnconfirmedBalance;
                 var balanceBtc = (double)balanceSats.ToUnitBtc();
 
                 SwitcherWallets.Add(new WalletSwitcherItem
@@ -521,6 +527,10 @@ public partial class ShellViewModel : ReactiveObject
                     ? SwitcherWallets.FirstOrDefault(w => w.Id == currentId)
                     : null;
                 SelectSwitcherWallet(match ?? SwitcherWallets[0]);
+            }
+            else
+            {
+                SelectedWallet = null;
             }
         }
         catch
@@ -561,6 +571,26 @@ public partial class ShellViewModel : ReactiveObject
         {
             // SDK call failed — keep existing display
         }
+    }
+
+    private void OnFundsWalletsChanged()
+    {
+        _ = LoadSwitcherWalletsAsync();
+    }
+
+    public void ResetAfterDataWipe()
+    {
+        _signatureStore.Clear();
+        _portfolioVm.ResetAfterDataWipe();
+        SwitcherWallets.Clear();
+        SelectedWallet = null;
+        InvestedBalanceDisplay = "0.0000 " + _currencyService.Symbol;
+        ToastMessage = null;
+        ModalContent = null;
+        IsModalOpen = false;
+        ClearViewCache();
+        this.RaisePropertyChanged(nameof(AvailableBalanceDisplay));
+        this.RaisePropertyChanged(nameof(SelectedWalletName));
     }
 
     /// <summary>

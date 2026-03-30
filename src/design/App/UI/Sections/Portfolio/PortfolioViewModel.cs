@@ -1065,6 +1065,11 @@ public partial class PortfolioViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(TotalAvailable));
     }
 
+    public void ResetAfterDataWipe()
+    {
+        ClearToEmpty();
+    }
+
     /// <summary>Navigate to investment detail view</summary>
     public void OpenInvestmentDetail(InvestmentViewModel investment)
     {

@@ -1,10 +1,14 @@
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.VisualTree;
+using App.UI.Shell;
 
 namespace App.UI.Sections.Settings;
 
 public partial class SettingsView : UserControl
 {
+    private SettingsViewModel? _subscribedVm;
+
     /// <summary>Design-time only.</summary>
     public SettingsView() => InitializeComponent();
 
@@ -12,9 +16,28 @@ public partial class SettingsView : UserControl
     {
         InitializeComponent();
         DataContext = vm;
+        DataContextChanged += (_, _) => SubscribeToVmEvents();
+        SubscribeToVmEvents();
     }
 
     private SettingsViewModel? Vm => DataContext as SettingsViewModel;
+
+    private void SubscribeToVmEvents()
+    {
+        if (_subscribedVm != null)
+            _subscribedVm.ToastRequested -= OnToastRequested;
+
+        _subscribedVm = Vm;
+
+        if (_subscribedVm != null)
+            _subscribedVm.ToastRequested += OnToastRequested;
+    }
+
+    private void OnToastRequested(string message)
+    {
+        var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
+        shellVm?.ShowToast(message);
+    }
 
     // ── Network ──
     private void OnChangeNetworkClick(object? sender, RoutedEventArgs e)
@@ -57,22 +80,6 @@ public partial class SettingsView : UserControl
             btn.Classes.Set("NetworkOptionActive", isActive);
             check.IsVisible = isActive;
         }
-    }
-
-    // ── Explorer ──
-    private void OnAddExplorer(object? sender, RoutedEventArgs e) =>
-        Vm?.AddExplorerLink();
-
-    private void OnRemoveExplorer(object? sender, RoutedEventArgs e)
-    {
-        if (sender is Button { DataContext: ExplorerItem item })
-            Vm?.RemoveExplorerLink(item);
-    }
-
-    private void OnToggleDefaultExplorer(object? sender, PointerPressedEventArgs e)
-    {
-        if (sender is Border { DataContext: ExplorerItem item })
-            Vm?.SetDefaultExplorer(item);
     }
 
     // ── Indexer ──

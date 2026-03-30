@@ -168,6 +168,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         else
         {
             _logger.LogError("Failed to import wallet '{WalletName}'", walletName);
+            ShellVm?.ShowToast($"Failed to import wallet '{walletName}'. Please check the seed words and try again.");
         }
     }
 
@@ -187,6 +188,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         else
         {
             _logger.LogError("GenerateSeedWords returned empty result");
+            ShellVm?.ShowToast("Failed to generate seed words. Please try again.");
         }
     }
 
@@ -207,6 +209,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         else
         {
             _logger.LogError("Failed to create wallet '{WalletName}' (generate flow)", walletName);
+            ShellVm?.ShowToast($"Failed to create wallet '{walletName}'. Please try again.");
         }
     }
 

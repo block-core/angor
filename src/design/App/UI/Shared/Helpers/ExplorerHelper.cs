@@ -3,7 +3,7 @@ using Angor.Shared.Services;
 namespace App.UI.Shared.Helpers;
 
 /// <summary>
-/// Builds block-explorer URLs using the primary indexer (mempool-style)
+/// Builds indexer-hosted URLs using the primary indexer (mempool-style)
 /// configured in <see cref="INetworkService"/>, and opens them in the default browser.
 /// </summary>
 public static class ExplorerHelper
@@ -45,7 +45,7 @@ public static class ExplorerHelper
     }
 
     /// <summary>
-    /// Open a transaction in the system's default browser.
+    /// Open a transaction page from the primary indexer in the system browser.
     /// No-ops silently if the txid is empty or the browser cannot be launched.
     /// </summary>
     public static void OpenTransaction(INetworkService networkService, string? txid)
@@ -56,7 +56,7 @@ public static class ExplorerHelper
     }
 
     /// <summary>
-    /// Open an address in the system's default browser.
+    /// Open an address page from the primary indexer in the system browser.
     /// No-ops silently if the address is empty or the browser cannot be launched.
     /// </summary>
     public static void OpenAddress(INetworkService networkService, string? address)
