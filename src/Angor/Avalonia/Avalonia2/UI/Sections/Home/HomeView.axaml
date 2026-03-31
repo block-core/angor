@@ -17,8 +17,9 @@
         Left  — "Fund Projects"  (Bitcoin icon, search button)
         Right — "Get Funded"     (Lightning icon, launch button)
         
-        Responsive: ColumnDefinitions="*,24,*" (desktop) → RowDefinitions with stacked (compact)
-        Vue: ProfileWelcome.vue — single-column centered on mobile
+        Desktop: ColumnDefinitions="*,24,*" — large icons (80px), text-3xl titles, 20px descriptions
+        Compact/mobile: single column, two rows — smaller icons (40px), text-base titles, text-xs descriptions
+        Vue: App.vue lines 214-241 (mobile), lines 2827-2863 (desktop)
     -->
     <controls:ScrollableView ContentPadding="24,24,24,24">
         <!-- Desktop: two columns side by side. Compact: stacked vertically.
@@ -31,13 +32,14 @@
                 <!-- Card background -->
                 <Border Classes="Panel" ClipToBounds="False" />
                 <!-- Tiled logo watermark overlay (matches Vue invest-column ::before)
+                     Vue: background-size: 80px, opacity: 0.08 (dark) / 0.03 (light)
                      PERF: Hidden on mobile — VisualBrush with SVG TileMode is expensive on mobile GPU -->
                 <Border Name="TiledLogoBorder" CornerRadius="12" Background="{DynamicResource TiledLogoBrush}" IsHitTestVisible="False" />
                 <!-- Content -->
-                <StackPanel Spacing="0" VerticalAlignment="Center" Margin="48">
-                    <!-- Bitcoin logo (80x80) — Vue: w-24 h-24 mb-8, fill=currentColor
+                <StackPanel Name="FundCardContent" Spacing="0" VerticalAlignment="Center" Margin="48">
+                    <!-- Bitcoin logo — Vue desktop: w-24 h-24 (96px) mb-8, mobile: w-10 h-10 (40px) mb-3
                          Uses bitcoin.svg path data colored Brand green. -->
-                    <Viewbox Width="80" Height="80"
+                    <Viewbox Name="FundCardIcon" Width="80" Height="80"
                              Margin="0,0,0,32"
                              HorizontalAlignment="Center">
                         <Path Fill="{DynamicResource Brand}"
@@ -45,23 +47,24 @@
                               Width="256" Height="256"
                               Stretch="Uniform" />
                     </Viewbox>
-                    <!-- Title — Vue: text-3xl font-bold mb-4 tracking-tight -->
-                    <TextBlock Classes="Title Strong"
+                    <!-- Title — Vue desktop: text-3xl font-bold mb-4, mobile: text-base font-bold mb-1 -->
+                    <TextBlock Name="FundCardTitle" Classes="Title Strong"
                                Margin="0,0,0,16"
                                TextAlignment="Center"
                                HorizontalAlignment="Center"
                                Text="Fund Projects" />
-                    <!-- Description — Vue: font-size 20px, leading-relaxed (1.625), normal weight, mb-8 -->
-                    <TextBlock FontSize="20"
+                    <!-- Description — Vue desktop: 20px leading-relaxed mb-8, mobile: text-xs mb-4 -->
+                    <TextBlock Name="FundCardDesc" FontSize="20"
                                LineHeight="32"
                                FontWeight="Normal"
                                Margin="0,0,0,32"
                                Foreground="{DynamicResource TextMuted}"
                                TextAlignment="Center"
                                HorizontalAlignment="Center"
+                               TextWrapping="Wrap"
                                Text="Discover and fund innovative Bitcoin projects on the Angor platform." />
-                    <!-- Action button — Vue: px-8 py-3 text-base btn-primary -->
-                    <Border HorizontalAlignment="Center" Classes="ButtonShadow">
+                    <!-- Action button — Vue desktop: px-8 py-3 text-base, mobile: w-full max-w-xs px-6 py-2.5 text-sm -->
+                    <Border Name="FundCardBtnBorder" HorizontalAlignment="Center" Classes="ButtonShadow">
                         <Button Content="Find Projects"
                                 Classes="Primary" />
                     </Border>
@@ -73,9 +76,9 @@
                 <!-- Card background -->
                 <Border Classes="Panel" ClipToBounds="False" />
                 <!-- Content -->
-                <StackPanel Spacing="0" VerticalAlignment="Center" Margin="48">
-                    <!-- Lightning bolt outline (stroked SVG path, 80x80) — Vue: w-24 h-24 mb-8, fill=none stroke=currentColor stroke-width=1.5 -->
-                    <Viewbox Width="80" Height="80"
+                <StackPanel Name="GetFundedCardContent" Spacing="0" VerticalAlignment="Center" Margin="48">
+                    <!-- Lightning bolt outline — Vue desktop: w-24 h-24 mb-8, mobile: w-10 h-10 mb-3 -->
+                    <Viewbox Name="GetFundedCardIcon" Width="80" Height="80"
                              Margin="0,0,0,32"
                              HorizontalAlignment="Center">
                         <Path Data="{StaticResource LightningBoltHero}"
@@ -87,23 +90,24 @@
                               Width="24" Height="24"
                               Stretch="Uniform" />
                     </Viewbox>
-                    <!-- Title — Vue: text-3xl font-bold mb-4 tracking-tight -->
-                    <TextBlock Classes="Title Strong"
+                    <!-- Title — Vue desktop: text-3xl font-bold mb-4, mobile: text-base font-bold mb-1 -->
+                    <TextBlock Name="GetFundedCardTitle" Classes="Title Strong"
                                Margin="0,0,0,16"
                                TextAlignment="Center"
                                HorizontalAlignment="Center"
                                Text="Get Funded" />
-                    <!-- Description — Vue: font-size 20px, leading-relaxed (1.625), normal weight, mb-8 -->
-                    <TextBlock FontSize="20"
+                    <!-- Description — Vue desktop: 20px leading-relaxed mb-8, mobile: text-xs mb-4 -->
+                    <TextBlock Name="GetFundedCardDesc" FontSize="20"
                                LineHeight="32"
                                FontWeight="Normal"
                                Margin="0,0,0,32"
                                Foreground="{DynamicResource TextMuted}"
                                TextAlignment="Center"
                                HorizontalAlignment="Center"
+                               TextWrapping="Wrap"
                                Text="Create and launch your own projects to raise funding." />
-                    <!-- Action button — Vue: px-8 py-3 text-base btn-primary -->
-                    <Border HorizontalAlignment="Center" Classes="ButtonShadow">
+                    <!-- Action button — Vue desktop: px-8 py-3 text-base, mobile: w-full max-w-xs px-6 py-2.5 text-sm -->
+                    <Border Name="GetFundedBtnBorder" HorizontalAlignment="Center" Classes="ButtonShadow">
                         <Button Content="Launch a Project"
                                 Classes="Primary" />
                     </Border>

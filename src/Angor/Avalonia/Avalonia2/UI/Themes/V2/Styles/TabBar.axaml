@@ -3,9 +3,12 @@
 
     <!-- ═══════════════════════════════════════════════════════════════════
          MATERIAL DESIGN 3 — BOTTOM NAVIGATION BAR
-         MD3 spec: 80dp height, 24dp icons, 12px labels, rounded pill active
-         indicator (64x32dp, 16dp corner radius) behind active icon.
+         MD3 spec: 80dp height, 24dp icons, 12sp labels (Medium weight),
+         rounded pill active indicator (64x32dp, 16dp corner radius) behind
+         active icon. 4dp gap between icon panel and label.
          Colors: active = brand green, inactive = gray-600 (light) / #FAFAFA (dark)
+         Vue ref: App.vue lines 6526-6584 — uses simple color toggle, no pill.
+         We enhance with MD3 pill for better touch UX.
          ═══════════════════════════════════════════════════════════════════ -->
 
     <!-- TabBarItem: individual tab button in the bottom tab bar
@@ -39,6 +42,13 @@
     <!-- Active tab: green foreground (Rule #9: NO BrushTransition, CSS class toggle) -->
     <Style Selector="Button.TabBarItem.TabBarItemActive">
         <Setter Property="Foreground" Value="{DynamicResource TabBarActiveText}" />
+    </Style>
+
+    <!-- TabBarLabel: 12sp (12px), font-weight 500 (Medium)
+         Vue: text-xs font-medium = 12px, 500 weight -->
+    <Style Selector="TextBlock.TabBarLabel">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="Medium" />
     </Style>
 
     <!-- ── MD3 Active Indicator Pill ──

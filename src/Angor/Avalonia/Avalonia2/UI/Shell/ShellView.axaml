@@ -355,19 +355,19 @@
                       ColumnDefinitions="*,*,*,*,*"
                       HorizontalAlignment="Stretch">
 
-                    <!-- Home tab -->
+                    <!-- Home tab
+                         MD3: 24dp icon, 12sp label, 4dp gap, pill 64x32dp behind icon -->
                     <Button Name="TabHome" Grid.Column="0" Classes="TabBarItem TabBarItemActive"
                             Click="OnTabHome">
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <!-- MD3 active indicator pill (64x32dp, 16dp radius) behind the icon -->
-                            <Panel Height="32" Margin="0,0,0,4">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
+                            <Panel Height="32">
                                 <Border Name="TabHomePill" Classes="TabBarPill TabBarPillActive"
                                         Width="64" Height="32" CornerRadius="16"
                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                <i:Icon Value="fa-solid fa-house" FontSize="22"
+                                <i:Icon Value="fa-solid fa-house" FontSize="24"
                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Panel>
-                            <TextBlock Text="Home" FontSize="12" FontWeight="Medium"
+                            <TextBlock Text="Home" Classes="TabBarLabel"
                                        HorizontalAlignment="Center" />
                         </StackPanel>
                     </Button>
@@ -375,15 +375,15 @@
                     <!-- Investor tab -->
                     <Button Name="TabInvestor" Grid.Column="1" Classes="TabBarItem"
                             Click="OnTabInvestor">
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Panel Height="32" Margin="0,0,0,4">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
+                            <Panel Height="32">
                                 <Border Name="TabInvestorPill" Classes="TabBarPill"
                                         Width="64" Height="32" CornerRadius="16"
                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                <i:Icon Value="fa-solid fa-chart-line" FontSize="22"
+                                <i:Icon Value="fa-solid fa-chart-line" FontSize="24"
                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Panel>
-                            <TextBlock Text="Investor" FontSize="12" FontWeight="Medium"
+                            <TextBlock Text="Investor" Classes="TabBarLabel"
                                        HorizontalAlignment="Center" />
                         </StackPanel>
                     </Button>
@@ -392,15 +392,15 @@
                     <Button Name="TabFounder" Grid.Column="2" Classes="TabBarItem"
                             Click="OnTabFounder">
                         <Panel>
-                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <Panel Height="32" Margin="0,0,0,4">
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
+                                <Panel Height="32">
                                     <Border Name="TabFounderPill" Classes="TabBarPill"
                                             Width="64" Height="32" CornerRadius="16"
                                             HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                    <i:Icon Value="fa-solid fa-file-lines" FontSize="22"
+                                    <i:Icon Value="fa-solid fa-file-lines" FontSize="24"
                                             HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 </Panel>
-                                <TextBlock Text="Founder" FontSize="12" FontWeight="Medium"
+                                <TextBlock Text="Founder" Classes="TabBarLabel"
                                            HorizontalAlignment="Center" />
                             </StackPanel>
                             <!-- Notification badge (Vue: absolute top-1 right-1, w-4 h-4, bg Bitcoin orange) -->
@@ -425,15 +425,15 @@
                     <!-- Funds tab -->
                     <Button Name="TabFunds" Grid.Column="3" Classes="TabBarItem"
                             Click="OnTabFunds">
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Panel Height="32" Margin="0,0,0,4">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
+                            <Panel Height="32">
                                 <Border Name="TabFundsPill" Classes="TabBarPill"
                                         Width="64" Height="32" CornerRadius="16"
                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                <i:Icon Value="fa-solid fa-wallet" FontSize="22"
+                                <i:Icon Value="fa-solid fa-wallet" FontSize="24"
                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Panel>
-                            <TextBlock Text="Funds" FontSize="12" FontWeight="Medium"
+                            <TextBlock Text="Funds" Classes="TabBarLabel"
                                        HorizontalAlignment="Center" />
                         </StackPanel>
                     </Button>
@@ -441,15 +441,15 @@
                     <!-- Settings tab -->
                     <Button Name="TabSettings" Grid.Column="4" Classes="TabBarItem"
                             Click="OnTabSettings">
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Panel Height="32" Margin="0,0,0,4">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
+                            <Panel Height="32">
                                 <Border Name="TabSettingsPill" Classes="TabBarPill"
                                         Width="64" Height="32" CornerRadius="16"
                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                <i:Icon Value="fa-solid fa-gear" FontSize="22"
+                                <i:Icon Value="fa-solid fa-gear" FontSize="24"
                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Panel>
-                            <TextBlock Text="Settings" FontSize="12" FontWeight="Medium"
+                            <TextBlock Text="Settings" Classes="TabBarLabel"
                                        HorizontalAlignment="Center" />
                         </StackPanel>
                     </Button>
