@@ -2,15 +2,109 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:shell="clr-namespace:AngorApp.UI.Shell"
-             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
-             x:Class="AngorApp.UI.Shell.ShellView" x:DataType="shell:IShellViewModel" Background="{DynamicResource AppBackground}">
+             xmlns:sh="clr-namespace:AngorApp.UI.Shell"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="650"
+             x:Class="AngorApp.UI.Shell.ShellView" x:DataType="sh:IShellViewModel"
+             Background="{DynamicResource AppBackground}" Container.Name="Shell" Container.Sizing="Width">
 
     <Design.DataContext>
-        <shell:ShellViewModelSample />
+        <sh:ShellViewModelSample />
     </Design.DataContext>
 
-    <Grid x:Name="TopBar" Margin="0 20 20 20" ColumnDefinitions="Auto *" RowDefinitions="42 *" ColumnSpacing="20" RowSpacing="20">
+    <UserControl.Styles>
+
+        <ContainerQuery Name="Shell" Query="min-width:0 and max-width:767">
+            <Style Selector="SectionStrip">
+                <Setter Property="Orientation" Value="Horizontal" />
+                <Setter Property="DockPanel.Dock" Value="Bottom" />
+            </Style>
+            <Style Selector="DockPanel#TopBar">
+                <Setter Property="IsVisible" Value="False" />
+            </Style>
+        </ContainerQuery>
+
+        <ContainerQuery Name="Shell" Query="min-width:768">
+            <Style Selector="SectionStrip">
+                <Setter Property="Orientation" Value="Vertical" />
+                <Setter Property="DockPanel.Dock" Value="Left" />
+            </Style>
+        </ContainerQuery>
+
+        <Style Selector="SectionStrip.Nav SectionStripGroupHeader">
+            <Setter Property="Foreground" Value="{DynamicResource Brand}" />
+            <Setter Property="FontFamily" Value="Sans Serif" />
+            <Setter Property="FontWeight" Value="SemiLight" />
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="Margin" Value="10" />
+        </Style>
+
+        <Style Selector="SectionStrip.Nav SectionStripItem">
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="IconOptions.Fill" Value="{Binding $self.Foreground}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+            <Setter Property="ClipToBounds" Value="False" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <Style Selector="SectionStrip.Nav[Orientation=Vertical] SectionStripItem">
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Margin" Value="10" />
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="IconOptions.Fill" Value="{Binding $self.Foreground}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+            <Setter Property="ClipToBounds" Value="False" />
+            <Setter Property="BorderThickness" Value="1" />
+        </Style>
+
+        <Style Selector="SectionStrip.Nav ListBoxItem">
+            <Setter Property="ClipToBounds" Value="False" />
+        </Style>
+
+        <Style Selector="SectionStrip.Nav SectionStripListBox">
+            <Setter Property="ClipToBounds" Value="False" />
+        </Style>
+
+        <Style Selector="SectionStrip.Nav">
+            <Setter Property="ItemSpacing" Value="10" />
+        </Style>
+
+        <Style Selector="SectionStrip.Nav SectionStripItem:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
+        </Style>
+
+        <Style Selector="SectionStrip.Nav SectionStripItem:selected">
+            <Setter Property="Background" Value="{DynamicResource SurfaceSelected}" />
+            <Setter Property="Foreground" Value="{DynamicResource Highlight}" />
+        </Style>
+
+        <Style Selector="SectionStrip.Nav SectionStripItem:selected Border">
+            <Setter Property="BoxShadow" Value="{DynamicResource SectionShadow}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+        </Style>
+    </UserControl.Styles>
+
+    <DockPanel>
+        <DockPanel x:Name="TopBar" DockPanel.Dock="Top" Height="60">
+            <PathIcon Height="32" Foreground="{DynamicResource Brand}" Width="200"
+                      Data="{StaticResource AngorLogo}" />
+            <sh:InfoBar  />
+        </DockPanel>
+        <SectionStrip Classes="Nav" SelectedSection="{Binding SelectedSection}" IconSize="24"
+                      Width="200" Sections="{Binding SidebarSections}" />
+        <OverlayBorder Classes="Panel" Padding="0"
+                       Background="{DynamicResource TiledLogoBrush}">
+            <Frame Content="{Binding SelectedSection.Navigator.Content^}"
+                   BackCommand="{Binding SelectedSection.Navigator.Back}">
+                <Interaction.Behaviors>
+                    <AutoHeaderFooterBehavior />
+                </Interaction.Behaviors>
+            </Frame>
+        </OverlayBorder>
+    </DockPanel>
+
+    <!--    <Grid x:Name="TopBar" Margin="0 20 20 20" ColumnDefinitions="Auto *" RowDefinitions="42 *" ColumnSpacing="20" RowSpacing="20">
         <PathIcon Height="32" Foreground="{DynamicResource Brand}" Width="32" Data="{StaticResource AngorLogo}" />
         <DockPanel Grid.Row="0" Grid.Column="1" Dock="Top">
             <DockPanel DockPanel.Dock="Top" HorizontalSpacing="20">
@@ -58,4 +152,4 @@
             </Frame>
         </OverlayBorder>
     </Grid>
-</UserControl>
+--></UserControl>
