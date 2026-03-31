@@ -17,7 +17,7 @@
         <!-- crash. Desktop: sidebar+header visible, tab bar hidden.     -->
         <!-- Compact: sidebar+header hidden, tab bar visible.            -->
         <!-- ═══════════════════════════════════════════════════════════ -->
-        <Grid Name="ShellContent">
+        <Grid Name="ShellContent" ColumnDefinitions="208,*" RowDefinitions="42,*,0">
             <!-- Desktop layout: Column 0 = sidebar (208px), Column 1 = content
                  Row 0 = header (42px), Row 1 = content, Row 2 = tab bar (0 on desktop)
                  Compact layout: Column 0 = 0px, Column 1 = content full-width
@@ -351,22 +351,19 @@
                 <!-- MD3: 80dp height + safe area padding at bottom
                      Padding: 0 top (content is vertically centered in 80dp), 
                      bottom padding added via code-behind for Android safe area -->
+                <!-- Vue-style tab bar: color-only active state, no pill indicator.
+                     Active = brand green icon+label, Inactive = muted gray.
+                     Vue ref: App.vue lines 6526-6584 -->
                 <Grid Name="TabBarGrid" Height="80"
                       ColumnDefinitions="*,*,*,*,*"
                       HorizontalAlignment="Stretch">
 
-                    <!-- Home tab
-                         MD3: 24dp icon, 12sp label, 4dp gap, pill 64x32dp behind icon -->
+                    <!-- Home tab -->
                     <Button Name="TabHome" Grid.Column="0" Classes="TabBarItem TabBarItemActive"
                             Click="OnTabHome">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
-                            <Panel Height="32">
-                                <Border Name="TabHomePill" Classes="TabBarPill TabBarPillActive"
-                                        Width="64" Height="32" CornerRadius="16"
-                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                <i:Icon Value="fa-solid fa-house" FontSize="24"
-                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            </Panel>
+                            <i:Icon Value="fa-solid fa-house" FontSize="22"
+                                    HorizontalAlignment="Center" />
                             <TextBlock Text="Home" Classes="TabBarLabel"
                                        HorizontalAlignment="Center" />
                         </StackPanel>
@@ -376,13 +373,8 @@
                     <Button Name="TabInvestor" Grid.Column="1" Classes="TabBarItem"
                             Click="OnTabInvestor">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
-                            <Panel Height="32">
-                                <Border Name="TabInvestorPill" Classes="TabBarPill"
-                                        Width="64" Height="32" CornerRadius="16"
-                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                <i:Icon Value="fa-solid fa-chart-line" FontSize="24"
-                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            </Panel>
+                            <i:Icon Value="fa-solid fa-chart-line" FontSize="22"
+                                    HorizontalAlignment="Center" />
                             <TextBlock Text="Investor" Classes="TabBarLabel"
                                        HorizontalAlignment="Center" />
                         </StackPanel>
@@ -393,13 +385,8 @@
                             Click="OnTabFounder">
                         <Panel>
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
-                                <Panel Height="32">
-                                    <Border Name="TabFounderPill" Classes="TabBarPill"
-                                            Width="64" Height="32" CornerRadius="16"
-                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                    <i:Icon Value="fa-solid fa-file-lines" FontSize="24"
-                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                </Panel>
+                                <i:Icon Value="fa-solid fa-file-lines" FontSize="22"
+                                        HorizontalAlignment="Center" />
                                 <TextBlock Text="Founder" Classes="TabBarLabel"
                                            HorizontalAlignment="Center" />
                             </StackPanel>
@@ -426,13 +413,8 @@
                     <Button Name="TabFunds" Grid.Column="3" Classes="TabBarItem"
                             Click="OnTabFunds">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
-                            <Panel Height="32">
-                                <Border Name="TabFundsPill" Classes="TabBarPill"
-                                        Width="64" Height="32" CornerRadius="16"
-                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                <i:Icon Value="fa-solid fa-wallet" FontSize="24"
-                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            </Panel>
+                            <i:Icon Value="fa-solid fa-wallet" FontSize="22"
+                                    HorizontalAlignment="Center" />
                             <TextBlock Text="Funds" Classes="TabBarLabel"
                                        HorizontalAlignment="Center" />
                         </StackPanel>
@@ -442,13 +424,8 @@
                     <Button Name="TabSettings" Grid.Column="4" Classes="TabBarItem"
                             Click="OnTabSettings">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
-                            <Panel Height="32">
-                                <Border Name="TabSettingsPill" Classes="TabBarPill"
-                                        Width="64" Height="32" CornerRadius="16"
-                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                <i:Icon Value="fa-solid fa-gear" FontSize="24"
-                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            </Panel>
+                            <i:Icon Value="fa-solid fa-gear" FontSize="22"
+                                    HorizontalAlignment="Center" />
                             <TextBlock Text="Settings" Classes="TabBarLabel"
                                        HorizontalAlignment="Center" />
                         </StackPanel>

@@ -4,7 +4,6 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia2.UI.Shell;
 using Avalonia2.UI.Shared;
-using Avalonia2.UI.Shared.Controls;
 using Avalonia.VisualTree;
 using ReactiveUI;
 
@@ -18,7 +17,6 @@ public partial class HomeView : UserControl
     private Grid? _homeGrid;
     private Grid? _fundCard;
     private Grid? _getFundedCard;
-    private ScrollableView? _scrollableView;
     private Border? _tiledLogoBorder;
 
     // Cached controls for mobile sizing
@@ -35,6 +33,12 @@ public partial class HomeView : UserControl
     private StackPanel? _getFundedCardContent;
     private Border? _getFundedBtnBorder;
 
+    // Vue mobile uses shorter description text than desktop
+    private const string FundDescMobile = "Discover and fund innovative Bitcoin projects.";
+    private const string FundDescDesktop = "Discover and fund innovative Bitcoin projects on the Angor platform.";
+    private const string GetFundedDescMobile = "Create and launch your own projects.";
+    private const string GetFundedDescDesktop = "Create and launch your own projects to raise funding.";
+
     /// <summary>Design-time only.</summary>
     public HomeView() => InitializeComponent();
 
@@ -49,7 +53,6 @@ public partial class HomeView : UserControl
         _homeGrid = this.FindControl<Grid>("HomeGrid");
         _fundCard = this.FindControl<Grid>("FundCard");
         _getFundedCard = this.FindControl<Grid>("GetFundedCard");
-        _scrollableView = this.GetLogicalDescendants().OfType<ScrollableView>().FirstOrDefault();
         _tiledLogoBorder = this.FindControl<Border>("TiledLogoBorder");
 
         // Cache mobile sizing controls
@@ -65,6 +68,8 @@ public partial class HomeView : UserControl
         _getFundedBtnBorder = this.FindControl<Border>("GetFundedBtnBorder");
 
         // ── Responsive layout: two-col (desktop) → stacked (compact) ──
+        // No ScrollableView wrapping — the HomeGrid fills available space directly,
+        // so star rows work correctly on both desktop and mobile.
         _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
             .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
     }
@@ -73,78 +78,69 @@ public partial class HomeView : UserControl
     {
         if (_homeGrid == null || _fundCard == null || _getFundedCard == null) return;
 
-        // Bottom padding: 96px in compact for tab bar + floating panel clearance
-        if (_scrollableView != null)
-            _scrollableView.ContentPadding = isCompact
-                ? new Thickness(16, 16, 16, 96)  // Vue mobile: p-4 pb-20 (16px padding, 80px bottom for tab bar)
-                : new Thickness(24);
+        // CRITICAL: Never replace ColumnDefinitions/RowDefinitions collections.
+        // Only modify existing column/row widths. Replacing collections causes
+        // Avalonia's layout engine to crash (SIGABRT) because child controls
+        // briefly reference invalid column/row indices during the swap.
+        //
+        // The XAML Grid always has 3 columns and 3 rows:
+        //   Desktop:  Col0=* (card), Col1=24 (gap), Col2=* (card) | Row0=* (content), Row1=0, Row2=0
+        //   Compact:  Col0=* (card), Col1=0,        Col2=0        | Row0=* (card),    Row1=16 (gap), Row2=* (card)
+        var cols = _homeGrid.ColumnDefinitions;
+        var rows = _homeGrid.RowDefinitions;
 
-        // Tiled logo pattern — show on all platforms
-        // Vue: invest-column::before uses background-image: url('/logo.svg') tiled at 80px
-        // Previously hidden on mobile for perf, but user noticed it's missing.
-        // The VisualBrush with a simple SVG is acceptable on modern mobile GPUs.
-        // (The heavier DrawingBrush crosshatch texture in ShellView stays hidden on mobile.)
         if (_tiledLogoBorder != null)
             _tiledLogoBorder.IsVisible = true;
 
         if (isCompact)
         {
             // ── MOBILE LAYOUT ──
-            // Vue mobile (App.vue line 214): flex flex-col h-full gap-3 p-4 pb-20
-            // Cards are flex-1 (split available space), stacked with 12px gap
-            _homeGrid.ColumnDefinitions.Clear();
-            _homeGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            _homeGrid.RowDefinitions.Clear();
-            _homeGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));  // flex-1
-            _homeGrid.RowDefinitions.Add(new RowDefinition(12, GridUnitType.Pixel));  // gap-3 = 12px
-            _homeGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));  // flex-1
+            _homeGrid.Margin = new Thickness(16, 16, 16, 16);
+
+            // Collapse columns 1-2, expand rows for stacked cards
+            if (cols.Count >= 3) { cols[0].Width = GridLength.Star; cols[1].Width = new GridLength(0); cols[2].Width = new GridLength(0); }
+            if (rows.Count >= 3) { rows[0].Height = GridLength.Star; rows[1].Height = new GridLength(16); rows[2].Height = GridLength.Star; }
 
             Grid.SetColumn(_fundCard, 0);
             Grid.SetRow(_fundCard, 0);
             Grid.SetColumn(_getFundedCard, 0);
             Grid.SetRow(_getFundedCard, 2);
 
-            // Remove MinHeight — let cards flex to fill available space
             _fundCard.MinHeight = 0;
             _getFundedCard.MinHeight = 0;
 
-            // ── Mobile content sizing ──
-            // Vue mobile: icons w-10 h-10 (40px) mb-3 (12px)
             ApplyMobileCardSizing(_fundCardIcon, _fundCardTitle, _fundCardDesc, _fundCardContent, _fundCardBtnBorder);
             ApplyMobileCardSizing(_getFundedCardIcon, _getFundedCardTitle, _getFundedCardDesc, _getFundedCardContent, _getFundedBtnBorder);
+            if (_fundCardDesc != null) _fundCardDesc.Text = FundDescMobile;
+            if (_getFundedCardDesc != null) _getFundedCardDesc.Text = GetFundedDescMobile;
         }
         else
         {
             // ── DESKTOP LAYOUT ──
-            // Vue desktop (App.vue line 2827): min-h-full flex items-stretch
-            // Two columns: invest-column p-12 + launch-column p-12, with margin gap
-            _homeGrid.ColumnDefinitions.Clear();
-            _homeGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            _homeGrid.ColumnDefinitions.Add(new ColumnDefinition(24, GridUnitType.Pixel));
-            _homeGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            _homeGrid.RowDefinitions.Clear();
-            _homeGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
+            _homeGrid.Margin = new Thickness(24);
+
+            // Expand columns for side-by-side, collapse rows 1-2
+            if (cols.Count >= 3) { cols[0].Width = GridLength.Star; cols[1].Width = new GridLength(24); cols[2].Width = GridLength.Star; }
+            if (rows.Count >= 3) { rows[0].Height = GridLength.Star; rows[1].Height = new GridLength(0); rows[2].Height = new GridLength(0); }
 
             Grid.SetColumn(_fundCard, 0);
             Grid.SetRow(_fundCard, 0);
             Grid.SetColumn(_getFundedCard, 2);
             Grid.SetRow(_getFundedCard, 0);
 
-            // Restore desktop MinHeight
             _fundCard.MinHeight = 480;
             _getFundedCard.MinHeight = 480;
 
-            // ── Desktop content sizing ──
-            // Vue desktop: icons w-24 h-24 (96px→80px Avalonia) mb-8 (32px), text-3xl, 20px desc
             ApplyDesktopCardSizing(_fundCardIcon, _fundCardTitle, _fundCardDesc, _fundCardContent, _fundCardBtnBorder);
             ApplyDesktopCardSizing(_getFundedCardIcon, _getFundedCardTitle, _getFundedCardDesc, _getFundedCardContent, _getFundedBtnBorder);
+            if (_fundCardDesc != null) _fundCardDesc.Text = FundDescDesktop;
+            if (_getFundedCardDesc != null) _getFundedCardDesc.Text = GetFundedDescDesktop;
         }
     }
 
     /// <summary>
     /// Apply mobile sizing to a home card.
-    /// Vue mobile: icons w-10 h-10 (40px), mb-3 (12px), text-base title (16px), text-xs desc (12px),
-    /// p-4 (16px) padding, full-width button.
+    /// Sized up from Vue's text-base/text-xs for readability on mobile devices.
     /// </summary>
     private static void ApplyMobileCardSizing(
         Viewbox? icon, TextBlock? title, TextBlock? desc,
@@ -152,31 +148,30 @@ public partial class HomeView : UserControl
     {
         if (icon != null)
         {
-            icon.Width = 40;
-            icon.Height = 40;
+            icon.Width = 48;
+            icon.Height = 48;
             icon.Margin = new Thickness(0, 0, 0, 12); // mb-3
         }
         if (title != null)
         {
-            title.FontSize = 16; // text-base
-            title.Margin = new Thickness(0, 0, 0, 4); // mb-1
-            // Remove Title class styling — override with explicit size
+            title.FontSize = 20; // readable on mobile (Vue text-base=16 is too small on device)
+            title.Margin = new Thickness(0, 0, 0, 6);
             title.Classes.Set("Title", false);
         }
         if (desc != null)
         {
-            desc.FontSize = 12; // text-xs
-            desc.LineHeight = 18; // leading-relaxed for 12px
-            desc.Margin = new Thickness(0, 0, 0, 16); // mb-4
+            desc.FontSize = 14; // readable on mobile (Vue text-xs=12 is too small on device)
+            desc.LineHeight = 20;
+            desc.Margin = new Thickness(0, 0, 0, 16);
         }
         if (content != null)
         {
-            content.Margin = new Thickness(16); // p-4 = 16px
+            content.Margin = new Thickness(20); // slightly more breathing room
         }
         if (btnBorder != null)
         {
-            // Vue mobile: w-full max-w-xs — stretch button, max 320px
-            btnBorder.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
+            // Center the button with a max width cap
+            btnBorder.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center;
             btnBorder.MaxWidth = 320;
         }
     }
@@ -198,7 +193,7 @@ public partial class HomeView : UserControl
         }
         if (title != null)
         {
-            title.FontSize = double.NaN; // Reset to style default
+            title.ClearValue(TextBlock.FontSizeProperty); // Reset to style default
             title.Margin = new Thickness(0, 0, 0, 16); // mb-4
             title.Classes.Set("Title", true);
         }

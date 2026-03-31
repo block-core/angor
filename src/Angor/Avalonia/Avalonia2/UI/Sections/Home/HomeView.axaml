@@ -21,11 +21,13 @@
         Compact/mobile: single column, two rows — smaller icons (40px), text-base titles, text-xs descriptions
         Vue: App.vue lines 214-241 (mobile), lines 2827-2863 (desktop)
     -->
-    <controls:ScrollableView ContentPadding="24,24,24,24">
-        <!-- Desktop: two columns side by side. Compact: stacked vertically.
-             The code-behind toggles ColumnDefinitions/RowDefinitions + Grid.Column/Grid.Row 
-             assignments based on LayoutModeService. -->
-        <Grid Name="HomeGrid" ColumnDefinitions="*,24,*" RowDefinitions="*" ClipToBounds="False">
+    <!-- No ScrollableView — home page is two fixed cards that fill available space.
+         Eliminates ScrollViewer infinite-height issue with star rows on mobile. -->
+    <!-- Superset grid: 3 cols × 3 rows. Desktop uses cols, collapses rows 1-2 to 0.
+         Mobile uses rows, collapses cols 1-2 to 0. Widths modified in-place by code-behind
+         to avoid SIGABRT from replacing ColumnDefinitions/RowDefinitions mid-layout. -->
+    <Grid Name="HomeGrid" ColumnDefinitions="*,24,*" RowDefinitions="*,0,0" ClipToBounds="False"
+          Margin="24">
 
             <!-- ═══ Fund Projects card (left / top) ═══ -->
             <Grid Name="FundCard" Grid.Column="0" MinHeight="480" ClipToBounds="False">
@@ -115,5 +117,4 @@
             </Grid>
 
         </Grid>
-    </controls:ScrollableView>
 </UserControl>

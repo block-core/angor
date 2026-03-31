@@ -77,15 +77,26 @@ public partial class LayoutModeService : ReactiveObject
     /// <summary>
     /// Called by ShellView whenever the window size changes.
     /// Recalculates the layout mode from the new width.
+    /// When the mode crosses a breakpoint, the change is deferred to the next
+    /// UI frame to avoid mutating Grid definitions while Avalonia's layout
+    /// pass is still active (which causes SIGABRT on macOS).
     /// </summary>
     public void UpdateWidth(double width)
     {
         WindowWidth = width;
-        CurrentMode = width switch
+        var newMode = width switch
         {
             < MobileBreakpoint => LayoutMode.Mobile,
             < TabletBreakpoint => LayoutMode.Tablet,
             _ => LayoutMode.Desktop,
         };
+
+        if (newMode != CurrentMode)
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                CurrentMode = newMode;
+            });
+        }
     }
 }

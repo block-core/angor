@@ -115,11 +115,7 @@ public partial class ShellView : UserControl
     private Button _tabFounder = null!;
     private Button _tabFunds = null!;
     private Button _tabSettings = null!;
-    private Border _tabHomePill = null!;
-    private Border _tabInvestorPill = null!;
-    private Border _tabFounderPill = null!;
-    private Border _tabFundsPill = null!;
-    private Border _tabSettingsPill = null!;
+    // Pill indicators removed — Vue-style color-only active state
     private Border _investorSubTabs = null!;
     private Border _founderSubTabs = null!;
     private Button _investorSubTabFind = null!;
@@ -168,11 +164,7 @@ public partial class ShellView : UserControl
         _tabFounder = this.FindControl<Button>("TabFounder")!;
         _tabFunds = this.FindControl<Button>("TabFunds")!;
         _tabSettings = this.FindControl<Button>("TabSettings")!;
-        _tabHomePill = this.FindControl<Border>("TabHomePill")!;
-        _tabInvestorPill = this.FindControl<Border>("TabInvestorPill")!;
-        _tabFounderPill = this.FindControl<Border>("TabFounderPill")!;
-        _tabFundsPill = this.FindControl<Border>("TabFundsPill")!;
-        _tabSettingsPill = this.FindControl<Border>("TabSettingsPill")!;
+        // Pill indicators removed — Vue-style color-only active state
         _investorSubTabs = this.FindControl<Border>("InvestorSubTabs")!;
         _founderSubTabs = this.FindControl<Border>("FounderSubTabs")!;
         _investorSubTabFind = this.FindControl<Button>("InvestorSubTabFind")!;
@@ -208,11 +200,7 @@ public partial class ShellView : UserControl
                 _tabSettings.Classes.Set("TabBarItemActive", tab == "settings");
 
                 // Toggle MD3 pill indicator active class
-                _tabHomePill.Classes.Set("TabBarPillActive", tab == "home");
-                _tabInvestorPill.Classes.Set("TabBarPillActive", tab == "investor");
-                _tabFounderPill.Classes.Set("TabBarPillActive", tab == "founder");
-                _tabFundsPill.Classes.Set("TabBarPillActive", tab == "funds");
-                _tabSettingsPill.Classes.Set("TabBarPillActive", tab == "settings");
+                // Pill indicators removed — active state is color-only via TabBarItemActive class
 
                 // Sub-tab and back-bar visibility is handled by the detail state subscription below.
                 // Trigger a re-evaluation by reading current detail state.
@@ -380,28 +368,36 @@ public partial class ShellView : UserControl
     {
         if (_shellContent == null) return;
 
+        // CRITICAL: Never replace ColumnDefinitions/RowDefinitions collections.
+        // Only modify existing column/row widths. Replacing collections causes
+        // Avalonia's layout engine to crash (SIGABRT) because child controls
+        // briefly reference invalid column/row indices during the swap.
+        //
+        // The XAML Grid always has 2 columns and 3 rows:
+        //   Desktop:  Col0=208 (sidebar), Col1=* (content) | Row0=42 (header), Row1=* (content), Row2=0 (no tab bar)
+        //   Compact:  Col0=* (content),   Col1=0 (hidden)  | Row0=0 (no header), Row1=* (content), Row2=Auto (tab bar)
+        var cols = _shellContent.ColumnDefinitions;
+        var rows = _shellContent.RowDefinitions;
+
         if (isDesktop)
         {
-            // Desktop: sidebar (208px) + content (*), header (42px) + content (*) + no tab bar (0)
-            // Vue: sidebar w-52 = 208px, hidden lg:flex
             _shellContent.Margin = new Avalonia.Thickness(0, 24, 24, 24);
-            _shellContent.ColumnDefinitions = ColumnDefinitions.Parse("208,*");
-            _shellContent.RowDefinitions = RowDefinitions.Parse("42,*,0");
             _shellContent.ColumnSpacing = 0;
             _shellContent.RowSpacing = 20;
 
-            // Show desktop elements
+            // Sidebar 208px, content fills rest
+            if (cols.Count >= 2) { cols[0].Width = new GridLength(208); cols[1].Width = GridLength.Star; }
+            if (rows.Count >= 3) { rows[0].Height = new GridLength(42); rows[2].Height = new GridLength(0); }
+
+            Grid.SetColumn(_contentBorder, 1);
+            _contentBorder.Classes.Set("Panel", true);
+
             _desktopLogo.IsVisible = true;
             _desktopHeader.IsVisible = true;
             _desktopSidebar.IsVisible = true;
 
-            // Content in column 1 with Panel class (rounded card background)
-            Grid.SetColumn(_contentBorder, 1);
-            _contentBorder.Classes.Set("Panel", true);
-
-            // Hide compact elements
             _bottomTabBar.IsVisible = false;
-            _textureOverlay.IsVisible = true; // PERF: texture overlay visible on desktop only
+            _textureOverlay.IsVisible = true;
             _investorSubTabs.IsVisible = false;
             _founderSubTabs.IsVisible = false;
             _investorBackBar.IsVisible = false;
@@ -410,50 +406,38 @@ public partial class ShellView : UserControl
         }
         else
         {
-            // Compact: no sidebar, no header, content full-width, tab bar visible
-            // Vue: lg:hidden — full-width content + bottom tab bar
             _shellContent.Margin = new Avalonia.Thickness(0);
-            _shellContent.ColumnDefinitions = ColumnDefinitions.Parse("*");
-            _shellContent.RowDefinitions = RowDefinitions.Parse("0,*,Auto");
             _shellContent.ColumnSpacing = 0;
             _shellContent.RowSpacing = 0;
 
-            // Hide desktop elements
+            // Content fills full width, sidebar collapses to 0
+            if (cols.Count >= 2) { cols[0].Width = GridLength.Star; cols[1].Width = new GridLength(0); }
+            if (rows.Count >= 3) { rows[0].Height = new GridLength(0); rows[2].Height = GridLength.Auto; }
+
+            Grid.SetColumn(_contentBorder, 0);
+            _contentBorder.Classes.Set("Panel", false);
+
             _desktopLogo.IsVisible = false;
             _desktopHeader.IsVisible = false;
             _desktopSidebar.IsVisible = false;
 
-            // Content fills full width (column 0, the only column)
-            Grid.SetColumn(_contentBorder, 0);
-            _contentBorder.Classes.Set("Panel", false);
-
-            // Show tab bar, hide expensive texture overlay
             _bottomTabBar.IsVisible = true;
             _bottomTabBar.Padding = new Avalonia.Thickness(0, 0, 0, AndroidSafeAreaBottom);
-            _textureOverlay.IsVisible = false; // PERF: DrawingBrush TileMode is expensive on mobile GPU
+            _textureOverlay.IsVisible = false;
 
-            // Re-evaluate sub-tab and back-bar visibility based on active tab + detail state
             if (DataContext is ShellViewModel vm)
             {
                 UpdateCompactOverlays(vm);
             }
         }
 
-        // Move sub-tabs, back bars, and tab bar to column 0 in compact (single column)
-        // and keep spanning in desktop (they're hidden anyway)
-        var subTabCol = isDesktop ? 0 : 0;
+        // Column spans for overlay elements
         var subTabColSpan = isDesktop ? 2 : 1;
-        Grid.SetColumn(_investorSubTabs, subTabCol);
         Grid.SetColumnSpan(_investorSubTabs, subTabColSpan);
-        Grid.SetColumn(_founderSubTabs, subTabCol);
         Grid.SetColumnSpan(_founderSubTabs, subTabColSpan);
-        Grid.SetColumn(_investorBackBar, subTabCol);
         Grid.SetColumnSpan(_investorBackBar, subTabColSpan);
-        Grid.SetColumn(_investmentDetailBackBar, subTabCol);
         Grid.SetColumnSpan(_investmentDetailBackBar, subTabColSpan);
-        Grid.SetColumn(_manageFundsBackBar, subTabCol);
         Grid.SetColumnSpan(_manageFundsBackBar, subTabColSpan);
-        Grid.SetColumn(_bottomTabBar, 0);
         Grid.SetColumnSpan(_bottomTabBar, isDesktop ? 2 : 1);
     }
 

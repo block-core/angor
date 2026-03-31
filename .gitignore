@@ -411,3 +411,9 @@ FodyWeavers.xsd
 
 # Local database files
 *.db
+
+# Android build artifacts
+*.apk
+*.aab
+*.keystore
+*.jks
