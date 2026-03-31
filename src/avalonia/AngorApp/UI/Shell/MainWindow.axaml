@@ -6,7 +6,9 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         Width="1400"
         Height="800"
-        WindowStartupLocation="CenterOwner"
+        MinWidth="350"
+        MinHeight="500"
+		WindowStartupLocation="CenterOwner"
         avvi:Breakpoints.IsBreakpointProvider="True"
         x:Class="AngorApp.UI.Shell.MainWindow"
         Title="Angor">

@@ -17,16 +17,19 @@
             <Style Selector="SectionStrip">
                 <Setter Property="Orientation" Value="Horizontal" />
                 <Setter Property="DockPanel.Dock" Value="Bottom" />
+                <Setter Property="MinItemWidth" Value="60" />
             </Style>
             <Style Selector="DockPanel#TopBar">
                 <Setter Property="IsVisible" Value="False" />
             </Style>
+            
         </ContainerQuery>
 
         <ContainerQuery Name="Shell" Query="min-width:768">
             <Style Selector="SectionStrip">
                 <Setter Property="Orientation" Value="Vertical" />
                 <Setter Property="DockPanel.Dock" Value="Left" />
+                <Setter Property="Width" Value="200" />
             </Style>
         </ContainerQuery>
 
@@ -89,10 +92,10 @@
         <DockPanel x:Name="TopBar" DockPanel.Dock="Top" Height="60">
             <PathIcon Height="32" Foreground="{DynamicResource Brand}" Width="200"
                       Data="{StaticResource AngorLogo}" />
-            <sh:InfoBar  />
+            <sh:InfoBar />
         </DockPanel>
         <SectionStrip Classes="Nav" SelectedSection="{Binding SelectedSection}" IconSize="24"
-                      Width="200" Sections="{Binding SidebarSections}" />
+                      Sections="{Binding SidebarSections}" />
         <OverlayBorder Classes="Panel" Padding="0"
                        Background="{DynamicResource TiledLogoBrush}">
             <Frame Content="{Binding SelectedSection.Navigator.Content^}"

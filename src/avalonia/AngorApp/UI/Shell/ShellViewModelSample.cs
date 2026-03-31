@@ -14,7 +14,7 @@ namespace AngorApp.UI.Shell
             {
                 Content = new HomeSectionView(),
                 FriendlyName = "Home",
-                Name = "Home",
+                Id = "Home",
                 Icon = new Icon("fa-home"),
                 SortOrder = 0
             };
@@ -22,7 +22,7 @@ namespace AngorApp.UI.Shell
             {
                 Content = "Content 2",
                 FriendlyName = "Funds",
-                Name = "Funds",
+                Id = "Funds",
                 Icon = new Icon("fa-regular fa-credit-card"),
                 SortOrder = 1
             };
@@ -30,7 +30,7 @@ namespace AngorApp.UI.Shell
             {
                 Content = "Content 3",
                 FriendlyName = "Find Projects",
-                Name = "Find Projects",
+                Id = "Find Projects",
                 Group = new SectionGroup("INVESTOR"),
                 Icon = new Icon("fa-magnifying-glass")
             };
@@ -38,14 +38,13 @@ namespace AngorApp.UI.Shell
             {
                 FriendlyName = "Funded",
                 Group = new SectionGroup("INVESTOR"),
-                Name = "Funded",
+                Id = "Funded",
                 Icon = new Icon("fa-arrow-trend-up")
             };
             SimpleSection myProjects = new()
             {
                 FriendlyName = "My Projects",
-                Group = new SectionGroup("FOUNDER"),
-                Name = "My Projects",
+                Id = "My Projects",
                 Icon = new Icon("fa-regular fa-file-lines")
             };
 

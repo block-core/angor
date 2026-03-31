@@ -49,15 +49,15 @@
     <PackageVersion Include="Serilog.Sinks.XUnit" Version="3.0.19" />
     <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="6.0.0" />
     <PackageVersion Include="Xamarin.AndroidX.Core.SplashScreen" Version="1.0.1.15" />
-    <PackageVersion Include="Zafiro" Version="46.0.0" />
+    <PackageVersion Include="Zafiro" Version="47.0.2" />
     <PackageVersion Include="Zafiro.Avalonia" Version="50.0.1" />
-    <PackageVersion Include="Zafiro.Avalonia.Generators" Version="51.0.0" />
-    <PackageVersion Include="Zafiro.Avalonia.Icons.Projektanker" Version="51.0.0" />
-    <PackageVersion Include="Zafiro.Avalonia.Icons.Svg" Version="51.0.0" />
+    <PackageVersion Include="Zafiro.Avalonia.Generators" Version="51.1.0" />
+    <PackageVersion Include="Zafiro.Avalonia.Icons.Projektanker" Version="51.1.0" />
+    <PackageVersion Include="Zafiro.Avalonia.Icons.Svg" Version="51.1.0" />
     <PackageVersion Include="Zafiro.FileSystem" Version="45.0.9" />
     <PackageVersion Include="Zafiro.UI" Version="45.0.9" />
     <PackageVersion Include="CSharpFunctionalExtensions" Version="3.6.0" />
-    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="51.0.0" />
+    <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="51.1.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="FluentAssertions" Version="8.0.0" />
     <PackageVersion Include="FluentAssertions.Reactive" Version="0.2.0" />
@@ -68,7 +68,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageVersion>
-
     <!-- Shared / legacy packages -->
     <PackageVersion Include="Blockcore.Core" Version="1.1.41" />
     <PackageVersion Include="Blockcore.Nostr.Client" Version="2.0.2" />
@@ -76,7 +75,6 @@
     <PackageVersion Include="System.Text.Json" Version="8.0.5" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <PackageVersion Include="Microsoft.JSInterop" Version="8.0.11" />
-
     <!-- Blazor / WebApp packages -->
     <PackageVersion Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageVersion Include="Blazored.SessionStorage" Version="2.4.0" />
