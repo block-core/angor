@@ -6,36 +6,14 @@ using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Wallet.Application;
 using Angor.Sdk.Wallet.Domain;
 using App.UI.Sections.FindProjects;
-using App.UI.Sections.Funds;
 using App.UI.Sections.MyProjects;
 using App.UI.Sections.Portfolio;
 using App.UI.Shared;
+using App.UI.Shared.Services;
 
 namespace App.UI.Shell;
 
 // ICurrencyService is resolved from DI and threaded through to sub-types that need it.
-
-/// <summary>
-/// A wallet item for the header wallet-switcher modal.
-/// Vue: walletGroups[].wallets[] in App.vue — each wallet has id, name, type, balance, label, network.
-/// Reuses the same CSS-class selection pattern as deploy/invest wallet selectors (Rule #9 compliant).
-/// </summary>
-public partial class WalletSwitcherItem : ReactiveObject
-{
-    public string Id { get; set; } = "";
-    public string Name { get; set; } = "";
-    /// <summary>Type: "bitcoin", "lightning", or "liquid".</summary>
-    public string WalletType { get; set; } = "bitcoin";
-    public double Balance { get; set; }
-    /// <summary>Subtitle: "{TypeLabel} • {SeedGroupName}".</summary>
-    public string Subtitle { get; set; } = "";
-    /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
-    public string CurrencySymbol { get; set; } = "BTC";
-
-    [Reactive] private bool isSelected;
-
-    public string FormattedBalance => Balance.ToString("F4", CultureInfo.InvariantCulture) + " " + CurrencySymbol;
-}
 
 /// <summary>
 /// A shared signature/funding request that lives in the SignatureStore.
@@ -187,6 +165,12 @@ public partial class PrototypeSettings : ReactiveObject
     /// </summary>
     [Reactive] private bool isDarkTheme;
 
+    /// <summary>
+    /// Persisted wallet ID for the currently selected wallet.
+    /// Used by <see cref="App.UI.Shared.Services.IWalletContext"/> to restore selection on restart.
+    /// </summary>
+    [Reactive] private string? selectedWalletId;
+
     public PrototypeSettings(IStore store)
     {
         _store = store;
@@ -197,6 +181,7 @@ public partial class PrototypeSettings : ReactiveObject
         {
             isDebugMode = result.Value.IsDebugMode;
             isDarkTheme = result.Value.IsDarkTheme;
+            selectedWalletId = result.Value.SelectedWalletId;
         }
 
         // Apply persisted theme immediately
@@ -208,7 +193,7 @@ public partial class PrototypeSettings : ReactiveObject
         }
 
         // Persist on changes
-        this.WhenAnyValue(x => x.IsDebugMode, x => x.IsDarkTheme)
+        this.WhenAnyValue(x => x.IsDebugMode, x => x.IsDarkTheme, x => x.SelectedWalletId)
             .Skip(1)
             .Subscribe(async _ =>
             {
@@ -216,6 +201,7 @@ public partial class PrototypeSettings : ReactiveObject
                 {
                     IsDebugMode = IsDebugMode,
                     IsDarkTheme = IsDarkTheme,
+                    SelectedWalletId = SelectedWalletId,
                 });
                 if (saveResult.IsFailure)
                 {
@@ -241,6 +227,7 @@ public partial class PrototypeSettings : ReactiveObject
     {
         public bool IsDebugMode { get; set; }
         public bool IsDarkTheme { get; set; }
+        public string? SelectedWalletId { get; set; }
     }
 }
 
@@ -265,9 +252,8 @@ public partial class ShellViewModel : ReactiveObject
 {
     private readonly PortfolioViewModel _portfolioVm;
     private readonly SignatureStore _signatureStore;
-    private readonly FundsViewModel _fundsVm;
     private readonly Func<string, object?> _viewFactory;
-    private readonly IWalletAppService _walletAppService;
+    private readonly IWalletContext _walletContext;
     private readonly IInvestmentAppService _investmentAppService;
     private readonly ICurrencyService _currencyService;
     private readonly PrototypeSettings _prototypeSettings;
@@ -303,15 +289,17 @@ public partial class ShellViewModel : ReactiveObject
 
     /// <summary>
     /// Currently selected wallet for the header wallet switcher.
+    /// Delegated to IWalletContext.SelectedWallet.
     /// Vue: selectedWalletId + selectedWalletName computed in App.vue.
     /// </summary>
-    [Reactive] private WalletSwitcherItem? selectedWallet;
+    public WalletInfo? SelectedWallet => _walletContext.SelectedWallet;
 
     /// <summary>
-    /// All wallets available for switching (mainnet).
+    /// All wallets available for switching.
+    /// Delegated to IWalletContext.Wallets.
     /// Vue: filteredWalletsForModal computed from walletGroups.
     /// </summary>
-    public ObservableCollection<WalletSwitcherItem> SwitcherWallets { get; } = new();
+    public ReadOnlyObservableCollection<WalletInfo> SwitcherWallets => _walletContext.Wallets;
 
     /// <summary>Display name for the header button. Shows "Select Wallet" if none selected.</summary>
     public string SelectedWalletName => SelectedWallet?.Name ?? "Select Wallet";
@@ -325,7 +313,7 @@ public partial class ShellViewModel : ReactiveObject
     /// <summary>Available balance display string for the header. Uses selected wallet balance.</summary>
     public string AvailableBalanceDisplay =>
         SelectedWallet != null
-            ? SelectedWallet.Balance.ToString("F4", CultureInfo.InvariantCulture) + " " + _currencyService.Symbol
+            ? SelectedWallet.FormattedBalance(_currencyService.Symbol)
             : "0.0000 " + _currencyService.Symbol;
 
     /// <summary>
@@ -333,13 +321,12 @@ public partial class ShellViewModel : ReactiveObject
     /// </summary>
     public string? ProfileName { get; }
 
-    public ShellViewModel(PortfolioViewModel portfolioVm, SignatureStore signatureStore, FundsViewModel fundsVm, Func<string, object?> viewFactory, IWalletAppService walletAppService, IInvestmentAppService investmentAppService, ICurrencyService currencyService, ProfileContext profileContext, PrototypeSettings prototypeSettings)
+    public ShellViewModel(PortfolioViewModel portfolioVm, SignatureStore signatureStore, Func<string, object?> viewFactory, IWalletContext walletContext, IInvestmentAppService investmentAppService, ICurrencyService currencyService, ProfileContext profileContext, PrototypeSettings prototypeSettings)
     {
         _portfolioVm = portfolioVm;
         _signatureStore = signatureStore;
-        _fundsVm = fundsVm;
         _viewFactory = viewFactory;
-        _walletAppService = walletAppService;
+        _walletContext = walletContext;
         _investmentAppService = investmentAppService;
         _currencyService = currencyService;
         _prototypeSettings = prototypeSettings;
@@ -387,17 +374,16 @@ public partial class ShellViewModel : ReactiveObject
         this.WhenAnyValue(x => x.SectionTitleOverride)
             .Subscribe(_ => this.RaisePropertyChanged(nameof(SelectedSectionName)));
 
-        // ── Initialize wallet switcher data from SDK ──
-        _ = LoadSwitcherWalletsAsync();
-        _fundsVm.WalletsChanged += OnFundsWalletsChanged;
-
-        // When selected wallet changes, update header display properties
-        this.WhenAnyValue(x => x.SelectedWallet)
-            .Subscribe(wallet =>
+        // ── Initialize wallet context and subscribe to updates ──
+        _ = _walletContext.ReloadAsync();
+        _walletContext.WalletsUpdated
+            .Subscribe(unit =>
             {
+                this.RaisePropertyChanged(nameof(SelectedWallet));
                 this.RaisePropertyChanged(nameof(SelectedWalletName));
                 this.RaisePropertyChanged(nameof(AvailableBalanceDisplay));
-                _ = LoadTotalInvestedAsync(wallet);
+                this.RaisePropertyChanged(nameof(SwitcherWallets));
+                _ = LoadTotalInvestedAsync(SelectedWallet);
             });
 
         // When toast message changes, notify HasToast
@@ -470,84 +456,31 @@ public partial class ShellViewModel : ReactiveObject
 
     /// <summary>
     /// Select a wallet from the switcher modal.
-    /// Deselects previous, selects new, updates header display.
+    /// Delegates to IWalletContext.SelectedWallet, which handles deselect/select/persist.
     /// Vue: selectWallet(walletId) in App.vue.
     /// </summary>
-    public void SelectSwitcherWallet(WalletSwitcherItem wallet)
+    public void SelectSwitcherWallet(WalletInfo wallet)
     {
-        // Deselect all
-        foreach (var w in SwitcherWallets)
-            w.IsSelected = false;
-
-        wallet.IsSelected = true;
-        SelectedWallet = wallet;
+        _walletContext.SelectedWallet = wallet;
+        this.RaisePropertyChanged(nameof(SelectedWallet));
+        this.RaisePropertyChanged(nameof(SelectedWalletName));
+        this.RaisePropertyChanged(nameof(AvailableBalanceDisplay));
+        _ = LoadTotalInvestedAsync(wallet);
     }
 
     /// <summary>
-    /// Load wallets from SDK for the wallet switcher.
-    /// Replaces hardcoded wallet data with real SDK wallet metadatas and balances.
+    /// Reload wallets from SDK via IWalletContext.
     /// </summary>
-    private bool _isLoadingSwitcherWallets;
-
-    public async Task LoadSwitcherWalletsAsync()
+    public async Task ReloadWalletsAsync()
     {
-        if (_isLoadingSwitcherWallets) return;
-        _isLoadingSwitcherWallets = true;
-
-        try
-        {
-            var metadatasResult = await _walletAppService.GetMetadatas();
-            if (metadatasResult.IsFailure) return;
-
-            SwitcherWallets.Clear();
-            foreach (var meta in metadatasResult.Value)
-            {
-                long balanceSats = 0;
-                var balanceInfoResult = await _walletAppService.GetAccountBalanceInfo(meta.Id);
-                if (balanceInfoResult.IsSuccess)
-                    balanceSats = balanceInfoResult.Value.TotalBalance + balanceInfoResult.Value.TotalUnconfirmedBalance;
-                var balanceBtc = (double)balanceSats.ToUnitBtc();
-
-                SwitcherWallets.Add(new WalletSwitcherItem
-                {
-                    Id = meta.Id.Value,
-                    Name = meta.Name,
-                    WalletType = "bitcoin",
-                    Balance = balanceBtc,
-                    Subtitle = $"Bitcoin • {meta.Name}",
-                    CurrencySymbol = _currencyService.Symbol
-                });
-            }
-
-            if (SwitcherWallets.Count > 0)
-            {
-                // Preserve current selection, or default to first wallet
-                var currentId = SelectedWallet?.Id;
-                var match = currentId != null
-                    ? SwitcherWallets.FirstOrDefault(w => w.Id == currentId)
-                    : null;
-                SelectSwitcherWallet(match ?? SwitcherWallets[0]);
-            }
-            else
-            {
-                SelectedWallet = null;
-            }
-        }
-        catch
-        {
-            // Wallet loading failed — switcher stays empty
-        }
-        finally
-        {
-            _isLoadingSwitcherWallets = false;
-        }
+        await _walletContext.ReloadAsync();
     }
 
     /// <summary>
     /// Load the total invested amount for the given wallet from the SDK.
     /// Updates the InvestedBalanceDisplay header property.
     /// </summary>
-    private async Task LoadTotalInvestedAsync(WalletSwitcherItem? wallet)
+    private async Task LoadTotalInvestedAsync(WalletInfo? wallet)
     {
         if (wallet == null)
         {
@@ -559,7 +492,7 @@ public partial class ShellViewModel : ReactiveObject
         {
             var result = await _investmentAppService.GetTotalInvested(
                 new Angor.Sdk.Funding.Investor.Operations.GetTotalInvested.GetTotalInvestedRequest(
-                    new WalletId(wallet.Id)));
+                    wallet.Id));
 
             if (result.IsSuccess)
             {
@@ -573,24 +506,19 @@ public partial class ShellViewModel : ReactiveObject
         }
     }
 
-    private void OnFundsWalletsChanged()
-    {
-        _ = LoadSwitcherWalletsAsync();
-    }
-
     public void ResetAfterDataWipe()
     {
         _signatureStore.Clear();
         _portfolioVm.ResetAfterDataWipe();
-        SwitcherWallets.Clear();
-        SelectedWallet = null;
         InvestedBalanceDisplay = "0.0000 " + _currencyService.Symbol;
         ToastMessage = null;
         ModalContent = null;
         IsModalOpen = false;
         ClearViewCache();
+        this.RaisePropertyChanged(nameof(SelectedWallet));
         this.RaisePropertyChanged(nameof(AvailableBalanceDisplay));
         this.RaisePropertyChanged(nameof(SelectedWalletName));
+        this.RaisePropertyChanged(nameof(SwitcherWallets));
     }
 
     /// <summary>

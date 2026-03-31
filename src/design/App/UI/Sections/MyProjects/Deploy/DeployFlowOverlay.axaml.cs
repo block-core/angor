@@ -4,6 +4,7 @@ using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using App.UI.Shared;
 using App.UI.Shared.Helpers;
+using App.UI.Shared.Services;
 using App.UI.Shell;
 
 namespace App.UI.Sections.MyProjects.Deploy;
@@ -130,7 +131,7 @@ public partial class DeployFlowOverlay : UserControl, IBackdropCloseable
             source = source.Parent as Control;
         }
 
-        if (walletBorder?.DataContext is WalletItem wallet)
+        if (walletBorder?.DataContext is WalletInfo wallet)
         {
             Vm?.SelectWallet(wallet);
             _selectedWalletBorder = WalletSelectionHelper.UpdateWalletSelection(_selectedWalletBorder, walletBorder);

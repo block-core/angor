@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:deploy="clr-namespace:App.UI.Sections.MyProjects.Deploy"
+             xmlns:services="clr-namespace:App.UI.Shared.Services"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="700"
              x:Class="App.UI.Sections.MyProjects.Deploy.DeployFlowOverlay"
@@ -188,7 +189,7 @@
 
                         <ItemsControl ItemsSource="{Binding Wallets}">
                             <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="deploy:WalletItem">
+                                <DataTemplate x:DataType="services:WalletInfo">
                                     <!-- Wallet item: w-full p-4 rounded-lg border-2 text-left
                                          Vue: space-y-3 → 12px gap, but user wants 8px -->
                                     <Border Name="WalletBorder" Classes="WalletCard"
@@ -213,7 +214,7 @@
                                                 <TextBlock Text="{Binding Name}"
                                                            FontSize="14" FontWeight="SemiBold"
                                                            Foreground="{DynamicResource TextStrong}" />
-                                                <TextBlock Text="{Binding Network}"
+                                                <TextBlock Text="{Binding WalletType}"
                                                            FontSize="13"
                                                            Foreground="{DynamicResource TextMuted}" />
                                             </StackPanel>

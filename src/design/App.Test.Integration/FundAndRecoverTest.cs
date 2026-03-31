@@ -619,8 +619,8 @@ public class FundAndRecoverTest
         // If the investment doesn't have a wallet ID yet (local-only add), set it from the wallet we used
         if (string.IsNullOrEmpty(targetInvestment.InvestmentWalletId))
         {
-            targetInvestment.InvestmentWalletId = investWallet.WalletId;
-            Log($"[STEP 12] Set InvestmentWalletId to '{investWallet.WalletId}' (was empty from local add)");
+            targetInvestment.InvestmentWalletId = investWallet.Id.Value;
+            Log($"[STEP 12] Set InvestmentWalletId to '{investWallet.Id.Value}' (was empty from local add)");
         }
         if (string.IsNullOrEmpty(targetInvestment.ProjectIdentifier))
         {
@@ -800,7 +800,7 @@ public class FundAndRecoverTest
         var fundsVm = GetFundsViewModel(window);
         fundsVm.Should().NotBeNull("FundsViewModel should be available for faucet request");
 
-        var walletId = fundsVm!.SeedGroups.FirstOrDefault()?.Wallets.FirstOrDefault()?.WalletId;
+        var walletId = fundsVm!.SeedGroups.FirstOrDefault()?.Wallets?.FirstOrDefault()?.Id.Value;
         walletId.Should().NotBeNullOrEmpty("Should have a wallet to fund");
 
         var deadline = DateTime.UtcNow + FaucetBalanceTimeout;
@@ -824,7 +824,7 @@ public class FundAndRecoverTest
                 lastFaucetAttempt = DateTime.UtcNow;
                 Log($"  [Faucet] Attempt #{faucetAttempts}: calling GetTestCoinsAsync...");
 
-                var (success, error) = await fundsVm.GetTestCoinsAsync(walletId!);
+                (bool success, string? error) = await fundsVm.GetTestCoinsAsync(walletId!);
                 Dispatcher.UIThread.RunJobs();
 
                 if (success)

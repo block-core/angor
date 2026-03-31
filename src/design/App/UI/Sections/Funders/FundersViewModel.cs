@@ -4,8 +4,8 @@ using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Shared;
-using Angor.Sdk.Wallet.Application;
 using App.UI.Shared;
+using App.UI.Shared.Services;
 using Microsoft.Extensions.Logging;
 
 namespace App.UI.Sections.Funders;
@@ -60,7 +60,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
 {
     private readonly IFounderAppService _founderAppService;
     private readonly IProjectAppService _projectAppService;
-    private readonly IWalletAppService _walletAppService;
+    private readonly IWalletContext _walletContext;
     private readonly ICurrencyService _currencyService;
     private readonly ILogger<FundersViewModel> _logger;
 
@@ -89,13 +89,13 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
     public FundersViewModel(
         IFounderAppService founderAppService,
         IProjectAppService projectAppService,
-        IWalletAppService walletAppService,
+        IWalletContext walletContext,
         ICurrencyService currencyService,
         ILogger<FundersViewModel> logger)
     {
         _founderAppService = founderAppService;
         _projectAppService = projectAppService;
-        _walletAppService = walletAppService;
+        _walletContext = walletContext;
         _currencyService = currencyService;
         _logger = logger;
 
@@ -116,16 +116,15 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
 
         try
         {
-            var metadatasResult = await _walletAppService.GetMetadatas();
-            if (metadatasResult.IsFailure) return;
+            var wallets = _walletContext.Wallets;
 
             _sdkSignatures.Clear();
             int idCounter = 10000; // high ID to avoid collision with shared store IDs
 
-            foreach (var meta in metadatasResult.Value)
+            foreach (var wallet in wallets)
             {
                 // Get founder's projects
-                var projectsResult = await _projectAppService.GetFounderProjects(meta.Id);
+                var projectsResult = await _projectAppService.GetFounderProjects(wallet.Id);
                 if (projectsResult.IsFailure) continue;
 
                 foreach (var project in projectsResult.Value.Projects)
@@ -134,7 +133,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
 
                     // Get investment requests for this project
                     var investmentsResult = await _founderAppService.GetProjectInvestments(
-                        new GetProjectInvestments.GetProjectInvestmentsRequest(meta.Id, project.Id));
+                        new GetProjectInvestments.GetProjectInvestmentsRequest(wallet.Id, project.Id));
 
                     if (investmentsResult.IsFailure) continue;
 
@@ -163,7 +162,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
                             Npub = investment.InvestorNostrPubKey ?? "",
                             EventId = investment.EventId ?? "",
                             ProjectIdentifier = project.Id.Value,
-                            FounderWalletId = meta.Id.Value,
+                            FounderWalletId = wallet.Id.Value,
                             InvestmentTransactionHex = investment.InvestmentTransactionHex ?? "",
                             InvestorNostrPubKey = investment.InvestorNostrPubKey ?? "",
                             AmountSats = investment.Amount

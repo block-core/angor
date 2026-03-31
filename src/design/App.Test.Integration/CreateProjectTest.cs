@@ -615,7 +615,7 @@ public class CreateProjectTest
         fundsVm.Should().NotBeNull("FundsViewModel should be available for faucet request");
 
         // Get the wallet ID from the first wallet in SeedGroups
-        var walletId = fundsVm!.SeedGroups.FirstOrDefault()?.Wallets.FirstOrDefault()?.WalletId;
+        var walletId = fundsVm!.SeedGroups.FirstOrDefault()?.Wallets?.FirstOrDefault()?.Id.Value;
         walletId.Should().NotBeNullOrEmpty("Should have a wallet to fund");
 
         var deadline = DateTime.UtcNow + FaucetBalanceTimeout;
@@ -641,7 +641,7 @@ public class CreateProjectTest
                 lastFaucetAttempt = DateTime.UtcNow;
                 Log($"  [Faucet] Attempt #{faucetAttempts}: calling GetTestCoinsAsync...");
 
-                var (success, error) = await fundsVm.GetTestCoinsAsync(walletId!);
+                (bool success, string? error) = await fundsVm.GetTestCoinsAsync(walletId!);
                 Dispatcher.UIThread.RunJobs();
 
                 if (success)

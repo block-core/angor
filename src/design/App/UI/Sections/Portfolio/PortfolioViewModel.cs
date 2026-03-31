@@ -12,6 +12,7 @@ using Avalonia.Media.Imaging;
 using App.UI.Sections.FindProjects;
 using App.UI.Shared;
 using App.UI.Shared.Helpers;
+using App.UI.Shared.Services;
 using App.UI.Shell;
 using Microsoft.Extensions.Logging;
 
@@ -445,7 +446,7 @@ public class InvestmentViewModel : INotifyPropertyChanged
 public partial class PortfolioViewModel : ReactiveObject
 {
     private readonly IInvestmentAppService _investmentAppService;
-    private readonly IWalletAppService _walletAppService;
+    private readonly IWalletContext _walletContext;
     private readonly SignatureStore _signatureStore;
     private readonly ICurrencyService _currencyService;
     private readonly ILogger<PortfolioViewModel> _logger;
@@ -471,13 +472,13 @@ public partial class PortfolioViewModel : ReactiveObject
 
     public PortfolioViewModel(
         IInvestmentAppService investmentAppService,
-        IWalletAppService walletAppService,
+        IWalletContext walletContext,
         SignatureStore signatureStore,
         ICurrencyService currencyService,
         ILogger<PortfolioViewModel> logger)
     {
         _investmentAppService = investmentAppService;
-        _walletAppService = walletAppService;
+        _walletContext = walletContext;
         _signatureStore = signatureStore;
         _currencyService = currencyService;
         _logger = logger;
@@ -501,16 +502,8 @@ public partial class PortfolioViewModel : ReactiveObject
 
         try
         {
-            var metadatasResult = await _walletAppService.GetMetadatas();
-            if (metadatasResult.IsFailure)
-            {
-                _logger.LogWarning("GetMetadatas failed during investment load: {Error}", metadatasResult.Error);
-                ClearToEmpty();
-                return;
-            }
-
-            var metadatas = metadatasResult.Value.ToList();
-            if (metadatas.Count == 0)
+            var wallets = _walletContext.Wallets;
+            if (wallets.Count == 0)
             {
                 _logger.LogInformation("No wallets found — clearing investments");
                 ClearToEmpty();
@@ -522,10 +515,10 @@ public partial class PortfolioViewModel : ReactiveObject
             double totalInRecovery = 0;
             int recoveryCount = 0;
 
-            foreach (var meta in metadatas)
+            foreach (var wallet in wallets)
             {
                 var investmentsResult = await _investmentAppService.GetInvestments(
-                    new GetInvestments.GetInvestmentsRequest(meta.Id));
+                    new GetInvestments.GetInvestmentsRequest(wallet.Id));
 
                 if (investmentsResult.IsFailure) continue;
 
@@ -588,7 +581,7 @@ public partial class PortfolioViewModel : ReactiveObject
                         ApprovalStatus = dto.FounderStatus == Angor.Sdk.Funding.Investor.FounderStatus.Approved ? "Approved" : "Pending",
                         AvatarUrl = dto.LogoUri?.ToString(),
                         ProjectIdentifier = dto.Id ?? "",
-                        InvestmentWalletId = meta.Id.Value,
+                        InvestmentWalletId = wallet.Id.Value,
                         InvestmentTransactionId = dto.InvestmentId ?? "",
                         CurrencySymbol = _currencyService.Symbol
                     };

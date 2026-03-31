@@ -8,6 +8,7 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Projects;
+using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Utilities;
 using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
@@ -350,7 +351,7 @@ public class MultiInvestClaimAndRecoverTest
         investVm.SelectWallet(investWallet);
         Dispatcher.UIThread.RunJobs();
 
-        Log(profileName, $"Investing {amountBtc} BTC with wallet {investWallet.WalletId}...");
+        Log(profileName, $"Investing {amountBtc} BTC with wallet {investWallet.Id.Value}...");
         investVm.PayWithWallet();
 
         var investDeadline = DateTime.UtcNow + TransactionTimeout;
@@ -849,7 +850,7 @@ public class MultiInvestClaimAndRecoverTest
         var fundsVm = GetFundsViewModel(window);
         fundsVm.Should().NotBeNull();
 
-        var walletId = fundsVm!.SeedGroups.FirstOrDefault()?.Wallets.FirstOrDefault()?.WalletId;
+        var walletId = fundsVm!.SeedGroups.FirstOrDefault()?.Wallets?.FirstOrDefault()?.Id.Value;
         walletId.Should().NotBeNullOrEmpty();
 
         var deadline = DateTime.UtcNow + FaucetBalanceTimeout;
@@ -873,7 +874,7 @@ public class MultiInvestClaimAndRecoverTest
                 lastFaucetAttempt = DateTime.UtcNow;
                 Log(profileName, $"Faucet attempt #{faucetAttempts}...");
 
-                var (success, error) = await fundsVm.GetTestCoinsAsync(walletId!);
+                (bool success, string? error) = await fundsVm.GetTestCoinsAsync(walletId!);
                 Dispatcher.UIThread.RunJobs();
                 Log(profileName, success ? "Faucet request accepted." : $"Faucet request failed: {error}");
             }

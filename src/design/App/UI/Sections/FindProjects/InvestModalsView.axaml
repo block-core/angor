@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:fp="clr-namespace:App.UI.Sections.FindProjects"
-             xmlns:deploy="clr-namespace:App.UI.Sections.MyProjects.Deploy"
+             xmlns:services="clr-namespace:App.UI.Shared.Services"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
              x:Class="App.UI.Sections.FindProjects.InvestModalsView"
@@ -166,7 +166,7 @@
                     <StackPanel Margin="24" Spacing="0">
                         <ItemsControl ItemsSource="{Binding Wallets}">
                             <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="deploy:WalletItem">
+                                <DataTemplate x:DataType="services:WalletInfo">
                                     <Border Name="WalletBorder" Classes="WalletCard"
                                             CornerRadius="8" Padding="16"
                                             Margin="0,0,0,8"
@@ -188,7 +188,7 @@
                                                 <TextBlock Text="{Binding Name}"
                                                            FontSize="14" FontWeight="SemiBold"
                                                            Foreground="{DynamicResource TextStrong}" />
-                                                <TextBlock Text="{Binding Network}"
+                                                <TextBlock Text="{Binding WalletType}"
                                                            FontSize="13"
                                                            Foreground="{DynamicResource TextMuted}" />
                                             </StackPanel>
