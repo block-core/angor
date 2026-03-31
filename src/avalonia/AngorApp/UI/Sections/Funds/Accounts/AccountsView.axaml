@@ -37,7 +37,7 @@
                 <EnhancedButton Command="{Binding ImportAccount}" Classes="Outline" Icon="{Icon fa-upload}" IsEnabled="False">Import Wallet</EnhancedButton>
                 <EnhancedButton Command="{Binding GetTestCoins}" IsVisible="{Binding CanGetTestCoins}" Classes="Emphasized" Icon="{Icon fa-plus}">Get Testnet Coins</EnhancedButton>
             </StackPanel>
-            <HeaderedContainer Classes="Card Radius-L Big Bitcoin Shadow MediumBigHeader" Header="Balance Summary" Background="{DynamicResource BitcoinWash}">
+            <HeaderedContainer Classes="Card ApricotGradient Shadow" HeaderClasses="Size-XL Black" Header="Balance Summary" Background="{DynamicResource BitcoinWash}">
                 <ItemsControl ItemsSource="{Binding Balances}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -46,7 +46,8 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <HeaderedContainer Header="{Binding Name}" Classes="Card ApricotBorder Fields" HeaderPadding="20" ContentPadding="20 0 0 20" Content="{Binding Balance^.ShortDecimalString}">
+                            <HeaderedContainer Header="{Binding Name}" Classes="Card ApricotBorder"
+                                               HeaderPadding="20" ContentPadding="20 0 0 20" Content="{Binding Balance^.ShortDecimalString}">
                             </HeaderedContainer>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
@@ -55,7 +56,9 @@
             <ItemsControl Classes="VerticalBigGap" ItemsSource="{Binding AccountGroups}" ClipToBounds="False">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <HeaderedContainer Classes="Card Window Shadow MediumBigHeader" Header="{Binding Name}">
+                        <HeaderedContainer Classes="Card Window Shadow"
+                                           HeaderClasses="Size-XL Black"
+                                           Header="{Binding Name}">
                             <ItemsControl x:Name="WalletList" ItemsSource="{Binding Accounts}" Classes="Vertical" ClipToBounds="False">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
