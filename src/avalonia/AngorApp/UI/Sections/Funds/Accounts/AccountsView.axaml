@@ -54,7 +54,7 @@
                 </ItemsControl>
             </HeaderedContainer>
             <ItemsControl Classes="VerticalBigGap" ItemsSource="{Binding AccountGroups}" ClipToBounds="False">
-                <ItemsControl.ItemTemplate>
+                <ItemsControl.ItemTemplate>MediumBigHeader
                     <DataTemplate>
                         <HeaderedContainer Classes="Card Window Shadow"
                                            HeaderClasses="Size-XL Black"
