@@ -32,18 +32,24 @@
 
     <controls:ScrollableView>
         <StackPanel Classes="Gap-XL" MaxWidth="1152">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Classes="Gap-S">
+            <FlexPanel Direction="Row" Wrap="Wrap" Gap="8" JustifyContent="End">
                 <EnhancedButton Command="{Binding RefreshBalances}" Classes="Outline" Classes.Spinning="{Binding RefreshBalances.IsExecuting}" Icon="{Icon fa-sync}">Refresh</EnhancedButton>
                 <EnhancedButton Command="{Binding ImportAccount}" Classes="Outline" Icon="{Icon fa-upload}" IsEnabled="False">Import Wallet</EnhancedButton>
                 <EnhancedButton Command="{Binding GetTestCoins}" IsVisible="{Binding CanGetTestCoins}" Classes="Emphasized" Icon="{Icon fa-plus}">Get Testnet Coins</EnhancedButton>
-            </StackPanel>
+            </FlexPanel>
             <HeaderedContainer Classes="Card ApricotGradient Shadow" HeaderClasses="Size-XL Black" Header="Balance Summary" Background="{DynamicResource BitcoinWash}">
                 <ItemsControl ItemsSource="{Binding Balances}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <WrapPanel ItemSpacing="20" ItemWidth="196" Orientation="Horizontal" />
+                            <FlexPanel Direction="Row" Wrap="Wrap" Gap="20" />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
+                    <ItemsControl.Styles>
+                        <Style Selector="ItemsControl > ContentPresenter">
+                            <Setter Property="FlexPanel.Grow" Value="1" />
+                            <Setter Property="FlexPanel.Basis" Value="180" />
+                        </Style>
+                    </ItemsControl.Styles>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <HeaderedContainer Header="{Binding Name}" Classes="Card ApricotBorder"
@@ -54,7 +60,7 @@
                 </ItemsControl>
             </HeaderedContainer>
             <ItemsControl Classes="VerticalBigGap" ItemsSource="{Binding AccountGroups}" ClipToBounds="False">
-                <ItemsControl.ItemTemplate>MediumBigHeader
+                <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <HeaderedContainer Classes="Card Window Shadow"
                                            HeaderClasses="Size-XL Black"
@@ -79,13 +85,13 @@
                                                 </EdgePanel>
                                             </EdgePanel.StartContent>
                                             <EdgePanel.EndContent>
-                                                <StackPanel Classes="Gap-S" Orientation="Horizontal">
-                                                    <StackPanel.Styles>
+                                                <FlexPanel Direction="Row" Wrap="Wrap" ColumnGap="8" RowGap="4" AlignItems="Center">
+                                                    <FlexPanel.Styles>
                                                         <Style Selector="EnhancedButton">
                                                             <Setter Property="IconOptions.Size" Value="12" />
                                                         </Style>
-                                                    </StackPanel.Styles>
-                                                    <StackPanel Margin="6 0" Orientation="Horizontal" Spacing="16">
+                                                    </FlexPanel.Styles>
+                                                    <FlexPanel Direction="Row" Wrap="Wrap" ColumnGap="16" RowGap="4" Margin="6 0">
                                                         <StackPanel>
                                                             <TextBlock Classes="Weight-Bold Strong" Text="{Binding Wallet.Balance.DecimalString}" />
                                                             <TextBlock Classes="Weight-Light Dimmed" Text="Balance" FontSize="10" />
@@ -98,12 +104,14 @@
                                                             <TextBlock Classes="Weight-Bold" Foreground="{DynamicResource Info}" Text="{Binding Wallet.ReservedBalance.DecimalString}" />
                                                             <TextBlock Classes="Weight-Light Dimmed" Text="Reserved" FontSize="10" />
                                                         </StackPanel>
-                                                    </StackPanel>
+                                                    </FlexPanel>
                                                     <ItemsControl ItemsSource="{Binding Wallet.Labels}" Classes="Horizontal" />
-                                                    <EnhancedButton Command="{Binding Send}" Height="32" Width="32" CornerRadius="6" Padding="7" Icon="{Icon fa-arrow-up}" Classes="Emphasized" />
-                                                    <EnhancedButton Command="{Binding Receive}" Height="32" Width="32" CornerRadius="6" Padding="7" Icon="{Icon fa-arrow-down}" Classes="Outline" />
-                                                    <EnhancedButton Command="{Binding ShowDetails}" Height="32" Width="32" CornerRadius="6" Padding="7" Icon="{Icon fa-coins}" Classes="Outline" />
-                                                </StackPanel>
+                                                    <FlexPanel Direction="Row" Gap="8">
+                                                        <EnhancedButton Command="{Binding Send}" Height="32" Width="32" CornerRadius="6" Padding="7" Icon="{Icon fa-arrow-up}" Classes="Emphasized" />
+                                                        <EnhancedButton Command="{Binding Receive}" Height="32" Width="32" CornerRadius="6" Padding="7" Icon="{Icon fa-arrow-down}" Classes="Outline" />
+                                                        <EnhancedButton Command="{Binding ShowDetails}" Height="32" Width="32" CornerRadius="6" Padding="7" Icon="{Icon fa-coins}" Classes="Outline" />
+                                                    </FlexPanel>
+                                                </FlexPanel>
                                             </EdgePanel.EndContent>
                                         </EdgePanel>
                                     </DataTemplate>
