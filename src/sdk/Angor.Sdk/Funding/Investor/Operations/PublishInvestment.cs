@@ -64,6 +64,15 @@ public static class PublishInvestment
                 Transaction = networkConfiguration.GetNetwork()
                     .CreateTransaction(investmentRecord.InvestmentTransactionHex)
             };
+
+            // Log transaction inputs for diagnosing UTXO-related publish failures
+            var txInputs = transactionInfo.Transaction.Inputs
+                .Select(i => i.PrevOut.ToString())
+                .ToList();
+            logger.Information("PublishInvestment: TxId={TxId}, Inputs={InputCount}: {Inputs}",
+                transactionInfo.Transaction.GetHash().ToString(),
+                txInputs.Count,
+                string.Join(", ", txInputs));
             
             var validate = await ValidateFounderSignatures(request.WalletId.Value, projectResult.Value,
                 investmentRecord.RequestEventTime.Value, investmentRecord.RequestEventId, transactionInfo, 
@@ -271,9 +280,9 @@ public static class PublishInvestment
                 if (response.Success)
                     return Result.Success(signedTransaction.Transaction.GetHash().ToString());
                 
-                logger.Error(response.Message);
+                logger.Error("Failed to publish investment transaction: {Message}", response.Message);
                 
-                return Result.Failure<string>("Failed to publish the transaction to the blockchain");
+                return Result.Failure<string>($"Failed to publish the transaction to the blockchain: {response.Message}");
             }
             catch (Exception e)
             {

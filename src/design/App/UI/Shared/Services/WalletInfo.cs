@@ -52,7 +52,7 @@ public partial class WalletInfo : ReactiveObject
     {
         get
         {
-            var btc = (double)TotalBalanceSats.ToUnitBtc();
+            var btc = (double)AvailableSats.ToUnitBtc();
             return $"{btc:F8} {CurrencySymbol}";
         }
     }

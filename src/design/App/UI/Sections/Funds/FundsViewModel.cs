@@ -118,8 +118,8 @@ public partial class FundsViewModel : ReactiveObject
 
         foreach (var wallet in wallets)
         {
-            totalSats += wallet.TotalBalanceSats;
-            btcSats += wallet.TotalBalanceSats;
+            totalSats += wallet.AvailableSats;
+            btcSats += wallet.AvailableSats;
         }
 
         double totalBtc = (double)totalSats.ToUnitBtc();

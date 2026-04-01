@@ -507,6 +507,15 @@ public partial class InvestPageViewModel : ReactiveObject
             return;
         }
 
+        IsProcessing = true;
+
+        // Refresh wallet UTXOs from the indexer before building the transaction.
+        // This ensures we don't pick UTXOs already consumed by a prior transaction
+        // (e.g. a project deploy) that haven't been synced to local LiteDB yet.
+        PaymentStatusText = "Refreshing wallet...";
+        _logger.LogInformation("Refreshing wallet UTXOs before building investment draft...");
+        await _walletContext.RefreshAllBalancesAsync();
+
         // Balance check: ensure wallet has enough funds for the investment
         var amountBtc = ParseAmount();
         var requiredSats = ((decimal)amountBtc).ToUnitSatoshi();
@@ -519,7 +528,6 @@ public partial class InvestPageViewModel : ReactiveObject
             return;
         }
 
-        IsProcessing = true;
         PaymentStatusText = "Building investment transaction...";
         _logger.LogInformation("PayWithWallet starting — wallet: {WalletId}, project: {ProjectId}, amount: {Amount} BTC",
             SelectedWallet.Id.Value, Project.ProjectId, InvestmentAmount);
@@ -562,7 +570,9 @@ public partial class InvestPageViewModel : ReactiveObject
             var draft = buildResult.Value.InvestmentDraft;
             _logger.LogInformation("Investment draft built successfully");
 
-            var isAboveThreshold = false;
+            // Investment-type projects always require founder approval (no threshold check).
+            // Fund-type projects require approval only when the amount exceeds the penalty threshold.
+            var isAboveThreshold = Project.ProjectType == "Invest";
             if (Project.ProjectType == "Fund")
             {
                 PaymentStatusText = "Checking investment threshold...";
@@ -585,8 +595,8 @@ public partial class InvestPageViewModel : ReactiveObject
 
             if (isAboveThreshold)
             {
-                // Above threshold: request founder signatures
-                _logger.LogInformation("Investment is above penalty threshold — requesting founder signatures");
+                // Above threshold or investment-type: request founder signatures
+                _logger.LogInformation("Investment requires founder approval — requesting founder signatures");
                 PaymentStatusText = "Requesting founder approval...";
                 var submitRequest = new RequestInvestmentSignatures.RequestFounderSignaturesRequest(
                     walletId,
@@ -667,6 +677,12 @@ public partial class InvestPageViewModel : ReactiveObject
         }
 
         IsProcessing = true;
+
+        // Refresh wallet UTXOs from the indexer before building the transaction.
+        PaymentStatusText = "Refreshing wallet...";
+        _logger.LogInformation("Refreshing wallet UTXOs before building invoice investment draft...");
+        await _walletContext.RefreshAllBalancesAsync();
+
         _invoiceMonitorCts?.Cancel();
         _invoiceMonitorCts = new CancellationTokenSource();
 
@@ -727,7 +743,9 @@ public partial class InvestPageViewModel : ReactiveObject
 
             var draft = buildResult.Value.InvestmentDraft;
 
-            var isAboveThreshold = false;
+            // Investment-type projects always require founder approval (no threshold check).
+            // Fund-type projects require approval only when the amount exceeds the penalty threshold.
+            var isAboveThreshold = Project.ProjectType == "Invest";
             if (Project.ProjectType == "Fund")
             {
                 PaymentStatusText = "Checking investment threshold...";

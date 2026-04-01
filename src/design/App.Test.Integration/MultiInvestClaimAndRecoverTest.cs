@@ -88,22 +88,41 @@ public class MultiInvestClaimAndRecoverTest
             await InvestInProjectAsync(window, Investor2Profile, project!, investor2AmountBtc);
         });
 
+        // Step 1: Founder approves the pending signature requests from both investors.
         await WithProfileWindow(FounderProfile, initializedProfiles, async window =>
         {
             await ApprovePendingInvestmentsAsync(window, FounderProfile, project!, expectedPendingCount: 2);
-            await ClaimStageOneAsync(window, FounderProfile, project!);
-            await ReleaseRemainingStagesToInvestorsAsync(window, FounderProfile, project!);
         });
 
+        // Step 2: Both investors confirm (publish) their approved investment transactions on-chain.
+        // This must happen BEFORE the founder can claim stages, because the indexer won't see any
+        // investment UTXOs until the transactions are actually broadcast and indexed.
         await WithProfileWindow(Investor1Profile, initializedProfiles, async window =>
         {
             await ConfirmApprovedInvestmentAsync(window, Investor1Profile, project!);
-            await ClaimRemainingStagesAsync(window, Investor1Profile, project!);
         });
 
         await WithProfileWindow(Investor2Profile, initializedProfiles, async window =>
         {
             await ConfirmApprovedInvestmentAsync(window, Investor2Profile, project!);
+        });
+
+        // Step 3: Now that investment transactions are on-chain, founder can claim stage 1
+        // and release remaining stages back to investors.
+        await WithProfileWindow(FounderProfile, initializedProfiles, async window =>
+        {
+            await ClaimStageOneAsync(window, FounderProfile, project!);
+            await ReleaseRemainingStagesToInvestorsAsync(window, FounderProfile, project!);
+        });
+
+        // Step 4: Each investor claims their remaining (released) stages.
+        await WithProfileWindow(Investor1Profile, initializedProfiles, async window =>
+        {
+            await ClaimRemainingStagesAsync(window, Investor1Profile, project!);
+        });
+
+        await WithProfileWindow(Investor2Profile, initializedProfiles, async window =>
+        {
             await ClaimRemainingStagesAsync(window, Investor2Profile, project!);
         });
 
@@ -243,6 +262,9 @@ public class MultiInvestClaimAndRecoverTest
         wizardVm.DurationValue = "3";
         wizardVm.DurationUnit = "Months";
         wizardVm.ReleaseFrequency = "Monthly";
+        // Set start date ~120 days in the past so all 3 monthly stages (baseDate+30/+60/+90)
+        // have release dates in the past, making them claimable (Unspent) instead of Locked.
+        wizardVm.StartDate = DateTime.UtcNow.AddDays(-120).ToString("yyyy-MM-dd");
         wizardVm.GenerateInvestmentStages();
         wizardVm.Stages.Count.Should().Be(3);
         wizardVm.Stages.Select(s => s.StageNumber).Should().ContainInOrder(1, 2, 3);

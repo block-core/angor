@@ -937,6 +937,12 @@ public partial class PortfolioViewModel : ReactiveObject
 
         try
         {
+            // Refresh wallet UTXOs before publishing — the investment transaction was built
+            // earlier (during PayWithWallet) and the UTXO state may have changed since then.
+            _logger.LogInformation("Refreshing wallet {WalletId} before confirming investment {InvestmentId}...",
+                investment.InvestmentWalletId, investment.InvestmentTransactionId);
+            await _walletContext.RefreshAllBalancesAsync();
+
             var request = new PublishInvestment.PublishInvestmentRequest(
                 investment.InvestmentTransactionId,
                 new WalletId(investment.InvestmentWalletId),
@@ -1107,7 +1113,21 @@ public partial class PortfolioViewModel : ReactiveObject
 
         var amountValue = double.TryParse(investmentAmount, System.Globalization.NumberStyles.Float,
             CultureInfo.InvariantCulture, out var parsedAmt) ? parsedAmt : 0;
-        var isAutoApproved = amountValue < Constants.AutoApprovalThreshold;
+        // Investment-type projects always require founder approval regardless of amount.
+        // Fund-type projects compare the investment amount (in sats) against the project's
+        // on-chain PenaltyThreshold. If no threshold is set (null/0), all Fund investments
+        // are auto-approved.
+        bool isAutoApproved;
+        if (projectType == "invest")
+        {
+            isAutoApproved = false;
+        }
+        else
+        {
+            var amountSats = ((decimal)parsedAmt).ToUnitSatoshi();
+            var thresholdSats = project.PenaltyThresholdSats ?? 0;
+            isAutoApproved = thresholdSats == 0 || amountSats < thresholdSats;
+        }
 
         var investment = new InvestmentViewModel
         {
@@ -1147,7 +1167,9 @@ public partial class PortfolioViewModel : ReactiveObject
         var sig = _signatureStore.AddSignature(
             project.ProjectName,
             project.ProjectName,
-            investmentAmount);
+            investmentAmount,
+            projectType,
+            project.PenaltyThresholdSats);
 
         investment.SignatureId = sig.Id;
         Investments.Insert(0, investment);

@@ -154,10 +154,12 @@ public class WalletContext : IWalletContext
 
     public async Task RefreshAllBalancesAsync()
     {
+        _logger.LogInformation("WalletContext.RefreshAllBalancesAsync starting for {Count} wallet(s)...", _wallets.Count);
         foreach (var wallet in _wallets.ToList())
         {
             await RefreshBalanceAsync(wallet.Id);
         }
+        _logger.LogInformation("WalletContext.RefreshAllBalancesAsync completed");
     }
 
     public async Task DeleteAllAsync()

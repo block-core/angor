@@ -47,9 +47,11 @@ public class SharedSignature
 /// Shared between Funders (founder view) and Portfolio (investor view).
 /// Vue: signatures ref + approveFunder/rejectFunder in App.vue.
 /// 
-/// Approval threshold (Vue: 0.01 BTC in handleInvestment):
-///   - Amount &lt; 0.01 BTC → auto-approved (status='approved'), investment immediately active
-///   - Amount >= 0.01 BTC → status='waiting', requires founder manual approval
+/// Approval logic:
+///   - Investment-type projects always require founder approval.
+///   - Fund-type projects compare the investment amount (sats) against the
+///     project's on-chain PenaltyThreshold. If no threshold or amount below
+///     threshold → auto-approved.
 /// </summary>
 public class SignatureStore
 {
@@ -70,15 +72,29 @@ public class SignatureStore
     /// <summary>
     /// Add a new signature for an investment.
     /// Vue: handleInvestment() in App.vue (line 8806).
-    /// Applies auto-approval threshold: &lt; 0.01 BTC = auto-approved.
+    /// Applies approval logic:
+    ///   - Investment-type projects always require founder approval.
+    ///   - Fund-type projects compare amount (sats) against the project's PenaltyThreshold.
     /// </summary>
-    public SharedSignature AddSignature(string projectId, string projectTitle, string amount)
+    public SharedSignature AddSignature(string projectId, string projectTitle, string amount, string projectType = "invest", long? penaltyThresholdSats = null)
     {
         var amountValue = double.TryParse(amount, System.Globalization.NumberStyles.Float,
             System.Globalization.CultureInfo.InvariantCulture, out var a) ? a : 0;
 
-        // Vue threshold: investments < 0.01 BTC are auto-approved
-        var requiresApproval = amountValue >= Constants.AutoApprovalThreshold;
+        // Investment-type projects always require founder approval.
+        // Fund-type projects compare against the project's on-chain penalty threshold.
+        bool requiresApproval;
+        if (string.Equals(projectType, "invest", StringComparison.OrdinalIgnoreCase))
+        {
+            requiresApproval = true;
+        }
+        else
+        {
+            var amountSats = ((decimal)amountValue).ToUnitSatoshi();
+            var threshold = penaltyThresholdSats ?? 0;
+            requiresApproval = threshold > 0 && amountSats >= threshold;
+        }
+
         var now = DateTime.Now;
 
         var sig = new SharedSignature

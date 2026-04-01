@@ -161,6 +161,12 @@ public partial class DeployFlowViewModel : ReactiveObject
         IsDeploying = true;
         DeployErrorMessage = null;
 
+        // Refresh wallet UTXOs from the indexer before building the transaction.
+        // This ensures we don't pick UTXOs already consumed by a prior transaction
+        // that haven't been synced to local LiteDB yet.
+        DeployStatusText = "Refreshing wallet...";
+        await _walletContext.RefreshAllBalancesAsync();
+
         try
         {
             var walletId = SelectedWallet.Id;
