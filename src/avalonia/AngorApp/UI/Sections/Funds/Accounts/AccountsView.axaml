@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:accounts="clr-namespace:AngorApp.UI.Sections.Funds.Accounts"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
-             mc:Ignorable="d" d:DesignWidth="800"
+             mc:Ignorable="d" d:DesignWidth="400"
              x:Class="AngorApp.UI.Sections.Funds.Accounts.AccountsView"
              x:DataType="accounts:IAccountsViewModel">
 
@@ -29,25 +29,15 @@
             </Style.Animations>
         </Style>
 
-        <ContainerQuery Name="Toolbar" Query="min-width:0 and max-width:499">
-            <Style Selector="FlexPanel">
-                <Setter Property="Direction" Value="Column" />
-            </Style>
-            <Style Selector="FlexPanel > EnhancedButton">
-                <Setter Property="HorizontalAlignment" Value="Stretch" />
-            </Style>
-        </ContainerQuery>
     </UserControl.Styles>
 
     <controls:ScrollableView>
         <StackPanel Classes="Gap-XL" MaxWidth="1152">
-            <Panel Container.Name="Toolbar" Container.Sizing="Width">
-                <FlexPanel Direction="Row" Wrap="Wrap" Gap="8" JustifyContent="End">
-                    <EnhancedButton Command="{Binding RefreshBalances}" Classes="Outline" Classes.Spinning="{Binding RefreshBalances.IsExecuting}" Icon="{Icon fa-sync}">Refresh</EnhancedButton>
-                    <EnhancedButton Command="{Binding ImportAccount}" Classes="Outline" Icon="{Icon fa-upload}" IsEnabled="False">Import Wallet</EnhancedButton>
-                    <EnhancedButton Command="{Binding GetTestCoins}" IsVisible="{Binding CanGetTestCoins}" Classes="Emphasized" Icon="{Icon fa-plus}">Get Testnet Coins</EnhancedButton>
-                </FlexPanel>
-            </Panel>
+            <FlexPanel Wrap="Wrap" Gap="8" AlignContent="Start" HorizontalAlignment="Right">
+                <EnhancedButton HorizontalAlignment="Stretch" Command="{Binding RefreshBalances}" Classes="Outline" Classes.Spinning="{Binding RefreshBalances.IsExecuting}" Icon="{Icon fa-sync}" FlexPanel.Grow="1" FlexPanel.Basis="120">Refresh</EnhancedButton>
+                <EnhancedButton  HorizontalAlignment="Stretch" Command="{Binding ImportAccount}" Classes="Outline" Icon="{Icon fa-upload}" IsEnabled="False" FlexPanel.Grow="1" FlexPanel.Basis="120">Import Wallet</EnhancedButton>
+                <EnhancedButton  HorizontalAlignment="Stretch" Command="{Binding GetTestCoins}" IsVisible="{Binding CanGetTestCoins}" Classes="Emphasized" Icon="{Icon fa-plus}" FlexPanel.Grow="1" FlexPanel.Basis="120">Get Testnet Coins</EnhancedButton>
+            </FlexPanel>
             <HeaderedContainer Classes="Card ApricotGradient Shadow" HeaderClasses="Size-XL Black" Header="Balance Summary" Background="{DynamicResource BitcoinWash}">
                 <ItemsControl ItemsSource="{Binding Balances}">
                     <ItemsControl.ItemsPanel>
