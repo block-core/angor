@@ -54,6 +54,8 @@ public static class CompositionRoot
         // Logging — Microsoft.Extensions.Logging with console output
         services.AddLogging(builder =>
         {
+            builder.ClearProviders();
+
             if (enableConsoleLogging)
             {
                 builder.AddConsole();
@@ -105,7 +107,7 @@ public static class CompositionRoot
         services.AddSingleton<PortfolioViewModel>();
 
         // ── Section VMs (transient — fresh per navigation) ──
-        services.AddTransient<ShellViewModel>();
+        services.AddSingleton<ShellViewModel>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<FundsViewModel>();
         services.AddTransient<FindProjectsViewModel>();
@@ -131,7 +133,8 @@ public static class CompositionRoot
                 sp.GetRequiredService<IFounderAppService>(),
                 sp.GetRequiredService<IProjectAppService>(),
                 sp.GetRequiredService<IProjectService>(),
-                sp.GetRequiredService<ICurrencyService>()));
+                sp.GetRequiredService<ICurrencyService>(),
+                sp.GetRequiredService<ILoggerFactory>().CreateLogger<ManageProjectViewModel>()));
 
         // ── Section Views (transient — each receives its VM via constructor injection) ──
         services.AddTransient<HomeView>();

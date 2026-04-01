@@ -1,13 +1,12 @@
 using System.Collections.ObjectModel;
-using System.Collections.Specialized;
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Wallet.Application;
-using App.UI.Shell;
 using App.UI.Shared;
+using Microsoft.Extensions.Logging;
 
 namespace App.UI.Sections.Funders;
 
@@ -50,19 +49,6 @@ public partial class SignatureRequestViewModel : ReactiveObject
     public bool IsApproved => Status == SignatureStatus.Approved.ToLowerString();
     public bool IsRejected => Status == SignatureStatus.Rejected.ToLowerString();
 
-    /// <summary>Create from a SharedSignature.</summary>
-    public static SignatureRequestViewModel FromShared(SharedSignature sig) => new()
-    {
-        Id = sig.Id,
-        ProjectTitle = sig.ProjectTitle,
-        Amount = sig.Amount,
-        Currency = sig.Currency,
-        Date = sig.Date,
-        Time = sig.Time,
-        Status = sig.Status,
-        Npub = sig.Npub,
-        HasMessages = sig.HasMessages
-    };
 }
 
 /// <summary>
@@ -75,8 +61,8 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
     private readonly IFounderAppService _founderAppService;
     private readonly IProjectAppService _projectAppService;
     private readonly IWalletAppService _walletAppService;
-    private readonly SignatureStore _signatureStore;
     private readonly ICurrencyService _currencyService;
+    private readonly ILogger<FundersViewModel> _logger;
 
     [Reactive] private bool hasFunders;
     [Reactive] private string currentFilter = SignatureStatus.Waiting.ToLowerString();
@@ -97,32 +83,25 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
     [Reactive] private ObservableCollection<SignatureRequestViewModel> filteredSignatures = new();
 
     private readonly CompositeDisposable _disposables = new();
-    private readonly NotifyCollectionChangedEventHandler _collectionChangedHandler;
+
+    public event Action<string>? ToastRequested;
 
     public FundersViewModel(
         IFounderAppService founderAppService,
         IProjectAppService projectAppService,
         IWalletAppService walletAppService,
-        SignatureStore signatureStore,
-        ICurrencyService currencyService)
+        ICurrencyService currencyService,
+        ILogger<FundersViewModel> logger)
     {
         _founderAppService = founderAppService;
         _projectAppService = projectAppService;
         _walletAppService = walletAppService;
-        _signatureStore = signatureStore;
         _currencyService = currencyService;
+        _logger = logger;
 
         this.WhenAnyValue(x => x.CurrentFilter)
             .Subscribe(_ => UpdateFilteredSignatures())
             .DisposeWith(_disposables);
-
-        // Re-filter when the shared store changes (new investments from UI flow)
-        _collectionChangedHandler = (_, _) =>
-        {
-            _cachedAllViewModels = null;
-            UpdateFilteredSignatures();
-        };
-        _signatureStore.AllSignatures.CollectionChanged += _collectionChangedHandler;
 
         // Load investment requests from SDK
         _ = LoadInvestmentRequestsAsync();
@@ -196,9 +175,9 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
             _cachedAllViewModels = null;
             UpdateFilteredSignatures();
         }
-        catch
+        catch (Exception ex)
         {
-            // SDK call failed
+            _logger.LogError(ex, "Failed to load funder investment requests");
         }
         finally
         {
@@ -210,13 +189,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
     {
         if (_cachedAllViewModels != null) return _cachedAllViewModels;
 
-        var all = new List<SignatureRequestViewModel>();
-        all.AddRange(_sdkSignatures);
-        // Include shared store entries (from UI-only invest flow)
-        foreach (var shared in _signatureStore.AllSignatures)
-        {
-            all.Add(SignatureRequestViewModel.FromShared(shared));
-        }
+        var all = new List<SignatureRequestViewModel>(_sdkSignatures);
         _cachedAllViewModels = all;
         return all;
     }
@@ -246,11 +219,6 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
             _ = ApproveSignatureAsync(sdkSig);
             return;
         }
-
-        // Fallback to shared store
-        _signatureStore.Approve(id);
-        _cachedAllViewModels = null;
-        UpdateFilteredSignatures();
     }
 
     private async Task ApproveSignatureAsync(SignatureRequestViewModel sig)
@@ -279,11 +247,23 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
                 sig.Status = SignatureStatus.Approved.ToLowerString();
                 _cachedAllViewModels = null;
                 UpdateFilteredSignatures();
+                return;
             }
+
+            _logger.LogError(
+                "ApproveInvestment failed for request {EventId} in project {ProjectId}: {Error}",
+                sig.EventId,
+                sig.ProjectIdentifier,
+                result.Error);
+            ToastRequested?.Invoke("Approval failed. Please try again.");
         }
-        catch
+        catch (Exception ex)
         {
-            // Approval failed
+            _logger.LogError(ex,
+                "Failed to approve investment request {EventId} for project {ProjectId}",
+                sig.EventId,
+                sig.ProjectIdentifier);
+            ToastRequested?.Invoke("Approval failed. Please try again.");
         }
     }
 
@@ -298,9 +278,6 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
             return;
         }
 
-        _signatureStore.Reject(id);
-        _cachedAllViewModels = null;
-        UpdateFilteredSignatures();
     }
 
     public void ApproveAll()
@@ -310,8 +287,6 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
         {
             _ = ApproveSignatureAsync(sig);
         }
-        // Approve shared store signatures
-        _signatureStore.ApproveAll();
         _cachedAllViewModels = null;
         UpdateFilteredSignatures();
     }
@@ -331,6 +306,5 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
     public void Dispose()
     {
         _disposables.Dispose();
-        _signatureStore.AllSignatures.CollectionChanged -= _collectionChangedHandler;
     }
 }

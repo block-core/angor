@@ -12,6 +12,7 @@ using App.Test.Integration.Helpers;
 using App.UI.Sections.Funds;
 using App.UI.Sections.MyProjects;
 using App.UI.Sections.MyProjects.Deploy;
+using App.UI.Sections.Portfolio;
 using App.UI.Sections.Settings;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
@@ -111,6 +112,21 @@ public class CreateProjectTest
         Log("[STEP 1] Wiping existing data...");
         await WipeExistingData(window);
 
+        Log("[STEP 1] Verifying shell header and funded state reset immediately after wipe...");
+        shellVm.SelectedWallet.Should().BeNull("wipe data should clear the selected header wallet");
+        shellVm.SwitcherWallets.Should().BeEmpty("wipe data should clear wallet switcher entries");
+        shellVm.AvailableBalanceDisplay.Should().Be("0.0000 TBTC", "wipe data should reset the header available balance");
+        shellVm.InvestedBalanceDisplay.Should().Be("0.0000 TBTC", "wipe data should reset the header invested balance");
+
+        window.NavigateToSection("Funded");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        var portfolioVmAfterWipe = GetPortfolioViewModel(window);
+        portfolioVmAfterWipe.Should().NotBeNull("PortfolioViewModel should be available after navigating to Funded");
+        portfolioVmAfterWipe!.HasInvestments.Should().BeFalse("wipe data should clear funded investments without needing refresh");
+        portfolioVmAfterWipe.Investments.Should().BeEmpty("Funded list should be empty immediately after wipe");
+
         // ──────────────────────────────────────────────────────────────
         // STEP 2: Navigate to Funds → create wallet via Generate path
         // ──────────────────────────────────────────────────────────────
@@ -135,6 +151,30 @@ public class CreateProjectTest
 
         Log("[STEP 3] Requesting testnet coins and waiting for balance...");
         await FundWalletViaFaucet(window);
+
+        Log("[STEP 3] Verifying header wallet balance sync and that Funded remains empty...");
+        var fundsVm = GetFundsViewModel(window);
+        fundsVm.Should().NotBeNull("FundsViewModel should still be available after funding");
+
+        var headerUpdated = await TestHelpers.WaitForCondition(
+            () => shellVm.SelectedWallet != null && shellVm.AvailableBalanceDisplay != "0.0000 TBTC",
+            TimeSpan.FromSeconds(30),
+            TimeSpan.FromMilliseconds(250));
+        headerUpdated.Should().BeTrue("header wallet balance should update automatically after funding");
+
+        shellVm.SelectedWallet.Should().NotBeNull("header should auto-select the funded wallet");
+        shellVm.AvailableBalanceDisplay.Should().Be(
+            fundsVm!.TotalBalance + " TBTC",
+            "header available balance should match the confirmed Funds total balance");
+
+        window.NavigateToSection("Funded");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        var portfolioVmBeforeCreate = GetPortfolioViewModel(window);
+        portfolioVmBeforeCreate.Should().NotBeNull("PortfolioViewModel should be available before project creation");
+        portfolioVmBeforeCreate!.HasInvestments.Should().BeFalse("wallet funding alone should not create funded investments");
+        portfolioVmBeforeCreate.Investments.Should().BeEmpty("Funded should remain empty before any investment flow happens");
 
         // ──────────────────────────────────────────────────────────────
         // STEP 4: Navigate to My Projects → open create wizard
@@ -716,6 +756,17 @@ public class CreateProjectTest
             .OfType<MyProjectsView>()
             .FirstOrDefault();
         return myProjectsView?.DataContext as MyProjectsViewModel;
+    }
+
+    /// <summary>
+    /// Get the PortfolioViewModel from the current Funded view.
+    /// </summary>
+    private PortfolioViewModel? GetPortfolioViewModel(Window window)
+    {
+        var portfolioView = window.GetVisualDescendants()
+            .OfType<PortfolioView>()
+            .FirstOrDefault();
+        return portfolioView?.DataContext as PortfolioViewModel;
     }
 
     /// <summary>

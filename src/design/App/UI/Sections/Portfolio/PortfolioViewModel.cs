@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;
@@ -449,6 +450,8 @@ public partial class PortfolioViewModel : ReactiveObject
     private readonly ICurrencyService _currencyService;
     private readonly ILogger<PortfolioViewModel> _logger;
 
+    public event Action<string>? ToastRequested;
+
     [Reactive] private bool hasInvestments;
     [Reactive] private InvestmentViewModel? selectedInvestment;
     [Reactive] private bool isLoading;
@@ -542,6 +545,28 @@ public partial class PortfolioViewModel : ReactiveObject
 
                     var (statusText, statusClass, step) = MapInvestmentStatus(dto.InvestmentStatus, dto.FounderStatus);
 
+                    var existingInvestment = Investments.FirstOrDefault(i =>
+                        (!string.IsNullOrEmpty(dto.Id) && i.ProjectIdentifier == dto.Id) ||
+                        (!string.IsNullOrEmpty(dto.InvestmentId) && i.InvestmentTransactionId == dto.InvestmentId));
+
+                    var serverStatus = dto.InvestmentStatus;
+                    if (existingInvestment != null)
+                    {
+                        var localStatus = MapUiStepToInvestmentStatus(existingInvestment);
+                        if (localStatus != serverStatus && IsStaleResponse(localStatus, serverStatus))
+                        {
+                            _logger.LogInformation(
+                                "Keeping optimistic local status {LocalStatus} for project {ProjectId}; server still reports {ServerStatus}",
+                                localStatus,
+                                dto.Id,
+                                serverStatus);
+
+                            statusText = existingInvestment.StatusText;
+                            statusClass = existingInvestment.StatusClass;
+                            step = existingInvestment.Step;
+                        }
+                    }
+
                     var vm = new InvestmentViewModel
                     {
                         ProjectName = dto.Name ?? "Unknown Project",
@@ -617,6 +642,31 @@ public partial class PortfolioViewModel : ReactiveObject
                 ("Cancelled", "recovered", 3),
             _ => ("Unknown", "waiting", 1)
         };
+    }
+
+    private static InvestmentStatus MapUiStepToInvestmentStatus(InvestmentViewModel investment)
+    {
+        if (investment.Status == "Cancelled" || investment.StatusText == "Cancelled")
+            return InvestmentStatus.Cancelled;
+
+        return investment.Step switch
+        {
+            3 => InvestmentStatus.Invested,
+            2 => InvestmentStatus.FounderSignaturesReceived,
+            _ => InvestmentStatus.PendingFounderSignatures
+        };
+    }
+
+    private static bool IsStaleResponse(InvestmentStatus local, InvestmentStatus server)
+    {
+        if (local == InvestmentStatus.Invested && server == InvestmentStatus.FounderSignaturesReceived)
+            return true;
+
+        if (local == InvestmentStatus.Cancelled &&
+            (server == InvestmentStatus.PendingFounderSignatures || server == InvestmentStatus.FounderSignaturesReceived))
+            return true;
+
+        return false;
     }
 
     /// <summary>
@@ -911,8 +961,19 @@ public partial class PortfolioViewModel : ReactiveObject
                 investment.Status = "Active";
                 return true;
             }
+
+            _logger.LogError("ConfirmInvestment failed for project {ProjectId} and investment {InvestmentId}: {Error}",
+                investment.ProjectIdentifier,
+                investment.InvestmentTransactionId,
+                result.Error);
+            ToastRequested?.Invoke("Failed to confirm investment. Please try again.");
         }
-        catch { }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ConfirmInvestmentAsync threw exception for project {ProjectId}",
+                investment.ProjectIdentifier);
+            ToastRequested?.Invoke("Failed to confirm investment. Please try again.");
+        }
 
         return false;
     }
@@ -944,8 +1005,19 @@ public partial class PortfolioViewModel : ReactiveObject
                 investment.Status = "Cancelled";
                 return true;
             }
+
+            _logger.LogError("CancelInvestmentRequest failed for project {ProjectId} and investment {InvestmentId}: {Error}",
+                investment.ProjectIdentifier,
+                investment.InvestmentTransactionId,
+                result.Error);
+            ToastRequested?.Invoke("Failed to cancel investment. Please try again.");
         }
-        catch { }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "CancelInvestmentAsync threw exception for project {ProjectId}",
+                investment.ProjectIdentifier);
+            ToastRequested?.Invoke("Failed to cancel investment. Please try again.");
+        }
 
         return false;
     }
@@ -991,6 +1063,11 @@ public partial class PortfolioViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(RecoveredToPenalty));
         this.RaisePropertyChanged(nameof(ProjectsInRecovery));
         this.RaisePropertyChanged(nameof(TotalAvailable));
+    }
+
+    public void ResetAfterDataWipe()
+    {
+        ClearToEmpty();
     }
 
     /// <summary>Navigate to investment detail view</summary>

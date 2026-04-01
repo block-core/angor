@@ -6,8 +6,10 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.Services;
-using App.UI.Shared;
+using App.UI.Sections.Funds;
+using App.UI.Sections.Portfolio;
 using App.UI.Shell;
+using App.UI.Shared;
 using Microsoft.Extensions.Logging;
 
 namespace App.UI.Sections.Settings;
@@ -25,16 +27,18 @@ public partial class SettingsViewModel : ReactiveObject
     private readonly IWalletAppService _walletAppService;
     private readonly IDatabaseManagementService _databaseManagementService;
     private readonly ICurrencyService _currencyService;
+    private readonly FundsViewModel _fundsViewModel;
+    private readonly PortfolioViewModel _portfolioViewModel;
+    private readonly SignatureStore _signatureStore;
+    private readonly ShellViewModel _shellViewModel;
     private readonly ILogger<SettingsViewModel> _logger;
+
+    public event Action<string>? ToastRequested;
 
     [Reactive] private string networkType;
     [Reactive] private bool isNetworkModalOpen;
     [Reactive] private string? selectedNetworkToSwitch;
     [Reactive] private bool networkChangeConfirmed;
-
-    // Explorer — table-based list
-    public ObservableCollection<ExplorerItem> ExplorerLinks { get; } = new();
-    [Reactive] private string newExplorerUrl = "";
 
     // Indexer — table-based list with status
     public ObservableCollection<IndexerItem> IndexerLinks { get; } = new();
@@ -105,6 +109,10 @@ public partial class SettingsViewModel : ReactiveObject
         IDatabaseManagementService databaseManagementService,
         PrototypeSettings prototypeSettings,
         ICurrencyService currencyService,
+        FundsViewModel fundsViewModel,
+        PortfolioViewModel portfolioViewModel,
+        SignatureStore signatureStore,
+        ShellViewModel shellViewModel,
         ILogger<SettingsViewModel> logger)
     {
         _networkService = networkService;
@@ -114,6 +122,10 @@ public partial class SettingsViewModel : ReactiveObject
         _databaseManagementService = databaseManagementService;
         _prototypeSettings = prototypeSettings;
         _currencyService = currencyService;
+        _fundsViewModel = fundsViewModel;
+        _portfolioViewModel = portfolioViewModel;
+        _signatureStore = signatureStore;
+        _shellViewModel = shellViewModel;
         _logger = logger;
 
         // Initialize currency display from the network configuration
@@ -136,21 +148,11 @@ public partial class SettingsViewModel : ReactiveObject
     }
 
     /// <summary>
-    /// Load explorer, indexer, and relay settings from SDK storage.
+    /// Load indexer and relay settings from SDK storage.
     /// </summary>
     private void LoadSettingsFromSdk()
     {
         var settings = _networkStorage.GetSettings();
-
-        ExplorerLinks.Clear();
-        foreach (var explorer in settings.Explorers)
-        {
-            ExplorerLinks.Add(new ExplorerItem
-            {
-                Url = explorer.Url,
-                IsDefault = explorer.IsPrimary
-            });
-        }
 
         IndexerLinks.Clear();
         foreach (var indexer in settings.Indexers)
@@ -182,11 +184,7 @@ public partial class SettingsViewModel : ReactiveObject
     {
         var current = _networkStorage.GetSettings();
 
-        current.Explorers = ExplorerLinks.Select(e => new SettingsUrl
-        {
-            Url = e.Url,
-            IsPrimary = e.IsDefault
-        }).ToList();
+        current.Explorers = new List<SettingsUrl>();
 
         current.Indexers = IndexerLinks.Select(i => new SettingsUrl
         {
@@ -226,7 +224,13 @@ public partial class SettingsViewModel : ReactiveObject
 
         // Delete all document collections (projects, investments, sync data, etc.)
         // This preserves the wallet file but clears all cached/synced data
-        await _databaseManagementService.DeleteAllDataAsync();
+        var deleteDataResult = await _databaseManagementService.DeleteAllDataAsync();
+        if (deleteDataResult.IsFailure)
+        {
+            _logger.LogError("Failed to clear existing data before network switch: {Error}", deleteDataResult.Error);
+            ToastRequested?.Invoke("Failed to switch network. Please try again.");
+            return;
+        }
 
         // Persist new network to SDK storage
         _networkStorage.SetNetwork(newNetwork);
@@ -261,30 +265,15 @@ public partial class SettingsViewModel : ReactiveObject
         LoadSettingsFromSdk();
 
         // Rebuild wallet balance data for the new network
-        await _walletAppService.RebuildAllWalletBalancesAsync();
-    }
-
-    // Explorer list management
-    public void AddExplorerLink()
-    {
-        if (!string.IsNullOrWhiteSpace(NewExplorerUrl))
+        var rebuildResult = await _walletAppService.RebuildAllWalletBalancesAsync();
+        if (rebuildResult.IsFailure)
         {
-            ExplorerLinks.Add(new ExplorerItem { Url = NewExplorerUrl.Trim(), IsDefault = false });
-            NewExplorerUrl = "";
-            SaveSettingsToSdk();
+            _logger.LogError("Failed to rebuild wallet balances after network switch: {Error}", rebuildResult.Error);
+            ToastRequested?.Invoke("Network switched, but wallet data failed to refresh.");
+            return;
         }
-    }
 
-    public void SetDefaultExplorer(ExplorerItem item)
-    {
-        foreach (var link in ExplorerLinks) link.IsDefault = link == item;
-        SaveSettingsToSdk();
-    }
-
-    public void RemoveExplorerLink(ExplorerItem item)
-    {
-        ExplorerLinks.Remove(item);
-        SaveSettingsToSdk();
+        ToastRequested?.Invoke("Network updated successfully.");
     }
 
     // Indexer list management
@@ -332,8 +321,16 @@ public partial class SettingsViewModel : ReactiveObject
     /// </summary>
     public async Task RefreshIndexerStatusAsync()
     {
-        await _networkService.CheckServices(true);
-        LoadSettingsFromSdk();
+        try
+        {
+            await _networkService.CheckServices(true);
+            LoadSettingsFromSdk();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to refresh indexer status");
+            ToastRequested?.Invoke("Failed to refresh indexer status.");
+        }
     }
 
     /// <summary>
@@ -341,8 +338,16 @@ public partial class SettingsViewModel : ReactiveObject
     /// </summary>
     public async Task RefreshRelayStatusAsync()
     {
-        await _networkService.CheckServices(true);
-        LoadSettingsFromSdk();
+        try
+        {
+            await _networkService.CheckServices(true);
+            LoadSettingsFromSdk();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to refresh relay status");
+            ToastRequested?.Invoke("Failed to refresh relay status.");
+        }
     }
 
     // Wipe data
@@ -355,13 +360,23 @@ public partial class SettingsViewModel : ReactiveObject
         IsWipeDataModalOpen = false;
 
         // Delete all document collections (projects, investments, sync data, etc.)
-        await _databaseManagementService.DeleteAllDataAsync();
+        var deleteDataResult = await _databaseManagementService.DeleteAllDataAsync();
+        if (deleteDataResult.IsFailure)
+        {
+            _logger.LogError("Failed to delete application data during wipe: {Error}", deleteDataResult.Error);
+            ToastRequested?.Invoke("Wipe data failed. Please try again.");
+            return;
+        }
 
         // Clear settings
         _networkStorage.SetSettings(new SettingsInfo());
         _networkService.AddSettingsIfNotExist();
         LoadSettingsFromSdk();
         _logger.LogInformation("Network settings cleared and defaults re-initialized");
+
+        _signatureStore.Clear();
+        _portfolioViewModel.ResetAfterDataWipe();
+        _fundsViewModel.ClearToEmpty();
 
         // Delete all wallets
         try
@@ -382,34 +397,24 @@ public partial class SettingsViewModel : ReactiveObject
             else
             {
                 _logger.LogWarning("Failed to get wallet metadatas for wipe: {Error}", metadatas.Error);
+                ToastRequested?.Invoke("Wipe data failed while loading wallets to delete.");
+                return;
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while deleting wallets during wipe");
+            ToastRequested?.Invoke("Wipe data failed while deleting wallets.");
+            return;
         }
 
-        // Clear cached views so sections reload with fresh data
-        var shellVm = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions
-            .GetService<ShellViewModel>(App.Services);
-        shellVm?.ClearViewCache();
-        _logger.LogInformation("Wipe data completed — view cache cleared");
+        _shellViewModel.ResetAfterDataWipe();
+        _logger.LogInformation("Wipe data completed — live shell state reset");
+        ToastRequested?.Invoke("All local data was wiped successfully.");
     }
 }
 
 // ── Table item models ──
-public class ExplorerItem : ReactiveObject
-{
-    public string Url { get; set; } = "";
-
-    private bool _isDefault;
-    public bool IsDefault
-    {
-        get => _isDefault;
-        set => this.RaiseAndSetIfChanged(ref _isDefault, value);
-    }
-}
-
 public class IndexerItem : ReactiveObject
 {
     public string Url { get; set; } = "";

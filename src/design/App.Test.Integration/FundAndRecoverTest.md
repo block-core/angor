@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Full end-to-end integration test that boots the real Avalonia app in headless mode, creates a wallet, funds it via a testnet faucet, creates a **Fund-type** project through the 6-step wizard, invests in that project (below the penalty threshold for direct publish), has the **founder spend stage 1**, and then has the **investor recover the remaining stages** — verifying the complete fund-spend-recover lifecycle through the UI and SDK.
+Full end-to-end integration test that boots the real Avalonia app in headless mode, creates a wallet, funds it via a testnet faucet, creates a **Fund-type** project through the 6-step wizard, invests in that project above the approval threshold, has the **founder approve the pending request**, has the **investor confirm the signed investment**, then has the **founder spend stage 1**, and finally has the **investor recover the remaining stages** — verifying the complete approval-spend-recover lifecycle through the UI and SDK.
 
 ## Prerequisites
 
@@ -26,7 +26,7 @@ Full end-to-end integration test that boots the real Avalonia app in headless mo
 | **Network** | Signet testnet (real indexer + faucet + Nostr relays) |
 | **Duration** | 120–300s |
 
-**Verifies**: The complete fund lifecycle — wallet setup, funding, Fund project creation via the 6-step wizard (with dynamic payout schedule), investing below the penalty threshold (direct publish), founder spending stage 1 via `ManageProjectViewModel`, investor recovering remaining stages via `PortfolioViewModel`.
+**Verifies**: The complete fund lifecycle — wallet setup, funding, Fund project creation via the 6-step wizard (with dynamic payout schedule), above-threshold investing through founder approval, investor confirmation after valid founder signatures, founder spending stage 1 via `ManageProjectViewModel`, and investor recovery via `PortfolioViewModel`.
 
 **Steps**:
 
@@ -44,25 +44,28 @@ Full end-to-end integration test that boots the real Avalonia app in headless mo
 6. **Verify project deployed** — Assert project appears in My Projects list by unique GUID in description.
 7. **Reload founder projects from SDK** — Call `LoadFounderProjectsAsync()` to get the `ProjectIdentifier` and `OwnerWalletId` (not set by `OnProjectDeployed`).
 8. **Navigate to Find Projects** — Reload projects from SDK via `LoadProjectsFromSdkAsync()`, find our project by GUID match.
-9. **Invest 0.001 BTC** — Open invest page, set amount to "0.001" BTC (below the 0.01 BTC penalty threshold), submit, select wallet, pay. The SDK pipeline: `BuildInvestmentDraft` -> `CheckPenaltyThreshold` (returns false for below-threshold) -> `SubmitTransactionFromDraft` (direct publish).
+9. **Invest 0.02 BTC** — Open invest page, set amount to "0.02" BTC (above the 0.01 BTC approval threshold), submit, select wallet, pay. The SDK pipeline: `BuildInvestmentDraft` -> `CheckPenaltyThreshold` (returns true for above-threshold) -> `SubmitInvestment` (request founder signatures).
 10. **Add investment to portfolio** — Call `AddToPortfolio()` on the invest page.
-11. **Founder spends stage 1** — Via `ManageProjectViewModel`:
+11. **Founder approves request** — Navigate to Funders, poll `LoadInvestmentRequestsAsync()` until the request appears in `waiting`, then call `ApproveSignature(...)` and verify it moves to `approved`.
+12. **Investor confirms signed investment** — Reload funded investments from SDK until the investment reaches `FounderSignaturesReceived`/step 2, then call `ConfirmInvestmentAsync(...)` and verify it advances to active/step 3.
+13. **Founder spends stage 1** — Via `ManageProjectViewModel`:
     - `OpenManageProject(project)` creates the manage VM
     - `LoadClaimableTransactionsAsync()` loads stages with UTXOs
-    - Wait for stage 0 to have available transactions (indexer lag)
-    - Select all available transactions for stage 0
-    - `ClaimStageFundsAsync(0, selectedTxs, feeRate)` builds and broadcasts the spending tx
-12. **Investor recovers remaining stages** — Via `PortfolioViewModel`:
+    - Wait for stage 1 to have available transactions (indexer lag)
+    - Select all available transactions for stage 1
+    - `ClaimStageFundsAsync(1, selectedTxs, feeRate)` builds and broadcasts the spending tx
+14. **Investor recovers remaining stages** — Via `PortfolioViewModel`:
     - Reload investments from SDK
     - Find our investment
     - `LoadRecoveryStatusAsync(investment)` — poll until recovery action available
     - Execute the appropriate recovery action based on `RecoveryState.ActionKey`
-13. **Verify recovery succeeded** — Assert the recovery operation returned `true`.
+15. **Verify recovery succeeded** — Assert the recovery operation returned `true`.
 
 **Key implementation details**:
 
 - **Fund vs Invest wizard flow**: Fund projects use `PayoutFrequency`, `SelectedInstallmentCounts`, `WeeklyPayoutDay`, and `GeneratePayoutSchedule()` instead of `DurationValue`/`DurationUnit`/`ReleaseFrequency`/`GenerateInvestmentStages()`.
-- **Penalty threshold**: Set `ApprovalThreshold = "0.01"` (0.01 BTC) in the wizard. The investment of 0.001 BTC is below this threshold, so `CheckPenaltyThreshold` returns `IsAboveThreshold=false` and the tx is published directly without founder signatures.
+- **Approval threshold**: Set `ApprovalThreshold = "0.01"` (0.01 BTC) in the wizard. The investment of 0.02 BTC is above this threshold, so `CheckPenaltyThreshold` returns `IsAboveThreshold=true` and the SDK routes the flow through founder signatures.
+- **Signature validation**: The investor-side signature validation happens in the SDK during `ConfirmInvestment`, not in the design app UI. `PublishInvestment.ValidateFounderSignatures(...)` validates the founder signatures before the signed transaction is broadcast.
 - **Payout day = today**: `WeeklyPayoutDay` is set to today's day of week so stage 1 is immediately claimable by the founder under the SDK's weekly payout calculation.
 - **`OnProjectDeployed` gap**: The `OnProjectDeployed()` callback adds a `MyProjectItemViewModel` without `ProjectIdentifier` or `OwnerWalletId`. The test calls `LoadFounderProjectsAsync()` to reload from SDK and get these fields.
 - **Pattern index**: For Fund projects, `InvestPageViewModel` uses `patternIndex = 0` (first pattern) when building the investment draft.

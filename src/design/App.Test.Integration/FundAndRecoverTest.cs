@@ -10,6 +10,7 @@ using Angor.Sdk.Funding.Projects;
 using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
+using App.UI.Sections.Funders;
 using App.UI.Sections.Funds;
 using App.UI.Sections.MyProjects;
 using App.UI.Sections.MyProjects.Deploy;
@@ -23,9 +24,10 @@ namespace App.Test.Integration;
 /// <summary>
 /// Full end-to-end integration test that boots the real app in headless mode,
 /// creates a wallet, funds it via testnet faucet, creates a fund-type
-/// project through the 6-step wizard, invests in that project below the penalty
-/// threshold for direct publish, has the founder spend stage 1, and then
-/// recovers the remaining invested funds.
+/// project through the 6-step wizard, invests in that project above the penalty
+/// threshold so founder approval is required, confirms the investment after the
+/// founder approves it, has the founder spend stage 1, and then recovers the
+/// remaining invested funds.
 ///
 /// Steps:
 ///   1. Wipe any existing data (via Settings → Danger Zone → Wipe Data)
@@ -33,12 +35,14 @@ namespace App.Test.Integration;
 ///   3. Fund wallet via faucet, wait for non-zero balance
 ///   4. Navigate to My Projects → create + deploy fund project (6-step wizard)
 ///   5. Navigate to Find Projects → reload → find our project by unique GUID
-///   6. Open invest page → set 0.001 BTC → submit → select wallet → pay → success
+///   6. Open invest page → set above-threshold amount → submit → select wallet → pay → success
 ///   7. Add investment to portfolio
-///   8. Navigate to My Projects → founder spends stage 1
-///   9. Navigate to Funded → reload investments → find our investment
-///  10. Load recovery status → execute appropriate recovery action
-///  11. Verify recovery succeeded
+///   8. Navigate to Funders → founder approves the pending investment request
+///   9. Navigate to Funded → reload investments → confirm the signed investment
+///  10. Navigate to My Projects → founder spends stage 1
+///  11. Navigate to Funded → reload investments → find our investment
+///  12. Load recovery status → execute appropriate recovery action
+///  13. Verify recovery succeeded
 ///
 /// A unique GUID is embedded in the project description so we can precisely identify
 /// the project we created, even if other projects exist in the list.
@@ -100,12 +104,12 @@ public class FundAndRecoverTest
         var installmentCount = 3;
         var weeklyPayoutDay = DateTime.UtcNow.DayOfWeek.ToString();
 
-        // Investment amount — below auto-approval threshold (0.01 BTC) so it publishes directly
-        var investmentAmountBtc = "0.001";
+        // Investment amount — above approval threshold (0.01 BTC) so founder approval is required
+        var investmentAmountBtc = "0.02";
 
         Log($"[STEP 0] Run ID: {runId}");
         Log($"[STEP 0] Project name: {projectName}");
-        Log($"[STEP 0] Investment amount: {investmentAmountBtc} BTC (below auto-approval threshold)");
+        Log($"[STEP 0] Investment amount: {investmentAmountBtc} BTC (above approval threshold)");
 
         // ──────────────────────────────────────────────────────────────
         // ARRANGE: Boot the full app with ShellView
@@ -318,7 +322,7 @@ public class FundAndRecoverTest
         Log($"[STEP 5] Found project: '{foundProject!.ProjectName}' (ID: {foundProject.ProjectId})");
 
         // ──────────────────────────────────────────────────────────────
-        // STEP 6: Open invest page → invest 0.001 BTC
+        // STEP 6: Open invest page → invest above threshold
         // ──────────────────────────────────────────────────────────────
         Log("[STEP 6] Opening project detail...");
         findProjectsVm!.OpenProjectDetail(foundProject);
@@ -401,9 +405,113 @@ public class FundAndRecoverTest
         Log($"[STEP 7] Portfolio now has {portfolioVm.Investments.Count} investment(s)");
 
         // ──────────────────────────────────────────────────────────────
-        // STEP 8: Founder spends stage 1
+        // STEP 8: Founder approves pending investment request
         // ──────────────────────────────────────────────────────────────
-        Log("[STEP 8] Founder spending stage 1...");
+        Log("[STEP 8] Founder approving pending investment request...");
+        findProjectsVm.CloseInvestPage();
+        findProjectsVm.CloseProjectDetail();
+        Dispatcher.UIThread.RunJobs();
+
+        window.NavigateToSection("Funders");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        var fundersVm = GetFundersViewModel(window);
+        fundersVm.Should().NotBeNull("FundersViewModel should be available for founder approval flow");
+
+        fundersVm!.SetFilter("waiting");
+
+        SignatureRequestViewModel? pendingRequest = null;
+        var approvalRequestDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        while (DateTime.UtcNow < approvalRequestDeadline)
+        {
+            await fundersVm.LoadInvestmentRequestsAsync();
+            fundersVm.SetFilter("waiting");
+            Dispatcher.UIThread.RunJobs();
+
+            pendingRequest = fundersVm.FilteredSignatures.FirstOrDefault(s =>
+                s.ProjectIdentifier == foundProject.ProjectId || s.ProjectTitle == foundProject.ProjectName);
+            if (pendingRequest != null)
+            {
+                break;
+            }
+
+            Log("[STEP 8] Pending founder request not visible yet. Retrying...");
+            await Task.Delay(PollInterval);
+        }
+
+        pendingRequest.Should().NotBeNull("Funders should show the pending request for the invested project");
+        Log($"[STEP 8] Approving request {pendingRequest!.EventId} for project '{pendingRequest.ProjectTitle}'");
+        fundersVm.ApproveSignature(pendingRequest.Id);
+        Dispatcher.UIThread.RunJobs();
+
+        var approvalCompleteDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        var founderApproved = false;
+        while (DateTime.UtcNow < approvalCompleteDeadline)
+        {
+            await fundersVm.LoadInvestmentRequestsAsync();
+            fundersVm.SetFilter("approved");
+            Dispatcher.UIThread.RunJobs();
+
+            founderApproved = fundersVm.FilteredSignatures.Any(s =>
+                s.ProjectIdentifier == foundProject.ProjectId || s.ProjectTitle == foundProject.ProjectName);
+            if (founderApproved)
+            {
+                break;
+            }
+
+            Log("[STEP 8] Waiting for approved founder signature to appear...");
+            await Task.Delay(PollInterval);
+        }
+
+        founderApproved.Should().BeTrue("Investment request should move to approved after founder approval");
+        Log("[STEP 8] Founder approval completed");
+
+        // ──────────────────────────────────────────────────────────────
+        // STEP 9: Investor reloads signed investment and confirms it
+        // ──────────────────────────────────────────────────────────────
+        Log("[STEP 9] Reloading funded investments and confirming signed investment...");
+        window.NavigateToSection("Funded");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        InvestmentViewModel? signedInvestment = null;
+        var signedDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        while (DateTime.UtcNow < signedDeadline)
+        {
+            await portfolioVm.LoadInvestmentsFromSdkAsync();
+            Dispatcher.UIThread.RunJobs();
+
+            signedInvestment = portfolioVm.Investments.FirstOrDefault(i =>
+                i.ProjectIdentifier == foundProject.ProjectId || i.ProjectName == foundProject.ProjectName);
+
+            if (signedInvestment != null)
+            {
+                Log($"[STEP 9] Investment status from SDK: status='{signedInvestment.StatusText}', step={signedInvestment.Step}, approval='{signedInvestment.ApprovalStatus}'");
+            }
+
+            if (signedInvestment is { Step: 2 } || signedInvestment?.ApprovalStatus == "Approved")
+            {
+                break;
+            }
+
+            await Task.Delay(PollInterval);
+        }
+
+        signedInvestment.Should().NotBeNull("Signed investment should appear in the portfolio after founder approval");
+        signedInvestment!.Step.Should().Be(2, "Founder approval should move the investment to the signed state before confirmation");
+
+        var confirmResult = await portfolioVm.ConfirmInvestmentAsync(signedInvestment);
+        Dispatcher.UIThread.RunJobs();
+        confirmResult.Should().BeTrue("Investor confirmation should succeed after founder signatures are available and valid");
+        signedInvestment.Step.Should().Be(3, "Confirmed investment should advance to the active state");
+        signedInvestment.StatusText.Should().Be("Investment Active");
+        Log("[STEP 9] Investor confirmed signed investment successfully");
+
+        // ──────────────────────────────────────────────────────────────
+        // STEP 10: Founder spends stage 1
+        // ──────────────────────────────────────────────────────────────
+        Log("[STEP 10] Founder spending stage 1...");
         findProjectsVm.CloseInvestPage();
         findProjectsVm.CloseProjectDetail();
         Dispatcher.UIThread.RunJobs();
@@ -433,22 +541,22 @@ public class FundAndRecoverTest
 
             var stageSnapshot = string.Join(", ", manageVm.Stages.Select(s =>
                 $"#{s.Number}:available={s.Available},canClaim={s.CanClaim},unspent={s.UnspentTransactionCount},spent={s.SpentTransactionCount},date='{s.CompletionDate}'"));
-            Log($"[STEP 8] Stage snapshot poll #{claimPollCount}: {stageSnapshot}");
+            Log($"[STEP 10] Stage snapshot poll #{claimPollCount}: {stageSnapshot}");
 
             var claimableStage = manageVm.Stages.FirstOrDefault(s => s.Number == 1 && s.AvailableTransactions.Count > 0);
             if (claimableStage != null)
             {
-                Log($"[STEP 8] Stage 1 is claimable after {claimPollCount} poll(s) with {claimableStage.AvailableTransactions.Count} transaction(s)");
+                Log($"[STEP 10] Stage 1 is claimable after {claimPollCount} poll(s) with {claimableStage.AvailableTransactions.Count} transaction(s)");
 
                 var selectedTransactions = claimableStage.AvailableTransactions.ToList();
                 var claimResult = await manageVm.ClaimStageFundsAsync(claimableStage.Number, selectedTransactions);
                 Dispatcher.UIThread.RunJobs();
                 claimResult.Should().BeTrue("Founder should be able to spend stage 1");
-                Log("[STEP 8] Founder successfully spent stage 1");
+                Log("[STEP 10] Founder successfully spent stage 1");
                 break;
             }
 
-            Log($"[STEP 8] Stage 1 not claimable yet (poll #{claimPollCount}). Retrying...");
+            Log($"[STEP 10] Stage 1 not claimable yet (poll #{claimPollCount}). Retrying...");
             await Task.Delay(PollInterval);
         }
 
@@ -460,7 +568,7 @@ public class FundAndRecoverTest
 
             var spentStageSnapshot = string.Join(", ", manageVm.Stages.Select(s =>
                 $"#{s.Number}:available={s.Available},canClaim={s.CanClaim},unspent={s.UnspentTransactionCount},spent={s.SpentTransactionCount},date='{s.CompletionDate}'"));
-            Log($"[STEP 8] Post-claim stage snapshot: {spentStageSnapshot}");
+            Log($"[STEP 10] Post-claim stage snapshot: {spentStageSnapshot}");
 
             if (manageVm.Stages.Any(s => s.Number == 1 && s.SpentTransactionCount > 0))
             {
@@ -473,9 +581,9 @@ public class FundAndRecoverTest
         manageVm!.Stages.Any(s => s.Number == 1 && s.SpentTransactionCount > 0).Should().BeTrue(
             "Stage 1 should show spent transactions after founder claim");
 
-        // STEP 9: Navigate to Funded → find our investment
+        // STEP 11: Navigate to Funded → find our investment
         // ──────────────────────────────────────────────────────────────
-        Log("[STEP 9] Navigating to Funded section...");
+        Log("[STEP 11] Navigating to Funded section...");
         window.NavigateToSection("Funded");
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
@@ -485,13 +593,13 @@ public class FundAndRecoverTest
             i.ProjectName == foundProject.ProjectName ||
             i.ProjectIdentifier == foundProject.ProjectId);
         investment.Should().NotBeNull("Should find our investment in the portfolio");
-        Log($"[STEP 9] Found investment: '{investment!.ProjectName}', status='{investment.StatusText}', step={investment.Step}");
+        Log($"[STEP 11] Found investment: '{investment!.ProjectName}', status='{investment.StatusText}', step={investment.Step}");
 
         // Also try to reload from SDK (indexer may lag)
-        Log("[STEP 9] Reloading investments from SDK...");
+        Log("[STEP 11] Reloading investments from SDK...");
         await portfolioVm.LoadInvestmentsFromSdkAsync();
         Dispatcher.UIThread.RunJobs();
-        Log($"[STEP 9] After SDK reload: {portfolioVm.Investments.Count} investment(s)");
+        Log($"[STEP 11] After SDK reload: {portfolioVm.Investments.Count} investment(s)");
 
         // Re-find after SDK reload (the list may have been replaced)
         var sdkInvestment = portfolioVm.Investments.FirstOrDefault(i =>
@@ -501,29 +609,29 @@ public class FundAndRecoverTest
         // Use whichever we found — local or SDK-loaded
         var targetInvestment = sdkInvestment ?? investment;
         targetInvestment.Should().NotBeNull("Investment should exist in portfolio (local or SDK-loaded)");
-        Log($"[STEP 9] Target investment: '{targetInvestment!.ProjectName}', identifier='{targetInvestment.ProjectIdentifier}', wallet='{targetInvestment.InvestmentWalletId}'");
+        Log($"[STEP 11] Target investment: '{targetInvestment!.ProjectName}', identifier='{targetInvestment.ProjectIdentifier}', wallet='{targetInvestment.InvestmentWalletId}'");
 
         // ──────────────────────────────────────────────────────────────
-        // STEP 10: Load recovery status and execute recovery
+        // STEP 12: Load recovery status and execute recovery
         // ──────────────────────────────────────────────────────────────
-        Log("[STEP 10] Loading recovery status...");
+        Log("[STEP 12] Loading recovery status...");
 
         // If the investment doesn't have a wallet ID yet (local-only add), set it from the wallet we used
         if (string.IsNullOrEmpty(targetInvestment.InvestmentWalletId))
         {
             targetInvestment.InvestmentWalletId = investWallet.WalletId;
-            Log($"[STEP 10] Set InvestmentWalletId to '{investWallet.WalletId}' (was empty from local add)");
+            Log($"[STEP 12] Set InvestmentWalletId to '{investWallet.WalletId}' (was empty from local add)");
         }
         if (string.IsNullOrEmpty(targetInvestment.ProjectIdentifier))
         {
             targetInvestment.ProjectIdentifier = foundProject.ProjectId;
-            Log($"[STEP 10] Set ProjectIdentifier to '{foundProject.ProjectId}' (was empty from local add)");
+            Log($"[STEP 12] Set ProjectIdentifier to '{foundProject.ProjectId}' (was empty from local add)");
         }
 
         // Give the indexer an initial grace period before the first poll.
         // Signet mempool propagation can be slow — the mempool.space indexer needs
         // time to receive and index the just-broadcast investment transaction.
-        Log("[STEP 10] Waiting 30s initial grace period for indexer to pick up the investment tx...");
+        Log("[STEP 12] Waiting 30s initial grace period for indexer to pick up the investment tx...");
         await Task.Delay(TimeSpan.FromSeconds(30));
 
         // Wait for indexer to catch up with the investment transaction, then load recovery status
@@ -537,7 +645,7 @@ public class FundAndRecoverTest
             await portfolioVm.LoadRecoveryStatusAsync(targetInvestment);
             Dispatcher.UIThread.RunJobs();
 
-            Log($"[STEP 10] Poll #{pollCount} — Recovery state: HasUnspent={targetInvestment.RecoveryState.HasUnspentItems}, " +
+            Log($"[STEP 12] Poll #{pollCount} — Recovery state: HasUnspent={targetInvestment.RecoveryState.HasUnspentItems}, " +
                 $"InPenalty={targetInvestment.RecoveryState.HasSpendableItemsInPenalty}, " +
                 $"HasReleaseSig={targetInvestment.RecoveryState.HasReleaseSignatures}, " +
                 $"EndOfProject={targetInvestment.RecoveryState.EndOfProject}, " +
@@ -551,7 +659,7 @@ public class FundAndRecoverTest
             }
 
             var remaining = recoveryDeadline - DateTime.UtcNow;
-            Log($"[STEP 10] No recovery action available yet. Waiting for indexer... ({remaining.TotalSeconds:F0}s remaining)");
+            Log($"[STEP 12] No recovery action available yet. Waiting for indexer... ({remaining.TotalSeconds:F0}s remaining)");
             await Task.Delay(recoveryPollInterval);
         }
 
@@ -562,7 +670,7 @@ public class FundAndRecoverTest
 
         // Execute the appropriate recovery operation
         var actionKey = targetInvestment.RecoveryState.ActionKey;
-        Log($"[STEP 10] Executing recovery action: '{actionKey}' ({targetInvestment.RecoveryState.ButtonLabel})...");
+        Log($"[STEP 12] Executing recovery action: '{actionKey}' ({targetInvestment.RecoveryState.ButtonLabel})...");
 
         bool recoveryResult;
         switch (actionKey)
@@ -581,20 +689,20 @@ public class FundAndRecoverTest
                 break;
             default:
                 recoveryResult = false;
-                Log($"[STEP 10] ERROR: Unknown recovery action key: '{actionKey}'");
+                Log($"[STEP 12] ERROR: Unknown recovery action key: '{actionKey}'");
                 break;
         }
 
         Dispatcher.UIThread.RunJobs();
 
         // ──────────────────────────────────────────────────────────────
-        // STEP 11: Verify recovery succeeded
+        // STEP 13: Verify recovery succeeded
         // ──────────────────────────────────────────────────────────────
-        Log($"[STEP 11] Recovery result: {recoveryResult}");
+        Log($"[STEP 13] Recovery result: {recoveryResult}");
         recoveryResult.Should().BeTrue(
             $"Recovery operation '{actionKey}' should succeed (transaction built and published)");
 
-        Log($"[STEP 11] Post-recovery state: HasUnspent={targetInvestment.RecoveryState.HasUnspentItems}, " +
+        Log($"[STEP 13] Post-recovery state: HasUnspent={targetInvestment.RecoveryState.HasUnspentItems}, " +
             $"InPenalty={targetInvestment.RecoveryState.HasSpendableItemsInPenalty}, " +
             $"ActionKey={targetInvestment.RecoveryState.ActionKey}");
 
@@ -818,6 +926,14 @@ public class FundAndRecoverTest
             .OfType<FindProjectsView>()
             .FirstOrDefault();
         return findProjectsView?.DataContext as FindProjectsViewModel;
+    }
+
+    private FundersViewModel? GetFundersViewModel(Window window)
+    {
+        var fundersView = window.GetVisualDescendants()
+            .OfType<FundersView>()
+            .FirstOrDefault();
+        return fundersView?.DataContext as FundersViewModel;
     }
 
     private static void Log(string message)
