@@ -488,6 +488,12 @@ public partial class PortfolioViewModel : ReactiveObject
         // Listen for signature status changes to update investment steps
         _signatureStore.SignatureStatusChanged += OnSignatureStatusChanged;
 
+        // Re-load investments whenever wallet list changes (e.g. after initial ReloadAsync completes).
+        // This fixes the race condition where PortfolioViewModel is constructed before wallets are
+        // loaded from LiteDB, resulting in an empty portfolio on app restart.
+        _walletContext.WalletsUpdated
+            .Subscribe(__ => _ = LoadInvestmentsFromSdkAsync());
+
         // Load investments from SDK
         _ = LoadInvestmentsFromSdkAsync();
     }
@@ -497,6 +503,9 @@ public partial class PortfolioViewModel : ReactiveObject
     /// </summary>
     public async Task LoadInvestmentsFromSdkAsync()
     {
+        // Guard against concurrent loads (e.g. constructor fire-and-forget + WalletsUpdated)
+        if (IsLoading) return;
+
         IsLoading = true;
         _logger.LogInformation("Loading investments from SDK...");
 

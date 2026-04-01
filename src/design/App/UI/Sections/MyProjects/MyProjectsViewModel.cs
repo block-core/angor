@@ -95,6 +95,12 @@ public partial class MyProjectsViewModel : ReactiveObject
         CreateProjectVm = createProjectVm;
         _currencyService = currencyService;
 
+        // Re-load founder projects whenever wallet list changes (e.g. after initial ReloadAsync completes).
+        // This fixes the race condition where MyProjectsViewModel is constructed before wallets are
+        // loaded from LiteDB, resulting in empty "My Projects" on app restart.
+        _walletContext.WalletsUpdated
+            .Subscribe(__ => _ = LoadFounderProjectsAsync());
+
         // Load founder projects from SDK
         _ = LoadFounderProjectsAsync();
     }
@@ -104,6 +110,9 @@ public partial class MyProjectsViewModel : ReactiveObject
     /// </summary>
     public async Task LoadFounderProjectsAsync()
     {
+        // Guard against concurrent loads (e.g. constructor fire-and-forget + WalletsUpdated)
+        if (IsLoading) return;
+
         IsLoading = true;
 
         try
