@@ -90,6 +90,14 @@ public class ProjectItemViewModel : INotifyPropertyChanged
     public string PayoutFrequency { get; set; } = "Monthly";
     public long SubscriptionPrice { get; set; } = 20000;
 
+    /// <summary>
+    /// Penalty threshold in satoshis from the project's on-chain data.
+    /// For Fund-type projects, investments below this amount are auto-approved.
+    /// For Invest-type projects, all investments require founder approval regardless.
+    /// Null means no threshold was set (treat as 0 → auto-approve all for Fund type).
+    /// </summary>
+    public long? PenaltyThresholdSats { get; set; }
+
     /// <summary>Formatted subscription price display, e.g. "0.0002 BTC"</summary>
     public string SubscriptionPriceDisplay => $"{SubscriptionPrice.ToUnitBtc():G} {CurrencySymbol}";
 
@@ -170,6 +178,7 @@ public class ProjectItemViewModel : INotifyPropertyChanged
             StartDate = dto.FundingStartDate.ToString("dd MMM yyyy"),
             EndDate = dto.FundingEndDate.ToString("dd MMM yyyy"),
             PenaltyDays = dto.PenaltyDuration.Days.ToString(),
+            PenaltyThresholdSats = dto.PenaltyThreshold,
             Stages = stages,
             BannerUrl = dto.Banner?.ToString(),
             AvatarUrl = dto.Avatar?.ToString()

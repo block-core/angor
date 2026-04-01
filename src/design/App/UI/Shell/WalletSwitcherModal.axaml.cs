@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using App.UI.Shared.Services;
 
 namespace App.UI.Shell;
 
@@ -59,7 +60,7 @@ public partial class WalletSwitcherModal : UserControl, IBackdropCloseable
             source = source.Parent as Control;
         }
 
-        if (found?.DataContext is WalletSwitcherItem wallet)
+        if (found?.DataContext is WalletInfo wallet)
         {
             // Select the wallet
             Vm?.SelectSwitcherWallet(wallet);

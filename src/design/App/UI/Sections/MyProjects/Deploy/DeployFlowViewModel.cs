@@ -8,6 +8,7 @@ using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Wallet.Application;
 using App.UI.Shared;
+using App.UI.Shared.Services;
 using ReactiveUI;
 
 namespace App.UI.Sections.MyProjects.Deploy;
@@ -22,20 +23,6 @@ public enum DeployScreen
     Success
 }
 
-/// <summary>Wallet item for the wallet selector list.</summary>
-public partial class WalletItem : ReactiveObject
-{
-    public string Name { get; set; } = "";
-    public string Network { get; set; } = "Bitcoin";
-    public string Balance { get; set; } = "0.00000000";
-    /// <summary>Balance in satoshis for programmatic comparison (e.g. balance checks before payment).</summary>
-    public long BalanceSats { get; set; }
-    /// <summary>SDK WalletId for operations</summary>
-    public string WalletId { get; set; } = "";
-
-    [Reactive] private bool isSelected;
-}
-
 /// <summary>
 /// ViewModel for the deploy flow overlay.
 /// Orchestrates: Wallet Selector → Pay Fee → Success.
@@ -47,12 +34,13 @@ public partial class DeployFlowViewModel : ReactiveObject
     private readonly IProjectAppService _projectAppService;
     private readonly IFounderAppService _founderAppService;
     private readonly ICurrencyService _currencyService;
+    private readonly IWalletContext _walletContext;
     private CancellationTokenSource? _invoiceMonitorCts;
 
     // ── State ──
     [Reactive] private DeployScreen currentScreen;
     [Reactive] private bool isVisible;
-    [Reactive] private WalletItem? selectedWallet;
+    [Reactive] private WalletInfo? selectedWallet;
     [Reactive] private bool isDeploying;
     [Reactive] private string deployStatusText = "Waiting for payment...";
     [Reactive] private long selectedFeeRate = 20;
@@ -82,19 +70,21 @@ public partial class DeployFlowViewModel : ReactiveObject
     /// <summary>Callback when deploy flow completes successfully.</summary>
     public Action? OnDeployCompleted { get; set; }
 
-    // ── Wallets loaded from SDK ──
-    public ObservableCollection<WalletItem> Wallets { get; } = new();
+    // ── Wallets loaded from IWalletContext ──
+    public ReadOnlyObservableCollection<WalletInfo> Wallets => _walletContext.Wallets;
 
     public DeployFlowViewModel(
         IWalletAppService walletAppService,
         IProjectAppService projectAppService,
         IFounderAppService founderAppService,
-        ICurrencyService currencyService)
+        ICurrencyService currencyService,
+        IWalletContext walletContext)
     {
         _walletAppService = walletAppService;
         _projectAppService = projectAppService;
         _founderAppService = founderAppService;
         _currencyService = currencyService;
+        _walletContext = walletContext;
         // Initialize ReactiveCommands for async payment operations
         PayWithWalletCommand = ReactiveCommand.CreateFromTask(PayWithWalletAsync);
         PayViaInvoiceCommand = ReactiveCommand.CreateFromTask(PayViaInvoiceAsync);
@@ -131,42 +121,6 @@ public partial class DeployFlowViewModel : ReactiveObject
         DeployStatusText = "Waiting for payment...";
         DeployErrorMessage = null;
         IsVisible = true;
-
-        // Load wallets from SDK
-        _ = LoadWalletsAsync();
-    }
-
-    /// <summary>Load wallets from SDK for the wallet selector.</summary>
-    private async Task LoadWalletsAsync()
-    {
-        try
-        {
-            var metadatasResult = await _walletAppService.GetMetadatas();
-            if (metadatasResult.IsFailure)
-            {
-                DeployErrorMessage = metadatasResult.Error;
-                return;
-            }
-
-            Wallets.Clear();
-            foreach (var meta in metadatasResult.Value)
-            {
-                var balanceResult = await _walletAppService.GetBalance(meta.Id);
-                var balanceBtc = balanceResult.IsSuccess ? (double)balanceResult.Value.Sats.ToUnitBtc() : 0;
-
-                Wallets.Add(new WalletItem
-                {
-                    Name = meta.Name,
-                    Network = "Bitcoin",
-                    Balance = $"{balanceBtc:F8} {_currencyService.Symbol}",
-                    WalletId = meta.Id.Value
-                });
-            }
-        }
-        catch (Exception ex)
-        {
-            DeployErrorMessage = ex.Message;
-        }
     }
 
     /// <summary>Close the overlay without completing.
@@ -181,7 +135,7 @@ public partial class DeployFlowViewModel : ReactiveObject
     }
 
     /// <summary>Select a wallet from the list.</summary>
-    public void SelectWallet(WalletItem wallet)
+    public void SelectWallet(WalletInfo wallet)
     {
         foreach (var w in Wallets) w.IsSelected = false;
         wallet.IsSelected = true;
@@ -196,7 +150,7 @@ public partial class DeployFlowViewModel : ReactiveObject
 
     private async Task PayWithWalletAsync()
     {
-        if (SelectedWallet == null || string.IsNullOrEmpty(SelectedWallet.WalletId)) return;
+        if (SelectedWallet == null) return;
         if (ProjectData == null)
         {
             DeployStatusText = "No project data available.";
@@ -207,9 +161,15 @@ public partial class DeployFlowViewModel : ReactiveObject
         IsDeploying = true;
         DeployErrorMessage = null;
 
+        // Refresh wallet UTXOs from the indexer before building the transaction.
+        // This ensures we don't pick UTXOs already consumed by a prior transaction
+        // that haven't been synced to local LiteDB yet.
+        DeployStatusText = "Refreshing wallet...";
+        await _walletContext.RefreshAllBalancesAsync();
+
         try
         {
-            var walletId = new WalletId(SelectedWallet.WalletId);
+            var walletId = SelectedWallet.Id;
 
             // Step 1: Create project keys
             DeployStatusText = "Generating project keys...";
@@ -318,7 +278,7 @@ public partial class DeployFlowViewModel : ReactiveObject
 
         // Use the first wallet for key generation and address monitoring
         var wallet = Wallets.FirstOrDefault();
-        if (wallet == null || string.IsNullOrEmpty(wallet.WalletId))
+        if (wallet == null)
         {
             DeployStatusText = "No wallet available for invoice monitoring.";
             DeployErrorMessage = "No wallet available for invoice monitoring.";
@@ -332,7 +292,7 @@ public partial class DeployFlowViewModel : ReactiveObject
 
         try
         {
-            var walletId = new WalletId(wallet.WalletId);
+            var walletId = wallet.Id;
 
             // Step 1: Create project keys (needed before we can deploy)
             DeployStatusText = "Generating project keys...";

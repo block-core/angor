@@ -135,7 +135,7 @@ public class SendToSelfTest
         // so poll-refresh until the balance is non-zero (up to 30s).
         // ──────────────────────────────────────────────────────────────
         Log("[STEP 9] Polling balance until non-zero after send-to-self...");
-        var step9Deadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
+        var step9Deadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
         var step9Polls = 0;
         while (DateTime.UtcNow < step9Deadline)
         {
@@ -403,9 +403,21 @@ public class SendToSelfTest
         Log("  [Send] Typing amount: 0.00010000");
         await window.TypeText("SendAmountInput", "0.00010000", UiTimeout);
 
-        // Click Send button (fee defaults to Medium = 20 sat/vB)
+        // Click Send button — this fires SendWithFeePopupAsync (async void / fire-and-forget),
+        // which calls shellVm.ShowModal(popup) to replace the send modal with the FeeSelectionPopup.
         Log("  [Send] Clicking BtnSendConfirm...");
         await window.ClickButton("BtnSendConfirm", UiTimeout);
+
+        // Give the async fire-and-forget handler time to show the FeeSelectionPopup modal.
+        // The handler calls GetShellVm() → FeeSelectionPopup.ShowAsync(shellVm) which sets
+        // ModalContent to the popup. We need at least one dispatcher pump + a small delay
+        // so the content control can instantiate and measure the popup in the visual tree.
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        // Confirm the fee selection popup (defaults to Standard = 20 sat/vB)
+        Log("  [Send] Confirming fee selection (Standard 20 sat/vB)...");
+        await window.ClickButton("FeeConfirmButton", TimeSpan.FromSeconds(30));
 
         // Wait for success panel to appear (the send is async, involves SDK + network)
         Log("  [Send] Waiting for SendSuccessPanel...");

@@ -3,9 +3,9 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
-using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Shared;
 using App.UI.Shared.Helpers;
+using App.UI.Shared.Services;
 using App.UI.Shell;
 
 namespace App.UI.Sections.FindProjects;
@@ -153,7 +153,7 @@ public partial class InvestModalsView : UserControl, IBackdropCloseable
         switch (foundName)
         {
             case "WalletBorder":
-                if (found.DataContext is WalletItem wallet)
+                if (found.DataContext is WalletInfo wallet)
                 {
                     Vm?.SelectWallet(wallet);
                     _selectedWalletBorder = WalletSelectionHelper.UpdateWalletSelection(_selectedWalletBorder, found);

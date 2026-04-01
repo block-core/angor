@@ -12,6 +12,7 @@ using Avalonia.Media.Imaging;
 using App.UI.Sections.FindProjects;
 using App.UI.Shared;
 using App.UI.Shared.Helpers;
+using App.UI.Shared.Services;
 using App.UI.Shell;
 using Microsoft.Extensions.Logging;
 
@@ -445,7 +446,7 @@ public class InvestmentViewModel : INotifyPropertyChanged
 public partial class PortfolioViewModel : ReactiveObject
 {
     private readonly IInvestmentAppService _investmentAppService;
-    private readonly IWalletAppService _walletAppService;
+    private readonly IWalletContext _walletContext;
     private readonly SignatureStore _signatureStore;
     private readonly ICurrencyService _currencyService;
     private readonly ILogger<PortfolioViewModel> _logger;
@@ -471,13 +472,13 @@ public partial class PortfolioViewModel : ReactiveObject
 
     public PortfolioViewModel(
         IInvestmentAppService investmentAppService,
-        IWalletAppService walletAppService,
+        IWalletContext walletContext,
         SignatureStore signatureStore,
         ICurrencyService currencyService,
         ILogger<PortfolioViewModel> logger)
     {
         _investmentAppService = investmentAppService;
-        _walletAppService = walletAppService;
+        _walletContext = walletContext;
         _signatureStore = signatureStore;
         _currencyService = currencyService;
         _logger = logger;
@@ -501,16 +502,8 @@ public partial class PortfolioViewModel : ReactiveObject
 
         try
         {
-            var metadatasResult = await _walletAppService.GetMetadatas();
-            if (metadatasResult.IsFailure)
-            {
-                _logger.LogWarning("GetMetadatas failed during investment load: {Error}", metadatasResult.Error);
-                ClearToEmpty();
-                return;
-            }
-
-            var metadatas = metadatasResult.Value.ToList();
-            if (metadatas.Count == 0)
+            var wallets = _walletContext.Wallets;
+            if (wallets.Count == 0)
             {
                 _logger.LogInformation("No wallets found — clearing investments");
                 ClearToEmpty();
@@ -522,10 +515,10 @@ public partial class PortfolioViewModel : ReactiveObject
             double totalInRecovery = 0;
             int recoveryCount = 0;
 
-            foreach (var meta in metadatas)
+            foreach (var wallet in wallets)
             {
                 var investmentsResult = await _investmentAppService.GetInvestments(
-                    new GetInvestments.GetInvestmentsRequest(meta.Id));
+                    new GetInvestments.GetInvestmentsRequest(wallet.Id));
 
                 if (investmentsResult.IsFailure) continue;
 
@@ -588,7 +581,7 @@ public partial class PortfolioViewModel : ReactiveObject
                         ApprovalStatus = dto.FounderStatus == Angor.Sdk.Funding.Investor.FounderStatus.Approved ? "Approved" : "Pending",
                         AvatarUrl = dto.LogoUri?.ToString(),
                         ProjectIdentifier = dto.Id ?? "",
-                        InvestmentWalletId = meta.Id.Value,
+                        InvestmentWalletId = wallet.Id.Value,
                         InvestmentTransactionId = dto.InvestmentId ?? "",
                         CurrencySymbol = _currencyService.Symbol
                     };
@@ -944,6 +937,12 @@ public partial class PortfolioViewModel : ReactiveObject
 
         try
         {
+            // Refresh wallet UTXOs before publishing — the investment transaction was built
+            // earlier (during PayWithWallet) and the UTXO state may have changed since then.
+            _logger.LogInformation("Refreshing wallet {WalletId} before confirming investment {InvestmentId}...",
+                investment.InvestmentWalletId, investment.InvestmentTransactionId);
+            await _walletContext.RefreshAllBalancesAsync();
+
             var request = new PublishInvestment.PublishInvestmentRequest(
                 investment.InvestmentTransactionId,
                 new WalletId(investment.InvestmentWalletId),
@@ -1114,7 +1113,21 @@ public partial class PortfolioViewModel : ReactiveObject
 
         var amountValue = double.TryParse(investmentAmount, System.Globalization.NumberStyles.Float,
             CultureInfo.InvariantCulture, out var parsedAmt) ? parsedAmt : 0;
-        var isAutoApproved = amountValue < Constants.AutoApprovalThreshold;
+        // Investment-type projects always require founder approval regardless of amount.
+        // Fund-type projects compare the investment amount (in sats) against the project's
+        // on-chain PenaltyThreshold. If no threshold is set (null/0), all Fund investments
+        // are auto-approved.
+        bool isAutoApproved;
+        if (projectType == "invest")
+        {
+            isAutoApproved = false;
+        }
+        else
+        {
+            var amountSats = ((decimal)parsedAmt).ToUnitSatoshi();
+            var thresholdSats = project.PenaltyThresholdSats ?? 0;
+            isAutoApproved = thresholdSats == 0 || amountSats < thresholdSats;
+        }
 
         var investment = new InvestmentViewModel
         {
@@ -1154,7 +1167,9 @@ public partial class PortfolioViewModel : ReactiveObject
         var sig = _signatureStore.AddSignature(
             project.ProjectName,
             project.ProjectName,
-            investmentAmount);
+            investmentAmount,
+            projectType,
+            project.PenaltyThresholdSats);
 
         investment.SignatureId = sig.Id;
         Investments.Insert(0, investment);

@@ -70,13 +70,25 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
         _utxos = new List<UtxoData>();
         if (DataContext is FundsViewModel fundsVm && !string.IsNullOrEmpty(walletId))
         {
-            var accountInfo = fundsVm.GetAccountBalanceInfo(walletId);
-            if (accountInfo?.AccountInfo != null)
-            {
-                _utxos = accountInfo.AccountInfo.AllUtxos()
-                    .Where(u => !u.PendingSpent)
-                    .ToList();
-            }
+            // Refresh UTXO cache from SDK, then load
+            _ = LoadUtxosAsync(fundsVm, walletId);
+        }
+        else
+        {
+            UpdateSendButtonText();
+            BuildUtxoList();
+        }
+    }
+
+    private async Task LoadUtxosAsync(FundsViewModel fundsVm, string walletId)
+    {
+        await fundsVm.RefreshUtxoCacheAsync(walletId);
+        var accountInfo = fundsVm.GetAccountBalanceInfo(walletId);
+        if (accountInfo?.AccountInfo != null)
+        {
+            _utxos = accountInfo.AccountInfo.AllUtxos()
+                .Where(u => !u.PendingSpent)
+                .ToList();
         }
 
         UpdateSendButtonText();

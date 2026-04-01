@@ -302,7 +302,7 @@ public partial class ShellView : UserControl
     {
         if (DataContext is ShellViewModel vm && !vm.IsModalOpen)
         {
-            _ = vm.LoadSwitcherWalletsAsync();
+            _ = vm.ReloadWalletsAsync();
             var modal = new WalletSwitcherModal { DataContext = vm };
             vm.ShowModal(modal);
         }

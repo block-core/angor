@@ -4,8 +4,8 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Application;
 using Angor.Sdk.Wallet.Domain;
 using Angor.Shared.Models;
-using App.UI.Shell;
 using App.UI.Shared;
+using App.UI.Shared.Services;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
 using System.Net.Http;
@@ -13,52 +13,28 @@ using System.Net.Http;
 namespace App.UI.Sections.Funds;
 
 /// <summary>
-/// Individual wallet item within a seed group.
-/// </summary>
-public class WalletItemViewModel
-{
-    public string Name { get; set; } = "";
-    public string Balance { get; set; } = "0.00000000";
-    public string WalletType { get; set; } = "On-Chain";
-    public string Label { get; set; } = "";
-    /// <summary>bitcoin, lightning, liquid</summary>
-    public string IconType { get; set; } = "bitcoin";
-    /// <summary>SDK WalletId for operations</summary>
-    public string WalletId { get; set; } = "";
-    /// <summary>Pending (unconfirmed) balance display string, or empty string when zero.</summary>
-    public string PendingBalance { get; set; } = "";
-    /// <summary>Reserved balance display string (UTXOs reserved for investments), or empty string when zero.</summary>
-    public string ReservedBalance { get; set; } = "";
-    /// <summary>True when there is a pending (unconfirmed) balance to display.</summary>
-    public bool HasPendingBalance => !string.IsNullOrEmpty(PendingBalance);
-    /// <summary>True when there is a reserved balance to display.</summary>
-    public bool HasReservedBalance => !string.IsNullOrEmpty(ReservedBalance);
-}
-
-/// <summary>
-/// Seed group (account) containing multiple wallets.
+/// Seed group (account) containing wallets from the centralized <see cref="IWalletContext"/>.
 /// </summary>
 public class SeedGroupViewModel
 {
     public string GroupName { get; set; } = "";
     public string GroupBalance { get; set; } = "0.00000000";
-    public ObservableCollection<WalletItemViewModel> Wallets { get; set; } = new();
+    public ReadOnlyObservableCollection<WalletInfo>? Wallets { get; set; }
 }
 
 /// <summary>
 /// Funds ViewModel — connected to Angor.SDK wallet services.
-/// Uses IWalletAppService for wallet creation, balance, and address operations.
+/// Uses <see cref="IWalletContext"/> for wallet state and <see cref="IWalletAppService"/> for wallet operations.
 /// </summary>
 public partial class FundsViewModel : ReactiveObject
 {
     private readonly IWalletAppService _walletAppService;
     private readonly IWalletAccountBalanceService _balanceService;
+    private readonly IWalletContext _walletContext;
     private readonly Func<BitcoinNetwork> _getNetwork;
     private readonly ICurrencyService _currencyService;
     private readonly ILogger<FundsViewModel> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
-
-    public event Action? WalletsChanged;
 
     /// <summary>True when wallets exist and populated state should show.</summary>
     [Reactive] private bool hasWallets;
@@ -82,9 +58,6 @@ public partial class FundsViewModel : ReactiveObject
     /// <summary>Cached AccountBalanceInfo per wallet for UTXO access.</summary>
     private readonly Dictionary<string, AccountBalanceInfo> _walletBalanceInfos = new();
 
-    /// <summary>Guard against concurrent LoadWalletsFromSdkAsync calls.</summary>
-    private bool _isLoadingWallets;
-
     /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
     public string CurrencySymbol => _currencyService.Symbol;
 
@@ -97,6 +70,7 @@ public partial class FundsViewModel : ReactiveObject
     public FundsViewModel(
         IWalletAppService walletAppService,
         IWalletAccountBalanceService balanceService,
+        IWalletContext walletContext,
         Func<BitcoinNetwork> getNetwork,
         ICurrencyService currencyService,
         ILogger<FundsViewModel> logger,
@@ -104,12 +78,17 @@ public partial class FundsViewModel : ReactiveObject
     {
         _walletAppService = walletAppService;
         _balanceService = balanceService;
+        _walletContext = walletContext;
         _getNetwork = getNetwork;
         _currencyService = currencyService;
         _logger = logger;
         _httpClientFactory = httpClientFactory;
 
-        _ = LoadWalletsFromSdkAsync();
+        // Subscribe to wallet context updates to rebuild display state
+        _walletContext.WalletsUpdated
+            .Subscribe(_ => Dispatcher.UIThread.Post(RebuildSeedGroups));
+
+        RebuildSeedGroups();
     }
 
     /// <summary>
@@ -121,114 +100,63 @@ public partial class FundsViewModel : ReactiveObject
     }
 
     /// <summary>
-    /// Load wallet data from the SDK.
-    /// Uses RefreshAndGetAccountBalanceInfo to get UTXO-based balances.
+    /// Rebuild the <see cref="SeedGroups"/> display collection from <see cref="IWalletContext.Wallets"/>.
+    /// This is a pure UI projection — no network calls.
     /// </summary>
-    public async Task LoadWalletsFromSdkAsync()
+    private void RebuildSeedGroups()
     {
-        if (_isLoadingWallets) return;
-        _isLoadingWallets = true;
-        IsLoading = true;
-        _logger.LogInformation("Loading wallets from SDK...");
+        var wallets = _walletContext.Wallets;
 
+        if (wallets.Count == 0)
+        {
+            ClearToEmpty();
+            return;
+        }
+
+        long totalSats = 0;
+        long btcSats = 0;
+
+        foreach (var wallet in wallets)
+        {
+            totalSats += wallet.AvailableSats;
+            btcSats += wallet.AvailableSats;
+        }
+
+        double totalBtc = (double)totalSats.ToUnitBtc();
+        double btcBtc = (double)btcSats.ToUnitBtc();
+
+        var group = new SeedGroupViewModel
+        {
+            GroupName = "Wallets",
+            GroupBalance = totalBtc.ToString("F4", CultureInfo.InvariantCulture),
+            Wallets = _walletContext.Wallets,
+        };
+
+        SeedGroups.Clear();
+        SeedGroups.Add(group);
+
+        TotalBalance = totalBtc.ToString("F4", CultureInfo.InvariantCulture);
+        BitcoinBalance = btcBtc.ToString("F4", CultureInfo.InvariantCulture);
+        HasWallets = true;
+
+        _logger.LogInformation("SeedGroups rebuilt — TotalBalance: {TotalBalance} ({TotalSats} sats), {Count} wallet(s)",
+            TotalBalance, totalSats, wallets.Count);
+    }
+
+    /// <summary>
+    /// Reload wallets from SDK (delegates to <see cref="IWalletContext.ReloadAsync"/>).
+    /// Called from code-behind on view re-attach and after wallet create/import.
+    /// </summary>
+    public async Task ReloadWalletsAsync()
+    {
+        IsLoading = true;
         try
         {
-            var metadatasResult = await _walletAppService.GetMetadatas();
-            if (metadatasResult.IsFailure)
-            {
-                _logger.LogWarning("GetMetadatas failed: {Error}", metadatasResult.Error);
-                ClearToEmpty();
-                return;
-            }
-
-            var metadatas = metadatasResult.Value.ToList();
-            if (metadatas.Count == 0)
-            {
-                _logger.LogInformation("No wallets found — showing empty state");
-                ClearToEmpty();
-                return;
-            }
-
-            _logger.LogInformation("Found {Count} wallet(s)", metadatas.Count);
-
-            _walletBalanceInfos.Clear();
-            long totalSats = 0;
-            long btcSats = 0;
-
-            var group = new SeedGroupViewModel
-            {
-                GroupName = "Wallets",
-                Wallets = new ObservableCollection<WalletItemViewModel>()
-            };
-
-            foreach (var meta in metadatas)
-            {
-                var walletId = meta.Id;
-                long balanceSats = 0;
-                long pendingSats = 0;
-                long reservedSats = 0;
-
-                // Use AccountBalanceInfo for UTXO-based balance
-                var balanceInfoResult = await _walletAppService.RefreshAndGetAccountBalanceInfo(walletId);
-                if (balanceInfoResult.IsSuccess)
-                {
-                    var info = balanceInfoResult.Value;
-                    _walletBalanceInfos[walletId.Value] = info;
-                    balanceSats = info.TotalBalance;
-                    pendingSats = info.TotalUnconfirmedBalance;
-                    reservedSats = info.TotalBalanceReserved;
-                }
-
-                totalSats += balanceSats;
-                btcSats += balanceSats;
-
-                double balanceBtc = (double)balanceSats.ToUnitBtc();
-                string pendingStr = pendingSats > 0
-                    ? $"{pendingSats.ToUnitBtc():F8} {_currencyService.Symbol}"
-                    : "";
-                string reservedStr = reservedSats > 0
-                    ? $"{reservedSats.ToUnitBtc():F8} {_currencyService.Symbol}"
-                    : "";
-
-                group.Wallets.Add(new WalletItemViewModel
-                {
-                    Name = meta.Name,
-                    Balance = $"{balanceBtc:F8} {_currencyService.Symbol}",
-                    WalletType = "On-Chain",
-                    Label = "",
-                    IconType = "bitcoin",
-                    WalletId = walletId.Value,
-                    PendingBalance = pendingStr,
-                    ReservedBalance = reservedStr
-                });
-            }
-
-            double totalBtc = (double)totalSats.ToUnitBtc();
-            double btcBtc = (double)btcSats.ToUnitBtc();
-
-            group.GroupBalance = totalBtc.ToString("F4", CultureInfo.InvariantCulture);
-
-            Dispatcher.UIThread.Post(() =>
-            {
-                SeedGroups.Clear();
-                SeedGroups.Add(group);
-
-                TotalBalance = totalBtc.ToString("F4", CultureInfo.InvariantCulture);
-                BitcoinBalance = btcBtc.ToString("F4", CultureInfo.InvariantCulture);
-                HasWallets = true;
-                _logger.LogInformation("Wallets loaded — TotalBalance: {TotalBalance} BTC ({TotalSats} sats)", TotalBalance, totalSats);
-                WalletsChanged?.Invoke();
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error loading wallets from SDK");
-            ClearToEmpty();
+            await _walletContext.ReloadAsync();
         }
         finally
         {
             IsLoading = false;
-            _isLoadingWallets = false;
         }
     }
 
@@ -251,7 +179,7 @@ public partial class FundsViewModel : ReactiveObject
         if (result.IsSuccess)
         {
             _logger.LogInformation("Wallet '{WalletName}' created successfully (WalletId: {WalletId})", walletName, result.Value);
-            await LoadWalletsFromSdkAsync();
+            await _walletContext.ReloadAsync();
             return (true, seedWords);
         }
 
@@ -275,7 +203,7 @@ public partial class FundsViewModel : ReactiveObject
         if (result.IsSuccess)
         {
             _logger.LogInformation("Wallet '{WalletName}' imported successfully (WalletId: {WalletId})", walletName, result.Value);
-            await LoadWalletsFromSdkAsync();
+            await _walletContext.ReloadAsync();
             return true;
         }
 
@@ -292,15 +220,17 @@ public partial class FundsViewModel : ReactiveObject
         try
         {
             var sats = ((decimal)amountBtc).ToUnitSatoshi();
+            var id = new WalletId(walletId);
             var result = await _walletAppService.SendAmount(
-                new WalletId(walletId),
+                id,
                 new Amount(sats),
                 new Address(destinationAddress),
                 new DomainFeeRate(feeRateSatsPerVByte));
 
             if (result.IsSuccess)
             {
-                await LoadWalletsFromSdkAsync();
+                // Refresh the sending wallet's balance from the indexer
+                await _walletContext.RefreshBalanceAsync(id);
                 return (true, result.Value.Value);
             }
 
@@ -347,8 +277,7 @@ public partial class FundsViewModel : ReactiveObject
     /// </summary>
     public async Task RefreshBalanceAsync(string walletId)
     {
-        await _balanceService.RefreshAccountBalanceInfoAsync(new WalletId(walletId));
-        await LoadWalletsFromSdkAsync();
+        await _walletContext.RefreshBalanceAsync(new WalletId(walletId));
     }
 
     /// <summary>
@@ -356,7 +285,7 @@ public partial class FundsViewModel : ReactiveObject
     /// </summary>
     public async Task RefreshAllBalancesAsync()
     {
-        await LoadWalletsFromSdkAsync();
+        await _walletContext.RefreshAllBalancesAsync();
     }
 
     /// <summary>
@@ -371,21 +300,18 @@ public partial class FundsViewModel : ReactiveObject
 
         try
         {
-            // Use cached balance info instead of SDK's GetBalance (which requires sensitive data)
-            if (!_walletBalanceInfos.TryGetValue(walletId, out var balanceInfo))
+            var id = new WalletId(walletId);
+
+            // Refresh balance info first to get UTXOs and address
+            var refreshResult = await _walletAppService.RefreshAndGetAccountBalanceInfo(id);
+            if (refreshResult.IsFailure)
             {
-                _logger.LogWarning("No cached balance info for wallet {WalletId}, refreshing first", walletId);
-
-                var refreshResult = await _walletAppService.RefreshAndGetAccountBalanceInfo(new WalletId(walletId));
-                if (refreshResult.IsFailure)
-                {
-                    _logger.LogWarning("Failed to refresh balance for wallet {WalletId}: {Error}", walletId, refreshResult.Error);
-                    return (false, "Cannot get wallet balance");
-                }
-
-                balanceInfo = refreshResult.Value;
-                _walletBalanceInfos[walletId] = balanceInfo;
+                _logger.LogWarning("Failed to refresh balance for wallet {WalletId}: {Error}", walletId, refreshResult.Error);
+                return (false, "Cannot get wallet balance");
             }
+
+            var balanceInfo = refreshResult.Value;
+            _walletBalanceInfos[walletId] = balanceInfo;
 
             // Guard: don't request coins if balance > 100 BTC
             long totalSats = balanceInfo.TotalBalance + balanceInfo.TotalUnconfirmedBalance;
@@ -415,14 +341,26 @@ public partial class FundsViewModel : ReactiveObject
                 return (false, $"Faucet request failed: {response.ReasonPhrase} - {body}");
             }
 
-            _logger.LogInformation("Faucet request succeeded for wallet {WalletId}, reloading balances", walletId);
-            await LoadWalletsFromSdkAsync();
+            _logger.LogInformation("Faucet request succeeded for wallet {WalletId}, refreshing balance", walletId);
+            await _walletContext.RefreshBalanceAsync(id);
             return (true, null);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Faucet request threw an exception for wallet {WalletId}", walletId);
             return (false, ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Refresh the UTXO cache for a specific wallet (used before opening WalletDetailModal).
+    /// </summary>
+    public async Task RefreshUtxoCacheAsync(string walletId)
+    {
+        var result = await _walletAppService.RefreshAndGetAccountBalanceInfo(new WalletId(walletId));
+        if (result.IsSuccess)
+        {
+            _walletBalanceInfos[walletId] = result.Value;
         }
     }
 
@@ -440,7 +378,6 @@ public partial class FundsViewModel : ReactiveObject
             BitcoinBalance = "0.0000";
             LiquidBalance = "0.0000";
             HasWallets = false;
-            WalletsChanged?.Invoke();
         });
     }
 
