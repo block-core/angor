@@ -1,5 +1,6 @@
 <Styles xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:i="https://github.com/projektanker/icons.avalonia">
 
     <!-- ═══════════════════════════════════════════════════════════════════
          MATERIAL DESIGN 3 — BOTTOM NAVIGATION BAR
@@ -28,6 +29,9 @@
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Foreground" Value="{DynamicResource TabBarInactiveText}" />
     </Style>
+    <Style Selector="Button.TabBarItem i|Icon">
+        <Setter Property="Foreground" Value="{DynamicResource TabBarInactiveText}" />
+    </Style>
     <!-- Remove the default Button template hover/pressed backgrounds -->
     <Style Selector="Button.TabBarItem /template/ ContentPresenter">
         <Setter Property="Background" Value="Transparent" />
@@ -41,6 +45,11 @@
 
     <!-- Active tab: green foreground (Rule #9: NO BrushTransition, CSS class toggle) -->
     <Style Selector="Button.TabBarItem.TabBarItemActive">
+        <Setter Property="Foreground" Value="{DynamicResource TabBarActiveText}" />
+    </Style>
+    <!-- i:Icon doesn't inherit TextElement.Foreground from Button template —
+         explicitly set it for active tabs so both icon and label are green -->
+    <Style Selector="Button.TabBarItem.TabBarItemActive i|Icon">
         <Setter Property="Foreground" Value="{DynamicResource TabBarActiveText}" />
     </Style>
 

@@ -17,6 +17,12 @@ public partial class MyProjectsView : UserControl
     private Grid? _projectListGrid;
     private Border? _myProjectsSidebar;
     private ScrollableView? _myProjectsContent;
+    // Sidebar hero elements — hidden on compact (Vue mobile shows only action buttons)
+    private Panel? _sidebarLogo;
+    private TextBlock? _sidebarTitle;
+    private TextBlock? _sidebarSubtitle;
+    private Grid? _sidebarStats;
+    private Button? _howFundingWorksBtn;
 
     /// <summary>Design-time only.</summary>
     public MyProjectsView() => InitializeComponent();
@@ -45,6 +51,11 @@ public partial class MyProjectsView : UserControl
         _projectListGrid = this.FindControl<Grid>("ProjectListGrid");
         _myProjectsSidebar = this.FindControl<Border>("MyProjectsSidebar");
         _myProjectsContent = this.FindControl<ScrollableView>("MyProjectsContent");
+        _sidebarLogo = this.FindControl<Panel>("SidebarLogo");
+        _sidebarTitle = this.FindControl<TextBlock>("SidebarTitle");
+        _sidebarSubtitle = this.FindControl<TextBlock>("SidebarSubtitle");
+        _sidebarStats = this.FindControl<Grid>("SidebarStats");
+        _howFundingWorksBtn = this.FindControl<Button>("HowFundingWorksBtn");
 
         // ── Responsive layout: 380px sidebar + content (desktop) → stacked (compact) ──
         _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
@@ -55,19 +66,35 @@ public partial class MyProjectsView : UserControl
     {
         if (_projectListGrid == null || _myProjectsSidebar == null || _myProjectsContent == null) return;
 
+        // CRITICAL: modify existing column/row widths in-place — never Clear()+Add().
+        // XAML Grid always has 2 columns and 2 rows:
+        //   Desktop:  Col0=380 (sidebar), Col1=* (content) | Row0=Auto (unused), Row1=* (content in row 0)
+        //   Compact:  Col0=* (full width), Col1=0 (hidden)  | Row0=Auto (sidebar buttons), Row1=* (content)
+        var cols = _projectListGrid.ColumnDefinitions;
+        var rows = _projectListGrid.RowDefinitions;
+
+        // Hide sidebar hero content on compact — Vue mobile shows only action buttons
+        if (_sidebarLogo != null) _sidebarLogo.IsVisible = !isCompact;
+        if (_sidebarTitle != null) _sidebarTitle.IsVisible = !isCompact;
+        if (_sidebarSubtitle != null) _sidebarSubtitle.IsVisible = !isCompact;
+        if (_sidebarStats != null) _sidebarStats.IsVisible = !isCompact;
+        if (_howFundingWorksBtn != null) _howFundingWorksBtn.IsVisible = !isCompact;
+
         if (isCompact)
         {
-            // Stacked: single column, sidebar above content
-            _projectListGrid.ColumnDefinitions.Clear();
-            _projectListGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            _projectListGrid.RowDefinitions.Clear();
-            _projectListGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            _projectListGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
+            // Collapse sidebar column, use rows for stacked layout
+            if (cols.Count >= 2) { cols[0].Width = GridLength.Star; cols[1].Width = new GridLength(0); }
+            if (rows.Count >= 2) { rows[0].Height = GridLength.Auto; rows[1].Height = GridLength.Star; }
 
             Grid.SetColumn(_myProjectsSidebar, 0);
             Grid.SetRow(_myProjectsSidebar, 0);
-            _myProjectsSidebar.Margin = new Avalonia.Thickness(0, 0, 0, 24);
+            _myProjectsSidebar.Margin = new Avalonia.Thickness(0, 0, 0, 16);
             _myProjectsSidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top;
+            // Strip card styling — just show the button
+            _myProjectsSidebar.Background = null;
+            _myProjectsSidebar.BorderThickness = new Avalonia.Thickness(0);
+            _myProjectsSidebar.BoxShadow = new Avalonia.Media.BoxShadows(default);
+            _myProjectsSidebar.Padding = new Avalonia.Thickness(0);
 
             Grid.SetColumn(_myProjectsContent, 0);
             Grid.SetRow(_myProjectsContent, 1);
@@ -75,17 +102,19 @@ public partial class MyProjectsView : UserControl
         }
         else
         {
-            // Side by side: 380px sidebar + * content
-            _projectListGrid.ColumnDefinitions.Clear();
-            _projectListGrid.ColumnDefinitions.Add(new ColumnDefinition(380, GridUnitType.Pixel));
-            _projectListGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            _projectListGrid.RowDefinitions.Clear();
-            _projectListGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
+            // Side by side: 380px sidebar + * content, single row
+            if (cols.Count >= 2) { cols[0].Width = new GridLength(380); cols[1].Width = GridLength.Star; }
+            if (rows.Count >= 2) { rows[0].Height = GridLength.Star; rows[1].Height = new GridLength(0); }
 
             Grid.SetColumn(_myProjectsSidebar, 0);
             Grid.SetRow(_myProjectsSidebar, 0);
             _myProjectsSidebar.Margin = new Avalonia.Thickness(0, 0, 24, 0);
             _myProjectsSidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch;
+            // Restore card styling — clear local overrides so XAML DynamicResource values take effect
+            _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.BackgroundProperty);
+            _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.BorderThicknessProperty);
+            _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.BoxShadowProperty);
+            _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.PaddingProperty);
 
             Grid.SetColumn(_myProjectsContent, 1);
             Grid.SetRow(_myProjectsContent, 0);
@@ -198,6 +227,7 @@ public partial class MyProjectsView : UserControl
         switch (btn.Name)
         {
             case "LaunchFromListButton":
+            case "MobileLaunchButton":
                 OpenCreateWizard(vm);
                 return;
 

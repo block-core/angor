@@ -85,6 +85,9 @@ public partial class FindProjectsView : UserControl
                   {
                       shellVm.IsProjectDetailOpen = hasProject && !hasInvest;
                       shellVm.IsInvestPageOpen = hasInvest;
+                      if (hasProject && tuple.Item1 != null)
+                          shellVm.ProjectDetailActionVerb = Shared.ProjectTypeTerminology.ActionVerb(
+                              Shared.ProjectTypeExtensions.FromDisplayString(tuple.Item1.ProjectType));
                   }
               });
         }

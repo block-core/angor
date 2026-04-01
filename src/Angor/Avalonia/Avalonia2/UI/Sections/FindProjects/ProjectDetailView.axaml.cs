@@ -48,6 +48,8 @@ public partial class ProjectDetailView : UserControl
     private Grid? _subInfoGrid;
     private Border? _projectNamePill;
     private StackPanel? _contentStack;
+    private DockPanel? _stickyNavBar;
+    private Panel? _navSpacer;
 
     // Track the PropertyChanged handler to prevent accumulation
     private EventHandler<AvaloniaPropertyChangedEventArgs>? _parentPropertyChangedHandler;
@@ -147,6 +149,8 @@ public partial class ProjectDetailView : UserControl
         _subInfoGrid = this.FindControl<Grid>("SubInfoGrid");
         _projectNamePill = this.FindControl<Border>("ProjectNamePill");
         _contentStack = this.FindControl<StackPanel>("ContentStack");
+        _stickyNavBar = this.FindControl<DockPanel>("StickyNavBar");
+        _navSpacer = this.FindControl<Panel>("NavSpacer");
 
         // ── Responsive layout switching ──
         _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
@@ -348,14 +352,16 @@ public partial class ProjectDetailView : UserControl
             }
         }
 
-        // ── Nav bar: hide project name pill on compact ──
-        if (_projectNamePill != null)
-            _projectNamePill.IsVisible = !isCompact;
+        // ── Nav bar: hide entire sticky nav + spacer on compact (ShellView's InvestorBackBar provides mobile buttons) ──
+        if (_stickyNavBar != null)
+            _stickyNavBar.IsVisible = !isCompact;
+        if (_navSpacer != null)
+            _navSpacer.IsVisible = !isCompact;
 
-        // ── Bottom padding: 96px clearance for tab bar + floating panel in compact ──
+        // ── Content margins: compact gets equal 24px on all sides + 96px bottom for floating bar ──
         if (_contentStack != null)
             _contentStack.Margin = isCompact
-                ? new Thickness(24, 0, 24, 96)
+                ? new Thickness(24, 24, 24, 96)
                 : new Thickness(24, 0, 24, 24);
     }
 

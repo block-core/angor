@@ -245,6 +245,8 @@ public partial class ShellViewModel : ReactiveObject
     // Sections set these when entering/exiting detail views so ShellView can react.
     [Reactive] private bool isProjectDetailOpen;
     [Reactive] private bool isInvestPageOpen;
+    /// <summary>CTA verb for the mobile floating bar — "Invest", "Fund", or "Subscribe".</summary>
+    [Reactive] private string projectDetailActionVerb = "Invest";
     [Reactive] private bool isInvestmentDetailOpen;
     [Reactive] private bool isManageFundsOpen;
     [Reactive] private bool isCreatingProject;

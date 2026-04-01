@@ -73,7 +73,7 @@
         <!-- STICKY NAV BAR (fixed to top)           -->
         <!-- Vue: sticky, top:0, z-index:100, transparent bg, pointer-events:none -->
         <!-- ═══════════════════════════════════════ -->
-        <DockPanel VerticalAlignment="Top"
+        <DockPanel Name="StickyNavBar" VerticalAlignment="Top"
                    ZIndex="100"
                    Margin="24,24,24,0"
                    IsHitTestVisible="True">
@@ -217,8 +217,9 @@
                       VerticalScrollBarVisibility="Auto">
         <StackPanel Name="ContentStack" Spacing="24" MaxWidth="1400" Margin="24,0,24,24">
 
-            <!-- Spacer: 24px nav top margin + 44px nav height + 24px gap = 92px -->
-            <Panel Height="92" />
+            <!-- Spacer for desktop sticky nav: 24px top margin + 44px nav height + 24px gap = 92px.
+                 Hidden in compact mode (no sticky nav). -->
+            <Panel Name="NavSpacer" Height="92" />
 
             <!-- ═══════════════════════════════════════ -->
             <!-- TOP SECTION: 2-column grid              -->

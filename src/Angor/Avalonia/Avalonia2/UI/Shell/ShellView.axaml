@@ -9,6 +9,45 @@
              x:DataType="shell:ShellViewModel"
              Background="{DynamicResource AppBackground}">
 
+    <!-- Floating bar button template overrides — Avalonia's default Button template
+         ContentPresenter needs explicit Background + CornerRadius to match the outer border.
+         Cover all states (normal, pointerover, pressed) to prevent default chrome. -->
+    <UserControl.Styles>
+        <!-- Back button -->
+        <Style Selector="Button#InvestorBackBtn /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource MobileBackBtnBg}" />
+            <Setter Property="CornerRadius" Value="16" />
+        </Style>
+        <Style Selector="Button#InvestorBackBtn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource MobileBackBtnBg}" />
+        </Style>
+        <Style Selector="Button#InvestorBackBtn:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource MobileBackBtnBg}" />
+        </Style>
+        <!-- Invest CTA button -->
+        <Style Selector="Button#InvestorCtaBtn /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource GreenGradient}" />
+            <Setter Property="CornerRadius" Value="16" />
+        </Style>
+        <Style Selector="Button#InvestorCtaBtn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource GreenGradient}" />
+        </Style>
+        <Style Selector="Button#InvestorCtaBtn:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{StaticResource GreenGradient}" />
+        </Style>
+        <!-- Share button -->
+        <Style Selector="Button#InvestorShareBtn /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource MobileShareBtnBg}" />
+            <Setter Property="CornerRadius" Value="16" />
+        </Style>
+        <Style Selector="Button#InvestorShareBtn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource MobileShareBtnBg}" />
+        </Style>
+        <Style Selector="Button#InvestorShareBtn:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource MobileShareBtnBg}" />
+        </Style>
+    </UserControl.Styles>
+
     <!-- Outer Panel allows modal overlay to stack above entire shell -->
     <Panel>
         <!-- ═══════════════════════════════════════════════════════════ -->
@@ -236,6 +275,8 @@
                     <!-- Back button — Vue line 6207: ALWAYS bg-[#1a1a1a] border-[#333] text-white, NOT theme-aware -->
                     <Button Name="InvestorBackBtn" Grid.Column="0"
                             HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center"
                             Height="52"
                             CornerRadius="16"
                             Background="{StaticResource MobileBackBtnBg}"

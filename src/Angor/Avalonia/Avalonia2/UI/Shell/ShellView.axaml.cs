@@ -215,7 +215,8 @@ public partial class ShellView : UserControl
                 x => x.IsInvestPageOpen,
                 x => x.IsInvestmentDetailOpen,
                 x => x.IsManageFundsOpen,
-                x => x.IsCreatingProject)
+                x => x.IsCreatingProject,
+                x => x.ProjectDetailActionVerb)
             .Subscribe(_ => UpdateCompactOverlays(vm));
 
         // ── React to MobileInvestorSubTab changes — update sub-tab active states ──
@@ -613,9 +614,9 @@ public partial class ShellView : UserControl
             && tab == "investor"
             && (vm.IsProjectDetailOpen || vm.IsInvestPageOpen);
 
-        // Update CTA text: "Submit" when on invest page, "Invest" when on project detail
+        // Update CTA text: "Submit" when on invest page, else project-type verb ("Invest"/"Fund"/"Subscribe")
         if (_investorCtaText != null)
-            _investorCtaText.Text = vm.IsInvestPageOpen ? "Submit" : "Invest";
+            _investorCtaText.Text = vm.IsInvestPageOpen ? "Submit" : vm.ProjectDetailActionVerb;
 
         // ── Investment detail back bar ──
         // Vue (line 6234): v-if="showInvestmentDetail && currentPage === 'investments'"

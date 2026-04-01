@@ -182,10 +182,10 @@ public partial class CreateProjectView : UserControl
             if (_stepContentPanel != null)
                 _stepContentPanel.Margin = new Thickness(16, 16, 16, 120); // 120px bottom for tab bar clearance
 
-            // Nav footer: add bottom margin for tab bar clearance
-            // Vue: mobile footer sits above the bottom tab bar (bottom: mobileTabHeight)
+            // Nav footer: flush with tab bar — no bottom margin needed since
+            // the footer is docked to the bottom of Row 1, directly above Row 2 (tab bar)
             if (_navFooter != null)
-                _navFooter.Margin = new Thickness(0, 0, 0, 56); // ~56px tab bar height
+                _navFooter.Margin = new Thickness(0);
         }
         else
         {

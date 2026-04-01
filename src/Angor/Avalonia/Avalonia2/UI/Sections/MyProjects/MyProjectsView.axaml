@@ -36,7 +36,9 @@
             - "Scan for your projects" button absolute top-right
         -->
         <Panel Name="ProjectListPanel" IsVisible="False">
-            <Grid Name="ProjectListGrid" ColumnDefinitions="380,*" Margin="24">
+            <!-- Superset grid: 2 cols × 2 rows. Desktop uses col0=380 + col1=*.
+                 Compact collapses col0 to 0 and uses rows instead. Widths modified in-place. -->
+            <Grid Name="ProjectListGrid" ColumnDefinitions="380,*" RowDefinitions="Auto,*" Margin="24">
                 <!-- ── Left Sidebar Panel ── -->
                 <!--
                     Vue: w-64 xl:w-96, bg-gray-50 dark:bg-[#2A2A2A],
@@ -55,31 +57,30 @@
                         VerticalAlignment="Stretch">
                     <StackPanel Spacing="20" VerticalAlignment="Center">
 
-                        <!-- Angor Logo — centered, SVG asset -->
-                        <Panel HorizontalAlignment="Center" Width="80" Height="80" Margin="0,8,0,0">
+                        <!-- Angor Logo — centered, SVG asset (hidden on compact) -->
+                        <Panel Name="SidebarLogo" HorizontalAlignment="Center" Width="80" Height="80" Margin="0,8,0,0">
                             <Svg Path="/Assets/logo.svg" />
                         </Panel>
 
-                        <!-- Title -->
-                        <TextBlock Text="ANGOR FOUNDER HUB"
+                        <!-- Title (hidden on compact) -->
+                        <TextBlock Name="SidebarTitle" Text="ANGOR FOUNDER HUB"
                                    FontSize="20"
                                    FontWeight="Bold"
                                    Foreground="{DynamicResource TextStrong}"
                                    HorizontalAlignment="Center"
                                    LetterSpacing="1" />
 
-                        <!-- Subtitle -->
-                        <!-- Vue: text-xs xl:text-sm — "Launch new projects and manage your existing fundraising campaigns." -->
-                        <TextBlock Text="Launch new projects and manage your existing fundraising campaigns."
+                        <!-- Subtitle (hidden on compact) -->
+                        <TextBlock Name="SidebarSubtitle" Text="Launch new projects and manage your existing fundraising campaigns."
                                    FontSize="14"
                                    Foreground="{DynamicResource TextMuted}"
                                    TextWrapping="Wrap"
                                    TextAlignment="Center"
                                    HorizontalAlignment="Center" />
 
-                        <!-- Stats Grid: 2-column layout matching Portfolio pattern -->
+                        <!-- Stats Grid: 2-column layout matching Portfolio pattern (hidden on compact) -->
                         <!-- Vue: xl:grid-cols-2 gap-3 xl:gap-4, 2 stats (Active Projects, Total Raised) -->
-                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto"
+                        <Grid Name="SidebarStats" ColumnDefinitions="*,*" RowDefinitions="Auto"
                               Margin="0,4,0,0">
                             <!-- Active Projects stat -->
                             <Border Grid.Row="0" Grid.Column="0"
@@ -170,7 +171,7 @@
                             </Border>
                             <!-- How Funding Works — outline secondary CTA -->
                             <!-- Vue: border-2 border-gray-300 dark:border-gray-600 rounded-xl text-sm py-3 hover:border-green-600 -->
-                            <Button HorizontalAlignment="Stretch"
+                            <Button Name="HowFundingWorksBtn" HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Center"
                                     Padding="16,12"
                                     Background="Transparent"
@@ -186,8 +187,42 @@
                 </Border>
 
                 <!-- ── Right Content: Project Grid ── -->
-                <controls:ScrollableView Name="MyProjectsContent" Grid.Column="1" ContentPadding="0">
+                <controls:ScrollableView Name="MyProjectsContent" Grid.Column="1" Grid.Row="0" ContentPadding="0">
                     <StackPanel Spacing="20">
+                        <!-- ── Mobile action buttons (compact only, hidden on desktop) ── -->
+                        <!-- Vue mobile: full-width "Scan for your projects" + "Launch a Project" -->
+                        <StackPanel Name="MobileActionPanel" Spacing="8" IsVisible="False">
+                            <Button HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    Padding="14,12" CornerRadius="10"
+                                    Background="Transparent"
+                                    BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                                    Cursor="Hand">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <i:Icon Value="fa-solid fa-rotate" FontSize="14"
+                                            Foreground="{DynamicResource TextStrong}" />
+                                    <TextBlock Text="Scan for your projects"
+                                               FontSize="14" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextStrong}" />
+                                </StackPanel>
+                            </Button>
+                            <Button Name="MobileLaunchButton"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    Padding="14,12" CornerRadius="10"
+                                    Background="Transparent"
+                                    BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                                    Cursor="Hand">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <i:Icon Value="fa-solid fa-plus" FontSize="14"
+                                            Foreground="{DynamicResource TextStrong}" />
+                                    <TextBlock Text="Launch a Project"
+                                               FontSize="14" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextStrong}" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
                         <!-- Header row -->
                         <Grid ColumnDefinitions="*,Auto">
                             <TextBlock Text="My Projects" FontSize="24" FontWeight="Bold"

@@ -91,12 +91,9 @@ public partial class LayoutModeService : ReactiveObject
             _ => LayoutMode.Desktop,
         };
 
-        if (newMode != CurrentMode)
-        {
-            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-            {
-                CurrentMode = newMode;
-            });
-        }
+        // Set mode synchronously — the SIGABRT crash is prevented by ShellView/HomeView
+        // using in-place width modification on their grids. Inner views that still use
+        // Clear()+Add() need the synchronous update to work correctly.
+        CurrentMode = newMode;
     }
 }
