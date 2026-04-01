@@ -318,7 +318,22 @@ public class WalletOperations : IWalletOperations
 
         return await PublishTransactionAsync(network, signedTransaction);
     }
+    public void ResetPendingSpentForTransaction(AccountInfo accountInfo, Transaction transaction)
+    {
+        var inputOutpoints = transaction.Inputs
+            .Select(i => i.PrevOut.ToString())
+            .ToHashSet();
 
+        foreach (var utxo in accountInfo.AllUtxos())
+        {
+            if (inputOutpoints.Contains(utxo.outpoint.ToString()))
+            {
+                utxo.PendingSpent = false;
+                _logger.LogInformation(
+                    "Released PendingSpent on {Outpoint} after transaction rollback.", utxo.outpoint);
+            }
+        }
+    }
     public List<UtxoData> UpdateAccountUnconfirmedInfoWithSpentTransaction(AccountInfo accountInfo, Transaction transaction)
     {
         Network network = _networkConfiguration.GetNetwork();
@@ -331,7 +346,6 @@ public class WalletOperations : IWalletOperations
 
         foreach (var utxoData in accountInfo.AllUtxos())
         {
-            // find all spent inputs to mark them as spent
             if (inputs.Contains(utxoData.outpoint.ToString()))
                 utxoData.PendingSpent = true;
         }
@@ -358,7 +372,10 @@ public class WalletOperations : IWalletOperations
         return list;
     }
 
-    public async Task<OperationResult<Transaction>> PublishTransactionAsync(Network network,Transaction signedTransaction)
+    public async Task<OperationResult<Transaction>> PublishTransactionAsync(
+        Network network,
+        Transaction signedTransaction,
+        AccountInfo? accountInfo = null)
     {
         var hex = signedTransaction.ToHex(network.Consensus.ConsensusFactory);
 
@@ -366,6 +383,15 @@ public class WalletOperations : IWalletOperations
 
         if (string.IsNullOrEmpty(res))
             return new OperationResult<Transaction> { Success = true, Data = signedTransaction };
+
+        if (accountInfo != null)
+        {
+            _logger.LogWarning(
+                "Transaction {TxId} rejected by indexer ({Reason}). Rolling back PendingSpent flags.",
+                signedTransaction.GetHash(), res);
+
+            ResetPendingSpentForTransaction(accountInfo, signedTransaction);
+        }
 
         return new OperationResult<Transaction> { Success = false, Message = res };
     }
@@ -522,21 +548,25 @@ public class WalletOperations : IWalletOperations
 
     private void CopyPendingSpentUtxos(List<UtxoData> from, List<UtxoData> to)
     {
+        var liveOutpoints = to.ToDictionary(u => u.outpoint.ToString());
+
         foreach (var utxoFrom in from)
         {
-            _logger.LogInformation($"{utxoFrom.address} new utxo {utxoFrom.outpoint.ToString()}");
+            if (!utxoFrom.PendingSpent)
+                continue;
 
-            if (utxoFrom.PendingSpent)
+            if (!liveOutpoints.TryGetValue(utxoFrom.outpoint.ToString(), out var liveUtxo))
             {
-                _logger.LogInformation($"{utxoFrom.address} searching for pending spent utxo for address");
-
-                var newUtxo = to.FirstOrDefault(x => x.outpoint.ToString() == utxoFrom.outpoint.ToString());
-                if (newUtxo != null)
-                {
-                    _logger.LogInformation($"{utxoFrom.address} copying pending spent utxo for address for utxo {newUtxo.outpoint.ToString()}.");
-                    newUtxo.PendingSpent = true;
-                }
+                _logger.LogInformation(
+                    "{Address} utxo {Outpoint} no longer in indexer response — dropping PendingSpent.",
+                    utxoFrom.address, utxoFrom.outpoint);
+                continue;
             }
+
+            liveUtxo.PendingSpent = true;
+            _logger.LogInformation(
+                "{Address} carrying PendingSpent forward for in-flight utxo {Outpoint}.",
+                utxoFrom.address, liveUtxo.outpoint);
         }
     }
 
