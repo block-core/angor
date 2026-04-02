@@ -109,8 +109,10 @@ public partial class MyProjectsView : UserControl
     {
         base.OnAttachedToLogicalTree(e);
 
+        if (DataContext is not MyProjectsViewModel vm) return;
+
         // Re-subscribe if subscriptions were disposed (view re-attached from cache)
-        if (_subscriptions == null && DataContext is MyProjectsViewModel vm)
+        if (_subscriptions == null)
         {
             _subscriptions = new CompositeDisposable();
             vm.ToastRequested += OnToastRequested;
@@ -119,6 +121,9 @@ public partial class MyProjectsView : UserControl
             SubscribeToVisibility(vm);
             UpdateListVisibility(vm);
         }
+
+        // Load founder projects each time the view is navigated to
+        _ = vm.LoadFounderProjectsAsync();
     }
 
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
@@ -133,10 +138,8 @@ public partial class MyProjectsView : UserControl
         var showWizard = vm.ShowCreateWizard;
         var showManage = vm.SelectedManageProject != null;
 
-        if (EmptyStatePanel != null)
-            EmptyStatePanel.IsVisible = !showWizard && !showManage && !vm.HasProjects;
-        if (ProjectListPanel != null)
-            ProjectListPanel.IsVisible = !showWizard && !showManage && vm.HasProjects;
+        if (MainContentPanel != null)
+            MainContentPanel.IsVisible = !showWizard && !showManage;
     }
 
     private void OnButtonClick(object? sender, RoutedEventArgs e)
@@ -187,24 +190,6 @@ public partial class MyProjectsView : UserControl
                     e.Handled = true;
                 }
                 return;
-        }
-
-        // EmptyState button doesn't have a Name — check by content
-        if (btn.Content is Avalonia.Controls.StackPanel sp)
-        {
-            foreach (var child in sp.Children)
-            {
-                if (child is TextBlock tb && tb.Text == "Launch a Project")
-                {
-                    OpenCreateWizard(vm);
-                    return;
-                }
-            }
-        }
-        // Also check direct TextBlock content inside button from EmptyState
-        if (btn.Content is string s && s == "Launch a Project")
-        {
-            OpenCreateWizard(vm);
         }
     }
 
