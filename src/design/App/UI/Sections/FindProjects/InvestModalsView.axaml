@@ -102,6 +102,20 @@
                         BorderBrush="{DynamicResource DeployModalBorder}"
                         Background="{DynamicResource DeployModalBackground}">
                     <StackPanel Spacing="12">
+                        <!-- Error banner — shown when an SDK operation fails -->
+                        <Border IsVisible="{Binding HasError}"
+                                CornerRadius="8" Padding="12"
+                                Background="#1aef4444"
+                                BorderBrush="#ef4444" BorderThickness="1">
+                            <Grid ColumnDefinitions="Auto,*">
+                                <i:Icon Grid.Column="0" Value="fa-solid fa-circle-exclamation"
+                                        FontSize="16" Foreground="#ef4444"
+                                        VerticalAlignment="Top" Margin="0,1,8,0" />
+                                <TextBlock Grid.Column="1" Text="{Binding ErrorMessage}"
+                                           FontSize="13" Foreground="#ef4444"
+                                           TextWrapping="Wrap" />
+                            </Grid>
+                        </Border>
                         <!-- Primary: Pay with wallet -->
                         <Button Name="PayWithWalletButton" HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Center"

@@ -103,6 +103,12 @@ public partial class InvestPageViewModel : ReactiveObject
     [Reactive] private string paymentStatusText = "Awaiting payment...";
     [Reactive] private bool paymentReceived;
 
+    /// <summary>
+    /// Error message displayed to the user on the wallet selector modal.
+    /// Cleared when processing starts; set when an SDK call fails.
+    /// </summary>
+    [Reactive] private string? errorMessage;
+
     /// <summary>Fee rate in sat/vB, set by FeeSelectionPopup before payment.</summary>
     [Reactive] private long selectedFeeRate = 20;
 
@@ -115,6 +121,7 @@ public partial class InvestPageViewModel : ReactiveObject
     public bool IsInvoice => CurrentScreen == InvestScreen.Invoice;
     public bool IsSuccess => CurrentScreen == InvestScreen.Success;
     public bool HasSelectedWallet => SelectedWallet != null;
+    public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
     public string PayButtonText => SelectedWallet != null
         ? $"Pay with {SelectedWallet.Name}"
         : "Choose Wallet";
@@ -246,6 +253,9 @@ public partial class InvestPageViewModel : ReactiveObject
                 this.RaisePropertyChanged(nameof(HasSelectedWallet));
                 this.RaisePropertyChanged(nameof(PayButtonText));
             });
+
+        this.WhenAnyValue(x => x.ErrorMessage)
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(HasError)));
 
         // Recompute totals + stages when amount changes
         this.WhenAnyValue(x => x.InvestmentAmount)
@@ -502,11 +512,12 @@ public partial class InvestPageViewModel : ReactiveObject
     {
         if (SelectedWallet == null)
         {
-            PaymentStatusText = "No wallet selected.";
+            ErrorMessage = "No wallet selected.";
             _logger.LogWarning("PayWithWallet called with no wallet selected");
             return;
         }
 
+        ErrorMessage = null;
         IsProcessing = true;
 
         // Refresh wallet UTXOs from the indexer before building the transaction.
@@ -522,9 +533,10 @@ public partial class InvestPageViewModel : ReactiveObject
         if (SelectedWallet.AvailableSats < requiredSats)
         {
             var walletBtc = SelectedWallet.AvailableSats.ToUnitBtc();
-            PaymentStatusText = $"Insufficient balance. Wallet has {walletBtc:F8} {_currencyService.Symbol}, but {amountBtc:F8} {_currencyService.Symbol} is required.";
+            ErrorMessage = $"Insufficient balance. Wallet has {walletBtc:F8} {_currencyService.Symbol}, but {amountBtc:F8} {_currencyService.Symbol} is required.";
             _logger.LogWarning("Insufficient balance: wallet {WalletId} has {BalanceSats} sats, need {RequiredSats} sats",
                 SelectedWallet.Id.Value, SelectedWallet.AvailableSats, requiredSats);
+            IsProcessing = false;
             return;
         }
 
@@ -562,7 +574,7 @@ public partial class InvestPageViewModel : ReactiveObject
             if (buildResult.IsFailure)
             {
                 _logger.LogError("BuildInvestmentDraft failed: {Error}", buildResult.Error);
-                PaymentStatusText = "Failed to build transaction.";
+                ErrorMessage = buildResult.Error;
                 IsProcessing = false;
                 return;
             }
@@ -585,7 +597,7 @@ public partial class InvestPageViewModel : ReactiveObject
                 if (thresholdResult.IsFailure)
                 {
                     _logger.LogError("CheckPenaltyThreshold failed: {Error}", thresholdResult.Error);
-                    PaymentStatusText = "Failed to check investment threshold.";
+                    ErrorMessage = thresholdResult.Error;
                     IsProcessing = false;
                     return;
                 }
@@ -607,7 +619,7 @@ public partial class InvestPageViewModel : ReactiveObject
                 if (submitResult.IsFailure)
                 {
                     _logger.LogError("SubmitInvestment (founder signatures) failed: {Error}", submitResult.Error);
-                    PaymentStatusText = "Failed to submit investment.";
+                    ErrorMessage = submitResult.Error;
                     IsProcessing = false;
                     return;
                 }
@@ -627,7 +639,7 @@ public partial class InvestPageViewModel : ReactiveObject
                 if (publishResult.IsFailure)
                 {
                     _logger.LogError("SubmitTransactionFromDraft failed: {Error}", publishResult.Error);
-                    PaymentStatusText = "Failed to publish transaction.";
+                    ErrorMessage = publishResult.Error;
                     IsProcessing = false;
                     return;
                 }
@@ -672,10 +684,11 @@ public partial class InvestPageViewModel : ReactiveObject
         var wallet = Wallets.FirstOrDefault();
         if (wallet == null)
         {
-            PaymentStatusText = "No wallet available for invoice monitoring.";
+            ErrorMessage = "No wallet available for invoice monitoring.";
             return;
         }
 
+        ErrorMessage = null;
         IsProcessing = true;
 
         // Refresh wallet UTXOs from the indexer before building the transaction.
@@ -696,7 +709,7 @@ public partial class InvestPageViewModel : ReactiveObject
             var addressResult = await _walletAppService.GetNextReceiveAddress(walletId);
             if (addressResult.IsFailure)
             {
-                PaymentStatusText = "Failed to generate receive address.";
+                ErrorMessage = addressResult.Error;
                 IsProcessing = false;
                 return;
             }
@@ -714,7 +727,7 @@ public partial class InvestPageViewModel : ReactiveObject
 
             if (monitorResult.IsFailure)
             {
-                PaymentStatusText = "Payment monitoring failed or timed out.";
+                ErrorMessage = monitorResult.Error;
                 IsProcessing = false;
                 return;
             }
@@ -736,7 +749,7 @@ public partial class InvestPageViewModel : ReactiveObject
             var buildResult = await _investmentAppService.BuildInvestmentDraft(buildRequest);
             if (buildResult.IsFailure)
             {
-                PaymentStatusText = "Failed to build transaction.";
+                ErrorMessage = buildResult.Error;
                 IsProcessing = false;
                 return;
             }
@@ -757,7 +770,7 @@ public partial class InvestPageViewModel : ReactiveObject
                 var thresholdResult = await _investmentAppService.IsInvestmentAbovePenaltyThreshold(thresholdRequest);
                 if (thresholdResult.IsFailure)
                 {
-                    PaymentStatusText = "Failed to check investment threshold.";
+                    ErrorMessage = thresholdResult.Error;
                     IsProcessing = false;
                     return;
                 }
@@ -776,7 +789,7 @@ public partial class InvestPageViewModel : ReactiveObject
                 var submitResult = await _investmentAppService.SubmitInvestment(submitRequest);
                 if (submitResult.IsFailure)
                 {
-                    PaymentStatusText = "Failed to submit investment.";
+                    ErrorMessage = submitResult.Error;
                     IsProcessing = false;
                     return;
                 }
@@ -792,7 +805,7 @@ public partial class InvestPageViewModel : ReactiveObject
                 var publishResult = await _investmentAppService.SubmitTransactionFromDraft(publishRequest);
                 if (publishResult.IsFailure)
                 {
-                    PaymentStatusText = "Failed to publish transaction.";
+                    ErrorMessage = publishResult.Error;
                     IsProcessing = false;
                     return;
                 }
@@ -802,11 +815,11 @@ public partial class InvestPageViewModel : ReactiveObject
         }
         catch (OperationCanceledException)
         {
-            PaymentStatusText = "Invoice monitoring cancelled.";
+            ErrorMessage = "Invoice monitoring cancelled.";
         }
-        catch
+        catch (Exception ex)
         {
-            PaymentStatusText = "An error occurred during payment.";
+            ErrorMessage = $"An error occurred: {ex.Message}";
         }
         finally
         {
@@ -824,6 +837,7 @@ public partial class InvestPageViewModel : ReactiveObject
         IsProcessing = false;
         PaymentStatusText = "Awaiting payment...";
         PaymentReceived = false;
+        ErrorMessage = null;
     }
 
     /// <summary>

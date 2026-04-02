@@ -159,7 +159,7 @@
                     Cursor="Hand"
                     Opacity="0"
                     IsHitTestVisible="False"
-                    IsVisible="{Binding IsOpen}"
+                    IsVisible="{Binding IsOpenAndNotInvested}"
                     BoxShadow="{DynamicResource FloatingBtnShadow}"
                     RenderTransform="translate(0px, 0px)">
                 <Border.Transitions>
@@ -276,7 +276,7 @@
 
                     <!-- OPEN: Green gradient investment card -->
                     <!-- Vue: linear-gradient(135deg, #2d5a3d 0%, #4a8f5f 100%), white text, centered -->
-                    <Border IsVisible="{Binding IsOpen}"
+                    <Border IsVisible="{Binding IsOpenAndNotInvested}"
                             CornerRadius="16"
                             Padding="32,24"
                             ClipToBounds="True">
@@ -326,6 +326,40 @@
                                                VerticalAlignment="Center" />
                                 </StackPanel>
                             </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- ALREADY INVESTED: Blue/teal gradient card -->
+                    <Border IsVisible="{Binding HasInvested}"
+                            CornerRadius="16"
+                            Padding="32,24"
+                            ClipToBounds="True">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                <GradientStop Color="#1a5276" Offset="0" />
+                                <GradientStop Color="#2e86c1" Offset="1" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <StackPanel Spacing="16" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Border Width="64" Height="64" CornerRadius="32"
+                                    Background="#33FFFFFF"
+                                    HorizontalAlignment="Center">
+                                <i:Icon Value="fa-solid fa-circle-check"
+                                       FontSize="28"
+                                       Foreground="White" />
+                            </Border>
+                            <TextBlock Text="You've Already Invested"
+                                       FontSize="22"
+                                       FontWeight="Bold"
+                                       Foreground="White"
+                                       TextAlignment="Center"
+                                       HorizontalAlignment="Center" />
+                            <TextBlock Text="You have an active investment in this project. View it in your portfolio."
+                                       FontSize="15"
+                                       Foreground="#CCFFFFFF"
+                                       TextWrapping="Wrap"
+                                       TextAlignment="Center"
+                                       HorizontalAlignment="Center" />
                         </StackPanel>
                     </Border>
 
