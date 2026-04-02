@@ -213,7 +213,7 @@ public class CreateInvestmentFromSpecificAddressIntegrationTests : IDisposable
 
         // Act - Publish the transaction to Angornet (signet)
         var transaction = _network.CreateTransaction(result.Value.InvestmentDraft.SignedTxHex);
-        var publishResult = await _walletOperations.PublishTransactionAsync(_network, transaction);
+        var publishResult = await _walletOperations.PublishTransactionAsync(_network, transaction, accountInfo);
 
         // Assert - Publication
         Assert.True(publishResult.Success, $"Failed to publish transaction: {publishResult.Message}");

@@ -131,7 +131,7 @@ public class AngornetMinerFaucet
             signedTransaction.TransactionFee);
 
         // Publish transaction
-        var publishResult = await _walletOperations.PublishTransactionAsync(_network, signedTransaction.Transaction);
+        var publishResult = await _walletOperations.PublishTransactionAsync(_network, signedTransaction.Transaction, minerAccountInfo);
         
         if (!publishResult.Success)
         {
