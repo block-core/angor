@@ -4,10 +4,13 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
+using Angor.Sdk.Common;
+using Angor.Shared.Utilities;
 using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.Funds;
 using App.UI.Sections.Settings;
+using App.UI.Shared.Services;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -128,6 +131,53 @@ public class SendToSelfTest
         var txId = await SendToSelf(window, receiveAddress!);
         Log($"[STEP 8] Send result TxId: {txId}");
         txId.Should().NotBeNullOrWhiteSpace("should get a valid transaction ID after sending");
+
+        // ──────────────────────────────────────────────────────────────
+        // STEP 8b: Verify WalletInfo.Balance excludes pending (no double-counting)
+        //
+        // Right after a send-to-self the wallet should have an unconfirmed
+        // incoming transaction. WalletInfo.Balance must show only the confirmed
+        // amount (TotalBalanceSats), while PendingBalance shows the unconfirmed
+        // amount separately.  Before the fix, Balance used AvailableSats
+        // (confirmed + unconfirmed) which double-counted the pending amount
+        // because PendingBalance was displayed alongside it.
+        // ──────────────────────────────────────────────────────────────
+        Log("[STEP 8b] Verifying WalletInfo pending balance is not double-counted...");
+        {
+            // Refresh so WalletInfo picks up the new unconfirmed transaction
+            await ClickWalletCardButton(window, "WalletCardBtnRefresh");
+            await Task.Delay(PollInterval);
+            Dispatcher.UIThread.RunJobs();
+
+            var walletContext = global::App.App.Services.GetRequiredService<IWalletContext>();
+            var wallet = walletContext.Wallets.FirstOrDefault();
+            wallet.Should().NotBeNull("should have at least one wallet after creation");
+
+            // After a send-to-self the wallet typically has a pending (unconfirmed)
+            // incoming UTXO. If it does, verify the accounting invariant:
+            //   Balance string uses TotalBalanceSats (confirmed only)
+            //   PendingBalance string uses UnconfirmedBalanceSats
+            //   AvailableSats = TotalBalanceSats + UnconfirmedBalanceSats
+            Log($"[STEP 8b] WalletInfo — TotalBalanceSats={wallet!.TotalBalanceSats}, UnconfirmedBalanceSats={wallet.UnconfirmedBalanceSats}, AvailableSats={wallet.AvailableSats}");
+            wallet.AvailableSats.Should().Be(wallet.TotalBalanceSats + wallet.UnconfirmedBalanceSats,
+                "AvailableSats should equal confirmed + unconfirmed");
+
+            // The Balance display string must be based on confirmed sats only
+            var expectedBalancePrefix = ((double)wallet.TotalBalanceSats.ToUnitBtc()).ToString("F8");
+            wallet.Balance.Should().StartWith(expectedBalancePrefix,
+                "Balance display should show confirmed sats only (TotalBalanceSats), not AvailableSats which includes unconfirmed");
+
+            if (wallet.UnconfirmedBalanceSats != 0)
+            {
+                wallet.HasPendingBalance.Should().BeTrue("should have a pending balance after send-to-self");
+                wallet.PendingBalance.Should().NotBeEmpty("PendingBalance display should be non-empty when unconfirmed != 0");
+                Log($"[STEP 8b] Pending balance verified: Balance='{wallet.Balance}', PendingBalance='{wallet.PendingBalance}'");
+            }
+            else
+            {
+                Log("[STEP 8b] No unconfirmed balance detected (transaction may have already confirmed). Skipping pending-specific assertions.");
+            }
+        }
 
         // ──────────────────────────────────────────────────────────────
         // STEP 9: Verify balance is still > 0 after send-to-self

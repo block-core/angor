@@ -390,6 +390,31 @@ public class MultiFundClaimAndRecoverTest
             $"Invest should reach success. Last status: {investVm.PaymentStatusText}");
         investVm.FormattedAmount.Should().Be(decimal.Parse(amountBtc, CultureInfo.InvariantCulture).ToString("F8", CultureInfo.InvariantCulture));
 
+        // ──────────────────────────────────────────────────────────────
+        // Bug 7 assertion: Verify SuccessTitle reflects auto-approval status
+        //
+        // Below-threshold investments (expectFounderApproval=false) are auto-approved
+        // and should show "Successful". Above-threshold investments
+        // (expectFounderApproval=true) need founder approval and should show
+        // "Pending Approval". Before the fix, SuccessTitle always said
+        // "Pending Approval" regardless of threshold.
+        // ──────────────────────────────────────────────────────────────
+        Log(profileName, $"[Bug7] IsAutoApproved={investVm.IsAutoApproved}, SuccessTitle='{investVm.SuccessTitle}'");
+        if (expectFounderApproval)
+        {
+            investVm.IsAutoApproved.Should().BeFalse(
+                "above-threshold investment should NOT be auto-approved");
+            investVm.SuccessTitle.Should().Contain("Pending Approval",
+                "above-threshold investment should show 'Pending Approval' in SuccessTitle");
+        }
+        else
+        {
+            investVm.IsAutoApproved.Should().BeTrue(
+                "below-threshold investment should be auto-approved");
+            investVm.SuccessTitle.Should().Contain("Successful",
+                "below-threshold (auto-approved) investment should show 'Successful' in SuccessTitle");
+        }
+
         var portfolioVm = global::App.App.Services.GetRequiredService<PortfolioViewModel>();
         investVm.AddToPortfolio();
         Dispatcher.UIThread.RunJobs();
