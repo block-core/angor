@@ -2,7 +2,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:funds="clr-namespace:App.UI.Sections.Funds"
+              xmlns:funds="clr-namespace:App.UI.Sections.Funds"
+             xmlns:services="clr-namespace:App.UI.Shared.Services"
              xmlns:controls="clr-namespace:App.UI.Shared.Controls"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="800"
@@ -238,13 +239,12 @@
                                         <StackPanel Margin="16,12,16,12">
                                             <ItemsControl ItemsSource="{Binding Wallets}">
                                                 <ItemsControl.ItemTemplate>
-                                                    <DataTemplate x:DataType="funds:WalletItemViewModel">
+                                                    <DataTemplate x:DataType="services:WalletInfo">
                                                         <controls:WalletCard
                                                             WalletName="{Binding Name}"
                                                             Balance="{Binding Balance}"
                                                             WalletType="{Binding WalletType}"
-                                                            Label="{Binding Label}"
-                                                            WalletId="{Binding WalletId}"
+                                                            WalletId="{Binding Id.Value}"
                                                             PendingBalance="{Binding PendingBalance}"
                                                             ReservedBalance="{Binding ReservedBalance}"
                                                             ShowFaucet="{Binding $parent[UserControl].((funds:FundsViewModel)DataContext).IsTestnet}" />

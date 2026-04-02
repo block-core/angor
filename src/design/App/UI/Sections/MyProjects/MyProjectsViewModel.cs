@@ -4,8 +4,8 @@ using System.Linq;
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
-using Angor.Sdk.Wallet.Application;
 using App.UI.Shared;
+using App.UI.Shared.Services;
 using ReactiveUI;
 
 namespace App.UI.Sections.MyProjects;
@@ -50,7 +50,7 @@ public class MyProjectItemViewModel
 public partial class MyProjectsViewModel : ReactiveObject
 {
     private readonly IProjectAppService _projectAppService;
-    private readonly IWalletAppService _walletAppService;
+    private readonly IWalletContext _walletContext;
     private readonly Func<MyProjectItemViewModel, ManageProjectViewModel> _manageFactory;
     private readonly ICurrencyService _currencyService;
 
@@ -84,16 +84,22 @@ public partial class MyProjectsViewModel : ReactiveObject
 
     public MyProjectsViewModel(
         IProjectAppService projectAppService,
-        IWalletAppService walletAppService,
+        IWalletContext walletContext,
         Func<MyProjectItemViewModel, ManageProjectViewModel> manageFactory,
         CreateProjectViewModel createProjectVm,
         ICurrencyService currencyService)
     {
         _projectAppService = projectAppService;
-        _walletAppService = walletAppService;
+        _walletContext = walletContext;
         _manageFactory = manageFactory;
         CreateProjectVm = createProjectVm;
         _currencyService = currencyService;
+
+        // Re-load founder projects whenever wallet list changes (e.g. after initial ReloadAsync completes).
+        // This fixes the race condition where MyProjectsViewModel is constructed before wallets are
+        // loaded from LiteDB, resulting in empty "My Projects" on app restart.
+        _walletContext.WalletsUpdated
+            .Subscribe(__ => _ = LoadFounderProjectsAsync());
 
         // Load founder projects from SDK
         _ = LoadFounderProjectsAsync();
@@ -104,18 +110,20 @@ public partial class MyProjectsViewModel : ReactiveObject
     /// </summary>
     public async Task LoadFounderProjectsAsync()
     {
+        // Guard against concurrent loads (e.g. constructor fire-and-forget + WalletsUpdated)
+        if (IsLoading) return;
+
         IsLoading = true;
 
         try
         {
-            var metadatasResult = await _walletAppService.GetMetadatas();
-            if (metadatasResult.IsFailure) return;
+            var wallets = _walletContext.Wallets;
 
             Projects.Clear();
 
-            foreach (var meta in metadatasResult.Value)
+            foreach (var wallet in wallets)
             {
-                var projectsResult = await _projectAppService.GetFounderProjects(meta.Id);
+                var projectsResult = await _projectAppService.GetFounderProjects(wallet.Id);
                 if (projectsResult.IsFailure) continue;
 
                 foreach (var dto in projectsResult.Value.Projects)
@@ -141,7 +149,7 @@ public partial class MyProjectsViewModel : ReactiveObject
                         BannerUrl = dto.Banner?.ToString(),
                         LogoUrl = dto.Avatar?.ToString(),
                         ProjectIdentifier = dto.Id?.Value ?? "",
-                        OwnerWalletId = meta.Id.Value
+                        OwnerWalletId = wallet.Id.Value
                     });
                 }
             }

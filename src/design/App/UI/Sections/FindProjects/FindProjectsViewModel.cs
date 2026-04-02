@@ -90,6 +90,14 @@ public class ProjectItemViewModel : INotifyPropertyChanged
     public string PayoutFrequency { get; set; } = "Monthly";
     public long SubscriptionPrice { get; set; } = 20000;
 
+    /// <summary>
+    /// Penalty threshold in satoshis from the project's on-chain data.
+    /// For Fund-type projects, investments below this amount are auto-approved.
+    /// For Invest-type projects, all investments require founder approval regardless.
+    /// Null means no threshold was set (treat as 0 → auto-approve all for Fund type).
+    /// </summary>
+    public long? PenaltyThresholdSats { get; set; }
+
     /// <summary>Formatted subscription price display, e.g. "0.0002 BTC"</summary>
     public string SubscriptionPriceDisplay => $"{SubscriptionPrice.ToUnitBtc():G} {CurrencySymbol}";
 
@@ -109,6 +117,22 @@ public class ProjectItemViewModel : INotifyPropertyChanged
     public bool IsOpen => Status == "Open";
     public bool IsFunded => Status == "Funded";
     public bool IsFundingClosed => Status == "Funding Closed";
+
+    private bool _hasInvested;
+    public bool HasInvested
+    {
+        get => _hasInvested;
+        set
+        {
+            if (_hasInvested == value) return;
+            _hasInvested = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsOpenAndNotInvested));
+        }
+    }
+
+    /// <summary>True when the project is open AND the current user has NOT already invested.</summary>
+    public bool IsOpenAndNotInvested => IsOpen && !HasInvested;
 
     /// <summary>Currency symbol for display (e.g. "BTC", "TBTC")</summary>
     public string CurrencySymbol { get; set; } = "BTC";
@@ -170,6 +194,7 @@ public class ProjectItemViewModel : INotifyPropertyChanged
             StartDate = dto.FundingStartDate.ToString("dd MMM yyyy"),
             EndDate = dto.FundingEndDate.ToString("dd MMM yyyy"),
             PenaltyDays = dto.PenaltyDuration.Days.ToString(),
+            PenaltyThresholdSats = dto.PenaltyThreshold,
             Stages = stages,
             BannerUrl = dto.Banner?.ToString(),
             AvatarUrl = dto.Avatar?.ToString()
@@ -187,6 +212,7 @@ public partial class FindProjectsViewModel : ReactiveObject
 {
     private readonly IProjectAppService _projectAppService;
     private readonly Func<ProjectItemViewModel, InvestPageViewModel> _investPageFactory;
+    private readonly PortfolioViewModel _portfolioViewModel;
     private readonly ICurrencyService _currencyService;
     private readonly ILogger<FindProjectsViewModel> _logger;
 
@@ -228,15 +254,20 @@ public partial class FindProjectsViewModel : ReactiveObject
     public FindProjectsViewModel(
         IProjectAppService projectAppService,
         Func<ProjectItemViewModel, InvestPageViewModel> investPageFactory,
+        PortfolioViewModel portfolioViewModel,
         ICurrencyService currencyService,
         ILogger<FindProjectsViewModel> logger)
     {
         _projectAppService = projectAppService;
         _investPageFactory = investPageFactory;
+        _portfolioViewModel = portfolioViewModel;
         _currencyService = currencyService;
         _logger = logger;
 
         _logger.LogInformation("FindProjectsViewModel created");
+
+        // When the portfolio investments change, re-check HasInvested flags
+        _portfolioViewModel.Investments.CollectionChanged += (_, _) => UpdateHasInvestedFlags();
 
         // Load projects from SDK
         _ = LoadProjectsFromSdkAsync();
@@ -265,6 +296,9 @@ public partial class FindProjectsViewModel : ReactiveObject
                     Projects.Add(vm);
                 }
                 _logger.LogInformation("Loaded {Count} project(s) from SDK", Projects.Count);
+
+                // Cross-reference with portfolio to mark projects the user already invested in
+                UpdateHasInvestedFlags();
 
                 // Fire-and-forget statistics loading for each project
                 _ = LoadProjectStatisticsAsync();
@@ -324,5 +358,25 @@ public partial class FindProjectsViewModel : ReactiveObject
             });
 
         await Task.WhenAll(tasks);
+    }
+
+    /// <summary>
+    /// Cross-reference loaded projects with the user's portfolio investments
+    /// to set HasInvested flags on each ProjectItemViewModel.
+    /// </summary>
+    private void UpdateHasInvestedFlags()
+    {
+        var investedProjectIds = _portfolioViewModel.Investments
+            .Select(i => i.ProjectIdentifier)
+            .Where(id => !string.IsNullOrEmpty(id))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var project in Projects)
+        {
+            project.HasInvested = investedProjectIds.Contains(project.ProjectId);
+        }
+
+        _logger.LogDebug("Updated HasInvested flags: {InvestedCount} of {TotalCount} projects marked as invested",
+            Projects.Count(p => p.HasInvested), Projects.Count);
     }
 }

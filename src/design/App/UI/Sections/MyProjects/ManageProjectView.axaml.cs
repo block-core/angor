@@ -98,7 +98,9 @@ public partial class ManageProjectView : UserControl
         var shell = this.FindAncestorOfType<ShellView>();
         if (shell?.DataContext is ShellViewModel shellVm && !shellVm.IsModalOpen)
         {
-            var modal = new PrivateKeysPasswordModal(
+            // Skip password modal — password is not used (SimplePasswordProvider returns "default-key").
+            // Open the keys display modal directly.
+            var modal = new PrivateKeysDisplayModal(
                 Vm.ProjectId, Vm.FounderKey, Vm.RecoveryKey,
                 Vm.NostrNpub, Vm.Nip05, Vm.NostrNsec, Vm.NostrHex);
             shellVm.ShowModal(modal);

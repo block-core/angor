@@ -4,10 +4,13 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
+using Angor.Sdk.Common;
+using Angor.Shared.Utilities;
 using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.Funds;
 using App.UI.Sections.Settings;
+using App.UI.Shared.Services;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -130,12 +133,59 @@ public class SendToSelfTest
         txId.Should().NotBeNullOrWhiteSpace("should get a valid transaction ID after sending");
 
         // ──────────────────────────────────────────────────────────────
+        // STEP 8b: Verify WalletInfo.Balance excludes pending (no double-counting)
+        //
+        // Right after a send-to-self the wallet should have an unconfirmed
+        // incoming transaction. WalletInfo.Balance must show only the confirmed
+        // amount (TotalBalanceSats), while PendingBalance shows the unconfirmed
+        // amount separately.  Before the fix, Balance used AvailableSats
+        // (confirmed + unconfirmed) which double-counted the pending amount
+        // because PendingBalance was displayed alongside it.
+        // ──────────────────────────────────────────────────────────────
+        Log("[STEP 8b] Verifying WalletInfo pending balance is not double-counted...");
+        {
+            // Refresh so WalletInfo picks up the new unconfirmed transaction
+            await ClickWalletCardButton(window, "WalletCardBtnRefresh");
+            await Task.Delay(PollInterval);
+            Dispatcher.UIThread.RunJobs();
+
+            var walletContext = global::App.App.Services.GetRequiredService<IWalletContext>();
+            var wallet = walletContext.Wallets.FirstOrDefault();
+            wallet.Should().NotBeNull("should have at least one wallet after creation");
+
+            // After a send-to-self the wallet typically has a pending (unconfirmed)
+            // incoming UTXO. If it does, verify the accounting invariant:
+            //   Balance string uses TotalBalanceSats (confirmed only)
+            //   PendingBalance string uses UnconfirmedBalanceSats
+            //   AvailableSats = TotalBalanceSats + UnconfirmedBalanceSats
+            Log($"[STEP 8b] WalletInfo — TotalBalanceSats={wallet!.TotalBalanceSats}, UnconfirmedBalanceSats={wallet.UnconfirmedBalanceSats}, AvailableSats={wallet.AvailableSats}");
+            wallet.AvailableSats.Should().Be(wallet.TotalBalanceSats + wallet.UnconfirmedBalanceSats,
+                "AvailableSats should equal confirmed + unconfirmed");
+
+            // The Balance display string must be based on confirmed sats only
+            var expectedBalancePrefix = ((double)wallet.TotalBalanceSats.ToUnitBtc()).ToString("F8");
+            wallet.Balance.Should().StartWith(expectedBalancePrefix,
+                "Balance display should show confirmed sats only (TotalBalanceSats), not AvailableSats which includes unconfirmed");
+
+            if (wallet.UnconfirmedBalanceSats != 0)
+            {
+                wallet.HasPendingBalance.Should().BeTrue("should have a pending balance after send-to-self");
+                wallet.PendingBalance.Should().NotBeEmpty("PendingBalance display should be non-empty when unconfirmed != 0");
+                Log($"[STEP 8b] Pending balance verified: Balance='{wallet.Balance}', PendingBalance='{wallet.PendingBalance}'");
+            }
+            else
+            {
+                Log("[STEP 8b] No unconfirmed balance detected (transaction may have already confirmed). Skipping pending-specific assertions.");
+            }
+        }
+
+        // ──────────────────────────────────────────────────────────────
         // STEP 9: Verify balance is still > 0 after send-to-self
         // The indexer may not reflect the new transaction immediately,
         // so poll-refresh until the balance is non-zero (up to 30s).
         // ──────────────────────────────────────────────────────────────
         Log("[STEP 9] Polling balance until non-zero after send-to-self...");
-        var step9Deadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
+        var step9Deadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
         var step9Polls = 0;
         while (DateTime.UtcNow < step9Deadline)
         {
@@ -403,9 +453,21 @@ public class SendToSelfTest
         Log("  [Send] Typing amount: 0.00010000");
         await window.TypeText("SendAmountInput", "0.00010000", UiTimeout);
 
-        // Click Send button (fee defaults to Medium = 20 sat/vB)
+        // Click Send button — this fires SendWithFeePopupAsync (async void / fire-and-forget),
+        // which calls shellVm.ShowModal(popup) to replace the send modal with the FeeSelectionPopup.
         Log("  [Send] Clicking BtnSendConfirm...");
         await window.ClickButton("BtnSendConfirm", UiTimeout);
+
+        // Give the async fire-and-forget handler time to show the FeeSelectionPopup modal.
+        // The handler calls GetShellVm() → FeeSelectionPopup.ShowAsync(shellVm) which sets
+        // ModalContent to the popup. We need at least one dispatcher pump + a small delay
+        // so the content control can instantiate and measure the popup in the visual tree.
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        // Confirm the fee selection popup (defaults to Standard = 20 sat/vB)
+        Log("  [Send] Confirming fee selection (Standard 20 sat/vB)...");
+        await window.ClickButton("FeeConfirmButton", TimeSpan.FromSeconds(30));
 
         // Wait for success panel to appear (the send is async, involves SDK + network)
         Log("  [Send] Waiting for SendSuccessPanel...");

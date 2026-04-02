@@ -5,12 +5,6 @@ namespace App.UI.Shared;
 /// </summary>
 public static class Constants
 {
-    /// <summary>
-    /// Vue threshold: investments below this amount (in BTC) are auto-approved.
-    /// Vue ref: handleInvestment() in App.vue — amount &lt; 0.01 → auto-approved.
-    /// </summary>
-    public const double AutoApprovalThreshold = 0.01;
-
     /// <summary>Default miner fee estimate in BTC (used when dynamic fee estimation is unavailable).</summary>
     public const double MinerFee = 0.00000391;
 

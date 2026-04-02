@@ -37,7 +37,7 @@ public partial class FundsView : UserControl
 
         // Reload wallet data when the view re-enters the tree (e.g. after wipe or navigation)
         if (DataContext is FundsViewModel vm)
-            _ = vm.LoadWalletsFromSdkAsync();
+            _ = vm.ReloadWalletsAsync();
 
         InvalidateVisual();
     }

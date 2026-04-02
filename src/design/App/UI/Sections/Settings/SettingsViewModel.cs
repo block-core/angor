@@ -6,10 +6,10 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.Services;
-using App.UI.Sections.Funds;
 using App.UI.Sections.Portfolio;
 using App.UI.Shell;
 using App.UI.Shared;
+using App.UI.Shared.Services;
 using Microsoft.Extensions.Logging;
 
 namespace App.UI.Sections.Settings;
@@ -27,7 +27,7 @@ public partial class SettingsViewModel : ReactiveObject
     private readonly IWalletAppService _walletAppService;
     private readonly IDatabaseManagementService _databaseManagementService;
     private readonly ICurrencyService _currencyService;
-    private readonly FundsViewModel _fundsViewModel;
+    private readonly IWalletContext _walletContext;
     private readonly PortfolioViewModel _portfolioViewModel;
     private readonly SignatureStore _signatureStore;
     private readonly ShellViewModel _shellViewModel;
@@ -109,7 +109,7 @@ public partial class SettingsViewModel : ReactiveObject
         IDatabaseManagementService databaseManagementService,
         PrototypeSettings prototypeSettings,
         ICurrencyService currencyService,
-        FundsViewModel fundsViewModel,
+        IWalletContext walletContext,
         PortfolioViewModel portfolioViewModel,
         SignatureStore signatureStore,
         ShellViewModel shellViewModel,
@@ -122,7 +122,7 @@ public partial class SettingsViewModel : ReactiveObject
         _databaseManagementService = databaseManagementService;
         _prototypeSettings = prototypeSettings;
         _currencyService = currencyService;
-        _fundsViewModel = fundsViewModel;
+        _walletContext = walletContext;
         _portfolioViewModel = portfolioViewModel;
         _signatureStore = signatureStore;
         _shellViewModel = shellViewModel;
@@ -376,37 +376,9 @@ public partial class SettingsViewModel : ReactiveObject
 
         _signatureStore.Clear();
         _portfolioViewModel.ResetAfterDataWipe();
-        _fundsViewModel.ClearToEmpty();
 
-        // Delete all wallets
-        try
-        {
-            var metadatas = await _walletAppService.GetMetadatas();
-            if (metadatas.IsSuccess)
-            {
-                var walletList = metadatas.Value.ToList();
-                _logger.LogInformation("Found {Count} wallet(s) to delete", walletList.Count);
-
-                foreach (var meta in walletList)
-                {
-                    _logger.LogInformation("Deleting wallet {WalletId} (Name: '{WalletName}')", meta.Id, meta.Name);
-                    await _walletAppService.DeleteWallet(meta.Id);
-                    _logger.LogInformation("Wallet {WalletId} deleted successfully", meta.Id);
-                }
-            }
-            else
-            {
-                _logger.LogWarning("Failed to get wallet metadatas for wipe: {Error}", metadatas.Error);
-                ToastRequested?.Invoke("Wipe data failed while loading wallets to delete.");
-                return;
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while deleting wallets during wipe");
-            ToastRequested?.Invoke("Wipe data failed while deleting wallets.");
-            return;
-        }
+        // Delete all wallets and clear wallet context state
+        await _walletContext.DeleteAllAsync();
 
         _shellViewModel.ResetAfterDataWipe();
         _logger.LogInformation("Wipe data completed — live shell state reset");

@@ -85,7 +85,8 @@
                             </Border>
                         </Button>
                         <!-- Confirm -->
-                        <Button Name="ConfirmButton" Classes="ModalBtn" Cursor="Hand">
+                        <Button Name="ConfirmButton" Classes="ModalBtn" Cursor="Hand"
+                                AutomationProperties.AutomationId="FeeConfirmButton">
                             <Border CornerRadius="8" Padding="24,12"
                                     ClipToBounds="True"
                                     Background="{DynamicResource GreenGradient}">

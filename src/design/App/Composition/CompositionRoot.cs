@@ -23,6 +23,7 @@ using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Sections.Portfolio;
 using App.UI.Sections.Settings;
 using App.UI.Shared;
+using App.UI.Shared.Services;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -104,6 +105,7 @@ public static class CompositionRoot
         // ── Shared singletons (replaces SharedViewModels static class) ──
         services.AddSingleton<SignatureStore>();
         services.AddSingleton<PrototypeSettings>();
+        services.AddSingleton<IWalletContext, WalletContext>();
         services.AddSingleton<PortfolioViewModel>();
 
         // ── Section VMs (transient — fresh per navigation) ──
@@ -125,6 +127,7 @@ public static class CompositionRoot
                 sp.GetRequiredService<IInvestmentAppService>(),
                 sp.GetRequiredService<PortfolioViewModel>(),
                 sp.GetRequiredService<ICurrencyService>(),
+                sp.GetRequiredService<IWalletContext>(),
                 sp.GetRequiredService<ILoggerFactory>().CreateLogger<InvestPageViewModel>()));
 
         services.AddSingleton<Func<MyProjectItemViewModel, ManageProjectViewModel>>(sp =>

@@ -371,7 +371,7 @@ public class MultiFundClaimAndRecoverTest
         investVm.SelectWallet(investWallet);
         Dispatcher.UIThread.RunJobs();
 
-        Log(profileName, $"Investing {amountBtc} BTC with wallet {investWallet.WalletId}...");
+        Log(profileName, $"Investing {amountBtc} BTC with wallet {investWallet.Id.Value}...");
         investVm.PayWithWallet();
 
         var investDeadline = DateTime.UtcNow + TransactionTimeout;
@@ -389,6 +389,31 @@ public class MultiFundClaimAndRecoverTest
         investVm.CurrentScreen.Should().Be(InvestScreen.Success,
             $"Invest should reach success. Last status: {investVm.PaymentStatusText}");
         investVm.FormattedAmount.Should().Be(decimal.Parse(amountBtc, CultureInfo.InvariantCulture).ToString("F8", CultureInfo.InvariantCulture));
+
+        // ──────────────────────────────────────────────────────────────
+        // Bug 7 assertion: Verify SuccessTitle reflects auto-approval status
+        //
+        // Below-threshold investments (expectFounderApproval=false) are auto-approved
+        // and should show "Successful". Above-threshold investments
+        // (expectFounderApproval=true) need founder approval and should show
+        // "Pending Approval". Before the fix, SuccessTitle always said
+        // "Pending Approval" regardless of threshold.
+        // ──────────────────────────────────────────────────────────────
+        Log(profileName, $"[Bug7] IsAutoApproved={investVm.IsAutoApproved}, SuccessTitle='{investVm.SuccessTitle}'");
+        if (expectFounderApproval)
+        {
+            investVm.IsAutoApproved.Should().BeFalse(
+                "above-threshold investment should NOT be auto-approved");
+            investVm.SuccessTitle.Should().Contain("Pending Approval",
+                "above-threshold investment should show 'Pending Approval' in SuccessTitle");
+        }
+        else
+        {
+            investVm.IsAutoApproved.Should().BeTrue(
+                "below-threshold investment should be auto-approved");
+            investVm.SuccessTitle.Should().Contain("Successful",
+                "below-threshold (auto-approved) investment should show 'Successful' in SuccessTitle");
+        }
 
         var portfolioVm = global::App.App.Services.GetRequiredService<PortfolioViewModel>();
         investVm.AddToPortfolio();
@@ -858,7 +883,7 @@ public class MultiFundClaimAndRecoverTest
         var fundsVm = GetFundsViewModel(window);
         fundsVm.Should().NotBeNull();
 
-        var walletId = fundsVm!.SeedGroups.FirstOrDefault()?.Wallets.FirstOrDefault()?.WalletId;
+        var walletId = fundsVm!.SeedGroups.FirstOrDefault()?.Wallets?.FirstOrDefault()?.Id.Value;
         walletId.Should().NotBeNullOrEmpty();
 
         var deadline = DateTime.UtcNow + FaucetBalanceTimeout;
@@ -882,7 +907,7 @@ public class MultiFundClaimAndRecoverTest
                 lastFaucetAttempt = DateTime.UtcNow;
                 Log(profileName, $"Faucet attempt #{faucetAttempts}...");
 
-                var (success, error) = await fundsVm.GetTestCoinsAsync(walletId!);
+                (bool success, string? error) = await fundsVm.GetTestCoinsAsync(walletId!);
                 Dispatcher.UIThread.RunJobs();
                 Log(profileName, success ? "Faucet request accepted." : $"Faucet request failed: {error}");
             }
