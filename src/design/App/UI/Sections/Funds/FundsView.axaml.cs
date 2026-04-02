@@ -3,6 +3,7 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
 using App.UI.Shared;
+using App.UI.Shared.Services;
 using App.UI.Shell;
 using App.UI.Shared.Controls;
 using Microsoft.Extensions.DependencyInjection;
@@ -96,6 +97,8 @@ public partial class FundsView : UserControl
 
     /// <summary>
     /// Extract wallet info from a WalletCard and open the Send modal.
+    /// Uses AvailableSats (confirmed + unconfirmed) for the balance so users can spend
+    /// unconfirmed UTXOs. The display Balance property only shows confirmed.
     /// </summary>
     private void OpenSendModal(Button btn)
     {
@@ -105,11 +108,16 @@ public partial class FundsView : UserControl
         var shellView = this.FindAncestorOfType<ShellView>();
         if (shellView?.DataContext is ShellViewModel shellVm && !shellVm.IsModalOpen)
         {
+            // Get spendable balance (confirmed + unconfirmed) from the WalletInfo DataContext
+            var spendableBalance = card.DataContext is WalletInfo walletInfo
+                ? walletInfo.FormattedBalanceFull(CurrencyService.Symbol)
+                : card.Balance ?? $"0.00000000 {CurrencyService.Symbol}";
+
             var modal = new SendFundsModal { DataContext = DataContext };
             modal.SetWallet(
                 card.WalletName ?? "Wallet",
                 card.WalletType ?? "On-Chain",
-                card.Balance ?? $"0.0000 {CurrencyService.Symbol}",
+                spendableBalance,
                 card.WalletId);
             shellVm.ShowModal(modal);
         }
@@ -137,6 +145,7 @@ public partial class FundsView : UserControl
 
     /// <summary>
     /// Extract wallet info from a WalletCard and open the UTXO management modal.
+    /// Uses AvailableSats (confirmed + unconfirmed) for the balance, consistent with SendFundsModal.
     /// </summary>
     private void OpenWalletDetailModal(Button btn)
     {
@@ -146,11 +155,15 @@ public partial class FundsView : UserControl
         var shellView = this.FindAncestorOfType<ShellView>();
         if (shellView?.DataContext is ShellViewModel shellVm && !shellVm.IsModalOpen)
         {
+            var spendableBalance = card.DataContext is WalletInfo walletInfo
+                ? walletInfo.FormattedBalanceFull(CurrencyService.Symbol)
+                : card.Balance ?? $"0.00000000 {CurrencyService.Symbol}";
+
             var modal = new WalletDetailModal { DataContext = DataContext };
             modal.SetWallet(
                 card.WalletName ?? "Wallet",
                 card.WalletType ?? "On-Chain",
-                card.Balance ?? $"0.0000 {CurrencyService.Symbol}",
+                spendableBalance,
                 card.WalletId ?? "");
             shellVm.ShowModal(modal);
         }

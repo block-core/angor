@@ -48,7 +48,7 @@ The current test suite covers the following scenarios:
 
 2. **Modularize Helper Methods**: Create reusable helper methods for common tasks such as navigating to sections, finding controls, and performing actions.
 
-3. **Log Actions**: Use logging to track the progress of tests and aid in debugging.
+3. **Log Actions**: Use logging to track the progress of tests and aid in debugging. Prefer injected `ILogger`-based logging in production and shared code so that log output is structured and routed through the standard logging pipeline. If you use `Console.WriteLine` for quick diagnostic output during investigation, treat it as temporary — remove it before committing. However, if a diagnostic log turns out to be genuinely useful (e.g., it logs state that would help diagnose future failures), convert it to an `ILogger` call and keep it rather than discarding it.
 
 4. **Handle Asynchronous Operations**: Use async/await and appropriate timeouts to handle asynchronous operations such as network requests and UI updates.
 
