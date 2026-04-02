@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:accounts="clr-namespace:AngorApp.UI.Sections.Funds.Accounts"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
-             mc:Ignorable="d" d:DesignWidth="350"
+             mc:Ignorable="d" d:DesignWidth="750"
              x:Class="AngorApp.UI.Sections.Funds.Accounts.AccountsView"
              x:DataType="accounts:IAccountsViewModel">
 
@@ -69,52 +69,7 @@
                             <ItemsControl x:Name="WalletList" ItemsSource="{Binding Accounts}" Classes="Vertical" ClipToBounds="False">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <EdgePanel Classes="ColorPanel White" ClipToBounds="False">
-                                            <EdgePanel.Styles>
-                                                <Style Selector="EdgePanel > Border">
-                                                    <Setter Property="BoxShadow" Value="{DynamicResource ItemShadow}" />
-                                                </Style>
-                                            </EdgePanel.Styles>
-                                            <EdgePanel.StartContent>
-                                                <EdgePanel StartContent="{Icon fa-bitcoin}"
-                                                           Classes="Icon-M Icon-Bg-LightGray Icon-Square"
-                                                           >
-                                                    <StackPanel VerticalAlignment="Center" Classes="Gap-S">
-                                                        <TextBlock Classes="Weight-Bold Strong" Text="{Binding Wallet.Name}" />
-                                                        <TextBlock Classes="Weight-Light Dimmed" Text="{Binding Wallet.NetworkKind}" />
-                                                    </StackPanel>
-                                                </EdgePanel>
-                                            </EdgePanel.StartContent>
-                                            <EdgePanel.EndContent>
-                                                <FlexPanel Direction="Row" Wrap="Wrap" ColumnGap="8" RowGap="4" AlignItems="Center">
-                                                    <FlexPanel.Styles>
-                                                        <Style Selector="EnhancedButton">
-                                                            <Setter Property="IconOptions.Size" Value="12" />
-                                                        </Style>
-                                                    </FlexPanel.Styles>
-                                                    <FlexPanel Direction="Row" Wrap="Wrap" ColumnGap="16" RowGap="4" Margin="6 0">
-                                                        <StackPanel>
-                                                            <TextBlock Classes="Weight-Bold Strong" Text="{Binding Wallet.Balance.DecimalString}" />
-                                                            <TextBlock Classes="Weight-Light Dimmed" Text="Balance" FontSize="10" />
-                                                        </StackPanel>
-                                                        <StackPanel IsVisible="{Binding Wallet.UnconfirmedBalance.IsPositive}">
-                                                            <TextBlock Classes="Weight-Bold" Foreground="{DynamicResource Warning}" Text="{Binding Wallet.UnconfirmedBalance.DecimalString}" />
-                                                            <TextBlock Classes="Weight-Light Dimmed" Text="Pending" FontSize="10" />
-                                                        </StackPanel>
-                                                        <StackPanel IsVisible="{Binding Wallet.ReservedBalance.IsPositive}">
-                                                            <TextBlock Classes="Weight-Bold" Foreground="{DynamicResource Info}" Text="{Binding Wallet.ReservedBalance.DecimalString}" />
-                                                            <TextBlock Classes="Weight-Light Dimmed" Text="Reserved" FontSize="10" />
-                                                        </StackPanel>
-                                                    </FlexPanel>
-                                                    <ItemsControl ItemsSource="{Binding Wallet.Labels}" Classes="Horizontal" />
-                                                    <FlexPanel Direction="Row" Gap="8">
-                                                        <EnhancedButton Command="{Binding Send}" Height="32" Width="32" CornerRadius="6" Padding="7" Icon="{Icon fa-arrow-up}" Classes="Emphasized" />
-                                                        <EnhancedButton Command="{Binding Receive}" Height="32" Width="32" CornerRadius="6" Padding="7" Icon="{Icon fa-arrow-down}" Classes="Outline" />
-                                                        <EnhancedButton Command="{Binding ShowDetails}" Height="32" Width="32" CornerRadius="6" Padding="7" Icon="{Icon fa-coins}" Classes="Outline" />
-                                                    </FlexPanel>
-                                                </FlexPanel>
-                                            </EdgePanel.EndContent>
-                                        </EdgePanel>
+                                        <accounts:AccountView ClipToBounds="False" />
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
