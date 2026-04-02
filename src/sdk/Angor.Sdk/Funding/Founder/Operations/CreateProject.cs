@@ -1,4 +1,5 @@
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Founder.Domain;
 using Angor.Sdk.Funding.Founder.Dtos;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Projects.Dtos;
@@ -36,6 +37,7 @@ public static class CreateProjectConstants
                 IFounderTransactionActions founderTransactionActions,
                 IWalletOperations walletOperations,
                 IWalletAccountBalanceService walletAccountBalanceService,
+                IFounderProjectsService founderProjectsService,
                 ILogger<CreateProjectHandler> logger
                 ) : IRequestHandler<CreateProjectRequest, Result<CreateProjectResponse>>
         {
@@ -63,6 +65,23 @@ public static class CreateProjectConstants
                 {
                     logger.LogDebug("Failed to create project transaction for Project {ProjectName} (WalletId: {WalletId}): {Error}", request.Project.ProjectName, request.WalletId.Value, transactionInfo.Error);
                     return Result.Failure<CreateProjectResponse>(transactionInfo.Error);
+                }
+
+                // Persist the founder project record locally so GetFounderProjects
+                // can load it without scanning all derived keys via the indexer.
+                var transactionId = transactionInfo.Value.Transaction.GetHash().ToString();
+                var saveResult = await founderProjectsService.Add(
+                    request.WalletId.Value,
+                    new FounderProjectRecord
+                    {
+                        ProjectIdentifier = newProjectKeys.ProjectIdentifier,
+                        CreationTransactionId = transactionId
+                    });
+
+                if (saveResult.IsFailure)
+                {
+                    logger.LogWarning("Failed to persist founder project record for {ProjectId}: {Error}",
+                        newProjectKeys.ProjectIdentifier, saveResult.Error);
                 }
 
                 // Return the transaction draft without publishing

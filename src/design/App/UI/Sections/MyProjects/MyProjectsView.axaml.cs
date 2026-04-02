@@ -17,6 +17,16 @@ public partial class MyProjectsView : UserControl
     public MyProjectsView(MyProjectsViewModel vm)
     {
         InitializeComponent();
+
+        // TODO: Perf — this line takes ~10s. When DataContext is set, all AXAML bindings
+        // resolve and child controls are instantiated. Suspected causes:
+        //   1. Svg control loading /Assets/logo.svg synchronously
+        //   2. CreateProjectViewModel constructor (12 Rx subscriptions, some fire immediately)
+        //   3. DeployFlowViewModel constructor (2 ReactiveCommands + 3 Rx subscriptions)
+        //   4. ManageProjectModalsView with 29 FindControl calls in its constructor
+        //   5. Large visual tree (~4000 AXAML lines across embedded child views)
+        // Neither CreateProjectViewModel nor DeployFlowViewModel implements IDisposable,
+        // so subscriptions leak on every navigation. All three VMs are transient.
         DataContext = vm;
 
         // Set the create wizard's DataContext from the parent VM
@@ -27,6 +37,11 @@ public partial class MyProjectsView : UserControl
         _subscriptions = new CompositeDisposable();
 
         AddHandler(Button.ClickEvent, OnButtonClick, RoutingStrategies.Bubble);
+
+        // Forward toast notifications from VM to ShellViewModel
+        vm.ToastRequested += OnToastRequested;
+        Disposable.Create(() => vm.ToastRequested -= OnToastRequested)
+            .DisposeWith(_subscriptions);
 
         // Manage panel visibility based on ViewModel state
         SubscribeToVisibility(vm);
@@ -94,17 +109,31 @@ public partial class MyProjectsView : UserControl
             .DisposeWith(_subscriptions!);
     }
 
+    private void OnToastRequested(string message)
+    {
+        var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
+        shellVm?.ShowToast(message);
+    }
+
     protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
     {
         base.OnAttachedToLogicalTree(e);
 
+        if (DataContext is not MyProjectsViewModel vm) return;
+
         // Re-subscribe if subscriptions were disposed (view re-attached from cache)
-        if (_subscriptions == null && DataContext is MyProjectsViewModel vm)
+        if (_subscriptions == null)
         {
             _subscriptions = new CompositeDisposable();
+            vm.ToastRequested += OnToastRequested;
+            Disposable.Create(() => vm.ToastRequested -= OnToastRequested)
+                .DisposeWith(_subscriptions);
             SubscribeToVisibility(vm);
             UpdateListVisibility(vm);
         }
+
+        // Load founder projects each time the view is navigated to
+        _ = vm.LoadFounderProjectsAsync();
     }
 
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
@@ -119,10 +148,8 @@ public partial class MyProjectsView : UserControl
         var showWizard = vm.ShowCreateWizard;
         var showManage = vm.SelectedManageProject != null;
 
-        if (EmptyStatePanel != null)
-            EmptyStatePanel.IsVisible = !showWizard && !showManage && !vm.HasProjects;
-        if (ProjectListPanel != null)
-            ProjectListPanel.IsVisible = !showWizard && !showManage && vm.HasProjects;
+        if (MainContentPanel != null)
+            MainContentPanel.IsVisible = !showWizard && !showManage;
     }
 
     private void OnButtonClick(object? sender, RoutedEventArgs e)
@@ -134,6 +161,11 @@ public partial class MyProjectsView : UserControl
         {
             case "LaunchFromListButton":
                 OpenCreateWizard(vm);
+                return;
+
+            case "ScanProjectsButton":
+                _ = vm.ScanForProjectsAsync();
+                e.Handled = true;
                 return;
 
             case "PART_ManageButton":
@@ -168,24 +200,6 @@ public partial class MyProjectsView : UserControl
                     e.Handled = true;
                 }
                 return;
-        }
-
-        // EmptyState button doesn't have a Name — check by content
-        if (btn.Content is Avalonia.Controls.StackPanel sp)
-        {
-            foreach (var child in sp.Children)
-            {
-                if (child is TextBlock tb && tb.Text == "Launch a Project")
-                {
-                    OpenCreateWizard(vm);
-                    return;
-                }
-            }
-        }
-        // Also check direct TextBlock content inside button from EmptyState
-        if (btn.Content is string s && s == "Launch a Project")
-        {
-            OpenCreateWizard(vm);
         }
     }
 
