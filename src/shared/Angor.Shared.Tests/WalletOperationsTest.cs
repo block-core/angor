@@ -1,4 +1,4 @@
-using Angor.Shared;
+==using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Protocol.Scripts;
@@ -333,6 +333,71 @@ public class WalletOperationsTest : AngorTestData
         // Assert
         Assert.True(operationResult.Success);
         Assert.NotNull(operationResult.Data); // ensure data is saved
+    }
+
+    [Fact]
+    public async Task PublishTransactionAsync_RollsBackPendingSpentOnIndexerError()
+    {
+        var network = _networkConfiguration.Object.GetNetwork();
+        var words = new WalletWords { Words = "suspect lesson reduce catalog melt lucky decade harvest plastic output hello panel", Passphrase = "" };
+        var address = new Blockcore.NBitcoin.Key().PubKey.GetSegwitAddress(network).ToString();
+
+        var transactionIdIn = uint256.Zero.ToString();
+        var transactionIdOther = uint256.One.ToString();
+
+        var utxoInTx = new UtxoData
+        {
+            value = 1000,
+            address = address,
+            scriptHex = GenerateScriptHex(address, network),
+            outpoint = new Outpoint(transactionIdIn, 0),
+            blockIndex = 1,
+            PendingSpent = true
+        };
+
+        var utxoOther = new UtxoData
+        {
+            value = 500,
+            address = address,
+            scriptHex = GenerateScriptHex(address, network),
+            outpoint = new Outpoint(transactionIdOther, 1),
+            blockIndex = 2,
+            PendingSpent = true
+        };
+
+        var accountInfo = new AccountInfo
+        {
+            walletId = "wallet",
+            ExtPubKey = "ext",
+            RootExtPubKey = "root",
+            Path = "m/84'/0'/0'",
+            AddressesInfo = new List<AddressInfo>
+            {
+                new AddressInfo
+                {
+                    Address = address,
+                    HdPath = "m/84'/0'/0'/0/0",
+                    UtxoData = new List<UtxoData> { utxoInTx, utxoOther }
+                }
+            }
+        };
+
+        var transaction = network.CreateTransaction();
+        transaction.Inputs.Add(new TxIn(new OutPoint(uint256.Zero, 0), Blockcore.Consensus.ScriptInfo.Script.Empty));
+
+        _indexerService.Setup(x => x.PublishTransactionAsync(It.IsAny<string>())).ReturnsAsync("rejected");
+
+        var result = await _sut.PublishTransactionAsync(network, transaction, accountInfo);
+
+        Assert.False(result.Success);
+        Assert.Equal("rejected", result.Message);
+
+        var utxos = accountInfo.AllUtxos().ToList();
+        var rolledBackUtxo = utxos.First(u => u.outpoint.transactionId == utxoInTx.outpoint.transactionId);
+        var untouchedUtxo = utxos.First(u => u.outpoint.transactionId == utxoOther.outpoint.transactionId);
+
+        Assert.False(rolledBackUtxo.PendingSpent);
+        Assert.True(untouchedUtxo.PendingSpent);
     }
 
 

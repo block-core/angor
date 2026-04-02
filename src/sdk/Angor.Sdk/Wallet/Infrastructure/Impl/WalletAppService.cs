@@ -188,7 +188,7 @@ public class WalletAppService(
                 return Result.Failure<TxId>("Could not calculate transaction fee: " + feeCalculationResult.Error);
             }
             
-            var result = await walletOperations.SendAmountToAddress(walletWords, sendInfo);
+            var result = await walletOperations.SendAmountToAddress(walletWords, sendInfo, accountInfo);
             if (!result.Success)
                 return Result.Failure<TxId>(result.Message);
 

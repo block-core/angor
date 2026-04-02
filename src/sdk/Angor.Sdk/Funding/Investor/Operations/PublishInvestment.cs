@@ -81,7 +81,7 @@ public static class PublishInvestment
             if (validate.IsFailure)
                 return Result.Failure<PublishInvestmentResponse>(validate.Error);
             
-            var publishResult = await PublishSignedTransactionAsync(transactionInfo);
+            var publishResult = await PublishSignedTransactionAsync(transactionInfo, request.WalletId);
 
             if (publishResult.IsFailure)
                 return Result.Failure<PublishInvestmentResponse>(publishResult.Error);
@@ -270,12 +270,23 @@ public static class PublishInvestment
         // }
 
 
-        private async Task<Result<string>> PublishSignedTransactionAsync(TransactionInfo signedTransaction)
+        private async Task<Result<string>> PublishSignedTransactionAsync(TransactionInfo signedTransaction, WalletId walletId)
         {
             try
             { 
+                AccountInfo? accountInfo = null;
+                var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
+                if (accountBalanceResult.IsSuccess)
+                {
+                    accountInfo = accountBalanceResult.Value.AccountInfo;
+                }
+                else
+                {
+                    logger.Warning("Failed to load account info for wallet {WalletId}: {Error}", walletId, accountBalanceResult.Error);
+                }
+                
                 var response = await walletOperations.PublishTransactionAsync(networkConfiguration.GetNetwork(),
-                    signedTransaction.Transaction);
+                    signedTransaction.Transaction, accountInfo);
                 
                 if (response.Success)
                     return Result.Success(signedTransaction.Transaction.GetHash().ToString());

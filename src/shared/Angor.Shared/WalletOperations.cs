@@ -290,7 +290,8 @@ public class WalletOperations : IWalletOperations
 
     public async Task<OperationResult<Transaction>>
         SendAmountToAddress(WalletWords walletWords,
-            SendInfo sendInfo) //TODO change the passing of wallet words as parameter after refactoring is complete
+            SendInfo sendInfo,
+            AccountInfo? accountInfo = null) //TODO change the passing of wallet words as parameter after refactoring is complete
     {
         Network network = _networkConfiguration.GetNetwork();
 
@@ -316,9 +317,9 @@ public class WalletOperations : IWalletOperations
 
         var signedTransaction = builder.BuildTransaction(true);
 
-        return await PublishTransactionAsync(network, signedTransaction);
+        return await PublishTransactionAsync(network, signedTransaction, accountInfo);
     }
-    public void ResetPendingSpentForTransaction(AccountInfo accountInfo, Transaction transaction)
+    private void ResetPendingSpentForTransaction(AccountInfo accountInfo, Transaction transaction)
     {
         var inputOutpoints = transaction.Inputs
             .Select(i => i.PrevOut.ToString())
