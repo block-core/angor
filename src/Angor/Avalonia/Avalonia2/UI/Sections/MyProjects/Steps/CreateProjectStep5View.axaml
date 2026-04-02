@@ -428,13 +428,13 @@
                             <TextBlock Text="What date do you want to receive funds each month?" FontSize="16" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
                         </Border>
-                        <StackPanel Margin="24">
+                        <StackPanel Margin="16">
                             <ListBox Name="MonthlyDateGrid" Classes="Transparent"
                                      ItemContainerTheme="{StaticResource ButtonizedAccentListBoxItem}"
                                      SelectionMode="Single" Background="Transparent">
                                 <ListBox.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <UniformGrid Columns="10" ColumnSpacing="8" RowSpacing="8" />
+                                        <UniformGrid Columns="7" ColumnSpacing="6" RowSpacing="6" />
                                     </ItemsPanelTemplate>
                                 </ListBox.ItemsPanel>
                                 <!-- Days 1-29 -->
@@ -481,17 +481,22 @@
                             <TextBlock Text="What day do you want to receive funds each week?" FontSize="16" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
                         </Border>
-                        <StackPanel Margin="24">
-                            <ListBox Name="WeeklyDayList" Classes="Transparent Horizontal"
+                        <StackPanel Margin="16">
+                            <ListBox Name="WeeklyDayList" Classes="Transparent"
                                      ItemContainerTheme="{StaticResource ButtonizedAccentListBoxItem}"
                                      SelectionMode="Single" Background="Transparent">
-                                <ListBoxItem Tag="Mon"><TextBlock Text="Mon" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
-                                <ListBoxItem Tag="Tue"><TextBlock Text="Tue" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
-                                <ListBoxItem Tag="Wed"><TextBlock Text="Wed" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
-                                <ListBoxItem Tag="Thu"><TextBlock Text="Thu" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
-                                <ListBoxItem Tag="Fri"><TextBlock Text="Fri" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
-                                <ListBoxItem Tag="Sat"><TextBlock Text="Sat" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
-                                <ListBoxItem Tag="Sun"><TextBlock Text="Sun" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="7" ColumnSpacing="6" RowSpacing="6" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBoxItem Tag="Mon" Padding="6"><TextBlock Text="Mo" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="Tue" Padding="6"><TextBlock Text="Tu" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="Wed" Padding="6"><TextBlock Text="We" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="Thu" Padding="6"><TextBlock Text="Th" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="Fri" Padding="6"><TextBlock Text="Fr" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="Sat" Padding="6"><TextBlock Text="Sa" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="Sun" Padding="6"><TextBlock Text="Su" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
                             </ListBox>
                         </StackPanel>
                     </StackPanel>

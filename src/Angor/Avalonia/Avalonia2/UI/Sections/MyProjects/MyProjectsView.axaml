@@ -151,9 +151,9 @@
                             </Border>
                         </Grid>
 
-                        <!-- CTA Buttons -->
+                        <!-- CTA Buttons — hidden on compact (MobileActionPanel replaces these) -->
                         <!-- Vue: "Launch a Project" (btn-primary) + "How Funding Works" (outline, border-2 border-gray-300, mt-3) -->
-                        <StackPanel Spacing="12">
+                        <StackPanel Name="SidebarCTAButtons" Spacing="12">
                             <!-- Launch a Project — primary CTA -->
                             <Border Classes="ButtonShadow">
                                 <Button Name="LaunchFromListButton" Classes="Primary"

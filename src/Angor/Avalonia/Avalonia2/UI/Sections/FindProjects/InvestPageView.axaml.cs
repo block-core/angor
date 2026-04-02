@@ -335,7 +335,15 @@ public partial class InvestPageView : UserControl
         {
             case "SubmitButton":
             case "MobileSubmitButton":
-                Vm?.Submit();
+                if (Vm?.CanSubmit == true)
+                {
+                    Vm.Submit();
+                }
+                else
+                {
+                    // Scroll to top so user sees the amount input
+                    _contentScroller?.ScrollToHome();
+                }
                 e.Handled = true;
                 break;
 

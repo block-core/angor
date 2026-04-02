@@ -15,7 +15,7 @@
 
     <Panel>
         <Border HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="420" MaxWidth="448"
+                MinWidth="320" MaxWidth="448" Margin="8"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"

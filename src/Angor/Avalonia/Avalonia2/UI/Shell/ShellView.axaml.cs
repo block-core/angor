@@ -614,9 +614,9 @@ public partial class ShellView : UserControl
             && tab == "investor"
             && (vm.IsProjectDetailOpen || vm.IsInvestPageOpen);
 
-        // Update CTA text: "Submit" when on invest page, else project-type verb ("Invest"/"Fund"/"Subscribe")
+        // Update CTA text: use the project-type action verb on both detail and invest pages
         if (_investorCtaText != null)
-            _investorCtaText.Text = vm.IsInvestPageOpen ? "Submit" : vm.ProjectDetailActionVerb;
+            _investorCtaText.Text = vm.ProjectDetailActionVerb;
 
         // ── Investment detail back bar ──
         // Vue (line 6234): v-if="showInvestmentDetail && currentPage === 'investments'"

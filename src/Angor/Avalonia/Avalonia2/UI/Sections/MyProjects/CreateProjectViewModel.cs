@@ -431,7 +431,6 @@ public partial class CreateProjectViewModel : ReactiveObject
                     FormError = IsInvestment
                         ? "Please create at least one funding stage before proceeding"
                         : "Please generate a payout schedule before proceeding";
-                    StagesError = FormError;
                     RaiseErrorProperties();
                     return;
                 }

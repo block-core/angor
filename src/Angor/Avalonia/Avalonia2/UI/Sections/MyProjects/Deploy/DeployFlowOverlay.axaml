@@ -45,7 +45,7 @@
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsWalletSelector}"
                 HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="448" MaxWidth="480"
+                MinWidth="320" MaxWidth="480" Margin="8"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"
@@ -230,7 +230,7 @@
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsPayFee}"
                 HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="448" MaxWidth="480"
+                MinWidth="320" MaxWidth="480" Margin="8"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"
@@ -393,7 +393,7 @@
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsSuccess}"
                 HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="448" MaxWidth="480"
+                MinWidth="320" MaxWidth="480" Margin="8"
                 CornerRadius="16"
                 Background="{DynamicResource DeploySuccessBg}"
                 BoxShadow="0 8 32 0 #40000000"

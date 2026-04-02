@@ -76,13 +76,13 @@
         <Style Selector="Border.QuickAmountBtn.QuickAmountSelected > StackPanel > TextBlock.QuickAmountLabel">
             <Setter Property="Foreground" Value="White" />
         </Style>
-        <!-- Disabled submit button: dim + no cursor -->
-        <Style Selector="Border#SubmitButton:disabled">
+        <!-- Disabled submit button: dim + no cursor (use [IsEnabled=False] for Border) -->
+        <Style Selector="Border#SubmitButton[IsEnabled=False]">
             <Setter Property="Opacity" Value="0.45" />
             <Setter Property="Cursor" Value="Arrow" />
         </Style>
         <!-- Mobile submit button disabled state -->
-        <Style Selector="Border#MobileSubmitButton:disabled">
+        <Style Selector="Border#MobileSubmitButton[IsEnabled=False]">
             <Setter Property="Opacity" Value="0.45" />
             <Setter Property="Cursor" Value="Arrow" />
         </Style>
@@ -270,7 +270,8 @@
                         Cursor="Hand"
                         BoxShadow="0 2 8 0 #4D4B7C5A"
                         VerticalAlignment="Center"
-                        IsEnabled="{Binding CanSubmit}">
+                        IsEnabled="{Binding CanSubmit}"
+                        Opacity="{Binding SubmitOpacity}">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                             <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
@@ -287,7 +288,7 @@
                         <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="18"
                                Foreground="White" VerticalAlignment="Center"
                                IsVisible="{Binding IsSubscription}" />
-                        <TextBlock Text="{Binding Project.ActionButtonText}"
+                        <TextBlock Text="{Binding ActionButtonText}"
                                    FontSize="16" FontWeight="SemiBold"
                                    Foreground="White" VerticalAlignment="Center" />
                     </StackPanel>
@@ -729,7 +730,8 @@
                         BoxShadow="0 4 12 0 #4D2D5A3D"
                         HorizontalAlignment="Stretch"
                         IsVisible="False"
-                        IsEnabled="{Binding CanSubmit}">
+                        IsEnabled="{Binding CanSubmit}"
+                        Opacity="{Binding SubmitOpacity}">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                             <GradientStop Color="#2D5A3D" Offset="0" />
@@ -744,7 +746,7 @@
                         <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="18"
                                Foreground="White" VerticalAlignment="Center"
                                IsVisible="{Binding IsSubscription}" />
-                        <TextBlock Text="{Binding Project.ActionButtonText}"
+                        <TextBlock Text="{Binding ActionButtonText}"
                                    FontSize="16" FontWeight="Bold"
                                    Foreground="White" VerticalAlignment="Center" />
                     </StackPanel>

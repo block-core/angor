@@ -65,9 +65,9 @@
                 CornerRadius="16"
                 Padding="24"
                 BoxShadow="0 2 8 0 #1A000000">
-            <Grid ColumnDefinitions="*,Auto">
-                <!-- Left: Label + value -->
-                <StackPanel Grid.Column="0" Spacing="4" VerticalAlignment="Center">
+            <StackPanel Spacing="12">
+                <!-- Label + value -->
+                <StackPanel Spacing="4">
                     <!-- Vue: .project-id-label — font-size 13px -->
                     <TextBlock Text="Project ID"
                                FontSize="13" FontWeight="Medium"
@@ -80,12 +80,10 @@
                                TextWrapping="Wrap" />
                 </StackPanel>
 
-                <!-- Right: Action buttons -->
+                <!-- Action buttons — wrap-friendly row -->
                 <!-- Vue: .project-id-actions — gap 8 -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"
-                            VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="8">
                     <!-- Edit Project button -->
-                    <!-- Vue: .edit-project-button — pad 6 12, rounded 6, border #d1d5db, color #4B7C5A, font 13px -->
                     <Button Background="Transparent"
                             BorderBrush="{DynamicResource StrokeSubtle}"
                             BorderThickness="1"
@@ -120,7 +118,6 @@
                     </Button>
 
                     <!-- Copy button (icon only) -->
-                    <!-- Vue: .copy-button — pad 8, rounded 6, color #6b7280 -->
                     <Button Name="CopyProjectIdBtn"
                             Background="Transparent"
                             BorderThickness="0"
@@ -129,7 +126,7 @@
                         <i:Icon Value="fa-solid fa-copy" FontSize="16" Foreground="{DynamicResource ProjectIdLabel}" />
                     </Button>
                 </StackPanel>
-            </Grid>
+            </StackPanel>
         </Border>
 
         <!-- ═══ 2. PROJECT STATISTICS CARD (orange gradient) ═══ -->

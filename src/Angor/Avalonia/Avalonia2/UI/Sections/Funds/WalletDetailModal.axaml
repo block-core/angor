@@ -72,8 +72,7 @@
         <!-- Vue: rounded-2xl shadow-2xl bg-[#111]/bg-white          -->
         <!-- ════════════════════════════════════════════════════════ -->
         <Border HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="640" MaxWidth="896"
-                MaxHeight="680"
+                MinWidth="320" MaxWidth="896" Margin="8"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"

@@ -174,6 +174,10 @@ public partial class InvestPageViewModel : ReactiveObject
     // Vue ref: row label prefix
     public string StageRowPrefix => IsSubscription ? "Payment" : "Stage";
 
+    // ── Action button label (mirrors Project.ActionButtonText for direct binding) ──
+    public string ActionButtonText => ProjectTypeTerminology.ActionButtonText(TypeEnum);
+    public double SubmitOpacity => CanSubmit ? 1.0 : 0.45;
+
     // ── Success message ──
     public string SuccessTitle => ProjectTypeTerminology.SuccessTitle(TypeEnum);
     public string SuccessDescription => $"Your {Project.ProjectType.ToLower()} of {FormattedAmount} BTC to {Project.ProjectName} has been submitted successfully.";
@@ -224,6 +228,7 @@ public partial class InvestPageViewModel : ReactiveObject
                 this.RaisePropertyChanged(nameof(FormattedAmount));
                 this.RaisePropertyChanged(nameof(AngorFeeAmount));
                 this.RaisePropertyChanged(nameof(CanSubmit));
+                this.RaisePropertyChanged(nameof(SubmitOpacity));
                 this.RaisePropertyChanged(nameof(SuccessDescription));
                 this.RaisePropertyChanged(nameof(StagesSummary));
                 this.RaisePropertyChanged(nameof(TransactionAmountValue));
@@ -235,6 +240,7 @@ public partial class InvestPageViewModel : ReactiveObject
             .Subscribe(_ =>
             {
                 this.RaisePropertyChanged(nameof(CanSubmit));
+                this.RaisePropertyChanged(nameof(SubmitOpacity));
             });
 
         // Initialize subscription plans if subscription type

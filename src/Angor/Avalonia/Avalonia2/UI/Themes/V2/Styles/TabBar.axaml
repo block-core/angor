@@ -32,6 +32,13 @@
     <Style Selector="Button.TabBarItem i|Icon">
         <Setter Property="Foreground" Value="{DynamicResource TabBarInactiveText}" />
     </Style>
+    <!-- Custom SVG Path icons (stroke-based Heroicons) inherit tab color -->
+    <Style Selector="Button.TabBarItem Path.TabIconStroke">
+        <Setter Property="Stroke" Value="{DynamicResource TabBarInactiveText}" />
+    </Style>
+    <Style Selector="Button.TabBarItem Path.TabIconFill">
+        <Setter Property="Fill" Value="{DynamicResource TabBarInactiveText}" />
+    </Style>
     <!-- Remove the default Button template hover/pressed backgrounds -->
     <Style Selector="Button.TabBarItem /template/ ContentPresenter">
         <Setter Property="Background" Value="Transparent" />
@@ -51,6 +58,12 @@
          explicitly set it for active tabs so both icon and label are green -->
     <Style Selector="Button.TabBarItem.TabBarItemActive i|Icon">
         <Setter Property="Foreground" Value="{DynamicResource TabBarActiveText}" />
+    </Style>
+    <Style Selector="Button.TabBarItem.TabBarItemActive Path.TabIconStroke">
+        <Setter Property="Stroke" Value="{DynamicResource TabBarActiveText}" />
+    </Style>
+    <Style Selector="Button.TabBarItem.TabBarItemActive Path.TabIconFill">
+        <Setter Property="Fill" Value="{DynamicResource TabBarActiveText}" />
     </Style>
 
     <!-- TabBarLabel: 12sp (12px), font-weight 500 (Medium)

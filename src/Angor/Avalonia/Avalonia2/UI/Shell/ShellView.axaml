@@ -399,35 +399,47 @@
                       ColumnDefinitions="*,*,*,*,*"
                       HorizontalAlignment="Stretch">
 
-                    <!-- Home tab -->
+                    <!-- Home tab — NavIconHome (Heroicons outline, stroke) -->
                     <Button Name="TabHome" Grid.Column="0" Classes="TabBarItem TabBarItemActive"
                             Click="OnTabHome">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
-                            <i:Icon Value="fa-solid fa-house" FontSize="22"
-                                    HorizontalAlignment="Center" />
+                            <Viewbox Width="22" Height="22" HorizontalAlignment="Center">
+                                <Panel Width="24" Height="24">
+                                    <Path Classes="TabIconStroke" Data="{StaticResource NavIconHome}"
+                                          StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round" />
+                                </Panel>
+                            </Viewbox>
                             <TextBlock Text="Home" Classes="TabBarLabel"
                                        HorizontalAlignment="Center" />
                         </StackPanel>
                     </Button>
 
-                    <!-- Investor tab -->
+                    <!-- Investor tab — NavIconTrendUp (Heroicons outline, stroke) -->
                     <Button Name="TabInvestor" Grid.Column="1" Classes="TabBarItem"
                             Click="OnTabInvestor">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
-                            <i:Icon Value="fa-solid fa-chart-line" FontSize="22"
-                                    HorizontalAlignment="Center" />
+                            <Viewbox Width="22" Height="22" HorizontalAlignment="Center">
+                                <Panel Width="24" Height="24">
+                                    <Path Classes="TabIconStroke" Data="{StaticResource NavIconTrendUp}"
+                                          StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round" />
+                                </Panel>
+                            </Viewbox>
                             <TextBlock Text="Investor" Classes="TabBarLabel"
                                        HorizontalAlignment="Center" />
                         </StackPanel>
                     </Button>
 
-                    <!-- Founder tab -->
+                    <!-- Founder tab — NavIconDocument (Heroicons outline, stroke) -->
                     <Button Name="TabFounder" Grid.Column="2" Classes="TabBarItem"
                             Click="OnTabFounder">
                         <Panel>
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
-                                <i:Icon Value="fa-solid fa-file-lines" FontSize="22"
-                                        HorizontalAlignment="Center" />
+                                <Viewbox Width="22" Height="22" HorizontalAlignment="Center">
+                                    <Panel Width="24" Height="24">
+                                        <Path Classes="TabIconStroke" Data="{StaticResource NavIconDocument}"
+                                              StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round" />
+                                    </Panel>
+                                </Viewbox>
                                 <TextBlock Text="Founder" Classes="TabBarLabel"
                                            HorizontalAlignment="Center" />
                             </StackPanel>
@@ -450,23 +462,31 @@
                         </Panel>
                     </Button>
 
-                    <!-- Funds tab -->
+                    <!-- Funds tab — NavIconWallet (fill-based, non-standard viewBox) -->
                     <Button Name="TabFunds" Grid.Column="3" Classes="TabBarItem"
                             Click="OnTabFunds">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
-                            <i:Icon Value="fa-solid fa-wallet" FontSize="22"
-                                    HorizontalAlignment="Center" />
+                            <Viewbox Width="22" Height="22" HorizontalAlignment="Center">
+                                <Panel Width="24" Height="24">
+                                    <Path Classes="TabIconFill" Data="{StaticResource NavIconWallet}"
+                                          Stretch="Uniform" />
+                                </Panel>
+                            </Viewbox>
                             <TextBlock Text="Funds" Classes="TabBarLabel"
                                        HorizontalAlignment="Center" />
                         </StackPanel>
                     </Button>
 
-                    <!-- Settings tab -->
+                    <!-- Settings tab — NavIconSettings (Heroicons outline, stroke) -->
                     <Button Name="TabSettings" Grid.Column="4" Classes="TabBarItem"
                             Click="OnTabSettings">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="4">
-                            <i:Icon Value="fa-solid fa-gear" FontSize="22"
-                                    HorizontalAlignment="Center" />
+                            <Viewbox Width="22" Height="22" HorizontalAlignment="Center">
+                                <Panel Width="24" Height="24">
+                                    <Path Classes="TabIconStroke" Data="{StaticResource NavIconSettings}"
+                                          StrokeThickness="2" StrokeLineCap="Round" StrokeJoin="Round" />
+                                </Panel>
+                            </Viewbox>
                             <TextBlock Text="Settings" Classes="TabBarLabel"
                                        HorizontalAlignment="Center" />
                         </StackPanel>

@@ -51,7 +51,8 @@
                         </Border>
 
                         <!-- Center: Name+Balance row, Type+Label row -->
-                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center"
+                                    MinWidth="0">
                             <!-- Top row: name left, balance right -->
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Grid.Column="0"
@@ -59,7 +60,8 @@
                                            FontSize="15"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextStrong}"
-                                           VerticalAlignment="Center" />
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis" />
                                 <TextBlock Grid.Column="1"
                                            Text="{TemplateBinding Balance}"
                                            FontSize="15"

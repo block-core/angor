@@ -23,6 +23,8 @@ public partial class MyProjectsView : UserControl
     private TextBlock? _sidebarSubtitle;
     private Grid? _sidebarStats;
     private Button? _howFundingWorksBtn;
+    private StackPanel? _mobileActionPanel;
+    private StackPanel? _sidebarCTAButtons;
 
     /// <summary>Design-time only.</summary>
     public MyProjectsView() => InitializeComponent();
@@ -56,6 +58,8 @@ public partial class MyProjectsView : UserControl
         _sidebarSubtitle = this.FindControl<TextBlock>("SidebarSubtitle");
         _sidebarStats = this.FindControl<Grid>("SidebarStats");
         _howFundingWorksBtn = this.FindControl<Button>("HowFundingWorksBtn");
+        _mobileActionPanel = this.FindControl<StackPanel>("MobileActionPanel");
+        _sidebarCTAButtons = this.FindControl<StackPanel>("SidebarCTAButtons");
 
         // ── Responsive layout: 380px sidebar + content (desktop) → stacked (compact) ──
         _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
@@ -79,6 +83,8 @@ public partial class MyProjectsView : UserControl
         if (_sidebarSubtitle != null) _sidebarSubtitle.IsVisible = !isCompact;
         if (_sidebarStats != null) _sidebarStats.IsVisible = !isCompact;
         if (_howFundingWorksBtn != null) _howFundingWorksBtn.IsVisible = !isCompact;
+        if (_mobileActionPanel != null) _mobileActionPanel.IsVisible = isCompact;
+        if (_sidebarCTAButtons != null) _sidebarCTAButtons.IsVisible = !isCompact;
 
         if (isCompact)
         {

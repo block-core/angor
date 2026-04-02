@@ -741,8 +741,14 @@ public partial class ShellViewModel : ReactiveObject
     {
         if (IsInvestPageOpen)
         {
-            // Submit invest — handled by the InvestPage itself, not here
-            // The floating button just triggers the invest flow via the page
+            // Trigger invest submit via the FindProjectsViewModel's InvestPageViewModel
+            if (_viewCache.TryGetValue("Find Projects", out var iv) &&
+                iv is FindProjectsView { DataContext: FindProjectsViewModel fpVm2 } &&
+                fpVm2.InvestPageViewModel is { } investVm)
+            {
+                if (investVm.CanSubmit)
+                    investVm.Submit();
+            }
         }
         else if (IsProjectDetailOpen)
         {
