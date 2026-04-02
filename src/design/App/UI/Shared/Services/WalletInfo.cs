@@ -47,12 +47,13 @@ public partial class WalletInfo : ReactiveObject
 
     // ── Bindable display properties (AXAML-friendly) ──
 
-    /// <summary>Full-precision balance with symbol, e.g. "0.01000000 BTC". Bindable.</summary>
+    /// <summary>Full-precision confirmed balance with symbol, e.g. "0.01000000 BTC". Bindable.
+    /// Uses TotalBalanceSats (confirmed only) because PendingBalance displays unconfirmed separately.</summary>
     public string Balance
     {
         get
         {
-            var btc = (double)AvailableSats.ToUnitBtc();
+            var btc = (double)TotalBalanceSats.ToUnitBtc();
             return $"{btc:F8} {CurrencySymbol}";
         }
     }

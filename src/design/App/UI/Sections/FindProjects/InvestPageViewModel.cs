@@ -112,6 +112,10 @@ public partial class InvestPageViewModel : ReactiveObject
     /// <summary>Fee rate in sat/vB, set by FeeSelectionPopup before payment.</summary>
     [Reactive] private long selectedFeeRate = 20;
 
+    /// <summary>Whether the investment was auto-approved (published directly, below penalty threshold).
+    /// False means it requires founder approval. Used to determine success screen text.</summary>
+    [Reactive] private bool isAutoApproved;
+
     // ── Subscription State ──
     [Reactive] private string? selectedSubscriptionPattern;
 
@@ -195,8 +199,8 @@ public partial class InvestPageViewModel : ReactiveObject
     public string StageRowPrefix => IsSubscription ? "Payment" : "Stage";
 
     // ── Success message ──
-    public string SuccessTitle => ProjectTypeTerminology.SuccessTitle(TypeEnum);
-    public string SuccessDescription => $"Your {Project.ProjectType.ToLower()} of {FormattedAmount} {_currencyService.Symbol} to {Project.ProjectName} has been submitted successfully.";
+    public string SuccessTitle => ProjectTypeTerminology.SuccessTitle(TypeEnum, IsAutoApproved);
+    public string SuccessDescription => ProjectTypeTerminology.SuccessDescription(TypeEnum, IsAutoApproved, FormattedAmount, _currencyService.Symbol, Project.ProjectName);
     public string SuccessButtonText => ProjectTypeTerminology.SuccessButtonText(TypeEnum);
 
     // ── Wallets loaded from IWalletContext ──
@@ -256,6 +260,14 @@ public partial class InvestPageViewModel : ReactiveObject
 
         this.WhenAnyValue(x => x.ErrorMessage)
             .Subscribe(_ => this.RaisePropertyChanged(nameof(HasError)));
+
+        // Update success messages when auto-approval status is determined
+        this.WhenAnyValue(x => x.IsAutoApproved)
+            .Subscribe(_ =>
+            {
+                this.RaisePropertyChanged(nameof(SuccessTitle));
+                this.RaisePropertyChanged(nameof(SuccessDescription));
+            });
 
         // Recompute totals + stages when amount changes
         this.WhenAnyValue(x => x.InvestmentAmount)
@@ -608,6 +620,7 @@ public partial class InvestPageViewModel : ReactiveObject
             if (isAboveThreshold)
             {
                 // Above threshold or investment-type: request founder signatures
+                IsAutoApproved = false;
                 _logger.LogInformation("Investment requires founder approval — requesting founder signatures");
                 PaymentStatusText = "Requesting founder approval...";
                 var submitRequest = new RequestInvestmentSignatures.RequestFounderSignaturesRequest(
@@ -628,6 +641,7 @@ public partial class InvestPageViewModel : ReactiveObject
             else
             {
                 // Below threshold: publish directly
+                IsAutoApproved = true;
                 _logger.LogInformation("Investment is below penalty threshold — publishing directly");
                 PaymentStatusText = "Publishing transaction...";
                 var publishRequest = new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(
@@ -780,6 +794,7 @@ public partial class InvestPageViewModel : ReactiveObject
 
             if (isAboveThreshold)
             {
+                IsAutoApproved = false;
                 PaymentStatusText = "Requesting founder approval...";
                 var submitRequest = new RequestInvestmentSignatures.RequestFounderSignaturesRequest(
                     walletId,
@@ -796,6 +811,7 @@ public partial class InvestPageViewModel : ReactiveObject
             }
             else
             {
+                IsAutoApproved = true;
                 PaymentStatusText = "Publishing transaction...";
                 var publishRequest = new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(
                     walletId.Value,
