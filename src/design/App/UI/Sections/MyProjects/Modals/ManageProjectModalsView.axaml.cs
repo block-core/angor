@@ -215,7 +215,7 @@ public partial class ManageProjectModalsView : UserControl
     //  CLAIM FLOW
     // ─────────────────────────────────────────────────────────────────
 
-    private void OnClaimSelectedClick()
+    private async void OnClaimSelectedClick()
     {
         if (Vm == null) return;
 
@@ -223,16 +223,27 @@ public partial class ManageProjectModalsView : UserControl
         var stage = Vm.SelectedStage;
         if (stage == null) return;
 
-        var selectedAmount = stage.AvailableTransactions
-            .Where(t => t.IsSelected)
-            .Sum(t => double.TryParse(t.Amount, out var v) ? v : 0);
+        var selectedTxs = stage.AvailableTransactions.Where(t => t.IsSelected).ToList();
+        var selectedAmount = selectedTxs.Sum(t => double.TryParse(t.Amount, out var v) ? v : 0);
 
-        if (selectedAmount <= 0) return; // nothing selected
+        if (selectedAmount <= 0 || selectedTxs.Count == 0) return; // nothing selected
 
         Vm.ClaimedAmount = selectedAmount.ToString("F8");
         Vm.ShowClaimModal = false;
-        Vm.WalletPassword = "";
-        Vm.ShowPasswordModal = true;
+
+        // Skip password modal — password is not used (SimplePasswordProvider returns "default-key").
+        // Go directly to fee selection and claim.
+        var feeRate = await AskForFeeRateAsync();
+        if (feeRate == null) return; // User cancelled
+
+        Vm.IsClaiming = true;
+        var success = await Vm.ClaimStageFundsAsync(stage.Number, selectedTxs, feeRate.Value);
+        Vm.IsClaiming = false;
+
+        if (success)
+        {
+            Vm.ShowSuccessModal = true;
+        }
     }
 
     private async void OnConfirmClaimClick()
@@ -269,7 +280,7 @@ public partial class ManageProjectModalsView : UserControl
     //  RELEASE FUNDS FLOW
     // ─────────────────────────────────────────────────────────────────
 
-    private void OnReleaseFundsConfirmClick()
+    private async void OnReleaseFundsConfirmClick()
     {
         if (Vm == null) return;
 
@@ -289,8 +300,23 @@ public partial class ManageProjectModalsView : UserControl
         }
 
         Vm.ShowReleaseFundsModal = false;
-        Vm.WalletPassword = "";
-        Vm.ShowReleaseFundsPasswordModal = true;
+
+        // Skip password modal — password is not used (SimplePasswordProvider returns "default-key").
+        // Go directly to release.
+        var totalRelease = Vm.Stages
+            .SelectMany(s => s.AvailableTransactions)
+            .Sum(t => double.TryParse(t.Amount, out var v) ? v : 0);
+
+        Vm.ReleasedAmount = totalRelease.ToString("F8");
+
+        Vm.IsReleasingFunds = true;
+        var success = await Vm.ReleaseFundsToInvestorsAsync();
+        Vm.IsReleasingFunds = false;
+
+        if (success)
+        {
+            Vm.ShowReleaseFundsSuccessModal = true;
+        }
     }
 
     private async void OnConfirmReleaseClick()

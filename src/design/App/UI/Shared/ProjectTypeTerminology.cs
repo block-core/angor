@@ -139,12 +139,23 @@ public static class ProjectTypeTerminology
 
     // ── Success messages (invest flow) ──
 
-    public static string SuccessTitle(ProjectType type) => type switch
-    {
-        ProjectType.Fund => "Funding Pending Approval",
-        ProjectType.Subscription => "Subscription Pending Approval",
-        _ => "Investment Pending Approval"
-    };
+    public static string SuccessTitle(ProjectType type, bool isAutoApproved) => isAutoApproved
+        ? type switch
+        {
+            ProjectType.Fund => "Funding Successful",
+            ProjectType.Subscription => "Subscription Successful",
+            _ => "Investment Successful"
+        }
+        : type switch
+        {
+            ProjectType.Fund => "Funding Pending Approval",
+            ProjectType.Subscription => "Subscription Pending Approval",
+            _ => "Investment Pending Approval"
+        };
+
+    public static string SuccessDescription(ProjectType type, bool isAutoApproved, string formattedAmount, string symbol, string projectName) => isAutoApproved
+        ? $"Your {type.ToDisplayString().ToLower()} of {formattedAmount} {symbol} to {projectName} has been published successfully."
+        : $"Your {type.ToDisplayString().ToLower()} of {formattedAmount} {symbol} to {projectName} has been submitted and is pending founder approval.";
 
     public static string SuccessButtonText(ProjectType type) => type switch
     {
