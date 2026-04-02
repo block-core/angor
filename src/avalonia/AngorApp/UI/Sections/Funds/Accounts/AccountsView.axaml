@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:accounts="clr-namespace:AngorApp.UI.Sections.Funds.Accounts"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
-             mc:Ignorable="d" d:DesignWidth="400"
+             mc:Ignorable="d" d:DesignWidth="350"
              x:Class="AngorApp.UI.Sections.Funds.Accounts.AccountsView"
              x:DataType="accounts:IAccountsViewModel">
 
@@ -42,7 +42,7 @@
                 <ItemsControl ItemsSource="{Binding Balances}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <FlexPanel Direction="Row" Wrap="Wrap" Gap="20" />
+                            <WrapPanel ItemWidth="200" ItemSpacing="20" LineSpacing="20" HorizontalAlignment="Left" />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.Styles>
