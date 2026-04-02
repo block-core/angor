@@ -6,6 +6,7 @@ using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
 using App.UI.Shared;
 using App.UI.Shared.Services;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 
 namespace App.UI.Sections.MyProjects;
@@ -53,6 +54,10 @@ public partial class MyProjectsViewModel : ReactiveObject
     private readonly IWalletContext _walletContext;
     private readonly Func<MyProjectItemViewModel, ManageProjectViewModel> _manageFactory;
     private readonly ICurrencyService _currencyService;
+    private readonly ILogger<MyProjectsViewModel> _logger;
+
+    /// <summary>Raised when the VM wants to show a transient toast notification.</summary>
+    public event Action<string>? ToastRequested;
 
     /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
     public string CurrencySymbol => _currencyService.Symbol;
@@ -87,13 +92,15 @@ public partial class MyProjectsViewModel : ReactiveObject
         IWalletContext walletContext,
         Func<MyProjectItemViewModel, ManageProjectViewModel> manageFactory,
         CreateProjectViewModel createProjectVm,
-        ICurrencyService currencyService)
+        ICurrencyService currencyService,
+        ILogger<MyProjectsViewModel> logger)
     {
         _projectAppService = projectAppService;
         _walletContext = walletContext;
         _manageFactory = manageFactory;
         CreateProjectVm = createProjectVm;
         _currencyService = currencyService;
+        _logger = logger;
 
         // Re-load founder projects whenever wallet list changes (e.g. after initial ReloadAsync completes).
         // This fixes the race condition where MyProjectsViewModel is constructed before wallets are
@@ -168,6 +175,47 @@ public partial class MyProjectsViewModel : ReactiveObject
     }
 
     public void LaunchCreateWizard() => ShowCreateWizard = true;
+
+    /// <summary>
+    /// Scan the network (indexer/Nostr) for founder projects not yet in local DB.
+    /// Discovers projects created from a restored wallet or if the local DB was cleared.
+    /// After scanning, reloads the project list.
+    /// </summary>
+    public async Task ScanForProjectsAsync()
+    {
+        if (IsLoading) return;
+
+        IsLoading = true;
+
+        try
+        {
+            var wallets = _walletContext.Wallets;
+
+            foreach (var wallet in wallets)
+            {
+                // ScanFounderProjects checks all 15 derived key slots,
+                // discovers new projects, and persists them locally.
+                var result = await _projectAppService.ScanFounderProjects(wallet.Id);
+                if (result.IsFailure)
+                {
+                    _logger.LogError("ScanFounderProjects failed for wallet {WalletId}: {Error}",
+                        wallet.Id.Value, result.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ScanForProjectsAsync threw an unexpected exception");
+            ToastRequested?.Invoke("Failed to scan for projects. Please try again.");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+
+        // Reload from local DB (now includes any newly discovered projects)
+        await LoadFounderProjectsAsync();
+    }
 
     /// <summary>
     /// Called after a project is successfully deployed.

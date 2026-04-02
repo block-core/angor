@@ -28,6 +28,11 @@ public partial class MyProjectsView : UserControl
 
         AddHandler(Button.ClickEvent, OnButtonClick, RoutingStrategies.Bubble);
 
+        // Forward toast notifications from VM to ShellViewModel
+        vm.ToastRequested += OnToastRequested;
+        Disposable.Create(() => vm.ToastRequested -= OnToastRequested)
+            .DisposeWith(_subscriptions);
+
         // Manage panel visibility based on ViewModel state
         SubscribeToVisibility(vm);
 
@@ -94,6 +99,12 @@ public partial class MyProjectsView : UserControl
             .DisposeWith(_subscriptions!);
     }
 
+    private void OnToastRequested(string message)
+    {
+        var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
+        shellVm?.ShowToast(message);
+    }
+
     protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
     {
         base.OnAttachedToLogicalTree(e);
@@ -102,6 +113,9 @@ public partial class MyProjectsView : UserControl
         if (_subscriptions == null && DataContext is MyProjectsViewModel vm)
         {
             _subscriptions = new CompositeDisposable();
+            vm.ToastRequested += OnToastRequested;
+            Disposable.Create(() => vm.ToastRequested -= OnToastRequested)
+                .DisposeWith(_subscriptions);
             SubscribeToVisibility(vm);
             UpdateListVisibility(vm);
         }
@@ -134,6 +148,11 @@ public partial class MyProjectsView : UserControl
         {
             case "LaunchFromListButton":
                 OpenCreateWizard(vm);
+                return;
+
+            case "ScanProjectsButton":
+                _ = vm.ScanForProjectsAsync();
+                e.Handled = true;
                 return;
 
             case "PART_ManageButton":
