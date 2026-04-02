@@ -1,4 +1,4 @@
-==using Angor.Shared;
+using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Protocol.Scripts;
