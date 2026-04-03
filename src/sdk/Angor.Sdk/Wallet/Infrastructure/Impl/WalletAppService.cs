@@ -254,6 +254,7 @@ public class WalletAppService(
             return Result.Failure("Wallet not found");
 
         // delete persisted documents related to the wallet
+        var delDerived = await derivedProjectKeys.DeleteAsync(walletId.Value);
         if (delDerived.IsFailure)
             return Result.Failure($"Failed to delete DerivedProjectKeys {delDerived.Error}");
 
