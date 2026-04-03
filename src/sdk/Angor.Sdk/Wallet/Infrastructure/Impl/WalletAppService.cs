@@ -1,4 +1,8 @@
 using Angor.Sdk.Common;
+using Angor.Data.Documents.Interfaces;
+using Angor.Sdk.Funding.Founder.Domain;
+using Angor.Sdk.Funding.Investor.Domain;
+using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Wallet.Application;
 using Angor.Sdk.Wallet.Domain;
 using Angor.Sdk.Wallet.Infrastructure.History;
@@ -18,7 +22,11 @@ public class WalletAppService(
     IPsbtOperations psbtOperations,
     ITransactionHistory transactionHistory,
     IHttpClientFactory httpClientFactory,
-    IWalletAccountBalanceService accountBalanceService)
+    IWalletAccountBalanceService accountBalanceService,
+    IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeys,
+    IGenericDocumentCollection<FounderProjectsDocument> founderProjects,
+    IGenericDocumentCollection<InvestmentRecordsDocument> investmentRecords,
+    IGenericDocumentCollection<InvestmentHandshake> investmentHandshakes)
     : IWalletAppService
 {
     //public static readonly WalletId SingleWalletId = new("8E3C5250-4E26-4A13-8075-0A189AEAF793");
@@ -244,6 +252,30 @@ public class WalletAppService(
         
         if (wallet == null)
             return Result.Failure("Wallet not found");
+
+        // delete persisted documents related to the wallet
+        if (delDerived.IsFailure)
+            return Result.Failure($"Failed to delete DerivedProjectKeys {delDerived.Error}");
+
+        var delFounder = await founderProjects.DeleteAsync(walletId.Value);
+        if (delFounder.IsFailure)
+            return Result.Failure($"Failed to delete FounderProjectsDocument {delFounder.Error}");
+
+        var delInvestments = await investmentRecords.DeleteAsync(walletId.Value);
+        if (delInvestments.IsFailure)
+            return Result.Failure($"Failed to delete InvestmentRecordsDocument {delInvestments.Error}");
+
+        // investment handshakes are composite key find matching handshakes and delete each
+        var handshakes = await investmentHandshakes.FindAsync(h => h.WalletId == walletId.Value);
+        if (handshakes.IsFailure)
+            return Result.Failure($"Failed to query InvestmentHandshakes {handshakes.Error}");
+
+        foreach (var hs in handshakes.Value)
+        {
+            var delHs = await investmentHandshakes.DeleteAsync(hs.Id);
+            if (delHs.IsFailure)
+                return Result.Failure($"Failed to delete InvestmentHandshake {hs.Id}: {delHs.Error}");
+        }
         
         var deleteAccountResult = await accountBalanceService.DeleteAccountBalanceInfoAsync(walletId);
         
