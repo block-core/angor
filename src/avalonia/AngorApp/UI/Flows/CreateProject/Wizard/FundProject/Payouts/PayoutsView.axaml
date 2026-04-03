@@ -29,8 +29,8 @@
         </Style>
     </UserControl.Styles>
 
-    <controls:ScrollableView MaxContentWidth="766">
-        <StackPanel VerticalAlignment="Center" Spacing="{StaticResource Gap-XL}">
+    <ScrollViewer>
+        <StackPanel MaxWidth="766" VerticalAlignment="Center" Spacing="{StaticResource Gap-XL}">
             <TextBlock Classes="Subtitle">Select your payout pattern and schedule</TextBlock>
 
                 <StackPanel Spacing="{StaticResource Gap-XL}" IsVisible="{Binding !!!Payouts.Count}">
@@ -156,5 +156,5 @@
                                      Frequency="{Binding FundProject.PayoutFrequency}" />
             </HeaderedContainer>
         </StackPanel>
-    </controls:ScrollableView>
+    </ScrollViewer>
 </UserControl>

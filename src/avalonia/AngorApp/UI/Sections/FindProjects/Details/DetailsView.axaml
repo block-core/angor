@@ -25,7 +25,7 @@
         </DataContextChangedTrigger>
     </Interaction.Behaviors>
 
-    <c:ScrollableView>
+    <ScrollViewer>
         <StackPanel Classes="Gap-L" Margin="20" MaxWidth="1200" HorizontalAlignment="Stretch">
 
             <!-- Top Section: Header + Investment Opportunity -->
@@ -238,5 +238,5 @@
             </Expander>
 
         </StackPanel>
-    </c:ScrollableView>
+    </ScrollViewer>
 </UserControl>

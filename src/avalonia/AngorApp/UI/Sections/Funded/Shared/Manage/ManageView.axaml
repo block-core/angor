@@ -19,7 +19,7 @@
         </LoadedTrigger>
     </Interaction.Behaviors>
 
-    <controls:ScrollableView>
+    <ScrollViewer>
         <StackPanel Classes="Gap-XL" Margin="10">
             <Grid ColumnSpacing="24" ColumnDefinitions="* 400">
                 <m:ProjectInfoCard ClipToBounds="False" DataContext="{Binding Funded.Project}" />
@@ -29,5 +29,5 @@
             <m:FundingInformation ClipToBounds="False" DataContext="{Binding Funded}" />
             <m:ScheduleCard ClipToBounds="False" DataContext="{Binding Funded}" />
         </StackPanel>
-    </controls:ScrollableView>
+    </ScrollViewer>
 </UserControl>

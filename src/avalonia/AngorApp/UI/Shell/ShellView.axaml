@@ -13,6 +13,10 @@
 
     <UserControl.Styles>
 
+        <Style Selector=":is(UserControl) > ScrollViewer">
+            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+        </Style>
+
         <ContainerQuery Name="Shell" Query="min-width:0 and max-width:767">
             <Style Selector="SectionStrip">
                 <Setter Property="Orientation" Value="Horizontal" />
@@ -22,7 +26,9 @@
             <Style Selector="DockPanel#TopBar">
                 <Setter Property="IsVisible" Value="False" />
             </Style>
-            
+            <Style Selector=":is(UserControl) > ScrollViewer">
+                <Setter Property="Padding" Value="0" />
+            </Style>
         </ContainerQuery>
 
         <ContainerQuery Name="Shell" Query="min-width:768">
@@ -30,6 +36,9 @@
                 <Setter Property="Orientation" Value="Vertical" />
                 <Setter Property="DockPanel.Dock" Value="Left" />
                 <Setter Property="Width" Value="200" />
+            </Style>
+            <Style Selector=":is(UserControl) > ScrollViewer">
+                <Setter Property="Padding" Value="20" />
             </Style>
         </ContainerQuery>
 

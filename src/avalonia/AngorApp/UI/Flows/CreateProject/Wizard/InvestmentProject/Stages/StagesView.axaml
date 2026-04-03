@@ -11,8 +11,8 @@
         <stages:StagesViewModelSample />
     </Design.DataContext>
 
-    <controls:ScrollableView MaxContentWidth="766">
-        <StackPanel Classes="Gap-XL">
+    <ScrollViewer>
+        <StackPanel MaxWidth="766" Classes="Gap-XL">
             <controls:ErrorSummary HorizontalAlignment="Stretch" Errors="{Binding Errors}" />
             <DockPanel>
                 <EnhancedButton DockPanel.Dock="Right" IsVisible="{Binding !IsAdvanced}" Classes="Outline" Command="{Binding ToggleEditor}">Advanced Editor</EnhancedButton>
@@ -22,6 +22,6 @@
             <stages:StagesSimpleEditor IsVisible="{Binding !IsAdvanced}" />
             <stages:StagesAdvancedEditor IsVisible="{Binding IsAdvanced}" />
         </StackPanel>
-    </controls:ScrollableView>
+    </ScrollViewer>
 
 </UserControl>

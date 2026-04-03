@@ -7,7 +7,7 @@
     </Design.PreviewWith>
 
     <Style Selector="Frame">
-        <Setter Property="Padding" Value="20" />
+        <Setter Property="Padding" Value="0" />
         <Setter Property="FooterBackground" Value="{DynamicResource Surface}" />
     </Style>
     <Style Selector="Frame EnhancedButton#BackButton">
@@ -16,7 +16,7 @@
         <Setter Property="Content" Value="Back" />
         <Setter Property="Height" Value="44" />
         <Setter Property="Spacing" Value="2" />
-        <Setter Property="Padding" Value="10 10 20 10" />
+        <Setter Property="Padding" Value="20 10 20 0" />
         <Setter Property="BoxShadow" Value="{DynamicResource ItemShadowBig}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="BorderBrush" Value="{DynamicResource Border}" />

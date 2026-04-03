@@ -21,23 +21,21 @@
         </DataContextChangedTrigger>
     </Interaction.Behaviors>
 
-    <Panel Classes="Padded">
-        <Loading IsLoading="{Binding LoadProjects.IsExecuting^}">
-            <ScrollViewer>
-                <ItemsControl Margin="0 70 0 0" ItemsSource="{Binding Projects}" ClipToBounds="False">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <BalancedWrapGrid MinItemWidth="280" MaxItemWidth="500" HorizontalSpacing="20" VerticalSpacing="20" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="findProjects:IFindProjectItem">
-                            <findProjects:FindProjectItemView />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-        </Loading>
-    </Panel>
+    <Loading IsLoading="{Binding LoadProjects.IsExecuting^}">
+        <ScrollViewer>
+            <ItemsControl Margin="0 70 0 0" ItemsSource="{Binding Projects}" ClipToBounds="False">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <BalancedWrapGrid MinItemWidth="280" MaxItemWidth="500" HorizontalSpacing="20" VerticalSpacing="20" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="findProjects:IFindProjectItem">
+                        <findProjects:FindProjectItemView />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Loading>
 
 </UserControl>

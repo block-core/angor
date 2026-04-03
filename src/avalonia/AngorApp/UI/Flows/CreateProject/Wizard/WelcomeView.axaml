@@ -6,8 +6,8 @@
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="750"
              x:Class="AngorApp.UI.Flows.CreateProject.Wizard.WelcomeView" x:DataType="wizard:WelcomeViewModel">
-    <controls:ScrollableView MaxContentWidth="768">
-        <Border Classes="Panel" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="30">
+    <ScrollViewer>
+        <Border MaxWidth="768" Classes="Panel" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="30">
             <StackPanel Classes="Gap-XXL">
                 <PathIcon Foreground="Transparent" Height="48" Width="48" Data="{StaticResource Lightning}">
                     <PathIcon.Styles>
@@ -29,6 +29,6 @@
 
             </StackPanel>
         </Border>
-    </controls:ScrollableView>
+    </ScrollViewer>
 
 </UserControl>

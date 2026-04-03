@@ -12,7 +12,7 @@
     <StyleInclude Source="/UI/Shared/Controls/Feerate/FeerateSelector.axaml" />
     <StyleInclude Source="/UI/Shared/Controls/ErrorSummary.axaml" />
     <StyleInclude Source="/UI/Shared/Controls/PageContainer.axaml" />
-    <StyleInclude Source="/UI/Shared/Controls/ScrollableView.axaml" />
+
     <StyleInclude Source="/UI/Shared/Controls/Badge.axaml" />
     <StyleInclude Source="/UI/Shared/Styles/Cards.axaml" />
     <StyleInclude Source="/UI/Shared/Styles/OverlayBorder.axaml" />

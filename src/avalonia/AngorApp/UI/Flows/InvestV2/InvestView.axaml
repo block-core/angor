@@ -24,7 +24,7 @@
         </Style>
     </UserControl.Styles>
 
-    <controls:ScrollableView>
+    <ScrollViewer>
         <Grid RowDefinitions="Auto, *, Auto">
 
             <!-- Main Content -->
@@ -169,5 +169,5 @@
 
             </BalancedWrapGrid>
         </Grid>
-    </controls:ScrollableView>
+    </ScrollViewer>
 </UserControl>

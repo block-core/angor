@@ -27,7 +27,7 @@
         </DataContextChangedTrigger>
     </Interaction.Behaviors>
 
-    <Border Margin="10" Classes="Panel Elevate Shadow" Cursor="Hand">
+    <Border Classes="Panel Elevate Shadow" Cursor="Hand">
         <StackPanel Classes="Gap-XL">
             <a:AdvancedImage CornerRadius="10 10 0 0" Margin="-20 -20 -20 0" Stretch="UniformToFill" Height="140"
                              Source="{Binding Project.BannerUrl}" />
