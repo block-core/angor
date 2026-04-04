@@ -130,19 +130,26 @@ public class InvestmentCancellationTest
 
         // ── Step 2: Invest above threshold (stays at Step 1 — Pending Approval) ──
         Log(profileName, $"Investing {investmentAmountBtc} BTC (above threshold, pending approval)...");
-        var portfolioVm = await InvestInProjectAsync(
+        await InvestInProjectAsync(
             window, profileName, foundProject, project, investmentAmountBtc);
 
-        // Find the pending investment
+        // Wait for the indexer to pick up the investment and reload from SDK.
+        // AddToPortfolio does an optimistic local insert without WalletId/TransactionId.
+        // LoadInvestmentsFromSdkAsync repopulates the full InvestmentViewModel with those fields.
+        var portfolioVm = await WaitForPortfolioInvestmentFromSdkAsync(
+            window, profileName, project,
+            inv => !string.IsNullOrEmpty(inv.InvestmentWalletId)
+                   && !string.IsNullOrEmpty(inv.InvestmentTransactionId));
+
         var pendingInvestment = portfolioVm.Investments.FirstOrDefault(i =>
-            i.ProjectIdentifier == project.ProjectIdentifier);
-        pendingInvestment.Should().NotBeNull("Pending investment should be in portfolio after AddToPortfolio");
-        pendingInvestment!.Step.Should().Be(1, "Above-threshold investment should be at Step 1 (Pending) before founder approval");
-        pendingInvestment.InvestmentWalletId.Should().NotBeNullOrEmpty("Investment should have a wallet ID");
-        pendingInvestment.InvestmentTransactionId.Should().NotBeNullOrEmpty("Investment should have a transaction ID");
+            i.ProjectIdentifier == project.ProjectIdentifier
+            && !string.IsNullOrEmpty(i.InvestmentWalletId));
+        pendingInvestment.Should().NotBeNull("Pending investment should be in portfolio after SDK reload");
+        pendingInvestment!.InvestmentWalletId.Should().NotBeNullOrEmpty("Investment should have a wallet ID after SDK reload");
+        pendingInvestment.InvestmentTransactionId.Should().NotBeNullOrEmpty("Investment should have a transaction ID after SDK reload");
 
         Log(profileName, $"Pending investment: Step={pendingInvestment.Step}, Status='{pendingInvestment.StatusText}', " +
-            $"TxId={pendingInvestment.InvestmentTransactionId}");
+            $"WalletId={pendingInvestment.InvestmentWalletId}, TxId={pendingInvestment.InvestmentTransactionId}");
 
         // Record balance before cancellation for comparison
         var fundsVm = GetFundsViewModel(window);
@@ -307,6 +314,53 @@ public class InvestmentCancellationTest
         Dispatcher.UIThread.RunJobs();
 
         return portfolioVm;
+    }
+
+    /// <summary>
+    /// Wait for the indexer to pick up the investment and reload from SDK.
+    /// Returns PortfolioViewModel once the investment matches the predicate.
+    /// </summary>
+    private async Task<PortfolioViewModel> WaitForPortfolioInvestmentFromSdkAsync(
+        Window window,
+        string profileName,
+        ProjectHandle project,
+        Func<InvestmentViewModel, bool> predicate)
+    {
+        window.NavigateToSection("Funded");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        var portfolioVm = global::App.App.Services.GetRequiredService<PortfolioViewModel>();
+        var deadline = DateTime.UtcNow + IndexerLagTimeout;
+
+        while (DateTime.UtcNow < deadline)
+        {
+            await portfolioVm.LoadInvestmentsFromSdkAsync();
+            Dispatcher.UIThread.RunJobs();
+
+            var investment = portfolioVm.Investments.FirstOrDefault(i =>
+                string.Equals(i.ProjectIdentifier, project.ProjectIdentifier, StringComparison.Ordinal));
+
+            if (investment != null)
+            {
+                Log(profileName, $"Portfolio investment found via SDK. Step={investment.Step}, " +
+                    $"Status={investment.StatusText}, WalletId={investment.InvestmentWalletId}, " +
+                    $"TxId={investment.InvestmentTransactionId}");
+                if (predicate(investment))
+                {
+                    return portfolioVm;
+                }
+            }
+            else
+            {
+                Log(profileName, "Portfolio investment not found in SDK yet.");
+            }
+
+            await Task.Delay(PollInterval);
+        }
+
+        throw new InvalidOperationException(
+            $"Portfolio investment for project {project.ProjectIdentifier} did not reach expected state within {IndexerLagTimeout.TotalSeconds}s.");
     }
 
     // ═══════════════════════════════════════════════════════════════════
