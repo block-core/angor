@@ -1,4 +1,8 @@
 using Angor.Sdk.Common;
+using Angor.Data.Documents.Interfaces;
+using Angor.Sdk.Funding.Founder.Domain;
+using Angor.Sdk.Funding.Investor.Domain;
+using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Wallet.Application;
 using Angor.Sdk.Wallet.Domain;
 using Angor.Sdk.Wallet.Infrastructure.History;
@@ -7,6 +11,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Blockcore.NBitcoin.BIP39;
 using CSharpFunctionalExtensions;
+using Serilog;
 
 namespace Angor.Sdk.Wallet.Infrastructure.Impl;
 
@@ -18,9 +23,14 @@ public class WalletAppService(
     IPsbtOperations psbtOperations,
     ITransactionHistory transactionHistory,
     IHttpClientFactory httpClientFactory,
-    IWalletAccountBalanceService accountBalanceService)
+    IWalletAccountBalanceService accountBalanceService,
+    IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeys,
+    IGenericDocumentCollection<FounderProjectsDocument> founderProjects,
+    IGenericDocumentCollection<InvestmentRecordsDocument> investmentRecords,
+    IGenericDocumentCollection<InvestmentHandshake> investmentHandshakes)
     : IWalletAppService
 {
+    private static readonly ILogger CleanupLogger = Log.ForContext<WalletAppService>();
     //public static readonly WalletId SingleWalletId = new("8E3C5250-4E26-4A13-8075-0A189AEAF793");
     private const string SingleWalletName = "<default>";
 
@@ -239,17 +249,16 @@ public class WalletAppService(
         }
 
         var wallets = walletsResult.Value.ToList();
-
         var wallet = wallets.FirstOrDefault(w => w.Id == walletId.Value);
-        
-        if (wallet == null)
-            return Result.Failure("Wallet not found");
-        
-        var deleteAccountResult = await accountBalanceService.DeleteAccountBalanceInfoAsync(walletId);
-        
-        if (deleteAccountResult.IsFailure)
-            return Result.Failure(deleteAccountResult.Error);
-        
+
+        if (wallet is null)
+        {
+            var cleanupMissing = await DeleteRelatedDocumentsAsync(walletId);
+            return cleanupMissing.IsSuccess
+                ? Result.Failure("Wallet not found")
+                : cleanupMissing;
+        }
+
         wallets.Remove(wallet);
 
         var saveResult = await walletStore.SaveAll(wallets);
@@ -259,6 +268,57 @@ public class WalletAppService(
         }
 
         sensitiveWalletDataProvider.RemoveSensitiveData(walletId);
+
+        var cleanup = await DeleteRelatedDocumentsAsync(walletId);
+        if (cleanup.IsFailure)
+        {
+            return cleanup;
+        }
+
+        return Result.Success();
+    }
+
+    // Removes related documents for wallet
+    private async Task<Result> DeleteRelatedDocumentsAsync(WalletId walletId)
+    {
+        var delDerived = await derivedProjectKeys.DeleteAsync(walletId.Value);
+        if (delDerived.IsFailure)
+        {
+            return Result.Failure($"Failed to delete DerivedProjectKeys {delDerived.Error}");
+        }
+
+        var delFounder = await founderProjects.DeleteAsync(walletId.Value);
+        if (delFounder.IsFailure)
+        {
+            return Result.Failure($"Failed to delete FounderProjectsDocument {delFounder.Error}");
+        }
+
+        var delInvestments = await investmentRecords.DeleteAsync(walletId.Value);
+        if (delInvestments.IsFailure)
+        {
+            return Result.Failure($"Failed to delete InvestmentRecordsDocument {delInvestments.Error}");
+        }
+
+        var handshakes = await investmentHandshakes.FindAsync(h => h.WalletId == walletId.Value);
+        if (handshakes.IsFailure)
+        {
+            return Result.Failure($"Failed to query InvestmentHandshakes {handshakes.Error}");
+        }
+
+        foreach (var hs in handshakes.Value)
+        {
+            var delHs = await investmentHandshakes.DeleteAsync(hs.Id);
+            if (delHs.IsFailure)
+            {
+                return Result.Failure($"Failed to delete InvestmentHandshake {hs.Id}: {delHs.Error}");
+            }
+        }
+
+        var deleteAccountResult = await accountBalanceService.DeleteAccountBalanceInfoAsync(walletId);
+        if (deleteAccountResult.IsFailure)
+        {
+            return deleteAccountResult;
+        }
 
         return Result.Success();
     }
