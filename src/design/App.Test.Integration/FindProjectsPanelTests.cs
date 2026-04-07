@@ -1,12 +1,16 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
+using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
+using App.UI.Sections.Settings;
 using App.UI.Shared.Controls;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace App.Test.Integration;
 
@@ -551,6 +555,175 @@ public class FindProjectsPanelTests
     }
 
     // ═══════════════════════════════════════════════════════════════════
+    // Invest Page — Wallet Selector
+    // ═══════════════════════════════════════════════════════════════════
+
+    [AvaloniaFact]
+    public async Task InvestPage_Submit_AdvancesToWalletSelector()
+    {
+        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests) + "-Wallet");
+        var window = TestHelpers.CreateShellWindow();
+
+        await CreateWalletViaGenerate(window);
+
+        window.NavigateToSection("Find Projects");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        var vm = GetFindProjectsViewModel(window);
+        await WaitForProjects(vm!);
+
+        var project = vm!.Projects.First(p => p.IsOpen);
+        vm.OpenProjectDetail(project);
+        Dispatcher.UIThread.RunJobs();
+        vm.OpenInvestPage();
+        Dispatcher.UIThread.RunJobs();
+
+        var investVm = vm.InvestPageViewModel!;
+        investVm.InvestmentAmount = "0.01";
+        Dispatcher.UIThread.RunJobs();
+
+        investVm.Submit();
+        Dispatcher.UIThread.RunJobs();
+
+        investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector,
+            "should advance to WalletSelector after valid submit");
+        investVm.IsWalletSelector.Should().BeTrue();
+
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public async Task InvestPage_WalletSelector_ShowsAvailableWallets()
+    {
+        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests) + "-Wallet");
+        var window = TestHelpers.CreateShellWindow();
+
+        await CreateWalletViaGenerate(window);
+
+        window.NavigateToSection("Find Projects");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        var vm = GetFindProjectsViewModel(window);
+        await WaitForProjects(vm!);
+
+        var project = vm!.Projects.First(p => p.IsOpen);
+        vm.OpenProjectDetail(project);
+        Dispatcher.UIThread.RunJobs();
+        vm.OpenInvestPage();
+        Dispatcher.UIThread.RunJobs();
+
+        var investVm = vm.InvestPageViewModel!;
+        investVm.InvestmentAmount = "0.01";
+        investVm.Submit();
+        Dispatcher.UIThread.RunJobs();
+
+        // Wallets should be populated from IWalletContext
+        investVm.Wallets.Should().NotBeEmpty("should have at least one wallet after creation");
+        var wallet = investVm.Wallets[0];
+        wallet.Name.Should().NotBeNullOrWhiteSpace("wallet should have a name");
+        wallet.Balance.Should().NotBeNull("wallet should have a balance string");
+
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public async Task InvestPage_WalletSelector_SelectWallet_UpdatesState()
+    {
+        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests) + "-Wallet");
+        var window = TestHelpers.CreateShellWindow();
+
+        await CreateWalletViaGenerate(window);
+
+        window.NavigateToSection("Find Projects");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        var vm = GetFindProjectsViewModel(window);
+        await WaitForProjects(vm!);
+
+        var project = vm!.Projects.First(p => p.IsOpen);
+        vm.OpenProjectDetail(project);
+        Dispatcher.UIThread.RunJobs();
+        vm.OpenInvestPage();
+        Dispatcher.UIThread.RunJobs();
+
+        var investVm = vm.InvestPageViewModel!;
+        investVm.InvestmentAmount = "0.01";
+        investVm.Submit();
+        Dispatcher.UIThread.RunJobs();
+
+        // Select the wallet
+        var wallet = investVm.Wallets[0];
+        investVm.SelectWallet(wallet);
+        Dispatcher.UIThread.RunJobs();
+
+        investVm.SelectedWallet.Should().Be(wallet, "SelectedWallet should be set after selection");
+        investVm.HasSelectedWallet.Should().BeTrue();
+        wallet.IsSelected.Should().BeTrue("wallet should be marked as selected");
+        investVm.PayButtonText.Should().Contain(wallet.Name,
+            "pay button text should include wallet name");
+
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public async Task InvestPage_WalletSelector_InsufficientBalance_ShowsError()
+    {
+        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests) + "-Wallet");
+        var window = TestHelpers.CreateShellWindow();
+
+        await CreateWalletViaGenerate(window);
+
+        window.NavigateToSection("Find Projects");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        var vm = GetFindProjectsViewModel(window);
+        await WaitForProjects(vm!);
+
+        var project = vm!.Projects.First(p => p.IsOpen);
+        vm.OpenProjectDetail(project);
+        Dispatcher.UIThread.RunJobs();
+        vm.OpenInvestPage();
+        Dispatcher.UIThread.RunJobs();
+
+        var investVm = vm.InvestPageViewModel!;
+
+        // Set a large amount the empty wallet can't cover
+        investVm.InvestmentAmount = "100.0";
+        investVm.Submit();
+        Dispatcher.UIThread.RunJobs();
+
+        // Select wallet and try to pay
+        var wallet = investVm.Wallets[0];
+        investVm.SelectWallet(wallet);
+        Dispatcher.UIThread.RunJobs();
+
+        var passwordProvider = global::App.App.Services.GetRequiredService<SimplePasswordProvider>();
+        passwordProvider.SetKey("default-key");
+
+        // Execute the reactive command and wait for completion
+        var tcs = new TaskCompletionSource();
+        investVm.PayWithWalletCommand.Execute().Subscribe(
+            _ => { },
+            ex => tcs.TrySetException(ex),
+            () => tcs.TrySetResult());
+        await tcs.Task.WaitAsync(TimeSpan.FromSeconds(30));
+        Dispatcher.UIThread.RunJobs();
+
+        investVm.ErrorMessage.Should().NotBeNullOrWhiteSpace(
+            "should show an error when wallet balance is insufficient");
+        investVm.ErrorMessage.Should().Contain("Insufficient",
+            "error should indicate insufficient balance");
+        investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector,
+            "should stay on WalletSelector after error, not advance to Success");
+
+        window.Close();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
     // Helpers
     // ═══════════════════════════════════════════════════════════════════
 
@@ -594,5 +767,67 @@ public class FindProjectsPanelTests
 
         vm.Projects.Should().NotBeEmpty(
             "projects should load from SDK within timeout — ensure testnet indexer/relays are reachable");
+    }
+
+    /// <summary>
+    /// Navigate to Settings → wipe data, then Funds → create wallet via Generate path.
+    /// Replicates the pattern used in SendToSelfTest and other integration tests.
+    /// </summary>
+    private static async Task CreateWalletViaGenerate(Window window)
+    {
+        // Wipe existing data
+        window.NavigateToSettings();
+        Dispatcher.UIThread.RunJobs();
+        await Task.Delay(500);
+
+        var settingsView = window.GetVisualDescendants()
+            .OfType<SettingsView>()
+            .FirstOrDefault();
+        if (settingsView?.DataContext is SettingsViewModel settingsVm)
+        {
+            settingsVm.ConfirmWipeData();
+            Dispatcher.UIThread.RunJobs();
+            await Task.Delay(500);
+            Dispatcher.UIThread.RunJobs();
+        }
+
+        // Navigate to Funds
+        window.NavigateToSection("Funds");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        // Find and click "Add Wallet" button
+        var addWalletBtn = window.GetVisualDescendants()
+            .OfType<Button>()
+            .Where(b => b.IsVisible)
+            .FirstOrDefault(b =>
+                (b.Content is string text && text.Contains("Add Wallet")) ||
+                (b.Content is StackPanel sp && sp.Children.OfType<TextBlock>().Any(tb => tb.Text == "Add Wallet")));
+        addWalletBtn.Should().NotBeNull("should find Add Wallet button");
+
+        addWalletBtn!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, addWalletBtn));
+        Dispatcher.UIThread.RunJobs();
+        await Task.Delay(300);
+        Dispatcher.UIThread.RunJobs();
+
+        // Click Generate New
+        await window.ClickButton("BtnGenerate", UiTimeout);
+        await Task.Delay(200);
+        Dispatcher.UIThread.RunJobs();
+
+        // Download seed (headless — file dialog skipped, but enables Continue)
+        await window.ClickButton("BtnDownloadSeed", UiTimeout);
+        await Task.Delay(300);
+        Dispatcher.UIThread.RunJobs();
+
+        // Click Continue to create wallet
+        await window.ClickButton("BtnContinueBackup", UiTimeout);
+        var successPanel = await window.WaitForControl<StackPanel>("CreateWalletSuccessPanel", TimeSpan.FromSeconds(30));
+        successPanel.Should().NotBeNull("wallet creation should succeed");
+
+        // Close modal
+        await window.ClickButton("BtnCreateWalletDone", UiTimeout);
+        await Task.Delay(300);
+        Dispatcher.UIThread.RunJobs();
     }
 }
