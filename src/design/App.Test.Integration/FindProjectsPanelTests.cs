@@ -391,6 +391,166 @@ public class FindProjectsPanelTests
     }
 
     // ═══════════════════════════════════════════════════════════════════
+    // Invest Page — Form
+    // ═══════════════════════════════════════════════════════════════════
+
+    [AvaloniaFact]
+    public async Task InvestPage_InitialState_ShowsInvestForm()
+    {
+        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
+        var window = TestHelpers.CreateShellWindow();
+
+        window.NavigateToSection("Find Projects");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        var vm = GetFindProjectsViewModel(window);
+        await WaitForProjects(vm!);
+
+        var project = vm!.Projects.First(p => p.IsOpen);
+        vm.OpenProjectDetail(project);
+        Dispatcher.UIThread.RunJobs();
+        vm.OpenInvestPage();
+        Dispatcher.UIThread.RunJobs();
+
+        var investVm = vm.InvestPageViewModel;
+        investVm.Should().NotBeNull("InvestPageViewModel should be created");
+        investVm!.CurrentScreen.Should().Be(InvestScreen.InvestForm, "initial screen should be InvestForm");
+        investVm.IsInvestForm.Should().BeTrue();
+        investVm.IsWalletSelector.Should().BeFalse();
+        investVm.IsInvoice.Should().BeFalse();
+        investVm.IsSuccess.Should().BeFalse();
+        investVm.InvestmentAmount.Should().BeEmpty("amount should start empty");
+
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public async Task InvestPage_QuickAmountButtons_SetInvestmentAmount()
+    {
+        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
+        var window = TestHelpers.CreateShellWindow();
+
+        window.NavigateToSection("Find Projects");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        var vm = GetFindProjectsViewModel(window);
+        await WaitForProjects(vm!);
+
+        var project = vm!.Projects.First(p => p.IsOpen);
+        vm.OpenProjectDetail(project);
+        Dispatcher.UIThread.RunJobs();
+        vm.OpenInvestPage();
+        Dispatcher.UIThread.RunJobs();
+
+        var investVm = vm.InvestPageViewModel!;
+
+        // Select the 0.01 quick amount
+        investVm.SelectQuickAmount(0.01);
+        Dispatcher.UIThread.RunJobs();
+
+        investVm.InvestmentAmount.Should().Be("0.01", "quick amount should set investment amount");
+        investVm.SelectedQuickAmount.Should().Be(0.01);
+        investVm.CanSubmit.Should().BeTrue("0.01 is above minimum (0.001)");
+
+        // Stages should recompute with the new amount
+        if (investVm.Stages.Count > 0)
+        {
+            investVm.Stages.Should().AllSatisfy(s =>
+                s.Amount.Should().NotBe("0.00000000", "stage amounts should update with investment amount"));
+        }
+
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public async Task InvestPage_ManualAmount_UpdatesStagesAndTotals()
+    {
+        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
+        var window = TestHelpers.CreateShellWindow();
+
+        window.NavigateToSection("Find Projects");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        var vm = GetFindProjectsViewModel(window);
+        await WaitForProjects(vm!);
+
+        var project = vm!.Projects.First(p => p.IsOpen);
+        vm.OpenProjectDetail(project);
+        Dispatcher.UIThread.RunJobs();
+        vm.OpenInvestPage();
+        Dispatcher.UIThread.RunJobs();
+
+        var investVm = vm.InvestPageViewModel!;
+
+        // Set manual amount
+        investVm.InvestmentAmount = "0.05";
+        Dispatcher.UIThread.RunJobs();
+
+        investVm.FormattedAmount.Should().Be("0.05000000", "formatted amount should pad to 8 decimals");
+        investVm.CanSubmit.Should().BeTrue("0.05 is above minimum");
+
+        // TotalAmount should include fees
+        investVm.TotalAmount.Should().NotBeNullOrWhiteSpace("TotalAmount should be computed");
+        // Total = amount + miner fee + angor fee, so it should be greater than the raw amount
+        double.TryParse(investVm.TotalAmount.Split(' ')[0],
+            System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture,
+            out var total).Should().BeTrue("TotalAmount should be parseable");
+        total.Should().BeGreaterThan(0.05, "total should include fees on top of the amount");
+
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public async Task InvestPage_Submit_DisabledBelowMinimum_EnabledAtMinimum()
+    {
+        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
+        var window = TestHelpers.CreateShellWindow();
+
+        window.NavigateToSection("Find Projects");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        var vm = GetFindProjectsViewModel(window);
+        await WaitForProjects(vm!);
+
+        var project = vm!.Projects.First(p => p.IsOpen);
+        vm.OpenProjectDetail(project);
+        Dispatcher.UIThread.RunJobs();
+        vm.OpenInvestPage();
+        Dispatcher.UIThread.RunJobs();
+
+        var investVm = vm.InvestPageViewModel!;
+
+        // Below minimum — CanSubmit should be false
+        investVm.InvestmentAmount = "0.0001";
+        Dispatcher.UIThread.RunJobs();
+        investVm.CanSubmit.Should().BeFalse("0.0001 is below minimum (0.001)");
+
+        // Submit should not advance screen
+        investVm.Submit();
+        Dispatcher.UIThread.RunJobs();
+        investVm.CurrentScreen.Should().Be(InvestScreen.InvestForm,
+            "Submit should stay on InvestForm when CanSubmit is false");
+
+        // At minimum — CanSubmit should be true
+        investVm.InvestmentAmount = "0.001";
+        Dispatcher.UIThread.RunJobs();
+        investVm.CanSubmit.Should().BeTrue("0.001 is the minimum investment amount");
+
+        // Submit should advance to WalletSelector
+        investVm.Submit();
+        Dispatcher.UIThread.RunJobs();
+        investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector,
+            "Submit should advance to WalletSelector when CanSubmit is true");
+
+        window.Close();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
     // Helpers
     // ═══════════════════════════════════════════════════════════════════
 
