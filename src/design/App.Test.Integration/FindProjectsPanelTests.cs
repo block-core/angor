@@ -724,6 +724,203 @@ public class FindProjectsPanelTests
     }
 
     // ═══════════════════════════════════════════════════════════════════
+    // Invest Page — Invoice & Modal Flow
+    // ═══════════════════════════════════════════════════════════════════
+
+    [AvaloniaFact]
+    public async Task InvestPage_ShowInvoice_SwitchesToInvoiceScreen()
+    {
+        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests) + "-Wallet");
+        var window = TestHelpers.CreateShellWindow();
+
+        await CreateWalletViaGenerate(window);
+
+        window.NavigateToSection("Find Projects");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        var vm = GetFindProjectsViewModel(window);
+        await WaitForProjects(vm!);
+
+        var project = vm!.Projects.First(p => p.IsOpen);
+        vm.OpenProjectDetail(project);
+        Dispatcher.UIThread.RunJobs();
+        vm.OpenInvestPage();
+        Dispatcher.UIThread.RunJobs();
+
+        var investVm = vm.InvestPageViewModel!;
+        investVm.InvestmentAmount = "0.01";
+        investVm.Submit();
+        Dispatcher.UIThread.RunJobs();
+
+        // Switch to invoice screen
+        investVm.ShowInvoice();
+        Dispatcher.UIThread.RunJobs();
+
+        investVm.CurrentScreen.Should().Be(InvestScreen.Invoice);
+        investVm.IsInvoice.Should().BeTrue();
+        investVm.IsWalletSelector.Should().BeFalse();
+
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public async Task InvestPage_BackToWalletSelector_FromInvoice()
+    {
+        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests) + "-Wallet");
+        var window = TestHelpers.CreateShellWindow();
+
+        await CreateWalletViaGenerate(window);
+
+        window.NavigateToSection("Find Projects");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        var vm = GetFindProjectsViewModel(window);
+        await WaitForProjects(vm!);
+
+        var project = vm!.Projects.First(p => p.IsOpen);
+        vm.OpenProjectDetail(project);
+        Dispatcher.UIThread.RunJobs();
+        vm.OpenInvestPage();
+        Dispatcher.UIThread.RunJobs();
+
+        var investVm = vm.InvestPageViewModel!;
+        investVm.InvestmentAmount = "0.01";
+        investVm.Submit();
+        Dispatcher.UIThread.RunJobs();
+
+        // Go to invoice then back
+        investVm.ShowInvoice();
+        Dispatcher.UIThread.RunJobs();
+        investVm.BackToWalletSelector();
+        Dispatcher.UIThread.RunJobs();
+
+        investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector);
+        investVm.IsWalletSelector.Should().BeTrue();
+        investVm.IsInvoice.Should().BeFalse();
+
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public async Task InvestPage_CloseModal_ResetsToInvestForm()
+    {
+        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests) + "-Wallet");
+        var window = TestHelpers.CreateShellWindow();
+
+        await CreateWalletViaGenerate(window);
+
+        window.NavigateToSection("Find Projects");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        var vm = GetFindProjectsViewModel(window);
+        await WaitForProjects(vm!);
+
+        var project = vm!.Projects.First(p => p.IsOpen);
+        vm.OpenProjectDetail(project);
+        Dispatcher.UIThread.RunJobs();
+        vm.OpenInvestPage();
+        Dispatcher.UIThread.RunJobs();
+
+        var investVm = vm.InvestPageViewModel!;
+        investVm.InvestmentAmount = "0.01";
+        investVm.Submit();
+        Dispatcher.UIThread.RunJobs();
+
+        // Select a wallet to set state
+        var wallet = investVm.Wallets[0];
+        investVm.SelectWallet(wallet);
+        Dispatcher.UIThread.RunJobs();
+
+        investVm.SelectedWallet.Should().NotBeNull("precondition: wallet should be selected");
+
+        // Close modal — should reset everything
+        investVm.CloseModal();
+        Dispatcher.UIThread.RunJobs();
+
+        investVm.CurrentScreen.Should().Be(InvestScreen.InvestForm, "should return to InvestForm");
+        investVm.SelectedWallet.Should().BeNull("wallet selection should be cleared");
+        investVm.IsProcessing.Should().BeFalse("processing flag should be reset");
+        investVm.PaymentReceived.Should().BeFalse("payment flag should be reset");
+        investVm.ErrorMessage.Should().BeNull("error message should be cleared");
+        investVm.PaymentStatusText.Should().Be("Awaiting payment...", "status text should reset");
+
+        window.Close();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Cross-Section Integration
+    // ═══════════════════════════════════════════════════════════════════
+
+    [AvaloniaFact]
+    public async Task FindProjects_ReloadProjects_RefreshesListFromSdk()
+    {
+        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
+        var window = TestHelpers.CreateShellWindow();
+
+        window.NavigateToSection("Find Projects");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        var vm = GetFindProjectsViewModel(window);
+        await WaitForProjects(vm!);
+
+        var initialCount = vm!.Projects.Count;
+        initialCount.Should().BeGreaterThan(0, "precondition: should have projects loaded");
+
+        // Trigger reload
+        await vm.LoadProjectsFromSdkAsync();
+        Dispatcher.UIThread.RunJobs();
+
+        vm.Projects.Count.Should().BeGreaterThan(0, "projects should be populated after reload");
+        vm.IsLoading.Should().BeFalse("loading flag should be cleared after reload");
+
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public async Task FindProjects_NavigateAwayAndBack_RetainsProjectList()
+    {
+        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
+        var window = TestHelpers.CreateShellWindow();
+
+        window.NavigateToSection("Find Projects");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        var vm = GetFindProjectsViewModel(window);
+        await WaitForProjects(vm!);
+
+        var initialCount = vm!.Projects.Count;
+        var firstName = vm.Projects[0].ProjectName;
+
+        // Navigate away to Settings
+        window.NavigateToSettings();
+        Dispatcher.UIThread.RunJobs();
+        await Task.Delay(300);
+
+        // Navigate back to Find Projects
+        window.NavigateToSection("Find Projects");
+        Dispatcher.UIThread.RunJobs();
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        // ViewModel should still have projects (view is cached, not recreated)
+        var vmAfter = GetFindProjectsViewModel(window);
+        vmAfter.Should().NotBeNull();
+        vmAfter!.Projects.Count.Should().BeGreaterThanOrEqualTo(initialCount,
+            "project list should persist after navigating away and back");
+
+        // Detail/invest panels should be reset to list view
+        vmAfter.SelectedProject.Should().BeNull("detail should be closed after navigation");
+        vmAfter.InvestPageViewModel.Should().BeNull("invest page should be closed after navigation");
+
+        window.Close();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
     // Helpers
     // ═══════════════════════════════════════════════════════════════════
 
