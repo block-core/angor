@@ -19,7 +19,7 @@
         </LoadedTrigger>
     </Interaction.Behaviors>
 
-    <ScrollViewer>
+    <ScrollViewer Classes="PageScroll">
         <StackPanel Classes="Gap-XL" Margin="10">
             <Grid ColumnSpacing="24" ColumnDefinitions="* 400">
                 <m:ProjectInfoCard ClipToBounds="False" DataContext="{Binding Funded.Project}" />

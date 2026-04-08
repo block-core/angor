@@ -13,27 +13,31 @@
 
     <UserControl.Styles>
 
-        <Style Selector=":is(UserControl) > ScrollViewer">
+        <Style Selector="ScrollViewer.PageScroll">
             <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
         </Style>
-        <Style Selector=":is(UserControl) > :is(ContentControl) > ScrollViewer">
-            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
-        </Style>
+
+        <!-- NOTE: We apply spacing via Margin on ScrollContentPresenter (template part) instead of
+             Padding on the ScrollViewer itself. This works around an Avalonia bug where
+             ScrollContentPresenter.MeasureOverride does NOT deflate Padding before measuring
+             its child, but ArrangeOverride does — causing a measure/arrange width mismatch
+             that makes content overflow to the right.
+             See: https://github.com/AvaloniaUI/Avalonia/issues/8838 -->
 
         <ContainerQuery Name="Shell" Query="min-width:0 and max-width:767">
             <Style Selector="SectionStrip">
                 <Setter Property="Orientation" Value="Horizontal" />
                 <Setter Property="DockPanel.Dock" Value="Bottom" />
-                <Setter Property="MinItemWidth" Value="60" />
+                <Setter Property="MinItemWidth" Value="70" />
             </Style>
             <Style Selector="DockPanel#TopBar">
                 <Setter Property="IsVisible" Value="False" />
             </Style>
-            <Style Selector=":is(UserControl) > ScrollViewer">
-                <Setter Property="Padding" Value="5,0" />
+            <Style Selector="ScrollViewer.PageScroll /template/ ScrollContentPresenter">
+                <Setter Property="Margin" Value="5,0" />
             </Style>
-            <Style Selector=":is(UserControl) > :is(ContentControl) > ScrollViewer">
-                <Setter Property="Padding" Value="5,0" />
+            <Style Selector="Frame ContentPresenter#Footer">
+                <Setter Property="Padding" Value="5"></Setter>
             </Style>
         </ContainerQuery>
 
@@ -43,11 +47,11 @@
                 <Setter Property="DockPanel.Dock" Value="Left" />
                 <Setter Property="Width" Value="200" />
             </Style>
-            <Style Selector=":is(UserControl) > ScrollViewer">
-                <Setter Property="Padding" Value="20,0" />
+            <Style Selector="ScrollViewer.PageScroll /template/ ScrollContentPresenter">
+                <Setter Property="Margin" Value="20,0" />
             </Style>
-            <Style Selector=":is(UserControl) > :is(ContentControl) > ScrollViewer">
-                <Setter Property="Padding" Value="20,0" />
+            <Style Selector="Frame ContentPresenter#Footer">
+                <Setter Property="Padding" Value="20"></Setter>
             </Style>
         </ContainerQuery>
 
@@ -125,52 +129,4 @@
         </OverlayBorder>
     </DockPanel>
 
-    <!--    <Grid x:Name="TopBar" Margin="0 20 20 20" ColumnDefinitions="Auto *" RowDefinitions="42 *" ColumnSpacing="20" RowSpacing="20">
-        <PathIcon Height="32" Foreground="{DynamicResource Brand}" Width="32" Data="{StaticResource AngorLogo}" />
-        <DockPanel Grid.Row="0" Grid.Column="1" Dock="Top">
-            <DockPanel DockPanel.Dock="Top" HorizontalSpacing="20">
-                <TextBlock FontWeight="Bold" VerticalAlignment="Center" FontSize="20" Text="{Binding SelectedSection.FriendlyName}" />
-                <Border IsVisible="{Binding ProfileName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" Background="{DynamicResource Brand}" CornerRadius="4" Padding="8 2" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding ProfileName}" FontSize="12" Foreground="White" />
-                </Border>
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Right" Spacing="16" Orientation="Horizontal">
-                    <StackPanel x:Name="AccountPanel" IsVisible="{Binding !!Wallets.Count}" Spacing="16" Orientation="Horizontal">
-                        <TextBlock VerticalAlignment="Center" IsVisible="{Binding TotalInvested.IsPositive, FallbackValue=False}">
-                            <TextBlock.Inlines>
-                                <Run Classes="Thin">Invested:</Run>
-                                <Run Classes="Label" Text="{Binding TotalInvested.ShortDecimalString, FallbackValue='0'}" />
-                            </TextBlock.Inlines>
-                        </TextBlock>
-                        <TextBlock VerticalAlignment="Center">
-                            <TextBlock.Inlines>
-                                <Run Classes="Thin">Available:</Run>
-                                <Run Classes="Label" Text="{Binding CurrentWallet.Balance.ShortDecimalString, FallbackValue='0'}" />
-                            </TextBlock.Inlines>
-                        </TextBlock>
-                        <ComboBox SelectedItem="{Binding CurrentWallet}" VerticalAlignment="Center" ItemsSource="{Binding Wallets}">
-                            <ComboBox.ItemTemplate>
-                                <DataTemplate>
-                                    <EdgePanel IconOptions.Size="18" Foreground="{DynamicResource TextMuted}" StartContent="{Icon fa-wallet}" Content="{Binding Name}" />
-                                </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                    </StackPanel>
-                    <ToggleButton Classes="Widget" IsChecked="{Binding IsDarkThemeEnabled, Mode=TwoWay}">
-                        <ToggleButton.Content>
-                            <PathIcon Foreground="{DynamicResource TextMuted}" Data="{DynamicResource Sun}" />
-                        </ToggleButton.Content>
-                    </ToggleButton>
-                    <EnhancedButton Classes="Widget" Icon="{Icon mdi-cog}" Command="{Binding GoToSettings}" />
-                </StackPanel>
-            </DockPanel>
-        </DockPanel>
-        <SectionStrip Classes="Nav" Grid.Row="1" Grid.Column="0" SelectedSection="{Binding SelectedSection}" IconSize="24" Width="200" HorizontalAlignment="Left" Sections="{Binding SidebarSections}" />
-        <OverlayBorder Grid.Row="1" Grid.Column="1" Classes="Panel" Padding="0" Background="{DynamicResource TiledLogoBrush}">
-            <Frame Content="{Binding SelectedSection.Navigator.Content^}" BackCommand="{Binding SelectedSection.Navigator.Back}">
-                <Interaction.Behaviors>
-                    <AutoHeaderFooterBehavior />
-                </Interaction.Behaviors>
-            </Frame>
-        </OverlayBorder>
-    </Grid>
---></UserControl>
+  </UserControl>

@@ -22,7 +22,7 @@
     </Interaction.Behaviors>
 
     <Loading IsLoading="{Binding LoadProjects.IsExecuting^}">
-        <ScrollViewer>
+        <ScrollViewer Classes="PageScroll">
             <ItemsControl Margin="0 70 0 0" ItemsSource="{Binding Projects}" ClipToBounds="False">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>

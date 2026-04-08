@@ -31,7 +31,7 @@
 
     </UserControl.Styles>
 
-    <ScrollViewer>
+    <ScrollViewer Classes="PageScroll">
         <StackPanel Classes="Gap-XL" MaxWidth="1152">
             <FlexPanel Wrap="Wrap" Gap="8" AlignContent="Start" HorizontalAlignment="Right">
                 <EnhancedButton HorizontalAlignment="Stretch" Command="{Binding RefreshBalances}" Classes="Outline" Classes.Spinning="{Binding RefreshBalances.IsExecuting}" Icon="{Icon fa-sync}" FlexPanel.Grow="1" FlexPanel.Basis="120">Refresh</EnhancedButton>

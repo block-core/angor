@@ -27,7 +27,7 @@
         </Style>
     </UserControl.Styles>
 
-    <ScrollViewer>
+    <ScrollViewer Classes="PageScroll">
         <StackPanel Classes="Gap-XL">
             <Loading IsLoading="{Binding LoadProjectStats.IsExecuting^}" ClipToBounds="False">
                 <StackPanel Classes="Gap-XL">

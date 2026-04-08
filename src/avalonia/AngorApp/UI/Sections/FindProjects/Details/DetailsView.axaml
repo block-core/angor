@@ -25,8 +25,8 @@
         </DataContextChangedTrigger>
     </Interaction.Behaviors>
 
-    <ScrollViewer>
-        <StackPanel Classes="Gap-L" Margin="20" MaxWidth="1200" HorizontalAlignment="Stretch">
+    <ScrollViewer Classes="PageScroll">
+        <StackPanel Classes="Gap-L" MaxWidth="1200" HorizontalAlignment="Stretch">
 
             <!-- Top Section: Header + Investment Opportunity -->
             <FlexPanel Direction="Row" Wrap="Wrap" ColumnGap="20" RowGap="20">

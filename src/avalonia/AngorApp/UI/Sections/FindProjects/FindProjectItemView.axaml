@@ -9,6 +9,7 @@
              xmlns:findProjects="clr-namespace:AngorApp.UI.Sections.FindProjects"
              mc:Ignorable="d" d:DesignWidth="240" d:DesignHeight="400"
              x:Class="AngorApp.UI.Sections.FindProjects.FindProjectItemView"
+             ClipToBounds="False"
              x:DataType="findProjects:IFindProjectItem">
 
     <Design.DataContext>
