@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:new="clr-namespace:AngorApp.UI.Sections.Home"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="450"
+             Classes="PageMargin"
              x:Class="AngorApp.UI.Sections.Home.HomeSectionView" x:DataType="new:HomeSectionSectionViewModel">
     <FlexPanel Direction="Row" Wrap="Wrap" Gap="20" AlignContent="Stretch">
         <Border Classes="Panel" FlexPanel.Grow="1" FlexPanel.Basis="400">

@@ -40,7 +40,10 @@
                 <Setter Property="Padding" Value="5"></Setter>
             </Style>
             <Style Selector="Frame ContentPresenter#Footer">
-                <Setter Property="Padding" Value="5"></Setter>
+                <Setter Property="Padding" Value="5" />
+            </Style>
+            <Style Selector=":is(UserControl).PageMargin">
+                <Setter Property="Padding" Value="5" />
             </Style>
         </ContainerQuery>
 
@@ -57,6 +60,9 @@
                 <Setter Property="Padding" Value="20 " />
             </Style>
             <Style Selector="Frame ContentPresenter#Footer">
+                <Setter Property="Padding" Value="20" />
+            </Style>
+            <Style Selector=":is(UserControl).PageMargin">
                 <Setter Property="Padding" Value="20" />
             </Style>
         </ContainerQuery>
