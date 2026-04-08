@@ -6,8 +6,8 @@
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="750"
              x:Class="AngorApp.UI.Flows.CreateProject.Wizard.WelcomeView" x:DataType="wizard:WelcomeViewModel">
-    <ScrollViewer>
-        <Border MaxWidth="768" Classes="Panel" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="30">
+    <ScrollViewer Classes="PageScroll">
+        <Border MaxWidth="768" Classes="Panel" HorizontalAlignment="Center" VerticalAlignment="Center">
             <StackPanel Classes="Gap-XXL">
                 <PathIcon Foreground="Transparent" Height="48" Width="48" Data="{StaticResource Lightning}">
                     <PathIcon.Styles>

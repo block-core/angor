@@ -36,6 +36,9 @@
             <Style Selector="ScrollViewer.PageScroll /template/ ScrollContentPresenter">
                 <Setter Property="Margin" Value="5,0" />
             </Style>
+            <Style Selector="Frame ContentPresenter#Header">
+                <Setter Property="Padding" Value="5"></Setter>
+            </Style>
             <Style Selector="Frame ContentPresenter#Footer">
                 <Setter Property="Padding" Value="5"></Setter>
             </Style>
@@ -50,8 +53,11 @@
             <Style Selector="ScrollViewer.PageScroll /template/ ScrollContentPresenter">
                 <Setter Property="Margin" Value="20,0" />
             </Style>
+            <Style Selector="Frame ContentPresenter#Header">
+                <Setter Property="Padding" Value="20 " />
+            </Style>
             <Style Selector="Frame ContentPresenter#Footer">
-                <Setter Property="Padding" Value="20"></Setter>
+                <Setter Property="Padding" Value="20" />
             </Style>
         </ContainerQuery>
 
