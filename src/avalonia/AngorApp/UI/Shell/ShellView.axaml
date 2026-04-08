@@ -42,8 +42,11 @@
             <Style Selector="Frame ContentPresenter#Footer">
                 <Setter Property="Padding" Value="5" />
             </Style>
-            <Style Selector=":is(UserControl).PageMargin">
+            <Style Selector=":is(TemplatedControl).DynamicPadding">
                 <Setter Property="Padding" Value="5" />
+            </Style>
+            <Style Selector=":is(TemplatedControl).DynamicMargin">
+                <Setter Property="Margin" Value="5" />
             </Style>
         </ContainerQuery>
 
@@ -62,8 +65,11 @@
             <Style Selector="Frame ContentPresenter#Footer">
                 <Setter Property="Padding" Value="20" />
             </Style>
-            <Style Selector=":is(UserControl).PageMargin">
+            <Style Selector=":is(TemplatedControl).DynamicPadding">
                 <Setter Property="Padding" Value="20" />
+            </Style>
+            <Style Selector=":is(TemplatedControl).DynamicMargin">
+                <Setter Property="Margin" Value="20" />
             </Style>
         </ContainerQuery>
 
@@ -130,7 +136,7 @@
         </DockPanel>
         <SectionStrip Classes="Nav" SelectedSection="{Binding SelectedSection}" IconSize="24"
                       Sections="{Binding SidebarSections}" />
-        <OverlayBorder Classes="Panel" Padding="0"
+        <OverlayBorder Classes="Panel DynamicMargin" Padding="0"
                        Background="{DynamicResource TiledLogoBrush}">
             <Frame Content="{Binding SelectedSection.Navigator.Content^}"
                    BackCommand="{Binding SelectedSection.Navigator.Back}">

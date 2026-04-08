@@ -9,6 +9,7 @@
     <Style Selector="Frame">
         <Setter Property="FooterBackground" Value="{DynamicResource Surface}" />
         <Setter Property="Padding" Value="0" />
+        <Setter Property="HeaderDisplayMode" Value="Separate" />
     </Style>
     <Style Selector="Frame EnhancedButton#BackButton">
         <Setter Property="ClipToBounds" Value="False" />
