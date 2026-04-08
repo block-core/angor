@@ -11,7 +11,7 @@
              xmlns:fund="clr-namespace:AngorApp.Model.ProjectsV2.FundProject;assembly=AngorApp.Model"
              xmlns:states="clr-namespace:AngorApp.Model.ProjectsV2.InvestmentProject;assembly=AngorApp.Model"
              mc:Ignorable="d"
-             d:DesignWidth="900"
+             d:DesignWidth="1200"
              x:Class="AngorApp.UI.Sections.FindProjects.Details.DetailsView"
              x:DataType="l:IDetailsViewModel">
 
@@ -32,7 +32,7 @@
             <FlexPanel Direction="Row" Wrap="Wrap" ColumnGap="20" RowGap="20">
 
                 <!-- Left: Header & Description -->
-                <OverlayBorder Classes="White Shadow" Padding="0" CornerRadius="16" FlexPanel.Grow="100">
+                <OverlayBorder Classes="White Shadow" Padding="0" CornerRadius="16" FlexPanel.Basis="400" FlexPanel.Grow="1">
                     <StackPanel>
                         <a:AdvancedImage CornerRadius="10 10 0 0" Margin="-20 -20 -20 0" Stretch="UniformToFill" Height="140" Source="{Binding Project.BannerUrl}" />
                         <Panel>
@@ -49,7 +49,7 @@
                 </OverlayBorder>
 
                 <!-- Right: Investment Opportunity -->
-                <ContentControl FlexPanel.Basis="400" FlexPanel.Grow="1" ClipToBounds="False" Content="{Binding Project}">
+                <ContentControl ClipToBounds="False" Content="{Binding Project}" FlexPanel.Basis="200" FlexPanel.Grow="1">
                     <ContentControl.DataTemplates>
                         <DataTemplate DataType="inv:IInvestmentProject">
                             <Panel Classes="Gap-XL">
