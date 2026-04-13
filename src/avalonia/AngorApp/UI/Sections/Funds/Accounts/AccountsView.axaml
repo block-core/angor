@@ -33,11 +33,11 @@
 
     <ScrollViewer Classes="PageScroll">
         <StackPanel Classes="Gap-XL" MaxWidth="1152">
-            <FlexPanel Wrap="Wrap" Gap="8" AlignContent="Start" HorizontalAlignment="Right">
+            <AutoWrapGrid ColumnSpacing="10" RowSpacing="10" HorizontalAlignment="Right">
                 <EnhancedButton HorizontalAlignment="Stretch" Command="{Binding RefreshBalances}" Classes="Outline" Classes.Spinning="{Binding RefreshBalances.IsExecuting}" Icon="{Icon fa-sync}" FlexPanel.Grow="1" FlexPanel.Basis="120">Refresh</EnhancedButton>
                 <EnhancedButton  HorizontalAlignment="Stretch" Command="{Binding ImportAccount}" Classes="Outline" Icon="{Icon fa-upload}" IsEnabled="False" FlexPanel.Grow="1" FlexPanel.Basis="120">Import Wallet</EnhancedButton>
                 <EnhancedButton  HorizontalAlignment="Stretch" Command="{Binding GetTestCoins}" IsVisible="{Binding CanGetTestCoins}" Classes="Emphasized" Icon="{Icon fa-plus}" FlexPanel.Grow="1" FlexPanel.Basis="120">Get Testnet Coins</EnhancedButton>
-            </FlexPanel>
+            </AutoWrapGrid>
             <HeaderedContainer Classes="Card ApricotGradient Shadow" HeaderClasses="Size-XL Black" Header="Balance Summary" Background="{DynamicResource BitcoinWash}">
                 <ItemsControl ItemsSource="{Binding Balances}">
                     <ItemsControl.ItemsPanel>
