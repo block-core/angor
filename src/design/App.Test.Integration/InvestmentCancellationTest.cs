@@ -10,6 +10,7 @@ using Angor.Sdk.Funding.Projects;
 using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
+using App.UI.Sections.Funders;
 using App.UI.Sections.Funds;
 using App.UI.Sections.MyProjects;
 using App.UI.Sections.MyProjects.Deploy;
@@ -25,30 +26,50 @@ namespace App.Test.Integration;
 ///
 /// CancelInvestmentRequest is implemented in the SDK and wired in the design app
 /// (PortfolioViewModel.CancelInvestmentAsync), but has zero E2E coverage. This
-/// test validates the full Nostr DM + handshake status + fund release flow.
+/// test validates the full Nostr DM + handshake status + fund release flow across
+/// three distinct cancellation/confirmation scenarios.
 ///
-/// Flow:
+/// Flow (3-step):
 ///   Phase 1 (Founder):
 ///     1. Wipe data, create wallet, fund via faucet
 ///     2. Create and deploy a fund project with 0.01 BTC approval threshold
 ///
-///   Phase 2 (Investor):
+///   Phase 2 (Investor) — Cancel before founder approval:
 ///     3. Create wallet, fund via faucet
-///     4. Invest above threshold (0.02 BTC) — requires founder approval (Step 1)
+///     4. Invest above threshold (0.02 BTC) — pending approval (Step 1)
 ///     5. Cancel the pending investment before founder approves
-///     6. Verify: investment status = Cancelled
-///     7. Verify: investor's balance is NOT locked (funds released)
-///     8. Re-invest in the same project to prove re-investing after cancel works
-///     9. Verify: new investment succeeds normally (separate from cancelled one)
+///     6. Verify: investment status = Cancelled, funds released
+///
+///   Phase 3 (Investor) — Re-invest after cancel:
+///     7. Re-invest in the same project (new pending investment)
+///
+///   Phase 4 (Founder) — Approve the new investment:
+///     8. Founder approves the pending investment request
+///
+///   Phase 5 (Investor) — Cancel after founder approval:
+///     9. Cancel the approved investment (Step 2)
+///     10. Verify: investment status = Cancelled, funds released
+///
+///   Phase 6 (Investor) — Re-invest again:
+///     11. Re-invest in the same project
+///
+///   Phase 7 (Founder) — Approve again:
+///     12. Founder approves the new investment request
+///
+///   Phase 8 (Investor) — Confirm the approved investment:
+///     13. Investor confirms the approved investment
+///     14. Verify: investment reaches Step 3 (active)
 ///
 /// This validates:
-///   - CancelInvestmentRequest correctly updates investment status
+///   - Cancel before founder approval works (Step 1 → Cancelled)
+///   - Cancel after founder approval works (Step 2 → Cancelled)
+///   - Confirming an approved investment completes the cycle (Step 3)
 ///   - Cancelled investments release reserved UTXOs (funds not locked)
 ///   - Re-investing after cancellation creates a new, separate investment
-///   - The portfolio shows both the cancelled and the new investment
+///   - The full founder-approval handshake works end-to-end
 ///
 /// Uses real testnet infrastructure (indexer + faucet + Nostr relays).
-/// May take 120-300 seconds depending on network conditions.
+/// May take 3-10 minutes depending on network conditions.
 /// </summary>
 public class InvestmentCancellationTest
 {
@@ -86,6 +107,7 @@ public class InvestmentCancellationTest
         // ──────────────────────────────────────────────────────────────
         // PHASE 1: Founder — create wallet, fund, deploy project
         // ──────────────────────────────────────────────────────────────
+        Log(null, "═══ PHASE 1: Founder creates wallet, funds, deploys project ═══");
         await WithProfileWindow(FounderProfile, initializedProfiles, async window =>
         {
             await CreateWalletAndFundAsync(window, FounderProfile);
@@ -101,49 +123,115 @@ public class InvestmentCancellationTest
         });
 
         project.Should().NotBeNull("Founder phase should produce a deployed project");
-        Log(null, $"Founder phase complete. ProjectId={project!.ProjectIdentifier}");
+        Log(null, $"Phase 1 complete. ProjectId={project!.ProjectIdentifier}");
 
         // ──────────────────────────────────────────────────────────────
-        // PHASE 2: Investor — invest, cancel, verify, re-invest
+        // PHASE 2: Investor — invest, cancel BEFORE founder approval
         // ──────────────────────────────────────────────────────────────
+        Log(null, "═══ PHASE 2: Investor invests and cancels BEFORE founder approval ═══");
         await WithProfileWindow(InvestorProfile, initializedProfiles, async window =>
         {
             await CreateWalletAndFundAsync(window, InvestorProfile);
-            await InvestCancelAndReinvestAsync(window, InvestorProfile, project!, investmentAmountBtc);
+            await InvestAndCancelBeforeApprovalAsync(window, InvestorProfile, project!, investmentAmountBtc);
         });
 
+        Log(null, "Phase 2 complete. Cancel-before-approval validated.");
+
+        // ──────────────────────────────────────────────────────────────
+        // PHASE 3: Investor — re-invest (new pending investment)
+        // ──────────────────────────────────────────────────────────────
+        Log(null, "═══ PHASE 3: Investor re-invests after cancel ═══");
+        await WithProfileWindow(InvestorProfile, initializedProfiles, async window =>
+        {
+            await InvestInProjectFromSdkAsync(window, InvestorProfile, project!, investmentAmountBtc);
+        });
+
+        Log(null, "Phase 3 complete. Re-investment submitted.");
+
+        // ──────────────────────────────────────────────────────────────
+        // PHASE 4: Founder — approve the pending investment
+        // ──────────────────────────────────────────────────────────────
+        Log(null, "═══ PHASE 4: Founder approves the pending investment ═══");
+        await WithProfileWindow(FounderProfile, initializedProfiles, async window =>
+        {
+            await ApprovePendingInvestmentAsync(window, FounderProfile, project!);
+        });
+
+        Log(null, "Phase 4 complete. Founder approved the investment.");
+
+        // ──────────────────────────────────────────────────────────────
+        // PHASE 5: Investor — cancel AFTER founder approval
+        // ──────────────────────────────────────────────────────────────
+        Log(null, "═══ PHASE 5: Investor cancels AFTER founder approval ═══");
+        await WithProfileWindow(InvestorProfile, initializedProfiles, async window =>
+        {
+            await CancelAfterApprovalAsync(window, InvestorProfile, project!);
+        });
+
+        Log(null, "Phase 5 complete. Cancel-after-approval validated.");
+
+        // ──────────────────────────────────────────────────────────────
+        // PHASE 6: Investor — re-invest again
+        // ──────────────────────────────────────────────────────────────
+        Log(null, "═══ PHASE 6: Investor re-invests again ═══");
+        await WithProfileWindow(InvestorProfile, initializedProfiles, async window =>
+        {
+            await InvestInProjectFromSdkAsync(window, InvestorProfile, project!, investmentAmountBtc);
+        });
+
+        Log(null, "Phase 6 complete. Second re-investment submitted.");
+
+        // ──────────────────────────────────────────────────────────────
+        // PHASE 7: Founder — approve again
+        // ──────────────────────────────────────────────────────────────
+        Log(null, "═══ PHASE 7: Founder approves the new investment ═══");
+        await WithProfileWindow(FounderProfile, initializedProfiles, async window =>
+        {
+            await ApprovePendingInvestmentAsync(window, FounderProfile, project!);
+        });
+
+        Log(null, "Phase 7 complete. Founder approved the second investment.");
+
+        // ──────────────────────────────────────────────────────────────
+        // PHASE 8: Investor — confirm approved investment (Step 3)
+        // ──────────────────────────────────────────────────────────────
+        Log(null, "═══ PHASE 8: Investor confirms the approved investment ═══");
+        await WithProfileWindow(InvestorProfile, initializedProfiles, async window =>
+        {
+            await ConfirmApprovedInvestmentAsync(window, InvestorProfile, project!);
+        });
+
+        Log(null, "Phase 8 complete. Investment confirmed and active.");
         Log(null, $"========== {nameof(CancelPendingInvestmentAndReinvest)} PASSED ==========");
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // Phase 2: Investor — invest, cancel, verify funds released, re-invest
+    // Phase 2: Investor — invest, cancel BEFORE founder approval
     // ═══════════════════════════════════════════════════════════════════
 
-    private async Task InvestCancelAndReinvestAsync(
+    private async Task InvestAndCancelBeforeApprovalAsync(
         Window window,
         string profileName,
         ProjectHandle project,
         string investmentAmountBtc)
     {
-        // ── Step 1: Find project in SDK ──
+        // ── Step 1: Find project and invest ──
         var foundProject = await FindProjectFromSdkAsync(window, profileName, project);
 
-        // ── Step 2: Invest above threshold (stays at Step 1 — Pending Approval) ──
         Log(profileName, $"Investing {investmentAmountBtc} BTC (above threshold, pending approval)...");
-        await InvestInProjectAsync(
-            window, profileName, foundProject, project, investmentAmountBtc);
+        await InvestInProjectAsync(window, profileName, foundProject, project, investmentAmountBtc);
 
         // Wait for the indexer to pick up the investment and reload from SDK.
-        // AddToPortfolio does an optimistic local insert without WalletId/TransactionId.
-        // LoadInvestmentsFromSdkAsync repopulates the full InvestmentViewModel with those fields.
         var portfolioVm = await WaitForPortfolioInvestmentFromSdkAsync(
             window, profileName, project,
             inv => !string.IsNullOrEmpty(inv.InvestmentWalletId)
-                   && !string.IsNullOrEmpty(inv.InvestmentTransactionId));
+                   && !string.IsNullOrEmpty(inv.InvestmentTransactionId)
+                   && inv.Status != "Cancelled");
 
         var pendingInvestment = portfolioVm.Investments.FirstOrDefault(i =>
             i.ProjectIdentifier == project.ProjectIdentifier
-            && !string.IsNullOrEmpty(i.InvestmentWalletId));
+            && !string.IsNullOrEmpty(i.InvestmentWalletId)
+            && i.Status != "Cancelled");
         pendingInvestment.Should().NotBeNull("Pending investment should be in portfolio after SDK reload");
         pendingInvestment!.InvestmentWalletId.Should().NotBeNullOrEmpty("Investment should have a wallet ID after SDK reload");
         pendingInvestment.InvestmentTransactionId.Should().NotBeNullOrEmpty("Investment should have a transaction ID after SDK reload");
@@ -151,13 +239,13 @@ public class InvestmentCancellationTest
         Log(profileName, $"Pending investment: Step={pendingInvestment.Step}, Status='{pendingInvestment.StatusText}', " +
             $"WalletId={pendingInvestment.InvestmentWalletId}, TxId={pendingInvestment.InvestmentTransactionId}");
 
-        // Record balance before cancellation for comparison
+        // Record balance before cancellation
         var fundsVm = GetFundsViewModel(window);
         var balanceBeforeCancel = fundsVm?.TotalBalance ?? "0.0000";
         Log(profileName, $"Balance before cancellation: {balanceBeforeCancel}");
 
-        // ── Step 3: Cancel the pending investment ──
-        Log(profileName, "Cancelling pending investment...");
+        // ── Step 2: Cancel the pending investment (before founder approval) ──
+        Log(profileName, "Cancelling pending investment (before founder approval)...");
         var cancelResult = await portfolioVm.CancelInvestmentAsync(pendingInvestment);
         Dispatcher.UIThread.RunJobs();
 
@@ -166,8 +254,201 @@ public class InvestmentCancellationTest
         pendingInvestment.Status.Should().Be("Cancelled", "Status field should be 'Cancelled'");
         Log(profileName, $"Investment cancelled. Status='{pendingInvestment.StatusText}'");
 
-        // ── Step 4: Verify funds are released (balance not locked) ──
-        // Refresh balance — reserved UTXOs should be released
+        // ── Step 3: Verify funds are released ──
+        await VerifyFundsReleasedAsync(window, profileName, balanceBeforeCancel);
+
+        Log(profileName, "Cancel-before-approval flow validated.");
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Phase 3/6: Investor — find project and invest (reusable)
+    // ═══════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Find the project from SDK and invest. Used for re-investment phases.
+    /// </summary>
+    private async Task InvestInProjectFromSdkAsync(
+        Window window,
+        string profileName,
+        ProjectHandle project,
+        string investmentAmountBtc)
+    {
+        Log(profileName, $"Re-investing {investmentAmountBtc} BTC in project {project.ProjectIdentifier}...");
+        var foundProject = await FindProjectFromSdkAsync(window, profileName, project);
+        await InvestInProjectAsync(window, profileName, foundProject, project, investmentAmountBtc);
+        Log(profileName, "Re-investment submitted successfully.");
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Phase 4/7: Founder — approve pending investment
+    // ═══════════════════════════════════════════════════════════════════
+
+    private async Task ApprovePendingInvestmentAsync(
+        Window window,
+        string profileName,
+        ProjectHandle project)
+    {
+        window.NavigateToSection("Funders");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        var fundersVm = GetFundersViewModel(window);
+        fundersVm.Should().NotBeNull();
+
+        SignatureRequestViewModel? pendingSignature = null;
+        var deadline = DateTime.UtcNow + IndexerLagTimeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            await fundersVm!.LoadInvestmentRequestsAsync();
+            Dispatcher.UIThread.RunJobs();
+            fundersVm.SetFilter("waiting");
+            Dispatcher.UIThread.RunJobs();
+
+            Log(profileName, $"Funders waiting count: {fundersVm.WaitingCount}, approved count: {fundersVm.ApprovedCount}");
+
+            pendingSignature = fundersVm.FilteredSignatures.FirstOrDefault(s =>
+                string.Equals(s.ProjectIdentifier, project.ProjectIdentifier, StringComparison.Ordinal));
+            if (pendingSignature != null)
+            {
+                break;
+            }
+
+            Log(profileName, "Waiting for pending founder approval request...");
+            await Task.Delay(PollInterval);
+        }
+
+        pendingSignature.Should().NotBeNull("above-threshold investment should require founder approval");
+        Log(profileName, $"Approving signature request id={pendingSignature!.Id} for project {project.ProjectIdentifier}");
+        fundersVm!.ApproveSignature(pendingSignature.Id);
+
+        var approvalDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        while (DateTime.UtcNow < approvalDeadline)
+        {
+            await fundersVm.LoadInvestmentRequestsAsync();
+            Dispatcher.UIThread.RunJobs();
+            fundersVm.SetFilter("approved");
+            Dispatcher.UIThread.RunJobs();
+
+            var approved = fundersVm.FilteredSignatures.Any(s =>
+                string.Equals(s.ProjectIdentifier, project.ProjectIdentifier, StringComparison.Ordinal));
+            if (approved)
+            {
+                Log(profileName, "Founder approval completed.");
+                return;
+            }
+
+            await Task.Delay(PollInterval);
+        }
+
+        throw new InvalidOperationException("Founder approval did not complete in time.");
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Phase 5: Investor — cancel AFTER founder approval
+    // ═══════════════════════════════════════════════════════════════════
+
+    private async Task CancelAfterApprovalAsync(
+        Window window,
+        string profileName,
+        ProjectHandle project)
+    {
+        // Wait for investment to reach Step 2 (founder approved)
+        var portfolioVm = await WaitForPortfolioInvestmentFromSdkAsync(
+            window, profileName, project,
+            inv => inv.Step >= 2
+                   && inv.Status != "Cancelled"
+                   && inv.ApprovalStatus == "Approved");
+
+        var approvedInvestment = portfolioVm.Investments.FirstOrDefault(i =>
+            i.ProjectIdentifier == project.ProjectIdentifier
+            && i.Status != "Cancelled"
+            && i.ApprovalStatus == "Approved");
+        approvedInvestment.Should().NotBeNull("Approved investment should be in portfolio");
+
+        Log(profileName, $"Approved investment found: Step={approvedInvestment!.Step}, Status='{approvedInvestment.StatusText}', " +
+            $"Approval={approvedInvestment.ApprovalStatus}");
+
+        // Record balance before cancellation
+        var fundsVm = GetFundsViewModel(window);
+        var balanceBeforeCancel = fundsVm?.TotalBalance ?? "0.0000";
+        Log(profileName, $"Balance before cancellation: {balanceBeforeCancel}");
+
+        // Cancel the approved investment
+        Log(profileName, "Cancelling approved investment (after founder approval)...");
+        var cancelResult = await portfolioVm.CancelInvestmentAsync(approvedInvestment);
+        Dispatcher.UIThread.RunJobs();
+
+        cancelResult.Should().BeTrue("Cancellation should succeed for an approved (Step 2) investment");
+        approvedInvestment.StatusText.Should().Be("Cancelled", "Status should be 'Cancelled' after cancellation");
+        approvedInvestment.Status.Should().Be("Cancelled", "Status field should be 'Cancelled'");
+        Log(profileName, $"Investment cancelled after approval. Status='{approvedInvestment.StatusText}'");
+
+        // Verify funds are released
+        await VerifyFundsReleasedAsync(window, profileName, balanceBeforeCancel);
+
+        Log(profileName, "Cancel-after-approval flow validated.");
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Phase 8: Investor — confirm approved investment (Step 3)
+    // ═══════════════════════════════════════════════════════════════════
+
+    private async Task ConfirmApprovedInvestmentAsync(
+        Window window,
+        string profileName,
+        ProjectHandle project)
+    {
+        // Wait for investment to reach Step 2 (founder approved)
+        var portfolioVm = await WaitForPortfolioInvestmentFromSdkAsync(
+            window, profileName, project,
+            inv => inv.Step >= 2
+                   && inv.Status != "Cancelled"
+                   && inv.ApprovalStatus == "Approved");
+
+        var investment = portfolioVm.Investments.First(i =>
+            i.ProjectIdentifier == project.ProjectIdentifier
+            && i.Status != "Cancelled"
+            && i.ApprovalStatus == "Approved");
+
+        Log(profileName, $"Confirming approved investment. Step={investment.Step}, Status={investment.StatusText}");
+        investment.ApprovalStatus.Should().Be("Approved");
+        var confirmResult = await portfolioVm.ConfirmInvestmentAsync(investment);
+        confirmResult.Should().BeTrue("founder-approved investment should be confirmable by the investor");
+
+        // Wait for Step 3 (active)
+        var activeDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        while (DateTime.UtcNow < activeDeadline)
+        {
+            await portfolioVm.LoadInvestmentsFromSdkAsync();
+            Dispatcher.UIThread.RunJobs();
+
+            var refreshed = portfolioVm.Investments.FirstOrDefault(i =>
+                i.ProjectIdentifier == project.ProjectIdentifier
+                && i.Status != "Cancelled");
+            if (refreshed?.Step == 3)
+            {
+                Log(profileName, "Investment confirmed and active (Step 3).");
+                return;
+            }
+
+            await Task.Delay(PollInterval);
+        }
+
+        throw new InvalidOperationException("Confirmed investment did not become active (Step 3) in time.");
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Shared verification helpers
+    // ═══════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Verify funds are released after cancellation by refreshing balance.
+    /// </summary>
+    private async Task VerifyFundsReleasedAsync(
+        Window window,
+        string profileName,
+        string balanceBeforeCancel)
+    {
         window.NavigateToSection("Funds");
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
@@ -176,48 +457,13 @@ public class InvestmentCancellationTest
         await Task.Delay(2000);
         Dispatcher.UIThread.RunJobs();
 
-        fundsVm = GetFundsViewModel(window);
+        var fundsVm = GetFundsViewModel(window);
         fundsVm.Should().NotBeNull();
         var balanceAfterCancel = fundsVm!.TotalBalance;
         Log(profileName, $"Balance after cancellation: {balanceAfterCancel}");
 
-        // The balance should be at least what it was before cancellation
-        // (reserved UTXOs released back to available balance)
         balanceAfterCancel.Should().NotBe("0.0000",
             "Balance should be non-zero after cancellation (funds released)");
-
-        // ── Step 5: Re-invest in the same project ──
-        Log(profileName, "Re-investing in the same project after cancellation...");
-        var foundProjectAgain = await FindProjectFromSdkAsync(window, profileName, project);
-
-        var portfolioVmAfterReinvest = await InvestInProjectAsync(
-            window, profileName, foundProjectAgain, project, investmentAmountBtc);
-
-        // ── Step 6: Verify new investment is separate from cancelled one ──
-        var allInvestments = portfolioVmAfterReinvest.Investments
-            .Where(i => i.ProjectIdentifier == project.ProjectIdentifier)
-            .ToList();
-
-        Log(profileName, $"Total investments for this project: {allInvestments.Count}");
-        foreach (var inv in allInvestments)
-        {
-            Log(profileName, $"  Investment: Step={inv.Step}, Status='{inv.StatusText}', TxId={inv.InvestmentTransactionId}");
-        }
-
-        // Should have at least the new investment (the cancelled one may or may not persist
-        // depending on whether the SDK removes it from the portfolio records)
-        var activeInvestments = allInvestments.Where(i => i.Status != "Cancelled").ToList();
-        activeInvestments.Should().HaveCountGreaterThanOrEqualTo(1,
-            "Should have at least one non-cancelled investment after re-investing");
-
-        var newInvestment = activeInvestments.First();
-        newInvestment.TotalInvested.Should().Be(
-            decimal.Parse(investmentAmountBtc, CultureInfo.InvariantCulture).ToString("F8", CultureInfo.InvariantCulture),
-            "New investment amount should match");
-        newInvestment.ProjectIdentifier.Should().Be(project.ProjectIdentifier,
-            "New investment should be for the same project");
-
-        Log(profileName, "Re-investment successful. Cancellation + reinvest flow validated.");
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -744,6 +990,11 @@ public class InvestmentCancellationTest
     private static FindProjectsViewModel? GetFindProjectsViewModel(Window window)
     {
         return window.GetVisualDescendants().OfType<FindProjectsView>().FirstOrDefault()?.DataContext as FindProjectsViewModel;
+    }
+
+    private static FundersViewModel? GetFundersViewModel(Window window)
+    {
+        return window.GetVisualDescendants().OfType<FundersView>().FirstOrDefault()?.DataContext as FundersViewModel;
     }
 
     private static void Log(string? profileName, string message)

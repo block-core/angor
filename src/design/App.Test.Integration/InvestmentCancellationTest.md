@@ -2,41 +2,65 @@
 
 ## Purpose
 
-Full end-to-end integration test for the **investment cancellation** flow. CancelInvestmentRequest is implemented in the SDK and wired in the design app (PortfolioViewModel.CancelInvestmentAsync), but had zero E2E coverage. This test validates the complete cancel + fund-release + re-invest cycle.
+Full end-to-end integration test for the **investment cancellation** flow. CancelInvestmentRequest is implemented in the SDK and wired in the design app (PortfolioViewModel.CancelInvestmentAsync), but had zero E2E coverage. This test validates the complete cancel + fund-release + re-invest cycle across three distinct scenarios:
+
+1. **Cancel before founder approval** (Step 1 → Cancelled)
+2. **Cancel after founder approval** (Step 2 → Cancelled)
+3. **Confirm after founder approval** (Step 2 → Step 3, active investment)
 
 ## Profiles
 
-- Founder profile: `InvestCancel-Founder`
-- Investor profile: `InvestCancel-Investor`
+- Founder profile: `InvestmentCancellation-Founder`
+- Investor profile: `InvestmentCancellation-Investor`
 
 All profiles are created under the application's profile directory.
 
-## Scenario
+## Scenario (8 Phases)
 
-1. Founder profile creates a wallet, funds it via the signet faucet, and deploys a **Fund** project with a high approval threshold (`0.001 BTC`) so that investments above threshold require founder approval.
-2. Investor profile creates a wallet, funds it, and invests in the project with an amount **above** the approval threshold (`0.01 BTC`).
-3. The investment stays at Step 1 (pending founder approval), which makes it cancellable.
-4. Investor cancels the pending investment via `CancelInvestmentAsync`.
-5. The test verifies the investment status changes to "Cancelled" or is removed from the active list.
-6. The test verifies that the investor's balance is restored (funds released back).
-7. Investor re-invests in the same project to confirm the wallet and project remain functional after cancellation.
+### Phase 1 — Founder setup
+Founder creates a wallet, funds it via the signet faucet, and deploys a **Fund** project with 0.01 BTC approval threshold.
+
+### Phase 2 — Cancel before approval
+Investor creates a wallet, funds it, invests 0.02 BTC (above threshold → pending approval at Step 1), then cancels the pending investment before the founder approves. Verifies status = Cancelled and funds released.
+
+### Phase 3 — Re-invest after cancel
+Investor re-invests in the same project (new pending investment at Step 1).
+
+### Phase 4 — Founder approves
+Founder approves the pending investment request via the Funders section.
+
+### Phase 5 — Cancel after approval
+Investor cancels the approved investment (Step 2). Verifies status = Cancelled and funds released.
+
+### Phase 6 — Re-invest again
+Investor re-invests in the same project again.
+
+### Phase 7 — Founder approves again
+Founder approves the new pending investment request.
+
+### Phase 8 — Investor confirms
+Investor confirms the approved investment. Verifies investment reaches Step 3 (active).
 
 ## Key Validations
 
 - Above-threshold investment stays at Step 1 (pending) until founder approval.
-- `CancelInvestmentAsync` successfully cancels a pending investment.
+- `CancelInvestmentAsync` successfully cancels a pending investment (Step 1).
+- `CancelInvestmentAsync` successfully cancels an approved investment (Step 2).
 - Investment status transitions to "Cancelled" after cancellation.
 - Investor balance is restored after cancellation (funds released).
 - Re-investment after cancellation succeeds, proving no state corruption.
-- Project remains investable after a cancelled investment.
+- Founder approval flow works end-to-end via `ApprovePendingInvestmentAsync`.
+- Investor confirmation flow works end-to-end via `ConfirmApprovedInvestmentAsync`.
+- The full 3-step lifecycle (invest → approve → confirm) completes successfully.
 
 ## Notes
 
 - The test reuses the real headless Avalonia app and switches profiles by rebuilding DI per profile.
-- Above-threshold investments are used specifically because they stay at Step 1 (pending) until founder approval, making them cancellable without needing the founder to sign first.
-- Balance restoration is verified with a tolerance for transaction fees.
-- The re-investment phase proves the full cycle is idempotent and the wallet/project state is clean after cancellation.
+- Multiple `WithProfileWindow` calls are used to switch between Founder and Investor profiles across phases.
+- Above-threshold investments (0.02 BTC > 0.01 threshold) require founder approval, keeping them at Step 1 until approved.
+- The founder approval pattern uses `FundersViewModel.LoadInvestmentRequestsAsync()`, `SetFilter("waiting")`, and `ApproveSignature(id)`.
 - IndexerLagTimeout (5 minutes) is used for polling because signet mempool propagation can be slow.
+- The test may take 3-10 minutes depending on network conditions.
 
 ## Run
 
