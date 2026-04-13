@@ -1,0 +1,106 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:mp="clr-namespace:App.UI.Sections.MyProjects"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="680" d:DesignHeight="600"
+             x:Class="App.UI.Sections.MyProjects.Steps.CreateProjectStep3View"
+             x:DataType="mp:CreateProjectViewModel">
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- STEP 3: PROJECT IMAGES                   -->
+    <!-- ═══════════════════════════════════════ -->
+    <StackPanel Spacing="24">
+        <!-- Subtitle — matches reference -->
+        <TextBlock Text="Upload your project's banner and profile images."
+                   FontSize="14" Foreground="{DynamicResource TextMuted}" />
+
+        <!-- Single unified profile card preview (matches reference layout) -->
+        <Border CornerRadius="10" BorderBrush="{DynamicResource Stroke}" BorderThickness="2"
+                Background="{DynamicResource Surface}" ClipToBounds="True">
+            <StackPanel>
+                <!-- Banner area — tiled pattern background with upload prompt -->
+                <Panel Height="200">
+                    <Rectangle Fill="{DynamicResource SurfaceMedium}" />
+                    <Rectangle Fill="{DynamicResource TiledLogoBrush}" />
+                    <!-- Banner image preview (shown when banner is selected) -->
+                    <Image Name="BannerPreviewImage" Stretch="UniformToFill"
+                           IsVisible="False" />
+                    <!-- "820x312px recommended" badge (top-right) -->
+                    <Border Background="#80000000" CornerRadius="6" Padding="10,5"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="12">
+                        <TextBlock Text="820x312px recommended" FontSize="11"
+                                   Foreground="White" />
+                    </Border>
+                    <!-- Upload Banner button (centered) -->
+                    <Button Name="UploadBannerButton" Background="Transparent"
+                            BorderThickness="0" Padding="0" Cursor="Hand"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Border Background="{DynamicResource Surface}" CornerRadius="8"
+                                Padding="16,10"
+                                BorderBrush="{DynamicResource Stroke}" BorderThickness="1">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <i:Icon Value="fa-solid fa-image"
+                                        FontSize="16"
+                                        Foreground="{DynamicResource TextStrong}" />
+                                <TextBlock Text="Upload Banner" FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextStrong}" />
+                            </StackPanel>
+                        </Border>
+                    </Button>
+                </Panel>
+
+                <!-- Content area: avatar + project info -->
+                <StackPanel Margin="24,-64,24,24" Spacing="16">
+                    <!-- Circular avatar placeholder overlapping banner — clickable -->
+                    <Border Name="UploadAvatarButton" Background="Transparent"
+                            Cursor="Hand"
+                            Width="128" Height="128"
+                            HorizontalAlignment="Left"
+                            ClipToBounds="False">
+                        <Border Width="128" Height="128" CornerRadius="64"
+                                Background="{DynamicResource SurfaceMedium}"
+                                BorderBrush="White" BorderThickness="4"
+                                BoxShadow="0 10 30 0 #22000000" ClipToBounds="True">
+                            <Panel>
+                                <!-- Avatar image preview — EllipseGeometry clip for
+                                     perfect circle (CornerRadius on parent Border can
+                                     distort when FluentTheme injects chrome) -->
+                                <Image Name="AvatarPreviewImage" Stretch="UniformToFill"
+                                       Width="120" Height="120"
+                                       IsVisible="False">
+                                    <Image.Clip>
+                                        <EllipseGeometry Center="60,60" RadiusX="60" RadiusY="60" />
+                                    </Image.Clip>
+                                </Image>
+                                <!-- Camera overlay icon (white circle with camera) matching Vue prototype -->
+                                <Border Name="AvatarUploadIcon"
+                                        Background="White" CornerRadius="16"
+                                        Width="32" Height="32"
+                                        BoxShadow="0 2 8 0 #40000000"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <i:Icon Value="fa-solid fa-camera"
+                                            FontSize="16"
+                                            Foreground="#1a1a1a"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center" />
+                                </Border>
+                            </Panel>
+                        </Border>
+                    </Border>
+
+                    <!-- Project name + description preview -->
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="{Binding ProjectName, FallbackValue='Project Name'}"
+                                   FontSize="20" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextStrong}" />
+                        <TextBlock Text="{Binding ProjectAbout, FallbackValue='Project description'}"
+                                   FontSize="14" Foreground="{DynamicResource TextMuted}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

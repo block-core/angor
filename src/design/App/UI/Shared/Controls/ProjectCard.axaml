@@ -1,0 +1,319 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:App.UI.Shared.Controls"
+        xmlns:i="https://github.com/projektanker/icons.avalonia">
+
+    <Design.PreviewWith>
+        <StackPanel Spacing="16" Width="380">
+            <ThemeVariantScope RequestedThemeVariant="Dark">
+                <Border Background="{DynamicResource AppBackground}" Padding="16">
+                    <controls:ProjectCard ProjectName="Hope With Bitcoin"
+                                          ShortDescription="Supporting communities through Bitcoin adoption and financial literacy programs across developing nations."
+                                          InvestorCount="1"
+                                          InvestorLabel="Funders"
+                                          Raised="0.50000"
+                                          Target="0.20000"
+                                          TargetLabel="Goal:"
+                                          Progress="25"
+                                          ProjectType="Fund"
+                                          Status="Open"
+                                          ShowManageFunds="True"
+                                          Banner="https://angor.tx1138.com/projects/hope-with-bitcoin-banner.webp"
+                                          Avatar="https://angor.tx1138.com/projects/hope-with-bitcoin-logo.webp" />
+                </Border>
+            </ThemeVariantScope>
+            <ThemeVariantScope RequestedThemeVariant="Light">
+                <Border Background="{DynamicResource AppBackground}" Padding="16">
+                    <controls:ProjectCard ProjectName="Zap AI"
+                                          ShortDescription="AI-powered tools for the Bitcoin ecosystem with advanced analytics."
+                                          InvestorCount="5"
+                                          InvestorLabel="Investors"
+                                          Raised="0.45678"
+                                          Target="0.75000"
+                                          TargetLabel="Target:"
+                                          Progress="61"
+                                          ProjectType="Invest"
+                                          Status="Funding Closed"
+                                          Banner="https://angor.tx1138.com/projects/zap-ai-banner.png"
+                                          Avatar="https://angor.tx1138.com/projects/zap-ai-logo.png" />
+                </Border>
+            </ThemeVariantScope>
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <!--
+        Vue ProjectCard layout (pixel-matched to Vue CSS & screenshots):
+        Banner (140px min) → Avatar (64x64, overlapping) → Pills → Title → Description →
+        Stats Row 1 (investor count + raised BTC) → Stats Row 2 (target label + amount) →
+        Progress Bar (at very bottom)
+
+        Card: border-radius 12px, shadow 0 2px 8px rgba(0,0,0,0.1)
+        Content padding: 48px 20px 20px (48px top for overlapping avatar)
+        Title: 18px bold, single line
+        Description: 14px, 2-line clamp
+        Pills: 11px semibold uppercase, above title
+    -->
+    <Style Selector="controls|ProjectCard">
+        <Setter Property="Template">
+            <ControlTemplate TargetType="controls:ProjectCard">
+                <Border x:Name="PART_CardRoot"
+                        Background="{DynamicResource Surface}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1"
+                        CornerRadius="12"
+                        ClipToBounds="False"
+                        BoxShadow="{DynamicResource ItemShadow}"
+                        RenderTransform="translate(0px, 0px)">
+                    <Border.Transitions>
+                        <Transitions>
+                            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" />
+                            <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.3" />
+                        </Transitions>
+                    </Border.Transitions>
+                    <!-- Inner clip border: clips banner overflow while outer border allows shadow to extend -->
+                    <Border CornerRadius="11" ClipToBounds="True">
+                    <StackPanel Spacing="0">
+                        <!-- Banner area — fixed height for consistent card sizing -->
+                        <Panel Height="150">
+                            <!-- Fallback gradient when no banner (below image) -->
+                            <Border Background="{DynamicResource SurfaceLow}" />
+                            <Image Stretch="UniformToFill"
+                                   Source="{Binding BannerBitmap, RelativeSource={RelativeSource TemplatedParent}}" />
+                            <!-- Avatar — Vue: 64x64, bottom -32px, left 20px, shadow -->
+                            <Panel VerticalAlignment="Bottom" HorizontalAlignment="Left"
+                                   Margin="20,0,0,-32">
+                                <Border CornerRadius="32" Width="64" Height="64"
+                                        Background="{DynamicResource Surface}"
+                                        BoxShadow="{DynamicResource FloatingBtnShadow}"
+                                        ClipToBounds="True">
+                                    <Image Stretch="UniformToFill"
+                                           Source="{Binding AvatarBitmap, RelativeSource={RelativeSource TemplatedParent}}" />
+                                </Border>
+                            </Panel>
+                        </Panel>
+
+                        <!-- Content area — Vue: padding 48px 20px 20px, gap 12px -->
+                        <StackPanel Spacing="12" Margin="20,48,20,20">
+
+                            <!-- 1. Pills row — type + status (ABOVE title per Vue) -->
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <!-- Invest type — Blue pill -->
+                                <ContentControl x:Name="PART_TypePillInvest"
+                                                Classes="Pill Blue"
+                                                Content="{TemplateBinding ProjectType}"
+                                                IsVisible="False" />
+                                <!-- Fund type — Amber pill -->
+                                <ContentControl x:Name="PART_TypePillFund"
+                                                Classes="Pill Amber"
+                                                Content="{TemplateBinding ProjectType}"
+                                                IsVisible="False" />
+                                <!-- Subscription type — Pink pill -->
+                                <ContentControl x:Name="PART_TypePillSubscription"
+                                                Classes="Pill Pink"
+                                                Content="{TemplateBinding ProjectType}"
+                                                IsVisible="False" />
+                                <!-- Fallback: Orange pill for unknown types -->
+                                <ContentControl x:Name="PART_TypePillDefault"
+                                                Classes="Pill Orange"
+                                                Content="{TemplateBinding ProjectType}"
+                                                IsVisible="False" />
+
+                                <!-- Status pill — always green -->
+                                <ContentControl Classes="Pill Green"
+                                                Content="{TemplateBinding Status}" />
+                            </StackPanel>
+
+                            <!-- 2. Title — Vue: 18px, font-weight 700, single line -->
+                            <TextBlock Text="{TemplateBinding ProjectName}"
+                                       FontSize="18"
+                                       FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}"
+                                       TextTrimming="CharacterEllipsis"
+                                       MaxLines="1" />
+
+                            <!-- 3. Description — Vue: 14px, 2-line clamp, height ~42px -->
+                            <TextBlock Text="{TemplateBinding ShortDescription}"
+                                       FontSize="14"
+                                       LineHeight="21"
+                                       Foreground="{DynamicResource TextMuted}"
+                                       TextWrapping="Wrap"
+                                       MaxLines="2"
+                                       TextTrimming="CharacterEllipsis"
+                                       Height="42" />
+
+                            <!-- 4. Stats Row 1: investor count (left) + raised BTC (right) -->
+                            <DockPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="4" DockPanel.Dock="Left">
+                                    <TextBlock Text="{TemplateBinding InvestorCount}"
+                                               FontSize="13"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock Text="{TemplateBinding InvestorLabel}"
+                                               FontSize="13"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                                <StackPanel x:Name="PART_RaisedRow"
+                                            Orientation="Horizontal" Spacing="4"
+                                            HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <TextBlock Text="{TemplateBinding Raised}"
+                                               FontSize="13"
+                                               FontWeight="Bold"
+                                               Foreground="{DynamicResource TextStrong}" />
+                                    <TextBlock Text="{TemplateBinding CurrencySymbol}"
+                                               FontSize="13"
+                                               Foreground="{DynamicResource TextMuted}" />
+                                </StackPanel>
+                            </DockPanel>
+
+                            <!-- 5. Stats Row 2: target/goal label (left) + target amount (right) -->
+                            <DockPanel x:Name="PART_TargetRow">
+                                <TextBlock Text="{TemplateBinding TargetLabel}"
+                                           FontSize="13"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           DockPanel.Dock="Left"
+                                           VerticalAlignment="Center" />
+                                <StackPanel Orientation="Horizontal" Spacing="4"
+                                            HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <TextBlock Text="{TemplateBinding Target}"
+                                               FontSize="13"
+                                               Foreground="{DynamicResource TextMuted}" />
+                                    <TextBlock Text="{TemplateBinding CurrencySymbol}"
+                                               FontSize="13"
+                                               Foreground="{DynamicResource TextMuted}" />
+                                </StackPanel>
+                            </DockPanel>
+
+                            <!-- 6. Progress bar — Vue: 8px, green gradient fill, at bottom -->
+                            <ProgressBar Value="{TemplateBinding Progress}"
+                                         Minimum="0" Maximum="100"
+                                         Height="8" />
+
+                            <!-- 7. Action buttons — shown when showManageFunds=true (My Projects only) -->
+                            <!--    3 buttons: Manage (flex), Edit (flex), Share (square icon) -->
+                            <!--    All fill full width, standardised 40px height -->
+                            <Grid x:Name="PART_ActionButtons"
+                                  ColumnDefinitions="*,8,*,8,Auto"
+                                  Margin="0,12,0,0"
+                                  IsVisible="False">
+                                <!-- Manage button -->
+                                <Button x:Name="PART_ManageButton"
+                                        Grid.Column="0"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Center"
+                                        VerticalContentAlignment="Center"
+                                        Height="40"
+                                        Padding="8,0"
+                                        Background="Transparent"
+                                        BorderBrush="{DynamicResource PrimaryGreenBrush}"
+                                        BorderThickness="2"
+                                        CornerRadius="8"
+                                        Foreground="{DynamicResource PrimaryGreenBrush}"
+                                        FontSize="14" FontWeight="SemiBold"
+                                        Content="Manage" />
+                                <!-- Edit button — inner elements inherit Foreground from Button -->
+                                <Button x:Name="PART_EditButton"
+                                        Grid.Column="2"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Center"
+                                        VerticalContentAlignment="Center"
+                                        Height="40"
+                                        Padding="8,0"
+                                        Background="Transparent"
+                                        BorderBrush="{DynamicResource PrimaryGreenBrush}"
+                                        BorderThickness="2"
+                                        CornerRadius="8"
+                                        Foreground="{DynamicResource PrimaryGreenBrush}"
+                                        FontSize="14" FontWeight="SemiBold">
+                                    <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                                        <i:Icon Value="fa-solid fa-pen" FontSize="12" Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                        <TextBlock Text="Edit" FontSize="14" FontWeight="SemiBold"
+                                                   VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <!-- Share button — square icon, same height -->
+                                <Button x:Name="PART_ShareButton"
+                                        Grid.Column="4"
+                                        Width="40" Height="40"
+                                        Padding="0"
+                                        Background="Transparent"
+                                        BorderBrush="{DynamicResource PrimaryGreenBrush}"
+                                        BorderThickness="2"
+                                        CornerRadius="8"
+                                        Foreground="{DynamicResource PrimaryGreenBrush}">
+                                    <i:Icon Value="fa-solid fa-share"
+                                            FontSize="16" Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+                    </Border>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <!-- Vue: .project-card hover → translateY(-2px) + enhanced shadow, 0.3s ease -->
+    <Style Selector="controls|ProjectCard:pointerover /template/ Border#PART_CardRoot">
+        <Setter Property="RenderTransform" Value="translate(0px, -2px)" />
+        <Setter Property="BoxShadow" Value="{DynamicResource ItemShadowHover}" />
+    </Style>
+
+    <!-- Show correct type pill based on ProjectType value -->
+    <Style Selector="controls|ProjectCard[ProjectType=Invest] /template/ ContentControl#PART_TypePillInvest">
+        <Setter Property="IsVisible" Value="True" />
+    </Style>
+    <Style Selector="controls|ProjectCard[ProjectType=Fund] /template/ ContentControl#PART_TypePillFund">
+        <Setter Property="IsVisible" Value="True" />
+    </Style>
+    <Style Selector="controls|ProjectCard[ProjectType=Subscription] /template/ ContentControl#PART_TypePillSubscription">
+        <Setter Property="IsVisible" Value="True" />
+    </Style>
+    <!-- Default fallback for any other type value -->
+    <Style Selector="controls|ProjectCard /template/ ContentControl#PART_TypePillDefault">
+        <Setter Property="IsVisible" Value="True" />
+    </Style>
+    <!-- Hide default when specific type is matched -->
+    <Style Selector="controls|ProjectCard[ProjectType=Invest] /template/ ContentControl#PART_TypePillDefault">
+        <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="controls|ProjectCard[ProjectType=Fund] /template/ ContentControl#PART_TypePillDefault">
+        <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="controls|ProjectCard[ProjectType=Subscription] /template/ ContentControl#PART_TypePillDefault">
+        <Setter Property="IsVisible" Value="False" />
+    </Style>
+
+    <!-- Hide amounts when ShowAmounts=False -->
+    <Style Selector="controls|ProjectCard[ShowAmounts=False] /template/ StackPanel#PART_RaisedRow">
+        <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="controls|ProjectCard[ShowAmounts=False] /template/ DockPanel#PART_TargetRow">
+        <Setter Property="IsVisible" Value="False" />
+    </Style>
+
+    <!-- Show action buttons when ShowManageFunds=True (My Projects page) -->
+    <Style Selector="controls|ProjectCard[ShowManageFunds=True] /template/ Grid#PART_ActionButtons">
+        <Setter Property="IsVisible" Value="True" />
+    </Style>
+
+    <!-- Manage Project button hover: Vue rgba(75,124,90,0.1) bg, #3d6448 border+text -->
+    <Style Selector="controls|ProjectCard /template/ Button#PART_ManageButton:pointerover">
+        <Setter Property="Background" Value="#1A4B7C5A" />
+        <Setter Property="BorderBrush" Value="#3D6448" />
+        <Setter Property="Foreground" Value="#3D6448" />
+    </Style>
+    <!-- Edit button hover: same green tint -->
+    <Style Selector="controls|ProjectCard /template/ Button#PART_EditButton:pointerover">
+        <Setter Property="Background" Value="#1A4B7C5A" />
+        <Setter Property="BorderBrush" Value="#3D6448" />
+        <Setter Property="Foreground" Value="#3D6448" />
+    </Style>
+    <!-- Share button hover: same green tint -->
+    <Style Selector="controls|ProjectCard /template/ Button#PART_ShareButton:pointerover">
+        <Setter Property="Background" Value="#1A4B7C5A" />
+        <Setter Property="BorderBrush" Value="#3D6448" />
+        <Setter Property="Foreground" Value="#3D6448" />
+    </Style>
+
+</Styles>

@@ -1,0 +1,49 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+        xmlns:controls="clr-namespace:App.UI.Shared.Controls">
+    <Design.PreviewWith>
+        <controls:DialogControl Content="This is the content of the dialog">
+            <controls:DialogControl.Options>
+                <generic:List x:TypeArguments="controls:IOption">
+                    <controls:OptionDesign Title="Primary" Role="Primary" />
+                    <controls:OptionDesign Title="Secondary" Role="Secondary" />
+                </generic:List>
+            </controls:DialogControl.Options>
+        </controls:DialogControl>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|DialogControl">
+        <Setter Property="MinWidth" Value="448" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <DockPanel>
+                    <ItemsControl ItemsSource="{TemplateBinding Options}" DockPanel.Dock="Bottom"
+                                  Margin="0,24,0,0"
+                                  IsVisible="{TemplateBinding Options, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <ItemsControl.ItemContainerTheme>
+                            <ControlTheme TargetType="ContentPresenter">
+                                <Setter Property="IsVisible" Value="{Binding IsVisible^, DataType=controls:IOption}" />
+                            </ControlTheme>
+                        </ItemsControl.ItemContainerTheme>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Rows="1" ColumnSpacing="10" RowSpacing="20" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="controls:IOption">
+                                <controls:IconButton Height="52" HorizontalAlignment="Stretch"
+                                                IsCancel="{Binding IsCancel}"
+                                                IsDefault="{Binding IsDefault}"
+                                                Content="{Binding Title^}" Command="{Binding Command}"
+                                                controls:ClassAssist.Classes="{Binding Role, Converter={x:Static controls:OptionRoleToClassNameConverter.Instance}}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <ContentPresenter DockPanel.Dock="Top" Content="{TemplateBinding Content}" />
+                </DockPanel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

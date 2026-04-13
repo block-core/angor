@@ -1,0 +1,212 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="400"
+             x:Class="App.UI.Shared.FeeSelectionPopup">
+
+    <!--
+        Reusable fee selection popup modal.
+        Shows 3 preset fee rates (Priority / Standard / Economy) in sat/vB,
+        an optional custom fee rate input, and Cancel / Confirm buttons.
+        Callers await the result via TaskCompletionSource<long?>.
+        Visual style matches RecoveryModalsView fee selector.
+    -->
+
+    <UserControl.Styles>
+        <!-- Fee priority button selection — Rule #9: NO BrushTransition on toggled elements -->
+        <Style Selector="Border.FeeBtn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource StrokeSubtle}" />
+        </Style>
+        <Style Selector="Border.FeeBtn.FeeSelected">
+            <Setter Property="Background" Value="{DynamicResource RecoveryFeeSelectedBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource RecoveryFeeSelectedBorder}" />
+        </Style>
+
+        <!-- Kill FluentTheme chrome on all modal buttons -->
+        <Style Selector="Button.ModalBtn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+        <Style Selector="Button.ModalBtn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.ModalBtn:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+    </UserControl.Styles>
+
+    <Panel>
+        <!-- Modal card: max-w-md (448px) centered -->
+        <Border HorizontalAlignment="Center" VerticalAlignment="Center"
+                MinWidth="420" MaxWidth="480"
+                CornerRadius="16"
+                Background="{DynamicResource RecoveryModalBg}"
+                BorderBrush="{DynamicResource RecoveryModalBorder}"
+                BorderThickness="1"
+                BoxShadow="0 8 32 0 #40000000"
+                ClipToBounds="True">
+            <DockPanel>
+
+                <!-- ── Header: icon + title + close X ── -->
+                <Border DockPanel.Dock="Top" Padding="24,20"
+                        BorderThickness="0,0,0,1"
+                        CornerRadius="15,15,0,0"
+                        BorderBrush="{DynamicResource ModalHeaderBorder}"
+                        Background="{DynamicResource RecoveryModalBg}">
+                    <Panel>
+                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                            <i:Icon Value="fa-solid fa-gauge-high" FontSize="20"
+                                    Foreground="{DynamicResource TextMuted}" />
+                            <TextBlock Text="Select Fee Rate" FontSize="20" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}" />
+                        </StackPanel>
+                        <Button Name="CloseButton" Classes="ModalBtn ModalCloseBtn"
+                                HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Panel>
+                </Border>
+
+                <!-- ── Footer: Cancel + Confirm ── -->
+                <Border DockPanel.Dock="Bottom" Padding="24,16"
+                        BorderThickness="0,1,0,0"
+                        CornerRadius="0,0,15,15"
+                        BorderBrush="{DynamicResource ModalHeaderBorder}"
+                        Background="{DynamicResource RecoveryModalBg}">
+                    <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+                        <!-- Cancel -->
+                        <Button Name="CancelButton" Classes="ModalBtn" Cursor="Hand">
+                            <Border CornerRadius="8" Padding="24,12"
+                                    Background="{DynamicResource ModalCancelBg}">
+                                <TextBlock Text="Cancel" FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource ModalCancelFg}" />
+                            </Border>
+                        </Button>
+                        <!-- Confirm -->
+                        <Button Name="ConfirmButton" Classes="ModalBtn" Cursor="Hand"
+                                AutomationProperties.AutomationId="FeeConfirmButton">
+                            <Border CornerRadius="8" Padding="24,12"
+                                    ClipToBounds="True"
+                                    Background="{DynamicResource GreenGradient}">
+                                <TextBlock Text="Confirm" FontSize="14" FontWeight="SemiBold"
+                                           Foreground="White"
+                                           HorizontalAlignment="Center" />
+                            </Border>
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <!-- ── Content ── -->
+                <StackPanel Spacing="20" Margin="24">
+
+                    <!-- Info badge -->
+                    <Border CornerRadius="8" Padding="12"
+                            Background="{DynamicResource RecoveryWarningBg}"
+                            BorderBrush="{DynamicResource RecoveryWarningBorder}"
+                            BorderThickness="1">
+                        <DockPanel>
+                            <i:Icon Value="fa-solid fa-circle-info" FontSize="16"
+                                    Foreground="{DynamicResource PrimaryGreenBrush}"
+                                    VerticalAlignment="Top"
+                                    Margin="0,2,10,0" DockPanel.Dock="Left" />
+                            <TextBlock Text="Choose the transaction fee rate. Higher fees confirm faster but cost more."
+                                       FontSize="13" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource RecoveryWarningText}" />
+                        </DockPanel>
+                    </Border>
+
+                    <!-- Fee Priority selector: 3-col grid -->
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Fee Priority" FontSize="14" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextStrong}" />
+                        <Grid ColumnDefinitions="*,*,*">
+                            <Grid.ColumnSpacing>12</Grid.ColumnSpacing>
+
+                            <!-- Priority -->
+                            <Border Name="FeePriority" Grid.Column="0"
+                                    Classes="FeeBtn" CornerRadius="8" Padding="12"
+                                    BorderThickness="2" Cursor="Hand">
+                                <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                    <TextBlock Name="FeePriorityLabel" Text="Priority" FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource RecoveryFeeUnselectedText}"
+                                               HorizontalAlignment="Center" />
+                                    <TextBlock Name="FeePriorityDesc" Text="~1-3 blocks" FontSize="12"
+                                               Foreground="{DynamicResource RecoveryFeeUnselectedText}"
+                                               HorizontalAlignment="Center" Opacity="0.7" />
+                                    <TextBlock Name="FeePriorityRate" Text="50 sat/vB" FontSize="11"
+                                               Foreground="{DynamicResource RecoveryFeeUnselectedText}"
+                                               HorizontalAlignment="Center" Opacity="0.5" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Standard (default selected) -->
+                            <Border Name="FeeStandard" Grid.Column="1"
+                                    Classes="FeeBtn FeeSelected" CornerRadius="8" Padding="12"
+                                    BorderThickness="2" Cursor="Hand">
+                                <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                    <TextBlock Name="FeeStandardLabel" Text="Standard" FontSize="14"
+                                               FontWeight="SemiBold" Foreground="White"
+                                               HorizontalAlignment="Center" />
+                                    <TextBlock Name="FeeStandardDesc" Text="~3-6 blocks" FontSize="12"
+                                               Foreground="White"
+                                               HorizontalAlignment="Center" Opacity="0.7" />
+                                    <TextBlock Name="FeeStandardRate" Text="20 sat/vB" FontSize="11"
+                                               Foreground="White"
+                                               HorizontalAlignment="Center" Opacity="0.5" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Economy -->
+                            <Border Name="FeeEconomy" Grid.Column="2"
+                                    Classes="FeeBtn" CornerRadius="8" Padding="12"
+                                    BorderThickness="2" Cursor="Hand">
+                                <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                    <TextBlock Name="FeeEconomyLabel" Text="Economy" FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource RecoveryFeeUnselectedText}"
+                                               HorizontalAlignment="Center" />
+                                    <TextBlock Name="FeeEconomyDesc" Text="~6+ blocks" FontSize="12"
+                                               Foreground="{DynamicResource RecoveryFeeUnselectedText}"
+                                               HorizontalAlignment="Center" Opacity="0.7" />
+                                    <TextBlock Name="FeeEconomyRate" Text="5 sat/vB" FontSize="11"
+                                               Foreground="{DynamicResource RecoveryFeeUnselectedText}"
+                                               HorizontalAlignment="Center" Opacity="0.5" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+
+                    <!-- Custom Fee Rate -->
+                    <StackPanel Spacing="8">
+                        <CheckBox Name="CustomFeeCheckbox" Margin="0">
+                            <TextBlock Text="Custom Fee Rate" FontSize="14"
+                                       Foreground="{DynamicResource TextStrong}" />
+                        </CheckBox>
+                        <Grid Name="CustomFeePanel" IsVisible="False" ColumnDefinitions="*,Auto">
+                            <TextBox Name="CustomFeeInput"
+                                     Watermark="Enter fee rate..."
+                                     Background="{DynamicResource ModalInputBg}"
+                                     BorderBrush="{DynamicResource StrokeSubtle}"
+                                     CornerRadius="8"
+                                     Padding="12,10"
+                                     FontSize="14"
+                                     Foreground="{DynamicResource TextStrong}" />
+                            <TextBlock Grid.Column="1" Text="sat/vB" FontSize="14"
+                                       Foreground="{DynamicResource TextMuted}"
+                                       VerticalAlignment="Center"
+                                       Margin="8,0,0,0" />
+                        </Grid>
+                        <!-- Validation error -->
+                        <TextBlock Name="CustomFeeError" FontSize="12"
+                                   Foreground="{DynamicResource ErrorFieldText}"
+                                   IsVisible="False" />
+                    </StackPanel>
+
+                </StackPanel>
+            </DockPanel>
+        </Border>
+    </Panel>
+</UserControl>

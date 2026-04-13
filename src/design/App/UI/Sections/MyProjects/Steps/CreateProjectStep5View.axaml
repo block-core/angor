@@ -1,0 +1,579 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:mp="clr-namespace:App.UI.Sections.MyProjects"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="680" d:DesignHeight="1200"
+             x:Class="App.UI.Sections.MyProjects.Steps.CreateProjectStep5View"
+             x:DataType="mp:CreateProjectViewModel">
+
+    <!-- ═══ STEP 5 STYLES (moved from parent CreateProjectView) ═══ -->
+    <UserControl.Styles>
+        <!-- ═══ INSTALLMENT MULTISELECT: row + checkbox styles ═══ -->
+        <!-- Vue: .settings-toggle-button — 24x24 border-2 rounded-4px checkbox -->
+        <Style Selector="Border.InstallmentOption">
+            <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+        </Style>
+        <Style Selector="Border.InstallmentOption:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
+        </Style>
+        <!-- Selected: green border + subtle green bg -->
+        <Style Selector="Border.InstallmentOption.InstallmentSelected">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
+            <Setter Property="Background" Value="{DynamicResource TypeCardInvestSelectedBg}" />
+        </Style>
+        <!-- Checkbox active: green fill + green border -->
+        <Style Selector="Border.CheckboxIndicator">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+        </Style>
+        <Style Selector="Border.CheckboxIndicator.CheckboxActive">
+            <Setter Property="Background" Value="{DynamicResource PrimaryGreenBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
+        </Style>
+        <!-- Installment selected text: green when active -->
+        <!-- Vue: text-[#5FAF78] (dark) / text-[#4B7C5A] (light) -->
+        <Style Selector="TextBlock.InstallmentText">
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
+        <Style Selector="TextBlock.InstallmentText.InstallmentTextSelected">
+            <Setter Property="Foreground" Value="{DynamicResource SelectionToggleTextSelected}" />
+        </Style>
+
+        <!-- ═══ PAYOUT FREQUENCY RADIO: row + radio circle styles ═══ -->
+        <!-- Vue: flex items-center justify-between p-4 rounded-lg border-2 -->
+        <Style Selector="Border.PayoutFreqOption">
+            <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+        </Style>
+        <Style Selector="Border.PayoutFreqOption:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
+        </Style>
+        <!-- Selected row: green border + subtle green bg -->
+        <Style Selector="Border.PayoutFreqOption.PayoutFreqSelected">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
+            <Setter Property="Background" Value="{DynamicResource TypeCardInvestSelectedBg}" />
+        </Style>
+        <!-- Radio outer ring: 20x20 rounded-full, border-2 -->
+        <Style Selector="Border.RadioOuter">
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+        </Style>
+        <Style Selector="Border.RadioOuter.RadioSelected">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
+        </Style>
+        <!-- Payout frequency selected text: green when active -->
+        <Style Selector="TextBlock.PayoutFreqText">
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
+        <Style Selector="TextBlock.PayoutFreqText.PayoutFreqTextSelected">
+            <Setter Property="Foreground" Value="{DynamicResource SelectionToggleTextSelected}" />
+        </Style>
+
+        <!-- Duration preset buttons (Step 5) — default + selected state (Rule #9: no BrushTransition) -->
+        <Style Selector="Button.DurPresetBtn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
+        <Style Selector="Button.DurPresetBtn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SurfaceLow}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+        </Style>
+        <Style Selector="Button.DurPresetBtn.DurPresetSelected">
+            <Setter Property="Background" Value="{DynamicResource Accent}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.DurPresetBtn.DurPresetSelected /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Accent}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.DurPresetBtn.DurPresetSelected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Accent}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+    </UserControl.Styles>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- STEP 5: STAGES / PAYOUTS                 -->
+    <!-- Reference: AngorApp StagesSimpleEditor   -->
+    <!-- (Investment) and PayoutsView (Fund/Sub)  -->
+    <!-- ═══════════════════════════════════════ -->
+    <StackPanel Spacing="24">
+        <!-- Subtitle -->
+        <TextBlock Text="{Binding Step5Subtitle}"
+                   FontSize="14" Foreground="{DynamicResource TextMuted}" />
+
+        <!-- Vue: stages error — shown when trying to advance without generating stages -->
+        <Border IsVisible="{Binding HasStagesError}"
+                Background="{DynamicResource ErrorBannerBg}"
+                BorderBrush="{DynamicResource ErrorBannerBorder}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="14,12">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <i:Icon Value="fa-solid fa-circle-exclamation"
+                       FontSize="16"
+                       Foreground="{DynamicResource ErrorBannerText}"
+                       VerticalAlignment="Center" />
+                <TextBlock Text="{Binding StagesError}"
+                           FontSize="14" FontWeight="Medium"
+                           Foreground="{DynamicResource ErrorBannerText}"
+                           TextWrapping="Wrap"
+                           VerticalAlignment="Center" />
+            </StackPanel>
+        </Border>
+
+        <!-- ─── INVESTMENT TYPE: Step 5 ─── -->
+        <!-- Duration + Frequency → Generate Stages -->
+        <Panel IsVisible="{Binding IsInvestment}">
+
+            <!-- Collapsed "Regenerate Stages" header — shown when stages exist and form is hidden -->
+            <!-- Vue: button w/ plus icon + "Regenerate Stages" text + chevron-down -->
+            <Border IsVisible="{Binding HasStages}" Margin="0,0,0,0">
+                <StackPanel Spacing="24">
+                    <Button Name="RegenerateStagesButton"
+                            IsVisible="{Binding !ShowGenerateForm}"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch"
+                            Background="{DynamicResource Surface}"
+                            BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                            CornerRadius="8" Padding="16,12">
+                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                            <i:Icon Value="fa-solid fa-plus" FontSize="16"
+                                    Foreground="{DynamicResource Accent}" />
+                             <TextBlock Text="Regenerate Stages" FontSize="14" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextStrong}" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <StackPanel Spacing="24" IsVisible="{Binding ShowGenerateForm}">
+
+                <!-- Card 1: How long will the project take? -->
+                <Border CornerRadius="12" BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                        Background="{DynamicResource Surface}" ClipToBounds="True">
+                    <StackPanel>
+                        <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24">
+                            <TextBlock Text="How long will the project take?" FontSize="16" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}" />
+                        </Border>
+                        <StackPanel Spacing="16" Margin="24">
+                            <!-- Project Length label -->
+                            <TextBlock Text="Project Length" FontSize="14" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}" />
+
+                            <!-- Duration input + unit dropdown — Vue: flex gap-2, input w-1/2 + select w-1/2 -->
+                            <Grid ColumnDefinitions="*,*" HorizontalAlignment="Stretch">
+                                <TextBox Text="{Binding DurationValue, Mode=TwoWay}"
+                                         Watermark="0"
+                                         FontSize="16" Padding="12,12,16,12" CornerRadius="8" />
+                                <ComboBox Name="DurationUnitCombo" Grid.Column="1" Margin="8,0,0,0"
+                                          ItemsSource="{Binding DurationUnitOptions}"
+                                          SelectedItem="{Binding DurationUnit, Mode=TwoWay}"
+                                          FontSize="16" Padding="12" CornerRadius="8"
+                                          HorizontalAlignment="Stretch" />
+                            </Grid>
+
+                            <!-- Duration presets — dynamic based on selected unit -->
+                            <!-- Vue: months→(3,6,12,18,24), weeks→(2,4,6,8,12), days→(3,7,14,21,28,30) -->
+                            <ItemsControl Name="InvestDurationPresets" ItemsSource="{Binding DurationPresetItems}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="mp:DurationPresetItem">
+                                        <Button Classes="DurPresetBtn"
+                                                Margin="0,0,8,8"
+                                                Padding="16,10" CornerRadius="8"
+                                                BorderThickness="2"
+                                                HorizontalContentAlignment="Center"
+                                                FontSize="13" FontWeight="Bold"
+                                                Tag="{Binding}"
+                                                Click="OnDurationPresetClicked">
+                                            <TextBlock Text="{Binding Label}" />
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Card 2: How would you like the payments to be split up? -->
+                <Border CornerRadius="12" BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                        Background="{DynamicResource Surface}" ClipToBounds="True">
+                    <StackPanel>
+                        <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24">
+                            <TextBlock Text="How would you like the payments to be split up?" FontSize="16" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}" />
+                        </Border>
+                        <StackPanel Spacing="16" Margin="24">
+                            <ListBox Name="InvestFrequencyPresets" Classes="Transparent Horizontal"
+                                     ItemContainerTheme="{StaticResource ButtonizedAccentListBoxItem}"
+                                     SelectionMode="Single" Background="Transparent">
+                                <ListBoxItem Tag="Weekly">
+                                    <TextBlock Text="Weekly" FontWeight="Bold" FontSize="13" TextAlignment="Center" />
+                                </ListBoxItem>
+                                <ListBoxItem Tag="Monthly">
+                                    <TextBlock Text="Monthly" FontWeight="Bold" FontSize="13" TextAlignment="Center" />
+                                </ListBoxItem>
+                                <ListBoxItem Tag="Bi-Monthly">
+                                    <TextBlock Text="Bi-Monthly" FontWeight="Bold" FontSize="13" TextAlignment="Center" />
+                                </ListBoxItem>
+                                <ListBoxItem Tag="Quarterly">
+                                    <TextBlock Text="Quarterly" FontWeight="Bold" FontSize="13" TextAlignment="Center" />
+                                </ListBoxItem>
+                            </ListBox>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Generate Fund Release Schedule button -->
+                <Button Name="GenerateStagesButton" HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        Padding="16,14" CornerRadius="12"
+                        FontSize="15" FontWeight="Bold"
+                        Foreground="White">
+                    <Button.Background>
+                        <SolidColorBrush Color="#2D5A3D" />
+                    </Button.Background>
+                    <TextBlock Text="Generate Fund Release Schedule" />
+                </Button>
+
+                <!-- Advanced Editor toggle -->
+                <Button Name="ToggleEditorButton" HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        Background="Transparent"
+                        BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                        Padding="16,14" CornerRadius="12"
+                        FontSize="14" Foreground="{DynamicResource TextMuted}"
+                        Content="Advanced Editor" />
+            </StackPanel>
+        </Panel>
+
+        <!-- ─── FUND / SUBSCRIPTION TYPE: Step 5 ─── -->
+        <!-- Frequency → Installments → Day picker → Generate -->
+        <Panel IsVisible="{Binding !IsInvestment}">
+
+            <!-- Collapsed "Regenerate Payouts" header — shown when stages exist and form is hidden -->
+            <Border IsVisible="{Binding HasStages}" Margin="0,0,0,0">
+                <StackPanel Spacing="24">
+                    <Button Name="RegeneratePayoutsButton"
+                            IsVisible="{Binding !ShowGenerateForm}"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch"
+                            Background="{DynamicResource Surface}"
+                            BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                            CornerRadius="8" Padding="16,12">
+                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                            <i:Icon Value="fa-solid fa-plus" FontSize="16"
+                                    Foreground="{DynamicResource Accent}" />
+                             <TextBlock Text="Regenerate Payouts" FontSize="14" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextStrong}" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <StackPanel Spacing="24" IsVisible="{Binding ShowGenerateForm}">
+
+                <!-- Card 1: How often would you like to receive payments -->
+                <Border CornerRadius="12" BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                        Background="{DynamicResource Surface}" ClipToBounds="True">
+                    <StackPanel>
+                        <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24">
+                            <TextBlock Text="How often would you like to receive payments" FontSize="16" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}" />
+                        </Border>
+                        <StackPanel Spacing="12" Margin="24">
+                            <!-- Monthly radio button -->
+                            <!-- Vue: flex items-center justify-between p-4 rounded-lg border-2 -->
+                            <Border Name="PayoutFreqMonthly" Classes="PayoutFreqOption"
+                                    CornerRadius="10" BorderThickness="2" Padding="16"
+                                    BorderBrush="{DynamicResource Stroke}"
+                                    Background="{DynamicResource SurfaceHover}"
+                                    Cursor="Hand">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Name="PayoutFreqMonthlyText" Classes="PayoutFreqText"
+                                               Text="Monthly" FontWeight="Bold" FontSize="14"
+                                               Foreground="{DynamicResource TextStrong}"
+                                               VerticalAlignment="Center" />
+                                    <!-- Radio indicator: 20x20 rounded-full, border-2, with 12x12 filled circle when selected -->
+                                    <Border Grid.Column="1" Name="RadioOuterMonthly" Classes="RadioOuter"
+                                            Width="20" Height="20" CornerRadius="10"
+                                            BorderBrush="{DynamicResource Stroke}" BorderThickness="2"
+                                            Background="Transparent"
+                                            VerticalAlignment="Center">
+                                        <Ellipse Name="RadioDotMonthly" Width="12" Height="12"
+                                                 Fill="{DynamicResource PrimaryGreenBrush}" IsVisible="False"
+                                                 HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+                            <!-- Weekly radio button -->
+                            <Border Name="PayoutFreqWeekly" Classes="PayoutFreqOption"
+                                    CornerRadius="10" BorderThickness="2" Padding="16"
+                                    BorderBrush="{DynamicResource Stroke}"
+                                    Background="{DynamicResource SurfaceHover}"
+                                    Cursor="Hand">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Name="PayoutFreqWeeklyText" Classes="PayoutFreqText"
+                                               Text="Weekly" FontWeight="Bold" FontSize="14"
+                                               Foreground="{DynamicResource TextStrong}"
+                                               VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Name="RadioOuterWeekly" Classes="RadioOuter"
+                                            Width="20" Height="20" CornerRadius="10"
+                                            BorderBrush="{DynamicResource Stroke}" BorderThickness="2"
+                                            Background="Transparent"
+                                            VerticalAlignment="Center">
+                                        <Ellipse Name="RadioDotWeekly" Width="12" Height="12"
+                                                 Fill="{DynamicResource PrimaryGreenBrush}" IsVisible="False"
+                                                 HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Card 2: What options would you like to give supporters? (multiselect checkboxes) -->
+                <!-- Vue: installmentCounts is an array — multiple can be selected -->
+                <Border Name="InstallmentsCard" CornerRadius="12" BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                        Background="{DynamicResource Surface}" ClipToBounds="True">
+                    <StackPanel>
+                        <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24">
+                            <TextBlock Text="What options would you like to give supporters?" FontSize="16" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}" />
+                        </Border>
+                        <StackPanel Spacing="12" Margin="24">
+                            <!-- 3 Installments -->
+                            <Border Name="Installment3" Classes="InstallmentOption"
+                                    CornerRadius="10" BorderThickness="2" Padding="16"
+                                    BorderBrush="{DynamicResource Stroke}"
+                                    Background="{DynamicResource SurfaceHover}"
+                                    Cursor="Hand">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Name="InstallmentText3" Classes="InstallmentText"
+                                               Text="3 Installments" FontSize="14" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextStrong}"
+                                               VerticalAlignment="Center" />
+                                    <!-- Checkbox indicator: 24x24 rounded-4px, green fill + checkmark when active -->
+                                    <Border Grid.Column="1" Name="Check3" Classes="CheckboxIndicator" Width="24" Height="24" CornerRadius="4"
+                                            BorderThickness="2"
+                                            VerticalAlignment="Center">
+                                        <i:Icon Value="fa-solid fa-check" FontSize="14" Foreground="White"
+                                                IsVisible="False" Name="CheckIcon3"
+                                                HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+                            <!-- 6 Installments -->
+                            <Border Name="Installment6" Classes="InstallmentOption"
+                                    CornerRadius="10" BorderThickness="2" Padding="16"
+                                    BorderBrush="{DynamicResource Stroke}"
+                                    Background="{DynamicResource SurfaceHover}"
+                                    Cursor="Hand">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Name="InstallmentText6" Classes="InstallmentText"
+                                               Text="6 Installments" FontSize="14" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextStrong}"
+                                               VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Name="Check6" Classes="CheckboxIndicator" Width="24" Height="24" CornerRadius="4"
+                                            BorderThickness="2"
+                                            VerticalAlignment="Center">
+                                        <i:Icon Value="fa-solid fa-check" FontSize="14" Foreground="White"
+                                                IsVisible="False" Name="CheckIcon6"
+                                                HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+                            <!-- 9 Installments -->
+                            <Border Name="Installment9" Classes="InstallmentOption"
+                                    CornerRadius="10" BorderThickness="2" Padding="16"
+                                    BorderBrush="{DynamicResource Stroke}"
+                                    Background="{DynamicResource SurfaceHover}"
+                                    Cursor="Hand">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <TextBlock Name="InstallmentText9" Classes="InstallmentText"
+                                               Text="9 Installments" FontSize="14" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextStrong}"
+                                               VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Name="Check9" Classes="CheckboxIndicator" Width="24" Height="24" CornerRadius="4"
+                                            BorderThickness="2"
+                                            VerticalAlignment="Center">
+                                        <i:Icon Value="fa-solid fa-check" FontSize="14" Foreground="White"
+                                                IsVisible="False" Name="CheckIcon9"
+                                                HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Card 4: Monthly day-of-month picker (1-29 grid) -->
+                <Border Name="MonthlyDateCard" CornerRadius="12" BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                        Background="{DynamicResource Surface}" ClipToBounds="True"
+                        IsVisible="{Binding IsPayoutMonthly}">
+                    <StackPanel>
+                        <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24">
+                            <TextBlock Text="What date do you want to receive funds each month?" FontSize="16" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}" />
+                        </Border>
+                        <StackPanel Margin="24">
+                            <ListBox Name="MonthlyDateGrid" Classes="Transparent"
+                                     ItemContainerTheme="{StaticResource ButtonizedAccentListBoxItem}"
+                                     SelectionMode="Single" Background="Transparent">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="10" ColumnSpacing="8" RowSpacing="8" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <!-- Days 1-29 -->
+                                <ListBoxItem Tag="1"><TextBlock Text="1" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="2"><TextBlock Text="2" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="3"><TextBlock Text="3" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="4"><TextBlock Text="4" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="5"><TextBlock Text="5" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="6"><TextBlock Text="6" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="7"><TextBlock Text="7" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="8"><TextBlock Text="8" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="9"><TextBlock Text="9" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="10"><TextBlock Text="10" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="11"><TextBlock Text="11" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="12"><TextBlock Text="12" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="13"><TextBlock Text="13" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="14"><TextBlock Text="14" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="15"><TextBlock Text="15" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="16"><TextBlock Text="16" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="17"><TextBlock Text="17" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="18"><TextBlock Text="18" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="19"><TextBlock Text="19" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="20"><TextBlock Text="20" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="21"><TextBlock Text="21" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="22"><TextBlock Text="22" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="23"><TextBlock Text="23" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="24"><TextBlock Text="24" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="25"><TextBlock Text="25" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="26"><TextBlock Text="26" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="27"><TextBlock Text="27" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="28"><TextBlock Text="28" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="29"><TextBlock Text="29" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                            </ListBox>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Card 5: Weekly day-of-week picker (Mon-Sun) -->
+                <Border Name="WeeklyDayCard" CornerRadius="12" BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                        Background="{DynamicResource Surface}" ClipToBounds="True"
+                        IsVisible="{Binding IsPayoutWeekly}">
+                    <StackPanel>
+                        <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24">
+                            <TextBlock Text="What day do you want to receive funds each week?" FontSize="16" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}" />
+                        </Border>
+                        <StackPanel Margin="24">
+                            <ListBox Name="WeeklyDayList" Classes="Transparent Horizontal"
+                                     ItemContainerTheme="{StaticResource ButtonizedAccentListBoxItem}"
+                                     SelectionMode="Single" Background="Transparent">
+                                <ListBoxItem Tag="Mon"><TextBlock Text="Mon" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="Tue"><TextBlock Text="Tue" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="Wed"><TextBlock Text="Wed" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="Thu"><TextBlock Text="Thu" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="Fri"><TextBlock Text="Fri" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="Sat"><TextBlock Text="Sat" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="Sun"><TextBlock Text="Sun" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
+                            </ListBox>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Generate Payout Schedule button -->
+                <Button Name="GeneratePayoutsButton" HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        Padding="16,14" CornerRadius="12"
+                        FontSize="15" FontWeight="Bold"
+                        Foreground="White">
+                    <Button.Background>
+                        <SolidColorBrush Color="#2D5A3D" />
+                    </Button.Background>
+                    <TextBlock Text="Generate Payout Schedule" />
+                </Button>
+            </StackPanel>
+        </Panel>
+
+        <!-- Generated Stages/Payouts Card (shared by all types) — AngorApp pattern -->
+        <Border CornerRadius="12" BorderBrush="{DynamicResource Accent}" BorderThickness="1"
+                Background="{DynamicResource BrandWash}" ClipToBounds="True"
+                IsVisible="{Binding HasStages}">
+            <StackPanel>
+                <!-- Card header: icon + title + count + Delete button -->
+                <Border Padding="20,16" CornerRadius="11,11,0,0"
+                        Background="{DynamicResource PrimaryGreenBrush08}">
+                    <DockPanel>
+                        <Button Name="DeleteStagesButton" DockPanel.Dock="Right"
+                                Background="Transparent"
+                                BorderBrush="{DynamicResource Accent}" BorderThickness="1"
+                                CornerRadius="8" Padding="12,6"
+                                VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <i:Icon Value="fa-solid fa-trash"
+                                       FontSize="14"
+                                       Foreground="{DynamicResource Accent}" />
+                                <TextBlock Text="Delete" FontSize="13" FontWeight="Bold"
+                                           Foreground="{DynamicResource Accent}" />
+                            </StackPanel>
+                        </Button>
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Border Width="36" Height="36" CornerRadius="8"
+                                    Background="{DynamicResource Accent}">
+                                <i:Icon Value="fa-regular fa-calendar" FontSize="18"
+                                        Foreground="White"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock FontSize="16" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}"
+                                       VerticalAlignment="Center">
+                                <Run Text="{Binding ScheduleTitle, Mode=OneWay}" />
+                            </TextBlock>
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <!-- Stage/payout rows -->
+                <StackPanel Spacing="4" Margin="20,16">
+                    <ItemsControl ItemsSource="{Binding Stages}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="mp:ProjectStageViewModel">
+                                <Border Padding="14,10" Margin="0,0,0,4"
+                                        CornerRadius="10"
+                                        BorderBrush="{DynamicResource Accent}" BorderThickness="1"
+                                        Background="{DynamicResource PrimaryGreenBrush04}">
+                                    <DockPanel>
+                                        <TextBlock FontSize="14" Foreground="{DynamicResource Accent}"
+                                                   FontWeight="SemiBold" DockPanel.Dock="Left">
+                                            <Run Text="{Binding StageLabel, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding StageNumber, Mode=OneWay}" />
+                                        </TextBlock>
+                                        <TextBlock FontSize="14" Foreground="{DynamicResource Accent}"
+                                                   FontWeight="Bold" HorizontalAlignment="Right"
+                                                   Text="{Binding DisplayText, Mode=OneWay}" />
+                                    </DockPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+
+</UserControl>

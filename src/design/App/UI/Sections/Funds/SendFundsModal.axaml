@@ -1,0 +1,317 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:funds="clr-namespace:App.UI.Sections.Funds"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="700"
+             x:Class="App.UI.Sections.Funds.SendFundsModal"
+             x:DataType="funds:FundsViewModel">
+
+    <!--
+        Send Funds Modal — Vue Funds.vue send flow:
+        Step 1 "form": From wallet info → Address input → Amount input (with % buttons) → Fee selector → Cancel/Send
+        Step 2 "success": Green checkmark → "Transaction Sent!" → summary → Done
+    -->
+
+    <UserControl.Styles>
+        <!-- No local styles needed — fee selection is handled by the FeeSelectionPopup -->
+    </UserControl.Styles>
+
+    <Panel>
+        <!-- ════════════════════════════════════════════════════════ -->
+        <!-- MODAL CARD                                               -->
+        <!-- Vue: rounded-2xl shadow-2xl max-w-md (448px) p-0        -->
+        <!-- ════════════════════════════════════════════════════════ -->
+        <Border HorizontalAlignment="Center" VerticalAlignment="Center"
+                MinWidth="420" MaxWidth="448"
+                CornerRadius="16"
+                Background="{DynamicResource DeployModalBackground}"
+                BorderBrush="{DynamicResource DeployModalBorder}"
+                BorderThickness="1"
+                BoxShadow="0 8 32 0 #40000000"
+                ClipToBounds="True"
+                RenderTransformOrigin="50%,50%"
+                RenderTransform="scale(1)">
+            <Border.Transitions>
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" />
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.3" />
+                </Transitions>
+            </Border.Transitions>
+
+            <Panel>
+                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- STEP 1: Send Form                                   -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                <StackPanel Name="FormPanel" Spacing="0"
+                            AutomationProperties.AutomationId="SendFormPanel">
+                    <!-- Header: "Send" + close X, border-bottom -->
+                    <Border BorderBrush="{DynamicResource ModalHeaderBorder}"
+                            BorderThickness="0,0,0,1"
+                            Padding="24,18">
+                        <Panel>
+                            <TextBlock Text="Send"
+                                       FontSize="18" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}"
+                                       VerticalAlignment="Center" />
+                            <Button Name="CloseForm" Classes="ModalCloseBtnSmall"
+                                    HorizontalAlignment="Right" VerticalAlignment="Center" />
+                        </Panel>
+                    </Border>
+
+                    <!-- Form body -->
+                    <StackPanel Spacing="20" Margin="24">
+                        <!-- From wallet info box -->
+                        <!-- Vue: rounded-lg border bg-gray-50/bg-[#0A0A0A] p-3 -->
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="From" FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextMuted}" />
+                            <Border Background="{DynamicResource RecoveryInfoCardBg}"
+                                    BorderBrush="{DynamicResource RecoveryInfoCardBorder}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="12">
+                                <DockPanel>
+                                    <TextBlock Name="FromBalance" DockPanel.Dock="Right"
+                                               Text="2.5432 BTC"
+                                               FontSize="14" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextStrong}"
+                                               VerticalAlignment="Center" />
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Name="FromWalletName" Text="Bitcoin Wallet"
+                                                   FontSize="14" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextStrong}" />
+                                        <TextBlock Name="FromWalletType" Text="On-Chain"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource TextMuted}" />
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Recipient Address -->
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Recipient Address" FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextMuted}" />
+                            <TextBox Name="AddressInput"
+                                     AutomationProperties.AutomationId="SendAddressInput"
+                                     Watermark="Enter Bitcoin address"
+                                     Background="{DynamicResource ModalInputBg}"
+                                     BorderBrush="{DynamicResource StrokeSubtle}"
+                                     CornerRadius="8"
+                                     Padding="12,10"
+                                     FontSize="14"
+                                     Foreground="{DynamicResource TextStrong}" />
+                            <!-- Address validation error -->
+                            <TextBlock Name="AddressError" FontSize="13"
+                                       Foreground="{DynamicResource ErrorFieldText}"
+                                       IsVisible="False" Margin="0,2,0,0" />
+                        </StackPanel>
+
+                        <!-- Amount -->
+                        <StackPanel Spacing="8">
+                            <TextBlock FontSize="13" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextMuted}">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="Amount ({0})">
+                                        <Binding Path="CurrencySymbol" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                            <TextBox Name="AmountInput"
+                                     AutomationProperties.AutomationId="SendAmountInput"
+                                     Watermark="0.00000000"
+                                     Background="{DynamicResource ModalInputBg}"
+                                     BorderBrush="{DynamicResource StrokeSubtle}"
+                                     CornerRadius="8"
+                                     Padding="12,10"
+                                     FontSize="14"
+                                     Foreground="{DynamicResource TextStrong}" />
+                            <!-- Amount validation error -->
+                            <TextBlock Name="AmountError" FontSize="13"
+                                       Foreground="{DynamicResource ErrorFieldText}"
+                                       IsVisible="False" Margin="0,2,0,0" />
+                            <!-- Quick percentage buttons: 25% 50% 75% 100% -->
+                            <!-- Vue: flex gap-2, each btn rounded-md px-3 py-1 text-sm -->
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Name="BtnPct25" Content="25%"
+                                        Padding="10,4" CornerRadius="6" FontSize="12"
+                                        Background="Transparent"
+                                        BorderBrush="{DynamicResource PrimaryGreenBrush}" BorderThickness="1"
+                                        Foreground="{DynamicResource PrimaryGreenBrush}" FontWeight="SemiBold"
+                                        Cursor="Hand" />
+                                <Button Name="BtnPct50" Content="50%"
+                                        Padding="10,4" CornerRadius="6" FontSize="12"
+                                        Background="Transparent"
+                                        BorderBrush="{DynamicResource PrimaryGreenBrush}" BorderThickness="1"
+                                        Foreground="{DynamicResource PrimaryGreenBrush}" FontWeight="SemiBold"
+                                        Cursor="Hand" />
+                                <Button Name="BtnPct75" Content="75%"
+                                        Padding="10,4" CornerRadius="6" FontSize="12"
+                                        Background="Transparent"
+                                        BorderBrush="{DynamicResource PrimaryGreenBrush}" BorderThickness="1"
+                                        Foreground="{DynamicResource PrimaryGreenBrush}" FontWeight="SemiBold"
+                                        Cursor="Hand" />
+                                <Button Name="BtnPct100" Content="100%"
+                                        Padding="10,4" CornerRadius="6" FontSize="12"
+                                        Background="Transparent"
+                                        BorderBrush="{DynamicResource PrimaryGreenBrush}" BorderThickness="1"
+                                        Foreground="{DynamicResource PrimaryGreenBrush}" FontWeight="SemiBold"
+                                        Cursor="Hand" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Fee rate is selected via the reusable FeeSelectionPopup
+                             when the user clicks Send -->
+
+                        <!-- Action buttons: Cancel + Send -->
+                        <Grid ColumnDefinitions="*,8,*" Margin="0,4,0,0">
+                            <Button Name="BtnCancel" Grid.Column="0"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    Padding="14,12" CornerRadius="8"
+                                    Background="Transparent"
+                                    BorderBrush="{DynamicResource StrokeSubtle}"
+                                    BorderThickness="1"
+                                    Foreground="{DynamicResource ModalCancelBtnText}"
+                                    FontWeight="SemiBold" FontSize="14"
+                                    Cursor="Hand"
+                                    Content="Cancel" />
+                            <Button Name="BtnSend" Grid.Column="2"
+                                    AutomationProperties.AutomationId="BtnSendConfirm"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    Padding="14,12" CornerRadius="8"
+                                    Foreground="White"
+                                    FontWeight="SemiBold" FontSize="14"
+                                    BorderThickness="0"
+                                    Cursor="Hand">
+                                <Button.Background>
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                        <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
+                                        <GradientStop Color="#3D6448" Offset="1" />
+                                    </LinearGradientBrush>
+                                </Button.Background>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <i:Icon Value="fa-solid fa-paper-plane"
+                                           FontSize="14" Foreground="White"
+                                           VerticalAlignment="Center" />
+                                    <TextBlock Text="Send" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- ═══════════════════════════════════════════════════ -->
+                <!-- STEP 2: Success                                     -->
+                <!-- ═══════════════════════════════════════════════════ -->
+                <StackPanel Name="SuccessPanel" IsVisible="False" Spacing="16" Margin="24"
+                            AutomationProperties.AutomationId="SendSuccessPanel">
+                    <!-- Green checkmark circle -->
+                    <Border Width="80" Height="80" CornerRadius="40"
+                            Background="{DynamicResource CreateWalletGreenCircleBg}"
+                            HorizontalAlignment="Center"
+                            Margin="0,8,0,0">
+                        <i:Icon Value="fa-solid fa-check"
+                               FontSize="36"
+                               Foreground="{DynamicResource CreateWalletGreenIcon}" />
+                    </Border>
+
+                    <TextBlock Text="Transaction Sent!"
+                               FontSize="24" FontWeight="Bold"
+                               Foreground="{DynamicResource TextStrong}"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center" />
+
+                    <TextBlock Text="Your transaction has been broadcast to the network."
+                               FontSize="14"
+                               Foreground="{DynamicResource TextMuted}"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center" />
+
+                    <!-- Transaction summary -->
+                    <Border Background="{DynamicResource RecoveryInfoCardBg}"
+                            BorderBrush="{DynamicResource RecoveryInfoCardBorder}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="16">
+                        <StackPanel Spacing="12">
+                            <DockPanel>
+                                <TextBlock Text="Amount" FontSize="13"
+                                           Foreground="{DynamicResource TextMuted}" />
+                                <TextBlock Name="SummaryAmount" DockPanel.Dock="Right"
+                                           Text="0.50000000 BTC" FontSize="13" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextStrong}"
+                                           HorizontalAlignment="Right" />
+                            </DockPanel>
+                            <DockPanel>
+                                <TextBlock Text="Fee" FontSize="13"
+                                           Foreground="{DynamicResource TextMuted}" />
+                                <TextBlock Name="SummaryFee" DockPanel.Dock="Right"
+                                           Text="0.00001200" FontSize="13" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextStrong}"
+                                           HorizontalAlignment="Right" />
+                            </DockPanel>
+                            <Border BorderBrush="{DynamicResource Stroke}"
+                                    BorderThickness="0,0,0,1" Margin="0,2" />
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Transaction ID" FontSize="12"
+                                           Foreground="{DynamicResource TextMuted}" />
+                                <Border Background="{DynamicResource ModalInputBg}"
+                                        CornerRadius="6" Padding="10,8">
+                                    <DockPanel>
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                            <Button Name="BtnExploreTxid"
+                                                    Background="Transparent" BorderThickness="0"
+                                                    Padding="4" Cursor="Hand"
+                                                    ToolTip.Tip="View in explorer">
+                                                <i:Icon Value="fa-solid fa-arrow-up-right-from-square"
+                                                       FontSize="14"
+                                                       Foreground="{DynamicResource TextMuted}" />
+                                            </Button>
+                                            <Button Name="BtnCopyTxid"
+                                                    Background="Transparent" BorderThickness="0"
+                                                    Padding="4" Cursor="Hand"
+                                                    ToolTip.Tip="Copy to clipboard">
+                                                <i:Icon Value="fa-regular fa-copy"
+                                                       FontSize="14"
+                                                       Foreground="{DynamicResource TextMuted}" />
+                                            </Button>
+                                        </StackPanel>
+                                        <TextBlock Name="SummaryTxid" Text=""
+                               AutomationProperties.AutomationId="SummaryTxid"
+                                                   FontSize="13"
+                                                   FontFamily="Cascadia Mono, Consolas, monospace"
+                                                    Foreground="{DynamicResource PrimaryGreenBrush}"
+                                                   VerticalAlignment="Center" />
+                                    </DockPanel>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Done button -->
+                    <Button Name="BtnDone" HorizontalAlignment="Stretch"
+                            AutomationProperties.AutomationId="BtnSendDone"
+                            HorizontalContentAlignment="Center"
+                            Padding="14,12" CornerRadius="8"
+                            Foreground="White"
+                            FontWeight="SemiBold" FontSize="14"
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            Margin="0,4,0,0">
+                        <Button.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
+                                <GradientStop Color="#3D6448" Offset="1" />
+                            </LinearGradientBrush>
+                        </Button.Background>
+                        <TextBlock Text="Done" />
+                    </Button>
+                </StackPanel>
+            </Panel>
+        </Border>
+    </Panel>
+</UserControl>

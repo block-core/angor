@@ -31,6 +31,11 @@ public class ProjectAppService(
         return mediator.Send(new GetFounderProjects.GetFounderProjectsRequest(walletId));
     }
 
+    public Task<Result<ScanFounderProjects.ScanFounderProjectsResponse>> ScanFounderProjects(WalletId walletId)
+    {
+        return mediator.Send(new ScanFounderProjects.ScanFounderProjectsRequest(walletId));
+    }
+
     public Task<Result<CreateProjectProfileResponse>> CreateProjectProfile(WalletId walletId, ProjectSeedDto projectSeedDto, CreateProjectDto project)
     {
         return mediator.Send(new CreateProjectProfileRequest(walletId, projectSeedDto, project));

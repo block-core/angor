@@ -1,0 +1,151 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:funds="clr-namespace:App.UI.Sections.Funds"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="600"
+             x:Class="App.UI.Sections.Funds.ReceiveFundsModal"
+             x:DataType="funds:FundsViewModel">
+
+    <!--
+        Receive Funds Modal — Vue Funds.vue receive flow:
+        Single step: To wallet info → QR code (192x192, theme-aware) → Address label → Copyable address → Done
+    -->
+
+    <Panel>
+        <Border HorizontalAlignment="Center" VerticalAlignment="Center"
+                MinWidth="420" MaxWidth="448"
+                CornerRadius="16"
+                Background="{DynamicResource DeployModalBackground}"
+                BorderBrush="{DynamicResource DeployModalBorder}"
+                BorderThickness="1"
+                BoxShadow="0 8 32 0 #40000000"
+                ClipToBounds="True"
+                RenderTransformOrigin="50%,50%"
+                RenderTransform="scale(1)">
+            <Border.Transitions>
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" />
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.3" />
+                </Transitions>
+            </Border.Transitions>
+
+            <StackPanel Spacing="0">
+                <!-- Header: "Receive" + close X, border-bottom -->
+                <Border BorderBrush="{DynamicResource ModalHeaderBorder}"
+                        BorderThickness="0,0,0,1"
+                        Padding="24,18">
+                    <Panel>
+                        <TextBlock Text="Receive"
+                                   FontSize="18" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextStrong}"
+                                   VerticalAlignment="Center" />
+                        <Button Name="CloseBtn" Classes="ModalCloseBtnSmall"
+                                HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Panel>
+                </Border>
+
+                <!-- Body -->
+                <StackPanel Spacing="20" Margin="24">
+                    <!-- To wallet info box -->
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="To" FontSize="13" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextMuted}" />
+                        <Border Background="{DynamicResource RecoveryInfoCardBg}"
+                                BorderBrush="{DynamicResource RecoveryInfoCardBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="12">
+                            <StackPanel Spacing="2">
+                                <TextBlock Name="ToWalletName" Text="Bitcoin Wallet"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextStrong}" />
+                                <TextBlock Name="ToWalletType" Text="On-Chain"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextMuted}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- QR Code placeholder -->
+                    <!-- Vue: 192x192, wrapped in p-4 rounded-2xl border-4, centered -->
+                    <Border HorizontalAlignment="Center"
+                            CornerRadius="16"
+                            BorderBrush="{DynamicResource Stroke}"
+                            BorderThickness="4"
+                            Padding="16"
+                            Background="{DynamicResource DeployModalBackground}">
+                        <!-- QR placeholder: dark grid pattern to simulate QR code -->
+                        <Border Width="192" Height="192"
+                                CornerRadius="4"
+                                Background="{DynamicResource DeployModalBackground}">
+                            <!-- Stub: QR code icon centered (real QR generation is backend work) -->
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8">
+                                <i:Icon Value="fa-solid fa-qrcode"
+                                       FontSize="80"
+                                       Foreground="{DynamicResource TextMuted}"
+                                       HorizontalAlignment="Center" />
+                                <TextBlock Text="QR Code"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           HorizontalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                    </Border>
+
+                    <!-- Address type label -->
+                    <TextBlock Name="AddressTypeLabel" Text="On-Chain Address"
+                               FontSize="13"
+                               Foreground="{DynamicResource TextMuted}"
+                               HorizontalAlignment="Center" />
+
+                    <!-- Copyable address field -->
+                    <!-- Vue: p-3 rounded-lg, monospace text + copy button -->
+                    <Border Background="{DynamicResource ModalInputBg}"
+                            BorderBrush="{DynamicResource StrokeSubtle}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="12,10">
+                        <DockPanel>
+                            <Button Name="BtnCopyAddress" DockPanel.Dock="Right"
+                                    Background="Transparent" BorderThickness="0"
+                                    Padding="4" Cursor="Hand"
+                                    VerticalAlignment="Center">
+                                <i:Icon Value="fa-regular fa-copy"
+                                       FontSize="14"
+                                       Foreground="{DynamicResource TextMuted}" />
+                            </Button>
+                             <TextBlock Name="AddressText"
+                                        AutomationProperties.AutomationId="ReceiveAddressText"
+                                       Text="Loading..."
+                                       FontSize="13"
+                                       FontFamily="Cascadia Mono, Consolas, monospace"
+                                        Foreground="{DynamicResource PrimaryGreenBrush}"
+                                       TextTrimming="CharacterEllipsis"
+                                       VerticalAlignment="Center" />
+                        </DockPanel>
+                    </Border>
+
+                    <!-- Done button (green gradient, full width) -->
+                     <Button Name="BtnDone" HorizontalAlignment="Stretch"
+                            AutomationProperties.AutomationId="BtnReceiveDone"
+                            HorizontalContentAlignment="Center"
+                            Padding="14,12" CornerRadius="8"
+                            Foreground="White"
+                            FontWeight="SemiBold" FontSize="14"
+                            BorderThickness="0"
+                            Cursor="Hand">
+                        <Button.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
+                                <GradientStop Color="#3D6448" Offset="1" />
+                            </LinearGradientBrush>
+                        </Button.Background>
+                        <TextBlock Text="Done" />
+                    </Button>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Panel>
+</UserControl>

@@ -1,0 +1,100 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:App.UI.Shared.Controls"
+        xmlns:i="https://github.com/projektanker/icons.avalonia">
+    <Design.PreviewWith>
+        <Border Padding="20">
+            <StackPanel Spacing="10">
+                <controls:IconButton Width="400"
+                                BorderBrush="Red"
+                                BorderThickness="5"
+                                Background="LightBlue"
+                                HorizontalContentAlignment="Left" Content="This is the new button">
+                    <controls:IconButton.Icon>
+                        <i:Icon Value="fa-wallet" />
+                    </controls:IconButton.Icon>
+                </controls:IconButton>
+                <controls:IconButton Width="300"
+                                BorderBrush="#FFB81C"
+                                BorderThickness="2"
+                                Background="LightBlue"
+                                HorizontalContentAlignment="Left">
+                    <controls:IconButton.Icon>
+                        <i:Icon Value="fa-wallet" />
+                    </controls:IconButton.Icon>
+                </controls:IconButton>
+                <controls:IconButton>
+                    <controls:IconButton.Icon>
+                        <i:Icon Value="fa-wallet" />
+                    </controls:IconButton.Icon>
+                </controls:IconButton>
+                <controls:IconButton HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" Content="Button with icon">
+                    <controls:IconButton.Icon>
+                        <i:Icon Value="fa-times" />
+                    </controls:IconButton.Icon>
+                </controls:IconButton>
+                <controls:IconButton Content="Shadow Button" />
+            </StackPanel>
+        </Border>
+    </Design.PreviewWith>
+
+    <Styles.Resources>
+        <controls:DoubleToRightMarginConverter x:Key="DoubleToRightMargin" />
+        
+        <ControlTheme TargetType="controls:IconButton" x:Key="{x:Type controls:IconButton}">
+            <Setter Property="Spacing" Value="8" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="Padding" Value="8" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="ClipToBounds" Value="False" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Panel>
+                        <Border x:Name="MainBorder" BorderThickness="{TemplateBinding BorderThickness}"
+                                                     Padding="{TemplateBinding Padding}"
+                                                     Background="{TemplateBinding Background}"
+                                                     BorderBrush="{TemplateBinding BorderBrush}"
+                                                     CornerRadius="{TemplateBinding CornerRadius}"
+                                                     BoxShadow="{TemplateBinding BoxShadow}">
+                            <DockPanel HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
+                                <ContentPresenter IsVisible="{Binding !!$self.Content}"
+                                                  VerticalAlignment="Center"
+                                                  x:Name="IconPresenter"
+                                                  Margin="{Binding $parent[controls:IconButton].Spacing, Converter={StaticResource DoubleToRightMargin}}"
+                                                  Content="{TemplateBinding Icon}" />
+                                <ContentPresenter x:Name="ContentPresenter"
+                                                  IsVisible="{Binding !!$self.Content}"
+                                                  VerticalAlignment="Center"
+                                                  Content="{TemplateBinding Content}"
+                                                  ContentTemplate="{TemplateBinding ContentTemplate}" />
+                            </DockPanel>
+                        </Border>
+                    </Panel>
+                </ControlTemplate>
+            </Setter>
+            <Style Selector="^ /template/ Border#MainBorder">
+                <Setter Property="Transitions">
+                    <Setter.Value>
+                        <Transitions>
+                            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:.075" />
+                        </Transitions>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style Selector="^:pointerover /template/ Border#MainBorder">
+                <Setter Property="Opacity" Value="0.7" />
+            </Style>
+            <Style Selector="^:pressed /template/ Border#MainBorder">
+                <Setter Property="Opacity" Value="0.7" />
+                <Setter Property="RenderTransform" Value="scale(0.99)" />
+            </Style>
+            <Style Selector="^:disabled /template/ Border#MainBorder">
+                <Setter Property="Opacity" Value="0.5" />
+            </Style>
+        </ControlTheme>
+    </Styles.Resources>
+</Styles>

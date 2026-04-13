@@ -1,0 +1,258 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:mp="clr-namespace:App.UI.Sections.MyProjects"
+             xmlns:controls="clr-namespace:App.UI.Shared.Controls"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
+             x:Class="App.UI.Sections.MyProjects.MyProjectsView"
+             x:DataType="mp:MyProjectsViewModel">
+    <Design.DataContext>
+        <mp:MyProjectsViewModel />
+    </Design.DataContext>
+
+    <Panel>
+        <!-- ═══ EMPTY STATE (kept for future use, currently hidden) ═══ -->
+        <Panel Name="EmptyStatePanel" IsVisible="False">
+            <controls:EmptyState Title="WELCOME TO ANGOR FOUNDER HUB"
+                                 Description="This section is where you can launch your projects for funding."
+                                 DescriptionFontSize="20"
+                                 ButtonText="Launch a Project"
+                                 HasButton="True" />
+        </Panel>
+
+        <!-- ═══ MAIN CONTENT: Sidebar + Right area (always visible unless wizard/manage is open) ═══ -->
+        <Panel Name="MainContentPanel">
+            <Grid ColumnDefinitions="380,*" Margin="24">
+                <!-- ── Left Sidebar Panel ── -->
+                <Border Grid.Column="0"
+                        Background="{DynamicResource Surface}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        BoxShadow="{DynamicResource ItemShadow}"
+                        Padding="24"
+                        Margin="0,0,24,0"
+                        VerticalAlignment="Stretch">
+                    <StackPanel Spacing="20" VerticalAlignment="Center">
+
+                        <!-- Angor Logo — centered, SVG asset -->
+                        <Panel HorizontalAlignment="Center" Width="80" Height="80" Margin="0,8,0,0">
+                            <Svg Path="/Assets/logo.svg" />
+                        </Panel>
+
+                        <!-- Title -->
+                        <TextBlock Text="ANGOR FOUNDER HUB"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource TextStrong}"
+                                   HorizontalAlignment="Center"
+                                   LetterSpacing="1" />
+
+                        <!-- Subtitle -->
+                        <TextBlock Text="Launch new projects and manage your existing fundraising campaigns."
+                                   FontSize="14"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   TextWrapping="Wrap"
+                                   TextAlignment="Center"
+                                   HorizontalAlignment="Center" />
+
+                        <!-- Stats Grid: 2-column layout matching Portfolio pattern -->
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto"
+                              Margin="0,4,0,0">
+                            <!-- Active Projects stat -->
+                            <Border Grid.Row="0" Grid.Column="0"
+                                    Background="{DynamicResource SurfaceLow}"
+                                    BorderBrush="{DynamicResource Stroke}"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    Padding="16"
+                                    Margin="0,0,8,0">
+                                <Grid RowDefinitions="28,Auto,Auto" HorizontalAlignment="Left">
+                                    <Border Grid.Row="0" Width="28" Height="28" CornerRadius="14"
+                                            Background="#1A4B7C5A" HorizontalAlignment="Left"
+                                            VerticalAlignment="Top">
+                                        <i:Icon Value="fa-solid fa-file-lines"
+                                               FontSize="14"
+                                               Foreground="{DynamicResource TextMuted}" />
+                                    </Border>
+                                    <TextBlock Grid.Row="1" Text="{Binding Projects.Count}"
+                                               FontSize="20" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextStrong}"
+                                               Margin="0,8,0,0"
+                                               VerticalAlignment="Bottom" />
+                                    <TextBlock Grid.Row="2" Text="Active Projects"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               Margin="0,8,0,0" />
+                                </Grid>
+                            </Border>
+
+                            <!-- Total Raised stat -->
+                            <Border Grid.Row="0" Grid.Column="1"
+                                    Background="{DynamicResource SurfaceLow}"
+                                    BorderBrush="{DynamicResource Stroke}"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    Padding="16"
+                                    Margin="8,0,0,0">
+                                <Grid RowDefinitions="28,Auto,Auto" HorizontalAlignment="Left">
+                                    <Border Grid.Row="0" Width="28" Height="28" CornerRadius="14"
+                                            Background="#1A4B7C5A" HorizontalAlignment="Left"
+                                            VerticalAlignment="Top">
+                                        <i:Icon Value="fa-brands fa-bitcoin"
+                                               FontSize="14"
+                                               Foreground="{DynamicResource TextMuted}" />
+                                    </Border>
+                                    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="4"
+                                                Margin="0,8,0,0"
+                                                VerticalAlignment="Bottom">
+                                        <TextBlock Text="{Binding TotalRaised}"
+                                                   FontSize="18" FontWeight="Bold"
+                                                   Foreground="{DynamicResource TextStrong}" />
+                                        <TextBlock Text="{Binding CurrencySymbol}"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource TextMuted}"
+                                                   VerticalAlignment="Bottom" Margin="0,0,0,1" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Row="2" Text="Total Raised"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               Margin="0,8,0,0" />
+                                </Grid>
+                            </Border>
+                        </Grid>
+
+                        <!-- CTA Buttons -->
+                        <StackPanel Spacing="12">
+                            <!-- Launch a Project — primary CTA -->
+                            <Border Classes="ButtonShadow">
+                                <Button Name="LaunchFromListButton" Classes="Primary"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Center"
+                                        Padding="16,12">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <i:Icon Value="fa-solid fa-plus"
+                                               FontSize="14"
+                                               Foreground="{DynamicResource PrimaryButtonForeground}"
+                                               VerticalAlignment="Center" />
+                                        <TextBlock Text="Launch a Project" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </Border>
+                            <!-- How Funding Works — outline secondary CTA -->
+                            <Button HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    Padding="16,12"
+                                    Background="Transparent"
+                                    BorderBrush="{DynamicResource Stroke}"
+                                    BorderThickness="2"
+                                    CornerRadius="12">
+                                <TextBlock Text="How Funding Works"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextMuted}" />
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ── Right Content: Header + Project Grid ── -->
+                <controls:ScrollableView Grid.Column="1" ContentPadding="0">
+                    <StackPanel Spacing="20">
+                        <!-- Header row -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="My Projects" FontSize="24" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}"
+                                       VerticalAlignment="Center" />
+
+                            <!-- Scan for projects — queries indexer for all 15 derived key slots -->
+                            <Button Name="ScanProjectsButton" Grid.Column="1"
+                                    Classes="Primary"
+                                    Padding="12,8"
+                                    VerticalAlignment="Center"
+                                    IsEnabled="{Binding !IsLoading}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <!-- Normal state: refresh icon -->
+                                    <i:Icon Value="fa-solid fa-arrows-rotate"
+                                            FontSize="14"
+                                            IsVisible="{Binding !IsLoading}"
+                                            Foreground="{DynamicResource PrimaryButtonForeground}"
+                                            VerticalAlignment="Center" />
+                                    <!-- Loading state: spinning icon -->
+                                    <i:Icon Value="fa-solid fa-spinner"
+                                            FontSize="14"
+                                            IsVisible="{Binding IsLoading}"
+                                            Foreground="{DynamicResource PrimaryButtonForeground}"
+                                            VerticalAlignment="Center"
+                                            RenderTransformOrigin="50%,50%">
+                                        <i:Icon.RenderTransform>
+                                            <RotateTransform />
+                                        </i:Icon.RenderTransform>
+                                        <i:Icon.Styles>
+                                            <Style Selector="i|Icon[IsVisible=True]">
+                                                <Style.Animations>
+                                                    <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                        <KeyFrame Cue="0%">
+                                                            <Setter Property="RotateTransform.Angle" Value="0" />
+                                                        </KeyFrame>
+                                                        <KeyFrame Cue="100%">
+                                                            <Setter Property="RotateTransform.Angle" Value="360" />
+                                                        </KeyFrame>
+                                                    </Animation>
+                                                </Style.Animations>
+                                            </Style>
+                                        </i:Icon.Styles>
+                                    </i:Icon>
+                                    <TextBlock Text="Scan for Projects"
+                                               VerticalAlignment="Center"
+                                               FontSize="13" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+
+                        <!-- Project cards in responsive grid -->
+                        <ItemsControl ItemsSource="{Binding Projects}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <controls:ResponsiveGrid MinItemWidth="320"
+                                                             ColumnSpacing="16"
+                                                             RowSpacing="16" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="mp:MyProjectItemViewModel">
+                                     <controls:ProjectCard
+                                        ProjectName="{Binding Name}"
+                                        ShortDescription="{Binding Description}"
+                                        InvestorCount="{Binding InvestorCount}"
+                                        InvestorLabel="{Binding InvestorLabel}"
+                                        Raised="{Binding Raised}"
+                                        Target="{Binding TargetAmount}"
+                                        TargetLabel="{Binding TargetLabel}"
+                                        Progress="{Binding Progress}"
+                                        ProjectType="{Binding TypePillValue}"
+                                        Status="{Binding Status}"
+                                        Banner="{Binding BannerUrl}"
+                                        Avatar="{Binding LogoUrl}"
+                                        ShowManageFunds="True"
+                                        CurrencySymbol="{Binding $parent[UserControl].DataContext.CurrencySymbol}" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </controls:ScrollableView>
+            </Grid>
+        </Panel>
+
+        <!-- ═══ CREATE PROJECT WIZARD ═══ -->
+        <Panel Name="CreateWizardPanel" IsVisible="False">
+            <mp:CreateProjectView Name="CreateWizardView" />
+        </Panel>
+
+        <!-- ═══ MANAGE PROJECT DETAIL ═══ -->
+        <Panel Name="ManageProjectPanel" IsVisible="False">
+            <mp:ManageProjectView Name="ManageProjectViewControl" />
+        </Panel>
+    </Panel>
+</UserControl>

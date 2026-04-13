@@ -1,0 +1,521 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:funders="clr-namespace:App.UI.Sections.Funders"
+             xmlns:controls="clr-namespace:App.UI.Shared.Controls"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="800"
+             x:Class="App.UI.Sections.Funders.FundersView"
+             x:DataType="funders:FundersViewModel">
+    <Design.DataContext>
+        <funders:FundersViewModel />
+    </Design.DataContext>
+
+    <!-- Vue: signature card hover — subtle shadow transition -->
+    <UserControl.Styles>
+        <Style Selector="Border.SignatureCard">
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+        <Style Selector="Border.SignatureCard:pointerover">
+            <Setter Property="BoxShadow" Value="{DynamicResource ItemShadowHover}" />
+        </Style>
+
+        <!-- Filter tab styles — CSS class toggling (no code-behind color logic) -->
+        <Style Selector="Border.FilterTab">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+        <Style Selector="Border.FilterTab:pointerover">
+            <Setter Property="Opacity" Value="0.8" />
+        </Style>
+        <!-- Active tab: green bottom border -->
+        <Style Selector="Border.FilterTab.FilterTabActive">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
+        </Style>
+        <!-- Inactive tab text: muted -->
+        <Style Selector="Border.FilterTab TextBlock.TabLabel">
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        </Style>
+        <!-- Active tab text: strong -->
+        <Style Selector="Border.FilterTab.FilterTabActive TextBlock.TabLabel">
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
+    </UserControl.Styles>
+
+    <Panel>
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- EMPTY STATE: shown when HasFunders = false              -->
+        <!-- Vue: Users icon, "No Funders Yet", description          -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <controls:EmptyState Title="No Funders Yet"
+                             Description="When investors fund your projects, they'll appear here. You can review and approve funding requests from this page."
+                             HasButton="False"
+                             UseCustomIcon="True"
+                             IconData="{StaticResource NavIconUsers}"
+                             IsVisible="{Binding !HasFunders}" />
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!-- FUNDERS OVERVIEW: shown when HasFunders = true          -->
+        <!-- Vue: App.vue desktop Funders page (lines 3152-3335)     -->
+        <!-- Layout: header + filter tabs + scrollable card list     -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <controls:ScrollableView ContentPadding="24"
+                                 Name="FundersListPanel"
+                                 IsVisible="{Binding HasFunders}">
+            <!-- Vue: max-w-6xl mx-auto, px-4 md:px-8, pt-4 pb-20 -->
+            <StackPanel MaxWidth="1152" HorizontalAlignment="Stretch" Spacing="0">
+
+                <!-- ═══════════════════════════════════════ -->
+                <!-- HEADER: Icon + Title + Approve All btn  -->
+                <!-- Vue: flex items-center justify-between mb-8 -->
+                <!-- ═══════════════════════════════════════ -->
+                <DockPanel Margin="0,0,0,24">
+                    <!-- Left: Icon + Title -->
+                    <StackPanel Orientation="Horizontal" Spacing="12" DockPanel.Dock="Left"
+                                VerticalAlignment="Center">
+                        <!-- Vue: w-10 h-10 rounded-lg bg-black (dark) / bg-gray-100 (light) -->
+                        <Border Width="40" Height="40" CornerRadius="8"
+                                Background="{DynamicResource SurfaceLow}">
+                            <Viewbox Width="24" Height="24">
+                                <Path Data="{StaticResource NavIconUsers}"
+                                      Stroke="{DynamicResource TextStrong}"
+                                      StrokeThickness="2"
+                                      StrokeLineCap="Round"
+                                      StrokeJoin="Round"
+                                      Width="24" Height="24" Stretch="Uniform" />
+                            </Viewbox>
+                        </Border>
+                        <!-- Vue: text-2xl font-bold -->
+                        <TextBlock Text="Funders Overview"
+                                   FontSize="24"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource TextStrong}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- Right: Approve All button -->
+                    <!-- Vue: btn-primary text-white rounded-lg -->
+                    <Button DockPanel.Dock="Right"
+                            Name="ApproveAllButton"
+                            Classes="Primary"
+                            Padding="20,10"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                <Path Data="{StaticResource Checkmark}"
+                                      Stroke="White"
+                                      StrokeThickness="2"
+                                      StrokeLineCap="Round"
+                                      StrokeJoin="Round"
+                                      Width="24" Height="24" Stretch="Uniform" />
+                            </Viewbox>
+                            <TextBlock Text="Approve All"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="White"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </DockPanel>
+
+                <!-- ═══════════════════════════════════════ -->
+                <!-- FILTER TABS                             -->
+                <!-- Vue: flex gap-2 mb-6 border-b           -->
+                <!-- Active: text-white/text-[#4B7C5A] border-b-2 border-[#4B7C5A] -->
+                <!-- Inactive: text-gray-400/text-gray-500    -->
+                <!-- ═══════════════════════════════════════ -->
+                <Border BorderThickness="0,0,0,1"
+                        BorderBrush="{DynamicResource Stroke}"
+                        Margin="0,0,0,24"
+                        Padding="0,0,0,0">
+                    <StackPanel Orientation="Horizontal" Spacing="8" Name="FilterTabsPanel">
+                        <!-- Awaiting Approval tab -->
+                        <Border Name="TabWaiting"
+                                Classes="FilterTab FilterTabActive"
+                                Padding="16,8"
+                                BorderThickness="0,0,0,2"
+                                Margin="0,0,0,-1">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Awaiting Approval"
+                                           Classes="TabLabel"
+                                           FontSize="14"
+                                           FontWeight="SemiBold" />
+                                <!-- Vue: bg-[#F7931A] text-white rounded-full px-2 py-0.5 text-xs -->
+                                <Border CornerRadius="10" Padding="8,2"
+                                        Background="#F7931A">
+                                    <TextBlock Text="{Binding WaitingCount}"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="White" />
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Approved tab -->
+                        <Border Name="TabApproved"
+                                Classes="FilterTab"
+                                Padding="16,8"
+                                BorderThickness="0,0,0,2"
+                                Margin="0,0,0,-1">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Approved"
+                                           Classes="TabLabel"
+                                           FontSize="14"
+                                           FontWeight="SemiBold" />
+                                <Border CornerRadius="10" Padding="8,2"
+                                        Background="#F7931A">
+                                    <TextBlock Text="{Binding ApprovedCount}"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="White" />
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Rejected tab (only shown when HasRejected) -->
+                        <Border Name="TabRejected"
+                                Classes="FilterTab"
+                                Padding="16,8"
+                                BorderThickness="0,0,0,2"
+                                Margin="0,0,0,-1"
+                                IsVisible="{Binding HasRejected}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Rejected"
+                                           Classes="TabLabel"
+                                           FontSize="14"
+                                           FontWeight="SemiBold" />
+                                <Border CornerRadius="10" Padding="8,2"
+                                        Background="#F7931A">
+                                    <TextBlock Text="{Binding RejectedCount}"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="White" />
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- ═══════════════════════════════════════ -->
+                <!-- EMPTY FILTER STATE                      -->
+                <!-- Shown when filteredSignatures is empty   -->
+                <!-- Vue: flex-1 flex items-center justify-center min-h-[400px] -->
+                <!-- ═══════════════════════════════════════ -->
+                <Panel Name="FilterEmptyPanel" IsVisible="False"
+                       MinHeight="400">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                Spacing="12" MaxWidth="400">
+                        <Border Width="64" Height="64" CornerRadius="8"
+                                Background="{DynamicResource SurfaceLow}"
+                                HorizontalAlignment="Center"
+                                Margin="0,0,0,12">
+                            <Viewbox Width="32" Height="32">
+                                <Path Data="{StaticResource NavIconUsers}"
+                                      Stroke="{DynamicResource TextMuted}"
+                                      StrokeThickness="2"
+                                      StrokeLineCap="Round"
+                                      StrokeJoin="Round"
+                                      Width="24" Height="24" Stretch="Uniform" />
+                            </Viewbox>
+                        </Border>
+                        <TextBlock Text="No Funders Yet"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource TextStrong}"
+                                   HorizontalAlignment="Center" />
+                        <TextBlock Text="When investors fund your projects, they'll appear here. You can review and approve funding requests from this page."
+                                   FontSize="14"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   TextWrapping="Wrap"
+                                   TextAlignment="Center"
+                                   HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Panel>
+
+                <!-- ═══════════════════════════════════════ -->
+                <!-- SIGNATURE REQUEST CARDS                 -->
+                <!-- Vue: space-y-3 (vertical list, gap 12px) -->
+                <!-- ═══════════════════════════════════════ -->
+                <ItemsControl Name="SignaturesListPanel"
+                              ItemsSource="{Binding FilteredSignatures}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Spacing="12" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="funders:SignatureRequestViewModel">
+                            <!-- Vue: rounded-xl p-5 border transition-all -->
+                            <!-- Dark: bg-[#1a1a1a] border-[#404040] shadow: 0 4px 12px rgba(0,0,0,0.3) -->
+                            <!-- Light: bg-white border-[#e5e7eb] shadow: 0 2px 8px rgba(0,0,0,0.08) -->
+                            <Border Background="{DynamicResource Surface}"
+                                    BorderBrush="{DynamicResource Stroke}"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    BoxShadow="{DynamicResource ItemShadow}"
+                                    Padding="20"
+                                    Classes="SignatureCard">
+                                <Border.Transitions>
+                                    <Transitions>
+                                        <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.3" />
+                                    </Transitions>
+                                </Border.Transitions>
+                                <StackPanel Spacing="0">
+
+                                    <!-- Row: Left info + Right action buttons -->
+                                    <!-- Vue: flex items-center justify-between mb-4 -->
+                                    <DockPanel Margin="0,0,0,16">
+                                        <!-- Right: Action Buttons — Vue: flex items-center gap-2 -->
+                                        <StackPanel DockPanel.Dock="Right"
+                                                    Orientation="Horizontal" Spacing="8"
+                                                    VerticalAlignment="Center">
+
+                                            <!-- Approve button (waiting only) -->
+                                            <!-- Vue: h-[52px] px-4 rounded-lg font-semibold text-sm text-white -->
+                                            <!-- background: linear-gradient(135deg, #4B7C5A 0%, #3d6448 100%) -->
+                                            <Button Name="ApproveButton"
+                                                    Tag="{Binding Id}"
+                                                    IsVisible="{Binding IsWaiting}"
+                                                    Height="44" Padding="16,0"
+                                                    CornerRadius="8"
+                                                    Background="{DynamicResource PrimaryGreenBrush}"
+                                                    Foreground="White">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                                        <Path Data="{StaticResource Checkmark}"
+                                                              Stroke="White"
+                                                              StrokeThickness="2"
+                                                              StrokeLineCap="Round"
+                                                              StrokeJoin="Round"
+                                                              Width="24" Height="24" Stretch="Uniform" />
+                                                    </Viewbox>
+                                                    <TextBlock Text="Approve"
+                                                               FontSize="14"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="White"
+                                                               VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Button>
+
+                                            <!-- Approved status (approved only) -->
+                                            <!-- Vue: bg-green-100 text-green-700 opacity-70 cursor-not-allowed -->
+                                            <Border IsVisible="{Binding IsApproved}"
+                                                    Height="44" Padding="16,0"
+                                                    CornerRadius="8"
+                                                    Background="#1A4B7C5A"
+                                                    VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" Spacing="8"
+                                                            VerticalAlignment="Center">
+                                                    <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                                        <Path Data="{StaticResource Checkmark}"
+                                                              Stroke="{DynamicResource PrimaryGreenBrush}"
+                                                              StrokeThickness="2"
+                                                              StrokeLineCap="Round"
+                                                              StrokeJoin="Round"
+                                                              Width="24" Height="24" Stretch="Uniform" />
+                                                    </Viewbox>
+                                                    <TextBlock Text="Approved"
+                                                               FontSize="14"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource PrimaryGreenBrush}"
+                                                               VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Reject button (waiting only) -->
+                                            <!-- Vue: bg-red-600 hover:bg-red-700 text-white -->
+                                            <Button Name="RejectButton"
+                                                    Tag="{Binding Id}"
+                                                    IsVisible="{Binding IsWaiting}"
+                                                    Height="44" Padding="16,0"
+                                                    CornerRadius="8"
+                                                    Background="#DC2626"
+                                                    Foreground="White">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                                        <Path Data="{StaticResource XMark}"
+                                                              Stroke="White"
+                                                              StrokeThickness="2"
+                                                              StrokeLineCap="Round"
+                                                              StrokeJoin="Round"
+                                                              Width="24" Height="24" Stretch="Uniform" />
+                                                    </Viewbox>
+                                                    <TextBlock Text="Reject"
+                                                               FontSize="14"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="White"
+                                                               VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Button>
+
+                                            <!-- Rejected status (rejected only) -->
+                                            <!-- Vue: bg-red-100 text-red-700 opacity-70 -->
+                                            <Border IsVisible="{Binding IsRejected}"
+                                                    Height="44" Padding="16,0"
+                                                    CornerRadius="8"
+                                                    Background="#1ADC2626"
+                                                    VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" Spacing="8"
+                                                            VerticalAlignment="Center">
+                                                    <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                                        <Path Data="{StaticResource XMark}"
+                                                              Stroke="#DC2626"
+                                                              StrokeThickness="2"
+                                                              StrokeLineCap="Round"
+                                                              StrokeJoin="Round"
+                                                              Width="24" Height="24" Stretch="Uniform" />
+                                                    </Viewbox>
+                                                    <TextBlock Text="Rejected"
+                                                               FontSize="14"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="#DC2626"
+                                                               VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Chat button (always visible) -->
+                                            <!-- Vue: btn-secondary-green h-[52px] px-4 rounded-lg -->
+                                            <Button Name="ChatButton"
+                                                    Tag="{Binding Id}"
+                                                    Height="44" Padding="16,0"
+                                                    CornerRadius="8"
+                                                    Background="Transparent"
+                                                    BorderBrush="{DynamicResource PrimaryGreenBrush}"
+                                                    BorderThickness="2">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <i:Icon Value="fa-solid fa-comment"
+                                                           FontSize="16"
+                                                           Foreground="{DynamicResource PrimaryGreenBrush}"
+                                                           VerticalAlignment="Center" />
+                                                    <TextBlock Text="Has messages"
+                                                               FontSize="14"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource PrimaryGreenBrush}"
+                                                               VerticalAlignment="Center"
+                                                               IsVisible="{Binding HasMessages}" />
+                                                </StackPanel>
+                                            </Button>
+
+                                            <!-- Expand/Collapse button -->
+                                            <!-- Vue: btn-secondary-green h-[52px] px-3 -->
+                                            <Button Name="ExpandButton"
+                                                    Tag="{Binding Id}"
+                                                    Height="44" Width="44"
+                                                    Padding="0"
+                                                    CornerRadius="8"
+                                                    Background="Transparent"
+                                                    BorderBrush="{DynamicResource PrimaryGreenBrush}"
+                                                    BorderThickness="2"
+                                                    HorizontalContentAlignment="Center"
+                                                    VerticalContentAlignment="Center">
+                                                <Viewbox Width="16" Height="16">
+                                                    <Path Data="{StaticResource ChevronDown}"
+                                                          Stroke="{DynamicResource PrimaryGreenBrush}"
+                                                          StrokeThickness="2"
+                                                          StrokeLineCap="Round"
+                                                          StrokeJoin="Round"
+                                                          Width="24" Height="24" Stretch="Uniform" />
+                                                </Viewbox>
+                                            </Button>
+                                        </StackPanel>
+
+                                        <!-- Left: Project title + Amount + Date -->
+                                        <!-- Vue: flex items-center gap-4 flex-1 -->
+                                        <StackPanel Spacing="8" Margin="0,0,16,0">
+                                            <!-- Vue: text-base font-semibold mb-2 truncate — project title -->
+                                            <TextBlock Text="{Binding ProjectTitle}"
+                                                       FontSize="14"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextMuted}"
+                                                       TextTrimming="CharacterEllipsis" />
+
+                                            <!-- Vue: text-lg font-bold — amount -->
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <TextBlock Text="{Binding Amount}"
+                                                           FontSize="18"
+                                                           FontWeight="Bold"
+                                                           Foreground="{DynamicResource TextStrong}" />
+                                                <TextBlock Text="{Binding Currency}"
+                                                           FontSize="18"
+                                                           FontWeight="Bold"
+                                                           Foreground="{DynamicResource TextStrong}" />
+                                            </StackPanel>
+
+                                            <!-- Vue: calendar icon + date/time text-sm -->
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <i:Icon Value="fa-solid fa-calendar"
+                                                       FontSize="16"
+                                                       Foreground="{DynamicResource TextMuted}"
+                                                       VerticalAlignment="Center" />
+                                                <TextBlock FontSize="14"
+                                                           Foreground="{DynamicResource TextMuted}"
+                                                           VerticalAlignment="Center">
+                                                    <Run Text="{Binding Date, Mode=OneWay}" />
+                                                    <Run Text=" " />
+                                                    <Run Text="{Binding Time, Mode=OneWay}" />
+                                                </TextBlock>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </DockPanel>
+
+                                    <!-- ═══════════════════════════════════════ -->
+                                    <!-- EXPANDED DETAILS (npub)                 -->
+                                    <!-- Vue: v-if="expandedSignatures[id]"      -->
+                                    <!-- pt-4 border-t, "Investor npub" label    -->
+                                    <!-- Mono font npub + copy button            -->
+                                    <!-- ═══════════════════════════════════════ -->
+                                    <Border Name="ExpandedPanel"
+                                            Tag="{Binding Id}"
+                                            IsVisible="False"
+                                            BorderThickness="0,1,0,0"
+                                            BorderBrush="{DynamicResource Stroke}"
+                                            Padding="0,16,0,0">
+                                        <StackPanel Spacing="8">
+                                            <!-- Vue: text-sm font-medium text-gray-400/text-gray-600 -->
+                                            <TextBlock Text="Investor npub"
+                                                       FontSize="14"
+                                                       FontWeight="Medium"
+                                                       Foreground="{DynamicResource TextMuted}" />
+
+                                            <!-- Vue: flex items-center gap-2 p-3 rounded-lg bg-[#0A0A0A]/bg-gray-50 border -->
+                                            <Border Background="{DynamicResource SurfaceLow}"
+                                                    BorderBrush="{DynamicResource Stroke}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="8"
+                                                    Padding="12">
+                                                <DockPanel>
+                                                    <!-- Copy button -->
+                                                    <Button DockPanel.Dock="Right"
+                                                            Name="CopyNpubButton"
+                                                            Tag="{Binding Npub}"
+                                                            Background="Transparent"
+                                                            Padding="6"
+                                                            CornerRadius="4"
+                                                            VerticalAlignment="Top"
+                                                            Margin="8,0,0,0">
+                                                        <Border Width="16" Height="16">
+                                                            <i:Icon Value="fa-solid fa-copy" FontSize="14" Foreground="{DynamicResource TextMuted}" />
+                                                        </Border>
+                                                    </Button>
+                                                    <!-- Vue: flex-1 text-sm break-all font-mono -->
+                                                    <TextBlock Text="{Binding Npub}"
+                                                               FontSize="13"
+                                                               FontFamily="Consolas, Menlo, monospace"
+                                                               Foreground="{DynamicResource TextStrong}"
+                                                               TextWrapping="Wrap" />
+                                                </DockPanel>
+                                            </Border>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+            </StackPanel>
+        </controls:ScrollableView>
+    </Panel>
+</UserControl>

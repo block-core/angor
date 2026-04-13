@@ -1,0 +1,964 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:settings="clr-namespace:App.UI.Sections.Settings"
+             xmlns:controls="clr-namespace:App.UI.Shared.Controls"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="1400"
+             x:Class="App.UI.Sections.Settings.SettingsView"
+             x:DataType="settings:SettingsViewModel">
+    <Design.DataContext>
+        <settings:SettingsViewModel />
+    </Design.DataContext>
+
+    <!--
+        Settings page (Vue): 8 settings-card sections stacked vertically.
+        Each card: rounded-2xl (16px), bg #fff / dark #1a1a1a, border 1px #e5e7eb / dark #333,
+                   box-shadow 0 2px 8px rgba(0,0,0,0.1), overflow hidden
+        Header bar: padding 20px 24px, bg #f5f5f5 / dark #0a0a0a, border-bottom 1px solid #e5e7eb / dark #333
+        Header icon: color #4B7C5A (green)
+        Header title: font-size 18px, font-weight 700, color #1a1a1a / dark #fafafa
+        Body: padding 24px
+        Gap between cards: 24px
+    -->
+
+    <UserControl.Styles>
+        <!-- Network option button: default state (set via DynamicResource in XAML attributes) -->
+        <!-- Network option button: active/selected state — toggled via Classes.Set in code-behind -->
+        <!-- Per AGENTS.md Rule #9: NO BrushTransition on class-toggled elements -->
+        <Style Selector="Button.NetworkOption.NetworkOptionActive">
+            <Setter Property="Background" Value="{DynamicResource NetworkOptionActiveBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource NetworkOptionActiveBg}" />
+        </Style>
+        <Style Selector="Button.NetworkOption.NetworkOptionActive TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource NetworkOptionActiveText}" />
+        </Style>
+
+        <!-- Settings default-toggle checkbox: unchecked state -->
+        <!-- Vue: 24x24, border 2px #e5e7eb / dark #404040, bg white / dark #2a2a2a, border-radius 4px -->
+        <Style Selector="Border.SettingsCheckbox">
+            <Setter Property="Background" Value="{DynamicResource SettingsCheckboxBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SettingsCheckboxBorder}" />
+        </Style>
+        <!-- Vue: active → bg #4B7C5A, border #4B7C5A (same in both themes) -->
+        <Style Selector="Border.SettingsCheckbox.SettingsCheckboxChecked">
+            <Setter Property="Background" Value="{DynamicResource PrimaryGreenBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
+        </Style>
+        <!-- Vue: hover → border-color #4B7C5A -->
+        <Style Selector="Border.SettingsCheckbox:pointerover">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
+        </Style>
+    </UserControl.Styles>
+
+    <Panel>
+        <controls:ScrollableView ContentPadding="24,24,24,24">
+            <StackPanel Spacing="24">
+
+                <!-- ═══ 1. Network ═══ -->
+                <Border Background="{DynamicResource CardSurface}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        ClipToBounds="True"
+                        BoxShadow="{DynamicResource ItemShadow}">
+                    <StackPanel>
+                        <!-- Header bar -->
+                        <Border Background="{DynamicResource SurfaceHigh}"
+                                CornerRadius="15,15,0,0"
+                                BorderBrush="{DynamicResource Stroke}"
+                                BorderThickness="0,0,0,1"
+                                Padding="24,20">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <i:Icon Value="fa-solid fa-globe"
+                                       FontSize="20"
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                <TextBlock Text="Network"
+                                           FontSize="18"
+                                           FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                        <!-- Body: Vue .settings-network-body: flex, space-between -->
+                        <Border Padding="24">
+                            <DockPanel>
+                                <!-- Vue: green gradient action button -->
+                                <Button DockPanel.Dock="Right"
+                                        VerticalAlignment="Center"
+                                        Padding="20,14"
+                                        Background="{DynamicResource GreenGradient}"
+                                        Foreground="White"
+                                        BorderThickness="0"
+                                        CornerRadius="8"
+                                        FontWeight="SemiBold"
+                                        FontSize="14"
+                                        Click="OnChangeNetworkClick">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <i:Icon Value="fa-solid fa-plus"
+                                                FontSize="14"
+                                                Foreground="White"
+                                                VerticalAlignment="Center" />
+                                        <TextBlock Text="Change Network" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <TextBlock VerticalAlignment="Center" FontSize="14" Foreground="{DynamicResource TextMuted}">
+                                    <Run Text="Network Type: " />
+                                    <Run Text="{Binding NetworkType, Mode=OneWay}" FontWeight="SemiBold" Foreground="{DynamicResource TextStrong}" />
+                                </TextBlock>
+                            </DockPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- ═══ 2. Theme / Appearance ═══ -->
+                <Border Background="{DynamicResource CardSurface}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        ClipToBounds="True"
+                        BoxShadow="{DynamicResource ItemShadow}">
+                    <StackPanel>
+                        <Border Background="{DynamicResource SurfaceHigh}"
+                                CornerRadius="15,15,0,0"
+                                BorderBrush="{DynamicResource Stroke}"
+                                BorderThickness="0,0,0,1"
+                                Padding="24,20">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <i:Icon Value="fa-solid fa-palette"
+                                       FontSize="20"
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                <TextBlock Text="Theme"
+                                           FontSize="18"
+                                           FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                        <Border Padding="24">
+                            <DockPanel>
+                                <ToggleButton DockPanel.Dock="Right"
+                                              Classes="Widget"
+                                              IsChecked="{Binding IsDarkThemeEnabled, Mode=TwoWay}"
+                                              VerticalAlignment="Center">
+                                    <ToggleButton.Content>
+                                        <i:Icon Value="fa-solid fa-sun"
+                                                FontSize="16"
+                                                Foreground="{DynamicResource TextMuted}" />
+                                    </ToggleButton.Content>
+                                </ToggleButton>
+                                <StackPanel Spacing="4" VerticalAlignment="Center">
+                                    <TextBlock Text="Dark Mode"
+                                               FontSize="14"
+                                               FontWeight="Medium"
+                                               Foreground="{DynamicResource TextStrong}" />
+                                    <TextBlock Text="Toggle between light and dark theme"
+                                               FontSize="13"
+                                               Foreground="{DynamicResource TextMuted}" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- ═══ 3. Indexer ═══ -->
+                <!-- Vue: input + Add, Refresh button in header, table with Link/Status/Default/Delete -->
+                <Border Background="{DynamicResource CardSurface}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        ClipToBounds="True"
+                        BoxShadow="{DynamicResource ItemShadow}">
+                    <StackPanel>
+                        <Border Background="{DynamicResource SurfaceHigh}"
+                                CornerRadius="15,15,0,0"
+                                BorderBrush="{DynamicResource Stroke}"
+                                BorderThickness="0,0,0,1"
+                                Padding="24,20">
+                            <DockPanel>
+                                <!-- Vue: Refresh button in header-right -->
+                                <Button DockPanel.Dock="Right"
+                                        Padding="20,14"
+                                        Background="{DynamicResource GreenGradient}"
+                                        Foreground="White"
+                                        BorderThickness="0"
+                                        CornerRadius="8"
+                                        FontWeight="SemiBold"
+                                        FontSize="14"
+                                        Click="OnRefreshIndexer">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="14"
+                                                Foreground="White" VerticalAlignment="Center" />
+                                        <TextBlock Text="Refresh" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                <i:Icon Value="fa-solid fa-server"
+                                       FontSize="20"
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                <TextBlock Text="Indexer"
+                                               FontSize="18"
+                                               FontWeight="Bold"
+                                               Foreground="{DynamicResource TextStrong}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                        <Border Padding="24">
+                            <StackPanel Spacing="20">
+                                <!-- Add input group -->
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right"
+                                            Margin="12,0,0,0"
+                                            Padding="20,14"
+                                            Background="{DynamicResource PrimaryGreenBrush}"
+                                            Foreground="White"
+                                            BorderThickness="0"
+                                            CornerRadius="8"
+                                            FontWeight="SemiBold"
+                                            FontSize="14"
+                                            Click="OnAddIndexer">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <i:Icon Value="fa-solid fa-plus"
+                                                    FontSize="14"
+                                                    Foreground="White"
+                                                    VerticalAlignment="Center" />
+                                            <TextBlock Text="Add" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                    <TextBox Text="{Binding NewIndexerUrl, Mode=TwoWay}"
+                                             Watermark="Enter new indexer link"
+                                             Padding="12,12,16,12" />
+                                </DockPanel>
+
+                                <!-- Table: Link | Status | Default | Delete -->
+                                <ItemsControl ItemsSource="{Binding IndexerLinks}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="settings:IndexerItem">
+                                            <Border BorderBrush="{DynamicResource TableRowBorder}"
+                                                    BorderThickness="0,0,0,1"
+                                                    Padding="0,12">
+                                                <DockPanel>
+                                                    <!-- Delete button -->
+                                                    <Button DockPanel.Dock="Right"
+                                                            Padding="6"
+                                                            Background="Transparent"
+                                                            BorderThickness="0"
+                                                            CornerRadius="6"
+                                                            Click="OnRemoveIndexer">
+                                                        <i:Icon Value="fa-solid fa-trash"
+                                                               FontSize="16"
+                                                               Foreground="#EF4444" />
+                                                    </Button>
+                                                    <!-- Default toggle -->
+                                                    <Border DockPanel.Dock="Right"
+                                                            Classes="SettingsCheckbox"
+                                                            Classes.SettingsCheckboxChecked="{Binding IsDefault}"
+                                                            Margin="12,0"
+                                                            Width="24" Height="24"
+                                                            CornerRadius="4"
+                                                            BorderThickness="2"
+                                                            VerticalAlignment="Center"
+                                                            Cursor="Hand"
+                                                            PointerPressed="OnToggleDefaultIndexer">
+                                                        <Path Data="{StaticResource Checkmark}"
+                                                              Stroke="White"
+                                                              StrokeThickness="2"
+                                                              StrokeLineCap="Round"
+                                                              Width="14" Height="14"
+                                                              Stretch="Uniform"
+                                                              IsVisible="{Binding IsDefault}"
+                                                              HorizontalAlignment="Center"
+                                                              VerticalAlignment="Center" />
+                                                    </Border>
+                                                    <!-- Status badge -->
+                                                    <Border DockPanel.Dock="Right"
+                                                            Margin="12,0"
+                                                            Padding="12,4"
+                                                            CornerRadius="12"
+                                                            VerticalAlignment="Center"
+                                                            x:Name="StatusBadge">
+                                                        <TextBlock Text="{Binding Status}"
+                                                                   FontSize="12"
+                                                                   FontWeight="SemiBold" />
+                                                    </Border>
+                                                    <!-- Link URL -->
+                                                    <TextBlock Text="{Binding Url}"
+                                                               FontSize="14"
+                                                               FontWeight="Medium"
+                                                               Foreground="{DynamicResource SettingsLinkFg}"
+                                                               VerticalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                </DockPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- ═══ 4. Nostr Relays ═══ -->
+                <Border Background="{DynamicResource CardSurface}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        ClipToBounds="True"
+                        BoxShadow="{DynamicResource ItemShadow}">
+                    <StackPanel>
+                        <Border Background="{DynamicResource SurfaceHigh}"
+                                CornerRadius="15,15,0,0"
+                                BorderBrush="{DynamicResource Stroke}"
+                                BorderThickness="0,0,0,1"
+                                Padding="24,20">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <i:Icon Value="fa-solid fa-signal"
+                                       FontSize="20"
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                <TextBlock Text="Nostr Relays"
+                                           FontSize="18"
+                                           FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                        <Border Padding="24">
+                            <StackPanel Spacing="20">
+                                <!-- Add input group -->
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right"
+                                            Margin="12,0,0,0"
+                                            Padding="20,14"
+                                            Background="{DynamicResource PrimaryGreenBrush}"
+                                            Foreground="White"
+                                            BorderThickness="0"
+                                            CornerRadius="8"
+                                            FontWeight="SemiBold"
+                                            FontSize="14"
+                                            Click="OnAddRelay">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <i:Icon Value="fa-solid fa-plus"
+                                                    FontSize="14"
+                                                    Foreground="White"
+                                                    VerticalAlignment="Center" />
+                                            <TextBlock Text="Add" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                    <TextBox Text="{Binding NewRelayUrl, Mode=TwoWay}"
+                                             Watermark="Enter new relay link"
+                                             Padding="12,12,16,12" />
+                                </DockPanel>
+
+                                <!-- Table: Link | Name | Status | Delete -->
+                                <ItemsControl ItemsSource="{Binding NostrRelays}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="settings:RelayItem">
+                                            <Border BorderBrush="{DynamicResource TableRowBorder}"
+                                                    BorderThickness="0,0,0,1"
+                                                    Padding="0,12">
+                                                <DockPanel>
+                                                    <!-- Delete button -->
+                                                    <Button DockPanel.Dock="Right"
+                                                            Padding="6"
+                                                            Background="Transparent"
+                                                            BorderThickness="0"
+                                                            CornerRadius="6"
+                                                            Click="OnRemoveRelay">
+                                                        <i:Icon Value="fa-solid fa-trash"
+                                                               FontSize="16"
+                                                               Foreground="#EF4444" />
+                                                    </Button>
+                                                    <!-- Status badge -->
+                                                    <Border DockPanel.Dock="Right"
+                                                            Margin="12,0"
+                                                            Padding="12,4"
+                                                            CornerRadius="12"
+                                                            VerticalAlignment="Center"
+                                                            x:Name="RelayStatusBadge">
+                                                        <TextBlock Text="{Binding Status}"
+                                                                   FontSize="12"
+                                                                   FontWeight="SemiBold" />
+                                                    </Border>
+                                                    <!-- Name -->
+                                                    <TextBlock DockPanel.Dock="Right"
+                                                               Text="{Binding Name}"
+                                                               FontSize="14"
+                                                               Foreground="{DynamicResource TextMuted}"
+                                                               Margin="12,0"
+                                                               VerticalAlignment="Center" />
+                                                    <!-- Link URL -->
+                                                    <TextBlock Text="{Binding Url}"
+                                                               FontSize="14"
+                                                               FontWeight="Medium"
+                                                               Foreground="{DynamicResource SettingsLinkFg}"
+                                                               VerticalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                </DockPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- ═══ 5. Currency Display ═══ -->
+                <!-- Vue: header has "Current: BTC" description, body has disabled select + help text -->
+                <Border Background="{DynamicResource CardSurface}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        ClipToBounds="True"
+                        BoxShadow="{DynamicResource ItemShadow}">
+                    <StackPanel>
+                        <Border Background="{DynamicResource SurfaceHigh}"
+                                CornerRadius="15,15,0,0"
+                                BorderBrush="{DynamicResource Stroke}"
+                                BorderThickness="0,0,0,1"
+                                Padding="24,20">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Right"
+                                           FontSize="14"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           VerticalAlignment="Center">
+                                    <Run Text="Current: " />
+                                    <Run Text="{Binding CurrencyDisplay}" FontWeight="Bold" />
+                                </TextBlock>
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <i:Icon Value="fa-solid fa-dollar-sign"
+                                           FontSize="20"
+                                           Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                    <TextBlock Text="Currency Display"
+                                               FontSize="18"
+                                               FontWeight="Bold"
+                                               Foreground="{DynamicResource TextStrong}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                        <Border Padding="24">
+                            <StackPanel Spacing="12">
+                                <!-- Vue: .settings-currency-group: label + disabled select -->
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <TextBlock Text="Select Currency:"
+                                               FontSize="14"
+                                               FontWeight="Medium"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               VerticalAlignment="Center" />
+                                    <ComboBox SelectedIndex="0"
+                                              IsEnabled="False"
+                                              MinWidth="150"
+                                              Padding="10,10,40,10">
+                                        <ComboBoxItem Content="{Binding CurrencyDisplayName}" />
+                                    </ComboBox>
+                                </StackPanel>
+                                <!-- Vue: .settings-help-text -->
+                                <TextBlock Text="{Binding CurrencyHelpText}"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource SettingsHelpText}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- ═══ 6. Backup Account ═══ -->
+                <Border Background="{DynamicResource CardSurface}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        ClipToBounds="True"
+                        BoxShadow="{DynamicResource ItemShadow}">
+                    <StackPanel>
+                        <Border Background="{DynamicResource SurfaceHigh}"
+                                CornerRadius="15,15,0,0"
+                                BorderBrush="{DynamicResource Stroke}"
+                                BorderThickness="0,0,0,1"
+                                Padding="24,20">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <i:Icon Value="fa-solid fa-key"
+                                       FontSize="20"
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                <TextBlock Text="Backup Account"
+                                           FontSize="18"
+                                           FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                        <Border Padding="24">
+                            <StackPanel Spacing="20">
+                                <TextBlock Text="Download a backup of your account (seed) so you never lose access."
+                                           FontSize="14"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           TextWrapping="Wrap" />
+                                <!-- Vue: green gradient action button -->
+                                <Button HorizontalAlignment="Left"
+                                        Padding="20,14"
+                                        Background="{DynamicResource GreenGradient}"
+                                        Foreground="White"
+                                        BorderThickness="0"
+                                        CornerRadius="8"
+                                        FontWeight="SemiBold"
+                                        FontSize="14"
+                                        IsEnabled="False"
+                                        Opacity="0.5">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <i:Icon Value="fa-solid fa-key"
+                                               FontSize="16"
+                                               Foreground="White" />
+                                        <TextBlock Text="Download Backup (Coming Soon)" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- ═══ 7. Prototype Settings ═══ -->
+                <!-- Toggle between populated and empty states for development/testing -->
+                <Border Background="{DynamicResource CardSurface}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        ClipToBounds="True"
+                        BoxShadow="{DynamicResource ItemShadow}">
+                    <StackPanel>
+                        <Border BorderBrush="{DynamicResource Stroke}"
+                                BorderThickness="0,0,0,1"
+                                Padding="24,20">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <i:Icon Value="fa-solid fa-eye"
+                                       FontSize="20"
+                                       Foreground="{DynamicResource TextMuted}" />
+                                <TextBlock Text="Prototype Settings"
+                                           FontSize="18"
+                                           FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                        <Border Padding="24">
+                            <DockPanel>
+                                <ToggleSwitch DockPanel.Dock="Right"
+                                              IsChecked="{Binding ShowPopulatedApp, Mode=TwoWay}"
+                                              VerticalAlignment="Center"
+                                              OnContent=""
+                                              OffContent="" />
+                                <StackPanel Spacing="4" VerticalAlignment="Center">
+                                    <TextBlock Text="Show Populated App"
+                                               FontSize="14"
+                                               FontWeight="Medium"
+                                               Foreground="{DynamicResource TextStrong}" />
+                                    <TextBlock Text="When enabled, sections display sample data. When disabled, sections show empty states."
+                                               FontSize="13"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- ═══ 8. Debug Mode (testnet only) ═══ -->
+                <!-- Visible only on testnet networks. Enables debug features like project wizard
+                     data prepopulation and relaxed validation for easier testing. -->
+                <Border Background="{DynamicResource CardSurface}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        ClipToBounds="True"
+                        BoxShadow="{DynamicResource ItemShadow}"
+                        IsVisible="{Binding IsTestnet}">
+                    <StackPanel>
+                        <Border BorderBrush="{DynamicResource Stroke}"
+                                BorderThickness="0,0,0,1"
+                                Padding="24,20">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <i:Icon Value="fa-solid fa-bug"
+                                       FontSize="20"
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                <TextBlock Text="Debug Mode"
+                                           FontSize="18"
+                                           FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                        <Border Padding="24">
+                            <DockPanel>
+                                <ToggleSwitch DockPanel.Dock="Right"
+                                              IsChecked="{Binding IsDebugMode, Mode=TwoWay}"
+                                              VerticalAlignment="Center"
+                                              OnContent="Enabled"
+                                              OffContent="Disabled" />
+                                <StackPanel Spacing="4" VerticalAlignment="Center">
+                                    <TextBlock Text="Enable Debug Features"
+                                               FontSize="14"
+                                               FontWeight="Medium"
+                                               Foreground="{DynamicResource TextStrong}" />
+                                    <TextBlock Text="Debug mode is only available on testnet networks. When enabled, additional debugging features will be available such as prepopulated project wizard data and relaxed validation."
+                                               FontSize="13"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- ═══ 10. Danger Zone ═══ -->
+                <!-- Vue: border 2px solid #fee2e2 (light) / #7f1d1d (dark), no normal CardSurface bg -->
+                <Border BorderBrush="{DynamicResource DangerZoneBorder}"
+                        BorderThickness="2"
+                        CornerRadius="16"
+                        ClipToBounds="True"
+                        BoxShadow="{DynamicResource ItemShadow}">
+                    <StackPanel>
+                        <!-- Danger header bar: Vue .danger-header-bar bg rgba(254,242,242,0.8) (light) / #1a0a0a (dark) -->
+                        <Border Background="{DynamicResource DangerZoneHeaderBg}"
+                                CornerRadius="14,14,0,0"
+                                BorderBrush="{DynamicResource DangerZoneHeaderBorder}"
+                                BorderThickness="0,0,0,1"
+                                Padding="24,20">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <i:Icon Value="fa-solid fa-triangle-exclamation"
+                                       FontSize="20"
+                                       Foreground="#EF4444" />
+                                <TextBlock Text="Danger Zone"
+                                           FontSize="18"
+                                           FontWeight="Bold"
+                                           Foreground="#DC2626"
+                                           VerticalAlignment="Center" />
+                                <TextBlock Text="Irreversible actions"
+                                           FontSize="14"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           VerticalAlignment="Center"
+                                           Margin="8,0,0,0" />
+                            </StackPanel>
+                        </Border>
+                        <Border Padding="24">
+                            <StackPanel Spacing="20">
+                                <!-- Vue: Wipe Data button (solid red) -->
+                                <Button HorizontalAlignment="Left"
+                                        AutomationProperties.AutomationId="BtnWipeData"
+                                        Padding="20,14"
+                                        Background="{DynamicResource DangerButtonBg}"
+                                        Foreground="{DynamicResource DangerButtonFg}"
+                                        BorderThickness="0"
+                                        CornerRadius="8"
+                                        FontWeight="SemiBold"
+                                        FontSize="14"
+                                        Click="OnWipeDataClick">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <i:Icon Value="fa-solid fa-trash"
+                                               FontSize="16"
+                                               Foreground="White" />
+                                        <TextBlock Text="Wipe Data" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+
+
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </controls:ScrollableView>
+
+        <!-- ═══ Network Selection Modal Overlay ═══ -->
+        <!-- Vue: full modal with warning, network options with checkmarks, confirmation checkbox, footer buttons -->
+        <Border Background="{DynamicResource ModalBackdrop}"
+                IsVisible="{Binding IsNetworkModalOpen}"
+                IsHitTestVisible="{Binding IsNetworkModalOpen}"
+                PointerPressed="OnModalBackdropPressed">
+            <Border.Transitions>
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.3" />
+                </Transitions>
+            </Border.Transitions>
+
+            <Border Background="{DynamicResource CardSurface}"
+                    BorderBrush="{DynamicResource Stroke}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    MaxWidth="500"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    PointerPressed="OnModalContentPressed"
+                    RenderTransformOrigin="50%,50%"
+                    RenderTransform="scale(1)"
+                    BoxShadow="0 20 25 -5 #1A000000">
+                <Border.Transitions>
+                    <Transitions>
+                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" />
+                    </Transitions>
+                </Border.Transitions>
+
+                <StackPanel>
+                    <!-- Modal header: Vue .modal-header -->
+                    <Border BorderBrush="{DynamicResource Stroke}"
+                            BorderThickness="0,0,0,1"
+                            Padding="24">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right"
+                                    Padding="4"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    CornerRadius="6"
+                                    Click="OnCloseNetworkModal">
+                                <Path Data="{StaticResource XMark}"
+                                      Stroke="{DynamicResource TextMuted}"
+                                      StrokeThickness="2"
+                                      StrokeLineCap="Round"
+                                      Width="20" Height="20"
+                                      Stretch="Uniform" />
+                            </Button>
+                            <TextBlock Text="Change Network"
+                                       FontSize="20"
+                                       FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}"
+                                       VerticalAlignment="Center" />
+                        </DockPanel>
+                    </Border>
+
+                    <!-- Modal content -->
+                    <Border Padding="24">
+                        <StackPanel Spacing="20">
+                            <!-- Warning banner: Vue .network-warning-container -->
+                            <Border Background="{DynamicResource NetworkWarningBg}"
+                                    BorderBrush="{DynamicResource NetworkWarningBorder}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="16">
+                                <TextBlock Foreground="{DynamicResource NetworkWarningText}"
+                                           FontSize="14"
+                                           TextWrapping="Wrap"
+                                           LineHeight="21">
+                                    <Run Text="Changing the network will remove your attached wallet on " />
+                                    <Run Text="{Binding NetworkType, Mode=OneWay}" FontWeight="SemiBold" />
+                                </TextBlock>
+                            </Border>
+
+                            <!-- Network options: Vue .network-options -->
+                            <StackPanel Spacing="8" x:Name="NetworkOptionsPanel">
+                                <Button x:Name="BtnMainnet" Classes="NetworkOption"
+                                        Click="OnSelectMainnet"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Stretch"
+                                        Padding="16,14"
+                                        CornerRadius="8"
+                                        Background="{DynamicResource NetworkOptionBg}"
+                                        BorderBrush="{DynamicResource NetworkOptionBorder}"
+                                        BorderThickness="2">
+                                    <DockPanel>
+                                        <Path DockPanel.Dock="Right"
+                                              Data="{StaticResource Checkmark}"
+                                              Stroke="{DynamicResource NetworkOptionActiveText}"
+                                              StrokeThickness="2"
+                                              StrokeLineCap="Round"
+                                              Width="16" Height="16"
+                                              Stretch="Uniform"
+                                              x:Name="CheckMainnet"
+                                              IsVisible="False" />
+                                        <TextBlock Text="Mainnet" FontSize="14" FontWeight="Medium" />
+                                    </DockPanel>
+                                </Button>
+                                <Button x:Name="BtnTestnet" Classes="NetworkOption"
+                                        Click="OnSelectTestnet"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Stretch"
+                                        Padding="16,14"
+                                        CornerRadius="8"
+                                        Background="{DynamicResource NetworkOptionBg}"
+                                        BorderBrush="{DynamicResource NetworkOptionBorder}"
+                                        BorderThickness="2">
+                                    <DockPanel>
+                                        <Path DockPanel.Dock="Right"
+                                              Data="{StaticResource Checkmark}"
+                                              Stroke="{DynamicResource NetworkOptionActiveText}"
+                                              StrokeThickness="2"
+                                              StrokeLineCap="Round"
+                                              Width="16" Height="16"
+                                              Stretch="Uniform"
+                                              x:Name="CheckTestnet"
+                                              IsVisible="False" />
+                                        <TextBlock Text="Testnet" FontSize="14" FontWeight="Medium" />
+                                    </DockPanel>
+                                </Button>
+                                <Button x:Name="BtnAngornet" Classes="NetworkOption"
+                                        Click="OnSelectAngornet"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Stretch"
+                                        Padding="16,14"
+                                        CornerRadius="8"
+                                        Background="{DynamicResource NetworkOptionBg}"
+                                        BorderBrush="{DynamicResource NetworkOptionBorder}"
+                                        BorderThickness="2">
+                                    <DockPanel>
+                                        <Path DockPanel.Dock="Right"
+                                              Data="{StaticResource Checkmark}"
+                                              Stroke="{DynamicResource NetworkOptionActiveText}"
+                                              StrokeThickness="2"
+                                              StrokeLineCap="Round"
+                                              Width="16" Height="16"
+                                              Stretch="Uniform"
+                                              x:Name="CheckAngornet"
+                                              IsVisible="False" />
+                                        <TextBlock Text="Angornet" FontSize="14" FontWeight="Medium" />
+                                    </DockPanel>
+                                </Button>
+                                <Button x:Name="BtnSignet" Classes="NetworkOption"
+                                        Click="OnSelectSignet"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Stretch"
+                                        Padding="16,14"
+                                        CornerRadius="8"
+                                        Background="{DynamicResource NetworkOptionBg}"
+                                        BorderBrush="{DynamicResource NetworkOptionBorder}"
+                                        BorderThickness="2">
+                                    <DockPanel>
+                                        <Path DockPanel.Dock="Right"
+                                              Data="{StaticResource Checkmark}"
+                                              Stroke="{DynamicResource NetworkOptionActiveText}"
+                                              StrokeThickness="2"
+                                              StrokeLineCap="Round"
+                                              Width="16" Height="16"
+                                              Stretch="Uniform"
+                                              x:Name="CheckSignet"
+                                              IsVisible="False" />
+                                        <TextBlock Text="Signet" FontSize="14" FontWeight="Medium" />
+                                    </DockPanel>
+                                </Button>
+                            </StackPanel>
+
+                            <!-- Confirmation checkbox: Vue .network-confirmation-checkbox -->
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <CheckBox IsChecked="{Binding NetworkChangeConfirmed, Mode=TwoWay}"
+                                          VerticalAlignment="Top" />
+                                <TextBlock Text="By confirming, you agree to wiping all data from this device since you have a backup of your wallet words."
+                                           FontSize="14"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           TextWrapping="Wrap"
+                                           LineHeight="21"
+                                           VerticalAlignment="Top" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Modal footer: Vue .modal-footer -->
+                    <Border BorderBrush="{DynamicResource Stroke}"
+                            BorderThickness="0,1,0,0"
+                            Padding="24,20">
+                        <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+                            <Button Padding="20,10"
+                                    Background="{DynamicResource ModalCancelBg}"
+                                    Foreground="{DynamicResource ModalCancelFg}"
+                                    BorderThickness="0"
+                                    CornerRadius="8"
+                                    FontWeight="SemiBold"
+                                    FontSize="14"
+                                    Click="OnCloseNetworkModal"
+                                    Content="Cancel" />
+                            <Button Padding="20,10"
+                                    Background="{DynamicResource GreenGradient}"
+                                    Foreground="White"
+                                    BorderThickness="0"
+                                    CornerRadius="8"
+                                    FontWeight="SemiBold"
+                                    FontSize="14"
+                                    Click="OnConfirmNetworkSwitch"
+                                    Content="Remove wallet and switch network" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </Border>
+
+        <!-- ═══ Wipe Data Confirmation Modal ═══ -->
+        <Border Background="{DynamicResource ModalBackdrop}"
+                IsVisible="{Binding IsWipeDataModalOpen}"
+                IsHitTestVisible="{Binding IsWipeDataModalOpen}"
+                PointerPressed="OnWipeModalBackdropPressed">
+            <Border.Transitions>
+                <Transitions>
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.3" />
+                </Transitions>
+            </Border.Transitions>
+
+            <Border Background="{DynamicResource CardSurface}"
+                    BorderBrush="{DynamicResource Stroke}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    MaxWidth="500"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    PointerPressed="OnModalContentPressed"
+                    BoxShadow="0 20 25 -5 #1A000000">
+                <StackPanel>
+                    <!-- Header -->
+                    <Border BorderBrush="{DynamicResource Stroke}"
+                            BorderThickness="0,0,0,1"
+                            Padding="24">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right"
+                                    Padding="4"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    CornerRadius="6"
+                                    Click="OnCloseWipeDataModal">
+                                <Path Data="{StaticResource XMark}"
+                                      Stroke="{DynamicResource TextMuted}"
+                                      StrokeThickness="2"
+                                      StrokeLineCap="Round"
+                                      Width="20" Height="20"
+                                      Stretch="Uniform" />
+                            </Button>
+                            <TextBlock Text="Wipe Data"
+                                       FontSize="20"
+                                       FontWeight="Bold"
+                                       Foreground="#DC2626"
+                                       VerticalAlignment="Center" />
+                        </DockPanel>
+                    </Border>
+                    <!-- Content -->
+                    <Border Padding="24">
+                        <StackPanel Spacing="24">
+                            <TextBlock Text="This action will permanently delete all local data. This cannot be undone."
+                                       FontSize="14"
+                                       Foreground="{DynamicResource TextMuted}"
+                                       TextWrapping="Wrap"
+                                       LineHeight="22" />
+                            <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+                                <Button Padding="20,10"
+                                        Background="{DynamicResource ModalCancelBg}"
+                                        Foreground="{DynamicResource ModalCancelFg}"
+                                        BorderThickness="0"
+                                        CornerRadius="8"
+                                        FontWeight="SemiBold"
+                                        FontSize="14"
+                                        Click="OnCloseWipeDataModal"
+                                        Content="Cancel" />
+                                <Button Padding="20,10"
+                                        AutomationProperties.AutomationId="BtnConfirmWipeData"
+                                        Background="#EF4444"
+                                        Foreground="White"
+                                        BorderThickness="0"
+                                        CornerRadius="8"
+                                        FontWeight="SemiBold"
+                                        FontSize="14"
+                                        Click="OnConfirmWipeData"
+                                        Content="Wipe Data" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </Border>
+
+
+    </Panel>
+</UserControl>

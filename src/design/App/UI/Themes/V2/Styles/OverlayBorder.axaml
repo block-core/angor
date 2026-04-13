@@ -1,0 +1,38 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Design.PreviewWith>
+        <StackPanel Spacing="20" Width="400">
+            <ThemeVariantScope RequestedThemeVariant="Light">
+                <Border Padding="20" Background="{DynamicResource AppBackground}">
+                    <StackPanel Spacing="10">
+                        <TextBlock FontWeight="Bold">Light Theme</TextBlock>
+                        <Border Classes="Panel">
+                            <TextBlock>Border.Panel</TextBlock>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </ThemeVariantScope>
+            <ThemeVariantScope RequestedThemeVariant="Dark">
+                <Border Padding="20" Background="{DynamicResource AppBackground}">
+                    <StackPanel Spacing="10">
+                        <TextBlock FontWeight="Bold" Foreground="White">Dark Theme</TextBlock>
+                        <Border Classes="Panel">
+                            <TextBlock>Border.Panel</TextBlock>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </ThemeVariantScope>
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <Style Selector="Border.Panel">
+        <Setter Property="CornerRadius" Value="20" />
+        <!-- Main panel: 24px uniform spacing from edges (section content, header/footer bars) -->
+        <Setter Property="Padding" Value="24" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Background" Value="{DynamicResource Surface}" />
+    </Style>
+
+</Styles>

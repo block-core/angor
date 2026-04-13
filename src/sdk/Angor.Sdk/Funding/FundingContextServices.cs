@@ -1,6 +1,7 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Common.MediatR;
 using Angor.Sdk.Funding.Founder;
+using Angor.Sdk.Funding.Founder.Domain;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Domain;
 using Angor.Sdk.Funding.Investor.Operations;
@@ -29,6 +30,7 @@ public static class FundingContextServices
 
         
         services.AddSingleton<IPortfolioService, PortfolioService>();
+        services.AddSingleton<IFounderProjectsService, FounderProjectsService>();
         //services.AddSingleton<IProjectRepository, ProjectRepository>();
         services.AddScoped<IProjectService, DocumentProjectService>();
         services.AddSingleton<INostrDecrypter, NostrDecrypter>();

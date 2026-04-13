@@ -1,0 +1,213 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:App.UI.Shared.Controls"
+        xmlns:i="https://github.com/projektanker/icons.avalonia">
+
+    <Design.PreviewWith>
+        <StackPanel Spacing="8" Width="500">
+            <ThemeVariantScope RequestedThemeVariant="Dark">
+                <Border Background="{DynamicResource AppBackground}" Padding="16">
+                    <StackPanel Spacing="0">
+                        <controls:WalletCard WalletName="Main Wallet" Balance="5.2340 BTC" WalletType="Hot Wallet" Label="Investments" />
+                        <controls:WalletCard WalletName="Savings" Balance="4.7660 BTC" WalletType="Cold Storage" />
+                    </StackPanel>
+                </Border>
+            </ThemeVariantScope>
+            <ThemeVariantScope RequestedThemeVariant="Light">
+                <Border Background="{DynamicResource AppBackground}" Padding="16">
+                    <controls:WalletCard WalletName="Main Wallet" Balance="5.2340 BTC" WalletType="Hot Wallet" Label="Trading" />
+                </Border>
+            </ThemeVariantScope>
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <!--
+        Vue wallet card row (Funds.vue):
+        Card row: padding 20px 24px, border-bottom 1px solid
+        Title row: name (16px semibold left) + balance (16px semibold right)
+        Bottom row: type (13px muted left) + label pill (right, optional)
+        Right side: 3 action buttons (Send filled, Receive outlined, UTXO outlined) gap 8, each 32x32
+    -->
+    <Style Selector="controls|WalletCard">
+        <Setter Property="Template">
+            <ControlTemplate TargetType="controls:WalletCard">
+                <Border Name="CardRoot"
+                        Background="Transparent"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="0,0,0,1"
+                        Padding="20,16,24,16">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <!-- Left: Bitcoin icon 40x40 -->
+                        <Border Grid.Column="0"
+                                Width="40" Height="40"
+                                CornerRadius="8"
+                                Background="#fef3c7"
+                                Padding="8"
+                                VerticalAlignment="Center"
+                                Margin="0,0,12,0">
+                            <i:Icon Value="fa-brands fa-bitcoin"
+                                   FontSize="20"
+                                   Foreground="#f59e0b" />
+                        </Border>
+
+                        <!-- Center: Name+Balance row, Type+Label row -->
+                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                            <!-- Top row: name left, balance right -->
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0"
+                                           Text="{TemplateBinding WalletName}"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextStrong}"
+                                           VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{TemplateBinding Balance}"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextStrong}"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                            <!-- Pending balance row (yellow) — hidden when empty -->
+                            <Grid ColumnDefinitions="*,Auto"
+                                  IsVisible="{TemplateBinding PendingBalance, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                <TextBlock Grid.Column="0"
+                                           Text="Pending"
+                                           FontSize="12"
+                                           Foreground="#EAB308" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{TemplateBinding PendingBalance}"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="#EAB308" />
+                            </Grid>
+                            <!-- Reserved balance row (blue) — hidden when empty -->
+                            <Grid ColumnDefinitions="*,Auto"
+                                  IsVisible="{TemplateBinding ReservedBalance, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                <TextBlock Grid.Column="0"
+                                           Text="Reserved"
+                                           FontSize="12"
+                                           Foreground="#3B82F6" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{TemplateBinding ReservedBalance}"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="#3B82F6" />
+                            </Grid>
+                            <!-- Bottom row: type left, label pill right -->
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0"
+                                           Text="{TemplateBinding WalletType}"
+                                           FontSize="13"
+                                           Foreground="{DynamicResource TextMuted}" />
+                                <!-- Optional label pill -->
+                                <Border Grid.Column="1"
+                                        IsVisible="{TemplateBinding Label, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                        Background="{DynamicResource PillGreenBg}"
+                                        BorderBrush="{DynamicResource PillGreenBorder}"
+                                        BorderThickness="1"
+                                        CornerRadius="4"
+                                        Padding="6,1">
+                                    <TextBlock Text="{TemplateBinding Label}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource PillGreenText}" />
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Right: 3 action buttons -->
+                        <StackPanel Grid.Column="2"
+                                    Orientation="Horizontal"
+                                    Spacing="8"
+                                    VerticalAlignment="Center"
+                                    Margin="16,0,0,0">
+                            <!-- Send button — 32x32 FILLED green gradient -->
+                            <Button Name="BtnSend"
+                                    AutomationProperties.AutomationId="WalletCardBtnSend"
+                                    Width="32" Height="32"
+                                    Padding="0"
+                                    CornerRadius="6"
+                                    BorderThickness="0"
+                                    Cursor="Hand"
+                                    ToolTip.Tip="Send">
+                                <Button.Background>
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                        <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
+                                        <GradientStop Color="#3D6448" Offset="1" />
+                                    </LinearGradientBrush>
+                                </Button.Background>
+                                <i:Icon Value="fa-solid fa-arrow-up"
+                                       FontSize="14"
+                                       Foreground="White" />
+                            </Button>
+                            <!-- Receive button — 32x32 OUTLINED green -->
+                            <Button Name="BtnReceive"
+                                    AutomationProperties.AutomationId="WalletCardBtnReceive"
+                                    Width="32" Height="32"
+                                    Padding="0"
+                                    CornerRadius="6"
+                                    Background="Transparent"
+                                    BorderBrush="{DynamicResource PrimaryGreenBrush}"
+                                    BorderThickness="2"
+                                    Cursor="Hand"
+                                    ToolTip.Tip="Receive">
+                                <i:Icon Value="fa-solid fa-arrow-down"
+                                       FontSize="14"
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
+                            </Button>
+                            <!-- UTXO / Details button — 32x32 OUTLINED green -->
+                            <Button Name="BtnUtxo"
+                                    Width="32" Height="32"
+                                    Padding="0"
+                                    CornerRadius="6"
+                                    Background="Transparent"
+                                    BorderBrush="{DynamicResource PrimaryGreenBrush}"
+                                    BorderThickness="2"
+                                    Cursor="Hand"
+                                    ToolTip.Tip="UTXOs">
+                                <i:Icon Value="fa-solid fa-coins"
+                                       FontSize="14"
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
+                            </Button>
+                            <!-- Refresh button — 32x32 OUTLINED green, always visible -->
+                            <Button Name="BtnRefresh"
+                                    AutomationProperties.AutomationId="WalletCardBtnRefresh"
+                                    Width="32" Height="32"
+                                    Padding="0"
+                                    CornerRadius="6"
+                                    Background="Transparent"
+                                    BorderBrush="{DynamicResource PrimaryGreenBrush}"
+                                    BorderThickness="2"
+                                    Cursor="Hand"
+                                    ToolTip.Tip="Refresh Balance">
+                                <i:Icon Value="fa-solid fa-sync"
+                                       FontSize="14"
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
+                            </Button>
+                            <!-- Faucet button — 32x32 FILLED green gradient, testnet only -->
+                            <Button Name="BtnFaucet"
+                                    AutomationProperties.AutomationId="WalletCardBtnFaucet"
+                                    Width="32" Height="32"
+                                    Padding="0"
+                                    CornerRadius="6"
+                                    BorderThickness="0"
+                                    Cursor="Hand"
+                                    IsVisible="{TemplateBinding ShowFaucet}"
+                                    ToolTip.Tip="Get Testnet Coins">
+                                <Button.Background>
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                        <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
+                                        <GradientStop Color="#3D6448" Offset="1" />
+                                    </LinearGradientBrush>
+                                </Button.Background>
+                                <i:Icon Value="fa-solid fa-plus"
+                                       FontSize="14"
+                                       Foreground="White" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+</Styles>

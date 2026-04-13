@@ -267,6 +267,11 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
     public bool IsInvestmentAbovePenaltyThreshold(ProjectInfo projectInfo, long investmentAmount)
     {
+        if (projectInfo.ProjectType != ProjectType.Fund)
+        {
+            return false;
+        }
+
         return PenaltyThresholdHelper.IsInvestmentAbovePenaltyThreshold(projectInfo, investmentAmount);
     }
 

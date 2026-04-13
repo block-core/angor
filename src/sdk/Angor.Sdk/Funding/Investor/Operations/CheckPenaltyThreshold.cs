@@ -3,6 +3,7 @@ using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
+using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using CSharpFunctionalExtensions;
 using MediatR;
@@ -32,7 +33,13 @@ public static class CheckPenaltyThreshold
                 }
 
                 var projectInfo = projectResult.Value.ToProjectInfo();
-                
+
+                if (projectInfo.ProjectType != ProjectType.Fund)
+                {
+                    throw new InvalidOperationException(
+                        $"Penalty threshold check is only valid for Fund projects. Project '{request.ProjectId.Value}' is '{projectInfo.ProjectType}'.");
+                }
+
                 // Use the centralized threshold check logic
                 var isAboveThreshold = investorTransactionActions.IsInvestmentAbovePenaltyThreshold(
                     projectInfo, 

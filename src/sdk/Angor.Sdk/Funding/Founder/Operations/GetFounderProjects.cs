@@ -1,7 +1,7 @@
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Founder.Domain;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
-using Angor.Data.Documents.Interfaces;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Angor.Sdk.Funding.Projects;
@@ -9,6 +9,11 @@ using Angor.Sdk.Funding.Projects.Dtos;
 
 namespace Angor.Sdk.Funding.Founder.Operations;
 
+/// <summary>
+/// Loads the founder's projects from local persistence.
+/// Only returns projects already known locally (added during project creation or scanning).
+/// To discover new projects from the network, use <see cref="ScanFounderProjects"/>.
+/// </summary>
 public static class GetFounderProjects
 {
     public record GetFounderProjectsRequest(WalletId WalletId) : IRequest<Result<GetFounderProjectsResponse>>;
@@ -17,27 +22,31 @@ public static class GetFounderProjects
 
     public class GetFounderProjectsHandler(
         IProjectService projectService,
-        IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection) : IRequestHandler<GetFounderProjectsRequest, Result<GetFounderProjectsResponse>>
+        IFounderProjectsService founderProjectsService) : IRequestHandler<GetFounderProjectsRequest, Result<GetFounderProjectsResponse>>
     {
         public async Task<Result<GetFounderProjectsResponse>> Handle(GetFounderProjectsRequest request, CancellationToken cancellationToken)
         {
-            var storageResult = await derivedProjectKeysCollection.FindByIdAsync(request.WalletId.Value);
+            var recordsResult = await founderProjectsService.GetByWalletId(request.WalletId.Value);
 
-            if (storageResult.IsFailure || storageResult.Value == null)
-                return Result.Failure<GetFounderProjectsResponse>(storageResult.IsFailure ? storageResult.Error
-                    : "No projects found for the given wallet.");
-            
-            var keys = storageResult.Value!.Keys.Select(k => new ProjectId(k.ProjectIdentifier));
-            
-            var projects = await projectService.GetAllAsync(keys.ToArray());
-            
+            if (recordsResult.IsFailure)
+                return Result.Failure<GetFounderProjectsResponse>(recordsResult.Error);
+
+            var records = recordsResult.Value;
+
+            if (records.Count == 0)
+                return Result.Success(new GetFounderProjectsResponse(Enumerable.Empty<ProjectDto>()));
+
+            var keys = records.Select(r => new ProjectId(r.ProjectIdentifier)).ToArray();
+
+            var projects = await projectService.GetAllAsync(keys);
+
             if (projects.IsFailure)
                 return Result.Failure<GetFounderProjectsResponse>(projects.Error);
 
             var dtoList = projects.Value
                 .OrderByDescending(p => p.StartingDate)
                 .Select(p => p.ToDto());
-            
+
             return Result.Success(new GetFounderProjectsResponse(dtoList));
         }
     }

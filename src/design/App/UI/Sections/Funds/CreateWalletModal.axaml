@@ -1,0 +1,370 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:funds="clr-namespace:App.UI.Sections.Funds"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="600"
+             x:Class="App.UI.Sections.Funds.CreateWalletModal"
+             x:DataType="funds:FundsViewModel">
+
+    <!--
+        Create Wallet Modal — 3-step flow from Vue Funds.vue (lines 436-585):
+          Step 1 "choice":   Import or Generate New
+          Step 2a "import":  Enter BIP-39 seed phrase textarea
+          Step 2b "backup":  Backup seed phrase (amber warning) + Download + Continue
+          Step 3 "success":  Wallet Created! (green checkmark) + Done
+    -->
+
+    <Panel>
+        <!-- ════════════════════════════════════════════════════════════ -->
+        <!-- MODAL CARD                                                   -->
+        <!-- Vue: rounded-2xl shadow-2xl max-w-md (448px) p-6            -->
+        <!-- ════════════════════════════════════════════════════════════ -->
+        <Border HorizontalAlignment="Center" VerticalAlignment="Center"
+                MinWidth="420" MaxWidth="448"
+                CornerRadius="16"
+                Background="{DynamicResource DeployModalBackground}"
+                BorderBrush="{DynamicResource DeployModalBorder}"
+                BorderThickness="1"
+                BoxShadow="0 8 32 0 #40000000"
+                Padding="24"
+                ClipToBounds="True"
+                RenderTransformOrigin="50%,50%"
+                RenderTransform="scale(1)">
+            <Border.Transitions>
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" />
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.3" />
+                </Transitions>
+            </Border.Transitions>
+
+            <Panel>
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <!-- STEP 1: Add Wallet Choice (Import or Generate)         -->
+                <!-- Vue: lines 437-470                                     -->
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <StackPanel Name="ChoicePanel" Spacing="24"
+                            AutomationProperties.AutomationId="ChoicePanel">
+                    <!-- Header: "Add Wallet" centered, close X top-right -->
+                    <!-- Vue: mb-6, text-xl font-bold text-center -->
+                    <Panel>
+                        <TextBlock Text="Add Wallet"
+                                   FontSize="20" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextStrong}"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                        <Button Name="CloseChoice" Classes="ModalCloseBtnSmall"
+                                HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Panel>
+
+                    <!-- Two button choices stacked -->
+                    <!-- Vue: flex flex-col gap-3 -->
+                    <StackPanel Spacing="12">
+                        <!-- Import button: outlined -->
+                        <!-- Vue: border-2 border-gray-300/border-[#404040], text-gray-600/text-gray-300 -->
+                        <Button Name="BtnImport" HorizontalAlignment="Stretch"
+                                AutomationProperties.AutomationId="BtnImport"
+                                HorizontalContentAlignment="Center"
+                                Padding="16,12"
+                                CornerRadius="8"
+                                BorderThickness="2"
+                                Background="Transparent"
+                                BorderBrush="{DynamicResource StrokeSubtle}"
+                                Foreground="{DynamicResource CreateWalletOutlinedFg}"
+                                FontWeight="SemiBold"
+                                Cursor="Hand">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <i:Icon Value="fa-solid fa-upload"
+                                       FontSize="14"
+                                       Foreground="{DynamicResource CreateWalletOutlinedFg}"
+                                       VerticalAlignment="Center" />
+                                <TextBlock Text="Import" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Generate New button: solid green -->
+                        <!-- Vue: bg-[#4B7C5A] text-white hover:bg-[#3d6448] -->
+                        <Button Name="BtnGenerate" HorizontalAlignment="Stretch"
+                                AutomationProperties.AutomationId="BtnGenerate"
+                                HorizontalContentAlignment="Center"
+                                Padding="16,12"
+                                CornerRadius="8"
+                                Foreground="White"
+                                FontWeight="SemiBold"
+                                Cursor="Hand">
+                            <Button.Background>
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                    <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
+                                    <GradientStop Color="#3D6448" Offset="1" />
+                                </LinearGradientBrush>
+                            </Button.Background>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <i:Icon Value="fa-solid fa-plus"
+                                       FontSize="14"
+                                       Foreground="White"
+                                       VerticalAlignment="Center" />
+                                <TextBlock Text="Generate New" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <!-- STEP 2a: Import Wallet                                 -->
+                <!-- Vue: lines 473-515                                     -->
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <StackPanel Name="ImportPanel" IsVisible="False" Spacing="16"
+                            AutomationProperties.AutomationId="ImportPanel">
+                    <!-- Header: "Import Wallet" centered + close X -->
+                    <!-- Vue: mb-4, text-xl font-bold text-center -->
+                    <Panel>
+                        <TextBlock Text="Import Wallet"
+                                   FontSize="20" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextStrong}"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                        <Button Name="CloseImport" Classes="ModalCloseBtnSmall"
+                                HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Panel>
+
+                    <!-- Description -->
+                    <!-- Vue: text-sm mb-4, text-gray-300/text-gray-600 -->
+                    <TextBlock Text="Enter your BIP-39 seed words separated by spaces to import an external wallet."
+                               FontSize="14"
+                               Foreground="{DynamicResource TextMuted}"
+                               TextWrapping="Wrap" />
+
+                    <!-- Seed phrase textarea -->
+                    <!-- Vue: rows=4, px-4 py-3, rounded-lg, bg-gray-50/bg-[#111], border-gray-200/border-[#333], focus:ring-[#4B7C5A] -->
+                    <TextBox Name="SeedPhraseInput"
+                             AutomationProperties.AutomationId="SeedPhraseInput"
+                             MinHeight="100"
+                             TextWrapping="Wrap"
+                             AcceptsReturn="True"
+                             Watermark="twelve or twenty-four seed words separated by spaces"
+                             Background="{DynamicResource CreateWalletInputBg}"
+                             BorderBrush="{DynamicResource CreateWalletInputBorder}"
+                             CornerRadius="8"
+                             Padding="16,12"
+                             FontSize="14"
+                             Foreground="{DynamicResource TextStrong}" />
+
+                    <!-- Error/Success messages -->
+                    <TextBlock Name="SeedError"
+                               FontSize="13"
+                               Foreground="{DynamicResource ErrorForeground}"
+                               IsVisible="False"
+                               TextWrapping="Wrap" />
+                    <TextBlock Name="SeedSuccess"
+                               Text="Seed phrase verified successfully."
+                               FontSize="13"
+                               Foreground="#16A34A"
+                               IsVisible="False" />
+
+                    <!-- Buttons -->
+                    <!-- Vue: mt-6 flex flex-col gap-3 -->
+                    <StackPanel Spacing="12" Margin="0,8,0,0">
+                        <!-- Import Wallet (solid green) -->
+                        <Button Name="BtnSubmitImport" HorizontalAlignment="Stretch"
+                                AutomationProperties.AutomationId="BtnSubmitImport"
+                                HorizontalContentAlignment="Center"
+                                Padding="16,12"
+                                CornerRadius="8"
+                                Foreground="White"
+                                FontWeight="SemiBold"
+                                Cursor="Hand">
+                            <Button.Background>
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                    <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
+                                    <GradientStop Color="#3D6448" Offset="1" />
+                                </LinearGradientBrush>
+                            </Button.Background>
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <i:Icon Value="fa-solid fa-upload"
+                                       FontSize="14"
+                                       Foreground="White"
+                                       VerticalAlignment="Center" />
+                                <TextBlock Text="Import Wallet" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Cancel (outlined) -->
+                        <Button Name="BtnCancelImport" HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                Padding="16,12"
+                                CornerRadius="8"
+                                BorderThickness="2"
+                                Background="Transparent"
+                                BorderBrush="{DynamicResource StrokeSubtle}"
+                                Foreground="{DynamicResource CreateWalletOutlinedFg}"
+                                FontWeight="SemiBold"
+                                Cursor="Hand">
+                            <TextBlock Text="Cancel" />
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <!-- STEP 2b: Generate Wallet — Backup Seed Phrase          -->
+                <!-- Vue: lines 523-561 (generateStep === 'backup')         -->
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <StackPanel Name="BackupPanel" IsVisible="False" Spacing="16"
+                            AutomationProperties.AutomationId="BackupPanel">
+                    <!-- Amber warning circle: 80x80 -->
+                    <!-- Vue: w-20 h-20 rounded-full, bg-amber-900/bg-amber-100 -->
+                    <Border Width="80" Height="80" CornerRadius="40"
+                            Background="{DynamicResource CreateWalletAmberCircleBg}"
+                            HorizontalAlignment="Center">
+                        <i:Icon Value="fa-solid fa-lock"
+                               FontSize="36"
+                               Foreground="{DynamicResource CreateWalletAmberIcon}" />
+                    </Border>
+
+                    <!-- Title -->
+                    <!-- Vue: text-3xl font-bold text-center mb-3 -->
+                    <TextBlock Text="Backup Your Wallet"
+                               FontSize="28" FontWeight="Bold"
+                               Foreground="{DynamicResource TextStrong}"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center" />
+
+                    <!-- Description -->
+                    <!-- Vue: text-center mb-6, text-gray-300/text-gray-600 -->
+                    <TextBlock Text="Download your seed phrase and keep it safe. You'll need this to recover your wallet if you lose access."
+                               FontSize="14"
+                               Foreground="{DynamicResource TextMuted}"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center" />
+
+                    <!-- Seed phrase display -->
+                    <!-- Vue: bg-gray-50 dark:bg-[#1a1a1a] p-4 rounded-lg mb-6 border, font-mono text-center -->
+                    <Border Background="{DynamicResource CreateWalletSeedBg}"
+                            BorderBrush="{DynamicResource CreateWalletSeedBorder}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="16">
+                        <TextBlock Name="SeedPhraseDisplay"
+                                   Text=""
+                                   FontSize="14"
+                                   FontFamily="Cascadia Mono, Consolas, monospace"
+                                   Foreground="{DynamicResource CreateWalletSeedText}"
+                                   TextWrapping="Wrap"
+                                   TextAlignment="Center" />
+                    </Border>
+
+                    <!-- Buttons -->
+                    <!-- Vue: flex flex-col gap-3 -->
+                    <StackPanel Spacing="12">
+                        <!-- Download Seed (amber) -->
+                        <!-- Vue: bg-amber-800/bg-amber-500, text-white -->
+                        <Button Name="BtnDownloadSeed" HorizontalAlignment="Stretch"
+                                AutomationProperties.AutomationId="BtnDownloadSeed"
+                                HorizontalContentAlignment="Center"
+                                Padding="16,12"
+                                CornerRadius="8"
+                                Background="{DynamicResource CreateWalletAmberBtnBg}"
+                                Foreground="White"
+                                FontWeight="SemiBold"
+                                FontSize="15"
+                                Cursor="Hand">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <i:Icon Value="fa-solid fa-download"
+                                       FontSize="16"
+                                       Foreground="White"
+                                       VerticalAlignment="Center" />
+                                <TextBlock Text="Download Seed" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Continue (green border, disabled until downloaded) -->
+                        <!-- Vue: border-2 border-[#4B7C5A] text-[#4B7C5A] when enabled, 
+                             border-[#404040]/border-gray-300 text-gray-500/text-gray-400 when disabled -->
+                        <Button Name="BtnContinueBackup" HorizontalAlignment="Stretch"
+                                AutomationProperties.AutomationId="BtnContinueBackup"
+                                HorizontalContentAlignment="Center"
+                                Padding="16,12"
+                                CornerRadius="8"
+                                BorderThickness="2"
+                                Background="Transparent"
+                                BorderBrush="{DynamicResource StrokeSubtle}"
+                                Foreground="{DynamicResource CreateWalletDisabledFg}"
+                                FontWeight="SemiBold"
+                                IsEnabled="False"
+                                Cursor="Hand">
+                            <TextBlock Text="Continue" />
+                        </Button>
+
+                        <!-- Cancel (outlined) -->
+                        <Button Name="BtnCancelBackup" HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                Padding="16,12"
+                                CornerRadius="8"
+                                BorderThickness="2"
+                                Background="Transparent"
+                                BorderBrush="{DynamicResource StrokeSubtle}"
+                                Foreground="{DynamicResource CreateWalletOutlinedFg}"
+                                FontWeight="SemiBold"
+                                Cursor="Hand">
+                            <TextBlock Text="Cancel" />
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <!-- STEP 3: Wallet Created! (Success)                      -->
+                <!-- Vue: lines 563-581 (generateStep === 'success')        -->
+                <!-- Also used after successful import.                     -->
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <StackPanel Name="SuccessPanel" IsVisible="False" Spacing="16"
+                            AutomationProperties.AutomationId="CreateWalletSuccessPanel">
+                    <!-- Green checkmark circle: 80x80 -->
+                    <!-- Vue: w-20 h-20 rounded-full, bg-green-900/bg-green-100 -->
+                    <Border Width="80" Height="80" CornerRadius="40"
+                            Background="{DynamicResource CreateWalletGreenCircleBg}"
+                            HorizontalAlignment="Center">
+                        <i:Icon Value="fa-solid fa-check"
+                               FontSize="36"
+                               Foreground="{DynamicResource CreateWalletGreenIcon}" />
+                    </Border>
+
+                    <!-- Title -->
+                    <!-- Vue: text-3xl font-bold text-center mb-3 -->
+                    <TextBlock Text="Wallet Created!"
+                               FontSize="28" FontWeight="Bold"
+                               Foreground="{DynamicResource TextStrong}"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center" />
+
+                    <!-- Description -->
+                    <!-- Vue: text-center mb-8, text-gray-300/text-gray-600 -->
+                    <TextBlock Text="Your new wallet has been successfully created. You can now use it to fund or launch projects."
+                               FontSize="14"
+                               Foreground="{DynamicResource TextMuted}"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center"
+                               Margin="0,0,0,8" />
+
+                    <!-- Done button (green gradient) -->
+                    <!-- Vue: bg-gradient-to-r from-[#4B7C5A] to-[#3d6448], shadow-lg -->
+                    <Button Name="BtnDone" HorizontalAlignment="Stretch"
+                            AutomationProperties.AutomationId="BtnCreateWalletDone"
+                            HorizontalContentAlignment="Center"
+                            Padding="16,12"
+                            CornerRadius="8"
+                            Foreground="White"
+                            FontWeight="SemiBold"
+                            Cursor="Hand">
+                        <Button.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
+                                <GradientStop Color="#3D6448" Offset="1" />
+                            </LinearGradientBrush>
+                        </Button.Background>
+                        <TextBlock Text="Done" />
+                    </Button>
+                </StackPanel>
+            </Panel>
+        </Border>
+    </Panel>
+</UserControl>
