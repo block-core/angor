@@ -137,6 +137,14 @@ public partial class CreateProjectViewModel : ReactiveObject
     private readonly ICurrencyService _currencyService;
     private readonly INetworkConfiguration _networkConfiguration;
 
+    /// <summary>
+    /// True when debug mode is enabled AND on testnet.
+    /// Controls visibility of the "Debug Prefill Data" button in Step 2.
+    /// </summary>
+    public bool IsDebugMode =>
+        _networkConfiguration.GetDebugMode() &&
+        _networkConfiguration.GetNetwork().Name != "Main";
+
     public string CurrencySymbol => _currencyService.Symbol;
 
     /// <summary>e.g. "Target Amount (BTC) *"</summary>
@@ -368,9 +376,7 @@ public partial class CreateProjectViewModel : ReactiveObject
     /// </summary>
     private ProjectValidator CreateValidator()
     {
-        var isDebug = _networkConfiguration.GetDebugMode() &&
-                      _networkConfiguration.GetNetwork().Name != "Main";
-        return new ProjectValidator(isDebug);
+        return new ProjectValidator(IsDebugMode);
     }
 
     public void GoNext()
@@ -1070,6 +1076,147 @@ public partial class CreateProjectViewModel : ReactiveObject
 
         // Notify all step visibility properties
         RaiseAllStepProperties();
+
+        // Re-evaluate debug mode (may have changed in settings since last open)
+        this.RaisePropertyChanged(nameof(IsDebugMode));
+    }    /// <summary>
+    /// Prepopulate all wizard fields with debug/test data so the user can
+    /// click Next through every step and deploy quickly on testnet.
+    /// Values mirror the Avalonia app's PopulateInvestDebugDefaults / PopulateFundDebugDefaults.
+    /// </summary>
+    public void PrepopulateDebugData()
+    {
+        if (!IsDebugMode) return;
+
+        var id = Guid.NewGuid().ToString()[..8];
+
+        // If no project type is selected yet, default to investment
+        if (string.IsNullOrEmpty(ProjectType))
+        {
+            SelectProjectType("investment");
+        }
+
+        if (ProjectType == "fund")
+        {
+            PrepopulateFundDefaults(id);
+        }
+        else if (ProjectType == "subscription")
+        {
+            PrepopulateSubscriptionDefaults(id);
+        }
+        else
+        {
+            PrepopulateInvestmentDefaults(id);
+        }
+
+        // Step 3: Images — random placeholder images (same approach as Avalonia app's DebugData)
+        var seed = Guid.NewGuid().ToString("N")[..8];
+        BannerUrl = $"https://picsum.photos/seed/{seed}/820/312";
+        ProfileUrl = $"https://picsum.photos/seed/{seed}/170/170";
+
+        ClearErrors();
+        this.RaisePropertyChanged(nameof(CanGoNext));
+    }
+
+    private void PrepopulateInvestmentDefaults(string id)
+    {
+        // Step 2: Profile
+        ProjectName = $"Debug Project {id}";
+        ProjectAbout = $"Auto-populated debug project {id} for testing on testnet. Created at {DateTime.Now:HH:mm:ss}.";
+        ProjectWebsite = "https://angor.io";
+
+        // Step 4: Funding config
+        TargetAmount = "0.01";
+        PenaltyDays = 0;
+        InvestStartDate = DateTime.Now.Date;
+        InvestEndDate = DateTime.Now.Date;
+
+        // Step 5: Stages — 3 stages released today (10%, 30%, 60%)
+        Stages.Clear();
+        var today = DateTime.Now.Date;
+        var targetBtc = 0.01;
+
+        Stages.Add(new ProjectStageViewModel
+        {
+            StageNumber = 1,
+            Percentage = "10%",
+            ReleaseDate = FormatReleaseDateOrdinal(today),
+            AmountBtc = (targetBtc * 0.10).ToString("F4"),
+            StageLabel = "Stage",
+            DisplayText = $"10% ({targetBtc * 0.10:F4} {_currencyService.Symbol}) released on {FormatReleaseDateOrdinal(today)}"
+        });
+        Stages.Add(new ProjectStageViewModel
+        {
+            StageNumber = 2,
+            Percentage = "30%",
+            ReleaseDate = FormatReleaseDateOrdinal(today),
+            AmountBtc = (targetBtc * 0.30).ToString("F4"),
+            StageLabel = "Stage",
+            DisplayText = $"30% ({targetBtc * 0.30:F4} {_currencyService.Symbol}) released on {FormatReleaseDateOrdinal(today)}"
+        });
+        Stages.Add(new ProjectStageViewModel
+        {
+            StageNumber = 3,
+            Percentage = "60%",
+            ReleaseDate = FormatReleaseDateOrdinal(today),
+            AmountBtc = (targetBtc * 0.60).ToString("F4"),
+            StageLabel = "Stage",
+            DisplayText = $"60% ({targetBtc * 0.60:F4} {_currencyService.Symbol}) released on {FormatReleaseDateOrdinal(today)}"
+        });
+
+        ShowGenerateForm = false;
+        this.RaisePropertyChanged(nameof(HasStages));
+        this.RaisePropertyChanged(nameof(ScheduleSummary));
+    }
+
+    private void PrepopulateFundDefaults(string id)
+    {
+        // Step 2: Profile
+        ProjectName = $"Debug Fund {id}";
+        ProjectAbout = $"Auto-populated debug fund {id} for testing on testnet. Created at {DateTime.Now:HH:mm:ss}.";
+        ProjectWebsite = "https://angor.io";
+
+        // Step 4: Funding config
+        TargetAmount = "0.5";
+        ApprovalThreshold = "0.01";
+        PenaltyDays = 0;
+
+        // Step 5: Payouts — Monthly, day = today, installments 3 and 6
+        PayoutFrequency = "Monthly";
+        MonthlyPayoutDate = DateTime.Now.Day;
+        SelectedInstallmentCounts.Clear();
+        SelectedInstallmentCounts.Add(3);
+        SelectedInstallmentCounts.Add(6);
+        this.RaisePropertyChanged(nameof(IsPayoutMonthly));
+        this.RaisePropertyChanged(nameof(IsPayoutWeekly));
+        this.RaisePropertyChanged(nameof(CanGeneratePayouts));
+
+        // Generate payout stages
+        GeneratePayoutSchedule();
+    }
+
+    private void PrepopulateSubscriptionDefaults(string id)
+    {
+        // Step 2: Profile
+        ProjectName = $"Debug Subscription {id}";
+        ProjectAbout = $"Auto-populated debug subscription {id} for testing on testnet. Created at {DateTime.Now:HH:mm:ss}.";
+        ProjectWebsite = "https://angor.io";
+
+        // Step 4: Subscription price
+        SubscriptionPrice = "0.0001";
+
+        // Step 5: Payouts — Monthly, day = today, installments 3 and 6
+        PayoutFrequency = "Monthly";
+        MonthlyPayoutDate = DateTime.Now.Day;
+        SelectedInstallmentCounts.Clear();
+        SelectedInstallmentCounts.Add(3);
+        SelectedInstallmentCounts.Add(6);
+        this.RaisePropertyChanged(nameof(IsPayoutMonthly));
+        this.RaisePropertyChanged(nameof(IsPayoutWeekly));
+        this.RaisePropertyChanged(nameof(CanGeneratePayouts));
+
+        // Generate payout stages
+        GeneratePayoutSchedule();
     }
 
     private void ClearErrors()

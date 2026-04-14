@@ -166,6 +166,13 @@ public static class CompositionRoot
         // Initialize network settings
         provider.GetRequiredService<INetworkService>().AddSettingsIfNotExist();
 
+        // Sync persisted debug mode into INetworkConfiguration so it's available immediately
+        // (SettingsViewModel also does this in its constructor, but it's transient and only
+        // created when the user navigates to Settings)
+        var prototypeSettings = provider.GetRequiredService<PrototypeSettings>();
+        var networkConfig = provider.GetRequiredService<INetworkConfiguration>();
+        networkConfig.SetDebugMode(prototypeSettings.IsDebugMode);
+
         return provider;
     }
 }
