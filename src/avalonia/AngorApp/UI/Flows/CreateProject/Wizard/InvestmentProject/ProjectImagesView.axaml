@@ -17,8 +17,8 @@
         <x:Double x:Key="AvatarSize">120</x:Double>
     </UserControl.Resources>
 
-    <s:ScrollableView ContentPadding="30" MaxContentWidth="820">
-        <StackPanel Classes="Gap-XL">
+    <ScrollViewer>
+        <StackPanel MaxWidth="820" Classes="Gap-XL">
             <TextBlock>Upload your project's banner and profile images.
             </TextBlock>
             <HeaderedContainer Height="375"
@@ -84,5 +84,5 @@
                 </StackPanel>
             </HeaderedContainer>
         </StackPanel>
-    </s:ScrollableView>
+    </ScrollViewer>
 </UserControl>

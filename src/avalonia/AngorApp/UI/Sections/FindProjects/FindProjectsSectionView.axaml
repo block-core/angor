@@ -7,6 +7,7 @@
              xmlns:investmentProject="clr-namespace:AngorApp.Model.ProjectsV2.InvestmentProject;assembly=AngorApp.Model"
              xmlns:fundProject="clr-namespace:AngorApp.Model.ProjectsV2.FundProject;assembly=AngorApp.Model"
              xmlns:controls="clr-namespace:AngorApp.UI.Shared.Controls"
+             xmlns:details="clr-namespace:AngorApp.UI.Sections.FindProjects.Details"
              mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="650"
              x:Class="AngorApp.UI.Sections.FindProjects.FindProjectsSectionView" x:DataType="findProjects:IFindProjectsSectionViewModel" ClipToBounds="False">
 
@@ -20,87 +21,21 @@
         </DataContextChangedTrigger>
     </Interaction.Behaviors>
 
-    <Panel Classes="Padded">
-        <Loading IsLoading="{Binding LoadProjects.IsExecuting^}">
-            <ScrollViewer>
-                <ItemsControl Margin="0 70 0 0" ItemsSource="{Binding Projects}" ClipToBounds="False">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <BalancedWrapGrid MinItemWidth="280" MaxItemWidth="500" HorizontalSpacing="20" VerticalSpacing="20" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="findProjects:IFindProjectItem">
-                            <Border Margin="10" Classes="Panel Elevate">
-                                <StackPanel Classes="Gap-XL">
-                                    <a:AdvancedImage CornerRadius="10 10 0 0" Margin="-20 -20 -20 0" Stretch="UniformToFill" Height="140" Source="{Binding Project.BannerUrl}" />
-                                    <Border Height="60" Width="60" Margin="0 -50 0 0" HorizontalAlignment="Left" CornerRadius="30" ClipToBounds="True" Background="{DynamicResource AppBackground}">
-                                        <a:AdvancedImage Source="{Binding Project.LogoUrl}" />
-                                    </Border>
-                                    
-                                    <StackPanel Orientation="Horizontal" Classes="Gap-S">
-                                        <controls:ProjectTypePill DataContext="{Binding Project}" />
-                                        <controls:ProjectStatusPill DataContext="{Binding Project}" />
-                                    </StackPanel>
-                                    
-                                    <TextBlock Classes="Header" DockPanel.Dock="Top" Text="{Binding Project.Name}" />
-                                    <TextBlock Text="{Binding Project.Description}" MaxLines="2" TextWrapping="Wrap" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" />
-                                    
-                                    <ContentControl Content="{Binding Project}">
-                                        <ContentControl.DataTemplates>
-                                            <DataTemplate DataType="investmentProject:IInvestmentProject">
-                                                <Grid>
-                                                    <TextBlock Text="{Binding InvestorCount^, TargetNullValue='', StringFormat='{}{0} Investors'}" />
-                                                    <TextBlock Classes="Strong" HorizontalAlignment="Right" Text="{Binding Raised^.DecimalString, FallbackValue='...'}" MaxLines="2" TextWrapping="Wrap" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" />
-                                                </Grid>
-                                            </DataTemplate>
-                                            <DataTemplate DataType="fundProject:IFundProject">
-                                                <Grid>
-                                                    <TextBlock Text="{Binding FunderCount^, TargetNullValue='', StringFormat='{}{0} Funders'}" />
-                                                    <TextBlock Classes="Strong" HorizontalAlignment="Right" Text="{Binding Goal.DecimalString, FallbackValue='...'}" MaxLines="2" TextWrapping="Wrap" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" />
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ContentControl.DataTemplates>
-                                    </ContentControl>
-                                    
-                                    <ContentControl Content="{Binding Project}">
-                                        <ContentControl.DataTemplates>
-                                            <DataTemplate DataType="investmentProject:IInvestmentProject">
-                                                <Grid>
-                                                    <TextBlock Text="Target" />
-                                                    <TextBlock Classes="Strong" HorizontalAlignment="Right" Text="{Binding Target.DecimalString}" MaxLines="2" TextWrapping="Wrap" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" />
-                                                </Grid>
-                                            </DataTemplate>
-                                            <DataTemplate DataType="fundProject:IFundProject">
-                                                <Grid>
-                                                    <TextBlock Text="Goal" />
-                                                    <TextBlock Classes="Strong" HorizontalAlignment="Right" Text="{Binding Goal.DecimalString}" MaxLines="2" TextWrapping="Wrap" TextTrimming="{x:Static TextTrimming.CharacterEllipsis}" />
-                                                </Grid>
-                                            </DataTemplate>
-                                        </ContentControl.DataTemplates>
-                                    </ContentControl>
-                                    
-                                   <controls:ProjectProgress DataContext="{Binding Project}" />
-                                </StackPanel>
-
-                                <Interaction.Behaviors>
-                                    <TappedEventTrigger>
-                                        <InvokeCommandAction Command="{Binding GoToDetails}" />
-                                    </TappedEventTrigger>
-                                    <DataContextChangedTrigger>
-                                        <EnqueueCommandAction Command="{Binding Project.Refresh}"
-                                                              PoolName="ProjectDetails"
-                                                              MaxConcurrency="3"
-                                                              DelayBetweenSeconds="0.5" />
-                                    </DataContextChangedTrigger>
-                                </Interaction.Behaviors>
-
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-        </Loading>
-    </Panel>
+    <Loading IsLoading="{Binding LoadProjects.IsExecuting^}">
+        <ScrollViewer Classes="PageScroll">
+            <ItemsControl Margin="0 70 0 0" ItemsSource="{Binding Projects}" ClipToBounds="False">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <BalancedWrapGrid MinItemWidth="280" MaxItemWidth="500" HorizontalSpacing="20" VerticalSpacing="20" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="findProjects:IFindProjectItem">
+                        <findProjects:FindProjectItemView />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Loading>
 
 </UserControl>

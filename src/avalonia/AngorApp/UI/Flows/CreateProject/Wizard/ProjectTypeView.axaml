@@ -106,8 +106,8 @@
         </Style>
     </UserControl.Styles>
 
-    <controls:ScrollableView MaxContentWidth="800">
-        <StackPanel VerticalAlignment="Center" Classes="Gap-XL">
+    <ScrollViewer Classes="PageScroll">
+        <StackPanel MaxWidth="800" VerticalAlignment="Center" Classes="Gap-XL">
             <TextBlock>Choose the type of project you want to launch.</TextBlock>
             <ListBox SelectedIndex="0" ItemsSource="{Binding ProjectTypes}" SelectedItem="{Binding ProjectType}">
                 <ListBox.ItemsPanel>
@@ -140,7 +140,7 @@
                 </ListBox.ItemTemplate>
             </ListBox>
         </StackPanel>
-    </controls:ScrollableView>
+    </ScrollViewer>
 
 </UserControl>
 

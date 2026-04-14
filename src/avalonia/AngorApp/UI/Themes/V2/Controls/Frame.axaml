@@ -2,13 +2,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Design.PreviewWith>
         <Border Padding="20" Background="Gray">
-            <Frame Footer="" />
+            <Frame Width="300" Height="300" Footer="THIS IS A FOOTER" />
         </Border>
     </Design.PreviewWith>
 
     <Style Selector="Frame">
-        <Setter Property="Padding" Value="20" />
         <Setter Property="FooterBackground" Value="{DynamicResource Surface}" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="HeaderDisplayMode" Value="Separate" />
     </Style>
     <Style Selector="Frame EnhancedButton#BackButton">
         <Setter Property="ClipToBounds" Value="False" />
@@ -16,7 +17,7 @@
         <Setter Property="Content" Value="Back" />
         <Setter Property="Height" Value="44" />
         <Setter Property="Spacing" Value="2" />
-        <Setter Property="Padding" Value="10 10 20 10" />
+        <Setter Property="Padding" Value="20 0 20 0" />
         <Setter Property="BoxShadow" Value="{DynamicResource ItemShadowBig}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="BorderBrush" Value="{DynamicResource Border}" />

@@ -62,7 +62,7 @@
     </UserControl.Styles>
 
     <controls:PageContainer>
-        <ScrollViewer IconOptions.Size="{StaticResource IconSizeSmall}">
+        <ScrollViewer Classes="PageScroll" IconOptions.Size="{StaticResource IconSizeSmall}">
             <StackPanel Classes="Gap-XL" MaxWidth="700">
                 
                 <!-- Network Section -->

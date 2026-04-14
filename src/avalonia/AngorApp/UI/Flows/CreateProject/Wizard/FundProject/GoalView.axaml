@@ -49,8 +49,8 @@
         </Style>
     </UserControl.Styles>
     
-    <controls:ScrollableView MaxContentWidth="766">
-        <StackPanel VerticalAlignment="Center" Spacing="{StaticResource Gap-XL}">
+    <ScrollViewer>
+        <StackPanel MaxWidth="766" VerticalAlignment="Center" Spacing="{StaticResource Gap-XL}">
             <TextBlock Classes="Subtitle">Configure your funding goal and project nature.</TextBlock>
             
             <HeaderedContainer Classes="Card Radius-L Bitcoin">
@@ -150,5 +150,5 @@
                 </HeaderedContainer>
             </HeaderedContainer>
         </StackPanel>
-    </controls:ScrollableView>
+    </ScrollViewer>
 </UserControl>
