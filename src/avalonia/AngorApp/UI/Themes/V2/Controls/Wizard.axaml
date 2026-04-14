@@ -1,21 +1,46 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:slim="clr-namespace:Zafiro.Avalonia.Controls.Wizards.Slim;assembly=Zafiro.Avalonia">
+        xmlns:view="clr-namespace:Zafiro.Avalonia.Wizards.Graph.View;assembly=Zafiro.Avalonia">
 
     <Design.PreviewWith>
-        <WizardFooter Width="500" />
+        <StackPanel Spacing="20">
+            <view:GraphWizardHeaderView Width="500" />
+            <view:GraphWizardFooterView Width="500" />
+        </StackPanel>
     </Design.PreviewWith>
     
     <Style Selector="EnhancedButton.ReverseIcon ContentPresenter#IconPresenter">
         <Setter Property="DockPanel.Dock" Value="Right" />
     </Style>
 
-    <Style Selector="SlimWizardControl ScrollViewer">
+    <Style Selector="view|GraphWizardView ScrollViewer">
         <Setter Property="Padding" Value="0" />
     </Style>
 
     <Styles.Resources>
-        <ControlTheme x:Key="{x:Type slim:WizardFooter}" TargetType="slim:WizardFooter">
+        <ControlTheme x:Key="{x:Type view:GraphWizardHeaderView}" TargetType="view:GraphWizardHeaderView">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Grid ColumnDefinitions="*,Auto,*" Margin="0 0 0 12">
+                        <ContentPresenter Grid.Column="1"
+                                          Content="{Binding $parent[view:GraphWizardHeaderView].CurrentHeader}"
+                                          HorizontalAlignment="Center">
+                            <ContentPresenter.DataTemplates>
+                                <DataTemplate DataType="x:String">
+                                    <TextBlock Text="{Binding}"
+                                               FontSize="25"
+                                               FontWeight="Bold"
+                                               Foreground="{DynamicResource TextStrong}"
+                                               TextAlignment="Center" />
+                                </DataTemplate>
+                            </ContentPresenter.DataTemplates>
+                        </ContentPresenter>
+                    </Grid>
+                </ControlTemplate>
+            </Setter>
+        </ControlTheme>
+
+        <ControlTheme x:Key="{x:Type view:GraphWizardFooterView}" TargetType="view:GraphWizardFooterView">
             <Setter Property="Template">
                 <ControlTemplate>
                     <Grid ColumnDefinitions="*, Auto, *">
@@ -23,18 +48,20 @@
                                         Classes="White"
                                         Grid.Column="0"
                                         HorizontalAlignment="Left"
-                                        Command="{Binding $parent[slim:WizardFooter].Cancel}" />
-                        <ContentPresenter Grid.Column="1" Content="{Binding $parent[slim:WizardFooter].CurrentFooter}" HorizontalAlignment="Center" />
+                                        Command="{Binding $parent[view:GraphWizardFooterView].Wizard.Cancel}" />
+                        <ContentPresenter Grid.Column="1"
+                                          Content="{Binding $parent[view:GraphWizardFooterView].CurrentFooter}"
+                                          HorizontalAlignment="Center" />
                         <StackPanel Grid.Column="2"
                                     Orientation="Horizontal"
                                     Spacing="8"
                                     HorizontalAlignment="Right">
                             <EnhancedButton Content="Back"
                                             Classes="VisibleWhenEnabled Secondary"
-                                            Command="{Binding $parent[slim:WizardFooter].Wizard.Back}" />
-                            <EnhancedButton Content="{Binding $parent[slim:WizardFooter].Wizard.Next.Text, TargetNullValue='Next'}"
+                                            Command="{Binding $parent[view:GraphWizardFooterView].Wizard.Back}" />
+                            <EnhancedButton Content="{Binding $parent[view:GraphWizardFooterView].Wizard.NextTitle^, TargetNullValue='Next'}"
                                             Classes="Primary"
-                                            Command="{Binding $parent[slim:WizardFooter].Wizard.Next}" />
+                                            Command="{Binding $parent[view:GraphWizardFooterView].Wizard.Next}" />
                         </StackPanel>
                     </Grid>
                 </ControlTemplate>
