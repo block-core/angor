@@ -14,9 +14,8 @@ on:
 env:
   DOTNET_VERSION: '9.0.x'
   DOTNET_VERSION_TOOL: '10.0.101'
-  SOLUTION_PATH: 'src/Avalonia.sln'
-  AVALONIA_DIR: 'src'
-  DESKTOP_PROJECT: 'src/avalonia/AngorApp.Desktop/AngorApp.Desktop.csproj'
+  SOLUTION_PATH: 'src/App.sln'
+  DESKTOP_PROJECT: 'src/design/App.Desktop/App.Desktop.csproj'
   ANDROID_PROJECT: 'src/avalonia/AngorApp.Android/AngorApp.Android.csproj'
   APP_NAME: 'Angor'
   APP_ID: 'io.blockcore.angor'
@@ -54,10 +53,10 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       
       - name: Restore dependencies
-        run: dotnet restore avalonia/AngorApp.Desktop/AngorApp.Desktop.csproj
+        run: dotnet restore design/App.Desktop/App.Desktop.csproj
       
       - name: Build
-        run: dotnet build avalonia/AngorApp.Desktop/AngorApp.Desktop.csproj --no-restore -c Release
+        run: dotnet build design/App.Desktop/App.Desktop.csproj --no-restore -c Release
       
       - name: Test
         run: dotnet test sdk/Angor.Sdk.Tests/Angor.Sdk.Tests.csproj -c Release --verbosity normal
@@ -196,7 +195,8 @@ jobs:
             --project ${{ env.DESKTOP_PROJECT }} \
             --arch x64 \
             --output artifacts/Angor-${{ needs.prepare.outputs.version }}-osx-x64.dmg \
-            --application-name "${{ env.APP_NAME }}"
+            --application-name "${{ env.APP_NAME }}" \
+            --icon src/design/App.Desktop/icon.png
 
       
       - name: Create macOS arm64 .dmg (cross-compile)
@@ -205,7 +205,8 @@ jobs:
             --project ${{ env.DESKTOP_PROJECT }} \
             --arch arm64 \
             --output artifacts/Angor-${{ needs.prepare.outputs.version }}-osx-arm64.dmg \
-            --application-name "${{ env.APP_NAME }}"
+            --application-name "${{ env.APP_NAME }}" \
+            --icon src/design/App.Desktop/icon.png
 
       
       - name: Restore global.json

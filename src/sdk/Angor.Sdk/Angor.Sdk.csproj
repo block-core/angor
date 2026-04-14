@@ -9,6 +9,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <InternalsVisibleTo Include="Angor.Sdk.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="CSharpFunctionalExtensions" />
         <PackageReference Include="MediatR" />
         <PackageReference Include="Microsoft.Extensions.Caching.Memory" />

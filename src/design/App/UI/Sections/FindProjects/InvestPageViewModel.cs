@@ -661,6 +661,7 @@ public partial class InvestPageViewModel : ReactiveObject
             }
 
             _logger.LogInformation("Investment flow completed — advancing to Success screen");
+            _ = _walletContext.RefreshBalanceAsync(walletId);
             CurrentScreen = InvestScreen.Success;
         }
         catch (Exception ex)
@@ -827,6 +828,7 @@ public partial class InvestPageViewModel : ReactiveObject
                 }
             }
 
+            _ = _walletContext.RefreshBalanceAsync(walletId);
             CurrentScreen = InvestScreen.Success;
         }
         catch (OperationCanceledException)
