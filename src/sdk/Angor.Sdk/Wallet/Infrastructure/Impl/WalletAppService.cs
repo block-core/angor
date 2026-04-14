@@ -11,7 +11,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Blockcore.NBitcoin.BIP39;
 using CSharpFunctionalExtensions;
-using Serilog;
+using Microsoft.Extensions.Logging;
 
 namespace Angor.Sdk.Wallet.Infrastructure.Impl;
 
@@ -27,10 +27,10 @@ public class WalletAppService(
     IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeys,
     IGenericDocumentCollection<FounderProjectsDocument> founderProjects,
     IGenericDocumentCollection<InvestmentRecordsDocument> investmentRecords,
-    IGenericDocumentCollection<InvestmentHandshake> investmentHandshakes)
+    IGenericDocumentCollection<InvestmentHandshake> investmentHandshakes,
+    ILogger<WalletAppService> logger)
     : IWalletAppService
 {
-    private static readonly ILogger CleanupLogger = Log.ForContext<WalletAppService>();
     //public static readonly WalletId SingleWalletId = new("8E3C5250-4E26-4A13-8075-0A189AEAF793");
     private const string SingleWalletName = "<default>";
 
@@ -272,7 +272,7 @@ public class WalletAppService(
         var cleanup = await DeleteRelatedDocumentsAsync(walletId);
         if (cleanup.IsFailure)
         {
-            Log.Warning("Wallet {WalletId} was deleted from wallet storage, but related document cleanup failed: {Error}", walletId.Value, cleanup.Error);
+            logger.LogWarning("Wallet {WalletId} was deleted from wallet storage, but related document cleanup failed: {Error}", walletId.Value, cleanup.Error);
         }
 
         return Result.Success();
@@ -286,25 +286,33 @@ public class WalletAppService(
         var delDerived = await derivedProjectKeys.DeleteAsync(walletId.Value);
         if (delDerived.IsFailure)
         {
-            errors.Add($"Failed to delete DerivedProjectKeys {delDerived.Error}");
+            var error = $"Failed to delete DerivedProjectKeys {delDerived.Error}";
+            logger.LogWarning("Wallet cleanup issue for {WalletId}: {Error}", walletId.Value, error);
+            errors.Add(error);
         }
 
         var delFounder = await founderProjects.DeleteAsync(walletId.Value);
         if (delFounder.IsFailure)
         {
-            errors.Add($"Failed to delete FounderProjectsDocument {delFounder.Error}");
+            var error = $"Failed to delete FounderProjectsDocument {delFounder.Error}";
+            logger.LogWarning("Wallet cleanup issue for {WalletId}: {Error}", walletId.Value, error);
+            errors.Add(error);
         }
 
         var delInvestments = await investmentRecords.DeleteAsync(walletId.Value);
         if (delInvestments.IsFailure)
         {
-            errors.Add($"Failed to delete InvestmentRecordsDocument {delInvestments.Error}");
+            var error = $"Failed to delete InvestmentRecordsDocument {delInvestments.Error}";
+            logger.LogWarning("Wallet cleanup issue for {WalletId}: {Error}", walletId.Value, error);
+            errors.Add(error);
         }
 
         var handshakes = await investmentHandshakes.FindAsync(h => h.WalletId == walletId.Value);
         if (handshakes.IsFailure)
         {
-            errors.Add($"Failed to query InvestmentHandshakes {handshakes.Error}");
+            var error = $"Failed to query InvestmentHandshakes {handshakes.Error}";
+            logger.LogWarning("Wallet cleanup issue for {WalletId}: {Error}", walletId.Value, error);
+            errors.Add(error);
         }
         else
         {
@@ -313,7 +321,9 @@ public class WalletAppService(
                 var delHs = await investmentHandshakes.DeleteAsync(hs.Id);
                 if (delHs.IsFailure)
                 {
-                    errors.Add($"Failed to delete InvestmentHandshake {hs.Id}: {delHs.Error}");
+                    var error = $"Failed to delete InvestmentHandshake {hs.Id}: {delHs.Error}";
+                    logger.LogWarning("Wallet cleanup issue for {WalletId}: {Error}", walletId.Value, error);
+                    errors.Add(error);
                 }
             }
         }
@@ -321,6 +331,7 @@ public class WalletAppService(
         var deleteAccountResult = await accountBalanceService.DeleteAccountBalanceInfoAsync(walletId);
         if (deleteAccountResult.IsFailure)
         {
+            logger.LogWarning("Wallet cleanup issue for {WalletId}: {Error}", walletId.Value, deleteAccountResult.Error);
             errors.Add(deleteAccountResult.Error);
         }
 
