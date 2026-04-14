@@ -195,7 +195,8 @@ jobs:
             --project ${{ env.DESKTOP_PROJECT }} \
             --arch x64 \
             --output artifacts/Angor-${{ needs.prepare.outputs.version }}-osx-x64.dmg \
-            --application-name "${{ env.APP_NAME }}"
+            --application-name "${{ env.APP_NAME }}" \
+            --icon src/design/App.Desktop/icon.png
 
       
       - name: Create macOS arm64 .dmg (cross-compile)
@@ -204,7 +205,8 @@ jobs:
             --project ${{ env.DESKTOP_PROJECT }} \
             --arch arm64 \
             --output artifacts/Angor-${{ needs.prepare.outputs.version }}-osx-arm64.dmg \
-            --application-name "${{ env.APP_NAME }}"
+            --application-name "${{ env.APP_NAME }}" \
+            --icon src/design/App.Desktop/icon.png
 
       
       - name: Restore global.json
