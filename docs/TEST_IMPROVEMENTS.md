@@ -1,6 +1,10 @@
 # Improvements to Existing Integration Tests
 
-This document describes specific improvements to the 7 existing E2E integration tests in `src/design/App.Test.Integration/`.
+> **Last updated:** April 2026 -- re-analyzed after new E2E tests added.
+
+This document describes specific improvements to the existing E2E integration tests in `src/design/App.Test.Integration/`.
+
+**Current E2E test count: 9** (was 7).
 
 ---
 
@@ -28,6 +32,8 @@ var balanceResult = await balanceCollection.FindByIdAsync(walletId);
 balanceResult.IsSuccess.Should().BeTrue();
 balanceResult.Value.Should().NotBeNull();
 ```
+
+> **Note:** The new `WalletImportAndProjectScanTest` validates some of these assertions (WalletId determinism, balance after import), but `SendToSelfTest` would benefit from explicit DB assertions at each step of its own flow.
 
 #### 1.2 Transaction list after send
 
@@ -76,6 +82,8 @@ docResult.Value.Projects.Should().Contain(p => p.ProjectIdentifier == projectIde
 docResult.Value.Projects.First().CreationTransactionId.Should().NotBeNullOrEmpty();
 ```
 
+> **Note:** The new `WalletImportAndProjectScanTest` validates that `FounderProjectsDocument` is populated after project scan, but `CreateProjectTest` should validate it is populated immediately after deploy.
+
 #### 2.2 DerivedProjectKeys slot consumed
 
 ```csharp
@@ -116,6 +124,8 @@ record.InvestmentTransactionHash.Should().NotBeNullOrEmpty();
 record.InvestedAmountSats.Should().Be(investedAmount);
 ```
 
+> **Note:** The new `InvestmentCancellationTest` validates portfolio/investment record state during cancel/re-invest cycles, but `FundAndRecoverTest` would benefit from explicit DB assertions at the investment and recovery stages.
+
 #### 3.2 InvestmentHandshake status progression
 
 At each stage of the handshake, verify the `InvestmentHandshake` document in the DB:
@@ -125,6 +135,8 @@ At each stage of the handshake, verify the `InvestmentHandshake` document in the
 // After approval: Status = Approved, ApprovalEventId not null
 // After confirm: Status = Invested, InvestmentTransactionId not null
 ```
+
+> **Note:** The new `InvestmentCancellationTest` validates the handshake status becomes "Cancelled" and that re-invested handshakes progress through "Pending Approval" -> "Approved" -> confirmed, but explicit handshake status assertions at each intermediate step are still missing from the simpler `FundAndRecoverTest`.
 
 #### 3.3 Exact balance deltas
 
@@ -184,6 +196,8 @@ aboveThresholdHandshake.IsDirectInvestment.Should().BeFalse();
 aboveThresholdHandshake.ApprovalEventId.Should().NotBeNullOrEmpty();
 ```
 
+> **Note:** The new `InvestmentCancellationTest` validates `IsAutoApproved` is false for above-threshold investments, but below-threshold auto-approval assertion is still only partially covered.
+
 ---
 
 ## 5. MultiInvestClaimAndRecoverTest
@@ -214,9 +228,64 @@ At the end of the test, verify the complete state across all three profiles:
 
 ---
 
-## 6. General Improvements for All Tests
+## 6. WalletImportAndProjectScanTest (NEW)
 
-### 6.1 Add DB assertion helper methods
+**Current coverage:** Import wallet from seed, verify same WalletId, scan projects, verify balance. ~20+ assertions including DB and balance checks.
+
+### Already Covered
+- WalletId determinism (imported == created)
+- Balance discovery after import (UTXO refresh)
+- FounderProjectsDocument populated after ScanFounderProjects
+- Project name and identifier match across profiles
+
+### Missing Assertions
+
+#### 6.1 DerivedProjectKeys comparison
+
+```csharp
+// Verify the imported wallet's DerivedProjectKeys match the creator's exactly
+var importedKeys = await derivedKeysCollection.FindByIdAsync(importedWalletId);
+importedKeys.Value.Keys.Should().BeEquivalentTo(creatorKeys.Value.Keys);
+```
+
+#### 6.2 InvestmentRecordsDocument after import
+
+If the creator had investments, verify they are discoverable after import and scan.
+
+---
+
+## 7. InvestmentCancellationTest (NEW)
+
+**Current coverage:** 8-phase E2E with ~40+ assertions. Validates cancel before approval, cancel after approval, re-invest, and confirm.
+
+### Already Covered
+- Cancel before founder approval (status becomes "Cancelled", balance released)
+- Cancel after founder approval (status becomes "Cancelled", balance released)
+- Re-invest after cancellation succeeds
+- Confirm after approval reaches Step 3 (active)
+- Portfolio investment records updated at each stage
+
+### Missing Assertions
+
+#### 7.1 Founder-side cancellation visibility
+
+After investor cancels, verify the founder's view:
+
+```csharp
+// Switch to founder profile, verify cancelled investment no longer appears as pending
+var pendingRequests = await investmentRequestsCollection.FindAsync(r => r.Status != "Cancelled");
+pendingRequests.Should().NotContain(r => r.InvestorId == cancelledInvestorId);
+```
+
+#### 7.2 Nostr DM cancellation notification
+
+Verify the `NotifyFounderOfCancellation` MediatR request was dispatched (this is covered by `CancelInvestmentRequestTests` at the unit level but not verified E2E).
+
+---
+
+## 8. General Improvements for All Tests
+
+### 8.1 Add DB assertion helper methods
 
 Create shared helper methods in `TestHelpers.cs`:
 
@@ -246,7 +315,7 @@ public static async Task AssertDocumentNotExists<T>(IServiceProvider sp, string 
 }
 ```
 
-### 6.2 Add balance snapshot helpers
+### 8.2 Add balance snapshot helpers
 
 ```csharp
 public static async Task<long> GetBalanceSats(IServiceProvider sp, string walletId)
@@ -257,7 +326,7 @@ public static async Task<long> GetBalanceSats(IServiceProvider sp, string wallet
 }
 ```
 
-### 6.3 Log DB state at end of each test
+### 8.3 Log DB state at end of each test
 
 For debugging flaky tests, log the full DB state at the end:
 

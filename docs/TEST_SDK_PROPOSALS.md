@@ -1,12 +1,18 @@
 # SDK-Level Test Proposals
 
+> **Last updated:** April 2026 -- re-analyzed after significant test additions.
+
 This document describes new tests to add at the SDK level (`src/sdk/Angor.Sdk.Tests/`). These tests use real LiteDB but mock external dependencies (indexer, Nostr relays), so they can run in CI without any network infrastructure.
+
+**Status: 1 of 8 proposals fully implemented, 1 partially implemented, 6 not done.**
 
 ---
 
 ## 1. LiteDB Document Round-Trip Tests (HIGH PRIORITY)
 
-**Why:** The `IGenericDocumentCollection<T>` implementation (`LiteDbGenericDocumentCollection`) has complex expression rewriting logic and wraps/unwraps entities in `Document<T>`. None of the CRUD operations are tested against real LiteDB except for one caching bug test.
+**Status:** PARTIAL -- `LiteDbGenericDocumentCollectionTests` exists (3 tests) but only validates the `??=` expression caching bug fix using mocks, not round-trip persistence of each document type against real LiteDB.
+
+**Why:** The `IGenericDocumentCollection<T>` implementation (`LiteDbGenericDocumentCollection`) has complex expression rewriting logic and wraps/unwraps entities in `Document<T>`. The existing 3 tests validate a specific caching bug but don't test CRUD operations against real LiteDB.
 
 **File:** `Angor.Sdk.Tests/Data/LiteDbDocumentRoundTripTests.cs`
 
@@ -95,6 +101,8 @@ public class LiteDbDocumentRoundTripTests : IDisposable
 
 ## 2. WalletFactory Integration Tests (HIGH PRIORITY)
 
+**Status:** NOT DONE
+
 **Why:** `WalletFactory.CreateWallet` is the core wallet lifecycle method. It persists to both the file store and LiteDB. Currently has zero test coverage.
 
 **File:** `Angor.Sdk.Tests/Wallet/WalletFactoryIntegrationTests.cs`
@@ -122,7 +130,7 @@ CreateWallet_PersistsAccountBalanceInfo_ToLiteDb
 CreateWallet_SameSeedTwice_ProducesSameWalletId
     - Act: CreateWallet twice with same seed words
     - Assert: Both produce the same WalletId
-    - Assert: wallets.json has TWO entries with same Id (documenting the bug)
+    - Assert: wallets.json has TWO entries with same Id (documenting Bug #3)
 
 CreateWallet_InvalidSeedPhrase_ReturnsFailure
     - Act: CreateWallet("", "invalid words here", ...)
@@ -145,6 +153,8 @@ CreateWallet_WithPassphrase_ProducesDifferentWalletId
 ---
 
 ## 3. DatabaseManagementService Tests (HIGH PRIORITY)
+
+**Status:** NOT DONE
 
 **Why:** `DeleteAllDataAsync` is the nuclear reset option. It operates on all 8 collections but is untested.
 
@@ -173,7 +183,9 @@ DeleteAllData_ReturnsCorrectDeleteCount
 
 ## 4. PortfolioService Integration Tests (MEDIUM PRIORITY)
 
-**Why:** `PortfolioService` has a two-tier cache (local LiteDB + Nostr relay) but only the Nostr path is covered. The local cache path and the add/remove operations are untested.
+**Status:** NOT DONE (PortfolioService is only mocked in `CancelInvestmentRequestTests`, `InvestmentAppServiceTests`, `PublishInvestmentTests`, and `CreateInvestmentTests`)
+
+**Why:** `PortfolioService` has a two-tier cache (local LiteDB + Nostr relay) but only the Nostr path is covered via mocks. The local cache path and the add/remove operations are untested.
 
 **File:** `Angor.Sdk.Tests/Funding/Investor/Domain/PortfolioServiceIntegrationTests.cs`
 
@@ -222,6 +234,8 @@ RemoveInvestmentRecord_WhenNotFound_Succeeds
 
 ## 5. DocumentProjectService Integration Tests (MEDIUM PRIORITY)
 
+**Status:** NOT DONE
+
 **Why:** The project caching layer in LiteDB is critical for performance and offline-ish behavior. The cache-hit vs cache-miss paths are untested.
 
 **File:** `Angor.Sdk.Tests/Funding/Services/DocumentProjectServiceIntegrationTests.cs`
@@ -267,7 +281,9 @@ GetAllAsync_CachedProject_PreservesAllFields
 
 ## 6. WalletAppService.DeleteWallet Tests (MEDIUM PRIORITY)
 
-**Why:** Delete is a destructive operation with the known orphaned-data gap. Tests should document what gets cleaned and what doesn't.
+**Status:** NOT DONE
+
+**Why:** Delete is a destructive operation with the known orphaned-data gap (Bug #1). Tests should document what gets cleaned and what doesn't.
 
 **File:** `Angor.Sdk.Tests/Wallet/WalletAppServiceDeleteTests.cs`
 
@@ -282,10 +298,13 @@ DeleteWallet_RemovesAccountBalanceInfo_FromLiteDb
     - Assert: WalletAccountBalanceInfo collection no longer has entry
 
 DeleteWallet_DoesNotRemoveDerivedProjectKeys_FromLiteDb
-    - Assert: DerivedProjectKeys STILL exists (documents the gap)
+    - Assert: DerivedProjectKeys STILL exists (documents Bug #1)
 
 DeleteWallet_DoesNotRemoveFounderProjectsDocument_FromLiteDb
-    - Assert: FounderProjectsDocument STILL exists (documents the gap)
+    - Assert: FounderProjectsDocument STILL exists (documents Bug #1)
+
+DeleteWallet_DoesNotRemoveInvestmentHandshake_FromLiteDb
+    - Assert: InvestmentHandshake records STILL exist (documents Bug #1)
 
 DeleteWallet_WhenWalletNotFound_ReturnsFailure
     - Act: DeleteWallet(unknownId)
@@ -299,39 +318,26 @@ DeleteWallet_ClearsSensitiveDataFromMemory
 
 ---
 
-## 7. ScanFounderProjects Tests (MEDIUM PRIORITY)
+## 7. ~~ScanFounderProjects Tests~~ -- IMPLEMENTED
 
-**Why:** The project scan after wallet import is untested. It involves derived keys, indexer queries, and DB persistence.
+**Status:** **DONE** -- `ScanFounderProjectsTests.cs` added with 7 unit tests.
 
-**File:** `Angor.Sdk.Tests/Funding/Founder/Operations/ScanFounderProjectsTests.cs`
+**What it covers:**
+- `Handle_WhenDerivedKeysFails_ReturnsFailure` -- storage error handling
+- `Handle_WhenDerivedKeysReturnsNull_ReturnsFailure` -- null keys handling
+- `Handle_WhenNoUnknownKeysAndNoLocal_ReturnsEmptyList` -- empty state
+- `Handle_WhenAllKeysAlreadyKnown_SkipsScanAndReturnsProjects` -- cache hit (no indexer call)
+- `Handle_WhenNewProjectsDiscovered_PersistsAndReturnsThem` -- new project discovery + `AddRange` persistence
+- `Handle_WhenScanFailsButLocalProjectsExist_StillReturnsLocalProjects` -- graceful degradation
+- `Handle_WhenFinalProjectLoadFails_ReturnsFailure` -- final load error
 
-### Tests
-
-```
-ScanFounderProjects_WhenNewProjectFound_AddsToFounderProjectsDocument
-    - Arrange: DerivedProjectKeys with 15 slots, indexer returns 1 match
-    - Act: Send ScanFounderProjectsRequest
-    - Assert: FounderProjectsDocument updated with the found project
-
-ScanFounderProjects_WhenAllProjectsAlreadyKnown_NoIndexerCalls
-    - Arrange: All 15 slots already in FounderProjectsDocument
-    - Act: Send request
-    - Assert: Indexer not called (only local DB read)
-
-ScanFounderProjects_WhenNoProjectsFound_ReturnsEmpty
-    - Arrange: DerivedProjectKeys with 15 slots, indexer returns nothing
-    - Act: Send request
-    - Assert: Empty result, FounderProjectsDocument unchanged
-
-ScanFounderProjects_WhenDerivedKeysNotFound_ReturnsFailure
-    - Arrange: No DerivedProjectKeys in DB
-    - Act: Send request
-    - Assert: Result.IsFailure
-```
+**All use mocks (Moq), not real LiteDB.** A real-LiteDB variant would further strengthen confidence but is lower priority now.
 
 ---
 
 ## 8. AesWalletEncryption Round-Trip Tests (LOW PRIORITY)
+
+**Status:** NOT DONE
 
 **Why:** Encryption/decryption is critical but untested at the unit level.
 
@@ -355,17 +361,17 @@ Encrypt_ProducesUniqueSaltAndIV_EachTime
 
 ---
 
-## Implementation Priority
+## Implementation Priority (Revised)
 
-| Priority | Test Class | Effort | Dependencies |
-|---|---|---|---|
-| 1 | `LiteDbDocumentRoundTripTests` | Low | LiteDB only (temp file) |
-| 2 | `DatabaseManagementServiceTests` | Low | LiteDB only |
-| 3 | `WalletFactoryIntegrationTests` | Medium | LiteDB + InMemoryStore + TestNetworkFixture |
-| 4 | `WalletAppServiceDeleteTests` | Medium | Same as above |
-| 5 | `PortfolioServiceIntegrationTests` | Medium | LiteDB + Moq (relay, encryption) |
-| 6 | `DocumentProjectServiceIntegrationTests` | Medium | LiteDB + Moq (relay, indexer) |
-| 7 | `ScanFounderProjectsTests` | Medium | LiteDB + Moq (indexer, project service) |
-| 8 | `AesWalletEncryptionTests` | Low | No dependencies |
+| Priority | Test Class | Effort | Dependencies | Status |
+|---|---|---|---|---|
+| 1 | `LiteDbDocumentRoundTripTests` | Low | LiteDB only (temp file) | **PARTIAL** (3 mock-based tests exist) |
+| 2 | `DatabaseManagementServiceTests` | Low | LiteDB only | Not done |
+| 3 | `WalletFactoryIntegrationTests` | Medium | LiteDB + InMemoryStore + TestNetworkFixture | Not done |
+| 4 | `WalletAppServiceDeleteTests` | Medium | Same as above | Not done |
+| 5 | `PortfolioServiceIntegrationTests` | Medium | LiteDB + Moq (relay, encryption) | Not done |
+| 6 | `DocumentProjectServiceIntegrationTests` | Medium | LiteDB + Moq (relay, indexer) | Not done |
+| 7 | `ScanFounderProjectsTests` | Medium | LiteDB + Moq (indexer, project service) | **DONE** (7 tests) |
+| 8 | `AesWalletEncryptionTests` | Low | No dependencies | Not done |
 
 All of these can run in CI without any network infrastructure. They use real LiteDB (temp files) and mock all external services.

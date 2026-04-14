@@ -1,40 +1,33 @@
 # New Integration Test Proposals
 
+> **Last updated:** April 2026 -- re-analyzed after new E2E tests added.
+
 This document describes new end-to-end integration tests to create in `src/design/App.Test.Integration/`.
+
+**Status: 2 of 10 proposals have been implemented.** The remaining 8 are still recommended.
 
 ---
 
-## 1. Wallet Import and Project Scan (HIGH PRIORITY)
+## 1. ~~Wallet Import and Project Scan~~ -- IMPLEMENTED
 
-**Why:** Currently only the "Generate" wallet path is tested. Import (recovering from mnemonic) is the most critical user flow after a device loss.
+**Status:** **DONE** -- `WalletImportAndProjectScanTest.cs` added.
 
-**File:** `WalletImportAndProjectScanTest.cs`
+**What it covers:**
+- Profile A: create wallet, fund, create project, deploy
+- Profile B: import same seed words
+- Asserts: same `WalletId` (deterministic derivation), non-zero balance (UTXO discovery), `ScanFounderProjects` finds the project, project name and identifier match
 
-### Steps
-
-1. **Profile A:** Create wallet, fund it, create a project, deploy.
-2. Record the seed words and project details (identifier, founder key, etc.).
-3. **Profile B (fresh):** Import wallet using the same seed words.
-4. Assert: `DerivedProjectKeys` regenerated with the same 15 key slots.
-5. Assert: `WalletId` is identical (deterministic from xpub hash).
-6. Trigger `ScanFounderProjects`.
-7. Assert: The deployed project appears in "My Projects."
-8. Assert: `FounderProjectsDocument` in DB matches Profile A's project.
-9. Assert: Balance matches (same UTXOs discovered on-chain).
-
-### What This Validates
-
-- Mnemonic import produces the same deterministic wallet ID.
-- Derived project keys are correctly regenerated for the network.
-- `ScanFounderProjects` correctly queries the indexer for all 15 key slots.
-- Local DB (`FounderProjectsDocument`) is populated from scan results.
-- Balance refresh discovers existing UTXOs after import.
+**Remaining gaps in the implementation:**
+- Does not compare `DerivedProjectKeys` between profiles (proposed in TEST_IMPROVEMENTS.md section 6.1)
+- Does not verify `InvestmentRecordsDocument` discoverable after import
 
 ---
 
 ## 2. Wallet Delete and Reimport (HIGH PRIORITY)
 
-**Why:** Delete has a known gap: `DerivedProjectKeys` and `FounderProjectsDocument` are NOT cleaned up. This test documents and exposes that behavior.
+**Status:** NOT DONE
+
+**Why:** Delete has a known gap (Bug #1): `DerivedProjectKeys`, `FounderProjectsDocument`, `InvestmentRecordsDocument`, and `InvestmentHandshake` are NOT cleaned up. This test documents and exposes that behavior.
 
 **File:** `WalletDeleteAndReimportTest.cs`
 
@@ -64,7 +57,9 @@ This document describes new end-to-end integration tests to create in `src/desig
 
 ## 3. Many Investors Scenario (HIGH PRIORITY)
 
-**Why:** Current tests use 2 investors max. Real projects may have many investors, and the threshold/approval logic becomes complex at scale.
+**Status:** NOT DONE
+
+**Why:** Current tests use 2-3 investors max. Real projects may have many investors, and the threshold/approval logic becomes complex at scale.
 
 **File:** `ManyInvestorsTest.cs`
 
@@ -95,7 +90,9 @@ This document describes new end-to-end integration tests to create in `src/desig
 
 ## 4. Database Integrity After Operations (HIGH PRIORITY)
 
-**Why:** No test currently validates the database state directly. All assertions go through the UI. This test validates the full persistence lifecycle.
+**Status:** NOT DONE
+
+**Why:** No test currently validates the full database lifecycle including wipe and rebuild.
 
 **File:** `DatabaseIntegrityTest.cs`
 
@@ -133,7 +130,9 @@ This document describes new end-to-end integration tests to create in `src/desig
 
 ## 5. Subscribe Project Type (MEDIUM PRIORITY)
 
-**Why:** Only `Invest` and `Fund` types are tested. `Subscribe` is completely untested.
+**Status:** NOT DONE (unit tests exist for dynamic stage patterns but no E2E)
+
+**Why:** Only `Invest` and `Fund` types are tested. `Subscribe` is completely untested E2E.
 
 **File:** `SubscribeProjectTest.cs`
 
@@ -156,35 +155,29 @@ This document describes new end-to-end integration tests to create in `src/desig
 
 ---
 
-## 6. Investment Cancellation Flow (MEDIUM PRIORITY)
+## 6. ~~Investment Cancellation Flow~~ -- IMPLEMENTED
 
-**Why:** `CancelInvestmentRequest` has SDK unit tests but no end-to-end flow.
+**Status:** **DONE** -- `InvestmentCancellationTest.cs` added.
 
-**File:** `InvestmentCancellationTest.cs`
+**What it covers (8 phases, ~40+ assertions):**
+1. Founder creates project, investor invests
+2. Investor cancels **before** founder approval -- status becomes "Cancelled", balance released
+3. Investor re-invests after cancel -- new handshake created
+4. Founder approves the re-investment
+5. Investor cancels **after** founder approval -- status becomes "Cancelled", balance released
+6. Investor re-invests again
+7. Founder approves again
+8. Investor confirms approved investment -- reaches Step 3 (active)
 
-### Steps
-
-1. Founder creates a project.
-2. Investor starts investment handshake (sends Nostr DM request).
-3. Before founder approves, investor cancels the investment.
-4. Assert: `InvestmentHandshake.Status == Cancelled` in DB.
-5. Assert: Investor's funds are NOT locked.
-6. Assert: Investor's balance is unchanged.
-7. Assert: Founder does NOT see the investment as active.
-8. Investor invests again in the same project.
-9. Assert: New investment succeeds normally.
-10. Assert: A new `InvestmentHandshake` is created (separate from cancelled one).
-
-### What This Validates
-
-- Cancellation correctly updates handshake status.
-- Cancelled investments don't lock funds.
-- Re-investing after cancellation works.
-- Founder's view correctly reflects cancellations.
+**Remaining gaps in the implementation:**
+- Does not verify founder-side cancellation visibility (proposed in TEST_IMPROVEMENTS.md section 7.1)
+- Does not verify Nostr DM cancellation notification E2E
 
 ---
 
 ## 7. Project Discovery and Cache Behavior (MEDIUM PRIORITY)
+
+**Status:** NOT DONE
 
 **Why:** The `DocumentProjectService` caching layer (LiteDB cache-aside) is untested end-to-end.
 
@@ -213,7 +206,9 @@ This document describes new end-to-end integration tests to create in `src/desig
 
 ## 8. Duplicate Wallet Import (EDGE CASE)
 
-**Why:** There is NO duplicate wallet check in `WalletFactory`. Importing the same seed twice produces the same `WalletId`, and LiteDB will upsert (collide). This edge case is currently unhandled.
+**Status:** NOT DONE (Bug #3 still exists)
+
+**Why:** There is NO duplicate wallet check in `WalletFactory`. Importing the same seed twice produces the same `WalletId`, and `wallets.json` gets a duplicate entry. This edge case is currently unhandled.
 
 **File:** `DuplicateWalletImportTest.cs`
 
@@ -231,7 +226,7 @@ This document describes new end-to-end integration tests to create in `src/desig
 ### Expected Outcome
 
 This test should document whether the system:
-- Silently creates a duplicate (bug).
+- Silently creates a duplicate (bug -- this is the current behavior per analysis).
 - Detects the duplicate and rejects it (ideal).
 - Crashes or corrupts data (critical bug).
 
@@ -240,6 +235,8 @@ The test result will drive a fix: adding a duplicate `WalletId` check to `Wallet
 ---
 
 ## 9. Non-Zero Penalty Recovery (EDGE CASE)
+
+**Status:** NOT DONE
 
 **Why:** `MultiFundClaimAndRecoverTest` uses `PenaltyDays=0`. The actual penalty calculation with time-locked funds is untested.
 
@@ -267,6 +264,8 @@ The test result will drive a fix: adding a duplicate `WalletId` check to `Wallet
 
 ## 10. Wallet Network Switch (EDGE CASE)
 
+**Status:** NOT DONE
+
 **Why:** `RebuildAllWalletBalancesAsync` re-derives keys for the new network but this is never tested.
 
 **File:** `NetworkSwitchTest.cs`
@@ -286,3 +285,20 @@ The test result will drive a fix: adding a duplicate `WalletId` check to `Wallet
 - Key re-derivation happens on network switch.
 - Projects are filtered by network name.
 - Network switch is reversible without data loss.
+
+---
+
+## Summary
+
+| # | Proposal | Priority | Status |
+|---|---|---|---|
+| 1 | Wallet Import and Project Scan | HIGH | **DONE** |
+| 2 | Wallet Delete and Reimport | HIGH | Not done |
+| 3 | Many Investors | HIGH | Not done |
+| 4 | Database Integrity | HIGH | Not done |
+| 5 | Subscribe Project Type | MEDIUM | Not done |
+| 6 | Investment Cancellation | MEDIUM | **DONE** |
+| 7 | Project Discovery Cache | MEDIUM | Not done |
+| 8 | Duplicate Wallet Import | EDGE | Not done |
+| 9 | Non-Zero Penalty Recovery | EDGE | Not done |
+| 10 | Network Switch | EDGE | Not done |
