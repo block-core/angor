@@ -281,45 +281,53 @@ public class WalletAppService(
     // Removes related documents for wallet
     private async Task<Result> DeleteRelatedDocumentsAsync(WalletId walletId)
     {
+        var errors = new System.Collections.Generic.List<string>();
+
         var delDerived = await derivedProjectKeys.DeleteAsync(walletId.Value);
         if (delDerived.IsFailure)
         {
-            return Result.Failure($"Failed to delete DerivedProjectKeys {delDerived.Error}");
+            errors.Add($"Failed to delete DerivedProjectKeys {delDerived.Error}");
         }
 
         var delFounder = await founderProjects.DeleteAsync(walletId.Value);
         if (delFounder.IsFailure)
         {
-            return Result.Failure($"Failed to delete FounderProjectsDocument {delFounder.Error}");
+            errors.Add($"Failed to delete FounderProjectsDocument {delFounder.Error}");
         }
 
         var delInvestments = await investmentRecords.DeleteAsync(walletId.Value);
         if (delInvestments.IsFailure)
         {
-            return Result.Failure($"Failed to delete InvestmentRecordsDocument {delInvestments.Error}");
+            errors.Add($"Failed to delete InvestmentRecordsDocument {delInvestments.Error}");
         }
 
         var handshakes = await investmentHandshakes.FindAsync(h => h.WalletId == walletId.Value);
         if (handshakes.IsFailure)
         {
-            return Result.Failure($"Failed to query InvestmentHandshakes {handshakes.Error}");
+            errors.Add($"Failed to query InvestmentHandshakes {handshakes.Error}");
         }
-
-        foreach (var hs in handshakes.Value)
+        else
         {
-            var delHs = await investmentHandshakes.DeleteAsync(hs.Id);
-            if (delHs.IsFailure)
+            foreach (var hs in handshakes.Value)
             {
-                return Result.Failure($"Failed to delete InvestmentHandshake {hs.Id}: {delHs.Error}");
+                var delHs = await investmentHandshakes.DeleteAsync(hs.Id);
+                if (delHs.IsFailure)
+                {
+                    errors.Add($"Failed to delete InvestmentHandshake {hs.Id}: {delHs.Error}");
+                }
             }
         }
 
         var deleteAccountResult = await accountBalanceService.DeleteAccountBalanceInfoAsync(walletId);
         if (deleteAccountResult.IsFailure)
         {
-            return deleteAccountResult;
+            errors.Add(deleteAccountResult.Error);
         }
 
+        if (errors.Count > 0)
+        {
+            return Result.Failure(string.Join("; ", errors));
+        }
         return Result.Success();
     }
 
