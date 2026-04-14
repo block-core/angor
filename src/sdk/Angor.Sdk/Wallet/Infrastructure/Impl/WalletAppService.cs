@@ -272,7 +272,7 @@ public class WalletAppService(
         var cleanup = await DeleteRelatedDocumentsAsync(walletId);
         if (cleanup.IsFailure)
         {
-            return cleanup;
+            Log.Warning("Wallet {WalletId} was deleted from wallet storage, but related document cleanup failed: {Error}", walletId.Value, cleanup.Error);
         }
 
         return Result.Success();
