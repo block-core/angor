@@ -1,10 +1,12 @@
 using System.Collections.ObjectModel;
 using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Projects.Domain;
+using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Utilities;
 using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Shared;
+using App.UI.Shared.Services;
 using ReactiveUI;
 using SdkProjectType = Angor.Shared.Models.ProjectType;
 
@@ -133,6 +135,7 @@ public partial class CreateProjectViewModel : ReactiveObject
     public DeployFlowViewModel DeployFlow { get; }
 
     private readonly ICurrencyService _currencyService;
+    private readonly INetworkConfiguration _networkConfiguration;
 
     public string CurrencySymbol => _currencyService.Symbol;
 
@@ -145,10 +148,11 @@ public partial class CreateProjectViewModel : ReactiveObject
     /// <summary>e.g. "Price per period (BTC) *"</summary>
     public string PricePerPeriodLabel => _currencyService.PricePerPeriodLabel;
 
-    public CreateProjectViewModel(DeployFlowViewModel deployFlow, ICurrencyService currencyService)
+    public CreateProjectViewModel(DeployFlowViewModel deployFlow, ICurrencyService currencyService, INetworkConfiguration networkConfiguration)
     {
         DeployFlow = deployFlow;
         _currencyService = currencyService;
+        _networkConfiguration = networkConfiguration;
         // Default start date to today
         StartDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
         InvestStartDate = DateTime.Now;
@@ -358,12 +362,25 @@ public partial class CreateProjectViewModel : ReactiveObject
         RaiseAllStepProperties();
     }
 
+    /// <summary>
+    /// Creates a ProjectValidator with the current debug mode state.
+    /// Debug mode is only active when explicitly enabled AND on testnet.
+    /// </summary>
+    private ProjectValidator CreateValidator()
+    {
+        var isDebug = _networkConfiguration.GetDebugMode() &&
+                      _networkConfiguration.GetNetwork().Name != "Main";
+        return new ProjectValidator(isDebug);
+    }
+
     public void GoNext()
     {
         if (CurrentStep >= TotalSteps) return;
 
         // ── Validate current step (Vue: nextStep() lines 9451-9629) ──
         ClearErrors();
+
+        var validator = CreateValidator();
 
         switch (CurrentStep)
         {
@@ -377,21 +394,26 @@ public partial class CreateProjectViewModel : ReactiveObject
                 break;
 
             case 2:
-                if (string.IsNullOrWhiteSpace(ProjectName))
+            {
+                var nameResult = validator.ValidateName(ProjectName);
+                if (!nameResult.IsValid)
                 {
-                    FormError = "Please enter a project name";
-                    NameError = "Project name is required";
+                    FormError = nameResult.ErrorMessage!;
+                    NameError = nameResult.ErrorMessage!;
                     RaiseErrorProperties();
                     return;
                 }
-                if (string.IsNullOrWhiteSpace(ProjectAbout))
+
+                var descResult = validator.ValidateDescription(ProjectAbout);
+                if (!descResult.IsValid)
                 {
-                    FormError = "Please enter a project description";
-                    AboutError = "Project description is required";
+                    FormError = descResult.ErrorMessage!;
+                    AboutError = descResult.ErrorMessage!;
                     RaiseErrorProperties();
                     return;
                 }
                 break;
+            }
 
             case 3:
                 // Images are optional — no validation
@@ -430,10 +452,42 @@ public partial class CreateProjectViewModel : ReactiveObject
                         RaiseErrorProperties();
                         return;
                     }
+
+                    // Production validation: target amount limits
+                    var amountResult = validator.ValidateTargetAmount((decimal)double.Parse(TargetAmount,
+                        System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture));
+                    if (!amountResult.IsValid)
+                    {
+                        FormError = amountResult.ErrorMessage!;
+                        TargetAmountError = amountResult.ErrorMessage!;
+                        RaiseErrorProperties();
+                        return;
+                    }
+
                     if (!InvestEndDate.HasValue)
                     {
                         FormError = "Please enter the funding window end date";
                         EndDateError = "Please enter the funding window end date";
+                        RaiseErrorProperties();
+                        return;
+                    }
+
+                    // Production validation: funding end date
+                    var endDateResult = validator.ValidateFundingEndDate(InvestEndDate.Value);
+                    if (!endDateResult.IsValid)
+                    {
+                        FormError = endDateResult.ErrorMessage!;
+                        EndDateError = endDateResult.ErrorMessage!;
+                        RaiseErrorProperties();
+                        return;
+                    }
+
+                    // Production validation: penalty days
+                    var penaltyResult = validator.ValidatePenaltyDays(PenaltyDays);
+                    if (!penaltyResult.IsValid)
+                    {
+                        FormError = penaltyResult.ErrorMessage!;
                         RaiseErrorProperties();
                         return;
                     }
