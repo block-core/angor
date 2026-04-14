@@ -273,9 +273,10 @@ public static class PublishInvestment
         private async Task<Result<string>> PublishSignedTransactionAsync(TransactionInfo signedTransaction, WalletId walletId)
         {
             try
-            { 
+            {
                 AccountInfo? accountInfo = null;
-                var accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
+                Result<AccountBalanceInfo>? accountBalanceResult = null;
+                accountBalanceResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
                 if (accountBalanceResult.IsSuccess)
                 {
                     accountInfo = accountBalanceResult.Value.AccountInfo;
@@ -284,15 +285,24 @@ public static class PublishInvestment
                 {
                     logger.Warning("Failed to load account info for wallet {WalletId}: {Error}", walletId, accountBalanceResult.Error);
                 }
-                
+
                 var response = await walletOperations.PublishTransactionAsync(networkConfiguration.GetNetwork(),
                     signedTransaction.Transaction, accountInfo);
-                
+
                 if (response.Success)
                     return Result.Success(signedTransaction.Transaction.GetHash().ToString());
-                
+
+                if (accountBalanceResult is { IsSuccess: true })
+                {
+                    var saveAccountBalanceResult = await walletAccountBalanceService.SaveAccountBalanceInfoAsync(walletId, accountBalanceResult.Value);
+                    if (saveAccountBalanceResult.IsFailure)
+                    {
+                        logger.Warning("Failed to persist rolled back account info for wallet {WalletId}: {Error}", walletId, saveAccountBalanceResult.Error);
+                    }
+                }
+
                 logger.Error("Failed to publish investment transaction: {Message}", response.Message);
-                
+
                 return Result.Failure<string>($"Failed to publish the transaction to the blockchain: {response.Message}");
             }
             catch (Exception e)
