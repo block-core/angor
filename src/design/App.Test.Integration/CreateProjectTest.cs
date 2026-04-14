@@ -5,7 +5,6 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
-using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Projects;
 using Angor.Shared;
 using App.Composition.Adapters;
@@ -136,9 +135,9 @@ public class CreateProjectTest
 
         // Enable debug mode AFTER wipe (wipe resets settings to defaults).
         // Debug mode only relaxes validation constraints when the network is also testnet (not mainnet).
-        var networkConfig = global::App.App.Services.GetRequiredService<INetworkConfiguration>();
-        networkConfig.SetDebugMode(true);
-        Log("[STEP 1b] Debug mode ENABLED via INetworkConfiguration (after wipe).");
+        // Use SettingsViewModel so both PrototypeSettings (persisted) and INetworkConfiguration (in-memory) are updated.
+        await EnableDebugMode(window);
+        Log("[STEP 1b] Debug mode ENABLED via SettingsViewModel (after wipe).");
 
         // ──────────────────────────────────────────────────────────────
         // STEP 2: Navigate to Funds → create wallet via Generate path
@@ -568,6 +567,31 @@ public class CreateProjectTest
         {
             Log("  [Wipe] SettingsView/SettingsViewModel not found — skipping wipe.");
         }
+    }
+
+    /// <summary>
+    /// Navigate to Settings and enable debug mode via the SettingsViewModel.
+    /// This sets both PrototypeSettings (persisted) and INetworkConfiguration (in-memory).
+    /// </summary>
+    private async Task EnableDebugMode(Window window)
+    {
+        Log("  [DebugMode] Navigating to Settings...");
+        window.NavigateToSettings();
+        Dispatcher.UIThread.RunJobs();
+        await Task.Delay(500);
+
+        var settingsView = window.GetVisualDescendants()
+            .OfType<SettingsView>()
+            .FirstOrDefault();
+
+        settingsView.Should().NotBeNull("SettingsView should be available to enable debug mode");
+        var settingsVm = settingsView!.DataContext as SettingsViewModel;
+        settingsVm.Should().NotBeNull("SettingsViewModel should be available to enable debug mode");
+
+        settingsVm!.IsDebugMode = true;
+        Dispatcher.UIThread.RunJobs();
+        settingsVm.IsDebugMode.Should().BeTrue("Debug mode should be enabled");
+        Log("  [DebugMode] Debug mode enabled via SettingsViewModel.");
     }
 
     /// <summary>
