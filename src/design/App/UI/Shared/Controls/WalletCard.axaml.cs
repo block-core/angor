@@ -45,6 +45,12 @@ public class WalletCard : TemplatedControl
     public static readonly StyledProperty<string?> ReservedBalanceProperty =
         AvaloniaProperty.Register<WalletCard, string?>(nameof(ReservedBalance));
 
+    /// <summary>
+    /// When true, the refresh button shows a spinning icon.
+    /// </summary>
+    public static readonly StyledProperty<bool> IsRefreshingProperty =
+        AvaloniaProperty.Register<WalletCard, bool>(nameof(IsRefreshing));
+
     public string? WalletName
     {
         get => GetValue(WalletNameProperty);
@@ -91,5 +97,11 @@ public class WalletCard : TemplatedControl
     {
         get => GetValue(ReservedBalanceProperty);
         set => SetValue(ReservedBalanceProperty, value);
+    }
+
+    public bool IsRefreshing
+    {
+        get => GetValue(IsRefreshingProperty);
+        set => SetValue(IsRefreshingProperty, value);
     }
 }

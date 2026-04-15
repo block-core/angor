@@ -102,8 +102,33 @@
                             <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
                         </Transitions>
                     </Border.Transitions>
-                    <Button Classes="NavBtn" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Cursor="Hand">
-                        <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="14" Foreground="{DynamicResource TextStrong}" />
+                    <Button Name="RefreshButton" Classes="NavBtn" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Cursor="Hand"
+                            IsEnabled="{Binding !IsRefreshing}">
+                        <Panel>
+                            <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="14" Foreground="{DynamicResource TextStrong}"
+                                    IsVisible="{Binding !IsRefreshing}" />
+                            <i:Icon Value="fa-solid fa-spinner" FontSize="14" Foreground="{DynamicResource TextStrong}"
+                                    IsVisible="{Binding IsRefreshing}"
+                                    RenderTransformOrigin="50%,50%">
+                                <i:Icon.RenderTransform>
+                                    <RotateTransform />
+                                </i:Icon.RenderTransform>
+                                <i:Icon.Styles>
+                                    <Style Selector="i|Icon[IsVisible=True]">
+                                        <Style.Animations>
+                                            <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                <KeyFrame Cue="0%">
+                                                    <Setter Property="RotateTransform.Angle" Value="0" />
+                                                </KeyFrame>
+                                                <KeyFrame Cue="100%">
+                                                    <Setter Property="RotateTransform.Angle" Value="360" />
+                                                </KeyFrame>
+                                            </Animation>
+                                        </Style.Animations>
+                                    </Style>
+                                </i:Icon.Styles>
+                            </i:Icon>
+                        </Panel>
                     </Button>
                 </Border>
 

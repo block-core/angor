@@ -65,17 +65,6 @@ public partial class SettingsViewModel : ReactiveObject
 
     private readonly PrototypeSettings _prototypeSettings;
 
-    // Prototype settings toggle — delegates to injected PrototypeSettings
-    public bool ShowPopulatedApp
-    {
-        get => _prototypeSettings.ShowPopulatedApp;
-        set
-        {
-            _prototypeSettings.ShowPopulatedApp = value;
-            this.RaisePropertyChanged();
-        }
-    }
-
     /// <summary>
     /// Debug mode toggle — only effective on testnet networks.
     /// Delegates to PrototypeSettings and syncs to INetworkConfiguration.SetDebugMode().

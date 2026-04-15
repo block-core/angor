@@ -6,6 +6,7 @@ using Angor.Data.Documents.Interfaces;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
+using Microsoft.Extensions.Logging;
 using Stage = Angor.Sdk.Funding.Projects.Domain.Stage;
 
 namespace Angor.Sdk.Funding.Services;
@@ -13,7 +14,8 @@ namespace Angor.Sdk.Funding.Services;
 public class DocumentProjectService(
   IGenericDocumentCollection<Project> collection,
     IRelayService relayService,
-    IAngorIndexerService angorIndexerService) : IProjectService
+    IAngorIndexerService angorIndexerService,
+    ILogger<DocumentProjectService> logger) : IProjectService
 {
     public Task<Result<Project>> GetAsync(ProjectId id)
     {
@@ -36,8 +38,16 @@ public class DocumentProjectService(
 
             var projectResult = await collection.FindByIdsAsync(stringIds);
 
-            var localLookup = projectResult.IsSuccess && projectResult.Value.Any()//check the results from the local database
-             ? projectResult.Value.Select(item => item).ToList() : [];
+            List<Project> localLookup;
+            if (projectResult.IsFailure)
+            {
+                logger.LogWarning("Failed to read projects from local cache: {Error}. Treating as empty cache.", projectResult.Error);
+                localLookup = [];
+            }
+            else
+            {
+                localLookup = projectResult.Value.ToList();
+            }
 
             if (ids.Length == localLookup.Count)
                 return Result.Success(localLookup.OrderByDescending(p => p.StartingDate).AsEnumerable()); //all ids are in the local database, return them
@@ -112,7 +122,12 @@ public class DocumentProjectService(
             if (!response.Any())
                 return Result.Failure<IEnumerable<Project>>("No projects found");
 
-            var insertResult = await collection.InsertAsync(project => project.Id.Value, response.ToArray()); //TODO log the result?
+            foreach (var project in response)
+            {
+                var upsertResult = await collection.UpsertAsync(p => p.Id.Value, project);
+                if (upsertResult.IsFailure)
+                    logger.LogWarning("Failed to cache project {ProjectId}: {Error}", project.Id.Value, upsertResult.Error);
+            }
 
             return Result.Success(response.Concat(localLookup).OrderByDescending(p => p.StartingDate).AsEnumerable());
         }

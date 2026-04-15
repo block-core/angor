@@ -85,7 +85,8 @@ public static class GetInvestments
                         InRecovery = new Amount(stats.stats?.AmountInPenalties ?? 0),
                         RequestedOn = investmentRecord.RequestEventTime.HasValue
                             ? new DateTimeOffset(investmentRecord.RequestEventTime.Value)
-                            : null
+                            : null,
+                        ProjectType = project.ProjectType
                     };
 
                     if (investment != null)

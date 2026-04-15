@@ -1,6 +1,7 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Projects.Domain;
+using Angor.Shared.Models;
 
 namespace Angor.Sdk.Funding.Investor;
 
@@ -19,6 +20,11 @@ public class InvestedProjectDto
     public InvestmentStatus InvestmentStatus { get; set; }
     public string InvestmentId { get; set; }
     public DateTimeOffset? RequestedOn { get; set; }
+    
+    /// <summary>
+    /// Project type: Invest, Fund, or Subscribe. Defaults to Invest for backward compatibility.
+    /// </summary>
+    public ProjectType ProjectType { get; set; } = ProjectType.Invest;
 }
 
 public enum FounderStatus

@@ -11,9 +11,24 @@
     <!-- STEP 2: PROJECT PROFILE                  -->
     <!-- ═══════════════════════════════════════ -->
     <StackPanel Spacing="24">
-        <!-- Subtitle only — matches reference (no bold heading) -->
-        <TextBlock Text="Tell us about your project and what you're building."
-                   FontSize="14" Foreground="{DynamicResource TextMuted}" />
+        <!-- Subtitle + optional debug prefill button -->
+        <DockPanel>
+            <Button DockPanel.Dock="Right"
+                    Content="Debug Prefill Data"
+                    Click="OnDebugPrefillClick"
+                    IsVisible="{Binding IsDebugMode}"
+                    Background="#D97706"
+                    Foreground="White"
+                    FontWeight="Bold"
+                    FontSize="13"
+                    Padding="16,8"
+                    CornerRadius="8"
+                    Cursor="Hand"
+                    VerticalAlignment="Center" />
+            <TextBlock Text="Tell us about your project and what you're building."
+                       FontSize="14" Foreground="{DynamicResource TextMuted}"
+                       VerticalAlignment="Center" />
+        </DockPanel>
 
         <!-- Card: What's the project called? -->
         <Border CornerRadius="12" BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
