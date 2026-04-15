@@ -500,6 +500,7 @@ public partial class PortfolioViewModel : ReactiveObject
 
     /// <summary>
     /// Load investments from SDK for all wallets.
+    /// Preserves optimistic items that were added locally but not yet indexed by the server.
     /// </summary>
     public async Task LoadInvestmentsFromSdkAsync()
     {
@@ -519,10 +520,16 @@ public partial class PortfolioViewModel : ReactiveObject
                 return;
             }
 
+            // Snapshot existing items so we can preserve optimistic adds and stale-response state
+            var previousItems = Investments.ToList();
+
             Investments.Clear();
             double totalInvested = 0;
             double totalInRecovery = 0;
             int recoveryCount = 0;
+
+            // Track which previous items were matched by SDK results
+            var matchedPreviousIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var wallet in wallets)
             {
@@ -547,13 +554,20 @@ public partial class PortfolioViewModel : ReactiveObject
 
                     var (statusText, statusClass, step) = MapInvestmentStatus(dto.InvestmentStatus, dto.FounderStatus);
 
-                    var existingInvestment = Investments.FirstOrDefault(i =>
+                    // Check the snapshot (not the cleared collection) for stale-response guard
+                    var existingInvestment = previousItems.FirstOrDefault(i =>
                         (!string.IsNullOrEmpty(dto.Id) && i.ProjectIdentifier == dto.Id) ||
                         (!string.IsNullOrEmpty(dto.InvestmentId) && i.InvestmentTransactionId == dto.InvestmentId));
 
                     var serverStatus = dto.InvestmentStatus;
                     if (existingInvestment != null)
                     {
+                        // Mark as matched so we don't re-add it as an optimistic item
+                        if (!string.IsNullOrEmpty(dto.Id))
+                            matchedPreviousIds.Add(dto.Id);
+                        if (!string.IsNullOrEmpty(dto.InvestmentId))
+                            matchedPreviousIds.Add(dto.InvestmentId);
+
                         var localStatus = MapUiStepToInvestmentStatus(existingInvestment);
                         if (localStatus != serverStatus && IsStaleResponse(localStatus, serverStatus))
                         {
@@ -569,6 +583,16 @@ public partial class PortfolioViewModel : ReactiveObject
                         }
                     }
 
+                    // Map SDK ProjectType enum to lowercase string
+                    var projectType = dto.ProjectType switch
+                    {
+                        Angor.Shared.Models.ProjectType.Fund => "fund",
+                        Angor.Shared.Models.ProjectType.Subscribe => "subscription",
+                        _ => "invest"
+                    };
+                    var typeEnum = ProjectTypeExtensions.FromLowerString(projectType);
+                    var typeLabel = ProjectTypeTerminology.AmountNoun(typeEnum);
+
                     var vm = new InvestmentViewModel
                     {
                         ProjectName = dto.Name ?? "Unknown Project",
@@ -576,7 +600,7 @@ public partial class PortfolioViewModel : ReactiveObject
                         TotalInvested = investedBtc.ToString("F8", CultureInfo.InvariantCulture),
                         FundingAmount = $"{investedBtc:F4} {_currencyService.Symbol}",
                         FundingDate = DateTime.Now.ToString("M/dd/yyyy"),
-                        TypeLabel = "Investment",
+                        TypeLabel = typeLabel,
                         StatusText = statusText,
                         StatusClass = statusClass,
                         StatusPill1 = "Funding",
@@ -585,7 +609,7 @@ public partial class PortfolioViewModel : ReactiveObject
                         TotalRaised = raisedBtc.ToString("F4", CultureInfo.InvariantCulture),
                         Progress = targetBtc > 0 ? Math.Min(100, raisedBtc / targetBtc * 100) : 0,
                         Status = statusClass == "active" ? "Active" : "Pending",
-                        ProjectType = "invest",
+                        ProjectType = projectType,
                         Step = step,
                         ApprovalStatus = dto.FounderStatus == Angor.Sdk.Funding.Investor.FounderStatus.Approved ? "Approved" : "Pending",
                         AvatarUrl = dto.LogoUri?.ToString(),
@@ -596,6 +620,25 @@ public partial class PortfolioViewModel : ReactiveObject
                     };
 
                     Investments.Add(vm);
+                }
+            }
+
+            // Restore optimistic items that the SDK didn't return yet (indexer lag).
+            // These are items previously added via AddInvestmentFromProject() that
+            // the indexer hasn't caught up with.
+            foreach (var prev in previousItems)
+            {
+                bool wasMatchedById = !string.IsNullOrEmpty(prev.ProjectIdentifier)
+                    && matchedPreviousIds.Contains(prev.ProjectIdentifier);
+                bool wasMatchedByTxId = !string.IsNullOrEmpty(prev.InvestmentTransactionId)
+                    && matchedPreviousIds.Contains(prev.InvestmentTransactionId);
+
+                if (!wasMatchedById && !wasMatchedByTxId)
+                {
+                    _logger.LogInformation(
+                        "Restoring optimistic investment '{ProjectName}' (ID: {ProjectId}) — not yet returned by SDK",
+                        prev.ProjectName, prev.ProjectIdentifier);
+                    Investments.Insert(0, prev);
                 }
             }
 

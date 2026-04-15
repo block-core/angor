@@ -172,6 +172,7 @@ public partial class ManageProjectViewModel : ReactiveObject
     [Reactive] public partial bool IsReleasingFunds { get; set; }
     [Reactive] public partial string ClaimedAmount { get; set; }
     [Reactive] public partial string ReleasedAmount { get; set; }
+    [Reactive] public partial bool IsRefreshing { get; set; }
 
     public ManageStageViewModel? SelectedStage =>
         SelectedStageIndex >= 0 && SelectedStageIndex < Stages.Count
@@ -206,6 +207,28 @@ public partial class ManageProjectViewModel : ReactiveObject
         _ = LoadClaimableTransactionsAsync();
         _ = LoadProjectKeysAsync();
         _ = LoadProjectStatisticsAsync();
+    }
+
+    /// <summary>
+    /// Refresh all data from the SDK (claimable transactions + project statistics).
+    /// Called by the Refresh button in the nav bar.
+    /// </summary>
+    public async Task RefreshAsync()
+    {
+        if (IsRefreshing) return;
+
+        IsRefreshing = true;
+        _logger.LogInformation("Refreshing manage project data for {ProjectId}...", Project.ProjectIdentifier);
+        try
+        {
+            await Task.WhenAll(
+                LoadClaimableTransactionsAsync(),
+                LoadProjectStatisticsAsync());
+        }
+        finally
+        {
+            IsRefreshing = false;
+        }
     }
 
     /// <summary>
