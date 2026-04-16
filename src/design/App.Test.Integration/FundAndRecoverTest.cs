@@ -813,39 +813,20 @@ public class FundAndRecoverTest
         Log($"[STEP 12.1] Recovery display verified. StagesToRecover={targetInvestment.StagesToRecover}, " +
             $"AmountToRecover={targetInvestment.AmountToRecover}, ButtonText='{targetInvestment.PenaltyButtonText}'");
 
-        // Execute the appropriate recovery operation
+        // Execute the recovery through the real UI button path
         var actionKey = targetInvestment.RecoveryState.ActionKey;
-        Log($"[STEP 12] Executing recovery action: '{actionKey}' ({targetInvestment.RecoveryState.ButtonLabel})...");
+        Log($"[STEP 12] Clicking recovery action button: '{actionKey}' ({targetInvestment.RecoveryState.ButtonLabel})...");
 
-        bool recoveryResult;
-        switch (actionKey)
-        {
-            case "recovery":
-                recoveryResult = await portfolioVm.RecoverFundsAsync(targetInvestment);
-                break;
-            case "unfundedRelease":
-                recoveryResult = await portfolioVm.ReleaseFundsAsync(targetInvestment);
-                break;
-            case "endOfProject":
-                recoveryResult = await portfolioVm.ClaimEndOfProjectAsync(targetInvestment);
-                break;
-            case "penaltyRelease":
-                recoveryResult = await portfolioVm.PenaltyReleaseFundsAsync(targetInvestment);
-                break;
-            default:
-                recoveryResult = false;
-                Log($"[STEP 12] ERROR: Unknown recovery action key: '{actionKey}'");
-                break;
-        }
+        await window.ClickRecoveryFlowAsync(portfolioVm, targetInvestment, TimeSpan.FromSeconds(30));
 
         Dispatcher.UIThread.RunJobs();
 
         // ──────────────────────────────────────────────────────────────
         // STEP 13: Verify recovery succeeded
         // ──────────────────────────────────────────────────────────────
-        Log($"[STEP 13] Recovery result: {recoveryResult}");
-        recoveryResult.Should().BeTrue(
-            $"Recovery operation '{actionKey}' should succeed (transaction built and published)");
+        Log("[STEP 13] Recovery flow completed through real UI button path");
+        targetInvestment.ShowSuccessModal.Should().BeTrue(
+            $"Recovery operation '{actionKey}' should succeed and show the success modal");
 
         Log($"[STEP 13] Post-recovery state: HasUnspent={targetInvestment.RecoveryState.HasUnspentItems}, " +
             $"InPenalty={targetInvestment.RecoveryState.HasSpendableItemsInPenalty}, " +

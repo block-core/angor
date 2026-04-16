@@ -578,16 +578,16 @@ public class InvestAndRecoverTest
         amountToRecover.Should().BeGreaterThan(0);
 
         var actionKey = targetInvestment.RecoveryState.ActionKey;
-        Log($"[STEP 12] Executing recovery action: '{actionKey}' ({targetInvestment.RecoveryState.ButtonLabel})...");
+        Log($"[STEP 12] Clicking recovery action button: '{actionKey}' ({targetInvestment.RecoveryState.ButtonLabel})...");
 
         await EnsureWalletHasFeeFunds(window, targetInvestment.InvestmentWalletId, "before recovery action");
-        var recoveryResult = await ExecuteRecoveryActionWithRetry(portfolioVm, targetInvestment, actionKey);
+        await window.ClickRecoveryFlowAsync(portfolioVm, targetInvestment, TimeSpan.FromSeconds(30));
 
         Dispatcher.UIThread.RunJobs();
 
-        Log($"[STEP 13] Recovery result: {recoveryResult}");
-        recoveryResult.Should().BeTrue(
-            $"Recovery operation '{actionKey}' should succeed (transaction built and published)");
+        Log("[STEP 13] Recovery flow completed through real UI button path");
+        targetInvestment.ShowSuccessModal.Should().BeTrue(
+            $"Recovery operation '{actionKey}' should succeed and show the success modal");
 
         window.Close();
         Log("========== FullInvestAndRecoverFlow PASSED ==========");
@@ -717,44 +717,6 @@ public class InvestAndRecoverTest
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(200);
         Dispatcher.UIThread.RunJobs();
-    }
-
-    private async Task<bool> ExecuteRecoveryActionWithRetry(
-        PortfolioViewModel portfolioVm,
-        InvestmentViewModel investment,
-        string actionKey)
-    {
-        var deadline = DateTime.UtcNow + IndexerLagTimeout;
-        var attempt = 0;
-
-        while (DateTime.UtcNow < deadline)
-        {
-            attempt++;
-            Log($"[STEP 12] Recovery attempt #{attempt} for action '{actionKey}'...");
-
-            bool result = actionKey switch
-            {
-                "recovery" => await portfolioVm.RecoverFundsAsync(investment),
-                "unfundedRelease" => await portfolioVm.ReleaseFundsAsync(investment),
-                "endOfProject" => await portfolioVm.ClaimEndOfProjectAsync(investment),
-                "penaltyRelease" => await portfolioVm.PenaltyReleaseFundsAsync(investment),
-                _ => false
-            };
-
-            if (result)
-                return true;
-
-            await portfolioVm.LoadRecoveryStatusAsync(investment);
-            Dispatcher.UIThread.RunJobs();
-            Log($"[STEP 12] Retry state: ActionKey={investment.RecoveryState.ActionKey}, " +
-                $"HasUnspent={investment.RecoveryState.HasUnspentItems}, " +
-                $"EndOfProject={investment.RecoveryState.EndOfProject}, " +
-                $"HasReleaseSig={investment.RecoveryState.HasReleaseSignatures}, " +
-                $"InPenalty={investment.RecoveryState.HasSpendableItemsInPenalty}");
-            await Task.Delay(PollInterval);
-        }
-
-        return false;
     }
 
     private async Task EnsureWalletHasFeeFunds(Window window, string walletId, string context)

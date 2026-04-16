@@ -8,6 +8,9 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using App.UI.Shell;
+using App.UI.Sections.Portfolio;
+using App.UI.Shared;
+using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace App.Test.Integration.Helpers;
@@ -213,5 +216,78 @@ public static class TestHelpers
         return root.GetVisualDescendants()
             .OfType<T>()
             .FirstOrDefault(c => c.Name == name);
+    }
+
+    /// <summary>
+    /// Drives the real recovery UI flow for an investment: opens detail,
+    /// clicks the recovery button, confirms the modal, confirms the fee popup,
+    /// and waits for the recovery action to complete.
+    /// </summary>
+    public static async Task ClickRecoveryFlowAsync(
+        this Window window,
+        PortfolioViewModel portfolioVm,
+        InvestmentViewModel investment,
+        TimeSpan? timeout = null)
+    {
+        var maxWait = timeout ?? TimeSpan.FromSeconds(30);
+
+        window.NavigateToSection("Funded");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        portfolioVm.OpenInvestmentDetail(investment);
+        Dispatcher.UIThread.RunJobs();
+
+        var detailOpened = await WaitForCondition(
+            () => ReferenceEquals(portfolioVm.SelectedInvestment, investment),
+            maxWait,
+            TimeSpan.FromMilliseconds(100));
+        if (!detailOpened)
+            throw new TimeoutException("Portfolio selected investment detail did not open");
+
+        var detailViewVisible = await WaitForCondition(
+            () => window.GetVisualDescendants().OfType<InvestmentDetailView>().Any(v => v.IsVisible),
+            maxWait,
+            TimeSpan.FromMilliseconds(100));
+        if (!detailViewVisible)
+            throw new TimeoutException("InvestmentDetailView did not appear");
+
+        var recoverButton = window.FindByName<Button>("RecoverFundsButton")
+            ?? throw new InvalidOperationException("RecoverFundsButton not found in detail view");
+        recoverButton.IsVisible.Should().BeTrue("RecoverFundsButton should be visible before clicking it");
+
+        recoverButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, recoverButton));
+        Dispatcher.UIThread.RunJobs();
+
+        var modalOpened = await WaitForCondition(
+            () => investment.ShowRecoveryModal || investment.ShowReleaseModal || investment.ShowClaimModal,
+            maxWait,
+            TimeSpan.FromMilliseconds(100));
+        if (!modalOpened)
+            throw new TimeoutException("Recovery modal did not open");
+
+        var confirmButton = window.FindByName<Button>("ConfirmRecoveryModal")
+            ?? window.FindByName<Button>("ConfirmReleaseModal")
+            ?? window.FindByName<Button>("ClaimPenaltyButton")
+            ?? throw new InvalidOperationException("No visible recovery confirm button found");
+
+        confirmButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, confirmButton));
+        Dispatcher.UIThread.RunJobs();
+
+        var feeConfirmButton = await window.WaitForControl<Button>("FeeConfirmButton", maxWait)
+            ?? throw new TimeoutException("FeeSelectionPopup did not appear");
+
+        feeConfirmButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, feeConfirmButton));
+        Dispatcher.UIThread.RunJobs();
+
+        var completed = await WaitForCondition(
+            () => !investment.IsProcessing && (investment.ShowSuccessModal || !string.IsNullOrEmpty(investment.ErrorMessage)),
+            TimeSpan.FromMinutes(3),
+            TimeSpan.FromMilliseconds(200));
+        if (!completed)
+            throw new TimeoutException("Recovery UI flow did not complete");
+
+        investment.ErrorMessage.Should().BeNullOrEmpty("Recovery flow should complete without UI error");
+        investment.ShowSuccessModal.Should().BeTrue("Recovery success modal should be shown after successful recovery");
     }
 }
