@@ -67,15 +67,15 @@ public class InvestmentStageViewModel
     public string Percentage { get; set; } = "0%";
     public string ReleaseDate { get; set; } = "";
     public string Amount { get; set; } = "0.00000000";
-    public string Status { get; set; } = "Pending"; // Pending, Released, Available, Not Spent
+    public string Status { get; set; } = "Pending";
     /// <summary>Stage label prefix: "Stage" for invest, "Payment" for fund/subscription</summary>
     public string StagePrefix { get; set; } = "Stage";
 
     // Status visibility helpers for per-status badge coloring
     public bool IsStatusPending => Status == "Pending";
-    public bool IsStatusReleased => Status == "Released";
+    public bool IsStatusReleased => Status == "Released" || Status == "Spent by founder";
     public bool IsStatusNotSpent => Status == "Not Spent";
-    public bool IsStatusRecovered => Status == "Recovered";
+    public bool IsStatusRecovered => Status == "Recovered" || Status == "Penalty can be released" || Status.StartsWith("Penalty,");
 }
 
 /// <summary>
@@ -306,14 +306,14 @@ public class InvestmentViewModel : INotifyPropertyChanged
     };
 
     /// <summary>Number of unreleased stages (Vue: stagesToRecover computed)</summary>
-    public int StagesToRecover => Stages.Count(s => s.Status != "Released");
+    public int StagesToRecover => Stages.Count(s => s.Status != "Released" && !s.IsStatusRecovered);
 
     /// <summary>Sum of unreleased stage amounts (Vue: amountToRecover computed)</summary>
     public string AmountToRecover
     {
         get
         {
-            var total = Stages.Where(s => s.Status != "Released")
+            var total = Stages.Where(s => s.Status != "Released" && !s.IsStatusRecovered)
                 .Sum(s => double.TryParse(s.Amount, System.Globalization.NumberStyles.Float,
                     System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0);
             return total.ToString("F5", System.Globalization.CultureInfo.InvariantCulture);
@@ -766,11 +766,18 @@ public partial class PortfolioViewModel : ReactiveObject
             investment.Stages.Clear();
             foreach (var item in recovery.Items)
             {
+                var status = item.Status switch
+                {
+                    "Unspent" => "Not Spent",
+                    var s when !string.IsNullOrEmpty(s) => s,
+                    _ => item.IsSpent ? "Released" : (recovery.HasSpendableItemsInPenalty ? "Pending" : "Not Spent")
+                };
+
                 investment.Stages.Add(new InvestmentStageViewModel
                 {
                     StageNumber = item.StageIndex + 1,
                     Amount = item.Amount.ToUnitBtc().ToString("F8", CultureInfo.InvariantCulture),
-                    Status = item.IsSpent ? "Released" : (recovery.HasSpendableItemsInPenalty ? "Pending" : "Not Spent")
+                    Status = status
                 });
             }
 

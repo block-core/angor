@@ -553,14 +553,22 @@ public class InvestAndRecoverTest
         Log("[STEP 12.1] Verifying recovery stage display...");
         targetInvestment.Stages.Count.Should().Be(installmentCount);
 
+        foreach (var stage in targetInvestment.Stages)
+        {
+            stage.StageNumber.Should().BeGreaterThan(0);
+            stage.Amount.Should().NotBe("0.00000000");
+            stage.Status.Should().BeOneOf("Spent by founder", "Not Spent", "Pending");
+            Log($"[STEP 12.1] Recovery Stage #{stage.StageNumber}: amount={stage.Amount}, status='{stage.Status}'");
+        }
+
         var recoveryStage1 = targetInvestment.Stages.FirstOrDefault(s => s.StageNumber == 1);
         recoveryStage1.Should().NotBeNull();
-        recoveryStage1!.Status.Should().Be("Released");
+        recoveryStage1!.Status.Should().Be("Spent by founder");
 
         var recoveryLaterStages = targetInvestment.Stages.Where(s => s.StageNumber > 1).ToList();
         recoveryLaterStages.Should().HaveCount(2);
         recoveryLaterStages.Should().AllSatisfy(s =>
-            s.Status.Should().BeOneOf("Pending", "Not Spent"));
+            s.Status.Should().Be("Not Spent"));
 
         targetInvestment.ProjectType.Should().Be("invest");
         targetInvestment.ShowRecoverButton.Should().BeTrue();

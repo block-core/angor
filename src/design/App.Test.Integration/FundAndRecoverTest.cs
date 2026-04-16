@@ -780,22 +780,22 @@ public class FundAndRecoverTest
         {
             stage.StageNumber.Should().BeGreaterThan(0, "Stage number should be positive");
             stage.Amount.Should().NotBe("0.00000000", $"Stage {stage.StageNumber} should have a non-zero amount");
-            stage.Status.Should().BeOneOf("Released", "Pending", "Not Spent",
+            stage.Status.Should().BeOneOf("Spent by founder", "Not Spent", "Pending",
                 $"Stage {stage.StageNumber} status should be a valid value");
             Log($"[STEP 12.1] Recovery Stage #{stage.StageNumber}: amount={stage.Amount}, status='{stage.Status}'");
         }
 
-        // Stage 1 was spent by the founder — it should show as "Released"
+        // Stage 1 was spent by the founder — it should show that exact text.
         var recoveryStage1 = targetInvestment.Stages.FirstOrDefault(s => s.StageNumber == 1);
         recoveryStage1.Should().NotBeNull("Stage 1 should exist in recovery stages");
-        recoveryStage1!.Status.Should().Be("Released",
-            "Stage 1 should be 'Released' since the founder already spent it");
+        recoveryStage1!.Status.Should().Be("Spent by founder",
+            "Stage 1 should say 'Spent by founder' after the founder spends that stage");
 
-        // Remaining stages should be unspent (either "Pending" or "Not Spent")
+        // Remaining stages should still be untouched before any penalty recovery occurs.
         var unspentStages = targetInvestment.Stages.Where(s => s.StageNumber > 1).ToList();
         unspentStages.Should().AllSatisfy(s =>
-            s.Status.Should().BeOneOf("Pending", "Not Spent",
-                $"Stage {s.StageNumber} should be unspent since only stage 1 was spent"));
+            s.Status.Should().Be("Not Spent",
+                $"Stage {s.StageNumber} should say 'Not Spent' since only stage 1 was spent"));
 
         // Verify computed recovery properties
         targetInvestment.StagesToRecover.Should().BeGreaterThan(0,
