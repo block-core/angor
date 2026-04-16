@@ -210,6 +210,22 @@
                         <!-- Fee rate is selected via the reusable FeeSelectionPopup
                              when the user clicks Confirm -->
 
+                        <!-- Error message (shown when recovery operation fails) -->
+                        <Border CornerRadius="12" Padding="16"
+                                IsVisible="{Binding HasError}"
+                                Background="#331C1C"
+                                BorderBrush="#662222"
+                                BorderThickness="1">
+                            <DockPanel>
+                                <i:Icon Value="fa-solid fa-circle-exclamation" FontSize="18"
+                                        Foreground="#EF4444" VerticalAlignment="Top"
+                                        Margin="0,2,12,0" DockPanel.Dock="Left" />
+                                <TextBlock Text="{Binding ErrorMessage}"
+                                           FontSize="14" TextWrapping="Wrap"
+                                           Foreground="#FCA5A5" />
+                            </DockPanel>
+                        </Border>
+
                         <!-- Confirmation question -->
                         <TextBlock Text="Are you sure you want to recover these funds?"
                                    FontSize="15" FontWeight="SemiBold"
@@ -355,6 +371,22 @@
                         </Grid>
                     </Border>
                 </StackPanel>
+
+                <!-- Error message (shown when claim operation fails) -->
+                <Border CornerRadius="12" Padding="16" Margin="24,0,24,24"
+                        IsVisible="{Binding HasError}"
+                        Background="#331C1C"
+                        BorderBrush="#662222"
+                        BorderThickness="1">
+                    <DockPanel>
+                        <i:Icon Value="fa-solid fa-circle-exclamation" FontSize="18"
+                                Foreground="#EF4444" VerticalAlignment="Top"
+                                Margin="0,2,12,0" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding ErrorMessage}"
+                                   FontSize="14" TextWrapping="Wrap"
+                                   Foreground="#FCA5A5" />
+                    </DockPanel>
+                </Border>
             </StackPanel>
         </Border>
 
@@ -512,6 +544,22 @@
 
                         <!-- Fee rate is selected via the reusable FeeSelectionPopup
                              when the user clicks Confirm -->
+
+                        <!-- Error message (shown when release operation fails) -->
+                        <Border CornerRadius="12" Padding="16"
+                                IsVisible="{Binding HasError}"
+                                Background="#331C1C"
+                                BorderBrush="#662222"
+                                BorderThickness="1">
+                            <DockPanel>
+                                <i:Icon Value="fa-solid fa-circle-exclamation" FontSize="18"
+                                        Foreground="#EF4444" VerticalAlignment="Top"
+                                        Margin="0,2,12,0" DockPanel.Dock="Left" />
+                                <TextBlock Text="{Binding ErrorMessage}"
+                                           FontSize="14" TextWrapping="Wrap"
+                                           Foreground="#FCA5A5" />
+                            </DockPanel>
+                        </Border>
 
                     </StackPanel>
                 </ScrollViewer>

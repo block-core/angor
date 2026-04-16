@@ -889,6 +889,24 @@
                                 </DockPanel>
                             </Border>
                         </StackPanel>
+
+                        <!-- View Project JSON -->
+                        <Border Name="ViewProjectJsonBtn"
+                                Background="{DynamicResource SurfaceMedium}"
+                                BorderBrush="{DynamicResource Stroke}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="12,10"
+                                Cursor="Hand">
+                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                <i:Icon Value="fa-solid fa-code"
+                                       FontSize="16"
+                                       Foreground="{DynamicResource TextStrong}" />
+                                <TextBlock Text="View Project Info JSON"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextStrong}" />
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </StackPanel>
             </Border>

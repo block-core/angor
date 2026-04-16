@@ -338,6 +338,11 @@ public class MultiInvestClaimAndRecoverTest
     {
         var foundProject = await FindProjectFromSdkAsync(window, profileName, project);
 
+        // Verify target amount was stored correctly as 1 BTC (not 1 satoshi).
+        // Target is formatted as BTC with 5 decimal places by ProjectItemViewModel.FromDto().
+        foundProject.Target.Should().Be("1.00000",
+            "TargetAmount '1.0' means 1 BTC = 100_000_000 sats; the SDK should store sats and display converts back to BTC");
+
         var findProjectsVm = GetFindProjectsViewModel(window);
         findProjectsVm.Should().NotBeNull();
 

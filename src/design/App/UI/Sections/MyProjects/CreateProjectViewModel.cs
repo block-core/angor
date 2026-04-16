@@ -588,12 +588,12 @@ public partial class CreateProjectViewModel : ReactiveObject
     /// </summary>
     private CreateProjectDto BuildCreateProjectDto()
     {
-        // Parse target amount to satoshis
-        var targetSats = long.TryParse(TargetAmount, out var tSats) ? tSats
-            : double.TryParse(TargetAmount, System.Globalization.NumberStyles.Float,
+        // Parse target amount as BTC and convert to satoshis.
+        // The UI always accepts BTC values (e.g. "1" = 1 BTC = 100_000_000 sats).
+        var targetSats = decimal.TryParse(TargetAmount, System.Globalization.NumberStyles.Number,
                 System.Globalization.CultureInfo.InvariantCulture, out var tBtc)
-                ? ((decimal)tBtc).ToUnitSatoshi()
-                : 0L;
+            ? tBtc.ToUnitSatoshi()
+            : 0L;
 
         // Map UI project type to SDK ProjectType
         var sdkProjectType = ProjectType switch

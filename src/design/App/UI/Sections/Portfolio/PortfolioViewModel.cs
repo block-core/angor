@@ -384,6 +384,23 @@ public class InvestmentViewModel : INotifyPropertyChanged
         set { if (_isProcessing == value) return; _isProcessing = value; OnPropertyChanged(); }
     }
 
+    private string? _errorMessage;
+    /// <summary>Error message shown when a recovery operation fails.</summary>
+    public string? ErrorMessage
+    {
+        get => _errorMessage;
+        set
+        {
+            if (_errorMessage == value) return;
+            _errorMessage = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(HasError));
+        }
+    }
+
+    /// <summary>True when there is an error to display.</summary>
+    public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
+
     // ── Recovery data (populated from SDK when available) ──
     public string PenaltyDuration { get; set; } = "";
     public string MinerFee { get; set; } = "";
@@ -762,13 +779,23 @@ public partial class PortfolioViewModel : ReactiveObject
             var daysLeft = (recovery.ExpiryDate - DateTime.UtcNow).Days;
             investment.PenaltyDaysRemaining = Math.Max(0, daysLeft);
 
+            // Penalty-threshold logic only applies to Fund projects.
+            // Invest/Subscribe projects should not take the UI shortcut that maps
+            // `IsAboveThreshold == false` to the end-of-project claim path, because
+            // for non-Fund projects the SDK intentionally reports threshold as not applicable.
+            // Normalize the flag here so non-Fund projects only route to end-of-project
+            // when the project has actually expired.
+            var normalizedIsAboveThreshold = investment.ProjectType == "fund"
+                ? recovery.IsAboveThreshold
+                : true;
+
             // Map all 5 SDK fields to RecoveryState (replaces simplified 3-state string)
             investment.RecoveryState = new RecoveryState(
                 recovery.HasUnspentItems,
                 recovery.HasSpendableItemsInPenalty,
                 recovery.HasReleaseSignatures,
                 recovery.EndOfProject,
-                recovery.IsAboveThreshold);
+                normalizedIsAboveThreshold);
 
             _logger.LogInformation("Recovery status loaded for project {ProjectId}: HasUnspent={HasUnspent}, InPenalty={InPenalty}, HasReleaseSig={HasReleaseSig}, EndOfProject={EndOfProject}, AboveThreshold={AboveThreshold}, ActionKey={ActionKey}",
                 investment.ProjectIdentifier, recovery.HasUnspentItems, recovery.HasSpendableItemsInPenalty,

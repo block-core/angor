@@ -131,6 +131,7 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
     {
         if (Vm == null || Vm.IsProcessing) return;
 
+        Vm.ErrorMessage = null;
         var feeRate = await AskForFeeRateAsync();
         if (feeRate == null) return; // user cancelled
 
@@ -158,6 +159,10 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
                 Vm.ShowRecoveryModal = false;
                 Vm.ShowSuccessModal = true;
             }
+            else
+            {
+                Vm.ErrorMessage = "Recovery transaction failed. The transaction may not be final yet or the network rejected it. Please try again later.";
+            }
         }
         else
         {
@@ -169,6 +174,7 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
     {
         if (Vm == null || Vm.IsProcessing) return;
 
+        Vm.ErrorMessage = null;
         var feeRate = await AskForFeeRateAsync();
         if (feeRate == null) return; // user cancelled
 
@@ -189,6 +195,10 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
                 Vm.ShowClaimModal = false;
                 Vm.ShowSuccessModal = true;
             }
+            else
+            {
+                Vm.ErrorMessage = "Claim transaction failed. The penalty period may not have expired yet. Please try again later.";
+            }
         }
         else
         {
@@ -200,6 +210,7 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
     {
         if (Vm == null || Vm.IsProcessing) return;
 
+        Vm.ErrorMessage = null;
         var feeRate = await AskForFeeRateAsync();
         if (feeRate == null) return; // user cancelled
 
@@ -225,6 +236,10 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
                 Vm.ShowReleaseModal = false;
                 Vm.ShowSuccessModal = true;
             }
+            else
+            {
+                Vm.ErrorMessage = "Release transaction failed. The network may have rejected it. Please try again later.";
+            }
         }
         else
         {
@@ -239,6 +254,7 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
         if (Vm != null)
         {
             Vm.IsProcessing = false;
+            Vm.ErrorMessage = null;
             Vm.ShowRecoveryModal = false;
             Vm.ShowClaimModal = false;
             Vm.ShowReleaseModal = false;

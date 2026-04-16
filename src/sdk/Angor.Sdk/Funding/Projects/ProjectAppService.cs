@@ -60,4 +60,9 @@ public class ProjectAppService(
     {
         return mediator.Send(new GetProjectRelays.GetProjectRelaysRequest(nostrPubKey));
     }
+
+    public Task<Result<GetProjectInfoJson.GetProjectInfoJsonResponse>> GetProjectInfoJson(ProjectId projectId)
+    {
+        return mediator.Send(new GetProjectInfoJson.GetProjectInfoJsonRequest(projectId));
+    }
 }
