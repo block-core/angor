@@ -17,7 +17,7 @@ public class MempoolMonitoringService : IMempoolMonitoringService
     // Hardcoded configuration - will be moved to configuration later
     private readonly TimeSpan _pollingInterval = TimeSpan.FromSeconds(2);
 
-    public MempoolMonitoringService(
+    internal MempoolMonitoringService(
         IIndexerService indexerService,
         ILogger<MempoolMonitoringService> logger)
         : this(new AddressPollingService(indexerService, new Logger<AddressPollingService>(new LoggerFactory())), logger)

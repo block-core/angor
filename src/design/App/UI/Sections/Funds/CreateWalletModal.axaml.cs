@@ -37,6 +37,16 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
     /// <summary>Generated seed words stored for wallet creation after backup confirmation.</summary>
     private string? _generatedSeedWords;
 
+    /// <summary>
+    /// Optional callback invoked whenever the modal is dismissed — success, cancel, or backdrop click.
+    /// The bool indicates whether a wallet was successfully created/imported.
+    /// Set by the caller (e.g. InvestModalsView) to re-show the invest flow after import.
+    /// </summary>
+    public Action<bool>? OnDismissed { get; set; }
+
+    /// <summary>Tracks whether a wallet was successfully created during this modal's lifetime.</summary>
+    private bool _walletCreated;
+
     private ShellViewModel? ShellVm =>
         this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
 
@@ -45,7 +55,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
     /// </summary>
     public void OnBackdropCloseRequested()
     {
-        // No special cleanup needed — let the shell close the modal.
+        OnDismissed?.Invoke(_walletCreated);
     }
 
     private async void OnButtonClick(object? sender, RoutedEventArgs e)
@@ -59,6 +69,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
             // ── Step 1: Choice ──
             case "CloseChoice":
                 ShellVm?.HideModal();
+                OnDismissed?.Invoke(_walletCreated);
                 break;
 
             case "BtnImport":
@@ -77,6 +88,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
             case "CloseImport":
             case "BtnCancelImport":
                 ShellVm?.HideModal();
+                OnDismissed?.Invoke(_walletCreated);
                 break;
 
             case "BtnSubmitImport":
@@ -111,20 +123,23 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
 
             case "BtnCancelBackup":
                 ShellVm?.HideModal();
+                OnDismissed?.Invoke(_walletCreated);
                 break;
 
             // ── Step 3: Success ──
             case "BtnDone":
                 _logger.LogInformation("Wallet creation flow completed, closing modal");
                 ShellVm?.HideModal();
+                OnDismissed?.Invoke(_walletCreated);
                 break;
         }
     }
 
     /// <summary>
     /// Show a specific step, hiding all others.
+    /// Can be called externally to skip the choice step (e.g. pre-select "import" from the invest flow).
     /// </summary>
-    private void ShowStep(string step)
+    public void ShowStep(string step)
     {
         _logger.LogDebug("Showing step: {Step}", step);
         ChoicePanel.IsVisible = step == "choice";
@@ -178,6 +193,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         var success = await Vm.ImportWalletAsync(walletName, seedWords, "default-key");
         if (success)
         {
+            _walletCreated = true;
             _logger.LogInformation("Wallet '{WalletName}' imported successfully", walletName);
             ShowStep("success");
         }
@@ -219,6 +235,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         var success = await Vm.ImportWalletAsync(walletName, _generatedSeedWords, "default-key");
         if (success)
         {
+            _walletCreated = true;
             _logger.LogInformation("Wallet '{WalletName}' created successfully (generate flow)", walletName);
             ShowStep("success");
         }
