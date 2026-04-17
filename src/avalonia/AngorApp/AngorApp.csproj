@@ -16,6 +16,7 @@
         </AvaloniaResource>
     </ItemGroup>
     <ItemGroup>
+        <PackageReference Include="AVVI94.Breakpoints.Avalonia"/>
         <PackageReference Include="AsyncImageLoader.Avalonia"/>
         <PackageReference Include="Avalonia"/>
         <PackageReference Include="ReactiveUI.Avalonia"/>

@@ -35,6 +35,10 @@ public partial class ManageProjectView : UserControl
         var shareBtn = this.FindControl<Button>("ShareButton");
         if (shareBtn != null) shareBtn.Click += OnShareClick;
 
+        // ── Refresh button ──
+        var refreshBtn = this.FindControl<Button>("RefreshButton");
+        if (refreshBtn != null) refreshBtn.Click += OnRefreshClick;
+
         // ── View Private Keys button (opens shell modal password step) ──
         var viewPKBtn = this.FindControl<Button>("ViewPrivateKeysButton");
         if (viewPKBtn != null) viewPKBtn.Click += OnViewPrivateKeysClick;
@@ -85,6 +89,12 @@ public partial class ManageProjectView : UserControl
             var modal = new ShareModal(Vm.Project.Name, Vm.Project.Description);
             shellVm.ShowModal(modal);
         }
+    }
+
+    private async void OnRefreshClick(object? sender, RoutedEventArgs e)
+    {
+        if (Vm != null)
+            await Vm.RefreshAsync();
     }
 
     // ─────────────────────────────────────────────────────────────────

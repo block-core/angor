@@ -517,52 +517,7 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ═══ 7. Prototype Settings ═══ -->
-                <!-- Toggle between populated and empty states for development/testing -->
-                <Border Background="{DynamicResource CardSurface}"
-                        BorderBrush="{DynamicResource Stroke}"
-                        BorderThickness="1"
-                        CornerRadius="16"
-                        ClipToBounds="True"
-                        BoxShadow="{DynamicResource ItemShadow}">
-                    <StackPanel>
-                        <Border BorderBrush="{DynamicResource Stroke}"
-                                BorderThickness="0,0,0,1"
-                                Padding="24,20">
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <i:Icon Value="fa-solid fa-eye"
-                                       FontSize="20"
-                                       Foreground="{DynamicResource TextMuted}" />
-                                <TextBlock Text="Prototype Settings"
-                                           FontSize="18"
-                                           FontWeight="Bold"
-                                           Foreground="{DynamicResource TextStrong}"
-                                           VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Border>
-                        <Border Padding="24">
-                            <DockPanel>
-                                <ToggleSwitch DockPanel.Dock="Right"
-                                              IsChecked="{Binding ShowPopulatedApp, Mode=TwoWay}"
-                                              VerticalAlignment="Center"
-                                              OnContent=""
-                                              OffContent="" />
-                                <StackPanel Spacing="4" VerticalAlignment="Center">
-                                    <TextBlock Text="Show Populated App"
-                                               FontSize="14"
-                                               FontWeight="Medium"
-                                               Foreground="{DynamicResource TextStrong}" />
-                                    <TextBlock Text="When enabled, sections display sample data. When disabled, sections show empty states."
-                                               FontSize="13"
-                                               Foreground="{DynamicResource TextMuted}"
-                                               TextWrapping="Wrap" />
-                                </StackPanel>
-                            </DockPanel>
-                        </Border>
-                    </StackPanel>
-                </Border>
-
-                <!-- ═══ 8. Debug Mode (testnet only) ═══ -->
+                <!-- ═══ 7. Debug Mode (testnet only) ═══ -->
                 <!-- Visible only on testnet networks. Enables debug features like project wizard
                      data prepopulation and relaxed validation for easier testing. -->
                 <Border Background="{DynamicResource CardSurface}"

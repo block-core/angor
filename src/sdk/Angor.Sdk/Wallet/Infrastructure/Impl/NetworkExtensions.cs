@@ -21,13 +21,7 @@ public static class NetworkExtensions
         {
             return BitcoinNetwork.Mainnet;
         }
-
-        if (bitcoinNetwork == Network.Main)
-        {
-            return BitcoinNetwork.Mainnet;
-        }
-
-
+        
         if (bitcoinNetwork == Network.TestNet)
         {
             return BitcoinNetwork.Testnet;

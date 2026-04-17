@@ -7,7 +7,7 @@ Angor is a Bitcoin investment platform with two frontends:
 - **Blazor WASM web app** (legacy, .NET 8) in `src/webapp/`
 - **Shared library** (.NET 8) in `src/shared/`
 - **SDK** (.NET 9) in `src/sdk/`
-- **App** (future fresh Avalonia rewrite) in `src/app/`
+- **App** (new Avalonia rewrite) in `src/design/`
 
 ## Repository Structure
 
@@ -16,10 +16,10 @@ src/
   shared/          Angor.Shared (net8.0), Angor.Shared.Tests (net8.0)
   sdk/             Angor.Sdk (net9.0), Angor.Sdk.Tests, Angor.Data.Documents, Angor.Data.Documents.LiteDb
   avalonia/        AngorApp, AngorApp.Model, AngorApp.Tests, AngorApp.Desktop, AngorApp.Android, AngorApp.iOS, AngorApp.Browser
-  app/             (empty - future fresh Avalonia app)
+  design/          App, App.Desktop, App.Test.Integration (new Avalonia rewrite)
   webapp/          Angor.Client (Blazor WASM, net8.0)
   Avalonia.sln     Main solution: avalonia + sdk + shared
-  App.sln          Future app solution: app + sdk + shared
+  App.sln          New app solution: design + sdk + shared
   WebApp.sln       Web solution: webapp + shared
   Directory.Build.props
   Directory.Packages.props   Central Package Management (CPM)
@@ -40,6 +40,7 @@ dotnet build src/App.sln
 
 # Single project build
 dotnet build src/avalonia/AngorApp.Desktop/AngorApp.Desktop.csproj
+dotnet build src/design/App.Desktop/App.Desktop.csproj
 ```
 
 ## Test Commands

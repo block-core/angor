@@ -45,12 +45,13 @@ Full end-to-end integration test that boots the real Avalonia app in headless mo
 7. **Reload founder projects from SDK** — Call `LoadFounderProjectsAsync()` to get the `ProjectIdentifier` and `OwnerWalletId` (not set by `OnProjectDeployed`).
 8. **Navigate to Find Projects** — Reload projects from SDK via `LoadProjectsFromSdkAsync()`, find our project by GUID match.
 9. **Invest 0.02 BTC** — Open invest page, set amount to "0.02" BTC (above the 0.01 BTC approval threshold), submit, select wallet, pay. The SDK pipeline: `BuildInvestmentDraft` -> `CheckPenaltyThreshold` (returns true for above-threshold) -> `SubmitInvestment` (request founder signatures).
-10. **Add investment to portfolio** — Call `AddToPortfolio()` on the invest page.
+10. **Add investment to portfolio** — Call `AddToPortfolio()` on the invest page, reload portfolio from SDK, and verify there is exactly one entry for the project (no duplicate optimistic + SDK entries).
 11. **Founder approves request** — Navigate to Funders, poll `LoadInvestmentRequestsAsync()` until the request appears in `waiting`, then call `ApproveSignature(...)` and verify it moves to `approved`.
 12. **Investor confirms signed investment** — Reload funded investments from SDK until the investment reaches `FounderSignaturesReceived`/step 2, then call `ConfirmInvestmentAsync(...)` and verify it advances to active/step 3.
 13. **Founder spends stage 1** — Via `ManageProjectViewModel`:
     - `OpenManageProject(project)` creates the manage VM
     - `LoadClaimableTransactionsAsync()` loads stages with UTXOs
+    - Verify `Stages.Count == 3`, stage numbers are sequential, every stage has non-zero amount/UTXO data, and stage 1 is the spendable stage before claim
     - Wait for stage 1 to have available transactions (indexer lag)
     - Select all available transactions for stage 1
     - `ClaimStageFundsAsync(1, selectedTxs, feeRate)` builds and broadcasts the spending tx
@@ -58,6 +59,7 @@ Full end-to-end integration test that boots the real Avalonia app in headless mo
     - Reload investments from SDK
     - Find our investment
     - `LoadRecoveryStatusAsync(investment)` — poll until recovery action available
+    - Verify the recovery-stage VM list is populated, stage 1 is `Released`, and the remaining stages are still unreleased
     - Execute the appropriate recovery action based on `RecoveryState.ActionKey`
 15. **Verify recovery succeeded** — Assert the recovery operation returned `true`.
 
@@ -72,6 +74,7 @@ Full end-to-end integration test that boots the real Avalonia app in headless mo
 - **Password provider**: Must set `SimplePasswordProvider` to `"default-key"` before deploy/invest/spend steps.
 - **Deploy callback wiring**: The test manually wires `OnProjectDeployed` (normally done by `MyProjectsView.OpenCreateWizard` code-behind).
 - **PortfolioViewModel is singleton**: The same instance is shared across the invest page (for `AddToPortfolio`) and the funded section.
+- **Extra VM assertions**: The test now also checks `ProjectType`, `TypeLabel`, `StatusClass`, `ShowRecoverButton`, `StagesToRecover`, `AmountToRecover`, `ButtonMode`, and pre-spend stage header stats to catch UI-model regressions earlier.
 
 **How to run**:
 ```bash

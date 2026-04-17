@@ -19,15 +19,15 @@
         </LoadedTrigger>
     </Interaction.Behaviors>
 
-    <controls:ScrollableView>
+    <ScrollViewer Classes="PageScroll">
         <StackPanel Classes="Gap-XL" Margin="10">
-            <Grid ColumnSpacing="24" ColumnDefinitions="* 400">
-                <m:ProjectInfoCard ClipToBounds="False" DataContext="{Binding Funded.Project}" />
-                <m:ActionsCard DockPanel.Dock="Right" ClipToBounds="False" Grid.Column="1" />
-            </Grid>
+            <FlexPanel Direction="Row" Wrap="Wrap" ColumnGap="20" RowGap="20">
+                <m:ProjectInfoCard ClipToBounds="False"  DataContext="{Binding Funded.Project}" FlexPanel.Basis="400" FlexPanel.Grow="1" />
+                <m:ActionsCard DockPanel.Dock="Right" ClipToBounds="False"  FlexPanel.Basis="200" FlexPanel.Grow="1" />
+            </FlexPanel>
             <m:ProjectStatisticsCard ClipToBounds="False" DataContext="{Binding Funded}" />
             <m:FundingInformation ClipToBounds="False" DataContext="{Binding Funded}" />
             <m:ScheduleCard ClipToBounds="False" DataContext="{Binding Funded}" />
         </StackPanel>
-    </controls:ScrollableView>
+    </ScrollViewer>
 </UserControl>

@@ -459,7 +459,7 @@ public class MultiFundClaimAndRecoverTest
 
         pendingSignature.Should().NotBeNull("above-threshold investment should require founder approval");
         Log(profileName, $"Approving signature request id={pendingSignature!.Id} for project {project.ProjectIdentifier}");
-        fundersVm!.ApproveSignature(pendingSignature.Id);
+        await window.ClickApproveSignatureAsync(fundersVm!, pendingSignature, UiTimeout);
 
         var approvalDeadline = DateTime.UtcNow + IndexerLagTimeout;
         while (DateTime.UtcNow < approvalDeadline)
@@ -490,8 +490,7 @@ public class MultiFundClaimAndRecoverTest
 
         Log(profileName, $"Confirming approved investment. Step={investment.Step}, Status={investment.StatusText}");
         investment.ApprovalStatus.Should().Be("Approved");
-        var confirmResult = await portfolioVm.ConfirmInvestmentAsync(investment);
-        confirmResult.Should().BeTrue("founder-approved investment should be confirmable by the investor");
+        await window.ClickInvestmentDetailActionAsync(portfolioVm, investment, "ConfirmInvestmentButton", UiTimeout);
 
         var activeDeadline = DateTime.UtcNow + IndexerLagTimeout;
         while (DateTime.UtcNow < activeDeadline)
@@ -528,17 +527,14 @@ public class MultiFundClaimAndRecoverTest
             string.Equals(p.ProjectIdentifier, project.ProjectIdentifier, StringComparison.Ordinal));
         founderProject.Should().NotBeNull();
 
-        myProjectsVm.OpenManageProject(founderProject!);
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
         var manageVm = myProjectsVm.SelectedManageProject;
-        manageVm.Should().NotBeNull();
 
         var deadline = DateTime.UtcNow + IndexerLagTimeout;
         while (DateTime.UtcNow < deadline)
         {
+            await myProjectsVm!.LoadFounderProjectsAsync();
+            myProjectsVm.OpenManageProject(founderProject!);
+            manageVm = myProjectsVm.SelectedManageProject;
             await manageVm!.LoadClaimableTransactionsAsync();
             Dispatcher.UIThread.RunJobs();
 
@@ -552,8 +548,7 @@ public class MultiFundClaimAndRecoverTest
                 stage1.AvailableTransactions.Count.Should().Be(2,
                     "founder should claim stage 1 from both investor UTXOs");
 
-                var claimResult = await manageVm.ClaimStageFundsAsync(stage1.Number, stage1.AvailableTransactions.ToList());
-                claimResult.Should().BeTrue();
+                await window.ClickManageProjectClaimStageAsync(myProjectsVm, founderProject!, stage1.Number, UiTimeout);
                 Log(profileName, "Founder claimed stage 1 using both available UTXOs.");
                 break;
             }

@@ -59,7 +59,7 @@ public static class CompositionRoot
 
         // Integration services
         services.AddSingleton<ISeedwordsProvider, SeedwordsProvider>();
-        services.AddAllSectionsFromAttributes(logger);
+        services.AddSectionsFromAttributes(logger);
 
         var serviceProvider = services.BuildServiceProvider();
         serviceProvider.GetRequiredService<INetworkService>().AddSettingsIfNotExist();

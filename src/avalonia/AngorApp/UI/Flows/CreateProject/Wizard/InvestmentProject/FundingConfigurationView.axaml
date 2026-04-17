@@ -159,8 +159,8 @@
 
     </UserControl.Styles>
 
-    <controls:ScrollableView MaxContentWidth="766">
-        <StackPanel VerticalAlignment="Center" Spacing="{StaticResource Gap-XL}">
+    <ScrollViewer>
+        <StackPanel MaxWidth="766" VerticalAlignment="Center" Spacing="{StaticResource Gap-XL}">
             <TextBlock Classes="Subtitle">Configure your funding target, window, and project nature.</TextBlock>
 
 
@@ -313,5 +313,5 @@
                 </StackPanel>
             </HeaderedContainer>
         </StackPanel>
-    </controls:ScrollableView>
+    </ScrollViewer>
 </UserControl>

@@ -5,8 +5,8 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
-using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Projects;
+using Angor.Shared;
 using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.Funds;
@@ -86,8 +86,14 @@ public class CreateProjectTest
         var profileImageUrl = $"https://picsum.photos/seed/{Guid.NewGuid().ToString("N")[..8]}/100/100";
 
         // Wizard input parameters — declared up front so validation can reference them
-        var targetAmountBtc = "1.0";
-        var investEndDate = DateTime.Now.AddMonths(6);
+        // These values are deliberately chosen to ONLY pass in debug mode:
+        //   - targetAmountBtc 0.0001 is below production minimum of 0.001 BTC
+        //   - investEndDate = today fails production rule "must be after today"
+        //   - penaltyDays = 0 fails production minimum of 10 days
+        // With debug mode ON + testnet, these constraints are relaxed.
+        var targetAmountBtc = "0.0001";
+        var investEndDate = DateTime.Now.Date; // same day — debug only
+        var penaltyDays = 0; // below production minimum of 10
         var durationValue = "6";
         var durationUnit = "Months";
         var releaseFrequency = "Monthly";
@@ -126,6 +132,12 @@ public class CreateProjectTest
         portfolioVmAfterWipe.Should().NotBeNull("PortfolioViewModel should be available after navigating to Funded");
         portfolioVmAfterWipe!.HasInvestments.Should().BeFalse("wipe data should clear funded investments without needing refresh");
         portfolioVmAfterWipe.Investments.Should().BeEmpty("Funded list should be empty immediately after wipe");
+
+        // Enable debug mode AFTER wipe (wipe resets settings to defaults).
+        // Debug mode only relaxes validation constraints when the network is also testnet (not mainnet).
+        // Use SettingsViewModel so both PrototypeSettings (persisted) and INetworkConfiguration (in-memory) are updated.
+        await EnableDebugMode(window);
+        Log("[STEP 1b] Debug mode ENABLED via SettingsViewModel (after wipe).");
 
         // ──────────────────────────────────────────────────────────────
         // STEP 2: Navigate to Funds → create wallet via Generate path
@@ -243,10 +255,11 @@ public class CreateProjectTest
         Dispatcher.UIThread.RunJobs();
         wizardVm.CurrentStep.Should().Be(4, "Should advance to step 4 after setting images");
 
-        // ── Step 4: Funding configuration — target amount + end date ──
-        Log("[STEP 5.4] Setting target amount and end date...");
+        // ── Step 4: Funding configuration — target amount + end date + penalty ──
+        Log("[STEP 5.4] Setting target amount, end date, and penalty days...");
         wizardVm.TargetAmount = targetAmountBtc;
         wizardVm.InvestEndDate = investEndDate;
+        wizardVm.PenaltyDays = penaltyDays;
         Dispatcher.UIThread.RunJobs();
 
         Log("[STEP 5.4] Advancing to Step 5...");
@@ -476,7 +489,7 @@ public class CreateProjectTest
         projectDto.Name.Should().Be(projectName);
         projectDto.ShortDescription.Should().Contain(runId);
         projectDto.ProjectType.Should().Be(Angor.Shared.Models.ProjectType.Invest);
-        projectDto.TargetAmount.Should().Be(100_000_000L, "1 BTC = 100,000,000 sats");
+        projectDto.TargetAmount.Should().Be(10_000L, "0.0001 BTC = 10,000 sats");
         projectDto.Banner.Should().NotBeNull("Banner URI should be set");
         projectDto.Banner!.ToString().Should().Contain("picsum.photos");
         projectDto.Avatar.Should().NotBeNull("Avatar URI should be set");
@@ -509,13 +522,13 @@ public class CreateProjectTest
         // 8f. Validate funding dates
         projectDto.FundingStartDate.Should().BeBefore(investEndDate.ToUniversalTime().AddDays(1),
             "Funding start date should be before end date");
-        projectDto.FundingEndDate.Date.Should().BeCloseTo(investEndDate.Date, TimeSpan.FromDays(2),
+        projectDto.FundingEndDate.Date.Should().BeCloseTo(investEndDate, TimeSpan.FromDays(2),
             "Funding end date should be close to the wizard input end date");
         Log($"[STEP 8] Dates: start={projectDto.FundingStartDate:yyyy-MM-dd}, end={projectDto.FundingEndDate:yyyy-MM-dd}");
 
         // 8g. Validate penalty configuration
-        projectDto.PenaltyDuration.TotalDays.Should().BeApproximately(90, 1,
-            "Penalty duration should be ~90 days (default)");
+        projectDto.PenaltyDuration.TotalDays.Should().BeApproximately(0, 1,
+            "Penalty duration should be ~0 days (debug mode value)");
         Log($"[STEP 8] Penalty duration: {projectDto.PenaltyDuration.TotalDays} days");
 
         // Cleanup: close window
@@ -554,6 +567,31 @@ public class CreateProjectTest
         {
             Log("  [Wipe] SettingsView/SettingsViewModel not found — skipping wipe.");
         }
+    }
+
+    /// <summary>
+    /// Navigate to Settings and enable debug mode via the SettingsViewModel.
+    /// This sets both PrototypeSettings (persisted) and INetworkConfiguration (in-memory).
+    /// </summary>
+    private async Task EnableDebugMode(Window window)
+    {
+        Log("  [DebugMode] Navigating to Settings...");
+        window.NavigateToSettings();
+        Dispatcher.UIThread.RunJobs();
+        await Task.Delay(500);
+
+        var settingsView = window.GetVisualDescendants()
+            .OfType<SettingsView>()
+            .FirstOrDefault();
+
+        settingsView.Should().NotBeNull("SettingsView should be available to enable debug mode");
+        var settingsVm = settingsView!.DataContext as SettingsViewModel;
+        settingsVm.Should().NotBeNull("SettingsViewModel should be available to enable debug mode");
+
+        settingsVm!.IsDebugMode = true;
+        Dispatcher.UIThread.RunJobs();
+        settingsVm.IsDebugMode.Should().BeTrue("Debug mode should be enabled");
+        Log("  [DebugMode] Debug mode enabled via SettingsViewModel.");
     }
 
     /// <summary>

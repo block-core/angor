@@ -30,7 +30,7 @@
         </Style>
     </UserControl.Styles>
 
-    <ctrl:ScrollableView>
+    <ScrollViewer Classes="PageScroll">
         <StackPanel Classes="Gap-XL">
             <Loading IsLoading="{Binding LoadProjectStats.IsExecuting^}" ClipToBounds="False">
                 <StackPanel Classes="Gap-XL">
@@ -57,5 +57,5 @@
             <claim:ClaimView ClipToBounds="False" DataContext="{Binding ClaimViewModel^}" />
             <release:ReleaseView DataContext="{Binding ReleaseViewModel^}" ClipToBounds="False" />
         </StackPanel>
-    </ctrl:ScrollableView>
+    </ScrollViewer>
 </UserControl>

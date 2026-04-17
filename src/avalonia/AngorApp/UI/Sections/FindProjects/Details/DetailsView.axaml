@@ -11,6 +11,7 @@
              xmlns:fund="clr-namespace:AngorApp.Model.ProjectsV2.FundProject;assembly=AngorApp.Model"
              xmlns:states="clr-namespace:AngorApp.Model.ProjectsV2.InvestmentProject;assembly=AngorApp.Model"
              mc:Ignorable="d"
+             d:DesignWidth="1200"
              x:Class="AngorApp.UI.Sections.FindProjects.Details.DetailsView"
              x:DataType="l:IDetailsViewModel">
 
@@ -24,15 +25,15 @@
         </DataContextChangedTrigger>
     </Interaction.Behaviors>
 
-    <c:ScrollableView>
-        <StackPanel Spacing="30" Margin="20" MaxWidth="1200" HorizontalAlignment="Stretch">
+    <ScrollViewer Classes="PageScroll">
+        <StackPanel Classes="Gap-L" MaxWidth="1200" HorizontalAlignment="Stretch">
 
             <!-- Top Section: Header + Investment Opportunity -->
-            <Grid ColumnDefinitions="*, 400" ColumnSpacing="20">
+            <FlexPanel Direction="Row" Wrap="Wrap" ColumnGap="20" RowGap="20">
 
-                <!-- Left Column: Header & Description -->
-                <OverlayBorder Classes="White Shadow" Padding="0" CornerRadius="16">
-                    <StackPanel Grid.Column="0">
+                <!-- Left: Header & Description -->
+                <OverlayBorder Classes="White Shadow" Padding="0" CornerRadius="16" FlexPanel.Basis="400" FlexPanel.Grow="1">
+                    <StackPanel>
                         <a:AdvancedImage CornerRadius="10 10 0 0" Margin="-20 -20 -20 0" Stretch="UniformToFill" Height="140" Source="{Binding Project.BannerUrl}" />
                         <Panel>
                             <Border Classes="Shadow" Height="60" Width="60" Margin="20 -30 0 0" HorizontalAlignment="Left" CornerRadius="30" />
@@ -47,8 +48,8 @@
                     </StackPanel>
                 </OverlayBorder>
 
-                <!-- Right Column: Investment Opportunity -->
-                <ContentControl Grid.Column="1" ClipToBounds="False" Content="{Binding Project}">
+                <!-- Right: Investment Opportunity -->
+                <ContentControl ClipToBounds="False" Content="{Binding Project}" FlexPanel.Basis="200" FlexPanel.Grow="1">
                     <ContentControl.DataTemplates>
                         <DataTemplate DataType="inv:IInvestmentProject">
                             <Panel Classes="Gap-XL">
@@ -83,7 +84,7 @@
                         </DataTemplate>
                     </ContentControl.DataTemplates>
                 </ContentControl>
-            </Grid>
+            </FlexPanel>
 
             <!-- Project Statistics (dispatched by project type) -->
             <HeaderedContainer Classes="Card ApricotGradient Shadow BigHeader">
@@ -237,5 +238,5 @@
             </Expander>
 
         </StackPanel>
-    </c:ScrollableView>
+    </ScrollViewer>
 </UserControl>

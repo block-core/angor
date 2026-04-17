@@ -321,6 +321,11 @@ public class FundAndRecoverTest
         foundProject.Should().NotBeNull($"Should find our project (run ID '{runId}') in Find Projects from SDK");
         Log($"[STEP 5] Found project: '{foundProject!.ProjectName}' (ID: {foundProject.ProjectId})");
 
+        // Additional VM assertions on the found project
+        foundProject.ProjectName.Should().Be(projectName, "ProjectName should match what we set in the wizard");
+        foundProject.ProjectType.Should().Be("Fund", "Fund-type project should have ProjectType 'Fund'");
+        foundProject.ProjectId.Should().NotBeNullOrEmpty("ProjectId should be populated from SDK");
+
         // ──────────────────────────────────────────────────────────────
         // STEP 6: Open invest page → invest above threshold
         // ──────────────────────────────────────────────────────────────
@@ -394,7 +399,7 @@ public class FundAndRecoverTest
             $"Invest should reach success. Last status: {investVm.PaymentStatusText}");
 
         // ──────────────────────────────────────────────────────────────
-        // STEP 7: Add investment to portfolio
+        // STEP 7: Add investment to portfolio + verify no duplicates
         // ──────────────────────────────────────────────────────────────
         Log("[STEP 7] Adding investment to portfolio...");
         investVm.AddToPortfolio();
@@ -403,6 +408,37 @@ public class FundAndRecoverTest
         var portfolioVm = global::App.App.Services.GetRequiredService<PortfolioViewModel>();
         portfolioVm.HasInvestments.Should().BeTrue("Portfolio should have at least one investment after AddToPortfolio");
         Log($"[STEP 7] Portfolio now has {portfolioVm.Investments.Count} investment(s)");
+
+        // ── Enhancement 1: Portfolio duplicate check ──
+        // After AddToPortfolio the local collection has 1 optimistic entry.
+        // Reload from SDK and verify only ONE entry for our project (no duplicates).
+        Log("[STEP 7.1] Verifying no duplicate investments after SDK reload...");
+        await portfolioVm.LoadInvestmentsFromSdkAsync();
+        Dispatcher.UIThread.RunJobs();
+
+        var matchingInvestments = portfolioVm.Investments
+            .Where(i => i.ProjectIdentifier == foundProject.ProjectId || i.ProjectName == foundProject.ProjectName)
+            .ToList();
+        matchingInvestments.Count.Should().Be(1,
+            "There should be exactly one investment entry for our project after AddToPortfolio + SDK reload (no duplicates)");
+
+        var localInvestment = matchingInvestments[0];
+        Log($"[STEP 7.1] Verified single investment entry: name='{localInvestment.ProjectName}', step={localInvestment.Step}, status='{localInvestment.StatusText}'");
+
+        // Verify investment VM properties after local add
+        localInvestment.ProjectName.Should().Be(foundProject.ProjectName, "Investment project name should match");
+        localInvestment.ProjectType.Should().Be("fund", "Fund-type project should have ProjectType 'fund'");
+        localInvestment.TypeLabel.Should().Be("Funding", "Fund-type investments should show 'Funding' type label");
+        localInvestment.Step.Should().Be(1, "Above-threshold fund investment should start at step 1 (awaiting approval)");
+        localInvestment.StatusText.Should().Be("Awaiting Approval", "Above-threshold investment should show 'Awaiting Approval'");
+        localInvestment.ApprovalStatus.Should().Be("Pending", "Investment should be Pending before founder approval");
+        localInvestment.ProjectIdentifier.Should().Be(foundProject.ProjectId, "Investment should reference our project ID");
+        localInvestment.CurrencySymbol.Should().NotBeNullOrEmpty("CurrencySymbol should be set (e.g. 'BTC' or 'TBTC')");
+        localInvestment.FundingAmount.Should().EndWith(localInvestment.CurrencySymbol,
+            "FundingAmount should include the active currency symbol");
+        double.TryParse(localInvestment.TotalInvested, NumberStyles.Float, CultureInfo.InvariantCulture, out var totalInvested)
+            .Should().BeTrue("TotalInvested should parse as a numeric BTC amount");
+        totalInvested.Should().BeGreaterThan(0, "TotalInvested should be positive after investing");
 
         // ──────────────────────────────────────────────────────────────
         // STEP 8: Founder approves pending investment request
@@ -506,6 +542,11 @@ public class FundAndRecoverTest
         confirmResult.Should().BeTrue("Investor confirmation should succeed after founder signatures are available and valid");
         signedInvestment.Step.Should().Be(3, "Confirmed investment should advance to the active state");
         signedInvestment.StatusText.Should().Be("Investment Active");
+        signedInvestment.StatusClass.Should().Be("active", "Active investment should have 'active' status class");
+        signedInvestment.IsStatusActive.Should().BeTrue("IsStatusActive should be true for confirmed investment");
+        signedInvestment.IsStep3.Should().BeTrue("IsStep3 should be true after confirmation");
+        signedInvestment.IsStepAtLeast3.Should().BeTrue("IsStepAtLeast3 should be true after confirmation");
+        signedInvestment.ProjectType.Should().Be("fund", "Fund-type project type should persist through confirmation");
         Log("[STEP 9] Investor confirmed signed investment successfully");
 
         // ──────────────────────────────────────────────────────────────
@@ -530,6 +571,66 @@ public class FundAndRecoverTest
 
         var manageVm = founderProjectsVm.SelectedManageProject;
         manageVm.Should().NotBeNull("ManageProjectViewModel should be created");
+
+        // ── Enhancement 2: ManageProject stage/UTXO assertions before spending ──
+        // Wait for claimable transactions to load, then verify stages look correct BEFORE the founder spends.
+        Log("[STEP 10.0] Verifying ManageProject stages before founder spend...");
+        var preSpendDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        while (DateTime.UtcNow < preSpendDeadline)
+        {
+            await manageVm!.LoadClaimableTransactionsAsync();
+            Dispatcher.UIThread.RunJobs();
+
+            if (manageVm.Stages.Count >= installmentCount)
+                break;
+
+            Log($"[STEP 10.0] Waiting for stages to populate... ({manageVm.Stages.Count}/{installmentCount})");
+            await Task.Delay(PollInterval);
+        }
+
+        manageVm!.Stages.Count.Should().Be(installmentCount,
+            $"ManageProject should show {installmentCount} stages matching the payout schedule");
+        Log($"[STEP 10.0] Stage count verified: {manageVm.Stages.Count}");
+
+        // Verify stage numbers are sequential
+        var stageNumbers = manageVm.Stages.Select(s => s.Number).OrderBy(n => n).ToList();
+        stageNumbers.Should().ContainInOrder(Enumerable.Range(1, installmentCount),
+            "Stage numbers should be sequential 1..N");
+
+        // Verify stage 1 is available / first spendable
+        var stage1Pre = manageVm.Stages.First(s => s.Number == 1);
+        stage1Pre.Available.Should().BeTrue("Stage 1 should be available (has UTXOs)");
+        stage1Pre.UnspentTransactionCount.Should().BeGreaterThan(0,
+            "Stage 1 should have at least one unspent transaction");
+        stage1Pre.SpentTransactionCount.Should().Be(0,
+            "Stage 1 should have zero spent transactions before founder claims");
+        stage1Pre.AmountLeft.Should().NotBe("0.00000000",
+            "Stage 1 AmountLeft should be non-zero before spending");
+        stage1Pre.CompletionDate.Should().NotBeNullOrEmpty(
+            "Stage 1 should have a completion date");
+
+        // Verify all stages have non-zero amounts
+        foreach (var stage in manageVm.Stages)
+        {
+            stage.AmountLeft.Should().NotBe("0.00000000",
+                $"Stage {stage.Number} should have a non-zero amount before any spending");
+            stage.UnspentTransactionCount.Should().BeGreaterThan(0,
+                $"Stage {stage.Number} should have unspent UTXOs");
+            stage.SpentTransactionCount.Should().Be(0,
+                $"Stage {stage.Number} should have no spent transactions yet");
+            Log($"[STEP 10.0] Stage #{stage.Number}: amount={stage.AmountLeft}, " +
+                $"unspent={stage.UnspentTransactionCount}, spent={stage.SpentTransactionCount}, " +
+                $"available={stage.Available}, canClaim={stage.CanClaim}, " +
+                $"buttonMode={stage.ButtonMode}, date='{stage.CompletionDate}'");
+        }
+
+        // Verify header statistics
+        manageVm.TotalStages.Should().Be(installmentCount,
+            "ManageProject TotalStages header stat should match installment count");
+        Log($"[STEP 10.0] Header stats: TotalInvestment={manageVm.TotalInvestment}, " +
+            $"AvailableBalance={manageVm.AvailableBalance}, TotalStages={manageVm.TotalStages}, " +
+            $"TransactionTotal={manageVm.TransactionTotal}, TransactionSpent={manageVm.TransactionSpent}, " +
+            $"TransactionAvailable={manageVm.TransactionAvailable}");
 
         var claimableDeadline = DateTime.UtcNow + IndexerLagTimeout;
         var claimPollCount = 0;
@@ -668,39 +769,64 @@ public class FundAndRecoverTest
             $"Polled {pollCount} times over {IndexerLagTimeout.TotalMinutes} minutes. " +
             $"Project: {targetInvestment.ProjectIdentifier}, WalletId: {targetInvestment.InvestmentWalletId}");
 
-        // Execute the appropriate recovery operation
-        var actionKey = targetInvestment.RecoveryState.ActionKey;
-        Log($"[STEP 12] Executing recovery action: '{actionKey}' ({targetInvestment.RecoveryState.ButtonLabel})...");
+        // ── Enhancement 3: Recovery stage display verification ──
+        // After LoadRecoveryStatusAsync, the investment's Stages collection should be populated
+        // with per-stage recovery data. Verify the stage count and statuses.
+        Log("[STEP 12.1] Verifying recovery stage display...");
+        targetInvestment.Stages.Count.Should().Be(installmentCount,
+            $"Recovery should show {installmentCount} stages matching the project's payout schedule");
 
-        bool recoveryResult;
-        switch (actionKey)
+        foreach (var stage in targetInvestment.Stages)
         {
-            case "recovery":
-                recoveryResult = await portfolioVm.RecoverFundsAsync(targetInvestment);
-                break;
-            case "unfundedRelease":
-                recoveryResult = await portfolioVm.ReleaseFundsAsync(targetInvestment);
-                break;
-            case "endOfProject":
-                recoveryResult = await portfolioVm.ClaimEndOfProjectAsync(targetInvestment);
-                break;
-            case "penaltyRelease":
-                recoveryResult = await portfolioVm.PenaltyReleaseFundsAsync(targetInvestment);
-                break;
-            default:
-                recoveryResult = false;
-                Log($"[STEP 12] ERROR: Unknown recovery action key: '{actionKey}'");
-                break;
+            stage.StageNumber.Should().BeGreaterThan(0, "Stage number should be positive");
+            stage.Amount.Should().NotBe("0.00000000", $"Stage {stage.StageNumber} should have a non-zero amount");
+            stage.Status.Should().BeOneOf("Spent by founder", "Not Spent", "Pending",
+                $"Stage {stage.StageNumber} status should be a valid value");
+            Log($"[STEP 12.1] Recovery Stage #{stage.StageNumber}: amount={stage.Amount}, status='{stage.Status}'");
         }
+
+        // Stage 1 was spent by the founder — it should show that exact text.
+        var recoveryStage1 = targetInvestment.Stages.FirstOrDefault(s => s.StageNumber == 1);
+        recoveryStage1.Should().NotBeNull("Stage 1 should exist in recovery stages");
+        recoveryStage1!.Status.Should().Be("Spent by founder",
+            "Stage 1 should say 'Spent by founder' after the founder spends that stage");
+
+        // Remaining stages should still be untouched before any penalty recovery occurs.
+        var unspentStages = targetInvestment.Stages.Where(s => s.StageNumber > 1).ToList();
+        unspentStages.Should().AllSatisfy(s =>
+            s.Status.Should().Be("Not Spent",
+                $"Stage {s.StageNumber} should say 'Not Spent' since only stage 1 was spent"));
+
+        // Verify computed recovery properties
+        targetInvestment.StagesToRecover.Should().BeGreaterThan(0,
+            "StagesToRecover should be positive since there are unreleased stages");
+        double.TryParse(targetInvestment.AmountToRecover, System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture, out var amountToRecover).Should().BeTrue();
+        amountToRecover.Should().BeGreaterThan(0,
+            "AmountToRecover should be positive for unreleased stages");
+
+        // Verify recovery button visibility
+        targetInvestment.ShowRecoverButton.Should().BeTrue(
+            "ShowRecoverButton should be true for an active investment with a recovery action available");
+        targetInvestment.PenaltyButtonText.Should().NotBeNullOrEmpty(
+            "PenaltyButtonText should have a label for the recovery action");
+        Log($"[STEP 12.1] Recovery display verified. StagesToRecover={targetInvestment.StagesToRecover}, " +
+            $"AmountToRecover={targetInvestment.AmountToRecover}, ButtonText='{targetInvestment.PenaltyButtonText}'");
+
+        // Execute the recovery through the real UI button path
+        var actionKey = targetInvestment.RecoveryState.ActionKey;
+        Log($"[STEP 12] Clicking recovery action button: '{actionKey}' ({targetInvestment.RecoveryState.ButtonLabel})...");
+
+        await window.ClickRecoveryFlowAsync(portfolioVm, targetInvestment, TimeSpan.FromSeconds(30));
 
         Dispatcher.UIThread.RunJobs();
 
         // ──────────────────────────────────────────────────────────────
         // STEP 13: Verify recovery succeeded
         // ──────────────────────────────────────────────────────────────
-        Log($"[STEP 13] Recovery result: {recoveryResult}");
-        recoveryResult.Should().BeTrue(
-            $"Recovery operation '{actionKey}' should succeed (transaction built and published)");
+        Log("[STEP 13] Recovery flow completed through real UI button path");
+        targetInvestment.ShowSuccessModal.Should().BeTrue(
+            $"Recovery operation '{actionKey}' should succeed and show the success modal");
 
         Log($"[STEP 13] Post-recovery state: HasUnspent={targetInvestment.RecoveryState.HasUnspentItems}, " +
             $"InPenalty={targetInvestment.RecoveryState.HasSpendableItemsInPenalty}, " +

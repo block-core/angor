@@ -338,6 +338,11 @@ public class MultiInvestClaimAndRecoverTest
     {
         var foundProject = await FindProjectFromSdkAsync(window, profileName, project);
 
+        // Verify target amount was stored correctly as 1 BTC (not 1 satoshi).
+        // Target is formatted as BTC with 5 decimal places by ProjectItemViewModel.FromDto().
+        foundProject.Target.Should().Be("1.00000",
+            "TargetAmount '1.0' means 1 BTC = 100_000_000 sats; the SDK should store sats and display converts back to BTC");
+
         var findProjectsVm = GetFindProjectsViewModel(window);
         findProjectsVm.Should().NotBeNull();
 
@@ -456,7 +461,7 @@ public class MultiInvestClaimAndRecoverTest
         {
             Log(profileName,
                 $"Approving signature request id={pendingSignature.Id} for project {project.ProjectIdentifier}");
-            fundersVm!.ApproveSignature(pendingSignature.Id);
+            await window.ClickApproveSignatureAsync(fundersVm!, pendingSignature, UiTimeout);
         }
 
         var approvalDeadline = DateTime.UtcNow + IndexerLagTimeout;
@@ -494,8 +499,7 @@ public class MultiInvestClaimAndRecoverTest
         investment.ApprovalStatus.Should().Be("Approved");
         investment.Step.Should().Be(2, "approved investments should require explicit investor confirmation");
 
-        var confirmResult = await portfolioVm.ConfirmInvestmentAsync(investment);
-        confirmResult.Should().BeTrue("founder-approved investment should be confirmable by the investor");
+        await window.ClickInvestmentDetailActionAsync(portfolioVm, investment, "ConfirmInvestmentButton", UiTimeout);
 
         var activeDeadline = DateTime.UtcNow + IndexerLagTimeout;
         while (DateTime.UtcNow < activeDeadline)
@@ -532,17 +536,14 @@ public class MultiInvestClaimAndRecoverTest
             string.Equals(p.ProjectIdentifier, project.ProjectIdentifier, StringComparison.Ordinal));
         founderProject.Should().NotBeNull();
 
-        myProjectsVm.OpenManageProject(founderProject!);
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
         var manageVm = myProjectsVm.SelectedManageProject;
-        manageVm.Should().NotBeNull();
 
         var deadline = DateTime.UtcNow + IndexerLagTimeout;
         while (DateTime.UtcNow < deadline)
         {
+            await myProjectsVm!.LoadFounderProjectsAsync();
+            myProjectsVm.OpenManageProject(founderProject!);
+            manageVm = myProjectsVm.SelectedManageProject;
             await manageVm!.LoadClaimableTransactionsAsync();
             Dispatcher.UIThread.RunJobs();
 
@@ -556,8 +557,7 @@ public class MultiInvestClaimAndRecoverTest
                 stage1.AvailableTransactions.Count.Should().Be(2,
                     "founder should claim stage 1 from both investor UTXOs");
 
-                var claimResult = await manageVm.ClaimStageFundsAsync(stage1.Number, stage1.AvailableTransactions.ToList());
-                claimResult.Should().BeTrue();
+                await window.ClickManageProjectClaimStageAsync(myProjectsVm, founderProject!, stage1.Number, UiTimeout);
                 Log(profileName, "Founder claimed stage 1 using both available UTXOs.");
                 break;
             }
@@ -599,19 +599,16 @@ public class MultiInvestClaimAndRecoverTest
             string.Equals(p.ProjectIdentifier, project.ProjectIdentifier, StringComparison.Ordinal));
         founderProject.Should().NotBeNull();
 
-        myProjectsVm.OpenManageProject(founderProject!);
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        var manageVm = myProjectsVm.SelectedManageProject;
-        manageVm.Should().NotBeNull();
-
         var deadline = DateTime.UtcNow + IndexerLagTimeout;
         while (DateTime.UtcNow < deadline)
         {
-            var releaseResult = await manageVm!.ReleaseFundsToInvestorsAsync();
-            if (releaseResult)
+            await myProjectsVm!.LoadFounderProjectsAsync();
+            myProjectsVm.OpenManageProject(founderProject!);
+            var manageVm = myProjectsVm.SelectedManageProject;
+            manageVm.Should().NotBeNull();
+
+            var releaseSucceeded = await window.ClickManageProjectReleaseFundsAsync(myProjectsVm, founderProject!, UiTimeout);
+            if (releaseSucceeded)
             {
                 Log(profileName, "Founder released remaining stages to investors.");
                 return;

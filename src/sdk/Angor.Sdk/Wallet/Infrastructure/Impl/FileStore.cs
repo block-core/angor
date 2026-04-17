@@ -21,10 +21,17 @@ public class FileStore : IStore
 
     public async Task<Result> Save<T>(string key, T data)
     {
-        return from filePath in Result.Try(() => Path.Combine(appDataPath, key))
-            from contents in Result.Try(() => JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true }))
-            select Result.Try(() => File.WriteAllTextAsync(filePath, contents))
-                .Bind(Result.Success);
+        try
+        {
+            var filePath = Path.Combine(appDataPath, key);
+            var contents = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
+            await File.WriteAllTextAsync(filePath, contents);
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure(ex.Message);
+        }
     }
 
     public Task<Result<T>> Load<T>(string key)

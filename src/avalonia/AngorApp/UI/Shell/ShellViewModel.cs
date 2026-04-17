@@ -23,7 +23,7 @@ namespace AngorApp.UI.Shell
         {
             this.walletContext = walletContext;
             this.investmentAppService = investmentAppService;
-            sectionsByName = sections.ToDictionary(root => root.Name, root => root);
+            sectionsByName = sections.ToDictionary(root => root.Id, root => root);
             SidebarSections =
             [
                 sectionsByName["Home"],

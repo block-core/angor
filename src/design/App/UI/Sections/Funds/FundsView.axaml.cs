@@ -207,13 +207,23 @@ public partial class FundsView : UserControl
 
     /// <summary>
     /// Refresh balance for a single wallet via its WalletCard.
+    /// Sets IsRefreshing on the card to show a spinning icon during the operation.
     /// </summary>
-    private void RefreshWalletBalance(Button btn)
+    private async void RefreshWalletBalance(Button btn)
     {
         var card = FindParentWalletCard(btn);
         if (card?.WalletId == null) return;
-        if (DataContext is FundsViewModel vm)
-            _ = vm.RefreshBalanceAsync(card.WalletId);
+        if (DataContext is not FundsViewModel vm) return;
+
+        card.IsRefreshing = true;
+        try
+        {
+            await vm.RefreshBalanceAsync(card.WalletId);
+        }
+        finally
+        {
+            card.IsRefreshing = false;
+        }
     }
 
     /// <summary>

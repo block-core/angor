@@ -178,10 +178,39 @@
                                     BorderBrush="{DynamicResource PrimaryGreenBrush}"
                                     BorderThickness="2"
                                     Cursor="Hand"
+                                    IsEnabled="{Binding !IsRefreshing, RelativeSource={RelativeSource TemplatedParent}}"
                                     ToolTip.Tip="Refresh Balance">
-                                <i:Icon Value="fa-solid fa-sync"
-                                       FontSize="14"
-                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                <Panel>
+                                    <!-- Normal state -->
+                                    <i:Icon Value="fa-solid fa-sync"
+                                           FontSize="14"
+                                           IsVisible="{Binding !IsRefreshing, RelativeSource={RelativeSource TemplatedParent}}"
+                                           Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                    <!-- Spinning state -->
+                                    <i:Icon Value="fa-solid fa-spinner"
+                                           FontSize="14"
+                                           IsVisible="{TemplateBinding IsRefreshing}"
+                                           Foreground="{DynamicResource PrimaryGreenBrush}"
+                                           RenderTransformOrigin="50%,50%">
+                                        <i:Icon.RenderTransform>
+                                            <RotateTransform />
+                                        </i:Icon.RenderTransform>
+                                        <i:Icon.Styles>
+                                            <Style Selector="i|Icon[IsVisible=True]">
+                                                <Style.Animations>
+                                                    <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                        <KeyFrame Cue="0%">
+                                                            <Setter Property="RotateTransform.Angle" Value="0" />
+                                                        </KeyFrame>
+                                                        <KeyFrame Cue="100%">
+                                                            <Setter Property="RotateTransform.Angle" Value="360" />
+                                                        </KeyFrame>
+                                                    </Animation>
+                                                </Style.Animations>
+                                            </Style>
+                                        </i:Icon.Styles>
+                                    </i:Icon>
+                                </Panel>
                             </Button>
                             <!-- Faucet button — 32x32 FILLED green gradient, testnet only -->
                             <Button Name="BtnFaucet"
