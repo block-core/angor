@@ -282,6 +282,21 @@ public partial class ManageProjectViewModel : ReactiveObject
             TransactionSpent = stats.SpentTransactions;
             TransactionAvailable = stats.AvailableTransactions;
 
+            // Populate next stage countdown from SDK statistics
+            if (stats.NextStage != null && stats.NextStage.ReleaseDate > DateTime.UtcNow)
+            {
+                var timeUntil = stats.NextStage.ReleaseDate - DateTime.UtcNow;
+                CountdownDays = (int)timeUntil.TotalDays;
+                CountdownHours = timeUntil.Hours;
+                CountdownMins = timeUntil.Minutes;
+            }
+            else
+            {
+                CountdownDays = 0;
+                CountdownHours = 0;
+                CountdownMins = 0;
+            }
+
             this.RaisePropertyChanged(nameof(TotalInvestment));
             this.RaisePropertyChanged(nameof(AvailableBalance));
             this.RaisePropertyChanged(nameof(Withdrawable));
@@ -289,6 +304,9 @@ public partial class ManageProjectViewModel : ReactiveObject
             this.RaisePropertyChanged(nameof(TransactionTotal));
             this.RaisePropertyChanged(nameof(TransactionSpent));
             this.RaisePropertyChanged(nameof(TransactionAvailable));
+            this.RaisePropertyChanged(nameof(CountdownDays));
+            this.RaisePropertyChanged(nameof(CountdownHours));
+            this.RaisePropertyChanged(nameof(CountdownMins));
         }
         catch (Exception ex)
         {
@@ -330,22 +348,34 @@ public partial class ManageProjectViewModel : ReactiveObject
                 totalAmount += stageAmount;
 
                 var claimable = stageTransactions.Where(t => t.ClaimStatus == Angor.Sdk.Funding.Founder.Dtos.ClaimStatus.Unspent).ToList();
+                var locked = stageTransactions.Where(t => t.ClaimStatus == Angor.Sdk.Funding.Founder.Dtos.ClaimStatus.Locked).ToList();
                 var spent = stageTransactions.Where(t => t.ClaimStatus == Angor.Sdk.Funding.Founder.Dtos.ClaimStatus.SpentByFounder).ToList();
 
+                // AmountLeft includes both claimable (Unspent) and locked transactions
+                var unspentAmount = claimable.Sum(t => t.Amount.Sats.ToUnitBtc()) + locked.Sum(t => t.Amount.Sats.ToUnitBtc());
                 availableAmount += (double)claimable.Sum(t => t.Amount.Sats.ToUnitBtc());
                 availableCount += claimable.Count;
                 spentCount += spent.Count;
 
+                // Calculate days until available from DynamicReleaseDate for locked stages
+                int? daysUntilAvailable = null;
+                var releaseDate = stageTransactions.FirstOrDefault()?.DynamicReleaseDate;
+                if (locked.Count > 0 && releaseDate.HasValue && releaseDate.Value > DateTime.UtcNow)
+                {
+                    daysUntilAvailable = (int)Math.Ceiling((releaseDate.Value - DateTime.UtcNow).TotalDays);
+                }
+
                 var stage = new ManageStageViewModel
                 {
                     Number = group.Key,
-                    AmountLeft = claimable.Sum(t => t.Amount.Sats.ToUnitBtc()).ToString("F8", CultureInfo.InvariantCulture),
+                    AmountLeft = unspentAmount.ToString("F8", CultureInfo.InvariantCulture),
                     UtxoCount = stageTransactions.Count,
-                    CompletionDate = stageTransactions.FirstOrDefault()?.DynamicReleaseDate?.ToString("dd MMMM yyyy") ?? "",
-                    Available = claimable.Count > 0,
+                    CompletionDate = releaseDate?.ToString("dd MMMM yyyy") ?? "",
+                    Available = claimable.Count > 0 || locked.Count > 0,
                     CanClaim = claimable.Count > 0,
+                    DaysUntilAvailable = daysUntilAvailable,
                     SpentTransactionCount = spent.Count,
-                    UnspentTransactionCount = claimable.Count,
+                    UnspentTransactionCount = claimable.Count + locked.Count,
                 };
 
                 foreach (var tx in claimable)

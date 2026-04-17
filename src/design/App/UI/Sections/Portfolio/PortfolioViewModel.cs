@@ -67,15 +67,15 @@ public class InvestmentStageViewModel
     public string Percentage { get; set; } = "0%";
     public string ReleaseDate { get; set; } = "";
     public string Amount { get; set; } = "0.00000000";
-    public string Status { get; set; } = "Pending"; // Pending, Released, Available, Not Spent
+    public string Status { get; set; } = "Pending";
     /// <summary>Stage label prefix: "Stage" for invest, "Payment" for fund/subscription</summary>
     public string StagePrefix { get; set; } = "Stage";
 
     // Status visibility helpers for per-status badge coloring
     public bool IsStatusPending => Status == "Pending";
-    public bool IsStatusReleased => Status == "Released";
+    public bool IsStatusReleased => Status == "Released" || Status == "Spent by founder";
     public bool IsStatusNotSpent => Status == "Not Spent";
-    public bool IsStatusRecovered => Status == "Recovered";
+    public bool IsStatusRecovered => Status == "Recovered" || Status == "Penalty can be released" || Status.StartsWith("Penalty,");
 }
 
 /// <summary>
@@ -306,14 +306,14 @@ public class InvestmentViewModel : INotifyPropertyChanged
     };
 
     /// <summary>Number of unreleased stages (Vue: stagesToRecover computed)</summary>
-    public int StagesToRecover => Stages.Count(s => s.Status != "Released");
+    public int StagesToRecover => Stages.Count(s => s.Status != "Released" && !s.IsStatusRecovered);
 
     /// <summary>Sum of unreleased stage amounts (Vue: amountToRecover computed)</summary>
     public string AmountToRecover
     {
         get
         {
-            var total = Stages.Where(s => s.Status != "Released")
+            var total = Stages.Where(s => s.Status != "Released" && !s.IsStatusRecovered)
                 .Sum(s => double.TryParse(s.Amount, System.Globalization.NumberStyles.Float,
                     System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0);
             return total.ToString("F5", System.Globalization.CultureInfo.InvariantCulture);
@@ -383,6 +383,23 @@ public class InvestmentViewModel : INotifyPropertyChanged
         get => _isProcessing;
         set { if (_isProcessing == value) return; _isProcessing = value; OnPropertyChanged(); }
     }
+
+    private string? _errorMessage;
+    /// <summary>Error message shown when a recovery operation fails.</summary>
+    public string? ErrorMessage
+    {
+        get => _errorMessage;
+        set
+        {
+            if (_errorMessage == value) return;
+            _errorMessage = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(HasError));
+        }
+    }
+
+    /// <summary>True when there is an error to display.</summary>
+    public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
     // ── Recovery data (populated from SDK when available) ──
     public string PenaltyDuration { get; set; } = "";
@@ -749,11 +766,18 @@ public partial class PortfolioViewModel : ReactiveObject
             investment.Stages.Clear();
             foreach (var item in recovery.Items)
             {
+                var status = item.Status switch
+                {
+                    "Unspent" => "Not Spent",
+                    var s when !string.IsNullOrEmpty(s) => s,
+                    _ => item.IsSpent ? "Released" : (recovery.HasSpendableItemsInPenalty ? "Pending" : "Not Spent")
+                };
+
                 investment.Stages.Add(new InvestmentStageViewModel
                 {
                     StageNumber = item.StageIndex + 1,
                     Amount = item.Amount.ToUnitBtc().ToString("F8", CultureInfo.InvariantCulture),
-                    Status = item.IsSpent ? "Released" : (recovery.HasSpendableItemsInPenalty ? "Pending" : "Not Spent")
+                    Status = status
                 });
             }
 
@@ -762,13 +786,23 @@ public partial class PortfolioViewModel : ReactiveObject
             var daysLeft = (recovery.ExpiryDate - DateTime.UtcNow).Days;
             investment.PenaltyDaysRemaining = Math.Max(0, daysLeft);
 
+            // Penalty-threshold logic only applies to Fund projects.
+            // Invest/Subscribe projects should not take the UI shortcut that maps
+            // `IsAboveThreshold == false` to the end-of-project claim path, because
+            // for non-Fund projects the SDK intentionally reports threshold as not applicable.
+            // Normalize the flag here so non-Fund projects only route to end-of-project
+            // when the project has actually expired.
+            var normalizedIsAboveThreshold = investment.ProjectType == "fund"
+                ? recovery.IsAboveThreshold
+                : true;
+
             // Map all 5 SDK fields to RecoveryState (replaces simplified 3-state string)
             investment.RecoveryState = new RecoveryState(
                 recovery.HasUnspentItems,
                 recovery.HasSpendableItemsInPenalty,
                 recovery.HasReleaseSignatures,
                 recovery.EndOfProject,
-                recovery.IsAboveThreshold);
+                normalizedIsAboveThreshold);
 
             _logger.LogInformation("Recovery status loaded for project {ProjectId}: HasUnspent={HasUnspent}, InPenalty={InPenalty}, HasReleaseSig={HasReleaseSig}, EndOfProject={EndOfProject}, AboveThreshold={AboveThreshold}, ActionKey={ActionKey}",
                 investment.ProjectIdentifier, recovery.HasUnspentItems, recovery.HasSpendableItemsInPenalty,

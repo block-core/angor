@@ -5,6 +5,7 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using Angor.Sdk.Funding.Projects;
 using Angor.Shared;
 using Angor.Shared.Services;
 using App.UI.Shared.Controls;
@@ -123,6 +124,11 @@ public partial class ProjectDetailView : UserControl
         if (explorerLink != null)
             explorerLink.PointerPressed += OnExplorerLinkPressed;
 
+        // View Project JSON button — show project info as formatted JSON
+        var viewJsonBtn = this.FindControl<Border>("ViewProjectJsonBtn");
+        if (viewJsonBtn != null)
+            viewJsonBtn.PointerPressed += OnViewProjectJsonPressed;
+
         // Set progress bar width after loaded
         Loaded += OnLoaded;
     }
@@ -229,6 +235,21 @@ public partial class ProjectDetailView : UserControl
             var derivation = App.Services.GetRequiredService<IDerivationOperations>();
             var bitcoinAddress = derivation.ConvertAngorKeyToBitcoinAddress(project.ProjectId);
             ExplorerHelper.OpenAddress(networkService, bitcoinAddress);
+        }
+        e.Handled = true;
+    }
+
+    private void OnViewProjectJsonPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (DataContext is ProjectItemViewModel project && !string.IsNullOrEmpty(project.ProjectId))
+        {
+            var shell = this.FindAncestorOfType<ShellView>();
+            if (shell?.DataContext is ShellViewModel shellVm && !shellVm.IsModalOpen)
+            {
+                var projectAppService = App.Services.GetRequiredService<IProjectAppService>();
+                var modal = new ProjectInfoJsonModal(project.ProjectId, projectAppService);
+                shellVm.ShowModal(modal);
+            }
         }
         e.Handled = true;
     }

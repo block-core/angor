@@ -27,6 +27,17 @@ public partial class FindProjectsView : UserControl
         _detailPanel = this.FindControl<Panel>("ProjectDetailPanel");
         _investPanel = this.FindControl<Panel>("InvestPagePanel");
 
+        // Wire refresh button
+        var refreshBtn = this.FindControl<Button>("RefreshProjectsButton");
+        if (refreshBtn != null)
+        {
+            refreshBtn.Click += async (_, _) =>
+            {
+                if (DataContext is FindProjectsViewModel fvm)
+                    await fvm.LoadProjectsFromSdkAsync();
+            };
+        }
+
         // Listen for taps on ProjectCard elements to open project detail
         AddHandler(InputElement.TappedEvent, OnCardTapped, RoutingStrategies.Bubble);
 

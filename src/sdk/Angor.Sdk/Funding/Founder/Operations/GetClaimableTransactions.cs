@@ -33,7 +33,7 @@ public static class GetClaimableTransactions
                            StageId = stageData.StageIndex,
                            StageNumber = stageData.StageIndex + 1,
                            Amount = new Amount(item.Amount),
-                           DynamicReleaseDate = stageData.IsDynamic ? stageData.StageDate : null,
+                           DynamicReleaseDate = stageData.StageDate,
                            InvestorAddress = item.InvestorPublicKey,
                            ClaimStatus = DetermineClaimStatus(item, stageData),
                        }));
