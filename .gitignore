@@ -403,5 +403,8 @@ FodyWeavers.xsd
 # VS Code settings (local only)
 .vscode/settings.json
 
+# AI task notes
+ai-tasks/
+
 # Windows reserved device names
 nul
