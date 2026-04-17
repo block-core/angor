@@ -9,7 +9,18 @@
         <TrimMode>partial</TrimMode>
         <PublishSingleFile>true</PublishSingleFile>
         <PublishReadyToRun>true</PublishReadyToRun>
+        <!-- SDK uses reflection-based System.Text.Json (FileStore, WalletFactory, AesWalletEncryption, etc.) -->
+        <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     </PropertyGroup>
+
+    <!-- Preserve reflection-heavy assemblies from IL trimming -->
+    <ItemGroup Condition="'$(Configuration)'=='Release'">
+        <TrimmerRootAssembly Include="Angor.Sdk" />
+        <TrimmerRootAssembly Include="Angor.Shared" />
+        <TrimmerRootAssembly Include="Angor.Data.Documents" />
+        <TrimmerRootAssembly Include="Angor.Data.Documents.LiteDb" />
+        <TrimmerRootAssembly Include="LiteDB" />
+    </ItemGroup>
     
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
