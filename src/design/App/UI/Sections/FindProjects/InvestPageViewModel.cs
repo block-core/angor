@@ -237,9 +237,17 @@ public partial class InvestPageViewModel : ReactiveObject
 
         // Initialize ReactiveCommands for async payment operations
         PayWithWalletCommand = ReactiveCommand.CreateFromTask(PayWithWalletAsync);
-        PayWithWalletCommand.ThrownExceptions.Subscribe(ex => PaymentStatusText = $"Error: {ex.Message}");
+        PayWithWalletCommand.ThrownExceptions.Subscribe(ex =>
+        {
+            _logger.LogError(ex, "Unhandled exception in PayWithWalletCommand");
+            PaymentStatusText = $"Error: {ex.Message}";
+        });
         PayViaInvoiceCommand = ReactiveCommand.CreateFromTask(PayViaInvoiceAsync);
-        PayViaInvoiceCommand.ThrownExceptions.Subscribe(ex => PaymentStatusText = $"Error: {ex.Message}");
+        PayViaInvoiceCommand.ThrownExceptions.Subscribe(ex =>
+        {
+            _logger.LogError(ex, "Unhandled exception in PayViaInvoiceCommand");
+            PaymentStatusText = $"Error: {ex.Message}";
+        });
 
         // Raise derived property notifications when screen changes
         this.WhenAnyValue(x => x.CurrentScreen)
@@ -661,11 +669,15 @@ public partial class InvestPageViewModel : ReactiveObject
             }
 
             _logger.LogInformation("Investment flow completed — advancing to Success screen");
-            _ = _walletContext.RefreshBalanceAsync(walletId);
+            _ = _walletContext.RefreshBalanceAsync(walletId).ContinueWith(t =>
+            {
+                if (t.IsFaulted) _logger.LogWarning(t.Exception, "Background RefreshBalanceAsync failed for wallet {WalletId}", walletId.Value);
+            }, TaskContinuationOptions.OnlyOnFaulted);
             CurrentScreen = InvestScreen.Success;
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "PayWithWalletAsync failed");
             PaymentStatusText = $"Error: {ex.Message}";
         }
         finally
@@ -828,15 +840,20 @@ public partial class InvestPageViewModel : ReactiveObject
                 }
             }
 
-            _ = _walletContext.RefreshBalanceAsync(walletId);
+            _ = _walletContext.RefreshBalanceAsync(walletId).ContinueWith(t =>
+            {
+                if (t.IsFaulted) _logger.LogWarning(t.Exception, "Background RefreshBalanceAsync failed for wallet {WalletId}", walletId.Value);
+            }, TaskContinuationOptions.OnlyOnFaulted);
             CurrentScreen = InvestScreen.Success;
         }
         catch (OperationCanceledException)
         {
+            _logger.LogInformation("Invoice monitoring was cancelled");
             ErrorMessage = "Invoice monitoring cancelled.";
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "CompleteInvestmentAfterFundingAsync failed");
             ErrorMessage = $"An error occurred: {ex.Message}";
         }
         finally
