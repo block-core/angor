@@ -246,10 +246,9 @@ public class InvestmentCancellationTest
 
         // ── Step 2: Cancel the pending investment (before founder approval) ──
         Log(profileName, "Cancelling pending investment (before founder approval)...");
-        var cancelResult = await portfolioVm.CancelInvestmentAsync(pendingInvestment);
+        await window.ClickInvestmentDetailActionAsync(portfolioVm, pendingInvestment, "CancelInvestmentStep1Button");
         Dispatcher.UIThread.RunJobs();
 
-        cancelResult.Should().BeTrue("Cancellation should succeed for a pending (Step 1) investment");
         pendingInvestment.StatusText.Should().Be("Cancelled", "Status should be 'Cancelled' after cancellation");
         pendingInvestment.Status.Should().Be("Cancelled", "Status field should be 'Cancelled'");
         Log(profileName, $"Investment cancelled. Status='{pendingInvestment.StatusText}'");
@@ -319,7 +318,7 @@ public class InvestmentCancellationTest
 
         pendingSignature.Should().NotBeNull("above-threshold investment should require founder approval");
         Log(profileName, $"Approving signature request id={pendingSignature!.Id} for project {project.ProjectIdentifier}");
-        fundersVm!.ApproveSignature(pendingSignature.Id);
+        await window.ClickApproveSignatureAsync(fundersVm!, pendingSignature, UiTimeout);
 
         var approvalDeadline = DateTime.UtcNow + IndexerLagTimeout;
         while (DateTime.UtcNow < approvalDeadline)
@@ -375,10 +374,9 @@ public class InvestmentCancellationTest
 
         // Cancel the approved investment
         Log(profileName, "Cancelling approved investment (after founder approval)...");
-        var cancelResult = await portfolioVm.CancelInvestmentAsync(approvedInvestment);
+        await window.ClickInvestmentDetailActionAsync(portfolioVm, approvedInvestment, "CancelInvestmentButton");
         Dispatcher.UIThread.RunJobs();
 
-        cancelResult.Should().BeTrue("Cancellation should succeed for an approved (Step 2) investment");
         approvedInvestment.StatusText.Should().Be("Cancelled", "Status should be 'Cancelled' after cancellation");
         approvedInvestment.Status.Should().Be("Cancelled", "Status field should be 'Cancelled'");
         Log(profileName, $"Investment cancelled after approval. Status='{approvedInvestment.StatusText}'");
@@ -412,8 +410,7 @@ public class InvestmentCancellationTest
 
         Log(profileName, $"Confirming approved investment. Step={investment.Step}, Status={investment.StatusText}");
         investment.ApprovalStatus.Should().Be("Approved");
-        var confirmResult = await portfolioVm.ConfirmInvestmentAsync(investment);
-        confirmResult.Should().BeTrue("founder-approved investment should be confirmable by the investor");
+        await window.ClickInvestmentDetailActionAsync(portfolioVm, investment, "ConfirmInvestmentButton");
 
         // Wait for Step 3 (active)
         var activeDeadline = DateTime.UtcNow + IndexerLagTimeout;
