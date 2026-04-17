@@ -1,14 +1,12 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
-using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
 using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
-using App.UI.Sections.Settings;
 using App.UI.Shared.Controls;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -21,27 +19,32 @@ namespace App.Test.Integration;
 ///   - ProjectDetailPanel: single project detail view
 ///   - InvestPagePanel: invest/fund flow
 ///
-/// These tests boot the full app with real DI, navigate to Find Projects,
-/// and verify panel visibility transitions using the ViewModel API.
-/// No wallet or network calls required for panel switching itself,
-/// but project loading happens on construction (async, may populate from SDK).
+/// Consolidated into flow tests to avoid booting 22 separate app instances.
 /// </summary>
 public class FindProjectsPanelTests
 {
-    private static readonly TimeSpan UiTimeout = TimeSpan.FromSeconds(15);
-
+    /// <summary>
+    /// Flow 1 (no wallet): Tests panel state transitions, project list loading,
+    /// project card fields, statistics, detail view metadata, type terminology,
+    /// invest button visibility, HasInvested flag, invest form states (initial,
+    /// quick amount, manual amount, submit validation), reload, navigate away/back.
+    /// </summary>
     [AvaloniaFact]
-    public async Task FindProjects_InitialState_ShowsProjectListPanel()
+    public async Task FindProjectsFlow_NoWallet_PanelStatesAndProjectDisplay()
     {
         using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
         var window = TestHelpers.CreateShellWindow();
 
-        // Navigate to Find Projects
+        TestHelpers.Log("═══ Flow 1: No-wallet panel states and project display ═══");
+
+        // ── Navigate to Find Projects ──
+        TestHelpers.Log("[1.1] Navigating to Find Projects...");
         window.NavigateToSection("Find Projects");
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
-        // Get the FindProjectsView and its panels
+        // ── Initial panel state ──
+        TestHelpers.Log("[1.2] Checking initial panel state...");
         var (listPanel, detailPanel, investPanel) = GetPanels(window);
 
         listPanel.Should().NotBeNull("ProjectListPanel should exist");
@@ -52,202 +55,55 @@ public class FindProjectsPanelTests
         detailPanel!.IsVisible.Should().BeFalse("ProjectDetailPanel should be hidden in initial state");
         investPanel!.IsVisible.Should().BeFalse("InvestPagePanel should be hidden in initial state");
 
-        window.Close();
-    }
-
-    [AvaloniaFact]
-    public async Task FindProjects_OpenProjectDetail_ShowsDetailPanel()
-    {
-        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
-        var window = TestHelpers.CreateShellWindow();
-
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
+        // ── Wait for projects to load from SDK ──
+        TestHelpers.Log("[1.3] Waiting for projects to load from SDK...");
         var vm = GetFindProjectsViewModel(window);
         vm.Should().NotBeNull("FindProjectsViewModel should be available");
-
-        // Wait for projects to load from SDK
         await WaitForProjects(vm!);
 
-        // Open the first project's detail
-        vm!.Projects.Should().NotBeEmpty("should have at least one project loaded from SDK");
-        vm.OpenProjectDetail(vm.Projects[0]);
-        Dispatcher.UIThread.RunJobs();
-
-        var (listPanel, detailPanel, investPanel) = GetPanels(window);
-
-        listPanel!.IsVisible.Should().BeFalse("ProjectListPanel should be hidden when detail is open");
-        detailPanel!.IsVisible.Should().BeTrue("ProjectDetailPanel should be visible when detail is open");
-        investPanel!.IsVisible.Should().BeFalse("InvestPagePanel should be hidden when detail is open");
-
-        window.Close();
-    }
-
-    [AvaloniaFact]
-    public async Task FindProjects_CloseProjectDetail_ReturnsToList()
-    {
-        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
-        var window = TestHelpers.CreateShellWindow();
-
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        var vm = GetFindProjectsViewModel(window);
-        await WaitForProjects(vm!);
-
-        // Open then close detail
-        vm!.OpenProjectDetail(vm.Projects[0]);
-        Dispatcher.UIThread.RunJobs();
-        vm.CloseProjectDetail();
-        Dispatcher.UIThread.RunJobs();
-
-        var (listPanel, detailPanel, investPanel) = GetPanels(window);
-
-        listPanel!.IsVisible.Should().BeTrue("ProjectListPanel should be visible after closing detail");
-        detailPanel!.IsVisible.Should().BeFalse("ProjectDetailPanel should be hidden after closing detail");
-        investPanel!.IsVisible.Should().BeFalse("InvestPagePanel should be hidden after closing detail");
-
-        window.Close();
-    }
-
-    [AvaloniaFact]
-    public async Task FindProjects_OpenInvestPage_ShowsInvestPanel()
-    {
-        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
-        var window = TestHelpers.CreateShellWindow();
-
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        var vm = GetFindProjectsViewModel(window);
-        await WaitForProjects(vm!);
-
-        // Open detail then invest page
-        vm!.OpenProjectDetail(vm.Projects[0]);
-        Dispatcher.UIThread.RunJobs();
-        vm.OpenInvestPage();
-        Dispatcher.UIThread.RunJobs();
-
-        var (listPanel, detailPanel, investPanel) = GetPanels(window);
-
-        listPanel!.IsVisible.Should().BeFalse("ProjectListPanel should be hidden when invest page is open");
-        detailPanel!.IsVisible.Should().BeFalse("ProjectDetailPanel should be hidden when invest page is open");
-        investPanel!.IsVisible.Should().BeTrue("InvestPagePanel should be visible when invest page is open");
-
-        window.Close();
-    }
-
-    // ═══════════════════════════════════════════════════════════════════
-    // Project List Loading & Display
-    // ═══════════════════════════════════════════════════════════════════
-
-    [AvaloniaFact]
-    public async Task ProjectList_LoadsFromSdk_ShowsProjectCards()
-    {
-        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
-        var window = TestHelpers.CreateShellWindow();
-
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        var vm = GetFindProjectsViewModel(window);
-        vm.Should().NotBeNull();
-        await WaitForProjects(vm!);
-
-        // ViewModel has projects
         vm!.Projects.Count.Should().BeGreaterThan(0, "SDK should return at least one project");
+        TestHelpers.Log($"[1.3] {vm.Projects.Count} project(s) loaded");
 
-        // Visual tree has ProjectCard controls
+        // ── ProjectCard controls rendered ──
+        TestHelpers.Log("[1.4] Verifying ProjectCard controls...");
         Dispatcher.UIThread.RunJobs();
         var cards = window.GetVisualDescendants().OfType<ProjectCard>().ToList();
-        cards.Count.Should().BeGreaterThan(0, "at least one ProjectCard should render in the visual tree");
+        cards.Count.Should().BeGreaterThan(0, "at least one ProjectCard should render");
 
-        window.Close();
-    }
-
-    [AvaloniaFact]
-    public async Task ProjectList_ShowsCorrectFields_OnProjectCard()
-    {
-        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
-        var window = TestHelpers.CreateShellWindow();
-
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        var vm = GetFindProjectsViewModel(window);
-        vm.Should().NotBeNull();
-        await WaitForProjects(vm!);
-        Dispatcher.UIThread.RunJobs();
-
-        var firstProject = vm!.Projects[0];
-        var cards = window.GetVisualDescendants().OfType<ProjectCard>().ToList();
-        cards.Should().NotBeEmpty();
-
-        // Find the card that matches the first project
+        // ── Card fields match ViewModel ──
+        var firstProject = vm.Projects[0];
         var card = cards.FirstOrDefault(c => c.ProjectName == firstProject.ProjectName);
         card.Should().NotBeNull($"should find a ProjectCard for '{firstProject.ProjectName}'");
 
+        TestHelpers.Log($"[1.4] Checking card fields for '{firstProject.ProjectName}'...");
         card!.ProjectName.Should().NotBeNullOrWhiteSpace("ProjectName should be set on card");
         card.Target.Should().NotBeNullOrWhiteSpace("Target should be set on card");
         card.ProjectType.Should().NotBeNullOrWhiteSpace("ProjectType should be set on card");
         card.Status.Should().NotBeNullOrWhiteSpace("Status should be set on card");
         card.TargetLabel.Should().NotBeNullOrWhiteSpace("TargetLabel should be set on card");
-
-        // Verify the card data matches the ViewModel
         card.ProjectName.Should().Be(firstProject.ProjectName);
         card.Target.Should().Be(firstProject.Target);
         card.ProjectType.Should().Be(firstProject.ProjectType);
 
-        window.Close();
-    }
-
-    [AvaloniaFact]
-    public async Task ProjectList_LoadsStatistics_UpdatesRaisedAndInvestorCount()
-    {
-        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
-        var window = TestHelpers.CreateShellWindow();
-
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        var vm = GetFindProjectsViewModel(window);
-        vm.Should().NotBeNull();
-        await WaitForProjects(vm!);
-
-        // Statistics load is fire-and-forget after project load.
-        // Wait for at least one project to have non-default statistics.
+        // ── Statistics ──
+        TestHelpers.Log("[1.5] Checking project statistics...");
         var statsDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
         var statsLoaded = false;
-
         while (DateTime.UtcNow < statsDeadline)
         {
             Dispatcher.UIThread.RunJobs();
-
-            // Check if any project has statistics updated (InvestorCount > 0 or Raised != "0.00000")
-            if (vm!.Projects.Any(p => p.InvestorCount > 0 || p.Raised != "0.00000"))
+            if (vm.Projects.Any(p => p.InvestorCount > 0 || p.Raised != "0.00000"))
             {
                 statsLoaded = true;
                 break;
             }
-
             await Task.Delay(500);
         }
+        statsLoaded.Should().BeTrue("at least one project should have statistics");
 
-        statsLoaded.Should().BeTrue(
-            "at least one project should have statistics (InvestorCount > 0 or Raised != '0.00000') — " +
-            "this requires testnet projects with existing investments");
-
-        // Verify the project with stats has consistent data
-        var projectWithStats = vm!.Projects.First(p => p.InvestorCount > 0 || p.Raised != "0.00000");
+        var projectWithStats = vm.Projects.First(p => p.InvestorCount > 0 || p.Raised != "0.00000");
+        TestHelpers.Log($"[1.5] Project with stats: '{projectWithStats.ProjectName}', investors={projectWithStats.InvestorCount}, raised={projectWithStats.Raised}");
         projectWithStats.InvestorCount.Should().BeGreaterThanOrEqualTo(0);
-
         if (projectWithStats.Raised != "0.00000" &&
             double.TryParse(projectWithStats.Target, System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture, out var target) && target > 0)
@@ -255,322 +111,210 @@ public class FindProjectsPanelTests
             projectWithStats.Progress.Should().BeGreaterThan(0, "Progress should be > 0 when Raised > 0");
         }
 
-        window.Close();
-    }
-
-    // ═══════════════════════════════════════════════════════════════════
-    // Project Detail View
-    // ═══════════════════════════════════════════════════════════════════
-
-    [AvaloniaFact]
-    public async Task ProjectDetail_DisplaysProjectMetadata()
-    {
-        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
-        var window = TestHelpers.CreateShellWindow();
-
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        var vm = GetFindProjectsViewModel(window);
-        await WaitForProjects(vm!);
-
-        var project = vm!.Projects[0];
-        vm.OpenProjectDetail(project);
+        // ── Open project detail → panel transition ──
+        TestHelpers.Log("[1.6] Opening project detail...");
+        vm.OpenProjectDetail(firstProject);
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(300);
         Dispatcher.UIThread.RunJobs();
 
-        // Verify the detail view exists in the visual tree with correct DataContext
-        var detailView = window.GetVisualDescendants()
-            .OfType<ProjectDetailView>()
-            .FirstOrDefault();
+        (listPanel, detailPanel, investPanel) = GetPanels(window);
+        listPanel!.IsVisible.Should().BeFalse("ProjectListPanel should be hidden when detail is open");
+        detailPanel!.IsVisible.Should().BeTrue("ProjectDetailPanel should be visible");
+        investPanel!.IsVisible.Should().BeFalse("InvestPagePanel should be hidden");
+
+        // ── Detail view metadata ──
+        TestHelpers.Log("[1.6] Checking detail view metadata...");
+        var detailView = window.GetVisualDescendants().OfType<ProjectDetailView>().FirstOrDefault();
         detailView.Should().NotBeNull("ProjectDetailView should be in the visual tree");
-        detailView!.DataContext.Should().Be(project, "DataContext should be the selected project");
+        detailView!.DataContext.Should().Be(firstProject, "DataContext should be the selected project");
 
-        // Verify project metadata is populated on the ViewModel
-        project.ProjectName.Should().NotBeNullOrWhiteSpace("ProjectName should be set");
-        project.Target.Should().NotBeNullOrWhiteSpace("Target should be set");
-        project.StartDate.Should().NotBeNullOrWhiteSpace("StartDate should be set");
-        project.EndDate.Should().NotBeNullOrWhiteSpace("EndDate should be set");
-        project.PenaltyDays.Should().NotBeNullOrWhiteSpace("PenaltyDays should be set");
-        project.Stages.Should().NotBeNull("Stages collection should exist");
-        project.ProjectId.Should().NotBeNullOrWhiteSpace("ProjectId should be set");
-        project.FounderKey.Should().NotBeNull("FounderKey should be initialized");
+        firstProject.ProjectName.Should().NotBeNullOrWhiteSpace("ProjectName should be set");
+        firstProject.Target.Should().NotBeNullOrWhiteSpace("Target should be set");
+        firstProject.StartDate.Should().NotBeNullOrWhiteSpace("StartDate should be set");
+        firstProject.EndDate.Should().NotBeNullOrWhiteSpace("EndDate should be set");
+        firstProject.PenaltyDays.Should().NotBeNullOrWhiteSpace("PenaltyDays should be set");
+        firstProject.Stages.Should().NotBeNull("Stages collection should exist");
+        firstProject.ProjectId.Should().NotBeNullOrWhiteSpace("ProjectId should be set");
+        firstProject.FounderKey.Should().NotBeNull("FounderKey should be initialized");
 
-        window.Close();
-    }
-
-    [AvaloniaFact]
-    public async Task ProjectDetail_ShowsCorrectTypeTerminology()
-    {
-        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
-        var window = TestHelpers.CreateShellWindow();
-
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        var vm = GetFindProjectsViewModel(window);
-        await WaitForProjects(vm!);
-
-        var project = vm!.Projects[0];
-        vm.OpenProjectDetail(project);
-        Dispatcher.UIThread.RunJobs();
-
-        // Verify type-dependent terminology is consistent
-        if (project.ProjectType == "Fund")
+        // ── Type terminology ──
+        TestHelpers.Log("[1.7] Checking type terminology...");
+        if (firstProject.ProjectType == "Fund")
         {
-            project.ActionButtonText.Should().Contain("Fund", "Fund-type should have fund action text");
-            project.InvestorLabel.Should().Be("Funders", "Fund-type should use 'Funders' label");
-            project.TargetLabel.Should().Be("Goal:", "Fund-type should use 'Goal:' label");
+            firstProject.ActionButtonText.Should().Contain("Fund");
+            firstProject.InvestorLabel.Should().Be("Funders");
+            firstProject.TargetLabel.Should().Be("Goal:");
         }
-        else if (project.ProjectType == "Invest")
+        else if (firstProject.ProjectType == "Invest")
         {
-            project.ActionButtonText.Should().Contain("Invest", "Invest-type should have invest action text");
-            project.InvestorLabel.Should().Be("Investors", "Invest-type should use 'Investors' label");
-            project.TargetLabel.Should().Be("Target:", "Invest-type should use 'Target:' label");
+            firstProject.ActionButtonText.Should().Contain("Invest");
+            firstProject.InvestorLabel.Should().Be("Investors");
+            firstProject.TargetLabel.Should().Be("Target:");
         }
 
-        window.Close();
-    }
+        // ── Invest button visibility for open projects ──
+        TestHelpers.Log("[1.8] Checking invest button visibility...");
+        var openProject = vm.Projects.FirstOrDefault(p => p.IsOpen);
+        if (openProject != null && openProject != firstProject)
+        {
+            vm.CloseProjectDetail();
+            Dispatcher.UIThread.RunJobs();
+            vm.OpenProjectDetail(openProject);
+            Dispatcher.UIThread.RunJobs();
+            await Task.Delay(300);
+            Dispatcher.UIThread.RunJobs();
+            detailView = window.GetVisualDescendants().OfType<ProjectDetailView>().FirstOrDefault();
+        }
+        if (openProject != null)
+        {
+            var investBtn = detailView!.FindControl<Border>("InvestButton");
+            investBtn.Should().NotBeNull("InvestButton should exist in the detail view");
+            investBtn!.IsVisible.Should().BeTrue("InvestButton should be visible for an open project");
+        }
 
-    [AvaloniaFact]
-    public async Task ProjectDetail_ShowsInvestButton_WhenProjectIsOpen()
-    {
-        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
-        var window = TestHelpers.CreateShellWindow();
+        // ── HasInvested flag ──
+        TestHelpers.Log("[1.9] Checking HasInvested flag...");
+        firstProject.HasInvested.Should().BeFalse("fresh test profile should not have invested");
+        firstProject.IsOpenAndNotInvested.Should().Be(firstProject.IsOpen);
 
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
+        // ── Close detail → return to list ──
+        TestHelpers.Log("[1.10] Closing detail, returning to list...");
+        vm.CloseProjectDetail();
         Dispatcher.UIThread.RunJobs();
 
-        var vm = GetFindProjectsViewModel(window);
-        await WaitForProjects(vm!);
+        (listPanel, detailPanel, investPanel) = GetPanels(window);
+        listPanel!.IsVisible.Should().BeTrue("ProjectListPanel should be visible after closing detail");
+        detailPanel!.IsVisible.Should().BeFalse();
+        investPanel!.IsVisible.Should().BeFalse();
 
-        // Find an open project
-        var openProject = vm!.Projects.FirstOrDefault(p => p.IsOpen);
-        openProject.Should().NotBeNull("should have at least one open project");
-
-        vm.OpenProjectDetail(openProject!);
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(300);
-        Dispatcher.UIThread.RunJobs();
-
-        // The InvestButton border should be visible
-        var detailView = window.GetVisualDescendants()
-            .OfType<ProjectDetailView>()
-            .FirstOrDefault();
-        detailView.Should().NotBeNull();
-
-        var investBtn = detailView!.FindControl<Border>("InvestButton");
-        investBtn.Should().NotBeNull("InvestButton should exist in the detail view");
-        investBtn!.IsVisible.Should().BeTrue("InvestButton should be visible for an open project");
-
-        window.Close();
-    }
-
-    [AvaloniaFact]
-    public async Task ProjectDetail_HasInvestedFlag_ReflectsPortfolioState()
-    {
-        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
-        var window = TestHelpers.CreateShellWindow();
-
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        var vm = GetFindProjectsViewModel(window);
-        await WaitForProjects(vm!);
-
-        // Initially, projects loaded fresh should have HasInvested = false
-        // (since this is a clean test profile with no portfolio)
-        var project = vm!.Projects[0];
-        project.HasInvested.Should().BeFalse(
-            "fresh test profile should not have invested in any project");
-        project.IsOpenAndNotInvested.Should().Be(project.IsOpen,
-            "IsOpenAndNotInvested should match IsOpen when HasInvested is false");
-
-        window.Close();
-    }
-
-    // ═══════════════════════════════════════════════════════════════════
-    // Invest Page — Form
-    // ═══════════════════════════════════════════════════════════════════
-
-    [AvaloniaFact]
-    public async Task InvestPage_InitialState_ShowsInvestForm()
-    {
-        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
-        var window = TestHelpers.CreateShellWindow();
-
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        var vm = GetFindProjectsViewModel(window);
-        await WaitForProjects(vm!);
-
-        var project = vm!.Projects.First(p => p.IsOpen);
-        vm.OpenProjectDetail(project);
+        // ── Open invest page → panel transition ──
+        TestHelpers.Log("[1.11] Opening invest page...");
+        var openProj = vm.Projects.First(p => p.IsOpen);
+        vm.OpenProjectDetail(openProj);
         Dispatcher.UIThread.RunJobs();
         vm.OpenInvestPage();
         Dispatcher.UIThread.RunJobs();
 
+        (listPanel, detailPanel, investPanel) = GetPanels(window);
+        listPanel!.IsVisible.Should().BeFalse();
+        detailPanel!.IsVisible.Should().BeFalse();
+        investPanel!.IsVisible.Should().BeTrue("InvestPagePanel should be visible");
+
+        // ── Invest form initial state ──
+        TestHelpers.Log("[1.12] Checking invest form initial state...");
         var investVm = vm.InvestPageViewModel;
         investVm.Should().NotBeNull("InvestPageViewModel should be created");
-        investVm!.CurrentScreen.Should().Be(InvestScreen.InvestForm, "initial screen should be InvestForm");
+        investVm!.CurrentScreen.Should().Be(InvestScreen.InvestForm);
         investVm.IsInvestForm.Should().BeTrue();
         investVm.IsWalletSelector.Should().BeFalse();
         investVm.IsInvoice.Should().BeFalse();
         investVm.IsSuccess.Should().BeFalse();
         investVm.InvestmentAmount.Should().BeEmpty("amount should start empty");
 
-        window.Close();
-    }
-
-    [AvaloniaFact]
-    public async Task InvestPage_QuickAmountButtons_SetInvestmentAmount()
-    {
-        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
-        var window = TestHelpers.CreateShellWindow();
-
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        var vm = GetFindProjectsViewModel(window);
-        await WaitForProjects(vm!);
-
-        var project = vm!.Projects.First(p => p.IsOpen);
-        vm.OpenProjectDetail(project);
-        Dispatcher.UIThread.RunJobs();
-        vm.OpenInvestPage();
-        Dispatcher.UIThread.RunJobs();
-
-        var investVm = vm.InvestPageViewModel!;
-
-        // Select the 0.01 quick amount
+        // ── Quick amount button ──
+        TestHelpers.Log("[1.13] Testing quick amount button...");
         investVm.SelectQuickAmount(0.01);
         Dispatcher.UIThread.RunJobs();
-
-        investVm.InvestmentAmount.Should().Be("0.01", "quick amount should set investment amount");
+        investVm.InvestmentAmount.Should().Be("0.01");
         investVm.SelectedQuickAmount.Should().Be(0.01);
         investVm.CanSubmit.Should().BeTrue("0.01 is above minimum (0.001)");
-
-        // Stages should recompute with the new amount
         if (investVm.Stages.Count > 0)
         {
             investVm.Stages.Should().AllSatisfy(s =>
-                s.Amount.Should().NotBe("0.00000000", "stage amounts should update with investment amount"));
+                s.Amount.Should().NotBe("0.00000000"));
         }
 
-        window.Close();
-    }
-
-    [AvaloniaFact]
-    public async Task InvestPage_ManualAmount_UpdatesStagesAndTotals()
-    {
-        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
-        var window = TestHelpers.CreateShellWindow();
-
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        var vm = GetFindProjectsViewModel(window);
-        await WaitForProjects(vm!);
-
-        var project = vm!.Projects.First(p => p.IsOpen);
-        vm.OpenProjectDetail(project);
-        Dispatcher.UIThread.RunJobs();
-        vm.OpenInvestPage();
-        Dispatcher.UIThread.RunJobs();
-
-        var investVm = vm.InvestPageViewModel!;
-
-        // Set manual amount
+        // ── Manual amount ──
+        TestHelpers.Log("[1.14] Testing manual amount entry...");
         investVm.InvestmentAmount = "0.05";
         Dispatcher.UIThread.RunJobs();
-
-        investVm.FormattedAmount.Should().Be("0.05000000", "formatted amount should pad to 8 decimals");
-        investVm.CanSubmit.Should().BeTrue("0.05 is above minimum");
-
-        // TotalAmount should include fees
+        investVm.FormattedAmount.Should().Be("0.05000000");
+        investVm.CanSubmit.Should().BeTrue();
         investVm.TotalAmount.Should().NotBeNullOrWhiteSpace("TotalAmount should be computed");
-        // Total = amount + miner fee + angor fee, so it should be greater than the raw amount
         double.TryParse(investVm.TotalAmount.Split(' ')[0],
             System.Globalization.NumberStyles.Float,
             System.Globalization.CultureInfo.InvariantCulture,
             out var total).Should().BeTrue("TotalAmount should be parseable");
-        total.Should().BeGreaterThan(0.05, "total should include fees on top of the amount");
+        total.Should().BeGreaterThan(0.05, "total should include fees");
 
-        window.Close();
-    }
-
-    [AvaloniaFact]
-    public async Task InvestPage_Submit_DisabledBelowMinimum_EnabledAtMinimum()
-    {
-        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
-        var window = TestHelpers.CreateShellWindow();
-
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        var vm = GetFindProjectsViewModel(window);
-        await WaitForProjects(vm!);
-
-        var project = vm!.Projects.First(p => p.IsOpen);
-        vm.OpenProjectDetail(project);
-        Dispatcher.UIThread.RunJobs();
-        vm.OpenInvestPage();
-        Dispatcher.UIThread.RunJobs();
-
-        var investVm = vm.InvestPageViewModel!;
-
-        // Below minimum — CanSubmit should be false
+        // ── Submit validation: below minimum ──
+        TestHelpers.Log("[1.15] Testing submit validation...");
         investVm.InvestmentAmount = "0.0001";
         Dispatcher.UIThread.RunJobs();
-        investVm.CanSubmit.Should().BeFalse("0.0001 is below minimum (0.001)");
-
-        // Submit should not advance screen
+        investVm.CanSubmit.Should().BeFalse("0.0001 is below minimum");
         investVm.Submit();
         Dispatcher.UIThread.RunJobs();
-        investVm.CurrentScreen.Should().Be(InvestScreen.InvestForm,
-            "Submit should stay on InvestForm when CanSubmit is false");
+        investVm.CurrentScreen.Should().Be(InvestScreen.InvestForm, "should stay on InvestForm");
 
-        // At minimum — CanSubmit should be true
+        // ── Submit validation: at minimum ──
         investVm.InvestmentAmount = "0.001";
         Dispatcher.UIThread.RunJobs();
-        investVm.CanSubmit.Should().BeTrue("0.001 is the minimum investment amount");
-
-        // Submit should advance to WalletSelector
+        investVm.CanSubmit.Should().BeTrue("0.001 is the minimum");
         investVm.Submit();
         Dispatcher.UIThread.RunJobs();
-        investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector,
-            "Submit should advance to WalletSelector when CanSubmit is true");
+        investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector, "should advance to WalletSelector");
+
+        // ── Close invest page, return to list ──
+        vm.CloseInvestPage();
+        vm.CloseProjectDetail();
+        Dispatcher.UIThread.RunJobs();
+
+        // ── Reload projects ──
+        TestHelpers.Log("[1.16] Testing reload projects...");
+        var initialCount = vm.Projects.Count;
+        await vm.LoadProjectsFromSdkAsync();
+        Dispatcher.UIThread.RunJobs();
+        vm.Projects.Count.Should().BeGreaterThan(0, "projects should be populated after reload");
+        vm.IsLoading.Should().BeFalse("loading flag should be cleared");
+
+        // ── Navigate away and back ──
+        TestHelpers.Log("[1.17] Testing navigate away and back...");
+        var firstName = vm.Projects[0].ProjectName;
+        window.NavigateToSettings();
+        Dispatcher.UIThread.RunJobs();
+        await Task.Delay(300);
+
+        window.NavigateToSection("Find Projects");
+        Dispatcher.UIThread.RunJobs();
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        var vmAfter = GetFindProjectsViewModel(window);
+        vmAfter.Should().NotBeNull();
+        vmAfter!.Projects.Count.Should().BeGreaterThanOrEqualTo(initialCount);
+        vmAfter.SelectedProject.Should().BeNull("detail should be closed after navigation");
+        vmAfter.InvestPageViewModel.Should().BeNull("invest page should be closed after navigation");
 
         window.Close();
+        TestHelpers.Log("═══ Flow 1 PASSED ═══");
     }
 
-    // ═══════════════════════════════════════════════════════════════════
-    // Invest Page — Wallet Selector
-    // ═══════════════════════════════════════════════════════════════════
-
+    /// <summary>
+    /// Flow 2 (with wallet): Tests wallet selector, wallet display, wallet selection state,
+    /// insufficient balance error, invoice screen toggle, close modal reset.
+    /// </summary>
     [AvaloniaFact]
-    public async Task InvestPage_Submit_AdvancesToWalletSelector()
+    public async Task FindProjectsFlow_WithWallet_WalletSelectorAndInvoice()
     {
         using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests) + "-Wallet");
         var window = TestHelpers.CreateShellWindow();
 
-        await CreateWalletViaGenerate(window);
+        TestHelpers.Log("═══ Flow 2: With-wallet selector and invoice flow ═══");
 
+        // ── Create wallet ──
+        TestHelpers.Log("[2.1] Creating wallet...");
+        await window.WipeExistingData();
+        await window.CreateWalletViaGenerate();
+
+        // ── Navigate to Find Projects and load ──
+        TestHelpers.Log("[2.2] Navigating to Find Projects...");
         window.NavigateToSection("Find Projects");
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
         var vm = GetFindProjectsViewModel(window);
+        vm.Should().NotBeNull();
         await WaitForProjects(vm!);
 
         var project = vm!.Projects.First(p => p.IsOpen);
@@ -580,131 +324,57 @@ public class FindProjectsPanelTests
         Dispatcher.UIThread.RunJobs();
 
         var investVm = vm.InvestPageViewModel!;
+
+        // ── Submit to wallet selector ──
+        TestHelpers.Log("[2.3] Submitting to wallet selector...");
         investVm.InvestmentAmount = "0.01";
         Dispatcher.UIThread.RunJobs();
-
         investVm.Submit();
         Dispatcher.UIThread.RunJobs();
 
-        investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector,
-            "should advance to WalletSelector after valid submit");
+        investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector);
         investVm.IsWalletSelector.Should().BeTrue();
 
-        window.Close();
-    }
-
-    [AvaloniaFact]
-    public async Task InvestPage_WalletSelector_ShowsAvailableWallets()
-    {
-        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests) + "-Wallet");
-        var window = TestHelpers.CreateShellWindow();
-
-        await CreateWalletViaGenerate(window);
-
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        var vm = GetFindProjectsViewModel(window);
-        await WaitForProjects(vm!);
-
-        var project = vm!.Projects.First(p => p.IsOpen);
-        vm.OpenProjectDetail(project);
-        Dispatcher.UIThread.RunJobs();
-        vm.OpenInvestPage();
-        Dispatcher.UIThread.RunJobs();
-
-        var investVm = vm.InvestPageViewModel!;
-        investVm.InvestmentAmount = "0.01";
-        investVm.Submit();
-        Dispatcher.UIThread.RunJobs();
-
-        // Wallets should be populated from IWalletContext
-        investVm.Wallets.Should().NotBeEmpty("should have at least one wallet after creation");
+        // ── Wallet display ──
+        TestHelpers.Log("[2.4] Checking wallet display...");
+        investVm.Wallets.Should().NotBeEmpty("should have at least one wallet");
         var wallet = investVm.Wallets[0];
         wallet.Name.Should().NotBeNullOrWhiteSpace("wallet should have a name");
         wallet.Balance.Should().NotBeNull("wallet should have a balance string");
 
-        window.Close();
-    }
-
-    [AvaloniaFact]
-    public async Task InvestPage_WalletSelector_SelectWallet_UpdatesState()
-    {
-        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests) + "-Wallet");
-        var window = TestHelpers.CreateShellWindow();
-
-        await CreateWalletViaGenerate(window);
-
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        var vm = GetFindProjectsViewModel(window);
-        await WaitForProjects(vm!);
-
-        var project = vm!.Projects.First(p => p.IsOpen);
-        vm.OpenProjectDetail(project);
-        Dispatcher.UIThread.RunJobs();
-        vm.OpenInvestPage();
-        Dispatcher.UIThread.RunJobs();
-
-        var investVm = vm.InvestPageViewModel!;
-        investVm.InvestmentAmount = "0.01";
-        investVm.Submit();
-        Dispatcher.UIThread.RunJobs();
-
-        // Select the wallet
-        var wallet = investVm.Wallets[0];
+        // ── Wallet selection state ──
+        TestHelpers.Log("[2.5] Testing wallet selection...");
         investVm.SelectWallet(wallet);
         Dispatcher.UIThread.RunJobs();
 
-        investVm.SelectedWallet.Should().Be(wallet, "SelectedWallet should be set after selection");
+        investVm.SelectedWallet.Should().Be(wallet);
         investVm.HasSelectedWallet.Should().BeTrue();
-        wallet.IsSelected.Should().BeTrue("wallet should be marked as selected");
-        investVm.PayButtonText.Should().Contain(wallet.Name,
-            "pay button text should include wallet name");
+        wallet.IsSelected.Should().BeTrue();
+        investVm.PayButtonText.Should().Contain(wallet.Name);
 
-        window.Close();
-    }
-
-    [AvaloniaFact]
-    public async Task InvestPage_WalletSelector_InsufficientBalance_ShowsError()
-    {
-        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests) + "-Wallet");
-        var window = TestHelpers.CreateShellWindow();
-
-        await CreateWalletViaGenerate(window);
-
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
+        // ── Insufficient balance error ──
+        TestHelpers.Log("[2.6] Testing insufficient balance error...");
+        // Reset and try with large amount
+        investVm.CloseModal();
         Dispatcher.UIThread.RunJobs();
 
-        var vm = GetFindProjectsViewModel(window);
-        await WaitForProjects(vm!);
-
-        var project = vm!.Projects.First(p => p.IsOpen);
-        vm.OpenProjectDetail(project);
+        vm.CloseInvestPage();
         Dispatcher.UIThread.RunJobs();
         vm.OpenInvestPage();
         Dispatcher.UIThread.RunJobs();
 
-        var investVm = vm.InvestPageViewModel!;
-
-        // Set a large amount the empty wallet can't cover
+        investVm = vm.InvestPageViewModel!;
         investVm.InvestmentAmount = "100.0";
         investVm.Submit();
         Dispatcher.UIThread.RunJobs();
 
-        // Select wallet and try to pay
-        var wallet = investVm.Wallets[0];
+        wallet = investVm.Wallets[0];
         investVm.SelectWallet(wallet);
         Dispatcher.UIThread.RunJobs();
 
         var passwordProvider = global::App.App.Services.GetRequiredService<SimplePasswordProvider>();
         passwordProvider.SetKey("default-key");
 
-        // Execute the reactive command and wait for completion
         var tcs = new TaskCompletionSource();
         investVm.PayWithWalletCommand.Execute().Subscribe(
             _ => { },
@@ -713,47 +383,26 @@ public class FindProjectsPanelTests
         await tcs.Task.WaitAsync(TimeSpan.FromSeconds(30));
         Dispatcher.UIThread.RunJobs();
 
-        investVm.ErrorMessage.Should().NotBeNullOrWhiteSpace(
-            "should show an error when wallet balance is insufficient");
-        investVm.ErrorMessage.Should().Contain("Insufficient",
-            "error should indicate insufficient balance");
-        investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector,
-            "should stay on WalletSelector after error, not advance to Success");
+        TestHelpers.Log($"[2.6] Error message: {investVm.ErrorMessage}");
+        investVm.ErrorMessage.Should().NotBeNullOrWhiteSpace("should show error for insufficient balance");
+        investVm.ErrorMessage.Should().Contain("Insufficient");
+        investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector, "should stay on WalletSelector");
 
-        window.Close();
-    }
-
-    // ═══════════════════════════════════════════════════════════════════
-    // Invest Page — Invoice & Modal Flow
-    // ═══════════════════════════════════════════════════════════════════
-
-    [AvaloniaFact]
-    public async Task InvestPage_ShowInvoice_SwitchesToInvoiceScreen()
-    {
-        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests) + "-Wallet");
-        var window = TestHelpers.CreateShellWindow();
-
-        await CreateWalletViaGenerate(window);
-
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
+        // ── Reset, reopen invest page for invoice/modal tests ──
+        investVm.CloseModal();
         Dispatcher.UIThread.RunJobs();
-
-        var vm = GetFindProjectsViewModel(window);
-        await WaitForProjects(vm!);
-
-        var project = vm!.Projects.First(p => p.IsOpen);
-        vm.OpenProjectDetail(project);
+        vm.CloseInvestPage();
         Dispatcher.UIThread.RunJobs();
         vm.OpenInvestPage();
         Dispatcher.UIThread.RunJobs();
 
-        var investVm = vm.InvestPageViewModel!;
+        investVm = vm.InvestPageViewModel!;
         investVm.InvestmentAmount = "0.01";
         investVm.Submit();
         Dispatcher.UIThread.RunJobs();
 
-        // Switch to invoice screen
+        // ── Invoice screen toggle ──
+        TestHelpers.Log("[2.7] Testing invoice screen toggle...");
         investVm.ShowInvoice();
         Dispatcher.UIThread.RunJobs();
 
@@ -761,38 +410,7 @@ public class FindProjectsPanelTests
         investVm.IsInvoice.Should().BeTrue();
         investVm.IsWalletSelector.Should().BeFalse();
 
-        window.Close();
-    }
-
-    [AvaloniaFact]
-    public async Task InvestPage_BackToWalletSelector_FromInvoice()
-    {
-        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests) + "-Wallet");
-        var window = TestHelpers.CreateShellWindow();
-
-        await CreateWalletViaGenerate(window);
-
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        var vm = GetFindProjectsViewModel(window);
-        await WaitForProjects(vm!);
-
-        var project = vm!.Projects.First(p => p.IsOpen);
-        vm.OpenProjectDetail(project);
-        Dispatcher.UIThread.RunJobs();
-        vm.OpenInvestPage();
-        Dispatcher.UIThread.RunJobs();
-
-        var investVm = vm.InvestPageViewModel!;
-        investVm.InvestmentAmount = "0.01";
-        investVm.Submit();
-        Dispatcher.UIThread.RunJobs();
-
-        // Go to invoice then back
-        investVm.ShowInvoice();
-        Dispatcher.UIThread.RunJobs();
+        // Back to wallet selector
         investVm.BackToWalletSelector();
         Dispatcher.UIThread.RunJobs();
 
@@ -800,43 +418,13 @@ public class FindProjectsPanelTests
         investVm.IsWalletSelector.Should().BeTrue();
         investVm.IsInvoice.Should().BeFalse();
 
-        window.Close();
-    }
-
-    [AvaloniaFact]
-    public async Task InvestPage_CloseModal_ResetsToInvestForm()
-    {
-        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests) + "-Wallet");
-        var window = TestHelpers.CreateShellWindow();
-
-        await CreateWalletViaGenerate(window);
-
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        var vm = GetFindProjectsViewModel(window);
-        await WaitForProjects(vm!);
-
-        var project = vm!.Projects.First(p => p.IsOpen);
-        vm.OpenProjectDetail(project);
-        Dispatcher.UIThread.RunJobs();
-        vm.OpenInvestPage();
-        Dispatcher.UIThread.RunJobs();
-
-        var investVm = vm.InvestPageViewModel!;
-        investVm.InvestmentAmount = "0.01";
-        investVm.Submit();
-        Dispatcher.UIThread.RunJobs();
-
-        // Select a wallet to set state
-        var wallet = investVm.Wallets[0];
+        // ── Close modal reset ──
+        TestHelpers.Log("[2.8] Testing close modal reset...");
+        wallet = investVm.Wallets[0];
         investVm.SelectWallet(wallet);
         Dispatcher.UIThread.RunJobs();
-
         investVm.SelectedWallet.Should().NotBeNull("precondition: wallet should be selected");
 
-        // Close modal — should reset everything
         investVm.CloseModal();
         Dispatcher.UIThread.RunJobs();
 
@@ -848,76 +436,89 @@ public class FindProjectsPanelTests
         investVm.PaymentStatusText.Should().Be("Awaiting payment...", "status text should reset");
 
         window.Close();
+        TestHelpers.Log("═══ Flow 2 PASSED ═══");
     }
 
-    // ═══════════════════════════════════════════════════════════════════
-    // Cross-Section Integration
-    // ═══════════════════════════════════════════════════════════════════
-
+    /// <summary>
+    /// Flow 3 (negative tests): Closed project behavior, invalid input handling.
+    /// </summary>
     [AvaloniaFact]
-    public async Task FindProjects_ReloadProjects_RefreshesListFromSdk()
+    public async Task FindProjectsFlow_NegativeTests_ClosedProjectAndInvalidInput()
     {
         using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
         var window = TestHelpers.CreateShellWindow();
+
+        TestHelpers.Log("═══ Flow 3: Negative tests ═══");
 
         window.NavigateToSection("Find Projects");
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
         var vm = GetFindProjectsViewModel(window);
+        vm.Should().NotBeNull();
         await WaitForProjects(vm!);
 
-        var initialCount = vm!.Projects.Count;
-        initialCount.Should().BeGreaterThan(0, "precondition: should have projects loaded");
+        // ── Closed project: invest button hidden ──
+        TestHelpers.Log("[3.1] Checking closed project behavior...");
+        var closedProject = vm!.Projects.FirstOrDefault(p => !p.IsOpen);
+        if (closedProject != null)
+        {
+            vm.OpenProjectDetail(closedProject);
+            Dispatcher.UIThread.RunJobs();
+            await Task.Delay(300);
+            Dispatcher.UIThread.RunJobs();
 
-        // Trigger reload
-        await vm.LoadProjectsFromSdkAsync();
+            var detailView = window.GetVisualDescendants().OfType<ProjectDetailView>().FirstOrDefault();
+            detailView.Should().NotBeNull();
+
+            var investBtn = detailView!.FindControl<Border>("InvestButton");
+            if (investBtn != null)
+            {
+                investBtn.IsVisible.Should().BeFalse("InvestButton should be hidden for a closed project");
+            }
+
+            closedProject.IsOpenAndNotInvested.Should().BeFalse(
+                "closed project should have IsOpenAndNotInvested = false");
+
+            vm.CloseProjectDetail();
+            Dispatcher.UIThread.RunJobs();
+            TestHelpers.Log("[3.1] Closed project invest button hidden — verified");
+        }
+        else
+        {
+            TestHelpers.Log("[3.1] No closed projects found on testnet — skipping closed project test");
+        }
+
+        // ── Invalid input: empty amount ──
+        TestHelpers.Log("[3.2] Testing empty amount submission...");
+        var openProject = vm.Projects.First(p => p.IsOpen);
+        vm.OpenProjectDetail(openProject);
+        Dispatcher.UIThread.RunJobs();
+        vm.OpenInvestPage();
         Dispatcher.UIThread.RunJobs();
 
-        vm.Projects.Count.Should().BeGreaterThan(0, "projects should be populated after reload");
-        vm.IsLoading.Should().BeFalse("loading flag should be cleared after reload");
+        var investVm = vm.InvestPageViewModel!;
+        investVm.InvestmentAmount = "";
+        Dispatcher.UIThread.RunJobs();
+        investVm.CanSubmit.Should().BeFalse("empty amount should not be submittable");
+        investVm.Submit();
+        Dispatcher.UIThread.RunJobs();
+        investVm.CurrentScreen.Should().Be(InvestScreen.InvestForm, "should stay on form with empty amount");
+
+        // ── Invalid input: negative amount ──
+        TestHelpers.Log("[3.3] Testing negative amount...");
+        investVm.InvestmentAmount = "-0.01";
+        Dispatcher.UIThread.RunJobs();
+        investVm.CanSubmit.Should().BeFalse("negative amount should not be submittable");
+
+        // ── Invalid input: non-numeric ──
+        TestHelpers.Log("[3.4] Testing non-numeric amount...");
+        investVm.InvestmentAmount = "abc";
+        Dispatcher.UIThread.RunJobs();
+        investVm.CanSubmit.Should().BeFalse("non-numeric amount should not be submittable");
 
         window.Close();
-    }
-
-    [AvaloniaFact]
-    public async Task FindProjects_NavigateAwayAndBack_RetainsProjectList()
-    {
-        using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
-        var window = TestHelpers.CreateShellWindow();
-
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        var vm = GetFindProjectsViewModel(window);
-        await WaitForProjects(vm!);
-
-        var initialCount = vm!.Projects.Count;
-        var firstName = vm.Projects[0].ProjectName;
-
-        // Navigate away to Settings
-        window.NavigateToSettings();
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(300);
-
-        // Navigate back to Find Projects
-        window.NavigateToSection("Find Projects");
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        // ViewModel should still have projects (view is cached, not recreated)
-        var vmAfter = GetFindProjectsViewModel(window);
-        vmAfter.Should().NotBeNull();
-        vmAfter!.Projects.Count.Should().BeGreaterThanOrEqualTo(initialCount,
-            "project list should persist after navigating away and back");
-
-        // Detail/invest panels should be reset to list view
-        vmAfter.SelectedProject.Should().BeNull("detail should be closed after navigation");
-        vmAfter.InvestPageViewModel.Should().BeNull("invest page should be closed after navigation");
-
-        window.Close();
+        TestHelpers.Log("═══ Flow 3 PASSED ═══");
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -926,10 +527,9 @@ public class FindProjectsPanelTests
 
     private static FindProjectsViewModel? GetFindProjectsViewModel(Window window)
     {
-        var view = window.GetVisualDescendants()
+        return window.GetVisualDescendants()
             .OfType<FindProjectsView>()
-            .FirstOrDefault();
-        return view?.DataContext as FindProjectsViewModel;
+            .FirstOrDefault()?.DataContext as FindProjectsViewModel;
     }
 
     private static (Visual? list, Panel? detail, Panel? invest) GetPanels(Window window)
@@ -940,17 +540,12 @@ public class FindProjectsPanelTests
 
         if (view == null) return (null, null, null);
 
-        // ProjectListPanel is a ScrollableView (ContentControl), not a Panel
         var list = view.FindControl<ScrollableView>("ProjectListPanel") as Visual;
         var detail = view.FindControl<Panel>("ProjectDetailPanel");
         var invest = view.FindControl<Panel>("InvestPagePanel");
         return (list, detail, invest);
     }
 
-    /// <summary>
-    /// Wait for projects to load from SDK (async on construction).
-    /// Polls until Projects.Count > 0 or timeout.
-    /// </summary>
     private static async Task WaitForProjects(FindProjectsViewModel vm, TimeSpan? timeout = null)
     {
         var deadline = DateTime.UtcNow + (timeout ?? TimeSpan.FromSeconds(30));
@@ -964,67 +559,5 @@ public class FindProjectsPanelTests
 
         vm.Projects.Should().NotBeEmpty(
             "projects should load from SDK within timeout — ensure testnet indexer/relays are reachable");
-    }
-
-    /// <summary>
-    /// Navigate to Settings → wipe data, then Funds → create wallet via Generate path.
-    /// Replicates the pattern used in SendToSelfTest and other integration tests.
-    /// </summary>
-    private static async Task CreateWalletViaGenerate(Window window)
-    {
-        // Wipe existing data
-        window.NavigateToSettings();
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(500);
-
-        var settingsView = window.GetVisualDescendants()
-            .OfType<SettingsView>()
-            .FirstOrDefault();
-        if (settingsView?.DataContext is SettingsViewModel settingsVm)
-        {
-            settingsVm.ConfirmWipeData();
-            Dispatcher.UIThread.RunJobs();
-            await Task.Delay(500);
-            Dispatcher.UIThread.RunJobs();
-        }
-
-        // Navigate to Funds
-        window.NavigateToSection("Funds");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        // Find and click "Add Wallet" button
-        var addWalletBtn = window.GetVisualDescendants()
-            .OfType<Button>()
-            .Where(b => b.IsVisible)
-            .FirstOrDefault(b =>
-                (b.Content is string text && text.Contains("Add Wallet")) ||
-                (b.Content is StackPanel sp && sp.Children.OfType<TextBlock>().Any(tb => tb.Text == "Add Wallet")));
-        addWalletBtn.Should().NotBeNull("should find Add Wallet button");
-
-        addWalletBtn!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, addWalletBtn));
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(300);
-        Dispatcher.UIThread.RunJobs();
-
-        // Click Generate New
-        await window.ClickButton("BtnGenerate", UiTimeout);
-        await Task.Delay(200);
-        Dispatcher.UIThread.RunJobs();
-
-        // Download seed (headless — file dialog skipped, but enables Continue)
-        await window.ClickButton("BtnDownloadSeed", UiTimeout);
-        await Task.Delay(300);
-        Dispatcher.UIThread.RunJobs();
-
-        // Click Continue to create wallet
-        await window.ClickButton("BtnContinueBackup", UiTimeout);
-        var successPanel = await window.WaitForControl<StackPanel>("CreateWalletSuccessPanel", TimeSpan.FromSeconds(30));
-        successPanel.Should().NotBeNull("wallet creation should succeed");
-
-        // Close modal
-        await window.ClickButton("BtnCreateWalletDone", UiTimeout);
-        await Task.Delay(300);
-        Dispatcher.UIThread.RunJobs();
     }
 }

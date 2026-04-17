@@ -1,7 +1,6 @@
 using System.Globalization;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
-using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
@@ -15,7 +14,6 @@ using App.UI.Sections.Funds;
 using App.UI.Sections.MyProjects;
 using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Sections.Portfolio;
-using App.UI.Sections.Settings;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -77,11 +75,6 @@ public class InvestmentCancellationTest
     private const string FounderProfile = TestName + "-Founder";
     private const string InvestorProfile = TestName + "-Investor";
 
-    private static readonly TimeSpan FaucetBalanceTimeout = TimeSpan.FromMinutes(5);
-    private static readonly TimeSpan TransactionTimeout = TimeSpan.FromMinutes(2);
-    private static readonly TimeSpan UiTimeout = TimeSpan.FromSeconds(15);
-    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(5);
-    private static readonly TimeSpan IndexerLagTimeout = TimeSpan.FromMinutes(5);
 
     private sealed record ProjectHandle(string RunId, string ProjectName, string ProjectIdentifier, string FounderWalletId);
 
@@ -240,7 +233,7 @@ public class InvestmentCancellationTest
             $"WalletId={pendingInvestment.InvestmentWalletId}, TxId={pendingInvestment.InvestmentTransactionId}");
 
         // Record balance before cancellation
-        var fundsVm = GetFundsViewModel(window);
+        var fundsVm = window.GetFundsViewModel();
         var balanceBeforeCancel = fundsVm?.TotalBalance ?? "0.0000";
         Log(profileName, $"Balance before cancellation: {balanceBeforeCancel}");
 
@@ -291,11 +284,11 @@ public class InvestmentCancellationTest
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
-        var fundersVm = GetFundersViewModel(window);
+        var fundersVm = window.GetFundersViewModel();
         fundersVm.Should().NotBeNull();
 
         SignatureRequestViewModel? pendingSignature = null;
-        var deadline = DateTime.UtcNow + IndexerLagTimeout;
+        var deadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
         while (DateTime.UtcNow < deadline)
         {
             await fundersVm!.LoadInvestmentRequestsAsync();
@@ -313,14 +306,14 @@ public class InvestmentCancellationTest
             }
 
             Log(profileName, "Waiting for pending founder approval request...");
-            await Task.Delay(PollInterval);
+            await Task.Delay(TestHelpers.PollInterval);
         }
 
         pendingSignature.Should().NotBeNull("above-threshold investment should require founder approval");
         Log(profileName, $"Approving signature request id={pendingSignature!.Id} for project {project.ProjectIdentifier}");
-        await window.ClickApproveSignatureAsync(fundersVm!, pendingSignature, UiTimeout);
+        await window.ClickApproveSignatureAsync(fundersVm!, pendingSignature, TestHelpers.UiTimeout);
 
-        var approvalDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        var approvalDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
         while (DateTime.UtcNow < approvalDeadline)
         {
             await fundersVm.LoadInvestmentRequestsAsync();
@@ -336,7 +329,7 @@ public class InvestmentCancellationTest
                 return;
             }
 
-            await Task.Delay(PollInterval);
+            await Task.Delay(TestHelpers.PollInterval);
         }
 
         throw new InvalidOperationException("Founder approval did not complete in time.");
@@ -368,7 +361,7 @@ public class InvestmentCancellationTest
             $"Approval={approvedInvestment.ApprovalStatus}");
 
         // Record balance before cancellation
-        var fundsVm = GetFundsViewModel(window);
+        var fundsVm = window.GetFundsViewModel();
         var balanceBeforeCancel = fundsVm?.TotalBalance ?? "0.0000";
         Log(profileName, $"Balance before cancellation: {balanceBeforeCancel}");
 
@@ -413,7 +406,7 @@ public class InvestmentCancellationTest
         await window.ClickInvestmentDetailActionAsync(portfolioVm, investment, "ConfirmInvestmentButton");
 
         // Wait for Step 3 (active)
-        var activeDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        var activeDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
         while (DateTime.UtcNow < activeDeadline)
         {
             await portfolioVm.LoadInvestmentsFromSdkAsync();
@@ -428,7 +421,7 @@ public class InvestmentCancellationTest
                 return;
             }
 
-            await Task.Delay(PollInterval);
+            await Task.Delay(TestHelpers.PollInterval);
         }
 
         throw new InvalidOperationException("Confirmed investment did not become active (Step 3) in time.");
@@ -450,11 +443,11 @@ public class InvestmentCancellationTest
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
-        await ClickWalletCardButton(window, "WalletCardBtnRefresh");
+        await window.ClickWalletCardButton("WalletCardBtnRefresh");
         await Task.Delay(2000);
         Dispatcher.UIThread.RunJobs();
 
-        var fundsVm = GetFundsViewModel(window);
+        var fundsVm = window.GetFundsViewModel();
         fundsVm.Should().NotBeNull();
         var balanceAfterCancel = fundsVm!.TotalBalance;
         Log(profileName, $"Balance after cancellation: {balanceAfterCancel}");
@@ -477,7 +470,7 @@ public class InvestmentCancellationTest
         ProjectHandle project,
         string amountBtc)
     {
-        var findProjectsVm = GetFindProjectsViewModel(window);
+        var findProjectsVm = window.GetFindProjectsViewModel();
         findProjectsVm.Should().NotBeNull();
 
         findProjectsVm!.OpenProjectDetail(foundProject);
@@ -515,7 +508,7 @@ public class InvestmentCancellationTest
         Log(profileName, $"Paying {amountBtc} BTC with wallet {investWallet.Id.Value}...");
         investVm.PayWithWallet();
 
-        var investDeadline = DateTime.UtcNow + TransactionTimeout;
+        var investDeadline = DateTime.UtcNow + TestHelpers.TransactionTimeout;
         while (DateTime.UtcNow < investDeadline)
         {
             Dispatcher.UIThread.RunJobs();
@@ -524,7 +517,7 @@ public class InvestmentCancellationTest
                 break;
             }
 
-            await Task.Delay(PollInterval);
+            await Task.Delay(TestHelpers.PollInterval);
         }
 
         investVm.CurrentScreen.Should().Be(InvestScreen.Success,
@@ -574,7 +567,7 @@ public class InvestmentCancellationTest
         Dispatcher.UIThread.RunJobs();
 
         var portfolioVm = global::App.App.Services.GetRequiredService<PortfolioViewModel>();
-        var deadline = DateTime.UtcNow + IndexerLagTimeout;
+        var deadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
 
         while (DateTime.UtcNow < deadline)
         {
@@ -599,11 +592,11 @@ public class InvestmentCancellationTest
                 Log(profileName, "Portfolio investment not found in SDK yet.");
             }
 
-            await Task.Delay(PollInterval);
+            await Task.Delay(TestHelpers.PollInterval);
         }
 
         throw new InvalidOperationException(
-            $"Portfolio investment for project {project.ProjectIdentifier} did not reach expected state within {IndexerLagTimeout.TotalSeconds}s.");
+            $"Portfolio investment for project {project.ProjectIdentifier} did not reach expected state within {TestHelpers.IndexerLagTimeout.TotalSeconds}s.");
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -624,7 +617,7 @@ public class InvestmentCancellationTest
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
-        var myProjectsVm = GetMyProjectsViewModel(window);
+        var myProjectsVm = window.GetMyProjectsViewModel();
         myProjectsVm.Should().NotBeNull();
 
         await OpenCreateWizard(window, myProjectsVm!, profileName);
@@ -689,7 +682,7 @@ public class InvestmentCancellationTest
         Dispatcher.UIThread.RunJobs();
         deployVm.PayWithWallet();
 
-        var deployDeadline = DateTime.UtcNow + TransactionTimeout;
+        var deployDeadline = DateTime.UtcNow + TestHelpers.TransactionTimeout;
         while (DateTime.UtcNow < deployDeadline)
         {
             Dispatcher.UIThread.RunJobs();
@@ -698,7 +691,7 @@ public class InvestmentCancellationTest
                 break;
             }
 
-            await Task.Delay(PollInterval);
+            await Task.Delay(TestHelpers.PollInterval);
         }
 
         deployVm.CurrentScreen.Should().Be(DeployScreen.Success,
@@ -775,7 +768,7 @@ public class InvestmentCancellationTest
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
-        var fundsVm = GetFundsViewModel(window);
+        var fundsVm = window.GetFundsViewModel();
         fundsVm.Should().NotBeNull();
 
         if (!fundsVm!.SeedGroups.Any() || !fundsVm.SeedGroups.SelectMany(g => g.Wallets).Any())
@@ -804,10 +797,10 @@ public class InvestmentCancellationTest
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
-        var findProjectsVm = GetFindProjectsViewModel(window);
+        var findProjectsVm = window.GetFindProjectsViewModel();
         findProjectsVm.Should().NotBeNull();
 
-        var deadline = DateTime.UtcNow + IndexerLagTimeout;
+        var deadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
         while (DateTime.UtcNow < deadline)
         {
             await findProjectsVm!.LoadProjectsFromSdkAsync();
@@ -825,7 +818,7 @@ public class InvestmentCancellationTest
             }
 
             Log(profileName, "Project not found in SDK yet. Retrying...");
-            await Task.Delay(PollInterval);
+            await Task.Delay(TestHelpers.PollInterval);
         }
 
         throw new InvalidOperationException("Project was not found in the SDK project list in time.");
@@ -833,166 +826,31 @@ public class InvestmentCancellationTest
 
     private async Task WipeExistingData(Window window, string profileName)
     {
-        window.NavigateToSettings();
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(500);
-
-        var settingsView = window.GetVisualDescendants().OfType<SettingsView>().FirstOrDefault();
-        if (settingsView?.DataContext is SettingsViewModel settingsVm)
-        {
-            settingsVm.ConfirmWipeData();
-            Dispatcher.UIThread.RunJobs();
-            await Task.Delay(500);
-            Dispatcher.UIThread.RunJobs();
-            Log(profileName, "Profile data wiped.");
-        }
+        await window.WipeExistingData();
+        Log(profileName, "Profile data wiped.");
     }
 
     private async Task CreateWalletViaGenerate(Window window, string profileName)
     {
-        var addWalletBtn = FindAddWalletButton(window);
-        addWalletBtn.Should().NotBeNull();
-
-        addWalletBtn!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, addWalletBtn));
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(300);
-        Dispatcher.UIThread.RunJobs();
-
-        await window.ClickButton("BtnGenerate", UiTimeout);
-        await Task.Delay(200);
-        Dispatcher.UIThread.RunJobs();
-        await window.ClickButton("BtnDownloadSeed", UiTimeout);
-        await Task.Delay(300);
-        Dispatcher.UIThread.RunJobs();
-        await window.ClickButton("BtnContinueBackup", UiTimeout);
-
-        var successPanel = await window.WaitForControl<StackPanel>("CreateWalletSuccessPanel", TimeSpan.FromSeconds(30));
-        successPanel.Should().NotBeNull();
-        await window.ClickButton("BtnCreateWalletDone", UiTimeout);
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
+        await window.CreateWalletViaGenerate();
         Log(profileName, "Wallet created successfully.");
     }
 
     private async Task FundWalletViaFaucet(Window window, string profileName)
     {
-        var fundsVm = GetFundsViewModel(window);
-        fundsVm.Should().NotBeNull();
-
-        var walletId = fundsVm!.SeedGroups.FirstOrDefault()?.Wallets?.FirstOrDefault()?.Id.Value;
-        walletId.Should().NotBeNullOrEmpty();
-
-        var deadline = DateTime.UtcNow + FaucetBalanceTimeout;
-        var faucetRetryInterval = TimeSpan.FromSeconds(30);
-        var lastFaucetAttempt = DateTime.MinValue;
-        var faucetAttempts = 0;
-
-        while (DateTime.UtcNow < deadline)
-        {
-            Dispatcher.UIThread.RunJobs();
-
-            if (fundsVm.TotalBalance != "0.0000")
-            {
-                Log(profileName, $"Non-zero balance detected: {fundsVm.TotalBalance}");
-                return;
-            }
-
-            if (DateTime.UtcNow - lastFaucetAttempt >= faucetRetryInterval)
-            {
-                faucetAttempts++;
-                lastFaucetAttempt = DateTime.UtcNow;
-                Log(profileName, $"Faucet attempt #{faucetAttempts}...");
-
-                (bool success, string? error) = await fundsVm.GetTestCoinsAsync(walletId!);
-                Dispatcher.UIThread.RunJobs();
-                Log(profileName, success ? "Faucet request accepted." : $"Faucet request failed: {error}");
-            }
-
-            await ClickWalletCardButton(window, "WalletCardBtnRefresh");
-            await Task.Delay(PollInterval);
-            Dispatcher.UIThread.RunJobs();
-        }
-
-        throw new InvalidOperationException("Wallet balance did not become non-zero in time.");
+        await window.FundWalletViaFaucet();
+        Log(profileName, $"Wallet funded. Balance: {window.GetFundsViewModel()?.TotalBalance}");
     }
 
     private async Task OpenCreateWizard(Window window, MyProjectsViewModel myProjectsVm, string profileName)
     {
-        myProjectsVm.CreateProjectVm.ResetWizard();
-        myProjectsVm.LaunchCreateWizard();
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        myProjectsVm.ShowCreateWizard.Should().BeTrue();
-        myProjectsVm.CreateProjectVm.OnProjectDeployed = () =>
-        {
-            myProjectsVm.OnProjectDeployed(myProjectsVm.CreateProjectVm);
-            myProjectsVm.CloseCreateWizard();
-        };
-
+        await window.OpenCreateWizard(myProjectsVm);
         Log(profileName, "Create wizard opened.");
     }
 
     // ═══════════════════════════════════════════════════════════════════
     // Utility methods
     // ═══════════════════════════════════════════════════════════════════
-
-    private static Button? FindAddWalletButton(Window window)
-    {
-        var buttons = window.GetVisualDescendants().OfType<Button>().Where(b => b.IsVisible);
-        foreach (var btn in buttons)
-        {
-            if (btn.Content is string text && text.Contains("Add Wallet", StringComparison.Ordinal))
-            {
-                return btn;
-            }
-
-            if (btn.Content is StackPanel panel)
-            {
-                foreach (var child in panel.Children.OfType<TextBlock>())
-                {
-                    if (child.Text == "Add Wallet")
-                    {
-                        return btn;
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private async Task ClickWalletCardButton(Window window, string automationId)
-    {
-        var button = await window.WaitForControl<Button>(automationId, UiTimeout);
-        button.Should().NotBeNull();
-        button!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, button));
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(200);
-        Dispatcher.UIThread.RunJobs();
-    }
-
-    private static FundsViewModel? GetFundsViewModel(Window window)
-    {
-        return window.GetVisualDescendants().OfType<FundsView>().FirstOrDefault()?.DataContext as FundsViewModel;
-    }
-
-    private static MyProjectsViewModel? GetMyProjectsViewModel(Window window)
-    {
-        return window.GetVisualDescendants().OfType<MyProjectsView>().FirstOrDefault()?.DataContext as MyProjectsViewModel;
-    }
-
-    private static FindProjectsViewModel? GetFindProjectsViewModel(Window window)
-    {
-        return window.GetVisualDescendants().OfType<FindProjectsView>().FirstOrDefault()?.DataContext as FindProjectsViewModel;
-    }
-
-    private static FundersViewModel? GetFundersViewModel(Window window)
-    {
-        return window.GetVisualDescendants().OfType<FundersView>().FirstOrDefault()?.DataContext as FundersViewModel;
-    }
 
     private static void Log(string? profileName, string message)
     {

@@ -8,9 +8,12 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using App.UI.Shell;
+using App.UI.Sections.FindProjects;
 using App.UI.Sections.Funders;
+using App.UI.Sections.Funds;
 using App.UI.Sections.MyProjects;
 using App.UI.Sections.Portfolio;
+using App.UI.Sections.Settings;
 using App.UI.Shared;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +27,40 @@ namespace App.Test.Integration.Helpers;
 /// </summary>
 public static class TestHelpers
 {
+    // ═══════════════════════════════════════════════════════════════════
+    // Common Timeouts
+    // ═══════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Standard timeout for UI controls to appear after navigation or modal actions.
+    /// </summary>
+    public static readonly TimeSpan UiTimeout = TimeSpan.FromSeconds(15);
+
+    /// <summary>
+    /// Maximum time to wait for the faucet coins to appear in the wallet balance.
+    /// </summary>
+    public static readonly TimeSpan FaucetBalanceTimeout = TimeSpan.FromMinutes(5);
+
+    /// <summary>
+    /// Maximum time to wait for deploy/invest transactions to complete.
+    /// </summary>
+    public static readonly TimeSpan TransactionTimeout = TimeSpan.FromSeconds(120);
+
+    /// <summary>
+    /// Interval between balance refresh polls.
+    /// </summary>
+    public static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(5);
+
+    /// <summary>
+    /// Maximum time to wait for data to appear in the SDK after a transaction.
+    /// The indexer may lag behind the blockchain significantly on signet.
+    /// </summary>
+    public static readonly TimeSpan IndexerLagTimeout = TimeSpan.FromMinutes(5);
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Window & Shell
+    // ═══════════════════════════════════════════════════════════════════
+
     /// <summary>
     /// Creates a headless Window containing the real ShellView (resolved from DI).
     /// The ShellView constructor sets its own DataContext to ShellViewModel from App.Services.
@@ -54,6 +91,10 @@ public static class TestHelpers
                         ?? throw new InvalidOperationException("ShellView not found in window");
         return (ShellViewModel)shellView.DataContext!;
     }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Control Waiting & Interaction
+    // ═══════════════════════════════════════════════════════════════════
 
     /// <summary>
     /// Waits until a control with the given AutomationId appears in the visual tree,
@@ -141,6 +182,10 @@ public static class TestHelpers
         return textBlock?.Text;
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // Navigation
+    // ═══════════════════════════════════════════════════════════════════
+
     /// <summary>
     /// Navigates to a section by selecting the corresponding NavItem in the ShellViewModel.
     /// </summary>
@@ -164,6 +209,10 @@ public static class TestHelpers
         Dispatcher.UIThread.RunJobs();
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // Modal Helpers
+    // ═══════════════════════════════════════════════════════════════════
+
     /// <summary>
     /// Opens a modal by showing the given content via ShellViewModel.ShowModal().
     /// </summary>
@@ -183,6 +232,10 @@ public static class TestHelpers
         vm.HideModal();
         Dispatcher.UIThread.RunJobs();
     }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Visual Tree Search
+    // ═══════════════════════════════════════════════════════════════════
 
     /// <summary>
     /// Finds the first WalletCard in the visual tree and returns it.
@@ -219,6 +272,310 @@ public static class TestHelpers
             .OfType<T>()
             .FirstOrDefault(c => c.Name == name);
     }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // ViewModel Getters
+    // ═══════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Get the FundsViewModel from the current Funds view in the visual tree.
+    /// </summary>
+    public static FundsViewModel? GetFundsViewModel(this Window window)
+    {
+        var fundsView = window.GetVisualDescendants()
+            .OfType<FundsView>()
+            .FirstOrDefault();
+        return fundsView?.DataContext as FundsViewModel;
+    }
+
+    /// <summary>
+    /// Get the MyProjectsViewModel from the current My Projects view.
+    /// </summary>
+    public static MyProjectsViewModel? GetMyProjectsViewModel(this Window window)
+    {
+        var myProjectsView = window.GetVisualDescendants()
+            .OfType<MyProjectsView>()
+            .FirstOrDefault();
+        return myProjectsView?.DataContext as MyProjectsViewModel;
+    }
+
+    /// <summary>
+    /// Get the FindProjectsViewModel from the current Find Projects view.
+    /// </summary>
+    public static FindProjectsViewModel? GetFindProjectsViewModel(this Window window)
+    {
+        var findProjectsView = window.GetVisualDescendants()
+            .OfType<FindProjectsView>()
+            .FirstOrDefault();
+        return findProjectsView?.DataContext as FindProjectsViewModel;
+    }
+
+    /// <summary>
+    /// Get the FundersViewModel from the current Funders view.
+    /// </summary>
+    public static FundersViewModel? GetFundersViewModel(this Window window)
+    {
+        var fundersView = window.GetVisualDescendants()
+            .OfType<FundersView>()
+            .FirstOrDefault();
+        return fundersView?.DataContext as FundersViewModel;
+    }
+
+    /// <summary>
+    /// Get the PortfolioViewModel from the current Funded view.
+    /// </summary>
+    public static PortfolioViewModel? GetPortfolioViewModel(this Window window)
+    {
+        var portfolioView = window.GetVisualDescendants()
+            .OfType<PortfolioView>()
+            .FirstOrDefault();
+        return portfolioView?.DataContext as PortfolioViewModel;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Common Test Setup Flows
+    // ═══════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Navigate to Settings, call ConfirmWipeData() on the ViewModel.
+    /// Resets all persisted state for a clean test start.
+    /// </summary>
+    public static async Task WipeExistingData(this Window window)
+    {
+        Log("  [Wipe] Navigating to Settings...");
+        window.NavigateToSettings();
+        Dispatcher.UIThread.RunJobs();
+        await Task.Delay(500);
+
+        var settingsView = window.GetVisualDescendants()
+            .OfType<SettingsView>()
+            .FirstOrDefault();
+
+        if (settingsView?.DataContext is SettingsViewModel settingsVm)
+        {
+            Log("  [Wipe] Found SettingsViewModel, calling ConfirmWipeData()...");
+            settingsVm.ConfirmWipeData();
+            Dispatcher.UIThread.RunJobs();
+            await Task.Delay(500);
+            Dispatcher.UIThread.RunJobs();
+            Log("  [Wipe] Wipe completed.");
+        }
+        else
+        {
+            Log("  [Wipe] SettingsView/SettingsViewModel not found — skipping wipe.");
+        }
+    }
+
+    /// <summary>
+    /// Navigate to Settings and enable debug mode via the SettingsViewModel.
+    /// This sets both PrototypeSettings (persisted) and INetworkConfiguration (in-memory).
+    /// </summary>
+    public static async Task EnableDebugMode(this Window window)
+    {
+        Log("  [DebugMode] Navigating to Settings...");
+        window.NavigateToSettings();
+        Dispatcher.UIThread.RunJobs();
+        await Task.Delay(500);
+
+        var settingsView = window.GetVisualDescendants()
+            .OfType<SettingsView>()
+            .FirstOrDefault();
+
+        settingsView.Should().NotBeNull("SettingsView should be available to enable debug mode");
+        var settingsVm = settingsView!.DataContext as SettingsViewModel;
+        settingsVm.Should().NotBeNull("SettingsViewModel should be available to enable debug mode");
+
+        settingsVm!.IsDebugMode = true;
+        Dispatcher.UIThread.RunJobs();
+        settingsVm.IsDebugMode.Should().BeTrue("Debug mode should be enabled");
+        Log("  [DebugMode] Debug mode enabled via SettingsViewModel.");
+    }
+
+    /// <summary>
+    /// Open the Create Wallet modal from the Funds section, choose Generate,
+    /// click Download Seed (gracefully skipped in headless — no file dialog),
+    /// click Continue to create the wallet, and close on success.
+    /// Navigates to Funds first.
+    /// </summary>
+    public static async Task CreateWalletViaGenerate(this Window window)
+    {
+        window.NavigateToSection("Funds");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        Log("  [Generate] Looking for Add Wallet button...");
+        var addWalletBtn = FindAddWalletButton(window);
+        addWalletBtn.Should().NotBeNull("should find the Add Wallet button");
+
+        addWalletBtn!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, addWalletBtn));
+        Dispatcher.UIThread.RunJobs();
+        await Task.Delay(300);
+        Dispatcher.UIThread.RunJobs();
+
+        var choicePanel = await window.WaitForControl<StackPanel>("ChoicePanel", UiTimeout);
+        choicePanel.Should().NotBeNull("Choice panel should be visible in create wallet modal");
+        Log("  [Generate] ChoicePanel visible. Clicking 'Generate New'...");
+
+        await window.ClickButton("BtnGenerate", UiTimeout);
+        await Task.Delay(200);
+        Dispatcher.UIThread.RunJobs();
+
+        var backupPanel = await window.WaitForControl<StackPanel>("BackupPanel", UiTimeout);
+        backupPanel.Should().NotBeNull("Backup panel should be visible after clicking Generate New");
+        Log("  [Generate] BackupPanel visible. Clicking 'Download Seed'...");
+
+        await window.ClickButton("BtnDownloadSeed", UiTimeout);
+        await Task.Delay(300);
+        Dispatcher.UIThread.RunJobs();
+
+        Log("  [Generate] Clicking 'Continue' to create wallet...");
+        await window.ClickButton("BtnContinueBackup", UiTimeout);
+
+        var successPanel = await window.WaitForControl<StackPanel>("CreateWalletSuccessPanel", TimeSpan.FromSeconds(30));
+        successPanel.Should().NotBeNull("Success panel should appear after wallet generation");
+        Log("  [Generate] Wallet created successfully.");
+
+        await window.ClickButton("BtnCreateWalletDone", UiTimeout);
+        await Task.Delay(300);
+        Dispatcher.UIThread.RunJobs();
+
+        var shellVm = window.GetShellViewModel();
+        shellVm.IsModalOpen.Should().BeFalse("modal should be closed after clicking Done");
+        Log("  [Generate] Modal closed. Wallet creation complete.");
+    }
+
+    /// <summary>
+    /// Request testnet coins via the FundsViewModel's GetTestCoinsAsync and wait for balance.
+    /// If the faucet is temporarily out of funds, retries the faucet call with backoff
+    /// (every 30s) while also polling for balance in between, up to the total timeout.
+    /// Must be called while on the Funds section.
+    /// </summary>
+    public static async Task FundWalletViaFaucet(this Window window)
+    {
+        var fundsVm = window.GetFundsViewModel();
+        fundsVm.Should().NotBeNull("FundsViewModel should be available for faucet request");
+
+        // Get the wallet ID from the first wallet in SeedGroups
+        var walletId = fundsVm!.SeedGroups.FirstOrDefault()?.Wallets?.FirstOrDefault()?.Id.Value;
+        walletId.Should().NotBeNullOrEmpty("Should have a wallet to fund");
+
+        var deadline = DateTime.UtcNow + FaucetBalanceTimeout;
+        var faucetRetryInterval = TimeSpan.FromSeconds(30);
+        var lastFaucetAttempt = DateTime.MinValue;
+        var faucetAttempts = 0;
+
+        while (DateTime.UtcNow < deadline)
+        {
+            Dispatcher.UIThread.RunJobs();
+
+            // Check if balance is already non-zero
+            if (fundsVm.TotalBalance != "0.0000")
+            {
+                Log($"  [Faucet] Non-zero balance detected: {fundsVm.TotalBalance} (after {faucetAttempts} faucet attempt(s))");
+                return;
+            }
+
+            // Time to (re-)request from faucet?
+            if (DateTime.UtcNow - lastFaucetAttempt >= faucetRetryInterval)
+            {
+                faucetAttempts++;
+                lastFaucetAttempt = DateTime.UtcNow;
+                Log($"  [Faucet] Attempt #{faucetAttempts}: calling GetTestCoinsAsync...");
+
+                (bool success, string? error) = await fundsVm.GetTestCoinsAsync(walletId!);
+                Dispatcher.UIThread.RunJobs();
+
+                if (success)
+                    Log($"  [Faucet] Faucet request succeeded on attempt #{faucetAttempts}");
+                else
+                    Log($"  [Faucet] Faucet request failed: {error}. Retrying in {faucetRetryInterval.TotalSeconds}s");
+            }
+
+            // Poll balance via refresh
+            await window.ClickWalletCardButton("WalletCardBtnRefresh");
+            await Task.Delay(PollInterval);
+            Dispatcher.UIThread.RunJobs();
+        }
+
+        fundsVm.TotalBalance.Should().NotBe("0.0000",
+            $"Balance should become non-zero within {FaucetBalanceTimeout.TotalSeconds}s. Faucet was attempted {faucetAttempts} time(s).");
+    }
+
+    /// <summary>
+    /// Open the create project wizard from MyProjectsView.
+    /// Calls the ViewModel method directly since the EmptyState button uses PointerPressed.
+    /// Wires the deploy completed callback (normally done by MyProjectsView code-behind).
+    /// </summary>
+    public static async Task OpenCreateWizard(this Window window, MyProjectsViewModel myProjectsVm)
+    {
+        myProjectsVm.CreateProjectVm.ResetWizard();
+        myProjectsVm.LaunchCreateWizard();
+        Dispatcher.UIThread.RunJobs();
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        myProjectsVm.ShowCreateWizard.Should().BeTrue("Create wizard should be visible");
+
+        // Wire the deploy completed callback (normally done by MyProjectsView.OpenCreateWizard code-behind)
+        myProjectsVm.CreateProjectVm.OnProjectDeployed = () =>
+        {
+            myProjectsVm.OnProjectDeployed(myProjectsVm.CreateProjectVm);
+            myProjectsVm.CloseCreateWizard();
+        };
+
+        Log("  [Wizard] Create wizard opened and callback wired.");
+    }
+
+    /// <summary>
+    /// Find the "Add Wallet" button in the EmptyState control.
+    /// EmptyState is a templated control — the button is inside its template.
+    /// </summary>
+    public static Button? FindAddWalletButton(this Window window)
+    {
+        var buttons = window.GetVisualDescendants()
+            .OfType<Button>()
+            .Where(b => b.IsVisible);
+
+        foreach (var btn in buttons)
+        {
+            // Check direct string content
+            if (btn.Content is string text && text.Contains("Add Wallet"))
+                return btn;
+
+            // Check StackPanel content with TextBlock
+            if (btn.Content is StackPanel sp)
+            {
+                foreach (var child in sp.Children)
+                {
+                    if (child is TextBlock tb && tb.Text == "Add Wallet")
+                        return btn;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Click a button on the WalletCard by its AutomationId.
+    /// WalletCard buttons are inside a ControlTemplate, so they may not be
+    /// immediately in the visual tree. This method waits for the button to appear.
+    /// </summary>
+    public static async Task ClickWalletCardButton(this Window window, string automationId)
+    {
+        var button = await window.WaitForControl<Button>(automationId, UiTimeout);
+        button.Should().NotBeNull($"WalletCard button '{automationId}' should be found");
+
+        Log($"  [Click] Clicking '{automationId}'...");
+        button!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, button));
+        Dispatcher.UIThread.RunJobs();
+        await Task.Delay(200);
+        Dispatcher.UIThread.RunJobs();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // UI Flow Helpers (Recovery, Approval, Claim, Release)
+    // ═══════════════════════════════════════════════════════════════════
 
     /// <summary>
     /// Drives the real recovery UI flow for an investment: opens detail,
@@ -498,5 +855,18 @@ public static class TestHelpers
             throw new TimeoutException("Release funds flow did not complete");
 
         return manageVm.ShowReleaseFundsSuccessModal;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Logging
+    // ═══════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Write a timestamped log message to the console.
+    /// Visible in test output when running with --logger "console;verbosity=detailed".
+    /// </summary>
+    public static void Log(string message)
+    {
+        Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss.fff}] {message}");
     }
 }

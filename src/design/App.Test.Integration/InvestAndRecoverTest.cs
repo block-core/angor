@@ -1,7 +1,6 @@
 using System.Globalization;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
-using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
@@ -14,7 +13,6 @@ using App.UI.Sections.Funds;
 using App.UI.Sections.MyProjects;
 using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Sections.Portfolio;
-using App.UI.Sections.Settings;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -22,17 +20,12 @@ namespace App.Test.Integration;
 
 public class InvestAndRecoverTest
 {
-    private static readonly TimeSpan FaucetBalanceTimeout = TimeSpan.FromMinutes(5);
-    private static readonly TimeSpan TransactionTimeout = TimeSpan.FromSeconds(120);
-    private static readonly TimeSpan UiTimeout = TimeSpan.FromSeconds(15);
-    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(5);
-    private static readonly TimeSpan IndexerLagTimeout = TimeSpan.FromMinutes(5);
 
     [AvaloniaFact]
     public async Task FullInvestAndRecoverFlow()
     {
         using var profileScope = TestProfileScope.For(nameof(InvestAndRecoverTest));
-        Log("========== STARTING FullInvestAndRecoverFlow ==========");
+        TestHelpers.Log("========== STARTING FullInvestAndRecoverFlow ==========");
 
         var runId = Guid.NewGuid().ToString("N")[..12];
         var projectName = $"Test Invest {runId}";
@@ -47,53 +40,53 @@ public class InvestAndRecoverTest
         var installmentCount = 3;
         var investStartDate = DateTime.UtcNow.AddDays(-40).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-        Log($"[STEP 0] Run ID: {runId}");
-        Log($"[STEP 0] Project name: {projectName}");
-        Log($"[STEP 0] Investment amount: {investmentAmountBtc} BTC");
+        TestHelpers.Log($"[STEP 0] Run ID: {runId}");
+        TestHelpers.Log($"[STEP 0] Project name: {projectName}");
+        TestHelpers.Log($"[STEP 0] Investment amount: {investmentAmountBtc} BTC");
 
         var window = TestHelpers.CreateShellWindow();
         var shellVm = window.GetShellViewModel();
 
-        Log("[STEP 1] Wiping existing data...");
-        await WipeExistingData(window);
+        TestHelpers.Log("[STEP 1] Wiping existing data...");
+        await window.WipeExistingData();
 
-        Log("[STEP 2] Navigating to Funds section...");
+        TestHelpers.Log("[STEP 2] Navigating to Funds section...");
         window.NavigateToSection("Funds");
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
-        var emptyState = await window.WaitForControl<Panel>("EmptyStatePanel", UiTimeout);
+        var emptyState = await window.WaitForControl<Panel>("EmptyStatePanel", TestHelpers.UiTimeout);
         emptyState.Should().NotBeNull("Funds should show empty state after wipe");
 
-        Log("[STEP 2] Creating wallet via Generate path...");
-        await CreateWalletViaGenerate(window);
+        TestHelpers.Log("[STEP 2] Creating wallet via Generate path...");
+        await window.CreateWalletViaGenerate();
 
-        Log("[STEP 3] Waiting for WalletCard to appear...");
+        TestHelpers.Log("[STEP 3] Waiting for WalletCard to appear...");
         var walletCardBtn = await window.WaitForWalletCard(TimeSpan.FromSeconds(30));
         walletCardBtn.Should().NotBeNull("WalletCard should appear after wallet creation");
 
-        Log("[STEP 3] Requesting testnet coins and waiting for balance...");
-        await FundWalletViaFaucet(window);
+        TestHelpers.Log("[STEP 3] Requesting testnet coins and waiting for balance...");
+        await window.FundWalletViaFaucet();
 
         var passwordProvider = global::App.App.Services.GetRequiredService<SimplePasswordProvider>();
         passwordProvider.SetKey("default-key");
-        Log("[STEP 3] Set SimplePasswordProvider key to 'default-key'.");
+        TestHelpers.Log("[STEP 3] Set SimplePasswordProvider key to 'default-key'.");
 
-        Log("[STEP 4] Navigating to My Projects section...");
+        TestHelpers.Log("[STEP 4] Navigating to My Projects section...");
         window.NavigateToSection("My Projects");
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
-        var myProjectsVm = GetMyProjectsViewModel(window);
+        var myProjectsVm = window.GetMyProjectsViewModel();
         myProjectsVm.Should().NotBeNull("MyProjectsViewModel should be available");
 
-        Log("[STEP 4] Opening create wizard...");
-        await OpenCreateWizard(window, myProjectsVm!);
+        TestHelpers.Log("[STEP 4] Opening create wizard...");
+        await window.OpenCreateWizard(myProjectsVm!);
 
         var wizardVm = myProjectsVm!.CreateProjectVm;
         wizardVm.Should().NotBeNull("CreateProjectViewModel should exist");
 
-        Log("[STEP 4.1] Selecting 'investment' project type...");
+        TestHelpers.Log("[STEP 4.1] Selecting 'investment' project type...");
         wizardVm.DismissWelcome();
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(200);
@@ -102,25 +95,25 @@ public class InvestAndRecoverTest
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
-        Log("[STEP 4.2] Setting project name and about...");
+        TestHelpers.Log("[STEP 4.2] Setting project name and about...");
         wizardVm.ProjectName = projectName;
         wizardVm.ProjectAbout = projectAbout;
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
-        Log("[STEP 4.3] Setting banner and profile images...");
+        TestHelpers.Log("[STEP 4.3] Setting banner and profile images...");
         wizardVm.BannerUrl = bannerImageUrl;
         wizardVm.ProfileUrl = profileImageUrl;
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
-        Log("[STEP 4.4] Setting target amount and investment end date...");
+        TestHelpers.Log("[STEP 4.4] Setting target amount and investment end date...");
         wizardVm.TargetAmount = targetAmountBtc;
         wizardVm.InvestEndDate = investEndDate;
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
-        Log("[STEP 4.5] Generating three monthly investment stages...");
+        TestHelpers.Log("[STEP 4.5] Generating three monthly investment stages...");
         wizardVm.ShowStep5Welcome.Should().BeTrue("Step 5 should start with welcome screen");
         wizardVm.DismissStep5Welcome();
         Dispatcher.UIThread.RunJobs();
@@ -136,7 +129,7 @@ public class InvestAndRecoverTest
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
-        Log("[STEP 4.6] Deploying project...");
+        TestHelpers.Log("[STEP 4.6] Deploying project...");
         wizardVm.Deploy();
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(1000);
@@ -157,10 +150,10 @@ public class InvestAndRecoverTest
         deployVm.SelectWallet(deployWallet);
         Dispatcher.UIThread.RunJobs();
 
-        Log("[STEP 4.6] Paying with wallet (SDK deploy pipeline)...");
+        TestHelpers.Log("[STEP 4.6] Paying with wallet (SDK deploy pipeline)...");
         deployVm.PayWithWallet();
 
-        var deployDeadline = DateTime.UtcNow + TransactionTimeout;
+        var deployDeadline = DateTime.UtcNow + TestHelpers.TransactionTimeout;
         while (DateTime.UtcNow < deployDeadline)
         {
             Dispatcher.UIThread.RunJobs();
@@ -175,7 +168,7 @@ public class InvestAndRecoverTest
                     break;
             }
 
-            await Task.Delay(PollInterval);
+            await Task.Delay(TestHelpers.PollInterval);
         }
 
         deployVm.CurrentScreen.Should().Be(DeployScreen.Success,
@@ -194,7 +187,7 @@ public class InvestAndRecoverTest
         var project = myProjectsVm.Projects.FirstOrDefault(p => p.Description.Contains(runId));
         project.Should().NotBeNull($"Project with run ID '{runId}' should appear in My Projects");
 
-        Log("[STEP 4.7] Reloading founder projects from SDK to populate identifiers...");
+        TestHelpers.Log("[STEP 4.7] Reloading founder projects from SDK to populate identifiers...");
         await myProjectsVm.LoadFounderProjectsAsync();
         Dispatcher.UIThread.RunJobs();
 
@@ -203,16 +196,16 @@ public class InvestAndRecoverTest
         project!.ProjectIdentifier.Should().NotBeNullOrEmpty();
         project.OwnerWalletId.Should().NotBeNullOrEmpty();
 
-        Log("[STEP 5] Navigating to Find Projects...");
+        TestHelpers.Log("[STEP 5] Navigating to Find Projects...");
         window.NavigateToSection("Find Projects");
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
-        var findProjectsVm = GetFindProjectsViewModel(window);
+        var findProjectsVm = window.GetFindProjectsViewModel();
         findProjectsVm.Should().NotBeNull("FindProjectsViewModel should be available");
 
         ProjectItemViewModel? foundProject = null;
-        var findDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        var findDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
         while (DateTime.UtcNow < findDeadline)
         {
             await findProjectsVm!.LoadProjectsFromSdkAsync();
@@ -223,7 +216,7 @@ public class InvestAndRecoverTest
             if (foundProject != null)
                 break;
 
-            await Task.Delay(PollInterval);
+            await Task.Delay(TestHelpers.PollInterval);
         }
 
         foundProject.Should().NotBeNull($"Should find our project (run ID '{runId}') in Find Projects from SDK");
@@ -232,12 +225,12 @@ public class InvestAndRecoverTest
         foundProject.Target.Should().Be("1.00000");
         foundProject.ProjectId.Should().NotBeNullOrEmpty();
 
-        Log("[STEP 6] Opening project detail...");
+        TestHelpers.Log("[STEP 6] Opening project detail...");
         findProjectsVm!.OpenProjectDetail(foundProject);
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(300);
 
-        Log("[STEP 6] Opening invest page...");
+        TestHelpers.Log("[STEP 6] Opening invest page...");
         findProjectsVm.OpenInvestPage();
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(500);
@@ -259,7 +252,7 @@ public class InvestAndRecoverTest
         Dispatcher.UIThread.RunJobs();
         investVm.CanSubmit.Should().BeTrue();
 
-        Log("[STEP 6] Submitting invest form...");
+        TestHelpers.Log("[STEP 6] Submitting invest form...");
         investVm.Submit();
         Dispatcher.UIThread.RunJobs();
         investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector);
@@ -269,10 +262,10 @@ public class InvestAndRecoverTest
         Dispatcher.UIThread.RunJobs();
         investVm.SelectedWallet.Should().NotBeNull();
 
-        Log("[STEP 6] Paying with wallet (SDK invest pipeline)...");
+        TestHelpers.Log("[STEP 6] Paying with wallet (SDK invest pipeline)...");
         investVm.PayWithWallet();
 
-        var investDeadline = DateTime.UtcNow + TransactionTimeout;
+        var investDeadline = DateTime.UtcNow + TestHelpers.TransactionTimeout;
         while (DateTime.UtcNow < investDeadline)
         {
             Dispatcher.UIThread.RunJobs();
@@ -287,20 +280,20 @@ public class InvestAndRecoverTest
                     break;
             }
 
-            await Task.Delay(PollInterval);
+            await Task.Delay(TestHelpers.PollInterval);
         }
 
         investVm.CurrentScreen.Should().Be(InvestScreen.Success,
             $"Invest should reach success. Last status: {investVm.PaymentStatusText}");
 
-        Log("[STEP 7] Adding investment to portfolio...");
+        TestHelpers.Log("[STEP 7] Adding investment to portfolio...");
         investVm.AddToPortfolio();
         Dispatcher.UIThread.RunJobs();
 
         var portfolioVm = global::App.App.Services.GetRequiredService<PortfolioViewModel>();
         portfolioVm.HasInvestments.Should().BeTrue();
 
-        Log("[STEP 7.1] Verifying no duplicate investments after SDK reload...");
+        TestHelpers.Log("[STEP 7.1] Verifying no duplicate investments after SDK reload...");
         await portfolioVm.LoadInvestmentsFromSdkAsync();
         Dispatcher.UIThread.RunJobs();
 
@@ -317,7 +310,7 @@ public class InvestAndRecoverTest
         localInvestment.StatusText.Should().Be("Awaiting Approval");
         localInvestment.ApprovalStatus.Should().Be("Pending");
 
-        Log("[STEP 8] Founder approving pending investment request...");
+        TestHelpers.Log("[STEP 8] Founder approving pending investment request...");
         findProjectsVm.CloseInvestPage();
         findProjectsVm.CloseProjectDetail();
         Dispatcher.UIThread.RunJobs();
@@ -326,12 +319,12 @@ public class InvestAndRecoverTest
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
-        var fundersVm = GetFundersViewModel(window);
+        var fundersVm = window.GetFundersViewModel();
         fundersVm.Should().NotBeNull();
         fundersVm!.SetFilter("waiting");
 
         SignatureRequestViewModel? pendingRequest = null;
-        var approvalRequestDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        var approvalRequestDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
         while (DateTime.UtcNow < approvalRequestDeadline)
         {
             await fundersVm.LoadInvestmentRequestsAsync();
@@ -343,14 +336,14 @@ public class InvestAndRecoverTest
             if (pendingRequest != null)
                 break;
 
-            await Task.Delay(PollInterval);
+            await Task.Delay(TestHelpers.PollInterval);
         }
 
         pendingRequest.Should().NotBeNull();
         fundersVm.ApproveSignature(pendingRequest!.Id);
         Dispatcher.UIThread.RunJobs();
 
-        var approvalCompleteDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        var approvalCompleteDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
         var founderApproved = false;
         while (DateTime.UtcNow < approvalCompleteDeadline)
         {
@@ -363,18 +356,18 @@ public class InvestAndRecoverTest
             if (founderApproved)
                 break;
 
-            await Task.Delay(PollInterval);
+            await Task.Delay(TestHelpers.PollInterval);
         }
 
         founderApproved.Should().BeTrue();
 
-        Log("[STEP 9] Reloading funded investments and confirming signed investment...");
+        TestHelpers.Log("[STEP 9] Reloading funded investments and confirming signed investment...");
         window.NavigateToSection("Funded");
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
         InvestmentViewModel? signedInvestment = null;
-        var signedDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        var signedDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
         while (DateTime.UtcNow < signedDeadline)
         {
             await portfolioVm.LoadInvestmentsFromSdkAsync();
@@ -386,7 +379,7 @@ public class InvestAndRecoverTest
             if (signedInvestment is { Step: 2 } || signedInvestment?.ApprovalStatus == "Approved")
                 break;
 
-            await Task.Delay(PollInterval);
+            await Task.Delay(TestHelpers.PollInterval);
         }
 
         signedInvestment.Should().NotBeNull();
@@ -400,12 +393,12 @@ public class InvestAndRecoverTest
         signedInvestment.StatusText.Should().Be("Investment Active");
         signedInvestment.StatusClass.Should().Be("active");
 
-        Log("[STEP 10] Founder spending stage 1...");
+        TestHelpers.Log("[STEP 10] Founder spending stage 1...");
         window.NavigateToSection("My Projects");
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
-        var founderProjectsVm = GetMyProjectsViewModel(window);
+        var founderProjectsVm = window.GetMyProjectsViewModel();
         founderProjectsVm.Should().NotBeNull();
         founderProjectsVm!.OpenManageProject(project);
         Dispatcher.UIThread.RunJobs();
@@ -415,8 +408,8 @@ public class InvestAndRecoverTest
         var manageVm = founderProjectsVm.SelectedManageProject;
         manageVm.Should().NotBeNull();
 
-        Log("[STEP 10.0] Verifying ManageProject stages before founder spend...");
-        var preSpendDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        TestHelpers.Log("[STEP 10.0] Verifying ManageProject stages before founder spend...");
+        var preSpendDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
         while (DateTime.UtcNow < preSpendDeadline)
         {
             await manageVm!.LoadClaimableTransactionsAsync();
@@ -426,7 +419,7 @@ public class InvestAndRecoverTest
             if (manageVm.Stages.Count == installmentCount && stage1 != null)
                 break;
 
-            await Task.Delay(PollInterval);
+            await Task.Delay(TestHelpers.PollInterval);
         }
 
         manageVm!.Stages.Count.Should().Be(installmentCount);
@@ -475,7 +468,7 @@ public class InvestAndRecoverTest
         stage3Pre.DaysUntilAvailable.Should().BeGreaterThan(stage2Pre.DaysUntilAvailable!.Value,
             "stage 3 countdown should be greater than stage 2 countdown");
 
-        var claimableDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        var claimableDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
         while (DateTime.UtcNow < claimableDeadline)
         {
             await manageVm.LoadClaimableTransactionsAsync();
@@ -490,10 +483,10 @@ public class InvestAndRecoverTest
                 break;
             }
 
-            await Task.Delay(PollInterval);
+            await Task.Delay(TestHelpers.PollInterval);
         }
 
-        var spentStageDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        var spentStageDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
         while (DateTime.UtcNow < spentStageDeadline)
         {
             await manageVm.LoadClaimableTransactionsAsync();
@@ -502,12 +495,12 @@ public class InvestAndRecoverTest
             if (manageVm.Stages.Any(s => s.Number == 1 && s.SpentTransactionCount > 0))
                 break;
 
-            await Task.Delay(PollInterval);
+            await Task.Delay(TestHelpers.PollInterval);
         }
 
         manageVm.Stages.Any(s => s.Number == 1 && s.SpentTransactionCount > 0).Should().BeTrue();
 
-        Log("[STEP 11] Navigating to Funded section...");
+        TestHelpers.Log("[STEP 11] Navigating to Funded section...");
         window.NavigateToSection("Funded");
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
@@ -524,7 +517,7 @@ public class InvestAndRecoverTest
         var targetInvestment = sdkInvestment ?? investment;
         targetInvestment.Should().NotBeNull();
 
-        Log("[STEP 12] Loading recovery status...");
+        TestHelpers.Log("[STEP 12] Loading recovery status...");
         if (string.IsNullOrEmpty(targetInvestment!.InvestmentWalletId))
             targetInvestment.InvestmentWalletId = investWallet.Id.Value;
         if (string.IsNullOrEmpty(targetInvestment.ProjectIdentifier))
@@ -533,7 +526,7 @@ public class InvestAndRecoverTest
         await Task.Delay(TimeSpan.FromSeconds(30));
 
         var hasRecoveryAction = false;
-        var recoveryDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        var recoveryDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
         while (DateTime.UtcNow < recoveryDeadline)
         {
             await portfolioVm.LoadRecoveryStatusAsync(targetInvestment);
@@ -550,7 +543,7 @@ public class InvestAndRecoverTest
 
         hasRecoveryAction.Should().BeTrue();
 
-        Log("[STEP 12.1] Verifying recovery stage display...");
+        TestHelpers.Log("[STEP 12.1] Verifying recovery stage display...");
         targetInvestment.Stages.Count.Should().Be(installmentCount);
 
         foreach (var stage in targetInvestment.Stages)
@@ -558,7 +551,7 @@ public class InvestAndRecoverTest
             stage.StageNumber.Should().BeGreaterThan(0);
             stage.Amount.Should().NotBe("0.00000000");
             stage.Status.Should().BeOneOf("Spent by founder", "Not Spent", "Pending");
-            Log($"[STEP 12.1] Recovery Stage #{stage.StageNumber}: amount={stage.Amount}, status='{stage.Status}'");
+            TestHelpers.Log($"[STEP 12.1] Recovery Stage #{stage.StageNumber}: amount={stage.Amount}, status='{stage.Status}'");
         }
 
         var recoveryStage1 = targetInvestment.Stages.FirstOrDefault(s => s.StageNumber == 1);
@@ -578,145 +571,19 @@ public class InvestAndRecoverTest
         amountToRecover.Should().BeGreaterThan(0);
 
         var actionKey = targetInvestment.RecoveryState.ActionKey;
-        Log($"[STEP 12] Clicking recovery action button: '{actionKey}' ({targetInvestment.RecoveryState.ButtonLabel})...");
+        TestHelpers.Log($"[STEP 12] Clicking recovery action button: '{actionKey}' ({targetInvestment.RecoveryState.ButtonLabel})...");
 
         await EnsureWalletHasFeeFunds(window, targetInvestment.InvestmentWalletId, "before recovery action");
         await window.ClickRecoveryFlowAsync(portfolioVm, targetInvestment, TimeSpan.FromSeconds(30));
 
         Dispatcher.UIThread.RunJobs();
 
-        Log("[STEP 13] Recovery flow completed through real UI button path");
+        TestHelpers.Log("[STEP 13] Recovery flow completed through real UI button path");
         targetInvestment.ShowSuccessModal.Should().BeTrue(
             $"Recovery operation '{actionKey}' should succeed and show the success modal");
 
         window.Close();
-        Log("========== FullInvestAndRecoverFlow PASSED ==========");
-    }
-
-    private async Task WipeExistingData(Window window)
-    {
-        window.NavigateToSettings();
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(500);
-
-        var settingsView = window.GetVisualDescendants()
-            .OfType<SettingsView>()
-            .FirstOrDefault();
-
-        if (settingsView?.DataContext is SettingsViewModel settingsVm)
-        {
-            settingsVm.ConfirmWipeData();
-            Dispatcher.UIThread.RunJobs();
-            await Task.Delay(500);
-            Dispatcher.UIThread.RunJobs();
-        }
-    }
-
-    private async Task CreateWalletViaGenerate(Window window)
-    {
-        var addWalletBtn = FindAddWalletButton(window);
-        addWalletBtn.Should().NotBeNull();
-
-        addWalletBtn!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, addWalletBtn));
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(300);
-        Dispatcher.UIThread.RunJobs();
-
-        await window.ClickButton("BtnGenerate", UiTimeout);
-        await Task.Delay(200);
-        Dispatcher.UIThread.RunJobs();
-        await window.ClickButton("BtnDownloadSeed", UiTimeout);
-        await Task.Delay(300);
-        Dispatcher.UIThread.RunJobs();
-        await window.ClickButton("BtnContinueBackup", UiTimeout);
-
-        var successPanel = await window.WaitForControl<StackPanel>("CreateWalletSuccessPanel", TimeSpan.FromSeconds(30));
-        successPanel.Should().NotBeNull();
-        await window.ClickButton("BtnCreateWalletDone", UiTimeout);
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-    }
-
-    private async Task FundWalletViaFaucet(Window window)
-    {
-        var fundsVm = GetFundsViewModel(window);
-        fundsVm.Should().NotBeNull();
-
-        var walletId = fundsVm!.SeedGroups.FirstOrDefault()?.Wallets?.FirstOrDefault()?.Id.Value;
-        walletId.Should().NotBeNullOrEmpty();
-
-        var deadline = DateTime.UtcNow + FaucetBalanceTimeout;
-        var faucetRetryInterval = TimeSpan.FromSeconds(30);
-        var lastFaucetAttempt = DateTime.MinValue;
-
-        while (DateTime.UtcNow < deadline)
-        {
-            Dispatcher.UIThread.RunJobs();
-
-            if (fundsVm.TotalBalance != "0.0000")
-                return;
-
-            if (DateTime.UtcNow - lastFaucetAttempt >= faucetRetryInterval)
-            {
-                lastFaucetAttempt = DateTime.UtcNow;
-                await fundsVm.GetTestCoinsAsync(walletId!);
-                Dispatcher.UIThread.RunJobs();
-            }
-
-            await ClickWalletCardButton(window, "WalletCardBtnRefresh");
-            await Task.Delay(PollInterval);
-            Dispatcher.UIThread.RunJobs();
-        }
-
-        fundsVm.TotalBalance.Should().NotBe("0.0000");
-    }
-
-    private async Task OpenCreateWizard(Window window, MyProjectsViewModel myProjectsVm)
-    {
-        myProjectsVm.CreateProjectVm.ResetWizard();
-        myProjectsVm.LaunchCreateWizard();
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        myProjectsVm.ShowCreateWizard.Should().BeTrue();
-        myProjectsVm.CreateProjectVm.OnProjectDeployed = () =>
-        {
-            myProjectsVm.OnProjectDeployed(myProjectsVm.CreateProjectVm);
-            myProjectsVm.CloseCreateWizard();
-        };
-    }
-
-    private static Button? FindAddWalletButton(Window window)
-    {
-        var buttons = window.GetVisualDescendants().OfType<Button>().Where(b => b.IsVisible);
-
-        foreach (var btn in buttons)
-        {
-            if (btn.Content is string text && text.Contains("Add Wallet"))
-                return btn;
-
-            if (btn.Content is StackPanel panel)
-            {
-                foreach (var child in panel.Children.OfType<TextBlock>())
-                {
-                    if (child.Text == "Add Wallet")
-                        return btn;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private async Task ClickWalletCardButton(Window window, string automationId)
-    {
-        var button = await window.WaitForControl<Button>(automationId, UiTimeout);
-        button.Should().NotBeNull();
-        button!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, button));
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(200);
-        Dispatcher.UIThread.RunJobs();
+        TestHelpers.Log("========== FullInvestAndRecoverFlow PASSED ==========");
     }
 
     private async Task EnsureWalletHasFeeFunds(Window window, string walletId, string context)
@@ -725,7 +592,7 @@ public class InvestAndRecoverTest
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
-        var fundsVm = GetFundsViewModel(window);
+        var fundsVm = window.GetFundsViewModel();
         fundsVm.Should().NotBeNull();
 
         var deadline = DateTime.UtcNow + TimeSpan.FromMinutes(2);
@@ -739,43 +606,18 @@ public class InvestAndRecoverTest
                 var info = refresh.Value;
                 var available = info.TotalBalance + info.TotalUnconfirmedBalance + info.TotalBalanceReserved;
                 var availableBtc = available / 100_000_000m;
-                Log($"[STEP 12] Wallet balance {context}: {availableBtc:F8} BTC available for fees");
+                TestHelpers.Log($"[STEP 12] Wallet balance {context}: {availableBtc:F8} BTC available for fees");
                 if (available > 20_000)
                     return;
             }
 
-            Log($"[STEP 12] Wallet needs fee funds {context}. Requesting faucet coins...");
+            TestHelpers.Log($"[STEP 12] Wallet needs fee funds {context}. Requesting faucet coins...");
             await fundsVm!.GetTestCoinsAsync(walletId);
-            await ClickWalletCardButton(window, "WalletCardBtnRefresh");
-            await Task.Delay(PollInterval);
+            await window.ClickWalletCardButton("WalletCardBtnRefresh");
+            await Task.Delay(TestHelpers.PollInterval);
             Dispatcher.UIThread.RunJobs();
         }
 
         throw new InvalidOperationException($"Wallet '{walletId}' did not receive enough fee funds {context}.");
-    }
-
-    private static FundsViewModel? GetFundsViewModel(Window window)
-    {
-        return window.GetVisualDescendants().OfType<FundsView>().FirstOrDefault()?.DataContext as FundsViewModel;
-    }
-
-    private static MyProjectsViewModel? GetMyProjectsViewModel(Window window)
-    {
-        return window.GetVisualDescendants().OfType<MyProjectsView>().FirstOrDefault()?.DataContext as MyProjectsViewModel;
-    }
-
-    private static FindProjectsViewModel? GetFindProjectsViewModel(Window window)
-    {
-        return window.GetVisualDescendants().OfType<FindProjectsView>().FirstOrDefault()?.DataContext as FindProjectsViewModel;
-    }
-
-    private static FundersViewModel? GetFundersViewModel(Window window)
-    {
-        return window.GetVisualDescendants().OfType<FundersView>().FirstOrDefault()?.DataContext as FundersViewModel;
-    }
-
-    private static void Log(string message)
-    {
-        Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss.fff}] {message}");
     }
 }
