@@ -52,7 +52,11 @@ public static class CompositionRoot
             _ => BitcoinNetwork.Testnet
         };
 
-        // Logging — Microsoft.Extensions.Logging with console output
+        // Logging — Microsoft.Extensions.Logging with console + file output
+        var logFilePath = System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Angor", "logs", "angor-.log");
+
         services.AddLogging(builder =>
         {
             builder.ClearProviders();
@@ -61,6 +65,18 @@ public static class CompositionRoot
             {
                 builder.AddConsole();
             }
+
+            // Add Serilog as a provider for file logging
+            var fileLogger = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .WriteTo.File(
+                    logFilePath,
+                    rollingInterval: Serilog.RollingInterval.Day,
+                    retainedFileCountLimit: 15,
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
+                .CreateLogger();
+
+            builder.AddSerilog(fileLogger, dispose: true);
 
             // Suppress noisy per-request HTTP diagnostics (Sending/Received for every call)
             builder.AddFilter("System.Net.Http.HttpClient", LogLevel.Warning);
