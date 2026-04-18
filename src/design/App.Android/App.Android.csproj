@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net9.0-android</TargetFramework>
+        <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
+        <Nullable>enable</Nullable>
+        <ApplicationId>io.angor.app</ApplicationId>
+        <ApplicationVersion>1</ApplicationVersion>
+        <ApplicationDisplayVersion>0.0.0</ApplicationDisplayVersion>
+        <AndroidPackageFormat>apk</AndroidPackageFormat>
+        <AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+        <RootNamespace>App.Android</RootNamespace>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)'=='Release'">
+        <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
+        <Optimize>true</Optimize>
+        <PublishTrimmed>false</PublishTrimmed>
+        <TrimMode>none</TrimMode>
+        <OptimizationPreference>Speed</OptimizationPreference>
+        <PublishAot>false</PublishAot>
+        <DebugSymbols>false</DebugSymbols>
+        <DebugType>none</DebugType>
+        <RunAOTCompilation>false</RunAOTCompilation>
+        <EnableAssemblyILStripping>false</EnableAssemblyILStripping>
+        <NoWarn>$(NoWarn);IL2026;IL2111</NoWarn>
+        <AspectInjectorEnabled>false</AspectInjectorEnabled>
+    </PropertyGroup>
+    <ItemGroup>
+        <!-- Android app icon with day/night variants -->
+        <AndroidResource Include="Resources\drawable\icon.png" />
+        <AndroidResource Include="Resources\drawable-night\icon.png" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Avalonia.Android" />
+        <PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\App\App.csproj" />
+    </ItemGroup>
+</Project>

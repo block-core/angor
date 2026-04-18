@@ -16,7 +16,7 @@ env:
   DOTNET_VERSION_TOOL: '10.0.101'
   SOLUTION_PATH: 'src/App.sln'
   DESKTOP_PROJECT: 'src/design/App.Desktop/App.Desktop.csproj'
-  ANDROID_PROJECT: 'src/avalonia/AngorApp.Android/AngorApp.Android.csproj'
+  ANDROID_PROJECT: 'src/design/App.Android/App.Android.csproj'
   APP_NAME: 'Angor'
   APP_ID: 'io.blockcore.angor'
   VENDOR: 'Blockcore'
@@ -239,7 +239,7 @@ jobs:
       
       - name: Build APK
         run: |
-          dotnet publish avalonia/AngorApp.Android/AngorApp.Android.csproj \
+          dotnet publish design/App.Android/App.Android.csproj \
             -c Release \
             -f net9.0-android \
             -p:ApplicationDisplayVersion=${{ needs.prepare.outputs.version }} \
