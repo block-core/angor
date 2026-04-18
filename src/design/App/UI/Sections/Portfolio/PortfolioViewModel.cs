@@ -1258,7 +1258,30 @@ public partial class PortfolioViewModel : ReactiveObject
             project.PenaltyThresholdSats);
 
         investment.SignatureId = sig.Id;
-        Investments.Insert(0, investment);
+
+        // Deduplicate: if LoadInvestmentsFromSdkAsync already added this project
+        // (e.g. the indexer was fast enough), update the existing entry instead of
+        // inserting a second one.
+        var existing = Investments.FirstOrDefault(i =>
+            !string.IsNullOrEmpty(i.ProjectIdentifier) &&
+            i.ProjectIdentifier == project.ProjectId);
+
+        if (existing != null)
+        {
+            _logger.LogInformation(
+                "AddInvestmentFromProject: project '{ProjectName}' already in list (from SDK) — updating status instead of duplicating",
+                project.ProjectName);
+            existing.StatusText = investment.StatusText;
+            existing.StatusClass = investment.StatusClass;
+            existing.Step = investment.Step;
+            existing.Status = investment.Status;
+            existing.ApprovalStatus = investment.ApprovalStatus;
+            existing.SignatureId = sig.Id;
+        }
+        else
+        {
+            Investments.Insert(0, investment);
+        }
         HasInvestments = true;
 
         _logger.LogInformation("Investment added to portfolio: project='{ProjectName}', autoApproved={IsAutoApproved}, step={Step}, status='{StatusText}'",

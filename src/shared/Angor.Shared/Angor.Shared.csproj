@@ -29,4 +29,9 @@
     <PackageReference Update="Microsoft.SourceLink.GitHub" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Angor.Shared.Tests" />
+    <InternalsVisibleTo Include="Angor.Sdk.Tests" />
+  </ItemGroup>
+
 </Project>
