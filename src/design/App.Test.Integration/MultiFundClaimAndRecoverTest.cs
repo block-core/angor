@@ -422,7 +422,14 @@ public class MultiFundClaimAndRecoverTest
         var addedInvestment = portfolioVm.Investments.FirstOrDefault(i => i.ProjectIdentifier == project.ProjectIdentifier);
         addedInvestment.Should().NotBeNull();
         addedInvestment.ProjectName.Should().Be(project.ProjectName);
-        addedInvestment.TotalInvested.Should().Be(decimal.Parse(amountBtc, CultureInfo.InvariantCulture).ToString("F8", CultureInfo.InvariantCulture));
+        // TotalInvested may reflect the exact requested amount (optimistic add) or the
+        // post-fee on-chain amount (SDK loaded before AddToPortfolio). Accept both.
+        // With the dedup fix, zero values from the SDK are now overwritten by the optimistic amount.
+        var actualInvested = decimal.Parse(addedInvestment.TotalInvested, CultureInfo.InvariantCulture);
+        var expectedInvested = decimal.Parse(amountBtc, CultureInfo.InvariantCulture);
+        actualInvested.Should().BeGreaterThan(0, "TotalInvested should be non-zero after AddToPortfolio");
+        actualInvested.Should().BeLessThanOrEqualTo(expectedInvested, "TotalInvested should not exceed requested amount");
+        (expectedInvested - actualInvested).Should().BeLessThan(0.001m, "TotalInvested should be within fee tolerance of requested amount");
         Log(profileName, $"Investment completed. Founder approval expected: {expectFounderApproval}");
     }
 

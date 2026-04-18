@@ -1277,6 +1277,19 @@ public partial class PortfolioViewModel : ReactiveObject
             existing.Status = investment.Status;
             existing.ApprovalStatus = investment.ApprovalStatus;
             existing.SignatureId = sig.Id;
+
+            // Update TotalInvested if the optimistic value is better than what the SDK returned
+            // (e.g. SDK may return 0 due to indexer lag, or a post-fee amount)
+            if (parsedAmt > 0)
+            {
+                var existingAmt = double.TryParse(existing.TotalInvested,
+                    System.Globalization.NumberStyles.Float,
+                    CultureInfo.InvariantCulture, out var existVal) ? existVal : 0;
+                if (existingAmt == 0)
+                {
+                    existing.TotalInvested = investment.TotalInvested;
+                }
+            }
         }
         else
         {
