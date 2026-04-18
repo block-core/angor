@@ -539,8 +539,13 @@ public class InvestmentCancellationTest
         var addedInvestment = portfolioVm.Investments.FirstOrDefault(i =>
             i.ProjectIdentifier == project.ProjectIdentifier && i.Status != "Cancelled");
         addedInvestment.Should().NotBeNull("Investment should appear in portfolio");
-        addedInvestment!.TotalInvested.Should().Be(
-            decimal.Parse(amountBtc, CultureInfo.InvariantCulture).ToString("F8", CultureInfo.InvariantCulture));
+        // TotalInvested may reflect the exact requested amount (optimistic add) or the
+        // post-fee on-chain amount (SDK loaded before AddToPortfolio). Accept both.
+        var actualInvested = decimal.Parse(addedInvestment!.TotalInvested, CultureInfo.InvariantCulture);
+        var expectedInvested = decimal.Parse(amountBtc, CultureInfo.InvariantCulture);
+        actualInvested.Should().BeGreaterThan(0, "TotalInvested should be non-zero");
+        actualInvested.Should().BeLessThanOrEqualTo(expectedInvested, "TotalInvested should not exceed requested amount");
+        (expectedInvested - actualInvested).Should().BeLessThan(0.001m, "TotalInvested should be within fee tolerance of requested amount");
 
         Log(profileName, $"Investment completed. Step={addedInvestment.Step}, Status='{addedInvestment.StatusText}'");
 
