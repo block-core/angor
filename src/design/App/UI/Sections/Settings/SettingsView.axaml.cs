@@ -2,19 +2,27 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using App.UI.Shell;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace App.UI.Sections.Settings;
 
 public partial class SettingsView : UserControl
 {
+    private readonly ILogger<SettingsView> _logger;
     private SettingsViewModel? _subscribedVm;
 
     /// <summary>Design-time only.</summary>
-    public SettingsView() => InitializeComponent();
+    public SettingsView()
+    {
+        InitializeComponent();
+        _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<SettingsView>();
+    }
 
     public SettingsView(SettingsViewModel vm)
     {
         InitializeComponent();
+        _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<SettingsView>();
         DataContext = vm;
         DataContextChanged += (_, _) => SubscribeToVmEvents();
         SubscribeToVmEvents();
@@ -49,8 +57,17 @@ public partial class SettingsView : UserControl
     private void OnCloseNetworkModal(object? sender, RoutedEventArgs e) =>
         Vm?.CloseNetworkModal();
 
-    private async void OnConfirmNetworkSwitch(object? sender, RoutedEventArgs e) =>
-        await (Vm?.ConfirmNetworkSwitchAsync() ?? Task.CompletedTask);
+    private async void OnConfirmNetworkSwitch(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            await (Vm?.ConfirmNetworkSwitchAsync() ?? Task.CompletedTask);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "OnConfirmNetworkSwitch failed");
+        }
+    }
 
     private void OnSelectMainnet(object? sender, RoutedEventArgs e) => SelectNetworkOption("Mainnet");
     private void OnSelectTestnet(object? sender, RoutedEventArgs e) => SelectNetworkOption("Testnet");

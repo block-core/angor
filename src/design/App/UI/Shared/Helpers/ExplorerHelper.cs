@@ -1,4 +1,6 @@
 using Angor.Shared.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace App.UI.Shared.Helpers;
 
@@ -8,6 +10,8 @@ namespace App.UI.Shared.Helpers;
 /// </summary>
 public static class ExplorerHelper
 {
+    private static ILogger? _logger;
+    private static ILogger Logger => _logger ??= App.Services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(ExplorerHelper));
     /// <summary>
     /// Build a full indexer URL for the given transaction ID.
     /// Returns null if the txid is empty or no indexer is configured.
@@ -20,8 +24,9 @@ public static class ExplorerHelper
             var indexer = networkService.GetPrimaryIndexer();
             return $"{indexer.Url.TrimEnd('/')}/tx/{txid}";
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.LogWarning(ex, "GetTransactionUrl failed for txid '{Txid}'", txid);
             return null;
         }
     }
@@ -38,8 +43,9 @@ public static class ExplorerHelper
             var indexer = networkService.GetPrimaryIndexer();
             return $"{indexer.Url.TrimEnd('/')}/address/{address}";
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.LogWarning(ex, "GetAddressUrl failed for address '{Address}'", address);
             return null;
         }
     }
@@ -79,9 +85,9 @@ public static class ExplorerHelper
                 UseShellExecute = true,
             });
         }
-        catch
+        catch (Exception ex)
         {
-            // Silently fail if browser can't be opened
+            Logger.LogWarning(ex, "Failed to open URL '{Url}'", url);
         }
     }
 }

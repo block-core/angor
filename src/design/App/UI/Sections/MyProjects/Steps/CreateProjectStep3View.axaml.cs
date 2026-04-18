@@ -3,14 +3,19 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace App.UI.Sections.MyProjects.Steps;
 
 public partial class CreateProjectStep3View : UserControl
 {
+    private readonly ILogger<CreateProjectStep3View> _logger;
+
     public CreateProjectStep3View()
     {
         InitializeComponent();
+        _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<CreateProjectStep3View>();
     }
 
     protected override void OnLoaded(RoutedEventArgs e)
@@ -81,9 +86,9 @@ public partial class CreateProjectStep3View : UserControl
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // File read error — silently ignore for prototype
+            _logger.LogWarning(ex, "Failed to load image");
         }
     }
 

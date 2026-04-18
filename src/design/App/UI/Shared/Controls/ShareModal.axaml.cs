@@ -6,6 +6,8 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using App.UI.Shared.Helpers;
 using App.UI.Shell;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace App.UI.Shared.Controls;
 
@@ -16,6 +18,7 @@ namespace App.UI.Shared.Controls;
 /// </summary>
 public partial class ShareModal : UserControl, IBackdropCloseable
 {
+    private readonly ILogger<ShareModal> _logger;
     private readonly string _projectName;
     private readonly string _projectDescription;
     private readonly string _shareUrl;
@@ -24,10 +27,13 @@ public partial class ShareModal : UserControl, IBackdropCloseable
     /// Parameterless constructor for XAML designer/loader.
     /// Not used at runtime — use the parameterized constructor instead.
     /// </summary>
-    public ShareModal() : this("Sample Project", "A sample project description") { }
+    public ShareModal() : this("Sample Project", "A sample project description")
+    {
+    }
 
     public ShareModal(string projectName, string projectDescription, string? avatarUrl = null)
     {
+        _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<ShareModal>();
         _projectName = projectName;
         _projectDescription = projectDescription;
         _shareUrl = $"https://angor.io/project/{projectName.ToLowerInvariant().Replace(" ", "-")}";
@@ -46,9 +52,9 @@ public partial class ShareModal : UserControl, IBackdropCloseable
             {
                 ProjectAvatar.Source = new Avalonia.Media.Imaging.Bitmap(avatarUrl);
             }
-            catch
+            catch (Exception ex)
             {
-                // Avatar load failed — leave empty (white circle shows)
+                _logger.LogWarning(ex, "Avatar load failed");
             }
         }
 
@@ -81,20 +87,27 @@ public partial class ShareModal : UserControl, IBackdropCloseable
 
     private async void OnCopyClick(object? sender, RoutedEventArgs e)
     {
-        ClipboardHelper.CopyToClipboard(this, _shareUrl);
+        try
+        {
+            ClipboardHelper.CopyToClipboard(this, _shareUrl);
 
-        var copyBtn = this.FindControl<Button>("CopyButton");
-        if (copyBtn == null) return;
+            var copyBtn = this.FindControl<Button>("CopyButton");
+            if (copyBtn == null) return;
 
-        // Change button text + color to "Copied!" for 2 seconds via CSS class
-        copyBtn.Content = "Copied!";
-        copyBtn.Classes.Set("CopiedState", true);
+            // Change button text + color to "Copied!" for 2 seconds via CSS class
+            copyBtn.Content = "Copied!";
+            copyBtn.Classes.Set("CopiedState", true);
 
-        await Task.Delay(2000);
+            await Task.Delay(2000);
 
-        // Restore original
-        copyBtn.Content = "Copy";
-        copyBtn.Classes.Set("CopiedState", false);
+            // Restore original
+            copyBtn.Content = "Copy";
+            copyBtn.Classes.Set("CopiedState", false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "OnCopyClick failed");
+        }
     }
 
     /// <summary>
@@ -125,9 +138,9 @@ public partial class ShareModal : UserControl, IBackdropCloseable
                 UseShellExecute = true,
             });
         }
-        catch
+        catch (Exception ex)
         {
-            // Silently fail if browser can't be opened (visual-only prototype)
+            _logger.LogWarning(ex, "Failed to open browser for {Platform}", platform);
         }
     }
 
@@ -145,9 +158,9 @@ public partial class ShareModal : UserControl, IBackdropCloseable
                 UseShellExecute = true,
             });
         }
-        catch
+        catch (Exception ex)
         {
-            // Silently fail
+            _logger.LogWarning(ex, "Failed to open email client");
         }
     }
 

@@ -7,17 +7,24 @@ using App.UI.Shared.Services;
 using App.UI.Shell;
 using App.UI.Shared.Controls;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace App.UI.Sections.Funds;
 
 public partial class FundsView : UserControl
 {
+    private readonly ILogger<FundsView> _logger;
     /// <summary>Design-time only.</summary>
-    public FundsView() => InitializeComponent();
+    public FundsView()
+    {
+        InitializeComponent();
+        _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<FundsView>();
+    }
 
     public FundsView(FundsViewModel vm)
     {
         InitializeComponent();
+        _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<FundsView>();
         DataContext = vm;
 
         // Handle button clicks from EmptyState "Add Wallet", populated "Add Wallet",
@@ -219,6 +226,13 @@ public partial class FundsView : UserControl
         try
         {
             await vm.RefreshBalanceAsync(card.WalletId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "RefreshWalletBalance failed");
+            var shellView = this.FindAncestorOfType<ShellView>();
+            if (shellView?.DataContext is ShellViewModel shellVm)
+                shellVm.ShowToast($"Failed to refresh balance: {ex.Message}");
         }
         finally
         {

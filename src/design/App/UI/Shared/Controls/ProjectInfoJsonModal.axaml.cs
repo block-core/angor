@@ -5,6 +5,8 @@ using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Shared;
 using App.UI.Shared.Helpers;
 using App.UI.Shell;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace App.UI.Shared.Controls;
 
@@ -14,6 +16,7 @@ namespace App.UI.Shared.Controls;
 /// </summary>
 public partial class ProjectInfoJsonModal : UserControl, IBackdropCloseable
 {
+    private readonly ILogger<ProjectInfoJsonModal> _logger;
     private string _json = "";
 
     /// <summary>
@@ -22,6 +25,7 @@ public partial class ProjectInfoJsonModal : UserControl, IBackdropCloseable
     public ProjectInfoJsonModal()
     {
         InitializeComponent();
+        _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<ProjectInfoJsonModal>();
         WireButtons();
     }
 
@@ -53,20 +57,27 @@ public partial class ProjectInfoJsonModal : UserControl, IBackdropCloseable
 
     private async void OnCopyClick(object? sender, RoutedEventArgs e)
     {
-        if (string.IsNullOrEmpty(_json)) return;
+        try
+        {
+            if (string.IsNullOrEmpty(_json)) return;
 
-        ClipboardHelper.CopyToClipboard(this, _json);
+            ClipboardHelper.CopyToClipboard(this, _json);
 
-        var copyBtn = this.FindControl<Button>("CopyJsonButton");
-        if (copyBtn == null) return;
+            var copyBtn = this.FindControl<Button>("CopyJsonButton");
+            if (copyBtn == null) return;
 
-        copyBtn.Content = "Copied!";
-        copyBtn.Classes.Set("CopiedState", true);
+            copyBtn.Content = "Copied!";
+            copyBtn.Classes.Set("CopiedState", true);
 
-        await Task.Delay(2000);
+            await Task.Delay(2000);
 
-        copyBtn.Content = "Copy JSON";
-        copyBtn.Classes.Set("CopiedState", false);
+            copyBtn.Content = "Copy JSON";
+            copyBtn.Classes.Set("CopiedState", false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "OnCopyClick failed");
+        }
     }
 
     private async Task LoadJsonAsync(string projectId, IProjectAppService projectAppService)

@@ -10,6 +10,8 @@ using App.UI.Sections.MyProjects;
 using App.UI.Sections.Portfolio;
 using App.UI.Shared;
 using App.UI.Shared.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace App.UI.Shell;
 
@@ -221,7 +223,8 @@ public partial class PrototypeSettings : ReactiveObject
                 });
                 if (saveResult.IsFailure)
                 {
-                    System.Diagnostics.Debug.WriteLine($"[PrototypeSettings] Failed to save settings: {saveResult.Error}");
+                    var logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(PrototypeSettings));
+                    logger.LogWarning("Failed to save settings: {Error}", saveResult.Error);
                 }
             });
 
@@ -516,9 +519,10 @@ public partial class ShellViewModel : ReactiveObject
                 InvestedBalanceDisplay = btc.ToString("F4", CultureInfo.InvariantCulture) + " " + _currencyService.Symbol;
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // SDK call failed — keep existing display
+            var logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<ShellViewModel>();
+            logger.LogWarning(ex, "LoadTotalInvestedAsync failed for wallet '{WalletId}'", wallet.Id.Value);
         }
     }
 

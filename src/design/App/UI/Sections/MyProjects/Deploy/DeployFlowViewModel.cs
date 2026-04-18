@@ -9,6 +9,7 @@ using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Wallet.Application;
 using App.UI.Shared;
 using App.UI.Shared.Services;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 
 namespace App.UI.Sections.MyProjects.Deploy;
@@ -35,6 +36,7 @@ public partial class DeployFlowViewModel : ReactiveObject
     private readonly IFounderAppService _founderAppService;
     private readonly ICurrencyService _currencyService;
     private readonly IWalletContext _walletContext;
+    private readonly ILogger<DeployFlowViewModel> _logger;
     private CancellationTokenSource? _invoiceMonitorCts;
 
     // ── State ──
@@ -78,16 +80,30 @@ public partial class DeployFlowViewModel : ReactiveObject
         IProjectAppService projectAppService,
         IFounderAppService founderAppService,
         ICurrencyService currencyService,
-        IWalletContext walletContext)
+        IWalletContext walletContext,
+        ILogger<DeployFlowViewModel> logger)
     {
         _walletAppService = walletAppService;
         _projectAppService = projectAppService;
         _founderAppService = founderAppService;
         _currencyService = currencyService;
         _walletContext = walletContext;
+        _logger = logger;
         // Initialize ReactiveCommands for async payment operations
         PayWithWalletCommand = ReactiveCommand.CreateFromTask(PayWithWalletAsync);
+        PayWithWalletCommand.ThrownExceptions.Subscribe(ex =>
+        {
+            _logger.LogError(ex, "PayWithWalletCommand error");
+            DeployStatusText = $"Deployment error: {ex.Message}";
+            DeployErrorMessage = ex.Message;
+        });
         PayViaInvoiceCommand = ReactiveCommand.CreateFromTask(PayViaInvoiceAsync);
+        PayViaInvoiceCommand.ThrownExceptions.Subscribe(ex =>
+        {
+            _logger.LogError(ex, "PayViaInvoiceCommand error");
+            DeployStatusText = $"Deployment error: {ex.Message}";
+            DeployErrorMessage = ex.Message;
+        });
 
         // Raise derived property notifications when screen changes
         this.WhenAnyValue(x => x.CurrentScreen)
@@ -146,7 +162,9 @@ public partial class DeployFlowViewModel : ReactiveObject
     /// Vue ref: payWithDeployWallet() → 800ms spinner → QR "received" → 1500ms "Deploying..." → success.</summary>
     public ReactiveCommand<Unit, Unit> PayWithWalletCommand { get; }
 
-    public void PayWithWallet() => PayWithWalletCommand.Execute().Subscribe();
+    public void PayWithWallet() => PayWithWalletCommand.Execute().Subscribe(
+        onNext: _ => { },
+        onError: ex => _logger.LogError(ex, "PayWithWallet subscription error"));
 
     private async Task PayWithWalletAsync()
     {
@@ -265,7 +283,9 @@ public partial class DeployFlowViewModel : ReactiveObject
     /// Vue ref: handlePayment() → paymentStatus "received" → 1500ms → success.</summary>
     public ReactiveCommand<Unit, Unit> PayViaInvoiceCommand { get; }
 
-    public void PayViaInvoice() => PayViaInvoiceCommand.Execute().Subscribe();
+    public void PayViaInvoice() => PayViaInvoiceCommand.Execute().Subscribe(
+        onNext: _ => { },
+        onError: ex => _logger.LogError(ex, "PayViaInvoice subscription error"));
 
     private async Task PayViaInvoiceAsync()
     {
