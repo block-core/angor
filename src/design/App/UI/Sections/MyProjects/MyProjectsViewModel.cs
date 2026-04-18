@@ -155,9 +155,9 @@ public partial class MyProjectsViewModel : ReactiveObject
             this.RaisePropertyChanged(nameof(HasProjects));
             this.RaisePropertyChanged(nameof(TotalRaised));
         }
-        catch
+        catch (Exception ex)
         {
-            // SDK call failed
+            _logger.LogError(ex, "LoadFounderProjectsAsync failed");
         }
         finally
         {

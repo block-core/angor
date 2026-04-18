@@ -526,7 +526,9 @@ public partial class InvestPageViewModel : ReactiveObject
     /// <summary>Pay with selected wallet → build draft → check threshold → submit/publish → success.</summary>
     public ReactiveCommand<Unit, Unit> PayWithWalletCommand { get; }
 
-    public void PayWithWallet() => PayWithWalletCommand.Execute().Subscribe();
+    public void PayWithWallet() => PayWithWalletCommand.Execute().Subscribe(
+        onNext: _ => { },
+        onError: ex => _logger.LogError(ex, "PayWithWallet subscription error"));
 
     private async Task PayWithWalletAsync()
     {
@@ -703,7 +705,9 @@ public partial class InvestPageViewModel : ReactiveObject
     /// Vue ref: handlePayment() → paymentStatus "received" → success.</summary>
     public ReactiveCommand<Unit, Unit> PayViaInvoiceCommand { get; }
 
-    public void PayViaInvoice() => PayViaInvoiceCommand.Execute().Subscribe();
+    public void PayViaInvoice() => PayViaInvoiceCommand.Execute().Subscribe(
+        onNext: _ => { },
+        onError: ex => _logger.LogError(ex, "PayViaInvoice subscription error"));
 
     private async Task PayViaInvoiceAsync()
     {

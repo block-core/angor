@@ -345,33 +345,41 @@ public partial class SettingsViewModel : ReactiveObject
 
     public async void ConfirmWipeData()
     {
-        _logger.LogInformation("Wipe data requested — clearing settings and deleting all wallets");
-        IsWipeDataModalOpen = false;
-
-        // Delete all document collections (projects, investments, sync data, etc.)
-        var deleteDataResult = await _databaseManagementService.DeleteAllDataAsync();
-        if (deleteDataResult.IsFailure)
+        try
         {
-            _logger.LogError("Failed to delete application data during wipe: {Error}", deleteDataResult.Error);
-            ToastRequested?.Invoke("Wipe data failed. Please try again.");
-            return;
+            _logger.LogInformation("Wipe data requested — clearing settings and deleting all wallets");
+            IsWipeDataModalOpen = false;
+
+            // Delete all document collections (projects, investments, sync data, etc.)
+            var deleteDataResult = await _databaseManagementService.DeleteAllDataAsync();
+            if (deleteDataResult.IsFailure)
+            {
+                _logger.LogError("Failed to delete application data during wipe: {Error}", deleteDataResult.Error);
+                ToastRequested?.Invoke("Wipe data failed. Please try again.");
+                return;
+            }
+
+            // Clear settings
+            _networkStorage.SetSettings(new SettingsInfo());
+            _networkService.AddSettingsIfNotExist();
+            LoadSettingsFromSdk();
+            _logger.LogInformation("Network settings cleared and defaults re-initialized");
+
+            _signatureStore.Clear();
+            _portfolioViewModel.ResetAfterDataWipe();
+
+            // Delete all wallets and clear wallet context state
+            await _walletContext.DeleteAllAsync();
+
+            _shellViewModel.ResetAfterDataWipe();
+            _logger.LogInformation("Wipe data completed — live shell state reset");
+            ToastRequested?.Invoke("All local data was wiped successfully.");
         }
-
-        // Clear settings
-        _networkStorage.SetSettings(new SettingsInfo());
-        _networkService.AddSettingsIfNotExist();
-        LoadSettingsFromSdk();
-        _logger.LogInformation("Network settings cleared and defaults re-initialized");
-
-        _signatureStore.Clear();
-        _portfolioViewModel.ResetAfterDataWipe();
-
-        // Delete all wallets and clear wallet context state
-        await _walletContext.DeleteAllAsync();
-
-        _shellViewModel.ResetAfterDataWipe();
-        _logger.LogInformation("Wipe data completed — live shell state reset");
-        ToastRequested?.Invoke("All local data was wiped successfully.");
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ConfirmWipeData failed");
+            ToastRequested?.Invoke($"Wipe data failed: {ex.Message}");
+        }
     }
 }
 

@@ -8,6 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace App.UI.Shared.Helpers;
 
@@ -23,6 +25,9 @@ public static class ImageCacheService
     {
         Timeout = TimeSpan.FromSeconds(30)
     };
+
+    private static ILogger? _logger;
+    private static ILogger Logger => _logger ??= App.Services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(ImageCacheService));
 
     /// <summary>
     /// In-memory cache: URL → Bitmap. Once a bitmap is loaded it stays in RAM
@@ -87,8 +92,16 @@ public static class ImageCacheService
         // Slow path: download in background, dispatch result to UI thread
         Task.Run(async () =>
         {
-            var bitmap = await GetBitmapAsync(url);
-            Dispatcher.UIThread.Post(() => onLoaded(bitmap));
+            try
+            {
+                var bitmap = await GetBitmapAsync(url);
+                Dispatcher.UIThread.Post(() => onLoaded(bitmap));
+            }
+            catch (Exception ex)
+            {
+                Logger.LogWarning(ex, "LoadBitmapAsync failed for '{Url}'", url);
+                Dispatcher.UIThread.Post(() => onLoaded(null));
+            }
         });
     }
 
@@ -111,10 +124,14 @@ public static class ImageCacheService
                     MemoryCache.TryAdd(url, bitmap);
                     return bitmap;
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Corrupted cache file — delete and re-download
-                    try { File.Delete(cacheFile); } catch { /* ignore */ }
+                    Logger.LogWarning(ex, "Corrupted cache file for '{Url}'", url);
+                    try { File.Delete(cacheFile); }
+                    catch (Exception deleteEx)
+                    {
+                        Logger.LogWarning(deleteEx, "Failed to delete corrupted cache file for '{Url}'", url);
+                    }
                 }
             }
 
@@ -134,7 +151,10 @@ public static class ImageCacheService
                 {
                     File.WriteAllBytes(cacheFile, bytes);
                 }
-                catch { /* disk write failure is non-fatal */ }
+                catch (Exception ex)
+                {
+                    Logger.LogWarning(ex, "Disk write failure for cache file");
+                }
             });
 
             // 4. Decode bitmap
@@ -143,9 +163,9 @@ public static class ImageCacheService
             MemoryCache.TryAdd(url, bmp);
             return bmp;
         }
-        catch
+        catch (Exception ex)
         {
-            // Network failure, decode failure, etc. — return null (shows fallback gradient)
+            Logger.LogWarning(ex, "DownloadAndCacheAsync failed for '{Url}'", url);
             return null;
         }
     }

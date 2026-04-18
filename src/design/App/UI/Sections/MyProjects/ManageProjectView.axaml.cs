@@ -4,16 +4,20 @@ using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using App.UI.Shared.Controls;
 using App.UI.Shell;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace App.UI.Sections.MyProjects;
 
 public partial class ManageProjectView : UserControl
 {
+    private readonly ILogger<ManageProjectView> _logger;
     private ManageProjectViewModel? Vm => DataContext as ManageProjectViewModel;
 
     public ManageProjectView()
     {
         InitializeComponent();
+        _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<ManageProjectView>();
 
         // ── Wire content -> modals bridge: stage buttons open claim/spent modals ──
         var contentView = this.FindControl<ManageProjectContentView>("ContentView");
@@ -93,8 +97,15 @@ public partial class ManageProjectView : UserControl
 
     private async void OnRefreshClick(object? sender, RoutedEventArgs e)
     {
-        if (Vm != null)
-            await Vm.RefreshAsync();
+        try
+        {
+            if (Vm != null)
+                await Vm.RefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "OnRefreshClick failed");
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────
