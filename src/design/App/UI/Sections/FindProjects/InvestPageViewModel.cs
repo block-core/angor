@@ -267,6 +267,18 @@ public partial class InvestPageViewModel : ReactiveObject
         _ => Constants.InvoiceString
     };
 
+    /// <summary>
+    /// The raw address or invoice for QR code generation — null when not yet available.
+    /// Unlike InvoiceString, this does NOT fall back to PaymentStatusText so we don't
+    /// accidentally generate a QR code from "Generating invoice address...".
+    /// </summary>
+    public string? QrCodeContent => SelectedNetworkTab switch
+    {
+        NetworkTab.OnChain => OnChainAddress,
+        NetworkTab.Lightning => LightningInvoice,
+        _ => null
+    };
+
     public InvestPageViewModel(
         ProjectItemViewModel project,
         IWalletAppService walletAppService,
@@ -345,11 +357,16 @@ public partial class InvestPageViewModel : ReactiveObject
                 this.RaisePropertyChanged(nameof(InvoiceFieldLabel));
                 this.RaisePropertyChanged(nameof(InvoiceTabIcon));
                 this.RaisePropertyChanged(nameof(InvoiceString));
+                this.RaisePropertyChanged(nameof(QrCodeContent));
             });
 
-        // Address/invoice payload changes → refresh the bound text.
+        // Address/invoice payload changes → refresh the bound text and QR code.
         this.WhenAnyValue(x => x.OnChainAddress, x => x.LightningInvoice, x => x.IsGeneratingLightningInvoice)
-            .Subscribe(_ => this.RaisePropertyChanged(nameof(InvoiceString)));
+            .Subscribe(_ =>
+            {
+                this.RaisePropertyChanged(nameof(InvoiceString));
+                this.RaisePropertyChanged(nameof(QrCodeContent));
+            });
 
         // Live progress text feeds the placeholder shown before the address/invoice is ready.
         this.WhenAnyValue(x => x.PaymentStatusText)
@@ -936,6 +953,13 @@ public partial class InvestPageViewModel : ReactiveObject
 
             if (monitorResult.IsFailure)
             {
+                // If the token was cancelled (tab switch / modal close) don't surface the
+                // SDK error — the user intentionally left this path.
+                if (_invoiceMonitorCts?.IsCancellationRequested != false)
+                {
+                    _logger.LogInformation("On-chain monitoring returned failure after cancellation — suppressing error");
+                    return;
+                }
                 ErrorMessage = monitorResult.Error;
                 IsProcessing = false;
                 return;
@@ -1110,6 +1134,11 @@ public partial class InvestPageViewModel : ReactiveObject
                 monitorAddressRequest, _invoiceMonitorCts.Token);
             if (monitorAddressResult.IsFailure)
             {
+                if (_invoiceMonitorCts?.IsCancellationRequested != false)
+                {
+                    _logger.LogInformation("Lightning on-chain monitoring returned failure after cancellation — suppressing error");
+                    return;
+                }
                 ErrorMessage = monitorAddressResult.Error;
                 IsProcessing = false;
                 return;

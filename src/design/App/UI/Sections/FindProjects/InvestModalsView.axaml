@@ -5,6 +5,7 @@
              xmlns:fp="clr-namespace:App.UI.Sections.FindProjects"
              xmlns:services="clr-namespace:App.UI.Shared.Services"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
+             xmlns:shared="clr-namespace:App.UI.Shared"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
              x:Class="App.UI.Sections.FindProjects.InvestModalsView"
              x:DataType="fp:InvestPageViewModel">
@@ -333,8 +334,13 @@
                             Background="{DynamicResource DeployModalQrBg}"
                             Name="QrCodePlaceholder">
                         <Panel>
+                            <!-- Actual QR code — shown when an address or invoice is available -->
+                            <Image Width="192" Height="192" Stretch="UniformToFill"
+                                   Source="{Binding QrCodeContent, Converter={x:Static shared:QRCodeConverter.Instance}}"
+                                   IsVisible="{Binding QrCodeContent, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                            <!-- Placeholder icon — shown when no address/invoice yet and not generating -->
                             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8"
-                                        IsVisible="{Binding !IsGeneratingLightningInvoice}">
+                                        IsVisible="{Binding QrCodeContent, Converter={x:Static StringConverters.IsNullOrEmpty}}">
                                 <i:Icon Value="{Binding InvoiceTabIcon}"
                                        FontSize="48"
                                        Foreground="{DynamicResource DeployQrIconFill}"
