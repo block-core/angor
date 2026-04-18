@@ -1,12 +1,12 @@
-using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
+using App.UI.Sections.Funds;
 using App.UI.Shared;
 using App.UI.Shared.Helpers;
 using App.UI.Shared.Services;
 using App.UI.Shell;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace App.UI.Sections.FindProjects;
 
@@ -105,6 +105,41 @@ public partial class InvestModalsView : UserControl, IBackdropCloseable
     }
 
     /// <summary>
+    /// Open the CreateWalletModal pre-set to the "import" step (BIP-39 seed entry).
+    /// On dismissal (success, cancel, or backdrop) re-shows the invest modal.
+    /// If a wallet was imported, refreshes the wallet list so the new wallet appears.
+    /// </summary>
+    private void OpenImportWalletModal()
+    {
+        var shellVm = GetShellVm();
+        if (shellVm == null) return;
+
+        // Cancel any running invoice monitoring while the import dialog is up.
+        Vm?.SelectNetworkTab(NetworkTab.OnChain);
+
+        var fundsVm = global::App.App.Services.GetRequiredService<FundsViewModel>();
+        var modal = new CreateWalletModal { DataContext = fundsVm };
+
+        // Skip the choice step — go straight to seed import.
+        modal.ShowStep("import");
+
+        modal.OnDismissed = async walletCreated =>
+        {
+            if (walletCreated)
+            {
+                // Reload wallets so the new one appears in the wallet selector / invoice flow.
+                var walletContext = global::App.App.Services.GetRequiredService<IWalletContext>();
+                await walletContext.ReloadAsync();
+            }
+
+            // Re-show the invest modal so the user can continue the flow.
+            shellVm.ShowModal(this);
+        };
+
+        shellVm.ShowModal(modal);
+    }
+
+    /// <summary>
     /// Show fee selection popup, then proceed with wallet payment using the selected fee rate.
     /// Follows the same hide-modal/show-popup/re-show-modal pattern used in DeployFlowOverlay and SendFundsModal.
     /// </summary>
@@ -138,7 +173,11 @@ public partial class InvestModalsView : UserControl, IBackdropCloseable
             if (source is Border b && !string.IsNullOrEmpty(b.Name))
             {
                 var name = b.Name;
-                if (name == "WalletBorder" || name == "QrCodePlaceholder")
+                if (name == "WalletBorder"
+                    || name == "OnChainTabBorder"
+                    || name == "LightningTabBorder"
+                    || name == "LiquidTabBorder"
+                    || name == "ImportTabBorder")
                 {
                     found = b;
                     foundName = name;
@@ -161,8 +200,16 @@ public partial class InvestModalsView : UserControl, IBackdropCloseable
                 }
                 break;
 
-            case "QrCodePlaceholder":
-                Vm?.PayViaInvoice();
+            case "OnChainTabBorder":
+                Vm?.SelectNetworkTab(NetworkTab.OnChain);
+                e.Handled = true;
+                break;
+            case "LightningTabBorder":
+                Vm?.SelectNetworkTab(NetworkTab.Lightning);
+                e.Handled = true;
+                break;
+            case "ImportTabBorder":
+                OpenImportWalletModal();
                 e.Handled = true;
                 break;
         }
