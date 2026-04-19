@@ -226,6 +226,8 @@ jobs:
     defaults:
       run:
         working-directory: src
+    env:
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
     steps:
       - uses: actions/checkout@v4
       
@@ -238,12 +240,12 @@ jobs:
         run: dotnet workload install android
       
       - name: Decode keystore
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        if: env.HAS_KEYSTORE == 'true'
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > ${{ github.workspace }}/android.keystore
       
       - name: Build signed APK
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        if: env.HAS_KEYSTORE == 'true'
         run: |
           dotnet publish design/App.Android/App.Android.csproj \
             -c Release \
@@ -259,7 +261,7 @@ jobs:
             -o ${{ github.workspace }}/artifacts/
       
       - name: Build unsigned APK
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 == '' }}
+        if: env.HAS_KEYSTORE != 'true'
         run: |
           dotnet publish design/App.Android/App.Android.csproj \
             -c Release \
