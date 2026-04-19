@@ -247,12 +247,12 @@
 
         <!-- ═══ CREATE PROJECT WIZARD ═══ -->
         <Panel Name="CreateWizardPanel" IsVisible="False">
-            <mp:CreateProjectView Name="CreateWizardView" />
+            <mp:CreateProjectView Name="CreateWizardView" DataContext="{x:Null}" />
         </Panel>
 
         <!-- ═══ MANAGE PROJECT DETAIL ═══ -->
         <Panel Name="ManageProjectPanel" IsVisible="False">
-            <mp:ManageProjectView Name="ManageProjectViewControl" />
+            <mp:ManageProjectView Name="ManageProjectViewControl" DataContext="{x:Null}" />
         </Panel>
     </Panel>
 </UserControl>

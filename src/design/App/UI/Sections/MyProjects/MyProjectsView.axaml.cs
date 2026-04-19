@@ -18,21 +18,13 @@ public partial class MyProjectsView : UserControl
     {
         InitializeComponent();
 
-        // TODO: Perf — this line takes ~10s. When DataContext is set, all AXAML bindings
-        // resolve and child controls are instantiated. Suspected causes:
-        //   1. Svg control loading /Assets/logo.svg synchronously
-        //   2. CreateProjectViewModel constructor (12 Rx subscriptions, some fire immediately)
-        //   3. DeployFlowViewModel constructor (2 ReactiveCommands + 3 Rx subscriptions)
-        //   4. ManageProjectModalsView with 29 FindControl calls in its constructor
-        //   5. Large visual tree (~4000 AXAML lines across embedded child views)
-        // Neither CreateProjectViewModel nor DeployFlowViewModel implements IDisposable,
-        // so subscriptions leak on every navigation. All three VMs are transient.
-        DataContext = vm;
-
-        // Set the create wizard's DataContext from the parent VM
-        // (CreateProjectView is XAML-embedded, so it can't use constructor injection)
+        // Set the wizard's DataContext before the parent's to avoid DataContext inheritance.
+        // The child views have DataContext="{x:Null}" in XAML to block propagation;
+        // without this, ~100 compiled-binding InvalidCastExceptions fire on every construction.
         if (CreateWizardView != null)
             CreateWizardView.DataContext = vm.CreateProjectVm;
+
+        DataContext = vm;
 
         _subscriptions = new CompositeDisposable();
 
