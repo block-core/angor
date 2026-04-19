@@ -219,6 +219,8 @@ public class OneClickInvestLightningTest
 
         var firstEntry = portfolioVm.Investments[0];
         firstEntry.ProjectIdentifier.Should().Be(project.ProjectId);
+        firstEntry.StatusText.Should().Contain("Active",
+            "below-threshold Fund investment should be auto-approved as active");
 
         // Simulate the race: add same project again (as if SDK load returned it)
         portfolioVm.AddInvestmentFromProject(project, "0.00100000");

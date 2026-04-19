@@ -115,6 +115,9 @@ public class OneClickInvestOnChainTest
         vm.InvoiceTabIcon.Should().Contain("bolt");
 
         // The critical bug fix: on-chain monitoring error must not bleed through.
+        // The Lightning path may set its own error (e.g. "No wallet available for Lightning swap")
+        // which is fine — what matters is the on-chain monitoring error is gone.
+        // Give a moment for any racing cancelled-monitor result to arrive.
         await PumpUntilAsync(
             () => !string.IsNullOrEmpty(vm.ErrorMessage) || vm.LightningInvoice != null,
             TimeSpan.FromSeconds(5));
@@ -134,6 +137,8 @@ public class OneClickInvestOnChainTest
 
         vm.SelectedNetworkTab.Should().Be(NetworkTab.OnChain);
         vm.IsOnChainTab.Should().BeTrue();
+        // The on-chain flow starts but may complete instantly (no wallet → immediate error),
+        // so we only verify the tab switched correctly.
 
         // ── Step 7: CloseModal resets everything ──
         Log("[7] CloseModal resets all state...");
