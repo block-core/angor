@@ -621,6 +621,13 @@
                     </StackPanel>
                 </Border>
 
+                <!-- ═══ App Version ═══ -->
+                <TextBlock Text="{Binding AppVersion, StringFormat='Version {0}'}"
+                           FontSize="12"
+                           Foreground="{DynamicResource TextMuted}"
+                           HorizontalAlignment="Center"
+                           Margin="0,8,0,0" />
+
             </StackPanel>
         </controls:ScrollableView>
 

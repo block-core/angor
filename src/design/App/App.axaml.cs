@@ -40,6 +40,10 @@ public partial class App : Application
         {
             lifetime.MainWindow = new MainWindow();
         }
+        else if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
+        {
+            singleView.MainView = new ShellView();
+        }
 
         base.OnFrameworkInitializationCompleted();
     }

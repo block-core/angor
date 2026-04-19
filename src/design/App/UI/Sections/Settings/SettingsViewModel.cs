@@ -33,7 +33,27 @@ public partial class SettingsViewModel : ReactiveObject
     private readonly ShellViewModel _shellViewModel;
     private readonly ILogger<SettingsViewModel> _logger;
 
+    public string AppVersion { get; } = GetVersion();
+
     public event Action<string>? ToastRequested;
+
+    private static string GetVersion()
+    {
+        var assembly = typeof(SettingsViewModel).Assembly;
+        var informational = (System.Reflection.AssemblyInformationalVersionAttribute?)
+            System.Reflection.CustomAttributeExtensions.GetCustomAttribute(
+                assembly, typeof(System.Reflection.AssemblyInformationalVersionAttribute));
+        if (informational != null)
+        {
+            var ver = informational.InformationalVersion;
+            // Strip source commit hash suffix (e.g. "1.2.3+abc123")
+            var plusIndex = ver.IndexOf('+');
+            return plusIndex >= 0 ? ver[..plusIndex] : ver;
+        }
+
+        var version = assembly.GetName().Version;
+        return version != null ? version.ToString(3) : "0.0.0";
+    }
 
     [Reactive] private string networkType;
     [Reactive] private bool isNetworkModalOpen;
