@@ -56,7 +56,7 @@ jobs:
         run: dotnet restore design/App.Desktop/App.Desktop.csproj
       
       - name: Build
-        run: dotnet build design/App.Desktop/App.Desktop.csproj --no-restore -c Release -p:Version=${{ needs.prepare.outputs.version }}
+        run: dotnet build design/App.Desktop/App.Desktop.csproj --no-restore -c Release
       
       - name: Test
         run: dotnet test sdk/Angor.Sdk.Tests/Angor.Sdk.Tests.csproj -c Release --verbosity normal
