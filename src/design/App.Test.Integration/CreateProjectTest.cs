@@ -441,6 +441,9 @@ public class CreateProjectTest
         TestHelpers.Log($"[STEP 8] Target amount: {sdkTargetBtc} BTC (expected: {targetAmountBtc})");
 
         // 8c. Fetch the full ProjectDto from IProjectAppService to validate stages
+        // DIRECT SDK CALL: No ViewModel exposes the raw ProjectDto with stage configuration.
+        // We need it to validate that stages, target amount, and metadata persisted correctly
+        // after the create-project wizard completed via the UI.
         TestHelpers.Log("[STEP 8] Fetching full ProjectDto from SDK for stage validation...");
         var projectAppService = global::App.App.Services.GetRequiredService<IProjectAppService>();
         var walletAppService = global::App.App.Services.GetRequiredService<Angor.Sdk.Wallet.Application.IWalletAppService>();
