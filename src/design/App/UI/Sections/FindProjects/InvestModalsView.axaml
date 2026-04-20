@@ -3,8 +3,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:fp="clr-namespace:App.UI.Sections.FindProjects"
-             xmlns:deploy="clr-namespace:App.UI.Sections.MyProjects.Deploy"
+             xmlns:services="clr-namespace:App.UI.Shared.Services"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
+             xmlns:shared="clr-namespace:App.UI.Shared"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
              x:Class="App.UI.Sections.FindProjects.InvestModalsView"
              x:DataType="fp:InvestPageViewModel">
@@ -26,6 +27,22 @@
             <Setter Property="Background" Value="{DynamicResource DeployWalletSelectedBg}" />
             <Setter Property="BorderBrush" Value="{DynamicResource DeployWalletSelectedBorder}" />
         </Style>
+        <!-- Network tab selection — Selected class is bound to VM's per-tab booleans
+             via Classes.Selected="{Binding IsXxxTab}". -->
+        <Style Selector="Border.NetworkTab">
+            <Setter Property="BorderBrush" Value="{DynamicResource Border}" />
+            <Setter Property="Background" Value="{DynamicResource DeployTabUnselectedBg}" />
+        </Style>
+        <Style Selector="Border.NetworkTab.Selected">
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
+            <Setter Property="Background" Value="{DynamicResource DeployTabSelectedBg}" />
+        </Style>
+        <Style Selector="Border.NetworkTab > TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource DeployTabUnselectedText}" />
+        </Style>
+        <Style Selector="Border.NetworkTab.Selected > TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
     </UserControl.Styles>
     <Panel>
         <!-- Note: Shell provides the backdrop (ShellModalBackdrop in ShellView.axaml).
@@ -37,8 +54,8 @@
         <!-- Vue: max-w-md, Use an Existing Wallet, wallet list            -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsWalletSelector}"
-                HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                MinWidth="320" MaxWidth="1030" MaxHeight="720" Margin="16"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                MinWidth="448" MaxWidth="480"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"
@@ -79,11 +96,17 @@
                                            Foreground="{DynamicResource TextMuted}"
                                            VerticalAlignment="Center"
                                            HorizontalAlignment="Left" />
-                                <TextBlock Text="{Binding FormattedAmount, StringFormat='{}{0} BTC'}"
-                                           FontSize="18" FontWeight="Bold"
+                                <TextBlock FontSize="18" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}"
                                            VerticalAlignment="Center"
-                                           HorizontalAlignment="Right" />
+                                           HorizontalAlignment="Right">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}{0} {1}">
+                                            <Binding Path="FormattedAmount" />
+                                            <Binding Path="CurrencySymbol" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
                             </Panel>
                         </Border>
                     </StackPanel>
@@ -96,6 +119,20 @@
                         BorderBrush="{DynamicResource DeployModalBorder}"
                         Background="{DynamicResource DeployModalBackground}">
                     <StackPanel Spacing="12">
+                        <!-- Error banner — shown when an SDK operation fails -->
+                        <Border IsVisible="{Binding HasError}"
+                                CornerRadius="8" Padding="12"
+                                Background="#1aef4444"
+                                BorderBrush="#ef4444" BorderThickness="1">
+                            <Grid ColumnDefinitions="Auto,*">
+                                <i:Icon Grid.Column="0" Value="fa-solid fa-circle-exclamation"
+                                        FontSize="16" Foreground="#ef4444"
+                                        VerticalAlignment="Top" Margin="0,1,8,0" />
+                                <TextBlock Grid.Column="1" Text="{Binding ErrorMessage}"
+                                           FontSize="13" Foreground="#ef4444"
+                                           TextWrapping="Wrap" />
+                            </Grid>
+                        </Border>
                         <!-- Primary: Pay with wallet -->
                         <Button Name="PayWithWalletButton" HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Center"
@@ -160,7 +197,7 @@
                     <StackPanel Margin="24" Spacing="0">
                         <ItemsControl ItemsSource="{Binding Wallets}">
                             <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="deploy:WalletItem">
+                                <DataTemplate x:DataType="services:WalletInfo">
                                     <Border Name="WalletBorder" Classes="WalletCard"
                                             CornerRadius="8" Padding="16"
                                             Margin="0,0,0,8"
@@ -182,7 +219,7 @@
                                                 <TextBlock Text="{Binding Name}"
                                                            FontSize="14" FontWeight="SemiBold"
                                                            Foreground="{DynamicResource TextStrong}" />
-                                                <TextBlock Text="{Binding Network}"
+                                                <TextBlock Text="{Binding WalletType}"
                                                            FontSize="13"
                                                            Foreground="{DynamicResource TextMuted}" />
                                             </StackPanel>
@@ -216,8 +253,8 @@
         <!-- Vue: max-w-md, Pay Invoice, network tabs, QR, address        -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsInvoice}"
-                HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                MinWidth="320" MaxWidth="1030" MaxHeight="720" Margin="16"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                MinWidth="448" MaxWidth="480"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"
@@ -244,64 +281,107 @@
                             HorizontalAlignment="Right" VerticalAlignment="Top" />
                 </Panel>
 
-                <!-- Network tabs: 4-column grid (Lightning selected, On-Chain, Liquid, Import) -->
-                <Grid ColumnDefinitions="*,*,*,*" Margin="0,0,0,16">
+                <!-- Error banner — surfaces any SDK failure (no-wallet, Boltz unreachable, etc.).
+                     Without this, failures inside PayViaInvoice/Lightning are invisible and the
+                     placeholder text just looks frozen. -->
+                <Border IsVisible="{Binding HasError}"
+                        CornerRadius="8" Padding="12" Margin="0,0,0,16"
+                        Background="#1aef4444"
+                        BorderBrush="#ef4444" BorderThickness="1">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <i:Icon Grid.Column="0" Value="fa-solid fa-circle-exclamation"
+                                FontSize="16" Foreground="#ef4444"
+                                VerticalAlignment="Top" Margin="0,1,8,0" />
+                        <TextBlock Grid.Column="1" Text="{Binding ErrorMessage}"
+                                   FontSize="13" Foreground="#ef4444"
+                                   TextWrapping="Wrap" />
+                    </Grid>
+                </Border>
+
+                <!-- Network tabs: On-Chain (default) | Lightning | Import.
+                     Click handlers in code-behind read the Border name and call Vm.SelectNetworkTab(...).
+                     Liquid is hidden for now (no SDK wiring yet). -->
+                <Grid ColumnDefinitions="*,*,*" Margin="0,0,0,16">
                     <Grid.ColumnSpacing>8</Grid.ColumnSpacing>
-                    <Border Grid.Column="0" CornerRadius="12" Padding="12,8"
-                            BorderThickness="2" BorderBrush="{DynamicResource PrimaryGreenBrush}"
-                            Background="{DynamicResource DeployTabSelectedBg}">
-                        <TextBlock Text="Lightning" FontSize="13" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextStrong}"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-                    <Border Grid.Column="1" CornerRadius="12" Padding="12,8"
-                            BorderThickness="2" BorderBrush="{DynamicResource Border}"
-                            Background="{DynamicResource DeployTabUnselectedBg}">
+                    <Border Grid.Column="0" Name="OnChainTabBorder" Classes="NetworkTab"
+                            Classes.Selected="{Binding IsOnChainTab}"
+                            CornerRadius="12" Padding="12,8" BorderThickness="2" Cursor="Hand">
                         <TextBlock Text="On-Chain" FontSize="13" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource DeployTabUnselectedText}"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
-                    <Border Grid.Column="2" CornerRadius="12" Padding="12,8"
-                            BorderThickness="2" BorderBrush="{DynamicResource Border}"
-                            Background="{DynamicResource DeployTabUnselectedBg}">
-                        <TextBlock Text="Liquid" FontSize="13" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource DeployTabUnselectedText}"
+                    <Border Grid.Column="1" Name="LightningTabBorder" Classes="NetworkTab"
+                            Classes.Selected="{Binding IsLightningTab}"
+                            CornerRadius="12" Padding="12,8" BorderThickness="2" Cursor="Hand">
+                        <TextBlock Text="Lightning" FontSize="13" FontWeight="SemiBold"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
-                    <Border Grid.Column="3" CornerRadius="12" Padding="12,8"
-                            BorderThickness="2" BorderBrush="{DynamicResource Border}"
-                            Background="{DynamicResource DeployTabUnselectedBg}">
+                    <Border Grid.Column="2" Name="ImportTabBorder" Classes="NetworkTab"
+                            Classes.Selected="{Binding IsImportTab}"
+                            CornerRadius="12" Padding="12,8" BorderThickness="2" Cursor="Hand">
                         <TextBlock Text="Import" FontSize="13" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource DeployTabUnselectedText}"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                 </Grid>
 
-                <!-- QR Code placeholder: 192x192, border-4 frame -->
+                <!-- QR Code placeholder: 192x192, border-4 frame.
+                     Icon flips per tab (bitcoin / bolt / droplet / import).
+                     A spinner overlays it while CreateLightningSwap is in flight. -->
                 <Border HorizontalAlignment="Center" Margin="0,0,0,16"
                         Padding="16" CornerRadius="16"
                         BorderThickness="4" BorderBrush="{DynamicResource DeployQrBorder}"
                         Background="{DynamicResource DeployModalInputBg}">
                     <Border Width="192" Height="192" CornerRadius="8"
                             Background="{DynamicResource DeployModalQrBg}"
-                            Name="QrCodePlaceholder" Cursor="Hand">
-                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8">
-                            <i:Icon Value="fa-solid fa-bolt"
-                                   FontSize="48"
-                                   Foreground="{DynamicResource DeployQrIconFill}"
-                                   HorizontalAlignment="Center" />
-                            <TextBlock Text="QR Code" FontSize="13"
+                            Name="QrCodePlaceholder">
+                        <Panel>
+                            <!-- Actual QR code — shown when an address or invoice is available -->
+                            <Image Width="192" Height="192" Stretch="UniformToFill"
+                                   Source="{Binding QrCodeContent, Converter={x:Static shared:QRCodeConverter.Instance}}"
+                                   IsVisible="{Binding QrCodeContent, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                            <!-- Placeholder icon — shown when no address/invoice yet and not generating -->
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8"
+                                        IsVisible="{Binding QrCodeContent, Converter={x:Static StringConverters.IsNullOrEmpty}}">
+                                <i:Icon Value="{Binding InvoiceTabIcon}"
+                                       FontSize="48"
                                        Foreground="{DynamicResource DeployQrIconFill}"
                                        HorizontalAlignment="Center" />
-                        </StackPanel>
+                                <TextBlock Text="QR Code" FontSize="13"
+                                           Foreground="{DynamicResource DeployQrIconFill}"
+                                           HorizontalAlignment="Center" />
+                            </StackPanel>
+                            <!-- Spinner shown only while Boltz swap is being created. -->
+                            <i:Icon Value="fa-solid fa-spinner" FontSize="32"
+                                    Foreground="{DynamicResource DeployQrIconFill}"
+                                    IsVisible="{Binding IsGeneratingLightningInvoice}"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                                    RenderTransformOrigin="50%,50%">
+                                <i:Icon.RenderTransform>
+                                    <RotateTransform />
+                                </i:Icon.RenderTransform>
+                                <i:Icon.Styles>
+                                    <Style Selector="i|Icon[IsVisible=True]">
+                                        <Style.Animations>
+                                            <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                <KeyFrame Cue="0%">
+                                                    <Setter Property="RotateTransform.Angle" Value="0" />
+                                                </KeyFrame>
+                                                <KeyFrame Cue="100%">
+                                                    <Setter Property="RotateTransform.Angle" Value="360" />
+                                                </KeyFrame>
+                                            </Animation>
+                                        </Style.Animations>
+                                    </Style>
+                                </i:Icon.Styles>
+                            </i:Icon>
+                        </Panel>
                     </Border>
                 </Border>
 
-                <!-- Address/Invoice display -->
+                <!-- Address/Invoice display — label flips with the active tab. -->
                 <Border Margin="0,0,0,12" CornerRadius="8" Padding="12"
                         Background="{DynamicResource DeployModalInputBg}">
                     <StackPanel Spacing="6">
-                        <TextBlock Text="Lightning Invoice"
+                        <TextBlock Text="{Binding InvoiceFieldLabel}"
                                    FontSize="12"
                                    Foreground="{DynamicResource DeployTabUnselectedText}" />
                         <Grid ColumnDefinitions="*,Auto">
@@ -361,8 +441,8 @@
         <!-- Vue: max-w-md, green check, title, description, button        -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsSuccess}"
-                HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                MinWidth="320" MaxWidth="1030" MaxHeight="720" Margin="16"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                MinWidth="448" MaxWidth="480"
                 CornerRadius="16"
                 Background="{DynamicResource DeploySuccessBg}"
                 BoxShadow="0 8 32 0 #40000000"

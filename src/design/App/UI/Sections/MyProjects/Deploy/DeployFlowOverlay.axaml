@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:deploy="clr-namespace:App.UI.Sections.MyProjects.Deploy"
+             xmlns:services="clr-namespace:App.UI.Shared.Services"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="700"
              x:Class="App.UI.Sections.MyProjects.Deploy.DeployFlowOverlay"
@@ -44,8 +45,8 @@
         <!-- rounded-2xl shadow-2xl max-w-md -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsWalletSelector}"
-                HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                MinWidth="320" MaxWidth="1030" MaxHeight="720" Margin="16"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                MinWidth="448" MaxWidth="480"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"
@@ -165,9 +166,30 @@
                 <!-- Wallet list: p-6, space-y-3 (Vue: 12px gap) -->
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="24" Spacing="0">
+                        <Border IsVisible="{Binding HasDeployError}"
+                                Margin="0,0,0,16"
+                                Padding="12"
+                                CornerRadius="8"
+                                Background="{DynamicResource ErrorBannerBg}"
+                                BorderBrush="{DynamicResource ErrorBannerBorder}"
+                                BorderThickness="1">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <i:Icon Value="fa-solid fa-circle-exclamation"
+                                        FontSize="14"
+                                        Foreground="{DynamicResource ErrorBannerText}"
+                                        VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding DeployErrorMessage}"
+                                           FontSize="13"
+                                           FontWeight="Medium"
+                                           Foreground="{DynamicResource ErrorBannerText}"
+                                           TextWrapping="Wrap"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+
                         <ItemsControl ItemsSource="{Binding Wallets}">
                             <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="deploy:WalletItem">
+                                <DataTemplate x:DataType="services:WalletInfo">
                                     <!-- Wallet item: w-full p-4 rounded-lg border-2 text-left
                                          Vue: space-y-3 → 12px gap, but user wants 8px -->
                                     <Border Name="WalletBorder" Classes="WalletCard"
@@ -192,7 +214,7 @@
                                                 <TextBlock Text="{Binding Name}"
                                                            FontSize="14" FontWeight="SemiBold"
                                                            Foreground="{DynamicResource TextStrong}" />
-                                                <TextBlock Text="{Binding Network}"
+                                                <TextBlock Text="{Binding WalletType}"
                                                            FontSize="13"
                                                            Foreground="{DynamicResource TextMuted}" />
                                             </StackPanel>
@@ -229,8 +251,8 @@
         <!-- rounded-2xl shadow-2xl max-w-md, p-6                       -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsPayFee}"
-                HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                MinWidth="320" MaxWidth="1030" MaxHeight="720" Margin="16"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                MinWidth="448" MaxWidth="480"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"
@@ -361,7 +383,7 @@
                             <TextBlock Text="Fee to deploy"
                                        FontSize="12"
                                        Foreground="{DynamicResource DeployFeeLabel}" />
-                            <TextBlock Text="0.0001 BTC"
+                            <TextBlock Text="{Binding DeployFee}"
                                        FontSize="20" FontWeight="Bold"
                                        Foreground="{DynamicResource DeployFeeValue}" />
                         </StackPanel>
@@ -392,8 +414,8 @@
         <!-- rounded-2xl shadow-2xl max-w-md p-8                        -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsSuccess}"
-                HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                MinWidth="320" MaxWidth="1030" MaxHeight="720" Margin="16"
+                HorizontalAlignment="Center" VerticalAlignment="Center"
+                MinWidth="448" MaxWidth="480"
                 CornerRadius="16"
                 Background="{DynamicResource DeploySuccessBg}"
                 BoxShadow="0 8 32 0 #40000000"

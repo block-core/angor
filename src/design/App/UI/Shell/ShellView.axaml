@@ -299,7 +299,6 @@
                             Foreground="White"
                             FontWeight="SemiBold" FontSize="14"
                             Cursor="Hand"
-                            IsEnabled="{Binding InvestorCtaEnabled}"
                             Click="OnInvestorCtaClick">
                         <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
                             <i:Icon Value="fa-solid fa-bitcoin-sign" FontSize="16" Foreground="White" />

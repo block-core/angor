@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:fp="clr-namespace:App.UI.Sections.FindProjects"
              xmlns:controls="clr-namespace:App.UI.Shared.Controls"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="800"
              x:Class="App.UI.Sections.FindProjects.FindProjectsView"
              x:DataType="fp:FindProjectsViewModel">
@@ -37,9 +38,59 @@
         <!-- investor+raised, target, progress bar.                  -->
         <!-- ═══════════════════════════════════════════════════════ -->
         <controls:ScrollableView Name="ProjectListPanel" ContentPadding="24,24,24,24">
-            <Panel>
-                <ItemsControl ItemsSource="{Binding Projects}"
-                              IsVisible="{Binding !IsLoading}">
+            <StackPanel Spacing="16">
+                <!-- Header with refresh button -->
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0"
+                               Text="Discover Projects"
+                               FontSize="20" FontWeight="Bold"
+                               VerticalAlignment="Center" />
+                    <Button Name="RefreshProjectsButton" Grid.Column="1"
+                            Classes="Primary"
+                            Padding="12,8"
+                            VerticalAlignment="Center"
+                            IsEnabled="{Binding !IsLoading}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <!-- Normal state: refresh icon -->
+                            <i:Icon Value="fa-solid fa-arrows-rotate"
+                                    FontSize="14"
+                                    IsVisible="{Binding !IsLoading}"
+                                    Foreground="{DynamicResource PrimaryButtonForeground}"
+                                    VerticalAlignment="Center" />
+                            <!-- Loading state: spinning icon -->
+                            <i:Icon Value="fa-solid fa-spinner"
+                                    FontSize="14"
+                                    IsVisible="{Binding IsLoading}"
+                                    Foreground="{DynamicResource PrimaryButtonForeground}"
+                                    VerticalAlignment="Center"
+                                    RenderTransformOrigin="50%,50%">
+                                <i:Icon.RenderTransform>
+                                    <RotateTransform />
+                                </i:Icon.RenderTransform>
+                                <i:Icon.Styles>
+                                    <Style Selector="i|Icon[IsVisible=True]">
+                                        <Style.Animations>
+                                            <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                <KeyFrame Cue="0%">
+                                                    <Setter Property="RotateTransform.Angle" Value="0" />
+                                                </KeyFrame>
+                                                <KeyFrame Cue="100%">
+                                                    <Setter Property="RotateTransform.Angle" Value="360" />
+                                                </KeyFrame>
+                                            </Animation>
+                                        </Style.Animations>
+                                    </Style>
+                                </i:Icon.Styles>
+                            </i:Icon>
+                            <TextBlock Text="Refresh"
+                                       VerticalAlignment="Center"
+                                       FontSize="13" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <!-- Project cards in responsive grid -->
+                <ItemsControl ItemsSource="{Binding Projects}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <controls:ResponsiveGrid MinItemWidth="320"
@@ -61,39 +112,12 @@
                                 ProjectType="{Binding ProjectType}"
                                 Status="{Binding Status}"
                                 Banner="{Binding BannerUrl}"
-                                Avatar="{Binding AvatarUrl}" />
+                                Avatar="{Binding AvatarUrl}"
+                                CurrencySymbol="{Binding $parent[UserControl].DataContext.CurrencySymbol}" />
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-
-                <!-- Loading state -->
-                <StackPanel IsVisible="{Binding IsLoading}"
-                            HorizontalAlignment="Center" VerticalAlignment="Center"
-                            Spacing="12" Margin="0,64,0,0">
-                    <ProgressBar IsIndeterminate="True" Width="180" Height="4"
-                                 Foreground="{DynamicResource PrimaryGreenBrush}" />
-                    <TextBlock Text="Loading projects…"
-                               FontSize="14"
-                               Foreground="{DynamicResource TextMuted}"
-                               HorizontalAlignment="Center" />
-                </StackPanel>
-
-                <!-- Empty state: shown when projects list is empty (also covers IsLoading=true
-                     briefly, but the loading StackPanel overlays it while loading). -->
-                <StackPanel IsVisible="{Binding IsEmpty}"
-                            HorizontalAlignment="Center" VerticalAlignment="Center"
-                            Spacing="8" Margin="24,64,24,0">
-                    <TextBlock Text="No projects found"
-                               FontSize="16" FontWeight="SemiBold"
-                               Foreground="{DynamicResource TextStrong}"
-                               HorizontalAlignment="Center" />
-                    <TextBlock Text="Check your connection or try again in a moment."
-                               FontSize="13"
-                               Foreground="{DynamicResource TextMuted}"
-                               TextAlignment="Center"
-                               TextWrapping="Wrap" />
-                </StackPanel>
-            </Panel>
+            </StackPanel>
         </controls:ScrollableView>
     </Panel>
 </UserControl>
