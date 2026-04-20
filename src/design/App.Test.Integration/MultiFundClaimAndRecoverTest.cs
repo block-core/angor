@@ -611,6 +611,35 @@ public class MultiFundClaimAndRecoverTest
             () => portfolioVm.PenaltyReleaseFundsAsync(investment).ContinueWith(t => t.Result.Success),
             () => LogRecoveryBuildDiagnostics(investment, RecoveryAction.PenaltyRelease));
         penaltyReleaseResult.Should().BeTrue();
+
+        // #16 regression: after penalty release, stages should show "Recovered after penalty" or "Spent by investor" (not blank)
+        Log(profileName, "Verifying stage statuses after penalty release...");
+        var statusDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        while (DateTime.UtcNow < statusDeadline)
+        {
+            await portfolioVm.LoadRecoveryStatusAsync(investment);
+            Dispatcher.UIThread.RunJobs();
+
+            var recoveredStages = investment.Stages
+                .Where(s => s.Status == "Recovered after penalty" || s.Status == "Spent by investor")
+                .ToList();
+
+            if (recoveredStages.Count > 0)
+            {
+                Log(profileName, $"Found {recoveredStages.Count} stage(s) with recovered status: {string.Join(", ", recoveredStages.Select(s => $"stage {s.StageNumber}='{s.Status}'"))}");
+                // Verify the UI helper recognizes them as recovered
+                foreach (var stage in recoveredStages)
+                {
+                    stage.IsStatusRecovered.Should().BeTrue($"stage {stage.StageNumber} with status '{stage.Status}' should be recognized as recovered");
+                }
+                break;
+            }
+
+            await Task.Delay(PollInterval);
+        }
+
+        investment.Stages.Any(s => s.Status == "Recovered after penalty" || s.Status == "Spent by investor").Should().BeTrue(
+            "at least one stage should show 'Recovered after penalty' or 'Spent by investor' after penalty release");
     }
 
     private async Task RecoverBelowThresholdInvestmentAsync(Window window, string profileName, ProjectHandle project)

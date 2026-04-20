@@ -76,7 +76,7 @@ public class InvestmentStageViewModel
     public bool IsStatusPending => Status == "Pending";
     public bool IsStatusReleased => Status == "Released" || Status == "Spent by founder";
     public bool IsStatusNotSpent => Status == "Not Spent";
-    public bool IsStatusRecovered => Status == "Recovered" || Status == "Recovered (In Penalty)" || Status == "In Penalty" || Status == "Penalty can be released" || Status.StartsWith("Penalty,");
+    public bool IsStatusRecovered => Status == "Recovered" || Status == "Recovered (In Penalty)" || Status == "Recovered after penalty" || Status == "In Penalty" || Status == "Penalty can be released" || Status == "Spent by investor" || Status == "Project Unfunded, Spent back to investor" || Status.StartsWith("Penalty,");
 }
 
 /// <summary>

@@ -644,6 +644,34 @@ public class MultiInvestClaimAndRecoverTest
             () => portfolioVm.ReleaseFundsAsync(investment).ContinueWith(t => t.Result.Success),
             () => LogUnfundedReleaseBuildDiagnostics(investment));
         releaseResult.Should().BeTrue();
+
+        // #16 regression: after release, stages should show "Spent by investor" or "Recovered after penalty" (not blank)
+        Log(profileName, "Verifying stage statuses after unfunded release...");
+        var statusDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        while (DateTime.UtcNow < statusDeadline)
+        {
+            await portfolioVm.LoadRecoveryStatusAsync(investment);
+            Dispatcher.UIThread.RunJobs();
+
+            var recoveredStages = investment.Stages
+                .Where(s => s.Status == "Spent by investor" || s.Status == "Recovered after penalty" || s.Status == "Project Unfunded, Spent back to investor")
+                .ToList();
+
+            if (recoveredStages.Count > 0)
+            {
+                Log(profileName, $"Found {recoveredStages.Count} stage(s) with recovered status: {string.Join(", ", recoveredStages.Select(s => $"stage {s.StageNumber}='{s.Status}'"))}");
+                foreach (var stage in recoveredStages)
+                {
+                    stage.IsStatusRecovered.Should().BeTrue($"stage {stage.StageNumber} with status '{stage.Status}' should be recognized as recovered");
+                }
+                break;
+            }
+
+            await Task.Delay(PollInterval);
+        }
+
+        investment.Stages.Any(s => s.Status == "Spent by investor" || s.Status == "Recovered after penalty" || s.Status == "Project Unfunded, Spent back to investor").Should().BeTrue(
+            "at least one stage should show a recovered status after release");
     }
 
     private async Task<bool> ExecuteActionWithRetry(
