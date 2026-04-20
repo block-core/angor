@@ -98,10 +98,14 @@ public partial class PortfolioView : UserControl
 
         if (DataContext is PortfolioViewModel vm)
         {
+            vm.ToastRequested -= OnToastRequested;
+            _visibilitySubscription = System.Reactive.Disposables.Disposable.Create(() => vm.ToastRequested -= OnToastRequested);
+            vm.ToastRequested += OnToastRequested;
+
             // Portfolio list is visible when: HasInvestments AND no detail selected.
             // HasInvestments is handled by XAML binding; here we also hide when
             // SelectedInvestment is set (drill-down to detail view).
-            _visibilitySubscription = vm.WhenAnyValue(
+            var visibilitySub = vm.WhenAnyValue(
                 x => x.HasInvestments,
                 x => x.SelectedInvestment,
                 (hasInvestments, selected) => (hasInvestments, selected))
@@ -118,7 +122,15 @@ public partial class PortfolioView : UserControl
                   if (shell?.DataContext is ShellViewModel shellVm)
                       shellVm.IsInvestmentDetailOpen = selected != null;
               });
+
+            _visibilitySubscription = new System.Reactive.Disposables.CompositeDisposable(_visibilitySubscription, visibilitySub);
         }
+    }
+
+    private void OnToastRequested(string message)
+    {
+        var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
+        shellVm?.ShowToast(message);
     }
 
     protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
@@ -140,11 +152,20 @@ public partial class PortfolioView : UserControl
 
     private void OnButtonClick(object? sender, RoutedEventArgs e)
     {
-        if (e.Source is Button btn && btn.Name == "ManageButton" &&
-            btn.Tag is InvestmentViewModel investment &&
-            DataContext is PortfolioViewModel vm)
+        if (e.Source is not Button btn) return;
+
+        switch (btn.Name)
         {
-            vm.OpenInvestmentDetail(investment);
+            case "RefreshButton":
+                if (DataContext is PortfolioViewModel refreshVm)
+                    _ = refreshVm.LoadInvestmentsFromSdkAsync();
+                e.Handled = true;
+                break;
+
+            case "ManageButton" when btn.Tag is InvestmentViewModel investment:
+                if (DataContext is PortfolioViewModel vm)
+                    vm.OpenInvestmentDetail(investment);
+                break;
         }
     }
 

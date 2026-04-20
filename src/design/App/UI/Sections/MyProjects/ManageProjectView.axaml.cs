@@ -6,6 +6,8 @@ using Avalonia.VisualTree;
 using App.UI.Shared;
 using App.UI.Shared.Controls;
 using App.UI.Shell;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 
 namespace App.UI.Sections.MyProjects;
@@ -14,6 +16,7 @@ public partial class ManageProjectView : UserControl
 {
     private ManageProjectViewModel? Vm => DataContext as ManageProjectViewModel;
     private IDisposable? _layoutSubscription;
+    private readonly ILogger<ManageProjectView> _logger;
 
     // Cached responsive controls
     private DockPanel? _navBar;
@@ -23,6 +26,7 @@ public partial class ManageProjectView : UserControl
     public ManageProjectView()
     {
         InitializeComponent();
+        _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<ManageProjectView>();
 
         // Cache responsive controls
         _navBar = this.FindControl<DockPanel>("ManageNavBar");
@@ -48,6 +52,10 @@ public partial class ManageProjectView : UserControl
         // ── Share button ──
         var shareBtn = this.FindControl<Button>("ShareButton");
         if (shareBtn != null) shareBtn.Click += OnShareClick;
+
+        // ── Refresh button ──
+        var refreshBtn = this.FindControl<Button>("RefreshButton");
+        if (refreshBtn != null) refreshBtn.Click += OnRefreshClick;
 
         // ── View Private Keys button (opens shell modal password step) ──
         var viewPKBtn = this.FindControl<Button>("ViewPrivateKeysButton");
@@ -136,6 +144,23 @@ public partial class ManageProjectView : UserControl
         {
             var modal = new ShareModal(Vm.Project.Name, Vm.Project.Description);
             shellVm.ShowModal(modal);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    //  REFRESH
+    // ─────────────────────────────────────────────────────────────────
+
+    private async void OnRefreshClick(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (Vm != null)
+                await Vm.RefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "OnRefreshClick failed");
         }
     }
 

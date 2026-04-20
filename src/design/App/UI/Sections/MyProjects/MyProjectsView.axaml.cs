@@ -43,6 +43,11 @@ public partial class MyProjectsView : UserControl
 
         AddHandler(Button.ClickEvent, OnButtonClick, RoutingStrategies.Bubble);
 
+        // Forward toast notifications from VM to ShellViewModel
+        vm.ToastRequested += OnToastRequested;
+        Disposable.Create(() => vm.ToastRequested -= OnToastRequested)
+            .DisposeWith(_subscriptions);
+
         // Manage panel visibility based on ViewModel state
         SubscribeToVisibility(vm);
 
@@ -192,17 +197,31 @@ public partial class MyProjectsView : UserControl
             .DisposeWith(_subscriptions!);
     }
 
+    private void OnToastRequested(string message)
+    {
+        var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
+        shellVm?.ShowToast(message);
+    }
+
     protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
     {
         base.OnAttachedToLogicalTree(e);
 
+        if (DataContext is not MyProjectsViewModel vm) return;
+
         // Re-subscribe if subscriptions were disposed (view re-attached from cache)
-        if (_subscriptions == null && DataContext is MyProjectsViewModel vm)
+        if (_subscriptions == null)
         {
             _subscriptions = new CompositeDisposable();
+            vm.ToastRequested += OnToastRequested;
+            Disposable.Create(() => vm.ToastRequested -= OnToastRequested)
+                .DisposeWith(_subscriptions);
             SubscribeToVisibility(vm);
             UpdateListVisibility(vm);
         }
+
+        // Load founder projects each time the view is navigated to
+        _ = vm.LoadFounderProjectsAsync();
     }
 
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
@@ -235,6 +254,11 @@ public partial class MyProjectsView : UserControl
             case "LaunchFromListButton":
             case "MobileLaunchButton":
                 OpenCreateWizard(vm);
+                return;
+
+            case "ScanProjectsButton":
+                _ = vm.ScanForProjectsAsync();
+                e.Handled = true;
                 return;
 
             case "PART_ManageButton":

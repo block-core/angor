@@ -50,26 +50,53 @@
                                    Foreground="#f59e0b" />
                         </Border>
 
-                        <!-- Center: Name, Balance, Type + Label stacked vertically
-                             Stacked layout ensures long wallet names aren't squeezed to a
-                             single character column on narrow screens. -->
+                        <!-- Center: Name+Balance row, Type+Label row -->
                         <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center"
                                     MinWidth="0">
-                            <!-- Wallet name (full width, ellipsis on overflow) -->
-                            <TextBlock Text="{TemplateBinding WalletName}"
-                                       FontSize="15"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextStrong}"
-                                       TextWrapping="NoWrap"
-                                       TextTrimming="CharacterEllipsis" />
-                            <!-- Balance -->
-                            <TextBlock Text="{TemplateBinding Balance}"
-                                       FontSize="13"
-                                       FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextStrong}"
-                                       TextWrapping="NoWrap"
-                                       TextTrimming="CharacterEllipsis" />
-                            <!-- Type + optional label pill -->
+                            <!-- Top row: name left, balance right -->
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0"
+                                           Text="{TemplateBinding WalletName}"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextStrong}"
+                                           VerticalAlignment="Center"
+                                           TextWrapping="NoWrap"
+                                           TextTrimming="CharacterEllipsis" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{TemplateBinding Balance}"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextStrong}"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                            <!-- Pending balance row (yellow) — hidden when empty -->
+                            <Grid ColumnDefinitions="*,Auto"
+                                  IsVisible="{TemplateBinding PendingBalance, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                <TextBlock Grid.Column="0"
+                                           Text="Pending"
+                                           FontSize="12"
+                                           Foreground="#EAB308" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{TemplateBinding PendingBalance}"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="#EAB308" />
+                            </Grid>
+                            <!-- Reserved balance row (blue) — hidden when empty -->
+                            <Grid ColumnDefinitions="*,Auto"
+                                  IsVisible="{TemplateBinding ReservedBalance, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                <TextBlock Grid.Column="0"
+                                           Text="Reserved"
+                                           FontSize="12"
+                                           Foreground="#3B82F6" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{TemplateBinding ReservedBalance}"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="#3B82F6" />
+                            </Grid>
+                            <!-- Bottom row: type left, label pill right -->
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Grid.Column="0"
                                            Text="{TemplateBinding WalletType}"
@@ -99,6 +126,7 @@
                                     Margin="16,0,0,0">
                             <!-- Send button — 32x32 FILLED green gradient -->
                             <Button Name="BtnSend"
+                                    AutomationProperties.AutomationId="WalletCardBtnSend"
                                     Width="32" Height="32"
                                     Padding="0"
                                     CornerRadius="6"
@@ -117,6 +145,7 @@
                             </Button>
                             <!-- Receive button — 32x32 OUTLINED green -->
                             <Button Name="BtnReceive"
+                                    AutomationProperties.AutomationId="WalletCardBtnReceive"
                                     Width="32" Height="32"
                                     Padding="0"
                                     CornerRadius="6"
@@ -131,6 +160,7 @@
                             </Button>
                             <!-- UTXO / Details button — 32x32 OUTLINED green -->
                             <Button Name="BtnUtxo"
+                                    AutomationProperties.AutomationId="WalletCardBtnUtxo"
                                     Width="32" Height="32"
                                     Padding="0"
                                     CornerRadius="6"
@@ -142,6 +172,45 @@
                                 <i:Icon Value="fa-solid fa-coins"
                                        FontSize="14"
                                        Foreground="{DynamicResource PrimaryGreenBrush}" />
+                            </Button>
+                            <!-- Refresh button — 32x32 OUTLINED green -->
+                            <Button Name="BtnRefresh"
+                                    AutomationProperties.AutomationId="WalletCardBtnRefresh"
+                                    Width="32" Height="32"
+                                    Padding="0"
+                                    CornerRadius="6"
+                                    Background="Transparent"
+                                    BorderBrush="{DynamicResource PrimaryGreenBrush}"
+                                    BorderThickness="2"
+                                    Cursor="Hand"
+                                    ToolTip.Tip="Refresh Balance">
+                                <Panel>
+                                    <i:Icon Value="fa-solid fa-arrows-rotate"
+                                           FontSize="14"
+                                           Foreground="{DynamicResource PrimaryGreenBrush}"
+                                           IsVisible="{Binding !IsRefreshing, RelativeSource={RelativeSource TemplatedParent}}" />
+                                    <i:Icon Value="fa-solid fa-spinner"
+                                           FontSize="14"
+                                           Foreground="{DynamicResource PrimaryGreenBrush}"
+                                           IsVisible="{TemplateBinding IsRefreshing}"
+                                           Classes="fa-spin" />
+                                </Panel>
+                            </Button>
+                            <!-- Faucet / Get Test Coins button — 32x32 OUTLINED orange, testnet only -->
+                            <Button Name="BtnFaucet"
+                                    AutomationProperties.AutomationId="WalletCardBtnFaucet"
+                                    Width="32" Height="32"
+                                    Padding="0"
+                                    CornerRadius="6"
+                                    Background="Transparent"
+                                    BorderBrush="#f59e0b"
+                                    BorderThickness="2"
+                                    Cursor="Hand"
+                                    ToolTip.Tip="Get Test Coins"
+                                    IsVisible="{TemplateBinding ShowFaucet}">
+                                <i:Icon Value="fa-solid fa-faucet-drip"
+                                       FontSize="14"
+                                       Foreground="#f59e0b" />
                             </Button>
                         </StackPanel>
                     </Grid>

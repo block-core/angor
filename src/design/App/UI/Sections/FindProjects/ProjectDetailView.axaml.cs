@@ -5,10 +5,14 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using Angor.Sdk.Funding.Projects;
+using Angor.Shared;
+using Angor.Shared.Services;
 using App.UI.Shared;
 using App.UI.Shared.Controls;
 using App.UI.Shared.Helpers;
 using App.UI.Shell;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace App.UI.Sections.FindProjects;
 
@@ -135,6 +139,16 @@ public partial class ProjectDetailView : UserControl
 
         // Set progress bar width after loaded
         Loaded += OnLoaded;
+
+        // Explorer link — open project txid in block explorer
+        var explorerLink = this.FindControl<Border>("ExplorerLink");
+        if (explorerLink != null)
+            explorerLink.PointerPressed += OnExplorerLinkPressed;
+
+        // View Project JSON button — show project info as formatted JSON
+        var viewJsonBtn = this.FindControl<Border>("ViewProjectJsonBtn");
+        if (viewJsonBtn != null)
+            viewJsonBtn.PointerPressed += OnViewProjectJsonPressed;
 
         // Cache responsive layout controls
         _topSectionGrid = this.FindControl<Grid>("TopSectionGrid");
@@ -375,6 +389,33 @@ public partial class ProjectDetailView : UserControl
             _navCta.IsHitTestVisible = false;
         }
         UpdateProgressBar();
+    }
+
+    private void OnExplorerLinkPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (DataContext is ProjectItemViewModel project && !string.IsNullOrEmpty(project.ProjectId))
+        {
+            var networkService = App.Services.GetRequiredService<INetworkService>();
+            var derivation = App.Services.GetRequiredService<IDerivationOperations>();
+            var bitcoinAddress = derivation.ConvertAngorKeyToBitcoinAddress(project.ProjectId);
+            ExplorerHelper.OpenAddress(networkService, bitcoinAddress);
+        }
+        e.Handled = true;
+    }
+
+    private void OnViewProjectJsonPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (DataContext is ProjectItemViewModel project && !string.IsNullOrEmpty(project.ProjectId))
+        {
+            var shell = this.FindAncestorOfType<ShellView>();
+            if (shell?.DataContext is ShellViewModel shellVm && !shellVm.IsModalOpen)
+            {
+                var projectAppService = App.Services.GetRequiredService<IProjectAppService>();
+                var modal = new ProjectInfoJsonModal(project.ProjectId, projectAppService);
+                shellVm.ShowModal(modal);
+            }
+        }
+        e.Handled = true;
     }
 
     private void OnLoaded(object? sender, EventArgs e)

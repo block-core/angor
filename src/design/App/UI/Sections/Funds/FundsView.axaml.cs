@@ -4,9 +4,12 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
+using Angor.Shared.Services;
 using App.UI.Shell;
 using App.UI.Shared;
 using App.UI.Shared.Controls;
+using App.UI.Shared.Services;
+using Microsoft.Extensions.DependencyInjection;
 using ReactiveUI;
 
 namespace App.UI.Sections.Funds;
@@ -147,8 +150,11 @@ public partial class FundsView : UserControl
     {
         base.OnAttachedToLogicalTree(e);
 
+        // Reload wallet data when the view re-enters the tree (e.g. after wipe or navigation)
+        if (DataContext is FundsViewModel vm)
+            _ = vm.ReloadWalletsAsync();
+
         // Force layout invalidation so bindings re-evaluate when the cached view re-enters.
-        // Previous approach used DataContext = null / DataContext = vm which breaks DynamicResource bindings.
         InvalidateVisual();
     }
 
@@ -173,6 +179,16 @@ public partial class FundsView : UserControl
                 OpenWalletDetailModal(btn);
                 e.Handled = true;
                 return;
+
+            case "BtnRefresh":
+                HandleRefresh(btn);
+                e.Handled = true;
+                return;
+
+            case "BtnFaucet":
+                HandleFaucet(btn);
+                e.Handled = true;
+                return;
         }
 
         // EmptyState or seed group "Add Wallet" button
@@ -191,6 +207,9 @@ public partial class FundsView : UserControl
         return btn.FindAncestorOfType<WalletCard>();
     }
 
+    private ICurrencyService CurrencyService =>
+        App.Services.GetRequiredService<ICurrencyService>();
+
     /// <summary>
     /// Extract wallet info from a WalletCard and open the Send modal.
     /// </summary>
@@ -202,11 +221,17 @@ public partial class FundsView : UserControl
         var shellView = this.FindAncestorOfType<ShellView>();
         if (shellView?.DataContext is ShellViewModel shellVm && !shellVm.IsModalOpen)
         {
-            var modal = new SendFundsModal();
+            // Get spendable balance (confirmed + unconfirmed) from the WalletInfo DataContext
+            var spendableBalance = card.DataContext is WalletInfo walletInfo
+                ? walletInfo.FormattedBalanceFull(CurrencyService.Symbol)
+                : card.Balance ?? $"0.00000000 {CurrencyService.Symbol}";
+
+            var modal = new SendFundsModal { DataContext = DataContext };
             modal.SetWallet(
                 card.WalletName ?? "Wallet",
                 card.WalletType ?? "On-Chain",
-                card.Balance ?? "0.0000 BTC");
+                spendableBalance,
+                card.WalletId);
             shellVm.ShowModal(modal);
         }
     }
@@ -225,7 +250,8 @@ public partial class FundsView : UserControl
             var modal = new ReceiveFundsModal { DataContext = DataContext };
             modal.SetWallet(
                 card.WalletName ?? "Wallet",
-                card.WalletType ?? "On-Chain");
+                card.WalletType ?? "On-Chain",
+                card.WalletId);
             shellVm.ShowModal(modal);
         }
     }
@@ -241,13 +267,78 @@ public partial class FundsView : UserControl
         var shellView = this.FindAncestorOfType<ShellView>();
         if (shellView?.DataContext is ShellViewModel shellVm && !shellVm.IsModalOpen)
         {
+            var spendableBalance = card.DataContext is WalletInfo walletInfo
+                ? walletInfo.FormattedBalanceFull(CurrencyService.Symbol)
+                : card.Balance ?? $"0.00000000 {CurrencyService.Symbol}";
+
             var modal = new WalletDetailModal { DataContext = DataContext };
             modal.SetWallet(
                 card.WalletName ?? "Wallet",
                 card.WalletType ?? "On-Chain",
-                card.Balance ?? "0.0000 BTC",
+                spendableBalance,
                 card.WalletId ?? "");
             shellVm.ShowModal(modal);
+        }
+    }
+
+    /// <summary>
+    /// Refresh balance for the wallet associated with the clicked button.
+    /// </summary>
+    private async void HandleRefresh(Button btn)
+    {
+        var card = FindParentWalletCard(btn);
+        if (card == null || string.IsNullOrEmpty(card.WalletId)) return;
+        if (DataContext is not FundsViewModel vm) return;
+
+        card.IsRefreshing = true;
+        try
+        {
+            await vm.RefreshBalanceAsync(card.WalletId);
+        }
+        catch (Exception ex)
+        {
+            var shellView = this.FindAncestorOfType<ShellView>();
+            if (shellView?.DataContext is ShellViewModel shellVm)
+                shellVm.ShowToast($"Failed to refresh balance: {ex.Message}");
+        }
+        finally
+        {
+            card.IsRefreshing = false;
+        }
+    }
+
+    /// <summary>
+    /// Request test coins for the wallet associated with the clicked button (testnet only).
+    /// </summary>
+    private async void HandleFaucet(Button btn)
+    {
+        var card = FindParentWalletCard(btn);
+        if (card == null || string.IsNullOrEmpty(card.WalletId)) return;
+        if (DataContext is not FundsViewModel vm) return;
+
+        btn.IsEnabled = false;
+        try
+        {
+            var (success, error) = await vm.GetTestCoinsAsync(card.WalletId);
+
+            var shellView = this.FindAncestorOfType<ShellView>();
+            if (shellView?.DataContext is ShellViewModel shellVm)
+            {
+                if (success)
+                    shellVm.ShowToast("Testnet coins sent to your wallet. Balance will update shortly.");
+                else
+                    shellVm.ShowToast($"Faucet failed: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            var shellView = this.FindAncestorOfType<ShellView>();
+            if (shellView?.DataContext is ShellViewModel shellVm)
+                shellVm.ShowToast($"Error: {ex.Message}");
+        }
+        finally
+        {
+            btn.IsEnabled = true;
         }
     }
 
