@@ -1,6 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="clr-namespace:App.UI.Shared.Controls">
+        xmlns:controls="clr-namespace:App.UI.Shared.Controls"
+        xmlns:i="https://github.com/projektanker/icons.avalonia">
     <Design.PreviewWith>
         <StackPanel Spacing="10" HorizontalAlignment="Center">
             <ThemeVariantScope RequestedThemeVariant="Light">
@@ -261,14 +262,17 @@
         <Setter Property="CornerRadius" Value="8" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="RenderTransform" Value="none" />
+        <Setter Property="Width" Value="36" />
+        <Setter Property="Height" Value="36" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="ContentTemplate">
             <DataTemplate>
-                <Viewbox Width="20" Height="20">
-                    <Path Data="{StaticResource XMark}"
-                          Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
-                          StrokeLineCap="Round" StrokeJoin="Round"
-                          Width="24" Height="24" Stretch="Uniform" />
-                </Viewbox>
+                <i:Icon Value="fa-solid fa-xmark"
+                        FontSize="18"
+                        Foreground="{DynamicResource ModalCloseBtn}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center" />
             </DataTemplate>
         </Setter>
     </Style>
@@ -282,14 +286,17 @@
         <Setter Property="CornerRadius" Value="6" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="RenderTransform" Value="none" />
+        <Setter Property="Width" Value="28" />
+        <Setter Property="Height" Value="28" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="ContentTemplate">
             <DataTemplate>
-                <Viewbox Width="20" Height="20">
-                    <Path Data="{StaticResource XMark}"
-                          Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
-                          StrokeLineCap="Round" StrokeJoin="Round"
-                          Width="24" Height="24" Stretch="Uniform" />
-                </Viewbox>
+                <i:Icon Value="fa-solid fa-xmark"
+                        FontSize="14"
+                        Foreground="{DynamicResource ModalCloseBtn}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center" />
             </DataTemplate>
         </Setter>
     </Style>

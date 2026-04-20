@@ -70,8 +70,8 @@
         <!-- MODAL CARD                                               -->
         <!-- Vue: rounded-2xl shadow-2xl max-w-md (448px) p-6        -->
         <!-- ════════════════════════════════════════════════════════ -->
-        <Border HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="420" MaxWidth="448"
+        <Border HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                MinWidth="320" MaxWidth="1030" MaxHeight="720" Margin="16"
                 CornerRadius="16"
                 Background="{DynamicResource ShareModalBg}"
                 BorderBrush="{DynamicResource ShareModalBorder}"

@@ -4,6 +4,7 @@ using AsyncImageLoader.Loaders;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using App.Composition;
+using App.UI.Shared;
 using App.UI.Shell;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
@@ -42,6 +43,9 @@ public partial class App : Application
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
         {
+            // Android / iOS / WASM — no window, just set the main view directly.
+            // Force mobile layout since there's no resizable window.
+            LayoutModeService.Instance.UpdateWidth(400);
             singleView.MainView = new ShellView();
         }
 

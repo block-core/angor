@@ -55,8 +55,9 @@
                 <!-- ═══════════════════════════════════════ -->
                 <!-- LEFT PANEL: Portfolio Summary Card      -->
                 <!-- (STICKY — does not scroll)              -->
+                <!-- Responsive: stacked above content on compact -->
                 <!-- ═══════════════════════════════════════ -->
-                <Border Grid.Column="0"
+                <Border Name="PortfolioSidebar" Grid.Column="0"
                         Background="{DynamicResource Surface}"
                         BorderBrush="{DynamicResource Stroke}"
                         BorderThickness="1"
@@ -90,7 +91,7 @@
 
                         <!-- Buttons Row: Refresh + Penalties -->
                         <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
-                            <Button Name="RefreshButton" Classes="Primary" Padding="20,8">
+                            <Button Classes="Primary" Padding="20,8">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="13"
                                             Foreground="White" VerticalAlignment="Center" />
@@ -162,7 +163,7 @@
                                         <TextBlock Text="{Binding TotalInvested}"
                                                    FontSize="18" FontWeight="Bold"
                                                    Foreground="{DynamicResource TextStrong}" />
-                                        <TextBlock Text="{Binding CurrencySymbol}"
+                                        <TextBlock Text="BTC"
                                                    FontSize="11"
                                                    Foreground="{DynamicResource TextMuted}"
                                                    VerticalAlignment="Bottom" Margin="0,0,0,1" />
@@ -194,7 +195,7 @@
                                         <TextBlock Text="{Binding RecoveredToPenalty}"
                                                    FontSize="18" FontWeight="Bold"
                                                    Foreground="{DynamicResource TextStrong}" />
-                                        <TextBlock Text="{Binding CurrencySymbol}"
+                                        <TextBlock Text="BTC"
                                                    FontSize="11"
                                                    Foreground="{DynamicResource TextMuted}"
                                                    VerticalAlignment="Bottom" Margin="0,0,0,1" />
@@ -240,8 +241,9 @@
                 <!-- ═══════════════════════════════════════ -->
                 <!-- RIGHT PANEL: Your Investments           -->
                 <!-- (Scrollable — only this column scrolls) -->
+                <!-- Responsive: stacked below sidebar on compact -->
                 <!-- ═══════════════════════════════════════ -->
-                <controls:ScrollableView Grid.Column="1" ContentPadding="0,0,16,0">
+                <controls:ScrollableView Name="PortfolioContent" Grid.Column="1" ContentPadding="0,0,16,0">
                 <StackPanel Spacing="16">
 
                     <!-- Section heading -->

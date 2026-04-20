@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
+using App.UI.Shared;
 using App.UI.Shared.Controls;
 using App.UI.Shell;
 using System.Reactive.Linq;
@@ -11,6 +12,12 @@ namespace App.UI.Sections.Portfolio;
 public partial class PortfolioView : UserControl
 {
     private IDisposable? _visibilitySubscription;
+    private IDisposable? _layoutSubscription;
+
+    // Cached controls for responsive layout
+    private Grid? _portfolioGrid;
+    private Border? _sidebar;
+    private ScrollableView? _content;
 
     /// <summary>Design-time only.</summary>
     public PortfolioView() => InitializeComponent();
@@ -32,6 +39,57 @@ public partial class PortfolioView : UserControl
         // Wire Penalties button to open shell modal
         var penaltiesBtn = this.FindControl<Button>("PenaltiesButton");
         if (penaltiesBtn != null) penaltiesBtn.Click += OnPenaltiesClick;
+
+        // ── Cache responsive layout controls ──
+        _portfolioGrid = this.FindControl<Grid>("PortfolioListPanel");
+        _sidebar = this.FindControl<Border>("PortfolioSidebar");
+        _content = this.FindControl<ScrollableView>("PortfolioContent");
+
+        // ── Responsive layout: 380px sidebar + content (desktop) → stacked (compact) ──
+        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
+            .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
+    }
+
+    private void ApplyResponsiveLayout(bool isCompact)
+    {
+        if (_portfolioGrid == null || _sidebar == null || _content == null) return;
+
+        if (isCompact)
+        {
+            // Stacked: single column, sidebar above content
+            _portfolioGrid.ColumnDefinitions.Clear();
+            _portfolioGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            _portfolioGrid.RowDefinitions.Clear();
+            _portfolioGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+            _portfolioGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
+
+            Grid.SetColumn(_sidebar, 0);
+            Grid.SetRow(_sidebar, 0);
+            _sidebar.Margin = new Avalonia.Thickness(0, 0, 0, 24);
+            _sidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top;
+
+            Grid.SetColumn(_content, 0);
+            Grid.SetRow(_content, 1);
+            _content.ContentPadding = new Avalonia.Thickness(0, 0, 0, 96);
+        }
+        else
+        {
+            // Side by side: 380px sidebar + * content
+            _portfolioGrid.ColumnDefinitions.Clear();
+            _portfolioGrid.ColumnDefinitions.Add(new ColumnDefinition(380, GridUnitType.Pixel));
+            _portfolioGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            _portfolioGrid.RowDefinitions.Clear();
+            _portfolioGrid.RowDefinitions.Add(new RowDefinition(GridLength.Star));
+
+            Grid.SetColumn(_sidebar, 0);
+            Grid.SetRow(_sidebar, 0);
+            _sidebar.Margin = new Avalonia.Thickness(0, 0, 24, 0);
+            _sidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch;
+
+            Grid.SetColumn(_content, 1);
+            Grid.SetRow(_content, 0);
+            _content.ContentPadding = new Avalonia.Thickness(0, 0, 16, 0);
+        }
     }
 
     private void SubscribeToVisibility()
@@ -40,31 +98,27 @@ public partial class PortfolioView : UserControl
 
         if (DataContext is PortfolioViewModel vm)
         {
-            vm.ToastRequested -= OnToastRequested;
-            _visibilitySubscription = System.Reactive.Disposables.Disposable.Create(() => vm.ToastRequested -= OnToastRequested);
-            vm.ToastRequested += OnToastRequested;
-
             // Portfolio list is visible when: HasInvestments AND no detail selected.
             // HasInvestments is handled by XAML binding; here we also hide when
             // SelectedInvestment is set (drill-down to detail view).
-            var visibilitySub = vm.WhenAnyValue(
+            _visibilitySubscription = vm.WhenAnyValue(
                 x => x.HasInvestments,
                 x => x.SelectedInvestment,
-                (hasInvestments, selected) => hasInvestments && selected == null)
-              .Subscribe(visible =>
+                (hasInvestments, selected) => (hasInvestments, selected))
+              .Subscribe(tuple =>
               {
+                  var (hasInvestments, selected) = tuple;
+                  var visible = hasInvestments && selected == null;
+
                   if (PortfolioListPanel != null)
                       PortfolioListPanel.IsVisible = visible;
+
+                  // Publish detail view state to ShellViewModel for mobile back-button visibility
+                  var shell = this.FindAncestorOfType<ShellView>();
+                  if (shell?.DataContext is ShellViewModel shellVm)
+                      shellVm.IsInvestmentDetailOpen = selected != null;
               });
-
-            _visibilitySubscription = new System.Reactive.Disposables.CompositeDisposable(_visibilitySubscription, visibilitySub);
         }
-    }
-
-    private void OnToastRequested(string message)
-    {
-        var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
-        shellVm?.ShowToast(message);
     }
 
     protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
@@ -79,25 +133,18 @@ public partial class PortfolioView : UserControl
     {
         _visibilitySubscription?.Dispose();
         _visibilitySubscription = null;
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = null;
         base.OnDetachedFromLogicalTree(e);
     }
 
     private void OnButtonClick(object? sender, RoutedEventArgs e)
     {
-        if (e.Source is not Button btn) return;
-
-        switch (btn.Name)
+        if (e.Source is Button btn && btn.Name == "ManageButton" &&
+            btn.Tag is InvestmentViewModel investment &&
+            DataContext is PortfolioViewModel vm)
         {
-            case "RefreshButton":
-                if (DataContext is PortfolioViewModel refreshVm)
-                    _ = refreshVm.LoadInvestmentsFromSdkAsync();
-                e.Handled = true;
-                break;
-
-            case "ManageButton" when btn.Tag is InvestmentViewModel investment:
-                if (DataContext is PortfolioViewModel vm)
-                    vm.OpenInvestmentDetail(investment);
-                break;
+            vm.OpenInvestmentDetail(investment);
         }
     }
 

@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:shell="clr-namespace:App.UI.Shell"
-             xmlns:services="clr-namespace:App.UI.Shared.Services"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="500"
              x:Class="App.UI.Shell.WalletSwitcherModal"
@@ -32,8 +31,8 @@
         <!-- MODAL: Select Wallet                                        -->
         <!-- Vue: rounded-2xl shadow-2xl max-w-md (448px), modal-fade    -->
         <!-- ════════════════════════════════════════════════════════════ -->
-        <Border HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="420" MaxWidth="448"
+        <Border HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                MinWidth="320" MaxWidth="1030" MaxHeight="720" Margin="16"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"
@@ -74,7 +73,7 @@
                     <StackPanel Margin="24" Spacing="0">
                         <ItemsControl ItemsSource="{Binding SwitcherWallets}">
                             <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="services:WalletInfo">
+                                <DataTemplate x:DataType="shell:WalletSwitcherItem">
                                     <!-- Vue: .wallet-option — padding 14 16, border 2px, rounded 8 -->
                                     <Border Name="WalletBorder" Classes="SwitcherWalletCard"
                                             CornerRadius="8" Padding="14,14,16,14"
@@ -104,7 +103,7 @@
                                                 <TextBlock Text="{Binding Name}"
                                                            FontSize="14" FontWeight="SemiBold"
                                                            Foreground="{DynamicResource TextStrong}" />
-                                                <TextBlock Text="{Binding WalletType}"
+                                                <TextBlock Text="{Binding Subtitle}"
                                                            FontSize="13"
                                                            Foreground="{DynamicResource TextMuted}" />
                                             </StackPanel>
@@ -113,7 +112,7 @@
                                             <StackPanel Grid.Column="2" Orientation="Horizontal"
                                                         Spacing="8" VerticalAlignment="Center">
                                                 <!-- Vue: font-semibold text-white/text-gray-900 -->
-                                                <TextBlock Text="{Binding Balance}"
+                                                <TextBlock Text="{Binding FormattedBalance}"
                                                            FontSize="14" FontWeight="SemiBold"
                                                            Foreground="{DynamicResource TextStrong}"
                                                            VerticalAlignment="Center" />
