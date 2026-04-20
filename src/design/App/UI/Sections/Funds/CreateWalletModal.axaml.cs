@@ -104,7 +104,8 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
                 if (_seedDownloaded)
                 {
                     _logger.LogInformation("Seed downloaded confirmed, creating wallet via SDK");
-                    // Create wallet via SDK
+                    // Show spinner and disable button during wallet creation
+                    SetContinueProcessing(true);
                     try
                     {
                         await CreateWalletViaSdkAsync(Vm?.DefaultWalletName ?? "My Wallet");
@@ -113,6 +114,10 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
                     {
                         _logger.LogError(ex, "Unhandled exception during wallet creation");
                         ShellVm?.ShowToast($"Wallet creation failed: {ex.Message}");
+                    }
+                    finally
+                    {
+                        SetContinueProcessing(false);
                     }
                 }
                 else
@@ -146,6 +151,25 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         ImportPanel.IsVisible = step == "import";
         BackupPanel.IsVisible = step == "backup";
         SuccessPanel.IsVisible = step == "success";
+    }
+
+    /// <summary>
+    /// Show/hide spinner on the Continue button and disable/enable it during wallet creation.
+    /// </summary>
+    private void SetContinueProcessing(bool isProcessing)
+    {
+        var btn = this.FindControl<Button>("BtnContinueBackup");
+        if (btn != null) btn.IsEnabled = !isProcessing;
+
+        var spinner = this.FindControl<Projektanker.Icons.Avalonia.Icon>("ContinueSpinner");
+        if (spinner != null)
+        {
+            spinner.IsVisible = isProcessing;
+            spinner.Classes.Set("Spinning", isProcessing);
+        }
+
+        var text = this.FindControl<TextBlock>("ContinueText");
+        if (text != null) text.Text = isProcessing ? "Creating Wallet..." : "Continue";
     }
 
     /// <summary>

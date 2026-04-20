@@ -292,7 +292,28 @@
                                 FontWeight="SemiBold"
                                 IsEnabled="False"
                                 Cursor="Hand">
-                            <TextBlock Text="Continue" />
+                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                <!-- Spinner shown during wallet creation -->
+                                <i:Icon Name="ContinueSpinner" Value="fa-solid fa-spinner"
+                                        FontSize="16" IsVisible="False"
+                                        Foreground="{DynamicResource CreateWalletDisabledFg}">
+                                    <i:Icon.Styles>
+                                        <Style Selector="i|Icon.Spinning">
+                                            <Style.Animations>
+                                                <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                    <KeyFrame Cue="0%">
+                                                        <Setter Property="RotateTransform.Angle" Value="0" />
+                                                    </KeyFrame>
+                                                    <KeyFrame Cue="100%">
+                                                        <Setter Property="RotateTransform.Angle" Value="360" />
+                                                    </KeyFrame>
+                                                </Animation>
+                                            </Style.Animations>
+                                        </Style>
+                                    </i:Icon.Styles>
+                                </i:Icon>
+                                <TextBlock Name="ContinueText" Text="Continue" />
+                            </StackPanel>
                         </Button>
 
                         <!-- Cancel (outlined) -->

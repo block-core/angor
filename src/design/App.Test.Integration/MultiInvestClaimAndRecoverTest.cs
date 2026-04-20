@@ -641,7 +641,7 @@ public class MultiInvestClaimAndRecoverTest
         var releaseResult = await ExecuteActionWithRetry(
             profileName,
             "unfunded-release",
-            () => portfolioVm.ReleaseFundsAsync(investment),
+            () => portfolioVm.ReleaseFundsAsync(investment).ContinueWith(t => t.Result.Success),
             () => LogUnfundedReleaseBuildDiagnostics(investment));
         releaseResult.Should().BeTrue();
     }

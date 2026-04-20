@@ -392,7 +392,8 @@
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource WaitingBtnFg}" />
                                 </Button>
-                                <Button Padding="14,8"
+                                <Button Name="RefreshInvestmentButton"
+                                        Padding="14,8"
                                         Background="{DynamicResource WaitingBtnBg}"
                                         BorderBrush="{DynamicResource WaitingBtnBorder}"
                                         BorderThickness="1"
@@ -554,16 +555,22 @@
                                        TextWrapping="Wrap" />
 
                             <!-- View Transaction Details link -->
-                            <StackPanel Orientation="Horizontal" Spacing="6"
-                                        HorizontalAlignment="Center">
-                                <i:Icon Value="fa-solid fa-arrow-up-right-from-square"
-                                       FontSize="14"
-                                       Foreground="#FFFFFFCC" />
-                                <TextBlock Text="View Transaction Details"
-                                           FontSize="13"
-                                           Foreground="#FFFFFFCC"
-                                           TextDecorations="Underline" />
-                            </StackPanel>
+                            <Button Name="ViewTransactionButton"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Cursor="Hand"
+                                    HorizontalAlignment="Center"
+                                    Padding="0">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <i:Icon Value="fa-solid fa-arrow-up-right-from-square"
+                                           FontSize="14"
+                                           Foreground="#FFFFFFCC" />
+                                    <TextBlock Text="View Transaction Details"
+                                               FontSize="13"
+                                               Foreground="#FFFFFFCC"
+                                               TextDecorations="Underline" />
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
                     </Border>
 

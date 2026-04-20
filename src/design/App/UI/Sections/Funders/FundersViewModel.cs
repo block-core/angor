@@ -67,6 +67,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
     [Reactive] private bool hasFunders;
     [Reactive] private string currentFilter = SignatureStatus.Waiting.ToLowerString();
     [Reactive] private bool isLoading;
+    [Reactive] private bool isRefreshing;
 
     public ObservableCollection<int> ExpandedSignatureIds { get; } = new();
 
@@ -181,6 +182,23 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
         finally
         {
             IsLoading = false;
+        }
+    }
+
+    /// <summary>
+    /// Refresh investment requests (called by the UI refresh button).
+    /// </summary>
+    public async Task RefreshAsync()
+    {
+        if (IsRefreshing) return;
+        IsRefreshing = true;
+        try
+        {
+            await LoadInvestmentRequestsAsync();
+        }
+        finally
+        {
+            IsRefreshing = false;
         }
     }
 

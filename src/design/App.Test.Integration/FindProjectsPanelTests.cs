@@ -86,6 +86,8 @@ public class FindProjectsPanelTests
         card.ProjectType.Should().Be(firstProject.ProjectType);
 
         // ── Statistics ──
+        // On a fresh local signet, newly created projects won't have investments yet.
+        // Only assert statistics if at least one project actually has them.
         TestHelpers.Log("[1.5] Checking project statistics...");
         var statsDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
         var statsLoaded = false;
@@ -99,16 +101,22 @@ public class FindProjectsPanelTests
             }
             await Task.Delay(500);
         }
-        statsLoaded.Should().BeTrue("at least one project should have statistics");
 
-        var projectWithStats = vm.Projects.First(p => p.InvestorCount > 0 || p.Raised != "0.00000");
-        TestHelpers.Log($"[1.5] Project with stats: '{projectWithStats.ProjectName}', investors={projectWithStats.InvestorCount}, raised={projectWithStats.Raised}");
-        projectWithStats.InvestorCount.Should().BeGreaterThanOrEqualTo(0);
-        if (projectWithStats.Raised != "0.00000" &&
-            double.TryParse(projectWithStats.Target, System.Globalization.NumberStyles.Float,
-                System.Globalization.CultureInfo.InvariantCulture, out var target) && target > 0)
+        if (statsLoaded)
         {
-            projectWithStats.Progress.Should().BeGreaterThan(0, "Progress should be > 0 when Raised > 0");
+            var projectWithStats = vm.Projects.First(p => p.InvestorCount > 0 || p.Raised != "0.00000");
+            TestHelpers.Log($"[1.5] Project with stats: '{projectWithStats.ProjectName}', investors={projectWithStats.InvestorCount}, raised={projectWithStats.Raised}");
+            projectWithStats.InvestorCount.Should().BeGreaterThanOrEqualTo(0);
+            if (projectWithStats.Raised != "0.00000" &&
+                double.TryParse(projectWithStats.Target, System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out var target) && target > 0)
+            {
+                projectWithStats.Progress.Should().BeGreaterThan(0, "Progress should be > 0 when Raised > 0");
+            }
+        }
+        else
+        {
+            TestHelpers.Log("[1.5] No projects with statistics found (fresh chain). Skipping stats assertions.");
         }
 
         // ── Open project detail → panel transition ──
@@ -135,6 +143,14 @@ public class FindProjectsPanelTests
         firstProject.EndDate.Should().NotBeNullOrWhiteSpace("EndDate should be set");
         firstProject.PenaltyDays.Should().NotBeNullOrWhiteSpace("PenaltyDays should be set");
         firstProject.Stages.Should().NotBeNull("Stages collection should exist");
+        if (firstProject.Stages.Count > 0)
+        {
+            foreach (var stage in firstProject.Stages)
+            {
+                stage.Percentage.Should().NotBe("0%", $"Stage {stage.StageNumber} percentage should not be 0% (comment #18)");
+                stage.Percentage.Should().MatchRegex(@"^\d+%$", $"Stage {stage.StageNumber} percentage should be a valid percentage");
+            }
+        }
         firstProject.ProjectId.Should().NotBeNullOrWhiteSpace("ProjectId should be set");
         firstProject.FounderKey.Should().NotBeNull("FounderKey should be initialized");
 
@@ -263,7 +279,10 @@ public class FindProjectsPanelTests
         // ── Reload projects ──
         TestHelpers.Log("[1.16] Testing reload projects...");
         var initialCount = vm.Projects.Count;
-        await vm.LoadProjectsFromSdkAsync();
+        var loadTask = vm.LoadProjectsFromSdkAsync();
+        Dispatcher.UIThread.RunJobs();
+        vm.IsLoading.Should().BeTrue("IsLoading should be true while loading projects (comment #2)");
+        await loadTask;
         Dispatcher.UIThread.RunJobs();
         vm.Projects.Count.Should().BeGreaterThan(0, "projects should be populated after reload");
         vm.IsLoading.Should().BeFalse("loading flag should be cleared");
@@ -376,12 +395,19 @@ public class FindProjectsPanelTests
         passwordProvider.SetKey("default-key");
 
         var tcs = new TaskCompletionSource();
+        var wasProcessingDuringExecution = false;
         investVm.PayWithWalletCommand.Execute().Subscribe(
-            _ => { },
+            _ => { wasProcessingDuringExecution = wasProcessingDuringExecution || investVm.IsProcessing; },
             ex => tcs.TrySetException(ex),
             () => tcs.TrySetResult());
+        // Check IsProcessing is set immediately after command starts (comment #9)
+        Dispatcher.UIThread.RunJobs();
+        wasProcessingDuringExecution = wasProcessingDuringExecution || investVm.IsProcessing;
         await tcs.Task.WaitAsync(TimeSpan.FromSeconds(30));
         Dispatcher.UIThread.RunJobs();
+
+        wasProcessingDuringExecution.Should().BeTrue("IsProcessing should be true while PayWithWallet executes (comment #9)");
+        investVm.IsProcessing.Should().BeFalse("IsProcessing should be false after PayWithWallet completes (comment #9)");
 
         TestHelpers.Log($"[2.6] Error message: {investVm.ErrorMessage}");
         investVm.ErrorMessage.Should().NotBeNullOrWhiteSpace("should show error for insufficient balance");

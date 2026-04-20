@@ -596,7 +596,7 @@ public class MultiFundClaimAndRecoverTest
         var recoverToPenaltyResult = await ExecuteRecoveryActionWithRetry(
             profileName,
             "recover-to-penalty",
-            () => portfolioVm.RecoverFundsAsync(investment),
+            () => portfolioVm.RecoverFundsAsync(investment).ContinueWith(t => t.Result.Success),
             () => LogRecoveryBuildDiagnostics(investment, RecoveryAction.Recovery));
         recoverToPenaltyResult.Should().BeTrue();
 
@@ -608,7 +608,7 @@ public class MultiFundClaimAndRecoverTest
         var penaltyReleaseResult = await ExecuteRecoveryActionWithRetry(
             profileName,
             "penalty-release",
-            () => portfolioVm.PenaltyReleaseFundsAsync(investment),
+            () => portfolioVm.PenaltyReleaseFundsAsync(investment).ContinueWith(t => t.Result.Success),
             () => LogRecoveryBuildDiagnostics(investment, RecoveryAction.PenaltyRelease));
         penaltyReleaseResult.Should().BeTrue();
     }
@@ -620,15 +620,15 @@ public class MultiFundClaimAndRecoverTest
         investment.InvestmentWalletId.Should().NotBeNullOrEmpty();
         investment.InvestmentTransactionId.Should().NotBeNullOrEmpty();
 
-        var recoveryState = await WaitForRecoveryActionAsync(portfolioVm, investment, profileName, expectedActionKey: "endOfProject");
-        recoveryState.ActionKey.Should().Be("endOfProject");
+        var recoveryState = await WaitForRecoveryActionAsync(portfolioVm, investment, profileName, expectedActionKey: "belowThreshold");
+        recoveryState.ActionKey.Should().Be("belowThreshold");
 
         Log(profileName, "Recovering below-threshold investment without penalty...");
         await EnsureWalletHasFeeFunds(window, profileName, investment.InvestmentWalletId, "before end-of-project claim");
         var recoverResult = await ExecuteRecoveryActionWithRetry(
             profileName,
             "end-of-project-claim",
-            () => portfolioVm.ClaimEndOfProjectAsync(investment),
+            () => portfolioVm.ClaimEndOfProjectAsync(investment).ContinueWith(t => t.Result.Success),
             () => LogRecoveryBuildDiagnostics(investment, RecoveryAction.EndOfProject));
         recoverResult.Should().BeTrue();
     }

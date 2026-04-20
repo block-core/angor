@@ -69,6 +69,16 @@ public partial class FundersView : UserControl
           .Subscribe(filter => UpdateTabVisuals(filter));
         _subscriptions.Add(tabSub);
 
+        // Toggle spinning animation on refresh button icon
+        var refreshSub = vm.WhenAnyValue(x => x.IsRefreshing)
+          .Subscribe(isRefreshing =>
+          {
+              var refreshBtn = this.FindControl<Button>("RefreshButton");
+              var icon = refreshBtn?.GetLogicalDescendants().OfType<Projektanker.Icons.Avalonia.Icon>().FirstOrDefault();
+              icon?.Classes.Set("Spinning", isRefreshing);
+          });
+        _subscriptions.Add(refreshSub);
+
         _subscriptions.Add(Disposable.Create(() => vm.ToastRequested -= OnToastRequested));
         vm.ToastRequested += OnToastRequested;
     }
@@ -115,6 +125,11 @@ public partial class FundersView : UserControl
         {
             case "ApproveAllButton":
                 vm.ApproveAll();
+                e.Handled = true;
+                break;
+
+            case "RefreshButton":
+                _ = vm.RefreshAsync();
                 e.Handled = true;
                 break;
 

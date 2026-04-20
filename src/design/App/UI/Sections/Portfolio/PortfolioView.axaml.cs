@@ -73,6 +73,11 @@ public partial class PortfolioView : UserControl
         // Re-subscribe when the cached view is re-added to the tree
         // (the subscription was disposed in OnDetachedFromLogicalTree).
         SubscribeToVisibility();
+
+        // Auto-refresh investments when navigating back to portfolio
+        // (e.g. after investing, stages need to be reloaded from SDK)
+        if (DataContext is PortfolioViewModel vm)
+            _ = vm.LoadInvestmentsFromSdkAsync();
     }
 
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
