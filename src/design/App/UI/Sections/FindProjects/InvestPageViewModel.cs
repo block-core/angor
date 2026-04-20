@@ -487,7 +487,7 @@ public partial class InvestPageViewModel : ReactiveObject
         {
             var months = SelectedSubscriptionPattern == "pattern1" ? 3 : 6;
             var pricePerMonth = Project.SubscriptionPrice;
-            var today = DateTime.Now;
+            var today = DateTime.UtcNow;
 
             var newRows = new List<InvestStageRow>(months);
             for (var i = 0; i < months; i++)

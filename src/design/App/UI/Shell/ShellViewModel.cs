@@ -9,6 +9,7 @@ using App.UI.Sections.FindProjects;
 using App.UI.Sections.MyProjects;
 using App.UI.Sections.Portfolio;
 using App.UI.Shared;
+using App.UI.Shared.Helpers;
 using App.UI.Shared.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -97,7 +98,7 @@ public class SignatureStore
             requiresApproval = threshold > 0 && amountSats >= threshold;
         }
 
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
 
         var sig = new SharedSignature
         {
@@ -281,6 +282,28 @@ public partial class ShellViewModel : ReactiveObject
     [Reactive] private bool isSettingsOpen;
     [Reactive] private string? sectionTitleOverride;
 
+    // ── Mobile tab bar state ──
+    // Vue: mobileActiveTab, mobileInvestorSubTab, mobileFounderSubTab in App.vue
+    [Reactive] private string mobileActiveTab = "home";
+    [Reactive] private string mobileInvestorSubTab = "find-projects";
+    [Reactive] private string mobileFounderSubTab = "my-projects";
+
+    // ── Detail view state tracking (for mobile sub-tab/back-button visibility) ──
+    // Vue: showProjectDetail, showInvestPage, showInvestmentDetail, showManageFunds, isCreatingProject
+    // Sections set these when entering/exiting detail views so ShellView can react.
+    [Reactive] private bool isProjectDetailOpen;
+    [Reactive] private bool isInvestPageOpen;
+    /// <summary>CTA verb for the mobile floating bar — "Invest", "Fund", or "Subscribe".</summary>
+    [Reactive] private string projectDetailActionVerb = "Invest";
+    [Reactive] private bool isInvestmentDetailOpen;
+    [Reactive] private bool isManageFundsOpen;
+    [Reactive] private bool isCreatingProject;
+
+    /// <summary>
+    /// Reference to the LayoutModeService singleton for XAML bindings.
+    /// </summary>
+    public LayoutModeService Layout => LayoutModeService.Instance;
+
     /// <summary>
     /// When true, the next MyProjectsView instance will auto-open the create wizard.
     /// Consumed (reset to false) by MyProjectsView on init.
@@ -378,6 +401,7 @@ public partial class ShellViewModel : ReactiveObject
             {
                 IsSettingsOpen = false;
                 SectionTitleOverride = null;
+                SyncMobileTabState();
                 this.RaisePropertyChanged(nameof(CurrentSectionContent));
                 this.RaisePropertyChanged(nameof(SelectedSectionName));
             });
@@ -386,6 +410,7 @@ public partial class ShellViewModel : ReactiveObject
             .Where(open => open)
             .Subscribe(_ =>
             {
+                SyncMobileTabState();
                 this.RaisePropertyChanged(nameof(CurrentSectionContent));
                 this.RaisePropertyChanged(nameof(SelectedSectionName));
             });
@@ -524,6 +549,229 @@ public partial class ShellViewModel : ReactiveObject
             var logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<ShellViewModel>();
             logger.LogWarning(ex, "LoadTotalInvestedAsync failed for wallet '{WalletId}'", wallet.Id.Value);
         }
+    }
+
+    // ── Mobile tab bar navigation ──
+    // Vue: handleMobileTabChange, handleInvestorSubTabChange, handleFounderSubTabChange
+
+    /// <summary>
+    /// Handle a mobile bottom tab bar tap.
+    /// Vue: handleMobileTabChange() in App.vue (line 9075).
+    /// Maps the 5 mobile tabs to the sidebar nav items.
+    /// </summary>
+    public void HandleMobileTabChange(string tab)
+    {
+        // Vue special case (line 9077): clicking founder tab while ManageFunds is open
+        // calls backFromManageFunds() and returns early.
+        if (tab == "founder" && IsManageFundsOpen)
+        {
+            CloseManageFundsFromShell();
+            return;
+        }
+
+        MobileActiveTab = tab;
+
+        switch (tab)
+        {
+            case "home":
+                SelectNavByLabel("Home");
+                break;
+            case "funds":
+                SelectNavByLabel("Funds");
+                break;
+            case "investor":
+                // Remember last sub-tab (Vue: changePage(mobileInvestorSubTab.value))
+                SelectNavByLabel(MobileInvestorSubTab == "investments" ? "Funded" : "Find Projects");
+                break;
+            case "founder":
+                SelectNavByLabel(MobileFounderSubTab == "funders" ? "Funders" : "My Projects");
+                break;
+            case "settings":
+                NavigateToSettings();
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Handle investor floating sub-tab change.
+    /// Vue: handleInvestorSubTabChange() in App.vue.
+    /// </summary>
+    public void HandleInvestorSubTabChange(string subTab)
+    {
+        MobileInvestorSubTab = subTab;
+        MobileActiveTab = "investor";
+        SelectNavByLabel(subTab == "investments" ? "Funded" : "Find Projects");
+    }
+
+    /// <summary>
+    /// Handle founder floating sub-tab change.
+    /// Vue: handleFounderSubTabChange() in App.vue.
+    /// </summary>
+    public void HandleFounderSubTabChange(string subTab)
+    {
+        MobileFounderSubTab = subTab;
+        MobileActiveTab = "founder";
+        SelectNavByLabel(subTab == "funders" ? "Funders" : "My Projects");
+    }
+
+    /// <summary>
+    /// Sync the mobile tab state when desktop sidebar navigation changes.
+    /// Vue: changePage() sync logic in App.vue (line 8546).
+    /// </summary>
+    private void SyncMobileTabState()
+    {
+        if (IsSettingsOpen)
+        {
+            MobileActiveTab = "settings";
+            return;
+        }
+
+        switch (SelectedNavItem?.Label)
+        {
+            case "Home":
+                MobileActiveTab = "home";
+                break;
+            case "Funds":
+                MobileActiveTab = "funds";
+                break;
+            case "Find Projects":
+                MobileActiveTab = "investor";
+                MobileInvestorSubTab = "find-projects";
+                break;
+            case "Funded":
+                MobileActiveTab = "investor";
+                MobileInvestorSubTab = "investments";
+                break;
+            case "My Projects":
+                MobileActiveTab = "founder";
+                MobileFounderSubTab = "my-projects";
+                break;
+            case "Funders":
+                MobileActiveTab = "founder";
+                MobileFounderSubTab = "funders";
+                break;
+        }
+    }
+
+    /// <summary>Select a sidebar nav item by label.</summary>
+    private void SelectNavByLabel(string label)
+    {
+        var item = NavEntries.OfType<NavItem>().FirstOrDefault(n => n.Label == label);
+        if (item != null)
+            SelectedNavItem = item;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // MOBILE BACK BUTTON ACTIONS
+    // Vue: backToProjects(), backToProjectDetail(), backToInvestments(),
+    //      backFromManageFunds() in App.vue
+    // ═══════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Back from ProjectDetail/InvestPage in the investor flow.
+    /// Vue: showInvestPage ? backToProjectDetail() : backToProjects()
+    /// </summary>
+    public void BackFromInvestorDetail()
+    {
+        if (IsInvestPageOpen)
+        {
+            // Back from invest page → project detail
+            if (_viewCache.TryGetValue("Find Projects", out var v) &&
+                v is FindProjectsView { DataContext: FindProjectsViewModel fpVm })
+            {
+                fpVm.CloseInvestPage();
+            }
+        }
+        else if (IsProjectDetailOpen)
+        {
+            // Back from project detail → project list
+            if (_viewCache.TryGetValue("Find Projects", out var v) &&
+                v is FindProjectsView { DataContext: FindProjectsViewModel fpVm })
+            {
+                fpVm.CloseProjectDetail();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Back from InvestmentDetail → portfolio list.
+    /// Vue: backToInvestments()
+    /// </summary>
+    public void BackFromInvestmentDetail()
+    {
+        _portfolioVm.CloseInvestmentDetail();
+    }
+
+    /// <summary>
+    /// Close ManageFunds from the shell (used by founder tab special case and back button).
+    /// Vue: backFromManageFunds()
+    /// </summary>
+    public void CloseManageFundsFromShell()
+    {
+        if (_viewCache.TryGetValue("My Projects", out var v) &&
+            v is MyProjectsView { DataContext: MyProjectsViewModel mpVm })
+        {
+            mpVm.CloseManageProject();
+        }
+        // Ensure the founder tab is set and sub-tabs re-appear
+        MobileActiveTab = "founder";
+        MobileFounderSubTab = "my-projects";
+    }
+
+    /// <summary>
+    /// Share the currently selected investor project via the shell modal.
+    /// </summary>
+    public void ShareCurrentInvestorProject()
+    {
+        if (IsModalOpen) return;
+        if (!_viewCache.TryGetValue("Find Projects", out var v) ||
+            v is not FindProjectsView { DataContext: FindProjectsViewModel fpVm } ||
+            fpVm.SelectedProject is not { } project)
+            return;
+
+        ShowModal(new Shared.Controls.ShareModal(project.ProjectName, project.ShortDescription));
+    }
+
+    /// <summary>
+    /// Action for the invest/submit CTA button on the mobile back bar.
+    /// Vue: showInvestPage ? handleInvestPageAction() : viewInvestPage()
+    /// </summary>
+    public void MobileInvestAction()
+    {
+        if (IsInvestPageOpen)
+        {
+            // Trigger invest submit via the FindProjectsViewModel's InvestPageViewModel
+            if (_viewCache.TryGetValue("Find Projects", out var iv) &&
+                iv is FindProjectsView { DataContext: FindProjectsViewModel fpVm2 } &&
+                fpVm2.InvestPageViewModel is { } investVm)
+            {
+                if (investVm.CanSubmit)
+                    investVm.Submit();
+            }
+        }
+        else if (IsProjectDetailOpen)
+        {
+            // Open invest page from project detail
+            if (_viewCache.TryGetValue("Find Projects", out var v) &&
+                v is FindProjectsView { DataContext: FindProjectsViewModel fpVm })
+            {
+                fpVm.OpenInvestPage();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Reset all detail view state flags. Called on breakpoint crossing
+    /// or when navigating to a different section to ensure clean state.
+    /// Vue: changePage() resets showProjectDetail, showInvestPage, selectedProject.
+    /// </summary>
+    public void ResetDetailViewState()
+    {
+        IsProjectDetailOpen = false;
+        IsInvestPageOpen = false;
+        IsInvestmentDetailOpen = false;
+        IsManageFundsOpen = false;
+        IsCreatingProject = false;
     }
 
     public void ResetAfterDataWipe()

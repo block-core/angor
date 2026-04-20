@@ -160,7 +160,7 @@
                                                FontSize="13"
                                                FontWeight="Bold"
                                                Foreground="{DynamicResource TextStrong}" />
-                                    <TextBlock Text="{TemplateBinding CurrencySymbol}"
+                                    <TextBlock Text="BTC"
                                                FontSize="13"
                                                Foreground="{DynamicResource TextMuted}" />
                                 </StackPanel>
@@ -178,7 +178,7 @@
                                     <TextBlock Text="{TemplateBinding Target}"
                                                FontSize="13"
                                                Foreground="{DynamicResource TextMuted}" />
-                                    <TextBlock Text="{TemplateBinding CurrencySymbol}"
+                                    <TextBlock Text="BTC"
                                                FontSize="13"
                                                Foreground="{DynamicResource TextMuted}" />
                                 </StackPanel>

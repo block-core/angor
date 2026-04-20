@@ -77,17 +77,86 @@
 
     <!-- ═══════════════════════════════════════════════════════ -->
     <!-- MAIN WIZARD LAYOUT — two columns: stepper + content    -->
-    <!-- Stepper always visible; welcome card shown in right col -->
+    <!-- Desktop: stepper sidebar on left. Compact: hidden stepper,
+         mobile header with progress bar shown instead.           -->
     <!-- ═══════════════════════════════════════════════════════ -->
     <!-- Root panel to allow deploy overlay on top of wizard -->
     <Panel>
 
-    <Grid ColumnDefinitions="250,*" Margin="0">
+    <!-- ═══ MOBILE HEADER — hidden on desktop, shown on compact ═══ -->
+    <!--
+        Vue ref: App.vue lines 585-614 — mobile wizard header.
+        Contains: step title + close (X) button + progress bar segments.
+        Light: bg-white, border-gray-200, text-gray-900.
+        Dark: bg-gray-900 (#111827), border-gray-700 (#374151), text-white.
+    -->
+    <Border Name="MobileWizardHeader"
+            IsVisible="False"
+            VerticalAlignment="Top"
+            ZIndex="100"
+            Background="{DynamicResource Surface}"
+            BorderBrush="{DynamicResource Stroke}"
+            BorderThickness="0,0,0,1"
+            Padding="16">
+        <StackPanel Spacing="12">
+            <!-- Title row: step title + close button -->
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Name="MobileStepTitle"
+                           Grid.Column="0"
+                           Text="Project Type"
+                           FontSize="16" FontWeight="Bold"
+                           Foreground="{DynamicResource TextStrong}"
+                           VerticalAlignment="Center" />
+                <!-- Vue: close button — p-2 -mr-2 rounded-lg hover:bg-gray-100 -->
+                <Button Name="MobileCloseBtn"
+                        Grid.Column="1"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Padding="8"
+                        Cursor="Hand"
+                        CornerRadius="8">
+                    <i:Icon Value="fa-solid fa-xmark"
+                            FontSize="18"
+                            Foreground="{DynamicResource TextStrong}" />
+                </Button>
+            </Grid>
+            <!-- Progress bar segments — Vue: flex gap-1, h-1.5 rounded-full bars -->
+            <!-- 6 segments for 6 total steps. Green gradient for <=currentStep, gray for future. -->
+            <Grid Name="MobileProgressBar" ColumnDefinitions="*,4,*,4,*,4,*,4,*,4,*">
+                <!-- Segment 1 -->
+                <Border Name="ProgressSeg1" Grid.Column="0" Height="6" CornerRadius="3">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                            <GradientStop Color="{StaticResource PrimaryGreenDark}" Offset="0" />
+                            <GradientStop Color="#4D7A5D" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
+                <!-- Segment 2 -->
+                <Border Name="ProgressSeg2" Grid.Column="2" Height="6" CornerRadius="3"
+                        Background="{DynamicResource StrokeSubtle}" />
+                <!-- Segment 3 -->
+                <Border Name="ProgressSeg3" Grid.Column="4" Height="6" CornerRadius="3"
+                        Background="{DynamicResource StrokeSubtle}" />
+                <!-- Segment 4 -->
+                <Border Name="ProgressSeg4" Grid.Column="6" Height="6" CornerRadius="3"
+                        Background="{DynamicResource StrokeSubtle}" />
+                <!-- Segment 5 -->
+                <Border Name="ProgressSeg5" Grid.Column="8" Height="6" CornerRadius="3"
+                        Background="{DynamicResource StrokeSubtle}" />
+                <!-- Segment 6 -->
+                <Border Name="ProgressSeg6" Grid.Column="10" Height="6" CornerRadius="3"
+                        Background="{DynamicResource StrokeSubtle}" />
+            </Grid>
+        </StackPanel>
+    </Border>
 
-            <!-- ─── LEFT COLUMN: Vertical Stepper ─── -->
+    <Grid Name="WizardMainGrid" ColumnDefinitions="250,*" Margin="0">
+
+            <!-- ─── LEFT COLUMN: Vertical Stepper (hidden on compact) ─── -->
             <!-- Lighter surface background with logo pattern overlay.
                  Stepper is vertically centered. -->
-            <Grid Grid.Column="0">
+            <Grid Name="StepperColumn" Grid.Column="0">
                 <!-- Solid lighter background (no tiled pattern — clean surface) -->
                 <Border Background="{DynamicResource SurfaceMedium}" />
                 <!-- Subtle right-edge separator -->
@@ -220,7 +289,7 @@
             <DockPanel Grid.Column="1">
 
                 <!-- Navigation footer — docked to bottom -->
-                <Border DockPanel.Dock="Bottom"
+                <Border Name="NavFooter" DockPanel.Dock="Bottom"
                         IsVisible="{Binding ShowNavFooter}"
                         BorderBrush="{DynamicResource Stroke}"
                         BorderThickness="0,1,0,0"
@@ -444,10 +513,11 @@
                     </Border>
 
                     <!-- Scrollable step content (hidden on welcome/interstitial screens) -->
-                    <ScrollViewer IsVisible="{Binding ShowScrollContent}"
+                    <ScrollViewer Name="StepScrollViewer"
+                                  IsVisible="{Binding ShowScrollContent}"
                                   VerticalScrollBarVisibility="Auto"
                                   HorizontalScrollBarVisibility="Disabled">
-                    <StackPanel Spacing="0" Margin="32,32,32,24" MaxWidth="680">
+                    <StackPanel Name="StepContentPanel" Spacing="0" Margin="32,32,32,24" MaxWidth="680">
 
                         <!-- Vue formError banner: sticky red banner at top of step content -->
                         <!-- Light: bg-red-100 border-red-200 text-red-800 -->

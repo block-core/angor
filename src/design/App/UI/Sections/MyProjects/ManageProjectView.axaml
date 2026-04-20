@@ -103,6 +103,7 @@
                         </Transitions>
                     </Border.Transitions>
                     <Button Name="RefreshButton" Classes="NavBtn" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Cursor="Hand"
+                            AutomationProperties.AutomationId="ManageProjectRefreshButton"
                             IsEnabled="{Binding !IsRefreshing}">
                         <Panel>
                             <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="14" Foreground="{DynamicResource TextStrong}"
