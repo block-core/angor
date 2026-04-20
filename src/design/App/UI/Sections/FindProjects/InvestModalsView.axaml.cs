@@ -176,7 +176,6 @@ public partial class InvestModalsView : UserControl, IBackdropCloseable
                 if (name == "WalletBorder"
                     || name == "OnChainTabBorder"
                     || name == "LightningTabBorder"
-                    || name == "LiquidTabBorder"
                     || name == "ImportTabBorder")
                 {
                     found = b;

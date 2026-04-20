@@ -299,8 +299,7 @@
                 </Border>
 
                 <!-- Network tabs: On-Chain (default) | Lightning | Import.
-                     Click handlers in code-behind read the Border name and call Vm.SelectNetworkTab(...).
-                     Liquid is hidden for now (no SDK wiring yet). -->
+                     Click handlers in code-behind read the Border name and call Vm.SelectNetworkTab(...). -->
                 <Grid ColumnDefinitions="*,*,*" Margin="0,0,0,16">
                     <Grid.ColumnSpacing>8</Grid.ColumnSpacing>
                     <Border Grid.Column="0" Name="OnChainTabBorder" Classes="NetworkTab"

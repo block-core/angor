@@ -1,10 +1,13 @@
 using System.Reflection;
+using Angor.Shared;
+using Angor.Shared.Models;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Markup.Xaml.Styling;
 using App.Composition;
 using App.Test.Integration.Helpers;
+using Microsoft.Extensions.DependencyInjection;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
 
@@ -33,6 +36,15 @@ public class TestAppBuilder
         var services = CompositionRoot.BuildServiceProvider(profileName, enableConsoleLogging: true);
         var prop = typeof(global::App.App).GetProperty("Services", BindingFlags.Public | BindingFlags.Static)!;
         prop.SetValue(null, services);
+
+        // Override relays with the test relay for reliable test execution
+        var networkStorage = services.GetRequiredService<INetworkStorage>();
+        var settings = networkStorage.GetSettings();
+        settings.Relays = new List<SettingsUrl>
+        {
+            new() { Name = "Test Relay", Url = "wss://test.thedude.cloud", IsPrimary = true }
+        };
+        networkStorage.SetSettings(settings);
     }
 }
 

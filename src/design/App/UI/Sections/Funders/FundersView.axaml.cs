@@ -5,6 +5,7 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using App.UI.Sections.FindProjects;
 using App.UI.Shell;
 using App.UI.Shared.Helpers;
 using System.Reactive.Disposables;
@@ -69,6 +70,12 @@ public partial class FundersView : UserControl
           .Subscribe(filter => UpdateTabVisuals(filter));
         _subscriptions.Add(tabSub);
 
+        // Watch for invest flow VM being set → show InvestModalsView as shell modal
+        var investSub = vm.WhenAnyValue(x => x.InvestPageViewModel)
+          .Where(investVm => investVm != null)
+          .Subscribe(investVm => ShowInvestModal(investVm!));
+        _subscriptions.Add(investSub);
+
         _subscriptions.Add(Disposable.Create(() => vm.ToastRequested -= OnToastRequested));
         vm.ToastRequested += OnToastRequested;
     }
@@ -77,6 +84,29 @@ public partial class FundersView : UserControl
     {
         var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
         shellVm?.ShowToast(message);
+    }
+
+    /// <summary>
+    /// Show the InvestModalsView shell-level modal for the 1-click invest flow.
+    /// Same pattern as InvestPageView.ShowShellModal().
+    /// </summary>
+    private void ShowInvestModal(InvestPageViewModel investVm)
+    {
+        var shellView = this.FindAncestorOfType<ShellView>();
+        var shellVm = shellView?.DataContext as ShellViewModel;
+        if (shellVm == null || shellVm.IsModalOpen) return;
+
+        var modalsView = new InvestModalsView
+        {
+            DataContext = investVm,
+            OnNavigateBackToList = () =>
+            {
+                investVm.AddToPortfolio();
+                shellVm.NavigateToFunded();
+            }
+        };
+
+        shellVm.ShowModal(modalsView);
     }
 
     protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
@@ -130,6 +160,14 @@ public partial class FundersView : UserControl
 
             case "ChatButton":
                 // Chat action — placeholder for now
+                e.Handled = true;
+                break;
+
+            case "InvestButton" when btn.Tag is int investId:
+                var investSig = (DataContext as FundersViewModel) is { } fvm
+                    ? fvm.FilteredSignatures.FirstOrDefault(s => s.Id == investId)
+                    : null;
+                if (investSig != null) vm.OpenInvestFlow(investSig);
                 e.Handled = true;
                 break;
 

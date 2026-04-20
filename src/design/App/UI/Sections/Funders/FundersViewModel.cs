@@ -4,6 +4,7 @@ using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Shared;
+using App.UI.Sections.FindProjects;
 using App.UI.Shared;
 using App.UI.Shared.Services;
 using Microsoft.Extensions.Logging;
@@ -62,11 +63,15 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
     private readonly IProjectAppService _projectAppService;
     private readonly IWalletContext _walletContext;
     private readonly ICurrencyService _currencyService;
+    private readonly Func<ProjectItemViewModel, InvestPageViewModel> _investPageFactory;
     private readonly ILogger<FundersViewModel> _logger;
 
     [Reactive] private bool hasFunders;
     [Reactive] private string currentFilter = SignatureStatus.Waiting.ToLowerString();
     [Reactive] private bool isLoading;
+
+    /// <summary>Active invest flow VM — set when user clicks "Invest" on a signature card.</summary>
+    [Reactive] private InvestPageViewModel? investPageViewModel;
 
     public ObservableCollection<int> ExpandedSignatureIds { get; } = new();
 
@@ -91,12 +96,14 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
         IProjectAppService projectAppService,
         IWalletContext walletContext,
         ICurrencyService currencyService,
+        Func<ProjectItemViewModel, InvestPageViewModel> investPageFactory,
         ILogger<FundersViewModel> logger)
     {
         _founderAppService = founderAppService;
         _projectAppService = projectAppService;
         _walletContext = walletContext;
         _currencyService = currencyService;
+        _investPageFactory = investPageFactory;
         _logger = logger;
 
         this.WhenAnyValue(x => x.CurrentFilter)
@@ -301,6 +308,38 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
     public bool IsExpanded(int id) => ExpandedSignatureIds.Contains(id);
 
     public void SetFilter(string filter) => CurrentFilter = filter;
+
+    /// <summary>
+    /// Open the 1-click invest flow for the project associated with a signature request.
+    /// Creates a minimal ProjectItemViewModel and instantiates the InvestPageViewModel.
+    /// </summary>
+    public void OpenInvestFlow(SignatureRequestViewModel sig)
+    {
+        if (string.IsNullOrEmpty(sig.ProjectIdentifier))
+        {
+            _logger.LogWarning("Cannot open invest flow: no project identifier on signature {Id}", sig.Id);
+            return;
+        }
+
+        _logger.LogInformation("Opening 1-click invest flow for project '{ProjectTitle}' (ID: {ProjectId})",
+            sig.ProjectTitle, sig.ProjectIdentifier);
+
+        var project = new ProjectItemViewModel
+        {
+            ProjectId = sig.ProjectIdentifier,
+            ProjectName = sig.ProjectTitle,
+            ProjectType = "Fund",
+            CurrencySymbol = _currencyService.Symbol
+        };
+
+        InvestPageViewModel = _investPageFactory(project);
+    }
+
+    /// <summary>Close the invest flow overlay.</summary>
+    public void CloseInvestFlow()
+    {
+        InvestPageViewModel = null;
+    }
 
     public void Dispose()
     {

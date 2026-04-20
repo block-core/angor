@@ -28,7 +28,6 @@ public enum NetworkTab
 {
     OnChain,
     Lightning,
-    Liquid,
     Import
 }
 
@@ -156,14 +155,12 @@ public partial class InvestPageViewModel : ReactiveObject
     // ── Tab visibility (drives the Selected-class style on each tab Border) ──
     public bool IsOnChainTab => SelectedNetworkTab == NetworkTab.OnChain;
     public bool IsLightningTab => SelectedNetworkTab == NetworkTab.Lightning;
-    public bool IsLiquidTab => SelectedNetworkTab == NetworkTab.Liquid;
     public bool IsImportTab => SelectedNetworkTab == NetworkTab.Import;
 
     /// <summary>Header above the address/invoice text — flips with the active tab.</summary>
     public string InvoiceFieldLabel => SelectedNetworkTab switch
     {
         NetworkTab.Lightning => "Lightning Invoice",
-        NetworkTab.Liquid => "Liquid Address",
         NetworkTab.Import => "Imported Invoice",
         _ => "On-Chain Address"
     };
@@ -172,7 +169,6 @@ public partial class InvestPageViewModel : ReactiveObject
     public string InvoiceTabIcon => SelectedNetworkTab switch
     {
         NetworkTab.Lightning => "fa-solid fa-bolt",
-        NetworkTab.Liquid => "fa-solid fa-droplet",
         NetworkTab.Import => "fa-solid fa-file-import",
         _ => "fa-brands fa-bitcoin"
     };
@@ -352,7 +348,6 @@ public partial class InvestPageViewModel : ReactiveObject
             {
                 this.RaisePropertyChanged(nameof(IsOnChainTab));
                 this.RaisePropertyChanged(nameof(IsLightningTab));
-                this.RaisePropertyChanged(nameof(IsLiquidTab));
                 this.RaisePropertyChanged(nameof(IsImportTab));
                 this.RaisePropertyChanged(nameof(InvoiceFieldLabel));
                 this.RaisePropertyChanged(nameof(InvoiceTabIcon));
@@ -820,7 +815,7 @@ public partial class InvestPageViewModel : ReactiveObject
     /// Cancels any running monitoring loop before kicking off the new tab's flow.
     /// Lightning click triggers Boltz swap creation + monitoring + claim → publish.
     /// On-chain click re-enters the address-monitoring loop.
-    /// Liquid/Import are visual stubs for now.
+    /// Import is a visual stub for now.
     /// </summary>
     public void SelectNetworkTab(NetworkTab tab)
     {
@@ -860,9 +855,8 @@ public partial class InvestPageViewModel : ReactiveObject
                 PaymentStatusText = "Creating Lightning invoice...";
                 PayViaLightningCommand.Execute().Subscribe();
                 break;
-            case NetworkTab.Liquid:
             case NetworkTab.Import:
-                // Stubs — no SDK call yet. Modal shows the coming-soon placeholder.
+                // Stub — no SDK call yet. Modal shows the coming-soon placeholder.
                 break;
         }
     }

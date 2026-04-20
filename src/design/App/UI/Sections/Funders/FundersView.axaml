@@ -375,6 +375,26 @@
                                                 </StackPanel>
                                             </Border>
 
+                                            <!-- Invest button (always visible) -->
+                                            <Button Name="InvestButton"
+                                                    Tag="{Binding Id}"
+                                                    Height="44" Padding="16,0"
+                                                    CornerRadius="8"
+                                                    Background="{DynamicResource PrimaryGreenBrush}"
+                                                    Foreground="White">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <i:Icon Value="fa-solid fa-bolt"
+                                                           FontSize="16"
+                                                           Foreground="White"
+                                                           VerticalAlignment="Center" />
+                                                    <TextBlock Text="Invest"
+                                                               FontSize="14"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="White"
+                                                               VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Button>
+
                                             <!-- Chat button (always visible) -->
                                             <!-- Vue: btn-secondary-green h-[52px] px-4 rounded-lg -->
                                             <Button Name="ChatButton"

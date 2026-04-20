@@ -158,17 +158,12 @@ public class OneClickInvestLightningTest
         vm.IsLightningTab.Should().BeTrue();
 
         // ── Step 6: Stub tabs don't crash ──
-        Log("[6] Stub tabs (Liquid, Import) don't crash...");
-        vm.SelectNetworkTab(NetworkTab.Liquid);
-        Dispatcher.UIThread.RunJobs();
-        vm.SelectedNetworkTab.Should().Be(NetworkTab.Liquid);
-        vm.InvoiceFieldLabel.Should().Be("Liquid Address");
-        vm.IsProcessing.Should().BeFalse("stub tabs don't start async work");
-
+        Log("[6] Stub tab (Import) doesn't crash...");
         vm.SelectNetworkTab(NetworkTab.Import);
         Dispatcher.UIThread.RunJobs();
         vm.SelectedNetworkTab.Should().Be(NetworkTab.Import);
         vm.InvoiceFieldLabel.Should().Be("Imported Invoice");
+        vm.IsProcessing.Should().BeFalse("stub tabs don't start async work");
 
         // ── Step 7: CloseModal full reset ──
         Log("[7] CloseModal resets all Lightning state...");

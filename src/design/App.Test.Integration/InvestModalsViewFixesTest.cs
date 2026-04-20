@@ -133,11 +133,8 @@ public class InvestModalsViewFixesTest
                 "errors must be tagged with the step that produced them");
         }
 
-        // Liquid + Import tabs are visual stubs — switching to them does not crash and surfaces a known label.
-        Log("[7] Stub tabs do not crash...");
-        vm.SelectNetworkTab(NetworkTab.Liquid);
-        vm.SelectedNetworkTab.Should().Be(NetworkTab.Liquid);
-        vm.InvoiceFieldLabel.Should().Be("Liquid Address");
+        // Import tab is a visual stub — switching to it does not crash and surfaces a known label.
+        Log("[7] Stub tab does not crash...");
         vm.SelectNetworkTab(NetworkTab.Import);
         vm.SelectedNetworkTab.Should().Be(NetworkTab.Import);
         vm.InvoiceFieldLabel.Should().Be("Imported Invoice");

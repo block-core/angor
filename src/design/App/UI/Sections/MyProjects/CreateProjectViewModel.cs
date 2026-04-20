@@ -607,7 +607,7 @@ public partial class CreateProjectViewModel : ReactiveObject
         {
             "fund" => SdkProjectType.Fund,
             "subscription" => SdkProjectType.Subscribe,
-            "invest" => SdkProjectType.Invest,
+            "invest" or "investment" => SdkProjectType.Invest,
             _ => throw new InvalidOperationException(
                 $"Unknown project type '{ProjectType}'. Cannot deploy project with an unrecognized type.")
         };
