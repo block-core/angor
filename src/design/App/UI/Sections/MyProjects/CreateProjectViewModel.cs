@@ -29,6 +29,12 @@ public class ProjectStageViewModel
     public string ReleaseDate { get; set; } = "";
     public string AmountBtc { get; set; } = "0.00000000";
 
+    /// <summary>
+    /// The actual typed release date used for deployment.
+    /// This is the source of truth — <see cref="ReleaseDate"/> is only for display.
+    /// </summary>
+    public DateOnly ReleaseDateValue { get; set; }
+
     /// <summary>Label for this stage row — "Stage", "Monthly Payout", "Weekly Payout", "Payment", etc.</summary>
     public string StageLabel { get; set; } = "Stage";
 
@@ -590,36 +596,44 @@ public partial class CreateProjectViewModel : ReactiveObject
     {
         // Parse target amount as BTC and convert to satoshis.
         // The UI always accepts BTC values (e.g. "1" = 1 BTC = 100_000_000 sats).
-        var targetSats = decimal.TryParse(TargetAmount, System.Globalization.NumberStyles.Number,
-                System.Globalization.CultureInfo.InvariantCulture, out var tBtc)
-            ? tBtc.ToUnitSatoshi()
-            : 0L;
+        if (!decimal.TryParse(TargetAmount, System.Globalization.NumberStyles.Number,
+                System.Globalization.CultureInfo.InvariantCulture, out var tBtc) || tBtc <= 0)
+            throw new InvalidOperationException(
+                $"Invalid target amount '{TargetAmount}'. Cannot deploy project without a valid target amount.");
+        var targetSats = tBtc.ToUnitSatoshi();
 
         // Map UI project type to SDK ProjectType
         var sdkProjectType = ProjectType switch
         {
             "fund" => SdkProjectType.Fund,
             "subscription" => SdkProjectType.Subscribe,
-            _ => SdkProjectType.Invest
+            "invest" => SdkProjectType.Invest,
+            _ => throw new InvalidOperationException(
+                $"Unknown project type '{ProjectType}'. Cannot deploy project with an unrecognized type.")
         };
 
         // Parse dates
-        var startDt = DateTime.TryParse(StartDate, out var sd) ? sd : DateTime.UtcNow;
+        if (!DateTime.TryParse(StartDate, out var startDt))
+            throw new InvalidOperationException(
+                $"Invalid start date '{StartDate}'. Cannot deploy project without a valid start date.");
         DateTime? endDt = DateTime.TryParse(EndDate, out var ed) ? ed : null;
 
         // Build stages from the wizard's generated Stages collection
         var stageDtos = Stages.Select((s, i) =>
         {
             var pctStr = s.Percentage.Replace("%", "");
-            var pct = decimal.TryParse(pctStr, System.Globalization.NumberStyles.Float,
-                System.Globalization.CultureInfo.InvariantCulture, out var p) ? p : 0m;
+            if (!decimal.TryParse(pctStr, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var pct) || pct <= 0)
+                throw new InvalidOperationException(
+                    $"Stage {s.StageNumber} has invalid percentage '{s.Percentage}'. " +
+                    $"Cannot deploy project with missing or zero stage allocation.");
 
-            // Parse the release date from the display text
-            var stageDate = DateTime.TryParse(s.ReleaseDate, out var rd)
-                ? DateOnly.FromDateTime(rd)
-                : DateOnly.FromDateTime(startDt.AddMonths(i + 1));
+            if (s.ReleaseDateValue == default)
+                throw new InvalidOperationException(
+                    $"Stage {s.StageNumber} has no valid release date. " +
+                    $"Cannot deploy project with missing stage dates.");
 
-            return new CreateProjectStageDto(stageDate, pct);
+            return new CreateProjectStageDto(s.ReleaseDateValue, pct);
         }).ToList();
 
         // Build dynamic patterns for Fund/Subscribe types
@@ -654,7 +668,9 @@ public partial class CreateProjectViewModel : ReactiveObject
 
             payoutDayValue = IsPayoutMonthly && MonthlyPayoutDate.HasValue
                 ? MonthlyPayoutDate.Value
-                : int.TryParse(PayoutDay, out var pd) ? pd : 1;
+                : int.TryParse(PayoutDay, out var pd) ? pd
+                : throw new InvalidOperationException(
+                    $"Invalid payout day '{PayoutDay}'. Cannot deploy project without a valid payout day.");
         }
 
         // For subscription, parse the subscription price as sats
@@ -677,7 +693,10 @@ public partial class CreateProjectViewModel : ReactiveObject
 
         return new CreateProjectDto
         {
-            ProjectName = ProjectName ?? "Untitled Project",
+            ProjectName = !string.IsNullOrWhiteSpace(ProjectName)
+                ? ProjectName
+                : throw new InvalidOperationException(
+                    "Project name is required. Cannot deploy project without a name."),
             Description = ProjectAbout ?? "",
             AvatarUri = ProfileUrl ?? "",
             BannerUri = BannerUrl ?? "",
@@ -757,6 +776,7 @@ public partial class CreateProjectViewModel : ReactiveObject
                 StageNumber = i + 1,
                 Percentage = $"{pct}%",
                 ReleaseDate = FormatReleaseDateOrdinal(releaseDate),
+                ReleaseDateValue = DateOnly.FromDateTime(releaseDate),
                 AmountBtc = btcAmount.ToString("F4"),
                 StageLabel = "Stage",
                 DisplayText = $"{pct}% ({btcAmount:F4} {_currencyService.Symbol}) released on {FormatReleaseDateOrdinal(releaseDate)}"
@@ -818,6 +838,7 @@ public partial class CreateProjectViewModel : ReactiveObject
                 StageNumber = i + 1,
                 Percentage = $"{pct}%",
                 ReleaseDate = FormatReleaseDateOrdinal(releaseDate),
+                ReleaseDateValue = DateOnly.FromDateTime(releaseDate),
                 AmountBtc = (targetBtc * pct / 100).ToString("F4"),
                 StageLabel = label,
                 DisplayText = $"{pct}% paid on {FormatReleaseDateOrdinal(releaseDate)}"
@@ -994,6 +1015,7 @@ public partial class CreateProjectViewModel : ReactiveObject
                 StageNumber = i + 1,
                 Percentage = $"{pct}%",
                 ReleaseDate = FormatReleaseDateOrdinal(releaseDate),
+                ReleaseDateValue = DateOnly.FromDateTime(releaseDate),
                 AmountBtc = (targetBtc * pct / 100).ToString("F4"),
                 StageLabel = label,
                 DisplayText = $"{pct}% paid on {FormatReleaseDateOrdinal(releaseDate)}"
@@ -1141,6 +1163,7 @@ public partial class CreateProjectViewModel : ReactiveObject
             StageNumber = 1,
             Percentage = "10%",
             ReleaseDate = FormatReleaseDateOrdinal(today),
+            ReleaseDateValue = DateOnly.FromDateTime(today),
             AmountBtc = (targetBtc * 0.10).ToString("F4"),
             StageLabel = "Stage",
             DisplayText = $"10% ({targetBtc * 0.10:F4} {_currencyService.Symbol}) released on {FormatReleaseDateOrdinal(today)}"
@@ -1150,6 +1173,7 @@ public partial class CreateProjectViewModel : ReactiveObject
             StageNumber = 2,
             Percentage = "30%",
             ReleaseDate = FormatReleaseDateOrdinal(today),
+            ReleaseDateValue = DateOnly.FromDateTime(today),
             AmountBtc = (targetBtc * 0.30).ToString("F4"),
             StageLabel = "Stage",
             DisplayText = $"30% ({targetBtc * 0.30:F4} {_currencyService.Symbol}) released on {FormatReleaseDateOrdinal(today)}"
@@ -1159,6 +1183,7 @@ public partial class CreateProjectViewModel : ReactiveObject
             StageNumber = 3,
             Percentage = "60%",
             ReleaseDate = FormatReleaseDateOrdinal(today),
+            ReleaseDateValue = DateOnly.FromDateTime(today),
             AmountBtc = (targetBtc * 0.60).ToString("F4"),
             StageLabel = "Stage",
             DisplayText = $"60% ({targetBtc * 0.60:F4} {_currencyService.Symbol}) released on {FormatReleaseDateOrdinal(today)}"
