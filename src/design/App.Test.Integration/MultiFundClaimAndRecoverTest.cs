@@ -660,6 +660,8 @@ public class MultiFundClaimAndRecoverTest
         return false;
     }
 
+    /// DIAGNOSTIC SDK CALL: Logs the raw Build*Transaction result to help diagnose
+    /// why the UI-level recovery/release retry may be failing. Not part of the test flow.
     private static async Task LogRecoveryBuildDiagnostics(InvestmentViewModel investment, RecoveryAction action)
     {
         var investmentAppService = global::App.App.Services.GetRequiredService<IInvestmentAppService>();

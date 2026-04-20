@@ -233,9 +233,9 @@ public class FindProjectsInvoiceFlowTest
         Log("[STEP 5] Invoice monitoring active. Status: " + investVm.PaymentStatusText);
 
         // ── Step 6: Pay the invoice address via the faucet (external payer) ──
-        // The VM monitors the wallet's next unused receive address. Reading it
-        // here returns the same address (pure read — no pointer mutation) so we
-        // can hand it to the faucet exactly as a QR-scan payer would.
+        // DIRECT SDK CALL: The InvestPageViewModel monitors a receive address internally but
+        // does not expose it as a public property. We read it here to pass to the faucet,
+        // simulating an external payer scanning the QR code. This is a pure read — no state mutation.
         Log("[STEP 6] Fetching invoice address and paying it via faucet...");
         var walletContext = global::App.App.Services.GetRequiredService<IWalletContext>();
         var walletAppService = global::App.App.Services.GetRequiredService<IWalletAppService>();

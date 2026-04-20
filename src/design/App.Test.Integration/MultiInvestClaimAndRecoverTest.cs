@@ -673,6 +673,8 @@ public class MultiInvestClaimAndRecoverTest
         return false;
     }
 
+    /// DIAGNOSTIC SDK CALL: Logs the raw BuildUnfundedReleaseTransaction result to help
+    /// diagnose why the UI-level release retry may be failing. Not part of the test flow.
     private static async Task LogUnfundedReleaseBuildDiagnostics(InvestmentViewModel investment)
     {
         var investmentAppService = global::App.App.Services.GetRequiredService<IInvestmentAppService>();

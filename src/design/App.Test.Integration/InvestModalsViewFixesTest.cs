@@ -1,15 +1,9 @@
-using Angor.Sdk.Funding.Investor;
-using Angor.Sdk.Wallet.Application;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
-using App.UI.Sections.Portfolio;
-using App.UI.Shared;
-using App.UI.Shared.Services;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using FluentAssertions;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace App.Test.Integration;
 
@@ -29,8 +23,8 @@ namespace App.Test.Integration;
 ///      ArgumentNullException("Value cannot be null. (Parameter 'key')") strings — i.e. our defensive
 ///      pre-checks fire before any SDK call that could throw an unwrapped null-key exception.
 ///
-/// The test constructs an InvestPageViewModel directly from DI to keep the run under a couple of seconds —
-/// it still boots the full app (so DI / Avalonia / SDK wiring is exercised) but does not navigate the UI.
+/// The InvestPageViewModel is obtained via UI navigation (Find Projects → project detail → invest page)
+/// so the full DI, factory wiring, and navigation stack are exercised.
 /// </summary>
 public class InvestModalsViewFixesTest
 {
@@ -42,46 +36,31 @@ public class InvestModalsViewFixesTest
 
         var window = TestHelpers.CreateShellWindow();
 
-        // Resolve services from the live DI container so we exercise real wiring.
-        var services = global::App.App.Services;
-        var walletAppService = services.GetRequiredService<IWalletAppService>();
-        var investmentAppService = services.GetRequiredService<IInvestmentAppService>();
-        var portfolioVm = services.GetRequiredService<PortfolioViewModel>();
-        var currencyService = services.GetRequiredService<ICurrencyService>();
-        var walletContext = services.GetRequiredService<IWalletContext>();
-        var loggerFactory = services.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger<InvestPageViewModel>();
+        // ── Navigate to Find Projects and get an open project ──
+        Log("[0] Navigating to Find Projects and loading projects...");
+        window.NavigateToSection("Find Projects");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
 
-        // Minimal valid project. We don't deploy/lookup — we only drive the VM state machine.
-        var project = new ProjectItemViewModel
-        {
-            ProjectId = "headless-fixes-test-project",
-            ProjectName = "Headless Fixes Test",
-            ProjectType = "Fund",
-            FounderKey = "00",
-            NostrNpub = "00",
-            Target = "1.0",
-            TargetLabel = "1 BTC",
-            InvestorLabel = "0",
-            Status = "Open",
-            StartDate = DateTime.UtcNow.ToString("dd MMM yyyy"),
-            EndDate = DateTime.UtcNow.AddDays(30).ToString("dd MMM yyyy"),
-            PenaltyDays = "30",
-            PenaltyThresholdSats = 1_000_000
-        };
+        var findVm = window.GetFindProjectsViewModel();
+        findVm.Should().NotBeNull("FindProjectsViewModel should be available");
+        await WaitForProjects(findVm!);
 
-        var vm = new InvestPageViewModel(
-            project,
-            walletAppService,
-            investmentAppService,
-            portfolioVm,
-            currencyService,
-            walletContext,
-            logger);
+        var project = findVm!.Projects.FirstOrDefault(p => p.IsOpen);
+        project.Should().NotBeNull("at least one open project should be available for testing");
+
+        // ── Open project detail and invest page via UI navigation ──
+        findVm.OpenProjectDetail(project!);
+        Dispatcher.UIThread.RunJobs();
+        findVm.OpenInvestPage();
+        Dispatcher.UIThread.RunJobs();
+
+        var vm = findVm.InvestPageViewModel;
+        vm.Should().NotBeNull("InvestPageViewModel should be created via factory");
 
         // ── Fix 1: HasError binding drives the new Invoice-modal error banner ──
         Log("[1] HasError binding...");
-        vm.HasError.Should().BeFalse("no error initially");
+        vm!.HasError.Should().BeFalse("no error initially");
         vm.ErrorMessage = "synthetic test error";
         vm.HasError.Should().BeTrue("HasError must flip when ErrorMessage is set so the banner shows");
         vm.ErrorMessage = null;
@@ -165,6 +144,21 @@ public class InvestModalsViewFixesTest
 
         window.Close();
         Log("========== InvestModals fixes smoke test PASSED ==========");
+    }
+
+    private static async Task WaitForProjects(FindProjectsViewModel vm, TimeSpan? timeout = null)
+    {
+        var deadline = DateTime.UtcNow + (timeout ?? TimeSpan.FromSeconds(30));
+        while (DateTime.UtcNow < deadline)
+        {
+            Dispatcher.UIThread.RunJobs();
+            if (vm.Projects.Count > 0)
+                return;
+            await Task.Delay(250);
+        }
+
+        vm.Projects.Should().NotBeEmpty(
+            "projects should load from SDK within timeout — ensure testnet indexer/relays are reachable");
     }
 
     private static async Task PumpUntilAsync(Func<bool> condition, TimeSpan timeout)

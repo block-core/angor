@@ -1,15 +1,11 @@
-using Angor.Sdk.Funding.Investor;
-using Angor.Sdk.Wallet.Application;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
 using App.UI.Sections.Portfolio;
-using App.UI.Shared;
-using App.UI.Shared.Services;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace App.Test.Integration;
 
@@ -23,6 +19,9 @@ namespace App.Test.Integration;
 ///   (timeout/error expected without testnet) →
 ///   verify error is from Lightning path (not stale on-chain) →
 ///   portfolio deduplication after investment completion.
+///
+/// The InvestPageViewModel is obtained via UI navigation (Find Projects → project detail → invest page)
+/// rather than being constructed directly, so the full DI and factory wiring is exercised.
 /// </summary>
 public class OneClickInvestLightningTest
 {
@@ -33,30 +32,32 @@ public class OneClickInvestLightningTest
         Log("========== STARTING 1-click invest LIGHTNING test ==========");
 
         var window = TestHelpers.CreateShellWindow();
-        var services = global::App.App.Services;
 
-        var walletAppService = services.GetRequiredService<IWalletAppService>();
-        var investmentAppService = services.GetRequiredService<IInvestmentAppService>();
-        var portfolioVm = services.GetRequiredService<PortfolioViewModel>();
-        var currencyService = services.GetRequiredService<ICurrencyService>();
-        var walletContext = services.GetRequiredService<IWalletContext>();
-        var loggerFactory = services.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger<InvestPageViewModel>();
+        // ── Navigate to Find Projects and get an open project ──
+        Log("[0] Navigating to Find Projects and loading projects...");
+        window.NavigateToSection("Find Projects");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
 
-        var project = CreateTestProject("Fund");
+        var findVm = window.GetFindProjectsViewModel();
+        findVm.Should().NotBeNull("FindProjectsViewModel should be available");
+        await WaitForProjects(findVm!);
 
-        var vm = new InvestPageViewModel(
-            project,
-            walletAppService,
-            investmentAppService,
-            portfolioVm,
-            currencyService,
-            walletContext,
-            logger);
+        var project = findVm!.Projects.FirstOrDefault(p => p.IsOpen);
+        project.Should().NotBeNull("at least one open project should be available for testing");
+
+        // ── Open project detail and invest page via UI navigation ──
+        findVm.OpenProjectDetail(project!);
+        Dispatcher.UIThread.RunJobs();
+        findVm.OpenInvestPage();
+        Dispatcher.UIThread.RunJobs();
+
+        var vm = findVm.InvestPageViewModel;
+        vm.Should().NotBeNull("InvestPageViewModel should be created via factory");
 
         // ── Step 1: Set amount and enter invoice screen ──
         Log("[1] Set amount and show invoice...");
-        vm.InvestmentAmount = "0.001";
+        vm!.InvestmentAmount = "0.001";
         Dispatcher.UIThread.RunJobs();
         vm.CanSubmit.Should().BeTrue();
 
@@ -194,12 +195,20 @@ public class OneClickInvestLightningTest
         Log("========== STARTING portfolio deduplication test ==========");
 
         var window = TestHelpers.CreateShellWindow();
-        var services = global::App.App.Services;
 
-        var portfolioVm = services.GetRequiredService<PortfolioViewModel>();
-        var currencyService = services.GetRequiredService<ICurrencyService>();
+        // ── Navigate to Find Projects to get a real project for deduplication testing ──
+        window.NavigateToSection("Find Projects");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
 
-        var project = CreateTestProject("Fund");
+        var findVm = window.GetFindProjectsViewModel();
+        findVm.Should().NotBeNull();
+        await WaitForProjects(findVm!);
+
+        var project = findVm!.Projects.First(p => p.IsOpen);
+
+        // Get portfolio VM via DI (it's a singleton — same instance the app uses)
+        var portfolioVm = global::App.App.Services.GetRequiredService<PortfolioViewModel>();
 
         // Simulate adding an investment from the invest flow (optimistic add)
         var initialCount = portfolioVm.Investments.Count;
@@ -224,22 +233,20 @@ public class OneClickInvestLightningTest
         Log("========== Portfolio deduplication test PASSED ==========");
     }
 
-    private static ProjectItemViewModel CreateTestProject(string projectType) => new()
+    private static async Task WaitForProjects(FindProjectsViewModel vm, TimeSpan? timeout = null)
     {
-        ProjectId = "headless-lightning-test-project",
-        ProjectName = "Headless Lightning Test",
-        ProjectType = projectType,
-        FounderKey = "00",
-        NostrNpub = "00",
-        Target = "1.0",
-        TargetLabel = "1 BTC",
-        InvestorLabel = "0",
-        Status = "Open",
-        StartDate = DateTime.UtcNow.ToString("dd MMM yyyy"),
-        EndDate = DateTime.UtcNow.AddDays(30).ToString("dd MMM yyyy"),
-        PenaltyDays = "30",
-        PenaltyThresholdSats = 1_000_000
-    };
+        var deadline = DateTime.UtcNow + (timeout ?? TimeSpan.FromSeconds(30));
+        while (DateTime.UtcNow < deadline)
+        {
+            Dispatcher.UIThread.RunJobs();
+            if (vm.Projects.Count > 0)
+                return;
+            await Task.Delay(250);
+        }
+
+        vm.Projects.Should().NotBeEmpty(
+            "projects should load from SDK within timeout — ensure testnet indexer/relays are reachable");
+    }
 
     private static async Task PumpUntilAsync(Func<bool> condition, TimeSpan timeout)
     {
