@@ -98,7 +98,7 @@ public class SignatureStore
             requiresApproval = threshold > 0 && amountSats >= threshold;
         }
 
-        var now = DateTime.Now;
+        var now = DateTime.UtcNow;
 
         var sig = new SharedSignature
         {
