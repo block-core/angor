@@ -5,8 +5,11 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.VisualTree;
-using App.UI.Shell;
+using App.UI.Shared;
+using App.UI.Shared.Controls;
 using App.UI.Shared.Helpers;
+using App.UI.Shell;
+using ReactiveUI;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
@@ -15,6 +18,8 @@ namespace App.UI.Sections.Funders;
 public partial class FundersView : UserControl
 {
     private CompositeDisposable? _subscriptions;
+    private IDisposable? _layoutSubscription;
+    private ScrollableView? _fundersScrollable;
 
     /// <summary>Design-time only.</summary>
     public FundersView() => InitializeComponent();
@@ -36,6 +41,19 @@ public partial class FundersView : UserControl
         // Subscribe to visibility states once DataContext is set
         DataContextChanged += (_, _) => SubscribeToVisibility();
         SubscribeToVisibility();
+
+        // Cache ScrollableView for responsive bottom padding
+        _fundersScrollable = this.FindControl<ScrollableView>("FundersListPanel");
+
+        // ── Responsive layout: adjust bottom padding for tab bar clearance ──
+        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
+            .Subscribe(isCompact =>
+            {
+                if (_fundersScrollable != null)
+                    _fundersScrollable.ContentPadding = isCompact
+                        ? new Thickness(16, 16, 16, 96)
+                        : new Thickness(24);
+            });
     }
 
     private void SetFilterFromTab(string filter)
@@ -101,6 +119,8 @@ public partial class FundersView : UserControl
     {
         _subscriptions?.Dispose();
         _subscriptions = null;
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = null;
         base.OnDetachedFromLogicalTree(e);
     }
 

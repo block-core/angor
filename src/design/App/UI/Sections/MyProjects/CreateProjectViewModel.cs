@@ -167,9 +167,9 @@ public partial class CreateProjectViewModel : ReactiveObject
         DeployFlow = deployFlow;
         _currencyService = currencyService;
         _networkConfiguration = networkConfiguration;
-        // Default start date to today
+        // Default start date to today (UTC)
         StartDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
-        InvestStartDate = DateTime.Now;
+        InvestStartDate = DateTime.UtcNow;
 
         // Generate sample stages when a payout pattern is selected (legacy)
         this.WhenAnyValue(x => x.SelectedPayoutPattern)
@@ -1066,7 +1066,7 @@ public partial class CreateProjectViewModel : ReactiveObject
         PenaltyDays = 90;
         ApprovalThreshold = "0.001";
         SubscriptionPrice = "";
-        InvestStartDate = DateTime.Now;
+        InvestStartDate = DateTime.UtcNow;
         InvestEndDate = null;
 
         // Step 5: Stages/Payouts
@@ -1144,18 +1144,18 @@ public partial class CreateProjectViewModel : ReactiveObject
     {
         // Step 2: Profile
         ProjectName = $"Debug Project {id}";
-        ProjectAbout = $"Auto-populated debug project {id} for testing on testnet. Created at {DateTime.Now:HH:mm:ss}.";
+        ProjectAbout = $"Auto-populated debug project {id} for testing on testnet. Created at {DateTime.UtcNow:HH:mm:ss} UTC.";
         ProjectWebsite = "https://angor.io";
 
         // Step 4: Funding config
         TargetAmount = "0.01";
         PenaltyDays = 0;
-        InvestStartDate = DateTime.Now.Date;
-        InvestEndDate = DateTime.Now.Date;
+        InvestStartDate = DateTime.UtcNow.Date;
+        InvestEndDate = DateTime.UtcNow.Date;
 
         // Step 5: Stages — 3 stages: stage 1 today, stage 2 +30 days, stage 3 +60 days
         Stages.Clear();
-        var today = DateTime.Now.Date;
+        var today = DateTime.UtcNow.Date;
         var stage2Date = today.AddDays(30);
         var stage3Date = today.AddDays(60);
         var targetBtc = 0.01;
@@ -1200,7 +1200,7 @@ public partial class CreateProjectViewModel : ReactiveObject
     {
         // Step 2: Profile
         ProjectName = $"Debug Fund {id}";
-        ProjectAbout = $"Auto-populated debug fund {id} for testing on testnet. Created at {DateTime.Now:HH:mm:ss}.";
+        ProjectAbout = $"Auto-populated debug fund {id} for testing on testnet. Created at {DateTime.UtcNow:HH:mm:ss} UTC.";
         ProjectWebsite = "https://angor.io";
 
         // Step 4: Funding config
@@ -1208,9 +1208,10 @@ public partial class CreateProjectViewModel : ReactiveObject
         ApprovalThreshold = "0.01";
         PenaltyDays = 0;
 
-        // Step 5: Payouts — Monthly, day = today, installments 3 and 6
+        // Step 5: Payouts — Monthly, day = today (UTC), installments 3 and 6
+        // Use UtcNow.Day to stay consistent with StartDate which is also UTC-based.
         PayoutFrequency = "Monthly";
-        MonthlyPayoutDate = DateTime.Now.Day;
+        MonthlyPayoutDate = DateTime.UtcNow.Day;
         SelectedInstallmentCounts.Clear();
         SelectedInstallmentCounts.Add(3);
         SelectedInstallmentCounts.Add(6);
@@ -1226,15 +1227,15 @@ public partial class CreateProjectViewModel : ReactiveObject
     {
         // Step 2: Profile
         ProjectName = $"Debug Subscription {id}";
-        ProjectAbout = $"Auto-populated debug subscription {id} for testing on testnet. Created at {DateTime.Now:HH:mm:ss}.";
+        ProjectAbout = $"Auto-populated debug subscription {id} for testing on testnet. Created at {DateTime.UtcNow:HH:mm:ss} UTC.";
         ProjectWebsite = "https://angor.io";
 
         // Step 4: Subscription price
         SubscriptionPrice = "0.0001";
 
-        // Step 5: Payouts — Monthly, day = today, installments 3 and 6
+        // Step 5: Payouts — Monthly, day = today (UTC), installments 3 and 6
         PayoutFrequency = "Monthly";
-        MonthlyPayoutDate = DateTime.Now.Day;
+        MonthlyPayoutDate = DateTime.UtcNow.Day;
         SelectedInstallmentCounts.Clear();
         SelectedInstallmentCounts.Add(3);
         SelectedInstallmentCounts.Add(6);

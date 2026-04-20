@@ -8,6 +8,7 @@ using Avalonia.VisualTree;
 using Angor.Sdk.Funding.Projects;
 using Angor.Shared;
 using Angor.Shared.Services;
+using App.UI.Shared;
 using App.UI.Shared.Controls;
 using App.UI.Shared.Helpers;
 using App.UI.Shell;
@@ -20,6 +21,7 @@ public partial class ProjectDetailView : UserControl
     private bool _detailsExpanded = false;
     private bool _nostrExpanded = false;
     private bool _navCtaVisible;
+    private IDisposable? _layoutSubscription;
 
     // Cached FindControl results — avoid repeated tree walks
     private Button? _backBtn;
@@ -36,6 +38,22 @@ public partial class ProjectDetailView : UserControl
     private Border? _nostrHeader;
     private StackPanel? _nostrContent;
     private Control? _nostrChevron;
+
+    // Responsive layout controls
+    private Grid? _topSectionGrid;
+    private Border? _topLeftCard;
+    private Panel? _topRightCard;
+    private Grid? _statsGrid;
+    private Border? _statCard0;
+    private Border? _statCard1;
+    private Border? _statCard2;
+    private Grid? _investInfoGrid;
+    private Grid? _fundInfoGrid;
+    private Grid? _subInfoGrid;
+    private Border? _projectNamePill;
+    private StackPanel? _contentStack;
+    private DockPanel? _stickyNavBar;
+    private Panel? _navSpacer;
 
     // Track the PropertyChanged handler to prevent accumulation
     private EventHandler<AvaloniaPropertyChangedEventArgs>? _parentPropertyChangedHandler;
@@ -119,6 +137,9 @@ public partial class ProjectDetailView : UserControl
                 ev.Handled = true;
             };
 
+        // Set progress bar width after loaded
+        Loaded += OnLoaded;
+
         // Explorer link — open project txid in block explorer
         var explorerLink = this.FindControl<Border>("ExplorerLink");
         if (explorerLink != null)
@@ -129,8 +150,233 @@ public partial class ProjectDetailView : UserControl
         if (viewJsonBtn != null)
             viewJsonBtn.PointerPressed += OnViewProjectJsonPressed;
 
-        // Set progress bar width after loaded
-        Loaded += OnLoaded;
+        // Cache responsive layout controls
+        _topSectionGrid = this.FindControl<Grid>("TopSectionGrid");
+        _topLeftCard = this.FindControl<Border>("TopLeftCard");
+        _topRightCard = this.FindControl<Panel>("TopRightCard");
+        _statsGrid = this.FindControl<Grid>("StatsGrid");
+        _statCard0 = this.FindControl<Border>("StatCard0");
+        _statCard1 = this.FindControl<Border>("StatCard1");
+        _statCard2 = this.FindControl<Border>("StatCard2");
+        _investInfoGrid = this.FindControl<Grid>("InvestInfoGrid");
+        _fundInfoGrid = this.FindControl<Grid>("FundInfoGrid");
+        _subInfoGrid = this.FindControl<Grid>("SubInfoGrid");
+        _projectNamePill = this.FindControl<Border>("ProjectNamePill");
+        _contentStack = this.FindControl<StackPanel>("ContentStack");
+        _stickyNavBar = this.FindControl<DockPanel>("StickyNavBar");
+        _navSpacer = this.FindControl<Panel>("NavSpacer");
+
+        // ── Responsive layout switching ──
+        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
+            .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
+    }
+
+    private void ApplyResponsiveLayout(bool isCompact)
+    {
+        // ── Top section: *,400 → stacked ──
+        if (_topSectionGrid != null && _topLeftCard != null && _topRightCard != null)
+        {
+            if (isCompact)
+            {
+                _topSectionGrid.ColumnDefinitions.Clear();
+                _topSectionGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _topSectionGrid.RowDefinitions.Clear();
+                _topSectionGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                _topSectionGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+
+                Grid.SetColumn(_topLeftCard, 0);
+                Grid.SetRow(_topLeftCard, 0);
+                _topLeftCard.Margin = new Thickness(0, 0, 0, 24);
+
+                Grid.SetColumn(_topRightCard, 0);
+                Grid.SetRow(_topRightCard, 1);
+            }
+            else
+            {
+                _topSectionGrid.ColumnDefinitions.Clear();
+                _topSectionGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _topSectionGrid.ColumnDefinitions.Add(new ColumnDefinition(400, GridUnitType.Pixel));
+                _topSectionGrid.RowDefinitions.Clear();
+
+                Grid.SetColumn(_topLeftCard, 0);
+                Grid.SetRow(_topLeftCard, 0);
+                _topLeftCard.Margin = new Thickness(0, 0, 24, 0);
+
+                Grid.SetColumn(_topRightCard, 1);
+                Grid.SetRow(_topRightCard, 0);
+            }
+        }
+
+        // ── Stats grid: 3 cols with spacers → stacked ──
+        if (_statsGrid != null && _statCard0 != null && _statCard1 != null && _statCard2 != null)
+        {
+            if (isCompact)
+            {
+                _statsGrid.ColumnDefinitions.Clear();
+                _statsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _statsGrid.RowDefinitions.Clear();
+                _statsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                _statsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                _statsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+
+                Grid.SetColumn(_statCard0, 0); Grid.SetRow(_statCard0, 0);
+                Grid.SetColumn(_statCard1, 0); Grid.SetRow(_statCard1, 1);
+                Grid.SetColumn(_statCard2, 0); Grid.SetRow(_statCard2, 2);
+                _statCard0.Margin = new Thickness(0, 0, 0, 12);
+                _statCard1.Margin = new Thickness(0, 0, 0, 12);
+                _statCard2.Margin = new Thickness(0);
+            }
+            else
+            {
+                _statsGrid.ColumnDefinitions.Clear();
+                _statsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _statsGrid.ColumnDefinitions.Add(new ColumnDefinition(16, GridUnitType.Pixel));
+                _statsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _statsGrid.ColumnDefinitions.Add(new ColumnDefinition(16, GridUnitType.Pixel));
+                _statsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _statsGrid.RowDefinitions.Clear();
+
+                Grid.SetColumn(_statCard0, 0); Grid.SetRow(_statCard0, 0);
+                Grid.SetColumn(_statCard1, 2); Grid.SetRow(_statCard1, 0);
+                Grid.SetColumn(_statCard2, 4); Grid.SetRow(_statCard2, 0);
+                _statCard0.Margin = new Thickness(0);
+                _statCard1.Margin = new Thickness(0);
+                _statCard2.Margin = new Thickness(0);
+            }
+        }
+
+        // ── Investment info grid: 2x2 → stacked ──
+        if (_investInfoGrid != null)
+        {
+            if (isCompact)
+            {
+                _investInfoGrid.ColumnDefinitions.Clear();
+                _investInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _investInfoGrid.RowDefinitions.Clear();
+                // 4 cards stacked with 12px gap rows
+                for (int i = 0; i < 7; i++)
+                    _investInfoGrid.RowDefinitions.Add(new RowDefinition(i % 2 == 0 ? GridLength.Auto : new GridLength(12, GridUnitType.Pixel)));
+
+                // Re-assign children positions
+                var children = _investInfoGrid.Children.OfType<Border>().ToArray();
+                for (int i = 0; i < children.Length; i++)
+                {
+                    Grid.SetColumn(children[i], 0);
+                    Grid.SetRow(children[i], i * 2);
+                }
+            }
+            else
+            {
+                _investInfoGrid.ColumnDefinitions.Clear();
+                _investInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _investInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(16, GridUnitType.Pixel));
+                _investInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _investInfoGrid.RowDefinitions.Clear();
+                _investInfoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                _investInfoGrid.RowDefinitions.Add(new RowDefinition(16, GridUnitType.Pixel));
+                _investInfoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+
+                // Restore 2x2 layout
+                var children = _investInfoGrid.Children.OfType<Border>().ToArray();
+                if (children.Length >= 4)
+                {
+                    Grid.SetRow(children[0], 0); Grid.SetColumn(children[0], 0);
+                    Grid.SetRow(children[1], 0); Grid.SetColumn(children[1], 2);
+                    Grid.SetRow(children[2], 2); Grid.SetColumn(children[2], 0);
+                    Grid.SetRow(children[3], 2); Grid.SetColumn(children[3], 2);
+                }
+            }
+        }
+
+        // ── Fund info grid: 2 cols → stacked ──
+        if (_fundInfoGrid != null)
+        {
+            if (isCompact)
+            {
+                _fundInfoGrid.ColumnDefinitions.Clear();
+                _fundInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _fundInfoGrid.RowDefinitions.Clear();
+                _fundInfoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                _fundInfoGrid.RowDefinitions.Add(new RowDefinition(12, GridUnitType.Pixel));
+                _fundInfoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+
+                var children = _fundInfoGrid.Children.OfType<Border>().ToArray();
+                if (children.Length >= 2)
+                {
+                    Grid.SetColumn(children[0], 0); Grid.SetRow(children[0], 0);
+                    Grid.SetColumn(children[1], 0); Grid.SetRow(children[1], 2);
+                }
+            }
+            else
+            {
+                _fundInfoGrid.ColumnDefinitions.Clear();
+                _fundInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _fundInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(16, GridUnitType.Pixel));
+                _fundInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _fundInfoGrid.RowDefinitions.Clear();
+
+                var children = _fundInfoGrid.Children.OfType<Border>().ToArray();
+                if (children.Length >= 2)
+                {
+                    Grid.SetColumn(children[0], 0); Grid.SetRow(children[0], 0);
+                    Grid.SetColumn(children[1], 2); Grid.SetRow(children[1], 0);
+                }
+            }
+        }
+
+        // ── Subscription info grid: 3 cols → stacked ──
+        if (_subInfoGrid != null)
+        {
+            if (isCompact)
+            {
+                _subInfoGrid.ColumnDefinitions.Clear();
+                _subInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _subInfoGrid.RowDefinitions.Clear();
+                _subInfoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                _subInfoGrid.RowDefinitions.Add(new RowDefinition(12, GridUnitType.Pixel));
+                _subInfoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                _subInfoGrid.RowDefinitions.Add(new RowDefinition(12, GridUnitType.Pixel));
+                _subInfoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+
+                var children = _subInfoGrid.Children.OfType<Border>().ToArray();
+                if (children.Length >= 3)
+                {
+                    Grid.SetColumn(children[0], 0); Grid.SetRow(children[0], 0);
+                    Grid.SetColumn(children[1], 0); Grid.SetRow(children[1], 2);
+                    Grid.SetColumn(children[2], 0); Grid.SetRow(children[2], 4);
+                }
+            }
+            else
+            {
+                _subInfoGrid.ColumnDefinitions.Clear();
+                _subInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _subInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(16, GridUnitType.Pixel));
+                _subInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _subInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(16, GridUnitType.Pixel));
+                _subInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                _subInfoGrid.RowDefinitions.Clear();
+
+                var children = _subInfoGrid.Children.OfType<Border>().ToArray();
+                if (children.Length >= 3)
+                {
+                    Grid.SetColumn(children[0], 0); Grid.SetRow(children[0], 0);
+                    Grid.SetColumn(children[1], 2); Grid.SetRow(children[1], 0);
+                    Grid.SetColumn(children[2], 4); Grid.SetRow(children[2], 0);
+                }
+            }
+        }
+
+        // ── Nav bar: hide entire sticky nav + spacer on compact (ShellView's InvestorBackBar provides mobile buttons) ──
+        if (_stickyNavBar != null)
+            _stickyNavBar.IsVisible = !isCompact;
+        if (_navSpacer != null)
+            _navSpacer.IsVisible = !isCompact;
+
+        // ── Content margins: compact uses 16px gutter to match floating-bar + sub-tab margins ──
+        if (_contentStack != null)
+            _contentStack.Margin = isCompact
+                ? new Thickness(16, 16, 16, 96)
+                : new Thickness(24, 0, 24, 24);
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)
@@ -143,6 +389,33 @@ public partial class ProjectDetailView : UserControl
             _navCta.IsHitTestVisible = false;
         }
         UpdateProgressBar();
+    }
+
+    private void OnExplorerLinkPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (DataContext is ProjectItemViewModel project && !string.IsNullOrEmpty(project.ProjectId))
+        {
+            var networkService = App.Services.GetRequiredService<INetworkService>();
+            var derivation = App.Services.GetRequiredService<IDerivationOperations>();
+            var bitcoinAddress = derivation.ConvertAngorKeyToBitcoinAddress(project.ProjectId);
+            ExplorerHelper.OpenAddress(networkService, bitcoinAddress);
+        }
+        e.Handled = true;
+    }
+
+    private void OnViewProjectJsonPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (DataContext is ProjectItemViewModel project && !string.IsNullOrEmpty(project.ProjectId))
+        {
+            var shell = this.FindAncestorOfType<ShellView>();
+            if (shell?.DataContext is ShellViewModel shellVm && !shellVm.IsModalOpen)
+            {
+                var projectAppService = App.Services.GetRequiredService<IProjectAppService>();
+                var modal = new ProjectInfoJsonModal(project.ProjectId, projectAppService);
+                shellVm.ShowModal(modal);
+            }
+        }
+        e.Handled = true;
     }
 
     private void OnLoaded(object? sender, EventArgs e)
@@ -227,33 +500,6 @@ public partial class ProjectDetailView : UserControl
         }
     }
 
-    private void OnExplorerLinkPressed(object? sender, PointerPressedEventArgs e)
-    {
-        if (DataContext is ProjectItemViewModel project && !string.IsNullOrEmpty(project.ProjectId))
-        {
-            var networkService = App.Services.GetRequiredService<INetworkService>();
-            var derivation = App.Services.GetRequiredService<IDerivationOperations>();
-            var bitcoinAddress = derivation.ConvertAngorKeyToBitcoinAddress(project.ProjectId);
-            ExplorerHelper.OpenAddress(networkService, bitcoinAddress);
-        }
-        e.Handled = true;
-    }
-
-    private void OnViewProjectJsonPressed(object? sender, PointerPressedEventArgs e)
-    {
-        if (DataContext is ProjectItemViewModel project && !string.IsNullOrEmpty(project.ProjectId))
-        {
-            var shell = this.FindAncestorOfType<ShellView>();
-            if (shell?.DataContext is ShellViewModel shellVm && !shellVm.IsModalOpen)
-            {
-                var projectAppService = App.Services.GetRequiredService<IProjectAppService>();
-                var modal = new ProjectInfoJsonModal(project.ProjectId, projectAppService);
-                shellVm.ShowModal(modal);
-            }
-        }
-        e.Handled = true;
-    }
-
     /// <summary>
     /// Unified handler for both collapsible sections (Details and Nostr).
     /// Determines which section was clicked by checking the sender against cached references.
@@ -297,5 +543,12 @@ public partial class ProjectDetailView : UserControl
                 container.Cursor = new Cursor(StandardCursorType.Hand);
             }
         }
+    }
+
+    protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = null;
+        base.OnDetachedFromLogicalTree(e);
     }
 }

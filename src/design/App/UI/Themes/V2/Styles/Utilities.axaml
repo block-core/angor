@@ -108,4 +108,26 @@
         <Setter Property="CornerRadius" Value="{StaticResource RadiusLg}" />
     </Style>
 
+    <!-- ANIMATIONS -->
+
+    <!-- Continuous spin for loading spinners: apply Classes="spin" to any Icon.
+         Uses RotateTransform.Angle instead of RenderTransform keyframes to avoid
+         "No animator registered for RenderTransform" crash on Android AOT. -->
+    <Style Selector=":is(Control).spin">
+        <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+        <Setter Property="RenderTransform">
+            <RotateTransform />
+        </Setter>
+        <Style.Animations>
+            <Animation Duration="0:0:1" IterationCount="INFINITE">
+                <KeyFrame Cue="0%">
+                    <Setter Property="RotateTransform.Angle" Value="0" />
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="RotateTransform.Angle" Value="360" />
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
 </Styles>

@@ -78,7 +78,7 @@ public partial class CreateProjectStep4View : UserControl
         if (lb.SelectedItem is not ListBoxItem item) return;
         if (item.Tag is string tag && int.TryParse(tag, out var months) && Vm != null)
         {
-            Vm.InvestEndDate = DateTime.Now.AddMonths(months);
+            Vm.InvestEndDate = DateTime.UtcNow.AddMonths(months);
         }
     }
 

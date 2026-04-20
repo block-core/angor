@@ -51,7 +51,8 @@
                         </Border>
 
                         <!-- Center: Name+Balance row, Type+Label row -->
-                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center"
+                                    MinWidth="0">
                             <!-- Top row: name left, balance right -->
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Grid.Column="0"
@@ -59,7 +60,9 @@
                                            FontSize="15"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextStrong}"
-                                           VerticalAlignment="Center" />
+                                           VerticalAlignment="Center"
+                                           TextWrapping="NoWrap"
+                                           TextTrimming="CharacterEllipsis" />
                                 <TextBlock Grid.Column="1"
                                            Text="{TemplateBinding Balance}"
                                            FontSize="15"
@@ -97,9 +100,10 @@
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Grid.Column="0"
                                            Text="{TemplateBinding WalletType}"
-                                           FontSize="13"
-                                           Foreground="{DynamicResource TextMuted}" />
-                                <!-- Optional label pill -->
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           TextWrapping="NoWrap"
+                                           TextTrimming="CharacterEllipsis" />
                                 <Border Grid.Column="1"
                                         IsVisible="{TemplateBinding Label, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                         Background="{DynamicResource PillGreenBg}"
@@ -156,6 +160,7 @@
                             </Button>
                             <!-- UTXO / Details button — 32x32 OUTLINED green -->
                             <Button Name="BtnUtxo"
+                                    AutomationProperties.AutomationId="WalletCardBtnUtxo"
                                     Width="32" Height="32"
                                     Padding="0"
                                     CornerRadius="6"
@@ -168,7 +173,7 @@
                                        FontSize="14"
                                        Foreground="{DynamicResource PrimaryGreenBrush}" />
                             </Button>
-                            <!-- Refresh button — 32x32 OUTLINED green, always visible -->
+                            <!-- Refresh button — 32x32 OUTLINED green -->
                             <Button Name="BtnRefresh"
                                     AutomationProperties.AutomationId="WalletCardBtnRefresh"
                                     Width="32" Height="32"
@@ -178,59 +183,34 @@
                                     BorderBrush="{DynamicResource PrimaryGreenBrush}"
                                     BorderThickness="2"
                                     Cursor="Hand"
-                                    IsEnabled="{Binding !IsRefreshing, RelativeSource={RelativeSource TemplatedParent}}"
                                     ToolTip.Tip="Refresh Balance">
                                 <Panel>
-                                    <!-- Normal state -->
-                                    <i:Icon Value="fa-solid fa-sync"
+                                    <i:Icon Value="fa-solid fa-arrows-rotate"
                                            FontSize="14"
-                                           IsVisible="{Binding !IsRefreshing, RelativeSource={RelativeSource TemplatedParent}}"
-                                           Foreground="{DynamicResource PrimaryGreenBrush}" />
-                                    <!-- Spinning state -->
+                                           Foreground="{DynamicResource PrimaryGreenBrush}"
+                                           IsVisible="{Binding !IsRefreshing, RelativeSource={RelativeSource TemplatedParent}}" />
                                     <i:Icon Value="fa-solid fa-spinner"
                                            FontSize="14"
-                                           IsVisible="{TemplateBinding IsRefreshing}"
                                            Foreground="{DynamicResource PrimaryGreenBrush}"
-                                           RenderTransformOrigin="50%,50%">
-                                        <i:Icon.RenderTransform>
-                                            <RotateTransform />
-                                        </i:Icon.RenderTransform>
-                                        <i:Icon.Styles>
-                                            <Style Selector="i|Icon[IsVisible=True]">
-                                                <Style.Animations>
-                                                    <Animation Duration="0:0:1" IterationCount="INFINITE">
-                                                        <KeyFrame Cue="0%">
-                                                            <Setter Property="RotateTransform.Angle" Value="0" />
-                                                        </KeyFrame>
-                                                        <KeyFrame Cue="100%">
-                                                            <Setter Property="RotateTransform.Angle" Value="360" />
-                                                        </KeyFrame>
-                                                    </Animation>
-                                                </Style.Animations>
-                                            </Style>
-                                        </i:Icon.Styles>
-                                    </i:Icon>
+                                           IsVisible="{TemplateBinding IsRefreshing}"
+                                           Classes="fa-spin" />
                                 </Panel>
                             </Button>
-                            <!-- Faucet button — 32x32 FILLED green gradient, testnet only -->
+                            <!-- Faucet / Get Test Coins button — 32x32 OUTLINED orange, testnet only -->
                             <Button Name="BtnFaucet"
                                     AutomationProperties.AutomationId="WalletCardBtnFaucet"
                                     Width="32" Height="32"
                                     Padding="0"
                                     CornerRadius="6"
-                                    BorderThickness="0"
+                                    Background="Transparent"
+                                    BorderBrush="#f59e0b"
+                                    BorderThickness="2"
                                     Cursor="Hand"
-                                    IsVisible="{TemplateBinding ShowFaucet}"
-                                    ToolTip.Tip="Get Testnet Coins">
-                                <Button.Background>
-                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                        <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
-                                        <GradientStop Color="#3D6448" Offset="1" />
-                                    </LinearGradientBrush>
-                                </Button.Background>
-                                <i:Icon Value="fa-solid fa-plus"
+                                    ToolTip.Tip="Get Test Coins"
+                                    IsVisible="{TemplateBinding ShowFaucet}">
+                                <i:Icon Value="fa-solid fa-faucet-drip"
                                        FontSize="14"
-                                       Foreground="White" />
+                                       Foreground="#f59e0b" />
                             </Button>
                         </StackPanel>
                     </Grid>
