@@ -57,6 +57,10 @@ public class ManageStageViewModel
     public int SpentTransactionCount { get; set; }
     /// <summary>Number of unspent transactions (for "Funds Available" badge)</summary>
     public int UnspentTransactionCount { get; set; }
+    /// <summary>Number of immediately claimable transactions (Unspent status)</summary>
+    public int ClaimableTransactionCount { get; set; }
+    /// <summary>Total number of transactions for this stage</summary>
+    public int TotalTransactionCount { get; set; }
 
     /// <summary>Available (unspent) UTXO transactions for this stage.</summary>
     public ObservableCollection<UtxoTransactionViewModel> AvailableTransactions { get; set; } = new();
@@ -96,6 +100,11 @@ public class ManageStageViewModel
     /// <summary>True when the "Available in X Days" disabled button should show.
     /// Vue logic: stage.available && !stage.canClaim && !hasAllTransactionsSpent</summary>
     public bool ShowAvailableInDays => Available && !CanClaim && !IsFullySpent;
+
+    /// <summary>Display text for claimable UTXO count, e.g. "2 of 5 UTXOs claimable"</summary>
+    public string ClaimableInfoText => TotalTransactionCount > 0
+        ? $"{ClaimableTransactionCount} of {TotalTransactionCount} UTXOs claimable"
+        : "";
 }
 
 /// <summary>
@@ -376,6 +385,8 @@ public partial class ManageProjectViewModel : ReactiveObject
                     DaysUntilAvailable = daysUntilAvailable,
                     SpentTransactionCount = spent.Count,
                     UnspentTransactionCount = claimable.Count + locked.Count,
+                    ClaimableTransactionCount = claimable.Count,
+                    TotalTransactionCount = stageTransactions.Count,
                 };
 
                 foreach (var tx in claimable)

@@ -56,7 +56,7 @@ services:
   signet-node:
     container_name: angor-test-btc-node
     image: angor-test/bitcoin-signet:local
-    build: https://github.com/block-core/bitcoin-custom-signet.git#main
+    build: ../../../../../bitcoin-custom-signet
     mem_limit: 2048m
     cpus: 0.8
     healthcheck:
@@ -229,7 +229,7 @@ services:
   faucet-api:
     container_name: angor-test-faucet-api
     image: angor-test/faucet-api:local
-    build: https://github.com/block-core/bitcoin-custom-signet.git#main:faucet-api
+    build: ../../../../../bitcoin-custom-signet/faucet-api
     depends_on:
       signet-node:
         condition: service_healthy

@@ -1153,9 +1153,11 @@ public partial class CreateProjectViewModel : ReactiveObject
         InvestStartDate = DateTime.UtcNow.Date;
         InvestEndDate = DateTime.UtcNow.Date;
 
-        // Step 5: Stages — 3 stages released today (10%, 30%, 60%)
+        // Step 5: Stages — 3 stages: stage 1 today, stage 2 +30 days, stage 3 +60 days
         Stages.Clear();
         var today = DateTime.UtcNow.Date;
+        var stage2Date = today.AddDays(30);
+        var stage3Date = today.AddDays(60);
         var targetBtc = 0.01;
 
         Stages.Add(new ProjectStageViewModel
@@ -1172,21 +1174,21 @@ public partial class CreateProjectViewModel : ReactiveObject
         {
             StageNumber = 2,
             Percentage = "30%",
-            ReleaseDate = FormatReleaseDateOrdinal(today),
-            ReleaseDateValue = DateOnly.FromDateTime(today),
+            ReleaseDate = FormatReleaseDateOrdinal(stage2Date),
+            ReleaseDateValue = DateOnly.FromDateTime(stage2Date),
             AmountBtc = (targetBtc * 0.30).ToString("F4"),
             StageLabel = "Stage",
-            DisplayText = $"30% ({targetBtc * 0.30:F4} {_currencyService.Symbol}) released on {FormatReleaseDateOrdinal(today)}"
+            DisplayText = $"30% ({targetBtc * 0.30:F4} {_currencyService.Symbol}) released on {FormatReleaseDateOrdinal(stage2Date)}"
         });
         Stages.Add(new ProjectStageViewModel
         {
             StageNumber = 3,
             Percentage = "60%",
-            ReleaseDate = FormatReleaseDateOrdinal(today),
-            ReleaseDateValue = DateOnly.FromDateTime(today),
+            ReleaseDate = FormatReleaseDateOrdinal(stage3Date),
+            ReleaseDateValue = DateOnly.FromDateTime(stage3Date),
             AmountBtc = (targetBtc * 0.60).ToString("F4"),
             StageLabel = "Stage",
-            DisplayText = $"60% ({targetBtc * 0.60:F4} {_currencyService.Symbol}) released on {FormatReleaseDateOrdinal(today)}"
+            DisplayText = $"60% ({targetBtc * 0.60:F4} {_currencyService.Symbol}) released on {FormatReleaseDateOrdinal(stage3Date)}"
         });
 
         ShowGenerateForm = false;

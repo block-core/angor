@@ -515,7 +515,7 @@
                                                         BorderThickness="1"
                                                         CornerRadius="6"
                                                         Padding="16,8">
-                                                    <TextBlock Text="Funds Available"
+                                                    <TextBlock Text="{Binding ClaimableInfoText, FallbackValue='Funds Available'}"
                                                                FontSize="13" FontWeight="SemiBold"
                                                                Foreground="{DynamicResource PrimaryGreenBrush}" />
                                                 </Border>

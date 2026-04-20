@@ -4,9 +4,11 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using App.UI.Shared;
 using App.UI.Shared.Controls;
 using App.UI.Shared.Helpers;
+using App.UI.Shell;
 using ReactiveUI;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -84,6 +86,25 @@ public partial class FundersView : UserControl
         var tabSub = vm.WhenAnyValue(x => x.CurrentFilter)
           .Subscribe(filter => UpdateTabVisuals(filter));
         _subscriptions.Add(tabSub);
+
+        // Toggle spinning animation on refresh button icon
+        var refreshSub = vm.WhenAnyValue(x => x.IsRefreshing)
+          .Subscribe(isRefreshing =>
+          {
+              var refreshBtn = this.FindControl<Button>("RefreshButton");
+              var icon = refreshBtn?.GetLogicalDescendants().OfType<Projektanker.Icons.Avalonia.Icon>().FirstOrDefault();
+              icon?.Classes.Set("Spinning", isRefreshing);
+          });
+        _subscriptions.Add(refreshSub);
+
+        _subscriptions.Add(Disposable.Create(() => vm.ToastRequested -= OnToastRequested));
+        vm.ToastRequested += OnToastRequested;
+    }
+
+    private void OnToastRequested(string message)
+    {
+        var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
+        shellVm?.ShowToast(message);
     }
 
     protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
@@ -124,6 +145,11 @@ public partial class FundersView : UserControl
         {
             case "ApproveAllButton":
                 vm.ApproveAll();
+                e.Handled = true;
+                break;
+
+            case "RefreshButton":
+                _ = vm.RefreshAsync();
                 e.Handled = true;
                 break;
 

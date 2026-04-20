@@ -232,13 +232,14 @@ public partial class ManageProjectModalsView : UserControl
             if (selectedAmount <= 0 || selectedTxs.Count == 0) return; // nothing selected
 
             Vm.ClaimedAmount = selectedAmount.ToString("F8");
-            Vm.ShowClaimModal = false;
 
             // Skip password modal — password is not used (SimplePasswordProvider returns "default-key").
             // Go directly to fee selection and claim.
+            // NOTE: Keep claim modal visible during fee selection (#17) so user sees context.
             var feeRate = await AskForFeeRateAsync();
-            if (feeRate == null) return; // User cancelled
+            if (feeRate == null) return; // User cancelled — claim modal stays visible
 
+            Vm.ShowClaimModal = false;
             Vm.IsClaiming = true;
             var success = await Vm.ClaimStageFundsAsync(stage.Number, selectedTxs, feeRate.Value);
             Vm.IsClaiming = false;

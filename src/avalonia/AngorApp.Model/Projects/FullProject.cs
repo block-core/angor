@@ -28,12 +28,14 @@ public class FullProject(ProjectDto info, ProjectStatisticsDto stats) : IFullPro
                 });
             }
 
-            var stages = stats.DynamicStages?.Select(IStage (dto) => new Stage()
+            var dynamicStages = stats.DynamicStages;
+            var totalAmount = dynamicStages?.Sum(d => d.TotalAmount) ?? 0L;
+            var stages = dynamicStages?.Select(IStage (dto) => new Stage()
             {
                 Amount = dto.TotalAmount,
                 Index = dto.StageIndex,
                 ReleaseDate = dto.ReleaseDate,
-                RatioOfTotal = 0
+                RatioOfTotal = totalAmount > 0 ? (decimal)dto.TotalAmount / totalAmount : 0
             });
 
             return stages ?? [];
