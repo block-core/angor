@@ -87,6 +87,8 @@ public class FundAndRecoverTest
         // ──────────────────────────────────────────────────────────────
         TestHelpers.Log("[STEP 0] Booting app with ShellView...");
         var window = TestHelpers.CreateShellWindow();
+        try
+        {
         var shellVm = window.GetShellViewModel();
         TestHelpers.Log("[STEP 0] App booted. ShellView created, ShellViewModel ready.");
 
@@ -945,9 +947,13 @@ public class FundAndRecoverTest
             $"InPenalty={targetInvestment.RecoveryState.HasSpendableItemsInPenalty}, " +
             $"ActionKey={targetInvestment.RecoveryState.ActionKey}");
 
-        // Cleanup: close window
-        window.Close();
         TestHelpers.Log("========== FullFundAndRecoverFlow PASSED ==========");
+        }
+        finally
+        {
+            window.Close();
+            Dispatcher.UIThread.RunJobs();
+        }
     }
 
 }

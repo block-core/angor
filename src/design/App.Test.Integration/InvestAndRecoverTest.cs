@@ -45,6 +45,8 @@ public class InvestAndRecoverTest
         TestHelpers.Log($"[STEP 0] Investment amount: {investmentAmountBtc} BTC");
 
         var window = TestHelpers.CreateShellWindow();
+        try
+        {
         var shellVm = window.GetShellViewModel();
 
         TestHelpers.Log("[STEP 1] Wiping existing data...");
@@ -586,8 +588,13 @@ public class InvestAndRecoverTest
         targetInvestment.ShowSuccessModal.Should().BeTrue(
             $"Recovery operation '{actionKey}' should succeed and show the success modal");
 
-        window.Close();
         TestHelpers.Log("========== FullInvestAndRecoverFlow PASSED ==========");
+        }
+        finally
+        {
+            window.Close();
+            Dispatcher.UIThread.RunJobs();
+        }
     }
 
     private async Task EnsureWalletHasFeeFunds(Window window, string walletId, string context)
