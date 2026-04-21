@@ -27,7 +27,7 @@ Tracked issues and improvements found during manual testing of the new Avalonia 
 24. ~~**Recover shows penalty popup when below threshold** — Clicking the recover button shows a penalty days popup even when the investment is below the threshold (no penalty applies). Should skip penalty and go straight to recovery.~~ ✅ Fixed
 
 ## My Projects (Founder) > Manage Project
-10. **Missing 'Release Funds to Investor' button** — The release funds button is missing. Need to replicate from the avalonia app implementation (`src/avalonia/`). Also need an integration test for this.
+10. ~~**Missing 'Release Funds to Investor' button** — The release funds button is missing. Need to replicate from the avalonia app implementation (`src/avalonia/`). Also need an integration test for this.~~ ✅ Fixed — Release funds button wired up, duplicate removed, belowThreshold routing fixed. Integration tests added for both Fund and Invest project types (`MultiFundReleaseUnfundedAndClaimTest`, `MultiInvestReleaseUnfundedAndClaimTest`).
 17. ~~**Spend Stage popup disappears before confirmation** — When spending a stage as founder, the popup disappears before the confirmation popup appears, leaving the user unsure what happened.~~ ✅ Fixed
 22. ~~**Claimable stage shows no info** — When funds are claimable, the stage shows nothing. Should show the number of UTXOs available to claim out of total (currently only shows 'available in X days' when not yet claimable).~~ ✅ Fixed
 
