@@ -1,32 +1,37 @@
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace App.Test.Integration.Helpers;
 
 /// <summary>
 /// Minimal ThunderHub GraphQL client for paying BOLT11 invoices in integration tests.
-/// Authenticates via the get_session_token mutation, then pays invoices via the pay mutation.
+/// Authenticates via the getSessionToken mutation (extracts the Thub-Auth JWT from the
+/// Set-Cookie header), then pays invoices via the pay mutation.
 /// </summary>
 public class ThunderHubClient : IDisposable
 {
     private readonly HttpClient _http;
     private readonly string _baseUrl;
-    private string? _sessionToken;
+    private string? _authCookie;
 
     public ThunderHubClient(string baseUrl)
     {
         _baseUrl = baseUrl.TrimEnd('/');
-        _http = new HttpClient();
+        // Don't auto-follow redirects or handle cookies — we manage the auth cookie manually.
+        _http = new HttpClient(new HttpClientHandler { UseCookies = false });
     }
 
     /// <summary>
-    /// Log in to ThunderHub with the given account ID and password.
-    /// Must be called before PayInvoiceAsync.
+    /// Log in to ThunderHub with the given account name and password.
+    /// Queries getServerAccounts to resolve the account hash ID, then authenticates.
     /// </summary>
-    public async Task LoginAsync(string accountId, string password)
+    public async Task LoginAsync(string accountName, string password)
     {
+        // Step 1: Resolve the account hash ID from the display name
+        var accountId = await ResolveAccountIdAsync(accountName);
+
+        // Step 2: Call getSessionToken — the real auth token comes back as a Set-Cookie header
         var query = new
         {
             query = @"mutation GetSessionToken($id: String!, $password: String!) {
@@ -35,19 +40,16 @@ public class ThunderHubClient : IDisposable
             variables = new { id = accountId, password }
         };
 
-        var response = await PostGraphqlAsync(query);
-        var doc = JsonDocument.Parse(response);
+        var (responseBody, responseMessage) = await PostGraphqlRawAsync(query);
+        var doc = JsonDocument.Parse(responseBody);
 
         if (doc.RootElement.TryGetProperty("errors", out var errors))
             throw new Exception($"ThunderHub login failed: {errors}");
 
-        _sessionToken = doc.RootElement
-            .GetProperty("data")
-            .GetProperty("getSessionToken")
-            .GetString();
-
-        if (string.IsNullOrEmpty(_sessionToken))
-            throw new Exception("ThunderHub login returned empty session token");
+        // Extract the Thub-Auth JWT from the Set-Cookie response header
+        _authCookie = ExtractAuthCookie(responseMessage);
+        if (string.IsNullOrEmpty(_authCookie))
+            throw new Exception("ThunderHub login succeeded but no Thub-Auth cookie was returned");
     }
 
     /// <summary>
@@ -55,7 +57,7 @@ public class ThunderHubClient : IDisposable
     /// </summary>
     public async Task<bool> PayInvoiceAsync(string bolt11Invoice, float maxFeeSats = 1000, float maxPaths = 5)
     {
-        if (_sessionToken == null)
+        if (_authCookie == null)
             throw new InvalidOperationException("Must call LoginAsync before PayInvoiceAsync");
 
         var query = new
@@ -66,8 +68,8 @@ public class ThunderHubClient : IDisposable
             variables = new { request = bolt11Invoice, max_fee = maxFeeSats, max_paths = maxPaths }
         };
 
-        var response = await PostGraphqlAsync(query);
-        var doc = JsonDocument.Parse(response);
+        var (responseBody, _) = await PostGraphqlRawAsync(query);
+        var doc = JsonDocument.Parse(responseBody);
 
         if (doc.RootElement.TryGetProperty("errors", out var errors))
             throw new Exception($"ThunderHub pay failed: {errors}");
@@ -78,7 +80,48 @@ public class ThunderHubClient : IDisposable
             .GetBoolean();
     }
 
-    private async Task<string> PostGraphqlAsync(object body)
+    private async Task<string> ResolveAccountIdAsync(string accountName)
+    {
+        var query = new { query = "{ getServerAccounts { name id } }" };
+        var (responseBody, _) = await PostGraphqlRawAsync(query);
+        var doc = JsonDocument.Parse(responseBody);
+
+        if (doc.RootElement.TryGetProperty("errors", out var errors))
+            throw new Exception($"ThunderHub getServerAccounts failed: {errors}");
+
+        var accounts = doc.RootElement.GetProperty("data").GetProperty("getServerAccounts");
+        foreach (var account in accounts.EnumerateArray())
+        {
+            var name = account.GetProperty("name").GetString();
+            if (string.Equals(name, accountName, StringComparison.OrdinalIgnoreCase))
+                return account.GetProperty("id").GetString()!;
+        }
+
+        // List available accounts in the error message
+        var available = string.Join(", ", accounts.EnumerateArray()
+            .Select(a => $"'{a.GetProperty("name").GetString()}'"));
+        throw new Exception($"ThunderHub account '{accountName}' not found. Available: {available}");
+    }
+
+    private static string? ExtractAuthCookie(HttpResponseMessage response)
+    {
+        if (!response.Headers.TryGetValues("Set-Cookie", out var cookies))
+            return null;
+
+        foreach (var cookie in cookies)
+        {
+            // Format: "Thub-Auth=eyJ...JWT...; Path=/; HttpOnly; SameSite=Strict"
+            if (cookie.StartsWith("Thub-Auth=", StringComparison.OrdinalIgnoreCase))
+            {
+                var value = cookie.Split(';')[0]; // "Thub-Auth=eyJ..."
+                return value;                      // Full "Thub-Auth=..." for the Cookie header
+            }
+        }
+
+        return null;
+    }
+
+    private async Task<(string Body, HttpResponseMessage Response)> PostGraphqlRawAsync(object body)
     {
         var json = JsonSerializer.Serialize(body);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -88,12 +131,13 @@ public class ThunderHubClient : IDisposable
             Content = content
         };
 
-        if (_sessionToken != null)
-            request.Headers.Add("Cookie", $"SSOAuth={_sessionToken}");
+        if (_authCookie != null)
+            request.Headers.Add("Cookie", _authCookie);
 
         var response = await _http.SendAsync(request);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadAsStringAsync();
+        var responseBody = await response.Content.ReadAsStringAsync();
+        return (responseBody, response);
     }
 
     public void Dispose() => _http.Dispose();

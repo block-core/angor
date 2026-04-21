@@ -30,7 +30,7 @@ public class OneClickInvestLightningFundedTest
 {
     // ThunderHub LND-2 endpoint and credentials
     private const string ThunderHubUrl = "https://thunderhub.thedude.cloud:4005";
-    private const string ThunderHubAccountId = "2";
+    private const string ThunderHubAccountName = "LND-2";
     private const string ThunderHubPassword = "thunderhub";
 
     private static readonly TimeSpan LightningPaymentTimeout = TimeSpan.FromMinutes(5);
@@ -120,7 +120,7 @@ public class OneClickInvestLightningFundedTest
         // ── Step 7: Pay the invoice via ThunderHub LND-2 ──
         Log("[7] Paying invoice via ThunderHub LND-2...");
         using var thunderHub = new ThunderHubClient(ThunderHubUrl);
-        await thunderHub.LoginAsync(ThunderHubAccountId, ThunderHubPassword);
+        await thunderHub.LoginAsync(ThunderHubAccountName, ThunderHubPassword);
         Log("[7] ThunderHub login successful.");
 
         var paid = await thunderHub.PayInvoiceAsync(bolt11Invoice);
