@@ -14,7 +14,7 @@ Tracked issues and improvements found during manual testing of the new Avalonia 
 
 ## Funder Tab
 3. ~~**Missing refresh button** — No refresh button on the Funder tab; had to restart the app to see investors to approve.~~ ✅ Fixed
-4. **Verify 'Approve All' button** — The 'Approve All' button needs to be checked if it works correctly. Add coverage in an integration test.
+4. ~~**Verify 'Approve All' button** — The 'Approve All' button needs to be checked if it works correctly. Add coverage in an integration test.~~ ✅ Verified working
 
 ## Funded > Manage Project
 5. ~~**Missing refresh button** — No refresh button on the Manage Project view.~~ ✅ Fixed
