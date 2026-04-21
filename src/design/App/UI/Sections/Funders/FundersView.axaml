@@ -94,14 +94,40 @@
                                    VerticalAlignment="Center" />
                     </StackPanel>
 
-                    <!-- Right: Approve All button -->
-                    <!-- Vue: btn-primary text-white rounded-lg -->
-                    <Button DockPanel.Dock="Right"
-                            Name="ApproveAllButton"
-                            Classes="Primary"
-                            Padding="20,10"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center">
+                    <!-- Right: Refresh + Approve All buttons -->
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8"
+                                HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <!-- Refresh button -->
+                        <Button Name="RefreshButton"
+                                AutomationProperties.AutomationId="FundersRefreshButton"
+                                Classes="Outlined"
+                                Padding="10"
+                                VerticalAlignment="Center"
+                                IsEnabled="{Binding !IsRefreshing}">
+                            <i:Icon Value="fa-solid fa-arrows-rotate"
+                                    FontSize="16"
+                                    Foreground="{DynamicResource TextStrong}">
+                                <i:Icon.Styles>
+                                    <Style Selector="i|Icon.Spinning">
+                                        <Style.Animations>
+                                            <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                <KeyFrame Cue="0%">
+                                                    <Setter Property="RotateTransform.Angle" Value="0" />
+                                                </KeyFrame>
+                                                <KeyFrame Cue="100%">
+                                                    <Setter Property="RotateTransform.Angle" Value="360" />
+                                                </KeyFrame>
+                                            </Animation>
+                                        </Style.Animations>
+                                    </Style>
+                                </i:Icon.Styles>
+                            </i:Icon>
+                        </Button>
+                        <!-- Approve All button -->
+                        <Button Name="ApproveAllButton"
+                                Classes="Primary"
+                                Padding="20,10"
+                                VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Viewbox Width="16" Height="16" VerticalAlignment="Center">
                                 <Path Data="{StaticResource Checkmark}"
@@ -118,6 +144,7 @@
                                        VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
+                    </StackPanel>
                 </DockPanel>
 
                 <!-- ═══════════════════════════════════════ -->

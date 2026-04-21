@@ -1,8 +1,12 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
+using Avalonia.VisualTree;
+using App.UI.Shared;
 using App.UI.Shared.Controls;
+using App.UI.Shell;
 using System.Reactive.Linq;
 
 namespace App.UI.Sections.FindProjects;
@@ -10,10 +14,12 @@ namespace App.UI.Sections.FindProjects;
 public partial class FindProjectsView : UserControl
 {
     private IDisposable? _visibilitySubscription;
+    private IDisposable? _layoutSubscription;
 
     // Cached FindControl results — avoid repeated tree walks on every visibility update
     private Panel? _detailPanel;
     private Panel? _investPanel;
+    private ScrollableView? _projectListScrollable;
 
     /// <summary>Design-time only.</summary>
     public FindProjectsView() => InitializeComponent();
@@ -26,6 +32,7 @@ public partial class FindProjectsView : UserControl
         // Cache panels once
         _detailPanel = this.FindControl<Panel>("ProjectDetailPanel");
         _investPanel = this.FindControl<Panel>("InvestPagePanel");
+        _projectListScrollable = this.FindControl<ScrollableView>("ProjectListPanel");
 
         // Wire refresh button
         var refreshBtn = this.FindControl<Button>("RefreshProjectsButton");
@@ -44,6 +51,18 @@ public partial class FindProjectsView : UserControl
         // Manage visibility of the project list panel based on ViewModel state
         DataContextChanged += (_, _) => SubscribeToVisibility();
         SubscribeToVisibility();
+
+        // ── Responsive layout: adjust bottom padding for tab bar clearance ──
+        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
+            .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
+    }
+
+    private void ApplyResponsiveLayout(bool isCompact)
+    {
+        if (_projectListScrollable != null)
+            _projectListScrollable.ContentPadding = isCompact
+                ? new Thickness(16, 16, 16, 96)
+                : new Thickness(24);
     }
 
     private void SubscribeToVisibility()
@@ -70,6 +89,17 @@ public partial class FindProjectsView : UserControl
 
                   if (_investPanel != null)
                       _investPanel.IsVisible = hasInvest;
+
+                  // Publish detail view state to ShellViewModel for mobile sub-tab/back-button visibility
+                  var shell = this.FindAncestorOfType<ShellView>();
+                  if (shell?.DataContext is ShellViewModel shellVm)
+                  {
+                      shellVm.IsProjectDetailOpen = hasProject && !hasInvest;
+                      shellVm.IsInvestPageOpen = hasInvest;
+                      if (hasProject && tuple.Item1 != null)
+                          shellVm.ProjectDetailActionVerb = Shared.ProjectTypeTerminology.ActionVerb(
+                              Shared.ProjectTypeExtensions.FromDisplayString(tuple.Item1.ProjectType));
+                  }
               });
         }
     }
@@ -87,6 +117,8 @@ public partial class FindProjectsView : UserControl
     {
         _visibilitySubscription?.Dispose();
         _visibilitySubscription = null;
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = null;
         base.OnDetachedFromLogicalTree(e);
     }
 

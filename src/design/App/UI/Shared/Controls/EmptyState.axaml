@@ -36,6 +36,7 @@
                 <StackPanel HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             MaxWidth="420"
+                            Margin="24,0"
                             Spacing="0">
 
                     <!-- ═══ ICON AREA ═══ -->

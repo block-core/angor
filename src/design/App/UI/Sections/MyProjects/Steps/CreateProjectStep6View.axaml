@@ -89,9 +89,8 @@
                                    Foreground="{DynamicResource TextStrong}" FontWeight="Bold"
                                    HorizontalAlignment="Right">
                             <TextBlock.Text>
-                                <MultiBinding StringFormat="{}{0} {1}">
+                                <MultiBinding StringFormat="{}{0} BTC">
                                     <Binding Path="TargetAmount" />
-                                    <Binding Path="CurrencySymbol" />
                                 </MultiBinding>
                             </TextBlock.Text>
                         </TextBlock>
@@ -129,7 +128,7 @@
                         <TextBlock Grid.Column="1" FontSize="14"
                                    Foreground="{DynamicResource TextStrong}" FontWeight="Bold"
                                    HorizontalAlignment="Right">
-                            <Run Text="{Binding ApprovalThreshold, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" />
+                            <Run Text="{Binding ApprovalThreshold, Mode=OneWay}" /><Run Text=" BTC" />
                         </TextBlock>
                     </Grid>
                 </StackPanel>
@@ -169,16 +168,24 @@
                                         CornerRadius="10"
                                         BorderBrush="{DynamicResource Accent}" BorderThickness="1"
                                         Background="{DynamicResource PrimaryGreenBrush04}">
-                                    <DockPanel>
-                                        <TextBlock FontSize="14" Foreground="{DynamicResource Accent}"
-                                                   FontWeight="SemiBold" DockPanel.Dock="Left">
+                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                        <TextBlock Grid.Column="0"
+                                                   FontSize="14" Foreground="{DynamicResource Accent}"
+                                                   FontWeight="SemiBold"
+                                                   VerticalAlignment="Center"
+                                                   TextWrapping="NoWrap">
                                             <Run Text="{Binding StageLabel, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding StageNumber, Mode=OneWay}" />
                                         </TextBlock>
-                                        <TextBlock FontSize="14" Foreground="{DynamicResource Accent}"
-                                                   FontWeight="Bold" HorizontalAlignment="Right">
+                                        <TextBlock Grid.Column="1"
+                                                   FontSize="14" Foreground="{DynamicResource Accent}"
+                                                   FontWeight="Bold"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center"
+                                                   TextAlignment="Right"
+                                                   TextWrapping="Wrap">
                                             <Run Text="{Binding Percentage, Mode=OneWay}" /><Run Text=" paid on " /><Run Text="{Binding ReleaseDate, Mode=OneWay}" />
                                         </TextBlock>
-                                    </DockPanel>
+                                    </Grid>
                                 </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

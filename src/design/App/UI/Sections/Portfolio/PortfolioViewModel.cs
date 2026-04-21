@@ -49,7 +49,8 @@ public record RecoveryState(
     public string ActionKey => this switch
     {
         { HasUnspentItems: true, HasReleaseSignatures: true } => "unfundedRelease",
-        { HasUnspentItems: true, EndOfProject: true } or { HasUnspentItems: true, IsAboveThreshold: false } => "endOfProject",
+        { HasUnspentItems: true, EndOfProject: true } => "endOfProject",
+        { HasUnspentItems: true, IsAboveThreshold: false } => "belowThreshold",
         { HasUnspentItems: true, HasSpendableItemsInPenalty: false } => "recovery",
         { HasSpendableItemsInPenalty: true } => "penaltyRelease",
         _ => "none"
@@ -75,7 +76,7 @@ public class InvestmentStageViewModel
     public bool IsStatusPending => Status == "Pending";
     public bool IsStatusReleased => Status == "Released" || Status == "Spent by founder";
     public bool IsStatusNotSpent => Status == "Not Spent";
-    public bool IsStatusRecovered => Status == "Recovered" || Status == "Penalty can be released" || Status.StartsWith("Penalty,");
+    public bool IsStatusRecovered => Status == "Recovered" || Status == "Recovered (In Penalty)" || Status == "Recovered after penalty" || Status == "In Penalty" || Status == "Penalty can be released" || Status == "Spent by investor" || Status == "Project Unfunded, Spent back to investor" || Status.StartsWith("Penalty,");
 }
 
 /// <summary>
@@ -306,14 +307,14 @@ public class InvestmentViewModel : INotifyPropertyChanged
     };
 
     /// <summary>Number of unreleased stages (Vue: stagesToRecover computed)</summary>
-    public int StagesToRecover => Stages.Count(s => s.Status != "Released" && !s.IsStatusRecovered);
+    public int StagesToRecover => Stages.Count(s => !s.IsStatusReleased && !s.IsStatusRecovered);
 
     /// <summary>Sum of unreleased stage amounts (Vue: amountToRecover computed)</summary>
     public string AmountToRecover
     {
         get
         {
-            var total = Stages.Where(s => s.Status != "Released" && !s.IsStatusRecovered)
+            var total = Stages.Where(s => !s.IsStatusReleased && !s.IsStatusRecovered)
                 .Sum(s => double.TryParse(s.Amount, System.Globalization.NumberStyles.Float,
                     System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0);
             return total.ToString("F5", System.Globalization.CultureInfo.InvariantCulture);
@@ -616,7 +617,7 @@ public partial class PortfolioViewModel : ReactiveObject
                         ShortDescription = dto.Description ?? "",
                         TotalInvested = investedBtc.ToString("F8", CultureInfo.InvariantCulture),
                         FundingAmount = $"{investedBtc:F4} {_currencyService.Symbol}",
-                        FundingDate = DateTime.Now.ToString("M/dd/yyyy"),
+                        FundingDate = DateTime.UtcNow.ToString("M/dd/yyyy"),
                         TypeLabel = typeLabel,
                         StatusText = statusText,
                         StatusClass = statusClass,
@@ -770,7 +771,10 @@ public partial class PortfolioViewModel : ReactiveObject
                 {
                     "Unspent" => "Not Spent",
                     var s when !string.IsNullOrEmpty(s) => s,
-                    _ => item.IsSpent ? "Released" : (recovery.HasSpendableItemsInPenalty ? "Pending" : "Not Spent")
+                    _ when item.IsSpent && recovery.HasSpendableItemsInPenalty => "Recovered (In Penalty)",
+                    _ when item.IsSpent => "Recovered",
+                    _ when recovery.HasSpendableItemsInPenalty => "In Penalty",
+                    _ => "Not Spent"
                 };
 
                 investment.Stages.Add(new InvestmentStageViewModel
@@ -818,16 +822,19 @@ public partial class PortfolioViewModel : ReactiveObject
     /// <summary>
     /// Build and submit a recovery transaction for an investment.
     /// </summary>
-    public async Task<bool> RecoverFundsAsync(InvestmentViewModel investment, long feeRateSatsPerVByte = 20)
+    public async Task<(bool Success, string? Error)> RecoverFundsAsync(InvestmentViewModel investment, long feeRateSatsPerVByte = 20)
     {
         if (string.IsNullOrEmpty(investment.ProjectIdentifier) ||
-            string.IsNullOrEmpty(investment.InvestmentWalletId)) return false;
+            string.IsNullOrEmpty(investment.InvestmentWalletId)) return (false, "Missing project or wallet identifier.");
 
         _logger.LogInformation("RecoverFundsAsync starting: project={ProjectId}, wallet={WalletId}, feeRate={FeeRate}",
             investment.ProjectIdentifier, investment.InvestmentWalletId, feeRateSatsPerVByte);
 
         try
         {
+            // Refresh wallet UTXOs before building recovery transaction (#15)
+            await _walletContext.RefreshAllBalancesAsync();
+
             var walletId = new WalletId(investment.InvestmentWalletId);
             var projectId = new ProjectId(investment.ProjectIdentifier);
 
@@ -838,7 +845,7 @@ public partial class PortfolioViewModel : ReactiveObject
             if (buildResult.IsFailure)
             {
                 _logger.LogError("BuildRecoveryTransaction failed: {Error}", buildResult.Error);
-                return false;
+                return (false, buildResult.Error);
             }
 
             _logger.LogInformation("Recovery transaction built — publishing...");
@@ -849,34 +856,36 @@ public partial class PortfolioViewModel : ReactiveObject
             if (publishResult.IsSuccess)
             {
                 _logger.LogInformation("Recovery transaction published successfully for project {ProjectId}", investment.ProjectIdentifier);
-                // Refresh recovery state from SDK after successful transaction
                 await LoadRecoveryStatusAsync(investment);
-                return true;
+                return (true, null);
             }
 
             _logger.LogError("Recovery transaction publish failed: {Error}", publishResult.Error);
+            return (false, publishResult.Error);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "RecoverFundsAsync threw exception for project {ProjectId}", investment.ProjectIdentifier);
+            return (false, ex.Message);
         }
-
-        return false;
     }
 
     /// <summary>
     /// Build and submit a release transaction (unfunded release / recover without penalty).
     /// </summary>
-    public async Task<bool> ReleaseFundsAsync(InvestmentViewModel investment, long feeRateSatsPerVByte = 20)
+    public async Task<(bool Success, string? Error)> ReleaseFundsAsync(InvestmentViewModel investment, long feeRateSatsPerVByte = 20)
     {
         if (string.IsNullOrEmpty(investment.ProjectIdentifier) ||
-            string.IsNullOrEmpty(investment.InvestmentWalletId)) return false;
+            string.IsNullOrEmpty(investment.InvestmentWalletId)) return (false, "Missing project or wallet identifier.");
 
         _logger.LogInformation("ReleaseFundsAsync starting: project={ProjectId}, wallet={WalletId}, feeRate={FeeRate}",
             investment.ProjectIdentifier, investment.InvestmentWalletId, feeRateSatsPerVByte);
 
         try
         {
+            // Refresh wallet UTXOs before building release transaction (#15)
+            await _walletContext.RefreshAllBalancesAsync();
+
             var walletId = new WalletId(investment.InvestmentWalletId);
             var projectId = new ProjectId(investment.ProjectIdentifier);
 
@@ -887,7 +896,7 @@ public partial class PortfolioViewModel : ReactiveObject
             if (buildResult.IsFailure)
             {
                 _logger.LogError("BuildUnfundedReleaseTransaction failed: {Error}", buildResult.Error);
-                return false;
+                return (false, buildResult.Error);
             }
 
             _logger.LogInformation("Release transaction built — publishing...");
@@ -898,34 +907,36 @@ public partial class PortfolioViewModel : ReactiveObject
             if (publishResult.IsSuccess)
             {
                 _logger.LogInformation("Release transaction published successfully for project {ProjectId}", investment.ProjectIdentifier);
-                // Refresh recovery state from SDK after successful transaction
                 await LoadRecoveryStatusAsync(investment);
-                return true;
+                return (true, null);
             }
 
             _logger.LogError("Release transaction publish failed: {Error}", publishResult.Error);
+            return (false, publishResult.Error);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "ReleaseFundsAsync threw exception for project {ProjectId}", investment.ProjectIdentifier);
+            return (false, ex.Message);
         }
-
-        return false;
     }
 
     /// <summary>
     /// Build and submit an end-of-project claim transaction.
     /// </summary>
-    public async Task<bool> ClaimEndOfProjectAsync(InvestmentViewModel investment, long feeRateSatsPerVByte = 20)
+    public async Task<(bool Success, string? Error)> ClaimEndOfProjectAsync(InvestmentViewModel investment, long feeRateSatsPerVByte = 20)
     {
         if (string.IsNullOrEmpty(investment.ProjectIdentifier) ||
-            string.IsNullOrEmpty(investment.InvestmentWalletId)) return false;
+            string.IsNullOrEmpty(investment.InvestmentWalletId)) return (false, "Missing project or wallet identifier.");
 
         _logger.LogInformation("ClaimEndOfProjectAsync starting: project={ProjectId}, wallet={WalletId}, feeRate={FeeRate}",
             investment.ProjectIdentifier, investment.InvestmentWalletId, feeRateSatsPerVByte);
 
         try
         {
+            // Refresh wallet UTXOs before building end-of-project claim (#15)
+            await _walletContext.RefreshAllBalancesAsync();
+
             var walletId = new WalletId(investment.InvestmentWalletId);
             var projectId = new ProjectId(investment.ProjectIdentifier);
 
@@ -936,7 +947,7 @@ public partial class PortfolioViewModel : ReactiveObject
             if (buildResult.IsFailure)
             {
                 _logger.LogError("BuildEndOfProjectClaim failed: {Error}", buildResult.Error);
-                return false;
+                return (false, buildResult.Error);
             }
 
             _logger.LogInformation("End-of-project claim transaction built — publishing...");
@@ -947,34 +958,36 @@ public partial class PortfolioViewModel : ReactiveObject
             if (publishResult.IsSuccess)
             {
                 _logger.LogInformation("End-of-project claim published successfully for project {ProjectId}", investment.ProjectIdentifier);
-                // Refresh recovery state from SDK after successful transaction
                 await LoadRecoveryStatusAsync(investment);
-                return true;
+                return (true, null);
             }
 
             _logger.LogError("End-of-project claim publish failed: {Error}", publishResult.Error);
+            return (false, publishResult.Error);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "ClaimEndOfProjectAsync threw exception for project {ProjectId}", investment.ProjectIdentifier);
+            return (false, ex.Message);
         }
-
-        return false;
     }
 
     /// <summary>
     /// Build and submit a penalty release transaction (recover from penalty period).
     /// </summary>
-    public async Task<bool> PenaltyReleaseFundsAsync(InvestmentViewModel investment, long feeRateSatsPerVByte = 20)
+    public async Task<(bool Success, string? Error)> PenaltyReleaseFundsAsync(InvestmentViewModel investment, long feeRateSatsPerVByte = 20)
     {
         if (string.IsNullOrEmpty(investment.ProjectIdentifier) ||
-            string.IsNullOrEmpty(investment.InvestmentWalletId)) return false;
+            string.IsNullOrEmpty(investment.InvestmentWalletId)) return (false, "Missing project or wallet identifier.");
 
         _logger.LogInformation("PenaltyReleaseFundsAsync starting: project={ProjectId}, wallet={WalletId}, feeRate={FeeRate}",
             investment.ProjectIdentifier, investment.InvestmentWalletId, feeRateSatsPerVByte);
 
         try
         {
+            // Refresh wallet UTXOs before building penalty release transaction (#15)
+            await _walletContext.RefreshAllBalancesAsync();
+
             var walletId = new WalletId(investment.InvestmentWalletId);
             var projectId = new ProjectId(investment.ProjectIdentifier);
 
@@ -985,7 +998,7 @@ public partial class PortfolioViewModel : ReactiveObject
             if (buildResult.IsFailure)
             {
                 _logger.LogError("BuildPenaltyReleaseTransaction failed: {Error}", buildResult.Error);
-                return false;
+                return (false, buildResult.Error);
             }
 
             _logger.LogInformation("Penalty release transaction built — publishing...");
@@ -996,19 +1009,18 @@ public partial class PortfolioViewModel : ReactiveObject
             if (publishResult.IsSuccess)
             {
                 _logger.LogInformation("Penalty release published successfully for project {ProjectId}", investment.ProjectIdentifier);
-                // Refresh recovery state from SDK after successful transaction
                 await LoadRecoveryStatusAsync(investment);
-                return true;
+                return (true, null);
             }
 
             _logger.LogError("Penalty release publish failed: {Error}", publishResult.Error);
+            return (false, publishResult.Error);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "PenaltyReleaseFundsAsync threw exception for project {ProjectId}", investment.ProjectIdentifier);
+            return (false, ex.Message);
         }
-
-        return false;
     }
 
     /// <summary>
@@ -1220,7 +1232,7 @@ public partial class PortfolioViewModel : ReactiveObject
             ProjectName = project.ProjectName,
             ShortDescription = project.ShortDescription,
             FundingAmount = $"{investmentAmount} {_currencyService.Symbol}",
-            FundingDate = DateTime.Now.ToString("M/dd/yyyy"),
+            FundingDate = DateTime.UtcNow.ToString("M/dd/yyyy"),
             TypeLabel = typeLabel,
             StatusText = isAutoApproved ? $"{typeLabel} Active" : "Awaiting Approval",
             StatusClass = isAutoApproved ? "active" : "waiting",
@@ -1241,9 +1253,9 @@ public partial class PortfolioViewModel : ReactiveObject
             TargetAmount = project.Target,
             TotalRaised = project.Raised,
             TotalInvestors = project.InvestorCount,
-            StartDate = DateTime.Now.ToString("MMM dd, yyyy"),
+             StartDate = DateTime.UtcNow.ToString("MMM dd, yyyy"),
             EndDate = project.EndDate,
-            TransactionDate = DateTime.Now.ToString("MMM dd, yyyy"),
+             TransactionDate = DateTime.UtcNow.ToString("MMM dd, yyyy"),
             ApprovalStatus = isAutoApproved ? "Approved" : "Pending",
             ProjectIdentifier = project.ProjectId,
             Stages = stages,

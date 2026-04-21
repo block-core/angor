@@ -370,7 +370,8 @@ public class InvestAndRecoverTest
         var signedDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
         while (DateTime.UtcNow < signedDeadline)
         {
-            await portfolioVm.LoadInvestmentsFromSdkAsync();
+            await window.ClickButton("PortfolioRefreshButton");
+            await Task.Delay(500);
             Dispatcher.UIThread.RunJobs();
 
             signedInvestment = portfolioVm.Investments.FirstOrDefault(i =>
@@ -412,7 +413,8 @@ public class InvestAndRecoverTest
         var preSpendDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
         while (DateTime.UtcNow < preSpendDeadline)
         {
-            await manageVm!.LoadClaimableTransactionsAsync();
+            await window.ClickButton("ManageProjectRefreshButton");
+            await Task.Delay(500);
             Dispatcher.UIThread.RunJobs();
 
             var stage1 = manageVm.Stages.FirstOrDefault(s => s.Number == 1 && s.CanClaim);
@@ -471,7 +473,8 @@ public class InvestAndRecoverTest
         var claimableDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
         while (DateTime.UtcNow < claimableDeadline)
         {
-            await manageVm.LoadClaimableTransactionsAsync();
+            await window.ClickButton("ManageProjectRefreshButton");
+            await Task.Delay(500);
             Dispatcher.UIThread.RunJobs();
 
             var claimableStage = manageVm.Stages.FirstOrDefault(s => s.Number == 1 && s.AvailableTransactions.Count > 0);
@@ -509,7 +512,8 @@ public class InvestAndRecoverTest
             i.ProjectName == foundProject.ProjectName || i.ProjectIdentifier == foundProject.ProjectId);
         investment.Should().NotBeNull();
 
-        await portfolioVm.LoadInvestmentsFromSdkAsync();
+        await window.ClickButton("PortfolioRefreshButton");
+        await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
         var sdkInvestment = portfolioVm.Investments.FirstOrDefault(i =>

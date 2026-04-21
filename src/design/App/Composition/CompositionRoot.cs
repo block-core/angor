@@ -118,6 +118,25 @@ public static class CompositionRoot
         // Currency symbol service — reads ticker from INetworkConfiguration
         services.AddSingleton<ICurrencyService, CurrencyService>();
 
+        // INetworkStorage override for integration tests that need to point at a local
+        // docker stack (see src/design/App.Test.Integration/docker). When ANGOR_INDEXER_URL
+        // or ANGOR_RELAY_URLS is set, the decorator returns the env-var values from
+        // GetSettings() but never persists them, so the underlying database stays clean.
+        if (EnvOverrideNetworkStorage.IsActive())
+        {
+            services.AddSingleton<INetworkStorage>(sp =>
+                new EnvOverrideNetworkStorage(new NetworkStorage(sp.GetRequiredService<IStore>())));
+        }
+
+        // Faucet service — integration tests replace this registration to point
+        // at the local docker faucet (see src/design/App.Test.Integration/docker).
+        // Env-var override:
+        //   ANGOR_FAUCET_BASE_URL   e.g. http://localhost:48500
+        //   ANGOR_FAUCET_SEND_PATH  e.g. api/send/{0}/{1}   (defaults to the bitcoin-custom-signet path)
+        services.AddHttpClient();
+        services.AddSingleton(ResolveFaucetOptions());
+        services.AddSingleton<IFaucetService, HttpFaucetService>();
+
         // ── Shared singletons (replaces SharedViewModels static class) ──
         services.AddSingleton<SignatureStore>();
         services.AddSingleton<PrototypeSettings>();
@@ -190,5 +209,24 @@ public static class CompositionRoot
         networkConfig.SetDebugMode(prototypeSettings.IsDebugMode);
 
         return provider;
+    }
+
+    private static FaucetOptions ResolveFaucetOptions()
+    {
+        var baseUrl = Environment.GetEnvironmentVariable("ANGOR_FAUCET_BASE_URL");
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            return FaucetOptions.AngorPublic;
+        }
+
+        var sendPath = Environment.GetEnvironmentVariable("ANGOR_FAUCET_SEND_PATH");
+        if (string.IsNullOrWhiteSpace(sendPath))
+        {
+            // The bitcoin-custom-signet faucet-api and production faucet share
+            // the same route surface, so the default matches FaucetOptions.AngorPublic.
+            sendPath = FaucetOptions.AngorPublic.SendPathTemplate;
+        }
+
+        return new FaucetOptions(baseUrl, sendPath);
     }
 }

@@ -1,0 +1,252 @@
+# Local testnet stack for App.Test.Integration
+#
+# Spins up a fully isolated Angor-style signet (node + miner + mempool explorer +
+# Nostr relays + faucet API) so integration tests can run without depending on
+# the public Angor signet (signet.angor.online / faucettmp.angor.io / relay*.angor.io).
+#
+# Usage:
+#   cd src/design/App.Test.Integration/docker
+#   cp .env.example .env           # optional, only if you want to override defaults
+#   docker compose up -d
+#   docker compose logs -f signet-node
+#
+# Tear down (and wipe chain/relay data):
+#   docker compose down -v
+#
+# Images for the custom signet node and faucet API are built straight from the
+# block-core/bitcoin-custom-signet git repository, so first start will take a
+# few minutes. Everything else is pulled from Docker Hub.
+#
+# Ports are in a 48xxx / 47xxx range to avoid clashing with any concurrent
+# public-Angor signet stack a developer may also be running locally.
+#
+# See ./README.md for the full endpoint map and how to point the Avalonia app
+# at these services.
+
+name: angor-test-signet
+
+volumes:
+  btc-data:
+    name: angor-test-btc-data
+  fulcrum-data:
+    name: angor-test-fulcrum-data
+  mempool-api-cache:
+    name: angor-test-mempool-api-cache
+  mempool-db-data:
+    name: angor-test-mempool-db-data
+  relay1-data:
+    name: angor-test-relay1-data
+  relay2-data:
+    name: angor-test-relay2-data
+
+networks:
+  angor-test-net:
+    name: angor-test-net
+
+services:
+
+  # -----------------------------------------------------------------------
+  # Bitcoin signet node with built-in miner
+  # -----------------------------------------------------------------------
+  # Unique signet challenge so this chain can never accidentally sync with
+  # the public Angor signet, even if a peer is reachable. MINERENABLED=1
+  # produces a block every BLOCKPRODUCTIONDELAY seconds (default 30).
+  # MINETO is the BIP84 address at m/84'/1'/0'/0/0 of the faucet mnemonic,
+  # so coinbase rewards land directly in the faucet wallet.
+  signet-node:
+    container_name: angor-test-btc-node
+    image: angor-test/bitcoin-signet:local
+    build: ../../../../../bitcoin-custom-signet
+    mem_limit: 2048m
+    cpus: 0.8
+    healthcheck:
+      test: ["CMD", "bitcoin-cli", "ping"]
+      interval: 10s
+      retries: 5
+      start_period: 60s
+      timeout: 10s
+    restart: unless-stopped
+    stop_grace_period: 15m
+    volumes:
+      - btc-data:/root/.bitcoin
+    environment:
+      UACOMMENT: angor-test-signet
+      BLOCKPRODUCTIONDELAY: ${BLOCKPRODUCTIONDELAY:-30}
+      MINERENABLED: "1"
+      NBITS: ${NBITS:-1e0377ae}
+      # Miner reward address — BIP84 m/84'/1'/0'/0/0 of the faucet mnemonic
+      # ("margin radio diamond leg loud street announce guitar video shiver speed eyebrow")
+      MINETO: ${MINETO:-tb1qk4pq0rh75qtph47wlufhyss43flhvhvwe4zt8a}
+      # Unique challenge/privkey pair for this local stack — generated via
+      # `gen-signet-keys.sh` inside the custom signet image so the miner can
+      # sign blocks. ISOLATION, NOT SECURITY — do not reuse publicly.
+      SIGNETCHALLENGE: ${SIGNETCHALLENGE:-5121036cb519d70c45e501ae30d3355ac431ac9496e83280108e495da9d691fe43515651ae}
+      PRIVKEY: ${PRIVKEY:-cQnkRJCDLZ3pFqjvmgV6TFVu8sbv6nyCwpfzsVerKJuNthfV3uup}
+      EXTERNAL_IP: ${EXTERNAL_IP:-127.0.0.1}
+      RPCUSER: ${RPCUSER:-rpcuser}
+      RPCPASSWORD: ${RPCPASSWORD:-rpcpassword}
+      # Deliberately no ADDNODE — this chain is local-only.
+    ports:
+      - "${NODE_RPC_PORT:-48332}:38332"
+      - "${NODE_P2P_PORT:-48333}:38333"
+    networks:
+      - angor-test-net
+
+  # -----------------------------------------------------------------------
+  # Fulcrum — Electrum server backing the mempool explorer
+  # -----------------------------------------------------------------------
+  fulcrum:
+    container_name: angor-test-fulcrum
+    image: cculianu/fulcrum:latest
+    user: root
+    depends_on:
+      signet-node:
+        condition: service_healthy
+    volumes:
+      - fulcrum-data:/fulcrum_db
+    command: >
+      Fulcrum
+      --bitcoind angor-test-btc-node:38332
+      --rpcuser ${RPCUSER:-rpcuser}
+      --rpcpassword ${RPCPASSWORD:-rpcpassword}
+      --tcp 0.0.0.0:50001
+      --stats 0.0.0.0:3003
+    restart: unless-stopped
+    ports:
+      - "${FULCRUM_PORT:-48001}:50001"
+    networks:
+      - angor-test-net
+
+  # -----------------------------------------------------------------------
+  # mempool.space — MariaDB + backend API + web frontend
+  # -----------------------------------------------------------------------
+  mempool-db:
+    container_name: angor-test-mempool-db
+    image: mariadb:10.5.21
+    environment:
+      MYSQL_DATABASE: "mempool"
+      MYSQL_USER: "mempool"
+      MYSQL_PASSWORD: "mempool"
+      MYSQL_ROOT_PASSWORD: "admin"
+    restart: unless-stopped
+    stop_grace_period: 1m
+    volumes:
+      - mempool-db-data:/var/lib/mysql
+    networks:
+      - angor-test-net
+
+  mempool-api:
+    container_name: angor-test-mempool-api
+    image: mempool/backend:latest
+    user: "0:0"
+    depends_on:
+      mempool-db:
+        condition: service_started
+      fulcrum:
+        condition: service_started
+    environment:
+      MEMPOOL_NETWORK: "signet"
+      MEMPOOL_BACKEND: "electrum"
+      ELECTRUM_HOST: "angor-test-fulcrum"
+      ELECTRUM_PORT: "50001"
+      ELECTRUM_TLS_ENABLED: "false"
+      CORE_RPC_HOST: "angor-test-btc-node"
+      CORE_RPC_PORT: "38332"
+      CORE_RPC_USERNAME: ${RPCUSER:-rpcuser}
+      CORE_RPC_PASSWORD: ${RPCPASSWORD:-rpcpassword}
+      DATABASE_ENABLED: "true"
+      DATABASE_HOST: "angor-test-mempool-db"
+      DATABASE_DATABASE: "mempool"
+      DATABASE_USERNAME: "mempool"
+      DATABASE_PASSWORD: "mempool"
+      STATISTICS_ENABLED: "true"
+      LIGHTNING_ENABLED: "false"
+    restart: unless-stopped
+    stop_grace_period: 1m
+    command: "./wait-for-it.sh angor-test-mempool-db:3306 --timeout=720 --strict -- ./start.sh"
+    ports:
+      - "${MEMPOOL_API_PORT:-48999}:8999"
+    volumes:
+      - mempool-api-cache:/backend/cache
+    networks:
+      - angor-test-net
+
+  mempool-web:
+    container_name: angor-test-mempool-web
+    image: mempool/frontend:latest
+    user: "0:0"
+    depends_on:
+      mempool-api:
+        condition: service_started
+    environment:
+      FRONTEND_HTTP_PORT: "8080"
+      BACKEND_MAINNET_HTTP_HOST: "angor-test-mempool-api"
+      LIGHTNING: "false"
+    restart: unless-stopped
+    stop_grace_period: 1m
+    command: "./wait-for angor-test-mempool-db:3306 --timeout=720 -- nginx -g 'daemon off;'"
+    ports:
+      - "${MEMPOOL_WEB_PORT:-48080}:8080"
+    networks:
+      - angor-test-net
+
+  # -----------------------------------------------------------------------
+  # Nostr relays — two strfry instances so tests can verify multi-relay
+  # fan-out the same way the public stack (relay.angor.io + relay2.angor.io)
+  # behaves.
+  # -----------------------------------------------------------------------
+  relay1:
+    container_name: angor-test-relay-1
+    image: dockurr/strfry:latest
+    restart: unless-stopped
+    volumes:
+      - relay1-data:/app/strfry-db
+      - ./strfry.conf:/etc/strfry.conf:ro
+    ports:
+      - "${RELAY1_PORT:-47777}:7777"
+    networks:
+      - angor-test-net
+
+  relay2:
+    container_name: angor-test-relay-2
+    image: dockurr/strfry:latest
+    restart: unless-stopped
+    volumes:
+      - relay2-data:/app/strfry-db
+      - ./strfry.conf:/etc/strfry.conf:ro
+    ports:
+      - "${RELAY2_PORT:-47778}:7777"
+    networks:
+      - angor-test-net
+
+  # -----------------------------------------------------------------------
+  # Faucet API (C#/.NET) — hits the signet node directly via JSON-RPC.
+  # The faucet wallet is the BIP84 wallet for the default test mnemonic;
+  # the node's miner pays coinbase rewards into its first receive address
+  # (see MINETO above), so the faucet is funded automatically as blocks
+  # are produced.
+  # -----------------------------------------------------------------------
+  faucet-api:
+    container_name: angor-test-faucet-api
+    image: angor-test/faucet-api:local
+    build: ../../../../../bitcoin-custom-signet/faucet-api
+    depends_on:
+      signet-node:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_URLS: http://+:5500
+      ASPNETCORE_ENVIRONMENT: Development
+      Logging__LogLevel__Default: Information
+      Bitcoin__Mnemonic: ${FAUCET_MNEMONIC:-margin radio diamond leg loud street announce guitar video shiver speed eyebrow}
+      Bitcoin__Network: "TestNet"
+      Bitcoin__FeeRate: 10001
+      Bitcoin__ChangeAddressIndex: 0
+      Bitcoin__RpcUrl: "http://angor-test-btc-node:38332"
+      Bitcoin__RpcUser: ${RPCUSER:-rpcuser}
+      Bitcoin__RpcPassword: ${RPCPASSWORD:-rpcpassword}
+      Bitcoin__RpcWallet: "custom_signet"
+    restart: unless-stopped
+    ports:
+      - "${FAUCET_PORT:-48500}:5500"
+    networks:
+      - angor-test-net
