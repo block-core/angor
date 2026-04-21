@@ -20,8 +20,7 @@
         <PublishAot>false</PublishAot>
         <DebugSymbols>false</DebugSymbols>
         <DebugType>none</DebugType>
-        <RunAOTCompilation>true</RunAOTCompilation>
-        <AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>
+        <RunAOTCompilation>false</RunAOTCompilation>
         <EnableAssemblyILStripping>false</EnableAssemblyILStripping>
         <NoWarn>$(NoWarn);IL2026;IL2111</NoWarn>
         <AspectInjectorEnabled>false</AspectInjectorEnabled>
