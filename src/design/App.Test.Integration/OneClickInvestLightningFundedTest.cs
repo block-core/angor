@@ -28,7 +28,8 @@ namespace App.Test.Integration;
 /// </summary>
 public class OneClickInvestLightningFundedTest
 {
-    // ThunderHub credentials from environment variables — set before running.
+    // ThunderHub credentials from environment variables — test is skipped if not set.
+    // Set THUNDERHUB_URL, THUNDERHUB_ACCOUNT, THUNDERHUB_PASSWORD before running.
     private static readonly string? ThunderHubUrl = Environment.GetEnvironmentVariable("THUNDERHUB_URL");
     private static readonly string? ThunderHubAccountName = Environment.GetEnvironmentVariable("THUNDERHUB_ACCOUNT");
     private static readonly string? ThunderHubPassword = Environment.GetEnvironmentVariable("THUNDERHUB_PASSWORD");
@@ -38,6 +39,12 @@ public class OneClickInvestLightningFundedTest
     [AvaloniaFact]
     public async Task LightningInvoice_ThunderHubPays_ReachesSuccessScreen()
     {
+        if (string.IsNullOrEmpty(ThunderHubUrl) || string.IsNullOrEmpty(ThunderHubAccountName) || string.IsNullOrEmpty(ThunderHubPassword))
+        {
+            Log("SKIPPED: Lightning test requires THUNDERHUB_URL, THUNDERHUB_ACCOUNT, and THUNDERHUB_PASSWORD environment variables");
+            return;
+        }
+
         using var profileScope = TestProfileScope.For(nameof(OneClickInvestLightningFundedTest));
         Log("========== STARTING 1-click invest LIGHTNING FUNDED test ==========");
 
@@ -119,7 +126,7 @@ public class OneClickInvestLightningFundedTest
 
         // ── Step 7: Pay the invoice via ThunderHub LND-2 ──
         Log("[7] Paying invoice via ThunderHub LND-2...");
-        using var thunderHub = new ThunderHubClient(ThunderHubUrl);
+        using var thunderHub = new ThunderHubClient(ThunderHubUrl!);
         await thunderHub.LoginAsync(ThunderHubAccountName!, ThunderHubPassword!);
         Log("[7] ThunderHub login successful.");
 
