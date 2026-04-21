@@ -294,10 +294,10 @@
                                 IsEnabled="False"
                                 Cursor="Hand">
                             <Panel>
-                                <TextBlock Name="ContinueBtnContent" Text="Continue" HorizontalAlignment="Center" />
+                                <TextBlock Name="ContinueText" Text="Continue" HorizontalAlignment="Center" />
                                 <StackPanel Name="ContinueBtnSpinner" Orientation="Horizontal" Spacing="8"
                                             HorizontalAlignment="Center" IsVisible="False">
-                                    <i:Icon Value="fa-solid fa-spinner" FontSize="14"
+                                    <i:Icon Name="ContinueSpinner" Value="fa-solid fa-spinner" FontSize="14"
                                             Foreground="White" VerticalAlignment="Center"
                                             Classes="spin" />
                                     <TextBlock Text="Creating..." VerticalAlignment="Center" />
