@@ -313,7 +313,9 @@
                         <TextBlock Text="On-Chain" FontSize="13" FontWeight="SemiBold"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
-                    <Border Grid.Column="1" Name="LightningTabBorder" Classes="NetworkTab"
+                    <Border Grid.Column="1" Name="LightningTabBorder"
+                            AutomationProperties.AutomationId="InvestLightningTab"
+                            Classes="NetworkTab"
                             Classes.Selected="{Binding IsLightningTab}"
                             CornerRadius="12" Padding="12,8" BorderThickness="2" Cursor="Hand">
                         <TextBlock Text="Lightning" FontSize="13" FontWeight="SemiBold"
