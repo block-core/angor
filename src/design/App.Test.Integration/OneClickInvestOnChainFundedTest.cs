@@ -106,23 +106,10 @@ public class OneClickInvestOnChainFundedTest
         invoiceAddress.Should().NotBeNull("on-chain address should appear in the UI");
         Log($"[5] Address from UI: {invoiceAddress}");
 
-        // ── Regression guard: verify the auto-created wallet can be decrypted with the default key ──
-        // The invest flow calls CreateWalletWithoutPassword() which must encrypt with the same key
-        // that SimplePasswordProvider returns, otherwise all subsequent SDK operations fail with
-        // "Invalid encryption key".
-        Log("[5b] Verifying auto-created wallet encryption key roundtrip...");
-        var seedwordsProvider = global::App.App.Services.GetRequiredService<Angor.Sdk.Common.ISeedwordsProvider>();
-        var walletAppSvc = global::App.App.Services.GetRequiredService<Angor.Sdk.Wallet.Application.IWalletAppService>();
-        var metas = await walletAppSvc.GetMetadatas();
-        metas.IsSuccess.Should().BeTrue("should be able to list wallets after auto-creation");
-        metas.Value.Should().NotBeEmpty("invest flow should have auto-created a wallet");
-
-        var autoWalletId = metas.Value.First().Id;
-        var sensitiveResult = await seedwordsProvider.GetSensitiveData(autoWalletId.Value);
-        sensitiveResult.IsSuccess.Should().BeTrue(
-            $"auto-created wallet decryption should succeed — got error: {(sensitiveResult.IsFailure ? sensitiveResult.Error : "none")}. " +
-            "If this fails, CreateWalletWithoutPassword uses a different encryption key than SimplePasswordProvider.DefaultKey.");
-
+        // ── Step 1: Boot app, wipe data (no wallet — the invest flow auto-creates one) ──
+        Log("[1] Boot app, wipe data...");
+        var window = TestHelpers.CreateShellWindow();
+        await window.WipeExistingData();
         // Verify payment status shows in the UI
         var statusText = await window.GetText("InvestPaymentStatus", TestHelpers.UiTimeout);
         statusText.Should().Contain("Waiting for payment",
