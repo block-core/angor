@@ -36,11 +36,10 @@ public class OneClickInvestOnChainFundedTest
         using var profileScope = TestProfileScope.For(nameof(OneClickInvestOnChainFundedTest));
         Log("========== STARTING 1-click invest on-chain FUNDED test ==========");
 
-        // ── Step 1: Boot app, wipe data, create wallet (no funding) ──
-        Log("[1] Boot app, wipe, create wallet (unfunded)...");
+        // ── Step 1: Boot app, wipe data (no wallet — the invest flow auto-creates one) ──
+        Log("[1] Boot app, wipe data...");
         var window = TestHelpers.CreateShellWindow();
         await window.WipeExistingData();
-        await window.CreateWalletViaGenerate();
 
         // ── Step 2: Navigate to Find Projects and find an open project ──
         Log("[2] Finding an open project...");

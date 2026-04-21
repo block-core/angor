@@ -219,15 +219,25 @@ public class WalletAppService(
     {
         if (string.IsNullOrEmpty(name))
             name = network + " Wallet";
-        
+
         var mnemonic = new Mnemonic(Wordlist.English, WordCount.Twelve);
-        
+
         var seedWords = mnemonic.ToString();
         var passphrase = Maybe<string>.None;
-        
+
         //No need to refresh the wallet as we create it from scratch here
         return walletFactory.CreateWallet(name, seedWords, passphrase, encryptionKey, network)
             .Map(_ => _.Id);
+    }
+
+    /// <summary>
+    /// Create a wallet without a user-provided password.
+    /// Uses a default encryption key; will be replaced by secure storage in a future iteration.
+    /// </summary>
+    public Task<Result<WalletId>> CreateWalletWithoutPassword(BitcoinNetwork network)
+    {
+        // TODO: replace "DEFAULT" with ISecureKeyProvider.GetOrCreateKey() when secure storage is available
+        return CreateWallet(network + " Wallet", "DEFAULT", network);
     }
     
     public async Task<Result> DeleteWallet(WalletId walletId)
