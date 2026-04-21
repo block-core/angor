@@ -405,12 +405,12 @@ public partial class InvestPageViewModel : ReactiveObject
                 this.RaisePropertyChanged(nameof(SubmitOpacity));
             });
 
-        // Initialize subscription plans if subscription type
+        // Initialize subscription plans if subscription type.
+        // No auto-select: CanSubmit stays false until the user picks a plan,
+        // matching the Fund/Invest path (button dimmed until amount entered).
         if (IsSubscription)
         {
             InitializeSubscriptionPlans();
-            // Auto-select pattern1
-            SelectSubscriptionPlan("pattern1");
         }
 
         // Initialize stages from project

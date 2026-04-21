@@ -76,8 +76,12 @@
         <Style Selector="Border.QuickAmountBtn.QuickAmountSelected > StackPanel > TextBlock.QuickAmountLabel">
             <Setter Property="Foreground" Value="White" />
         </Style>
-        <!-- Disabled submit button: dim + no cursor -->
-        <Style Selector="Border#SubmitButton:disabled">
+        <!-- Disabled submit button: dim + no cursor (attribute selector — Border :disabled pseudo-class is unreliable) -->
+        <Style Selector="Border#SubmitButton[IsEnabled=False]">
+            <Setter Property="Opacity" Value="0.45" />
+            <Setter Property="Cursor" Value="Arrow" />
+        </Style>
+        <Style Selector="Border#MobileSubmitButton[IsEnabled=False]">
             <Setter Property="Opacity" Value="0.45" />
             <Setter Property="Cursor" Value="Arrow" />
         </Style>
