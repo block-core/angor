@@ -14,8 +14,8 @@
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
         <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
         <Optimize>true</Optimize>
-        <PublishTrimmed>true</PublishTrimmed>
-        <TrimMode>partial</TrimMode>
+        <PublishTrimmed>false</PublishTrimmed>
+        <TrimMode>none</TrimMode>
         <OptimizationPreference>Speed</OptimizationPreference>
         <PublishAot>false</PublishAot>
         <DebugSymbols>false</DebugSymbols>
