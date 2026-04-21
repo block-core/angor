@@ -187,7 +187,6 @@ public partial class ManageProjectContentView : UserControl
     /// The parent ManageProjectView subscribes to this to open the appropriate modal.
     /// </summary>
     public event System.Action<int, string>? StageButtonClicked;
-
     private void OnStageButtonClick(object? sender, RoutedEventArgs e)
     {
         if (e.Source is not Button btn) return;

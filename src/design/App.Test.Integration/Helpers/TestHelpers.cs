@@ -849,9 +849,17 @@ public static class TestHelpers
 
         var manageVm = myProjectsVm.SelectedManageProject!;
 
-        var manageView = window.GetVisualDescendants().OfType<ManageProjectView>().FirstOrDefault(v => v.IsVisible)
-            ?? throw new InvalidOperationException("Visible ManageProjectView not found");
-        manageView.OpenReleaseFundsModal();
+        // Click the "Release Funds" nav button in the top bar
+        var releaseFundsBtnVisible = await WaitForCondition(
+            () => window.FindByAutomationId<Button>("ReleaseFundsNavButton")?.IsVisible == true,
+            maxWait,
+            TimeSpan.FromMilliseconds(100));
+        if (!releaseFundsBtnVisible)
+            throw new TimeoutException("ReleaseFundsNavButton did not appear in the UI");
+
+        var releaseFundsBtn = window.FindByAutomationId<Button>("ReleaseFundsNavButton")
+            ?? throw new InvalidOperationException("ReleaseFundsNavButton not found");
+        releaseFundsBtn.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, releaseFundsBtn));
         Dispatcher.UIThread.RunJobs();
 
         var releaseButtonVisible = await WaitForCondition(
