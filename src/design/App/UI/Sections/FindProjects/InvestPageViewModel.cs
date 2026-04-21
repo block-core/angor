@@ -1081,6 +1081,7 @@ public partial class InvestPageViewModel : ReactiveObject
                 projectId,
                 new Amount(amountSats),
                 receivingAddress,
+                StageCount: Stages.Count,
                 EstimatedFeeRateSatsPerVbyte: (int)SelectedFeeRate);
 
             Result<CreateLightningSwapForInvestment.CreateLightningSwapResponse> swapResult;
