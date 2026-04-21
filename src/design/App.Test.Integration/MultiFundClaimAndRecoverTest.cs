@@ -88,7 +88,8 @@ public class MultiFundClaimAndRecoverTest
                 BelowThresholdInvestorProfile,
                 project!,
                 belowThresholdInvestmentBtc,
-                expectFounderApproval: false);
+                expectFounderApproval: false,
+                targetPatternStageCount: 6);
         });
 
         await WithProfileWindow(AboveThresholdInvestorProfile, initializedProfiles, async window =>
@@ -99,7 +100,8 @@ public class MultiFundClaimAndRecoverTest
                 AboveThresholdInvestorProfile,
                 project!,
                 aboveThresholdInvestmentBtc,
-                expectFounderApproval: true);
+                expectFounderApproval: true,
+                targetPatternStageCount: 3);
         });
 
         await WithProfileWindow(FounderProfile, initializedProfiles, async window =>
@@ -266,10 +268,12 @@ public class MultiFundClaimAndRecoverTest
         await Task.Delay(200);
         wizardVm.PayoutFrequency = "Weekly";
         wizardVm.ToggleInstallmentCount(3);
+        wizardVm.ToggleInstallmentCount(6);
         wizardVm.WeeklyPayoutDay = payoutDay;
         wizardVm.GeneratePayoutSchedule();
-        wizardVm.Stages.Count.Should().Be(3);
-        wizardVm.Stages.Select(s => s.StageNumber).Should().ContainInOrder(1, 2, 3);
+        wizardVm.Stages.Count.Should().Be(6, "stages preview uses the max selected installment count");
+        wizardVm.Stages.Select(s => s.StageNumber).Should().ContainInOrder(1, 2, 3, 4, 5, 6);
+        wizardVm.SelectedInstallmentCounts.Should().HaveCount(2, "project should have two instalment patterns (3-month and 6-month)");
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
@@ -332,7 +336,8 @@ public class MultiFundClaimAndRecoverTest
         string profileName,
         ProjectHandle project,
         string amountBtc,
-        bool expectFounderApproval)
+        bool expectFounderApproval,
+        int? targetPatternStageCount = null)
     {
         var foundProject = await FindProjectFromSdkAsync(window, profileName, project);
 
@@ -359,9 +364,55 @@ public class MultiFundClaimAndRecoverTest
         }
 
         investVm!.Wallets.Count.Should().BeGreaterThan(0);
+
+        // ── Select funding pattern via UI: find the FundPatternBorder, then invoke code-behind ──
+        if (targetPatternStageCount.HasValue)
+        {
+            Log(profileName, $"Selecting funding pattern with {targetPatternStageCount.Value} stages via UI...");
+
+            investVm.FundingPatterns.Should().HaveCountGreaterThan(1,
+                "project should expose multiple funding patterns");
+
+            // Find the InvestPageView in the visual tree
+            var investPageView = window.GetVisualDescendants()
+                .OfType<InvestPageView>()
+                .FirstOrDefault();
+            investPageView.Should().NotBeNull("InvestPageView should be in the visual tree");
+
+            // Find all FundPatternBorder elements — proves the UI rendered them
+            var patternBorders = investPageView!.GetVisualDescendants()
+                .OfType<Border>()
+                .Where(b => b.Name == "FundPatternBorder")
+                .ToList();
+            patternBorders.Should().HaveCountGreaterThan(1,
+                "invest page should render multiple FundPatternBorder elements");
+
+            // Find the border whose DataContext matches the target stage count
+            var targetBorder = patternBorders.FirstOrDefault(b =>
+                b.DataContext is FundingPatternOption opt && opt.StageCount == targetPatternStageCount.Value);
+            targetBorder.Should().NotBeNull(
+                $"a FundPatternBorder with StageCount={targetPatternStageCount.Value} should exist");
+
+            // Extract the FundingPatternOption and click via the ViewModel
+            // (PointerPressedEventArgs construction is not feasible in headless tests —
+            //  other tests in this suite also use VM calls for Border-based interactions)
+            var targetOption = (FundingPatternOption)targetBorder!.DataContext!;
+            investVm.SelectFundingPattern(targetOption);
+            Dispatcher.UIThread.RunJobs();
+            await Task.Delay(300);
+            Dispatcher.UIThread.RunJobs();
+
+            investVm.SelectedFundingPattern.Should().NotBeNull();
+            investVm.SelectedFundingPattern!.StageCount.Should().Be(targetPatternStageCount.Value,
+                $"selected funding pattern should have {targetPatternStageCount.Value} stages after selection");
+            Log(profileName, $"Funding pattern with {targetPatternStageCount.Value} stages selected. PatternId={investVm.SelectedFundingPattern.PatternId}");
+        }
+
         investVm.InvestmentAmount = amountBtc;
         investVm.CanSubmit.Should().BeTrue();
-        investVm.Stages.Count.Should().BeGreaterThanOrEqualTo(3, "fund project should expose at least the configured stage outputs to investors");
+        var expectedStageCount = targetPatternStageCount ?? 3;
+        investVm.Stages.Count.Should().BeGreaterThanOrEqualTo(expectedStageCount,
+            $"fund project should expose at least {expectedStageCount} stage outputs for the selected pattern");
         investVm.Stages.Select(s => s.LabelText).Should().Contain(label => label.Contains("Stage 1"));
         investVm.Submit();
         Dispatcher.UIThread.RunJobs();

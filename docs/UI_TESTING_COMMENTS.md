@@ -9,8 +9,8 @@ Tracked issues and improvements found during manual testing of the new Avalonia 
 
 ## Find Projects
 2. ~~**Refresh button should spin / show loading state** — The refresh button should spin while loading. If there are no projects loaded yet, show a large spinner.~~ ✅ Fixed
-20. **Fund project: Missing instalment selector** — When funding a project of type Fund, there is no option to select which instalment pattern to use (e.g. 3-month or 6-month). Should show the available instalments, and once one is selected, show the payout breakdown schedule.
-21. **Fund project: Show penalty threshold status** — Should indicate whether the funding amount is above or below the penalty threshold (i.e. whether it requires founder approval or not).
+20. ~~**Fund project: Missing instalment selector** — When funding a project of type Fund, there is no option to select which instalment pattern to use (e.g. 3-month or 6-month). Should show the available instalments, and once one is selected, show the payout breakdown schedule.~~ ✅ Fixed — Added funding pattern selector card with pattern options, stage count badges, frequency display. Updated patternIndex in payment flow.
+21. ~~**Fund project: Show penalty threshold status** — Should indicate whether the funding amount is above or below the penalty threshold (i.e. whether it requires founder approval or not).~~ ✅ Fixed — Added reactive threshold badge in invest page footer showing "Requires Approval" (orange) or "No Approval Needed" (green).
 
 ## Funder Tab
 3. ~~**Missing refresh button** — No refresh button on the Funder tab; had to restart the app to see investors to approve.~~ ✅ Fixed
@@ -23,7 +23,7 @@ Tracked issues and improvements found during manual testing of the new Avalonia 
 8. ~~**Stages don't refresh after investing** — After investing, stages don't refresh automatically. Have to navigate away and back to the manage page to see changes.~~ ✅ Fixed
 9. ~~**Invest button needs spinner** — The Invest button should spin and be disabled after clicking to prevent double-clicks.~~ ✅ Fixed
 18. ~~**Stage percentage shows 0%** — The stage percentage in the list of stages shows 0%.~~ ✅ Fixed
-23. **Penalty button is a mockup** — The penalty button does not show real pending penalties, it is currently a mockup.
+23. ~~**Penalty button is a mockup** — The penalty button does not show real pending penalties, it is currently a mockup.~~ ✅ Verified — Penalty button is fully wired to SDK (BuildPenaltyReleaseTransaction), shows real penalty amounts and days remaining from recovery status.
 24. ~~**Recover shows penalty popup when below threshold** — Clicking the recover button shows a penalty days popup even when the investment is below the threshold (no penalty applies). Should skip penalty and go straight to recovery.~~ ✅ Fixed
 
 ## My Projects (Founder) > Manage Project
@@ -32,9 +32,9 @@ Tracked issues and improvements found during manual testing of the new Avalonia 
 22. ~~**Claimable stage shows no info** — When funds are claimable, the stage shows nothing. Should show the number of UTXOs available to claim out of total (currently only shows 'available in X days' when not yet claimable).~~ ✅ Fixed
 
 ## Create Project
-11. **Advanced editor not working** — The advanced editor in the create project wizard is not functional.
+11. ~~**Advanced editor not working** — The advanced editor in the create project wizard is not functional.~~ ✅ Fixed — Added advanced editor with per-stage percentage editing, remove stage, and add stage buttons. Toggle button swaps between simple/advanced views.
 12. ~~**Debug prefill should use realistic stage dates** — In debug mode, the prefill button for invest should make stage 1 spendable immediately (today) but stages 2 and 3 should have future release dates to better simulate a real scenario.~~ ✅ Fixed
-19. **Fund type: Selected instalments missing from summary** — When creating a Fund project and selecting two instalment patterns, the review summary doesn't show which instalments were selected.
+19. ~~**Fund type: Selected instalments missing from summary** — When creating a Fund project and selecting two instalment patterns, the review summary doesn't show which instalments were selected.~~ ✅ Fixed — Added Payout Frequency, Installment Options, and Payout Day to the Step 6 review summary.
 
 ## Investor > Manage Project (Recovery)
 13. ~~**Recover/Penalty popup shows wrong stage count** — Shows all 3 stages even when some are already spent by the founder. Should only show the stages actually being recovered. Also doesn't show the penalty days.~~ ✅ Fixed

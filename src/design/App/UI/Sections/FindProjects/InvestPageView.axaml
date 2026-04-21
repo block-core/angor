@@ -256,6 +256,26 @@
                     </StackPanel>
                 </StackPanel>
 
+                <!-- Penalty threshold indicator -->
+                <Panel IsVisible="{Binding HasPenaltyThreshold}" VerticalAlignment="Center">
+                    <!-- Above threshold: requires founder approval -->
+                    <Border IsVisible="{Binding IsAbovePenaltyThreshold}"
+                            Padding="8,4" CornerRadius="4"
+                            Background="#30FF8C00">
+                        <TextBlock Text="Requires Approval"
+                                   FontSize="13" FontWeight="SemiBold"
+                                   Foreground="#FF8C00" />
+                    </Border>
+                    <!-- Below threshold: direct publish -->
+                    <Border IsVisible="{Binding !IsAbovePenaltyThreshold}"
+                            Padding="8,4" CornerRadius="4"
+                            Background="#302D5A3D">
+                        <TextBlock Text="No Approval Needed"
+                                   FontSize="13" FontWeight="SemiBold"
+                                   Foreground="#2D5A3D" />
+                    </Border>
+                </Panel>
+
                 <!-- Submit button -->
                 <Border Name="SubmitButton"
                         CornerRadius="8" Padding="32,14"
@@ -310,11 +330,13 @@
                     <!-- ════════════════════════════════════════════ -->
                     <!-- COLUMN 1: Investment Amount Card (invest)    -->
                     <!--           OR Subscription Plan Card (sub)    -->
+                    <!--           + Funding Pattern selector (fund)  -->
                     <!-- ════════════════════════════════════════════ -->
+                    <StackPanel Grid.Column="0" Spacing="24">
 
                     <!-- ── INVESTMENT AMOUNT (shown for invest/fund) ── -->
                     <!-- Vue: linear-gradient(to bottom right, #fff7ed, #fef3c7), border #fed7aa -->
-                    <Border Grid.Column="0"
+                    <Border
                             CornerRadius="16" Padding="24"
                             BorderThickness="1"
                             Background="{DynamicResource StatsDetailCardBackground}"
@@ -399,11 +421,86 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- ── FUNDING PATTERN SELECTOR (shown for fund type with patterns) ── -->
+                    <Border CornerRadius="16" Padding="24"
+                            BorderThickness="1"
+                            Background="{DynamicResource StatsDetailCardBackground}"
+                            BorderBrush="{DynamicResource StatsDetailCardBorder}"
+                            IsVisible="{Binding ShowFundingPatternSelector}">
+                        <StackPanel Spacing="20">
+                            <!-- Header -->
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border Width="40" Height="40" CornerRadius="8"
+                                        Background="#F97316">
+                                    <i:Icon Value="fa-solid fa-calendar-days" FontSize="18"
+                                            Foreground="White"
+                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                                <TextBlock Text="Funding Pattern"
+                                           FontSize="18" FontWeight="Bold"
+                                           Foreground="{DynamicResource StatsDetailLabel}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+
+                            <TextBlock Text="Select which instalment schedule to use:"
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMuted}" />
+
+                            <!-- Pattern options -->
+                            <ItemsControl ItemsSource="{Binding FundingPatterns}" Margin="0,4,0,0">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Spacing="12" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="fp:FundingPatternOption">
+                                        <Border Name="FundPatternBorder"
+                                                Classes="SubPlanBtn"
+                                                CornerRadius="12" Padding="16"
+                                                Cursor="Hand"
+                                                BorderThickness="2">
+                                            <StackPanel Spacing="4">
+                                                <Panel>
+                                                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Left"
+                                                                VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Name}"
+                                                                   FontSize="16" FontWeight="Bold"
+                                                                   Foreground="{DynamicResource SubPlanLabel}" />
+                                                        <Border CornerRadius="10" Padding="8,2"
+                                                                Background="{DynamicResource AccentBrush}">
+                                                            <TextBlock FontSize="12" FontWeight="SemiBold"
+                                                                       Foreground="White">
+                                                                <TextBlock.Text>
+                                                                    <MultiBinding StringFormat="{}{0} stages">
+                                                                        <Binding Path="StageCount" />
+                                                                    </MultiBinding>
+                                                                </TextBlock.Text>
+                                                            </TextBlock>
+                                                        </Border>
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding FrequencyText}"
+                                                               FontSize="14" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource SubPlanPrice}"
+                                                               HorizontalAlignment="Right"
+                                                               VerticalAlignment="Center" />
+                                                </Panel>
+                                                <TextBlock Text="{Binding Description}"
+                                                           FontSize="13"
+                                                           Foreground="{DynamicResource SubPlanDescription}"
+                                                           TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
                     <!-- ── SUBSCRIPTION PLAN (shown for subscription type) ── -->
                     <!-- Vue: .subscription-card { background: linear-gradient(to bottom right, #fff7ed, #fef3c7) } -->
                     <!-- Same warm gradient as investment card but with subscription-specific content -->
-                    <Border Grid.Column="0"
-                            CornerRadius="16" Padding="24"
+                    <Border CornerRadius="16" Padding="24"
                             BorderThickness="1"
                             Background="{DynamicResource StatsDetailCardBackground}"
                             BorderBrush="{DynamicResource StatsDetailCardBorder}"
@@ -471,6 +568,8 @@
                             </ItemsControl>
                         </StackPanel>
                     </Border>
+
+                    </StackPanel> <!-- end Column 0 StackPanel -->
 
                     <!-- ════════════════════════════════════════════ -->
                     <!-- COLUMN 2: Release Schedule / Payment Schedule -->
