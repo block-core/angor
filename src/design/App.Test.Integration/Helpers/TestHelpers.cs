@@ -434,14 +434,14 @@ public static class TestHelpers
         // ── #1 regression: Continue button should show spinner during wallet creation ──
         Dispatcher.UIThread.RunJobs();
         var continueBtn = window.FindByAutomationId<Button>("BtnContinueBackup");
-        var continueSpinner = window.FindByName<Projektanker.Icons.Avalonia.Icon>("ContinueSpinner");
+        var continueSpinner = window.FindByName<StackPanel>("ContinueBtnSpinner");
         // The spinner should be visible and button disabled while wallet creation is in progress.
         // If the operation completes instantly (test/headless), the success panel will already be
         // shown, so we only assert if the button still exists and is in the processing state.
         if (continueBtn is { IsEnabled: false })
         {
-            continueSpinner.Should().NotBeNull("#1: ContinueSpinner should exist on the Continue button");
-            continueSpinner!.IsVisible.Should().BeTrue("#1: ContinueSpinner should be visible during wallet creation");
+            continueSpinner.Should().NotBeNull("#1: ContinueBtnSpinner should exist on the Continue button");
+            continueSpinner!.IsVisible.Should().BeTrue("#1: ContinueBtnSpinner should be visible during wallet creation");
             Log("  [Generate] ✓ #1 verified: Continue spinner visible and button disabled during creation.");
         }
         else
