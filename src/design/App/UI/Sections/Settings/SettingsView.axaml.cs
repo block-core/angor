@@ -1,9 +1,13 @@
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
+using App.UI.Shared;
+using App.UI.Shared.Controls;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ReactiveUI;
 
 namespace App.UI.Sections.Settings;
 
@@ -11,6 +15,8 @@ public partial class SettingsView : UserControl
 {
     private readonly ILogger<SettingsView> _logger;
     private SettingsViewModel? _subscribedVm;
+    private IDisposable? _layoutSubscription;
+    private ScrollableView? _scrollableView;
 
     /// <summary>Design-time only.</summary>
     public SettingsView()
@@ -26,6 +32,24 @@ public partial class SettingsView : UserControl
         DataContext = vm;
         DataContextChanged += (_, _) => SubscribeToVmEvents();
         SubscribeToVmEvents();
+
+        _scrollableView = this.GetLogicalDescendants().OfType<ScrollableView>().FirstOrDefault();
+
+        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
+            .Subscribe(isCompact =>
+            {
+                if (_scrollableView != null)
+                    _scrollableView.ContentPadding = isCompact
+                        ? new Thickness(16, 16, 16, 96)
+                        : new Thickness(24);
+            });
+    }
+
+    protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = null;
+        base.OnDetachedFromLogicalTree(e);
     }
 
     private SettingsViewModel? Vm => DataContext as SettingsViewModel;
