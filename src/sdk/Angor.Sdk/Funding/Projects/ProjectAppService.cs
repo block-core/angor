@@ -65,4 +65,17 @@ public class ProjectAppService(
     {
         return mediator.Send(new GetProjectInfoJson.GetProjectInfoJsonRequest(projectId));
     }
+
+    public Task<Result<UpdateProjectProfile.UpdateProjectProfileResponse>> UpdateProjectProfile(
+        WalletId walletId,
+        ProjectSeedDto projectSeedDto,
+        ProjectMetadata metadata,
+        string? projectContent,
+        string? faqContent,
+        string? membersContent,
+        string? mediaContent)
+    {
+        return mediator.Send(new UpdateProjectProfile.UpdateProjectProfileRequest(
+            walletId, projectSeedDto, metadata, projectContent, faqContent, membersContent, mediaContent));
+    }
 }

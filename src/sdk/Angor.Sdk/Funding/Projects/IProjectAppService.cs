@@ -27,4 +27,13 @@ public interface IProjectAppService
     Task<Result<ProjectStatisticsDto>> GetProjectStatistics(ProjectId projectId);
     Task<Result<GetProjectRelays.GetProjectRelaysResponse>> GetRelaysForNpubAsync(string nostrPubKey);
     Task<Result<GetProjectInfoJson.GetProjectInfoJsonResponse>> GetProjectInfoJson(ProjectId projectId);
+
+    Task<Result<UpdateProjectProfile.UpdateProjectProfileResponse>> UpdateProjectProfile(
+        WalletId walletId,
+        ProjectSeedDto projectSeedDto,
+        ProjectMetadata metadata,
+        string? projectContent,
+        string? faqContent,
+        string? membersContent,
+        string? mediaContent);
 }

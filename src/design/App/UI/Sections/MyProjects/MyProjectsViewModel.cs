@@ -4,6 +4,7 @@ using System.Linq;
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
+using App.UI.Sections.MyProjects.EditProfile;
 using App.UI.Shared;
 using App.UI.Shared.Services;
 using Microsoft.Extensions.Logging;
@@ -53,6 +54,7 @@ public partial class MyProjectsViewModel : ReactiveObject
     private readonly IProjectAppService _projectAppService;
     private readonly IWalletContext _walletContext;
     private readonly Func<MyProjectItemViewModel, ManageProjectViewModel> _manageFactory;
+    private readonly Func<MyProjectItemViewModel, EditProfileViewModel> _editProfileFactory;
     private readonly ICurrencyService _currencyService;
     private readonly ILogger<MyProjectsViewModel> _logger;
 
@@ -64,6 +66,7 @@ public partial class MyProjectsViewModel : ReactiveObject
 
     [Reactive] private bool showCreateWizard;
     [Reactive] private ManageProjectViewModel? selectedManageProject;
+    [Reactive] private EditProfileViewModel? selectedEditProject;
     [Reactive] private bool isLoading;
 
     /// <summary>The create project wizard VM, injected via DI.</summary>
@@ -91,6 +94,7 @@ public partial class MyProjectsViewModel : ReactiveObject
         IProjectAppService projectAppService,
         IWalletContext walletContext,
         Func<MyProjectItemViewModel, ManageProjectViewModel> manageFactory,
+        Func<MyProjectItemViewModel, EditProfileViewModel> editProfileFactory,
         CreateProjectViewModel createProjectVm,
         ICurrencyService currencyService,
         ILogger<MyProjectsViewModel> logger)
@@ -98,6 +102,7 @@ public partial class MyProjectsViewModel : ReactiveObject
         _projectAppService = projectAppService;
         _walletContext = walletContext;
         _manageFactory = manageFactory;
+        _editProfileFactory = editProfileFactory;
         CreateProjectVm = createProjectVm;
         _currencyService = currencyService;
         _logger = logger;
@@ -244,4 +249,11 @@ public partial class MyProjectsViewModel : ReactiveObject
     }
 
     public void CloseManageProject() => SelectedManageProject = null;
+
+    public void OpenEditProfile(MyProjectItemViewModel project)
+    {
+        SelectedEditProject = _editProfileFactory(project);
+    }
+
+    public void CloseEditProfile() => SelectedEditProject = null;
 }

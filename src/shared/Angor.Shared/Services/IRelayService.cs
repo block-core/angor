@@ -30,4 +30,13 @@ public interface IRelayService
     void LookupRelayListForNPubs(Action<string, List<NostrEventTag>> onResponse, Action onEndOfStream, params string[] npubs);
     
     void LookupLatestProjects<T>(Action<EventInfo<T>> onResponseAction, Action? onEndOfStreamAction, int limit);
+
+    /// <summary>Fetches the kind-0 profile metadata for a given hex public key. Returns null if not found.</summary>
+    Task<ProjectMetadata?> FetchProfileMetadataAsync(string nostrPubKeyHex);
+
+    /// <summary>Fetches the content of a kind-30078 (ApplicationSpecificData) event with the given d-tag for a given author.</summary>
+    Task<string?> FetchAppSpecificDataAsync(string nostrPubKeyHex, string dTag);
+
+    /// <summary>Publishes a kind-30078 (ApplicationSpecificData) event with the given d-tag and content.</summary>
+    Task<string> PublishAppSpecificDataAsync(string dTag, string content, string hexPrivateKey, Action<NostrOkResponse> action);
 }
