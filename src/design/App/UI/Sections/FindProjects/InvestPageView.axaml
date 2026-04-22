@@ -265,6 +265,7 @@
 
                 <!-- Submit button -->
                 <Border Name="SubmitButton"
+                        AutomationProperties.AutomationId="InvestSubmitButton"
                         CornerRadius="8" Padding="32,14"
                         Cursor="Hand"
                         BoxShadow="0 2 8 0 #4D4B7C5A"
@@ -407,6 +408,7 @@
                                 <!-- Vue: padding 12px 16px, border 1px solid #e0e0e0, border-radius 8px, font-size 16px -->
                                 <Panel>
                                     <TextBox Name="AmountInput"
+                                             AutomationProperties.AutomationId="InvestAmountInput"
                                              Text="{Binding InvestmentAmount, Mode=TwoWay}"
                                              Watermark="0.00000000"
                                              FontSize="16" Padding="12,12,60,12"

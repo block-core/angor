@@ -99,7 +99,7 @@ public class CreateLightningSwapTests
             .ReturnsAsync(amount.Sats);
 
         var request = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
-            walletId, projectId, amount, address);
+            walletId, projectId, amount, address, StageCount: 4);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
@@ -130,7 +130,7 @@ public class CreateLightningSwapTests
             .ReturnsAsync(amount.Sats);
 
         var request = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
-            walletId, projectId, amount, address);
+            walletId, projectId, amount, address, StageCount: 4);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
@@ -154,7 +154,7 @@ public class CreateLightningSwapTests
             .ReturnsAsync(Result.Failure<Project>("Project not found"));
 
         var request = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
-            walletId, projectId, amount, address);
+            walletId, projectId, amount, address, StageCount: 4);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
@@ -189,7 +189,7 @@ public class CreateLightningSwapTests
             .ReturnsAsync(Result.Failure<(string, Maybe<string>)>("Wallet locked"));
 
         var request = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
-            walletId, projectId, amount, address);
+            walletId, projectId, amount, address, StageCount: 4);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);

@@ -179,7 +179,9 @@
                             </Panel>
                         </Button>
                         <!-- Secondary: Or pay an invoice instead -->
-                        <Button Name="PayInvoiceInsteadButton" HorizontalAlignment="Stretch"
+                        <Button Name="PayInvoiceInsteadButton"
+                                AutomationProperties.AutomationId="InvestPayInvoiceBtn"
+                                HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Center"
                                 CornerRadius="8" Padding="12,14"
                                 Background="Transparent"
@@ -303,13 +305,17 @@
                      Liquid is hidden for now (no SDK wiring yet). -->
                 <Grid ColumnDefinitions="*,*,*" Margin="0,0,0,16">
                     <Grid.ColumnSpacing>8</Grid.ColumnSpacing>
-                    <Border Grid.Column="0" Name="OnChainTabBorder" Classes="NetworkTab"
+                    <Border Grid.Column="0" Name="OnChainTabBorder"
+                            AutomationProperties.AutomationId="InvestOnChainTab"
+                            Classes="NetworkTab"
                             Classes.Selected="{Binding IsOnChainTab}"
                             CornerRadius="12" Padding="12,8" BorderThickness="2" Cursor="Hand">
                         <TextBlock Text="On-Chain" FontSize="13" FontWeight="SemiBold"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
-                    <Border Grid.Column="1" Name="LightningTabBorder" Classes="NetworkTab"
+                    <Border Grid.Column="1" Name="LightningTabBorder"
+                            AutomationProperties.AutomationId="InvestLightningTab"
+                            Classes="NetworkTab"
                             Classes.Selected="{Binding IsLightningTab}"
                             CornerRadius="12" Padding="12,8" BorderThickness="2" Cursor="Hand">
                         <TextBlock Text="Lightning" FontSize="13" FontWeight="SemiBold"
@@ -386,6 +392,7 @@
                                    Foreground="{DynamicResource DeployTabUnselectedText}" />
                         <Grid ColumnDefinitions="*,Auto">
                             <TextBlock Grid.Column="0" Text="{Binding InvoiceString}"
+                                       AutomationProperties.AutomationId="InvestInvoiceAddress"
                                        FontSize="11" FontFamily="Consolas,Menlo,monospace"
                                        Foreground="{DynamicResource TextStrong}"
                                        TextTrimming="CharacterEllipsis"
@@ -426,6 +433,7 @@
                                         Foreground="{DynamicResource DeployFeePillText}"
                                         VerticalAlignment="Center" />
                                 <TextBlock Text="{Binding PaymentStatusText}"
+                                           AutomationProperties.AutomationId="InvestPaymentStatus"
                                            FontSize="12" FontWeight="Medium"
                                            Foreground="{DynamicResource DeployFeePillText}"
                                            VerticalAlignment="Center" />
@@ -441,6 +449,7 @@
         <!-- Vue: max-w-md, green check, title, description, button        -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsSuccess}"
+                AutomationProperties.AutomationId="InvestSuccessModal"
                 HorizontalAlignment="Center" VerticalAlignment="Center"
                 MinWidth="448" MaxWidth="480"
                 CornerRadius="16"
@@ -468,6 +477,7 @@
 
                 <!-- Title -->
                 <TextBlock Text="{Binding SuccessTitle}"
+                           AutomationProperties.AutomationId="InvestSuccessTitle"
                            FontSize="28" FontWeight="Bold"
                            Foreground="{DynamicResource TextStrong}"
                            HorizontalAlignment="Center"
@@ -483,7 +493,9 @@
                            Margin="0,0,0,32" />
 
                 <!-- Action button: green gradient -->
-                <Button Name="ViewInvestmentsButton" HorizontalAlignment="Stretch"
+                <Button Name="ViewInvestmentsButton"
+                        AutomationProperties.AutomationId="InvestViewInvestmentsBtn"
+                        HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Center"
                         CornerRadius="8" Padding="24,12"
                         Cursor="Hand" BorderThickness="0">

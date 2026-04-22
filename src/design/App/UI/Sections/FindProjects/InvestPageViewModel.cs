@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Threading;
 using Angor.Sdk.Common;
+using CSharpFunctionalExtensions;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;
@@ -91,6 +92,7 @@ public partial class InvestPageViewModel : ReactiveObject
     private readonly PortfolioViewModel _portfolioVm;
     private readonly ICurrencyService _currencyService;
     private readonly IWalletContext _walletContext;
+    private readonly Func<BitcoinNetwork> _getNetwork;
     private readonly ILogger<InvestPageViewModel> _logger;
     private CancellationTokenSource? _invoiceMonitorCts;
 
@@ -288,6 +290,7 @@ public partial class InvestPageViewModel : ReactiveObject
         PortfolioViewModel portfolioVm,
         ICurrencyService currencyService,
         IWalletContext walletContext,
+        Func<BitcoinNetwork> getNetwork,
         ILogger<InvestPageViewModel> logger)
     {
         Project = project;
@@ -296,6 +299,7 @@ public partial class InvestPageViewModel : ReactiveObject
         _portfolioVm = portfolioVm;
         _currencyService = currencyService;
         _walletContext = walletContext;
+        _getNetwork = getNetwork;
         _logger = logger;
 
         _logger.LogInformation("InvestPageViewModel created for project '{ProjectName}' (ID: {ProjectId}, Type: {ProjectType})",
@@ -465,6 +469,27 @@ public partial class InvestPageViewModel : ReactiveObject
         InvestmentAmount = SatsToBtc(totalSats).ToString("F8", System.Globalization.CultureInfo.InvariantCulture);
 
         this.RaisePropertyChanged(nameof(SubscriptionPlans));
+    }
+
+    /// <summary>
+    /// Auto-create a wallet if none exists. Used by the 1-click invest flow so the user
+    /// doesn't need to visit the Funds section before investing.
+    /// </summary>
+    private async Task<Result> EnsureWalletExistsAsync()
+    {
+        _logger.LogInformation("No wallet found — auto-creating for 1-click invest flow");
+        PaymentStatusText = "Creating wallet...";
+
+        var result = await _walletAppService.CreateWalletWithoutPassword(_getNetwork());
+        if (result.IsFailure)
+        {
+            _logger.LogError("Auto-create wallet failed: {Error}", result.Error);
+            return Result.Failure(result.Error);
+        }
+
+        await _walletContext.ReloadAsync();
+        _logger.LogInformation("Wallet auto-created: {WalletId}", result.Value.Value);
+        return Result.Success();
     }
 
     private double ParseAmount()
@@ -882,12 +907,23 @@ public partial class InvestPageViewModel : ReactiveObject
 
     private async Task PayViaInvoiceAsync()
     {
-        // Use the first available wallet for address generation and monitoring
+        // Use the first available wallet for address generation and monitoring.
+        // If no wallet exists, create one silently (1-click experience).
         var wallet = Wallets.FirstOrDefault();
         if (wallet == null)
         {
-            ErrorMessage = "No wallet available for invoice monitoring.";
-            return;
+            var createResult = await EnsureWalletExistsAsync();
+            if (createResult.IsFailure)
+            {
+                ErrorMessage = createResult.Error;
+                return;
+            }
+            wallet = Wallets.FirstOrDefault();
+            if (wallet == null)
+            {
+                ErrorMessage = "Wallet was created but not found after reload.";
+                return;
+            }
         }
         if (wallet.Id is null || string.IsNullOrEmpty(wallet.Id.Value))
         {
@@ -1009,8 +1045,20 @@ public partial class InvestPageViewModel : ReactiveObject
         var wallet = Wallets.FirstOrDefault();
         if (wallet == null)
         {
-            ErrorMessage = "No wallet available for Lightning swap.";
-            return;
+            var createResult = await EnsureWalletExistsAsync();
+            if (createResult.IsFailure)
+            {
+                ErrorMessage = createResult.Error;
+                IsGeneratingLightningInvoice = false;
+                return;
+            }
+            wallet = Wallets.FirstOrDefault();
+            if (wallet == null)
+            {
+                ErrorMessage = "Wallet was created but not found after reload.";
+                IsGeneratingLightningInvoice = false;
+                return;
+            }
         }
         if (wallet.Id is null || string.IsNullOrEmpty(wallet.Id.Value))
         {
@@ -1085,6 +1133,7 @@ public partial class InvestPageViewModel : ReactiveObject
                 projectId,
                 new Amount(amountSats),
                 receivingAddress,
+                StageCount: Stages.Count,
                 EstimatedFeeRateSatsPerVbyte: (int)SelectedFeeRate);
 
             Result<CreateLightningSwapForInvestment.CreateLightningSwapResponse> swapResult;

@@ -25,7 +25,11 @@ public class TestAppBuilder
     private static void ConfigureServices(string profileName)
     {
         var existingServices = global::App.App.Services;
-        if (existingServices is IDisposable disposable)
+        if (existingServices is IAsyncDisposable asyncDisposable)
+        {
+            asyncDisposable.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        }
+        else if (existingServices is IDisposable disposable)
         {
             disposable.Dispose();
         }
