@@ -220,6 +220,8 @@ public partial class InvestPageViewModel : ReactiveObject
         ? SelectedSubscriptionPattern != null && ParseAmount() > 0
         : ParseAmount() >= Constants.MinInvestmentAmount;
 
+    public double SubmitOpacity => CanSubmit ? 1.0 : 0.45;
+
     // Vue ref: footer-summary stages/payments count
     private ProjectType TypeEnum => ProjectTypeExtensions.FromDisplayString(Project.ProjectType);
 
@@ -388,6 +390,7 @@ public partial class InvestPageViewModel : ReactiveObject
                 this.RaisePropertyChanged(nameof(FormattedAmount));
                 this.RaisePropertyChanged(nameof(AngorFeeAmount));
                 this.RaisePropertyChanged(nameof(CanSubmit));
+                this.RaisePropertyChanged(nameof(SubmitOpacity));
                 this.RaisePropertyChanged(nameof(SuccessDescription));
                 this.RaisePropertyChanged(nameof(StagesSummary));
                 this.RaisePropertyChanged(nameof(TransactionAmountValue));
@@ -399,14 +402,15 @@ public partial class InvestPageViewModel : ReactiveObject
             .Subscribe(_ =>
             {
                 this.RaisePropertyChanged(nameof(CanSubmit));
+                this.RaisePropertyChanged(nameof(SubmitOpacity));
             });
 
-        // Initialize subscription plans if subscription type
+        // Initialize subscription plans if subscription type.
+        // No auto-select: CanSubmit stays false until the user picks a plan,
+        // matching the Fund/Invest path (button dimmed until amount entered).
         if (IsSubscription)
         {
             InitializeSubscriptionPlans();
-            // Auto-select pattern1
-            SelectSubscriptionPlan("pattern1");
         }
 
         // Initialize stages from project

@@ -1,5 +1,10 @@
+using System;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Layout;
+using App.UI.Shared;
+using ReactiveUI;
 
 namespace App.UI.Shared.Controls;
 
@@ -103,5 +108,47 @@ public class WalletCard : TemplatedControl
     {
         get => GetValue(IsRefreshingProperty);
         set => SetValue(IsRefreshingProperty, value);
+    }
+
+    private IDisposable? _layoutSubscription;
+    private StackPanel? _actionButtons;
+
+    protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+    {
+        base.OnApplyTemplate(e);
+        _actionButtons = e.NameScope.Find<StackPanel>("ActionButtons");
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = LayoutModeService.Instance
+            .WhenAnyValue(x => x.IsCompact)
+            .Subscribe(ApplyResponsiveLayout);
+    }
+
+    private void ApplyResponsiveLayout(bool isCompact)
+    {
+        if (_actionButtons == null) return;
+
+        if (isCompact)
+        {
+            Grid.SetRow(_actionButtons, 1);
+            Grid.SetColumn(_actionButtons, 0);
+            Grid.SetColumnSpan(_actionButtons, 3);
+            _actionButtons.HorizontalAlignment = HorizontalAlignment.Left;
+            _actionButtons.Margin = new Thickness(0, 12, 0, 0);
+        }
+        else
+        {
+            Grid.SetRow(_actionButtons, 0);
+            Grid.SetColumn(_actionButtons, 2);
+            Grid.SetColumnSpan(_actionButtons, 1);
+            _actionButtons.HorizontalAlignment = HorizontalAlignment.Right;
+            _actionButtons.Margin = new Thickness(16, 0, 0, 0);
+        }
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = null;
+        base.OnDetachedFromVisualTree(e);
     }
 }

@@ -174,15 +174,14 @@ public partial class ProjectDetailView : UserControl
     private void ApplyResponsiveLayout(bool isCompact)
     {
         // ── Top section: *,400 → stacked ──
+        // XAML pre-declares ColumnDefinitions="*,400" RowDefinitions="Auto,Auto"
         if (_topSectionGrid != null && _topLeftCard != null && _topRightCard != null)
         {
             if (isCompact)
             {
-                _topSectionGrid.ColumnDefinitions.Clear();
-                _topSectionGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                _topSectionGrid.RowDefinitions.Clear();
-                _topSectionGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-                _topSectionGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                // Collapse col 1 to zero; stack cards in rows 0 and 1
+                if (_topSectionGrid.ColumnDefinitions.Count >= 2)
+                    _topSectionGrid.ColumnDefinitions[1].Width = new GridLength(0);
 
                 Grid.SetColumn(_topLeftCard, 0);
                 Grid.SetRow(_topLeftCard, 0);
@@ -193,10 +192,12 @@ public partial class ProjectDetailView : UserControl
             }
             else
             {
-                _topSectionGrid.ColumnDefinitions.Clear();
-                _topSectionGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                _topSectionGrid.ColumnDefinitions.Add(new ColumnDefinition(400, GridUnitType.Pixel));
-                _topSectionGrid.RowDefinitions.Clear();
+                // Restore 1fr + 400px columns, single row
+                if (_topSectionGrid.ColumnDefinitions.Count >= 2)
+                {
+                    _topSectionGrid.ColumnDefinitions[0].Width = GridLength.Star;
+                    _topSectionGrid.ColumnDefinitions[1].Width = new GridLength(400, GridUnitType.Pixel);
+                }
 
                 Grid.SetColumn(_topLeftCard, 0);
                 Grid.SetRow(_topLeftCard, 0);
@@ -207,17 +208,20 @@ public partial class ProjectDetailView : UserControl
             }
         }
 
-        // ── Stats grid: 3 cols with spacers → stacked ──
+        // ── Stats grid: 3 cols with 16px spacers → stacked ──
+        // XAML pre-declares ColumnDefinitions="*,16,*,16,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto"
         if (_statsGrid != null && _statCard0 != null && _statCard1 != null && _statCard2 != null)
         {
             if (isCompact)
             {
-                _statsGrid.ColumnDefinitions.Clear();
-                _statsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                _statsGrid.RowDefinitions.Clear();
-                _statsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-                _statsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-                _statsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                // Collapse all gap + card columns except col 0
+                if (_statsGrid.ColumnDefinitions.Count >= 5)
+                {
+                    _statsGrid.ColumnDefinitions[1].Width = new GridLength(0);
+                    _statsGrid.ColumnDefinitions[2].Width = new GridLength(0);
+                    _statsGrid.ColumnDefinitions[3].Width = new GridLength(0);
+                    _statsGrid.ColumnDefinitions[4].Width = new GridLength(0);
+                }
 
                 Grid.SetColumn(_statCard0, 0); Grid.SetRow(_statCard0, 0);
                 Grid.SetColumn(_statCard1, 0); Grid.SetRow(_statCard1, 1);
@@ -228,13 +232,15 @@ public partial class ProjectDetailView : UserControl
             }
             else
             {
-                _statsGrid.ColumnDefinitions.Clear();
-                _statsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                _statsGrid.ColumnDefinitions.Add(new ColumnDefinition(16, GridUnitType.Pixel));
-                _statsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                _statsGrid.ColumnDefinitions.Add(new ColumnDefinition(16, GridUnitType.Pixel));
-                _statsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                _statsGrid.RowDefinitions.Clear();
+                // Restore star/16/star/16/star widths
+                if (_statsGrid.ColumnDefinitions.Count >= 5)
+                {
+                    _statsGrid.ColumnDefinitions[0].Width = GridLength.Star;
+                    _statsGrid.ColumnDefinitions[1].Width = new GridLength(16, GridUnitType.Pixel);
+                    _statsGrid.ColumnDefinitions[2].Width = GridLength.Star;
+                    _statsGrid.ColumnDefinitions[3].Width = new GridLength(16, GridUnitType.Pixel);
+                    _statsGrid.ColumnDefinitions[4].Width = GridLength.Star;
+                }
 
                 Grid.SetColumn(_statCard0, 0); Grid.SetRow(_statCard0, 0);
                 Grid.SetColumn(_statCard1, 2); Grid.SetRow(_statCard1, 0);
@@ -245,20 +251,28 @@ public partial class ProjectDetailView : UserControl
             }
         }
 
-        // ── Investment info grid: 2x2 → stacked ──
+        // ── Investment info grid: 2x2 → 4 stacked rows ──
+        // XAML pre-declares ColumnDefinitions="*,16,*" RowDefinitions="Auto,16,Auto,16,Auto,16,Auto"
         if (_investInfoGrid != null)
         {
+            var children = _investInfoGrid.Children.OfType<Border>().ToArray();
             if (isCompact)
             {
-                _investInfoGrid.ColumnDefinitions.Clear();
-                _investInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                _investInfoGrid.RowDefinitions.Clear();
-                // 4 cards stacked with 12px gap rows
-                for (int i = 0; i < 7; i++)
-                    _investInfoGrid.RowDefinitions.Add(new RowDefinition(i % 2 == 0 ? GridLength.Auto : new GridLength(12, GridUnitType.Pixel)));
+                // Collapse gap + right columns
+                if (_investInfoGrid.ColumnDefinitions.Count >= 3)
+                {
+                    _investInfoGrid.ColumnDefinitions[1].Width = new GridLength(0);
+                    _investInfoGrid.ColumnDefinitions[2].Width = new GridLength(0);
+                }
+                // Use 12px gaps between rows (rows 1, 3, 5)
+                if (_investInfoGrid.RowDefinitions.Count >= 7)
+                {
+                    _investInfoGrid.RowDefinitions[1].Height = new GridLength(12, GridUnitType.Pixel);
+                    _investInfoGrid.RowDefinitions[3].Height = new GridLength(12, GridUnitType.Pixel);
+                    _investInfoGrid.RowDefinitions[5].Height = new GridLength(12, GridUnitType.Pixel);
+                }
 
-                // Re-assign children positions
-                var children = _investInfoGrid.Children.OfType<Border>().ToArray();
+                // Stack all 4 cards in column 0 at rows 0, 2, 4, 6
                 for (int i = 0; i < children.Length; i++)
                 {
                     Grid.SetColumn(children[i], 0);
@@ -267,17 +281,21 @@ public partial class ProjectDetailView : UserControl
             }
             else
             {
-                _investInfoGrid.ColumnDefinitions.Clear();
-                _investInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                _investInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(16, GridUnitType.Pixel));
-                _investInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                _investInfoGrid.RowDefinitions.Clear();
-                _investInfoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-                _investInfoGrid.RowDefinitions.Add(new RowDefinition(16, GridUnitType.Pixel));
-                _investInfoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                // Restore 2 cols with 16px gap
+                if (_investInfoGrid.ColumnDefinitions.Count >= 3)
+                {
+                    _investInfoGrid.ColumnDefinitions[0].Width = GridLength.Star;
+                    _investInfoGrid.ColumnDefinitions[1].Width = new GridLength(16, GridUnitType.Pixel);
+                    _investInfoGrid.ColumnDefinitions[2].Width = GridLength.Star;
+                }
+                // Only row 1 is 16px gap; collapse rows 3, 5 (unused in 2x2)
+                if (_investInfoGrid.RowDefinitions.Count >= 7)
+                {
+                    _investInfoGrid.RowDefinitions[1].Height = new GridLength(16, GridUnitType.Pixel);
+                    _investInfoGrid.RowDefinitions[3].Height = new GridLength(0);
+                    _investInfoGrid.RowDefinitions[5].Height = new GridLength(0);
+                }
 
-                // Restore 2x2 layout
-                var children = _investInfoGrid.Children.OfType<Border>().ToArray();
                 if (children.Length >= 4)
                 {
                     Grid.SetRow(children[0], 0); Grid.SetColumn(children[0], 0);
@@ -289,18 +307,18 @@ public partial class ProjectDetailView : UserControl
         }
 
         // ── Fund info grid: 2 cols → stacked ──
+        // XAML pre-declares ColumnDefinitions="*,16,*" RowDefinitions="Auto,12,Auto"
         if (_fundInfoGrid != null)
         {
+            var children = _fundInfoGrid.Children.OfType<Border>().ToArray();
             if (isCompact)
             {
-                _fundInfoGrid.ColumnDefinitions.Clear();
-                _fundInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                _fundInfoGrid.RowDefinitions.Clear();
-                _fundInfoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-                _fundInfoGrid.RowDefinitions.Add(new RowDefinition(12, GridUnitType.Pixel));
-                _fundInfoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                if (_fundInfoGrid.ColumnDefinitions.Count >= 3)
+                {
+                    _fundInfoGrid.ColumnDefinitions[1].Width = new GridLength(0);
+                    _fundInfoGrid.ColumnDefinitions[2].Width = new GridLength(0);
+                }
 
-                var children = _fundInfoGrid.Children.OfType<Border>().ToArray();
                 if (children.Length >= 2)
                 {
                     Grid.SetColumn(children[0], 0); Grid.SetRow(children[0], 0);
@@ -309,13 +327,13 @@ public partial class ProjectDetailView : UserControl
             }
             else
             {
-                _fundInfoGrid.ColumnDefinitions.Clear();
-                _fundInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                _fundInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(16, GridUnitType.Pixel));
-                _fundInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                _fundInfoGrid.RowDefinitions.Clear();
+                if (_fundInfoGrid.ColumnDefinitions.Count >= 3)
+                {
+                    _fundInfoGrid.ColumnDefinitions[0].Width = GridLength.Star;
+                    _fundInfoGrid.ColumnDefinitions[1].Width = new GridLength(16, GridUnitType.Pixel);
+                    _fundInfoGrid.ColumnDefinitions[2].Width = GridLength.Star;
+                }
 
-                var children = _fundInfoGrid.Children.OfType<Border>().ToArray();
                 if (children.Length >= 2)
                 {
                     Grid.SetColumn(children[0], 0); Grid.SetRow(children[0], 0);
@@ -325,20 +343,20 @@ public partial class ProjectDetailView : UserControl
         }
 
         // ── Subscription info grid: 3 cols → stacked ──
+        // XAML pre-declares ColumnDefinitions="*,16,*,16,*" RowDefinitions="Auto,12,Auto,12,Auto"
         if (_subInfoGrid != null)
         {
+            var children = _subInfoGrid.Children.OfType<Border>().ToArray();
             if (isCompact)
             {
-                _subInfoGrid.ColumnDefinitions.Clear();
-                _subInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                _subInfoGrid.RowDefinitions.Clear();
-                _subInfoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-                _subInfoGrid.RowDefinitions.Add(new RowDefinition(12, GridUnitType.Pixel));
-                _subInfoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-                _subInfoGrid.RowDefinitions.Add(new RowDefinition(12, GridUnitType.Pixel));
-                _subInfoGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                if (_subInfoGrid.ColumnDefinitions.Count >= 5)
+                {
+                    _subInfoGrid.ColumnDefinitions[1].Width = new GridLength(0);
+                    _subInfoGrid.ColumnDefinitions[2].Width = new GridLength(0);
+                    _subInfoGrid.ColumnDefinitions[3].Width = new GridLength(0);
+                    _subInfoGrid.ColumnDefinitions[4].Width = new GridLength(0);
+                }
 
-                var children = _subInfoGrid.Children.OfType<Border>().ToArray();
                 if (children.Length >= 3)
                 {
                     Grid.SetColumn(children[0], 0); Grid.SetRow(children[0], 0);
@@ -348,15 +366,15 @@ public partial class ProjectDetailView : UserControl
             }
             else
             {
-                _subInfoGrid.ColumnDefinitions.Clear();
-                _subInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                _subInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(16, GridUnitType.Pixel));
-                _subInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                _subInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(16, GridUnitType.Pixel));
-                _subInfoGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                _subInfoGrid.RowDefinitions.Clear();
+                if (_subInfoGrid.ColumnDefinitions.Count >= 5)
+                {
+                    _subInfoGrid.ColumnDefinitions[0].Width = GridLength.Star;
+                    _subInfoGrid.ColumnDefinitions[1].Width = new GridLength(16, GridUnitType.Pixel);
+                    _subInfoGrid.ColumnDefinitions[2].Width = GridLength.Star;
+                    _subInfoGrid.ColumnDefinitions[3].Width = new GridLength(16, GridUnitType.Pixel);
+                    _subInfoGrid.ColumnDefinitions[4].Width = GridLength.Star;
+                }
 
-                var children = _subInfoGrid.Children.OfType<Border>().ToArray();
                 if (children.Length >= 3)
                 {
                     Grid.SetColumn(children[0], 0); Grid.SetRow(children[0], 0);

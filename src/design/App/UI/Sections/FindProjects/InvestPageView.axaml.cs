@@ -95,46 +95,39 @@ public partial class InvestPageView : UserControl
         if (_bottomSpacer != null)
             _bottomSpacer.Height = isCompact ? 120 : 92;
 
-        // ── Content grid: 3-column → single column stacked ──
+        // ── Content grid: 3-column → single column stacked (SIGABRT-safe in-place mutation) ──
         if (_contentGrid != null)
         {
             if (isCompact)
             {
-                // Vue: flex-direction: column, gap: 16px, padding: 0 16px 32px 16px
-                _contentGrid.ColumnDefinitions.Clear();
-                _contentGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                _contentGrid.RowDefinitions.Clear();
-                // 3 content rows (amount/sub, stages, transaction) with Auto height
-                _contentGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-                _contentGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-                _contentGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                // Collapse cols 1 and 2 to 0 width
+                if (_contentGrid.ColumnDefinitions.Count >= 3)
+                {
+                    _contentGrid.ColumnDefinitions[1].Width = new GridLength(0);
+                    _contentGrid.ColumnDefinitions[2].Width = new GridLength(0);
+                }
                 _contentGrid.ColumnSpacing = 0;
-                _contentGrid.RowSpacing = 16; // Vue: gap: 16px on mobile
-                _contentGrid.Margin = new Thickness(16, 0, 16, 16); // Vue: padding 0 16px 32px 16px (bottom handled by spacer)
+                _contentGrid.RowSpacing = 16;
+                _contentGrid.Margin = new Thickness(16, 0, 16, 16);
 
-                // Reposition cards to single column
-                // Amount card (invest) — order 1
                 if (_amountCard != null)
                 {
                     Grid.SetColumn(_amountCard, 0);
                     Grid.SetRow(_amountCard, 0);
-                    _amountCard.Padding = new Thickness(16); // Vue: .invest-card { padding: 16px } on mobile
+                    _amountCard.Padding = new Thickness(16);
                 }
-                // Subscription card — order 1 (same slot as amount, only one is visible)
                 if (_subscriptionCard != null)
                 {
                     Grid.SetColumn(_subscriptionCard, 0);
                     Grid.SetRow(_subscriptionCard, 0);
                     _subscriptionCard.Padding = new Thickness(16);
                 }
-                // Stages card — order 2
                 if (_stagesCard != null)
                 {
                     Grid.SetColumn(_stagesCard, 0);
                     Grid.SetRow(_stagesCard, 1);
                     _stagesCard.Padding = new Thickness(16);
                 }
-                // Transaction details card — order 3
                 if (_transactionCard != null)
                 {
                     Grid.SetColumn(_transactionCard, 0);
@@ -144,17 +137,17 @@ public partial class InvestPageView : UserControl
             }
             else
             {
-                // Restore 3-column desktop layout
-                _contentGrid.ColumnDefinitions.Clear();
-                _contentGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                _contentGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                _contentGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-                _contentGrid.RowDefinitions.Clear();
+                // Restore 3 Star columns in-place
+                if (_contentGrid.ColumnDefinitions.Count >= 3)
+                {
+                    _contentGrid.ColumnDefinitions[0].Width = GridLength.Star;
+                    _contentGrid.ColumnDefinitions[1].Width = GridLength.Star;
+                    _contentGrid.ColumnDefinitions[2].Width = GridLength.Star;
+                }
                 _contentGrid.ColumnSpacing = 24;
                 _contentGrid.RowSpacing = 24;
                 _contentGrid.Margin = new Thickness(24, 0, 24, 24);
 
-                // Restore column positions
                 if (_amountCard != null)
                 {
                     Grid.SetColumn(_amountCard, 0);
