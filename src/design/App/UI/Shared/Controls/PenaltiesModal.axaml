@@ -3,14 +3,16 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
+             xmlns:portfolio="clr-namespace:App.UI.Sections.Portfolio"
              mc:Ignorable="d" d:DesignWidth="750" d:DesignHeight="500"
-             x:Class="App.UI.Shared.Controls.PenaltiesModal">
+             x:Class="App.UI.Shared.Controls.PenaltiesModal"
+             x:DataType="portfolio:PortfolioViewModel">
 
     <!--
-        Penalties Details Modal — Vue InvestmentDetail.vue lines 563-626
+        Penalties Details Modal - Vue InvestmentDetail.vue lines 563-626
         Shell modal pattern: card content only, no backdrop (shell provides blur + backdrop).
         max-w-2xl (~672px), table with PROJECT ID / AMOUNT IN PENALTY / DAYS REMAINING
-        Showing 2 stubbed penalty rows.
+        Bound to real PenaltyInvestments from PortfolioViewModel.
     -->
 
     <Panel>
@@ -23,38 +25,35 @@
                 BoxShadow="0 25 50 0 #40000000"
                 ClipToBounds="True">
             <DockPanel>
-                <!-- ── Header: lock icon + title + close ── -->
+                <!-- Header: lock icon + title + close -->
                 <Border DockPanel.Dock="Top"
                         Padding="24"
                         BorderBrush="{DynamicResource ModalHeaderBorder}"
                         BorderThickness="0,0,0,1">
                     <Grid ColumnDefinitions="Auto,12,*,Auto">
-                        <!-- Vue: w-6 h-6 text-gray-400/600 lock icon -->
                         <i:Icon Grid.Column="0"
                                 Value="fa-solid fa-lock"
                                 FontSize="20"
                                 Foreground="{DynamicResource TextMuted}"
                                 VerticalAlignment="Center" />
-                        <!-- Vue: text-2xl font-bold -->
                         <TextBlock Grid.Column="2"
                                    Text="Penalties Details"
                                    FontSize="22" FontWeight="Bold"
                                    Foreground="{DynamicResource TextStrong}"
                                    VerticalAlignment="Center" />
-                        <!-- Close button — ModalCloseBtn style with explicit 36x36 sizing -->
                         <Button Name="CloseButton" Classes="ModalCloseBtn" Grid.Column="3"
                                 Width="36" Height="36"
                                 VerticalAlignment="Center" />
                     </Grid>
                 </Border>
 
-                <!-- ── Scrollable body with table ── -->
+                <!-- Scrollable body with table -->
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled"
                               MaxHeight="500">
                     <StackPanel Margin="24">
 
-                        <!-- ── Table ── -->
+                        <!-- Table -->
                         <Border BorderBrush="{DynamicResource RecoveryTableHeaderBorder}"
                                 BorderThickness="1"
                                 CornerRadius="8"
@@ -62,7 +61,6 @@
                             <StackPanel>
 
                                 <!-- Table header row -->
-                                <!-- Vue: border-b-2 border-gray-200, py-3 px-4 font-semibold text-sm -->
                                 <Border BorderBrush="{DynamicResource RecoveryTableHeaderBorder}"
                                         BorderThickness="0,0,0,2"
                                         Padding="0">
@@ -88,77 +86,61 @@
                                     </Grid>
                                 </Border>
 
-                                <!-- Row 1 -->
-                                <Border BorderBrush="{DynamicResource RecoveryTableRowBorder}"
-                                        BorderThickness="0,0,0,1"
-                                        Padding="0">
-                                    <Grid ColumnDefinitions="3*,2*,2*">
-                                        <TextBlock Grid.Column="0"
-                                                   Text="angor1q3pthkftzh3ym4emg0ctcxhmz5u5m7lt5tk69je"
-                                                   FontSize="13"
-                                                   FontFamily="Cascadia Mono, Consolas, monospace"
-                                                   Foreground="{DynamicResource PenaltyTableText}"
-                                                   Padding="16,16"
-                                                   VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Grid.Column="1"
-                                                   Text="0.0099 TBTC"
-                                                   FontSize="13" FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource PenaltyAmountText}"
-                                                   Padding="16,16"
-                                                   VerticalAlignment="Center" />
-                                        <!-- Amber pill: Penalty Release in 31 days -->
-                                        <Border Grid.Column="2"
-                                                Padding="16,16"
-                                                VerticalAlignment="Center">
-                                            <Border Background="{DynamicResource PenaltyPillBg}"
-                                                    BorderBrush="{DynamicResource PenaltyPillBorder}"
-                                                    BorderThickness="1"
-                                                    CornerRadius="12"
-                                                    Padding="12,6"
-                                                    HorizontalAlignment="Left">
-                                                <TextBlock Text="Penalty Release in 31 days"
-                                                           FontSize="12" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource PenaltyPillText}" />
-                                            </Border>
-                                        </Border>
-                                    </Grid>
+                                <!-- Empty state -->
+                                <Border Padding="24"
+                                        IsVisible="{Binding !HasPenaltyInvestments}">
+                                    <TextBlock Text="No investments currently in penalty."
+                                               FontSize="14"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               HorizontalAlignment="Center" />
                                 </Border>
 
-                                <!-- Row 2 -->
-                                <Border Padding="0">
-                                    <Grid ColumnDefinitions="3*,2*,2*">
-                                        <TextBlock Grid.Column="0"
-                                                   Text="angor1qv8fh2d30mz6kfwjrx0acn4hp2qlfd8spyze5kr"
-                                                   FontSize="13"
-                                                   FontFamily="Cascadia Mono, Consolas, monospace"
-                                                   Foreground="{DynamicResource PenaltyTableText}"
-                                                   Padding="16,16"
-                                                   VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Grid.Column="1"
-                                                   Text="0.0045 TBTC"
-                                                   FontSize="13" FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource PenaltyAmountText}"
-                                                   Padding="16,16"
-                                                   VerticalAlignment="Center" />
-                                        <!-- Amber pill: Penalty Release in 14 days -->
-                                        <Border Grid.Column="2"
-                                                Padding="16,16"
-                                                VerticalAlignment="Center">
-                                            <Border Background="{DynamicResource PenaltyPillBg}"
-                                                    BorderBrush="{DynamicResource PenaltyPillBorder}"
-                                                    BorderThickness="1"
-                                                    CornerRadius="12"
-                                                    Padding="12,6"
-                                                    HorizontalAlignment="Left">
-                                                <TextBlock Text="Penalty Release in 14 days"
-                                                           FontSize="12" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource PenaltyPillText}" />
+                                <!-- Dynamic rows from real data -->
+                                <ItemsControl ItemsSource="{Binding PenaltyInvestments}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="portfolio:InvestmentViewModel">
+                                            <Border BorderBrush="{DynamicResource RecoveryTableRowBorder}"
+                                                    BorderThickness="0,0,0,1"
+                                                    Padding="0">
+                                                <Grid ColumnDefinitions="3*,2*,2*">
+                                                    <TextBlock Grid.Column="0"
+                                                               Text="{Binding ProjectIdentifier}"
+                                                               FontSize="13"
+                                                               FontFamily="Cascadia Mono, Consolas, monospace"
+                                                               Foreground="{DynamicResource PenaltyTableText}"
+                                                               Padding="16,16"
+                                                               VerticalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Grid.Column="1"
+                                                               FontSize="13" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource PenaltyAmountText}"
+                                                               Padding="16,16"
+                                                               VerticalAlignment="Center">
+                                                        <Run Text="{Binding PenaltyAmount, Mode=OneWay}" />
+                                                        <Run Text=" TBTC" />
+                                                    </TextBlock>
+                                                    <Border Grid.Column="2"
+                                                            Padding="16,16"
+                                                            VerticalAlignment="Center">
+                                                        <Border Background="{DynamicResource PenaltyPillBg}"
+                                                                BorderBrush="{DynamicResource PenaltyPillBorder}"
+                                                                BorderThickness="1"
+                                                                CornerRadius="12"
+                                                                Padding="12,6"
+                                                                HorizontalAlignment="Left">
+                                                            <TextBlock FontSize="12" FontWeight="SemiBold"
+                                                                       Foreground="{DynamicResource PenaltyPillText}">
+                                                                <Run Text="Penalty Release in " />
+                                                                <Run Text="{Binding PenaltyDaysRemaining, Mode=OneWay}" />
+                                                                <Run Text=" days" />
+                                                            </TextBlock>
+                                                        </Border>
+                                                    </Border>
+                                                </Grid>
                                             </Border>
-                                        </Border>
-                                    </Grid>
-                                </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
 
                             </StackPanel>
                         </Border>

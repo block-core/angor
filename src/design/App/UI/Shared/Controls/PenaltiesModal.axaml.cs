@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
+using App.UI.Sections.Portfolio;
 using App.UI.Shell;
 
 namespace App.UI.Shared.Controls;
@@ -18,6 +19,11 @@ public partial class PenaltiesModal : UserControl, IBackdropCloseable
 
         var closeBtn = this.FindControl<Button>("CloseButton");
         if (closeBtn != null) closeBtn.Click += OnCloseClick;
+    }
+
+    public PenaltiesModal(PortfolioViewModel vm) : this()
+    {
+        DataContext = vm;
     }
 
     private ShellViewModel? ShellVm =>

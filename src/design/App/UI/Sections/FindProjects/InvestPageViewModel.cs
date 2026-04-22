@@ -8,7 +8,9 @@ using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Wallet.Application;
 using Angor.Sdk.Wallet.Domain;
 using App.UI.Sections.Portfolio;
+using Angor.Shared.Models;
 using App.UI.Shared;
+using ProjectType = App.UI.Shared.ProjectType;
 using App.UI.Shared.Services;
 using Microsoft.Extensions.Logging;
 using MonitorOp = Angor.Sdk.Funding.Investor.Operations.MonitorAddressForFunds;
@@ -67,6 +69,23 @@ public class SubscriptionPlanOption : ReactiveObject
     public long TotalSats { get; set; }
     public string PriceText { get; set; } = "";
     public string Description { get; set; } = "";
+
+    private bool _isSelected;
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => this.RaiseAndSetIfChanged(ref _isSelected, value);
+    }
+}
+
+/// <summary>Funding pattern option for Fund-type projects (e.g. "3-Month Monthly", "6-Month Monthly").</summary>
+public class FundingPatternOption : ReactiveObject
+{
+    public byte PatternId { get; set; }
+    public string Name { get; set; } = "";
+    public string Description { get; set; } = "";
+    public int StageCount { get; set; }
+    public string FrequencyText { get; set; } = "";
 
     private bool _isSelected;
     public bool IsSelected
@@ -144,6 +163,9 @@ public partial class InvestPageViewModel : ReactiveObject
     // ── Subscription State ──
     [Reactive] private string? selectedSubscriptionPattern;
 
+    // ── Fund Pattern State ──
+    [Reactive] private FundingPatternOption? selectedFundingPattern;
+
     // ── Derived visibility ──
     public bool IsInvestForm => CurrentScreen == InvestScreen.InvestForm;
     public bool IsWalletSelector => CurrentScreen == InvestScreen.WalletSelector;
@@ -199,6 +221,11 @@ public partial class InvestPageViewModel : ReactiveObject
     // Vue ref: subscription-patterns — 2 plan buttons
     public ObservableCollection<SubscriptionPlanOption> SubscriptionPlans { get; } = new();
 
+    // ── Funding Patterns (fund type only) ──
+    public ObservableCollection<FundingPatternOption> FundingPatterns { get; } = new();
+    public bool ShowFundingPatternSelector => Project.ProjectType == "Fund" && FundingPatterns.Count > 0;
+    public bool IsFund => Project.ProjectType == "Fund";
+
     // ── Release Schedule / Payment Schedule ──
     public ObservableCollection<InvestStageRow> Stages { get; } = new();
 
@@ -221,6 +248,24 @@ public partial class InvestPageViewModel : ReactiveObject
     public bool CanSubmit => IsSubscription
         ? SelectedSubscriptionPattern != null && ParseAmount() > 0
         : ParseAmount() >= Constants.MinInvestmentAmount;
+
+    // ── Penalty threshold indicator ──
+    /// <summary>Whether the project has a penalty threshold configured.</summary>
+    public bool HasPenaltyThreshold => Project.PenaltyThresholdSats.HasValue
+                                       || TypeEnum is ProjectType.Fund or ProjectType.Subscription;
+
+    /// <summary>Whether the current investment amount exceeds the penalty threshold (requires founder approval).</summary>
+    public bool IsAbovePenaltyThreshold
+    {
+        get
+        {
+            if (!Project.PenaltyThresholdSats.HasValue) return true; // no threshold = always requires approval
+            var amountSats = (long)((decimal)ParseAmount() * 100_000_000m);
+            return amountSats > Project.PenaltyThresholdSats.Value;
+        }
+    }
+
+    public string ThresholdStatusText => IsAbovePenaltyThreshold ? "Requires Approval" : "No Approval Needed";
 
     public double SubmitOpacity => CanSubmit ? 1.0 : 0.45;
 
@@ -398,6 +443,8 @@ public partial class InvestPageViewModel : ReactiveObject
                 this.RaisePropertyChanged(nameof(SuccessDescription));
                 this.RaisePropertyChanged(nameof(StagesSummary));
                 this.RaisePropertyChanged(nameof(TransactionAmountValue));
+                this.RaisePropertyChanged(nameof(IsAbovePenaltyThreshold));
+                this.RaisePropertyChanged(nameof(ThresholdStatusText));
                 RecomputeStages();
             });
 
@@ -416,6 +463,20 @@ public partial class InvestPageViewModel : ReactiveObject
         {
             InitializeSubscriptionPlans();
         }
+
+        // Initialize funding patterns if fund type
+        if (IsFund)
+        {
+            InitializeFundingPatterns();
+        }
+
+        // Recompute when funding pattern changes
+        this.WhenAnyValue(x => x.SelectedFundingPattern)
+            .Subscribe(_ =>
+            {
+                this.RaisePropertyChanged(nameof(StagesSummary));
+                RecomputeStages();
+            });
 
         // Initialize stages from project
         RecomputeStages();
@@ -469,6 +530,129 @@ public partial class InvestPageViewModel : ReactiveObject
         InvestmentAmount = SatsToBtc(totalSats).ToString("F8", System.Globalization.CultureInfo.InvariantCulture);
 
         this.RaisePropertyChanged(nameof(SubscriptionPlans));
+    }
+
+    // ── Fund Pattern helpers ──
+
+    private void InitializeFundingPatterns()
+    {
+        foreach (var pattern in Project.DynamicStagePatterns)
+        {
+            FundingPatterns.Add(new FundingPatternOption
+            {
+                PatternId = pattern.PatternId,
+                Name = pattern.Name ?? $"Pattern {pattern.PatternId}",
+                Description = pattern.DisplayDescription,
+                StageCount = pattern.StageCount,
+                FrequencyText = pattern.Frequency.ToString()
+            });
+        }
+
+        if (FundingPatterns.Count > 0)
+        {
+            SelectFundingPattern(FundingPatterns[0]);
+        }
+
+        this.RaisePropertyChanged(nameof(ShowFundingPatternSelector));
+    }
+
+    /// <summary>Select a funding pattern for Fund-type projects.</summary>
+    public void SelectFundingPattern(FundingPatternOption option)
+    {
+        SelectedFundingPattern = option;
+        foreach (var p in FundingPatterns)
+            p.IsSelected = p.PatternId == option.PatternId;
+
+        this.RaisePropertyChanged(nameof(FundingPatterns));
+    }
+
+    /// <summary>
+    /// Generate synthetic stages from a DynamicStagePattern (Fund-type projects).
+    /// Mirrors the Avalonia reference: GenerateStagesFromPattern in InvestViewModel.cs.
+    /// </summary>
+    private List<InvestStageRow> GenerateStagesFromFundingPattern(DynamicStagePattern pattern, double amount)
+    {
+        var stageCount = pattern.StageCount;
+        if (stageCount <= 0)
+            return new List<InvestStageRow>();
+
+        var ratioPerStage = 1.0 / stageCount;
+        var now = DateTimeOffset.UtcNow;
+        var rows = new List<InvestStageRow>(stageCount);
+
+        for (var i = 0; i < stageCount; i++)
+        {
+            var releaseDate = ComputePatternReleaseDate(now, pattern, i + 1);
+            var stageAmount = amount * ratioPerStage;
+            var pctStr = $"{ratioPerStage * 100:F0}%";
+            rows.Add(new InvestStageRow
+            {
+                StageNumber = i + 1,
+                ReleaseDate = releaseDate.ToString("dd MMM yyyy"),
+                Percentage = pctStr,
+                Amount = $"{stageAmount:F8}",
+                LabelText = $"Stage {i + 1}",
+                AmountDisplayText = $"{stageAmount:F8} {_currencyService.Symbol}",
+                IsSubscriptionRow = false
+            });
+        }
+
+        return rows;
+    }
+
+    private static DateTimeOffset ComputePatternReleaseDate(DateTimeOffset startDate, DynamicStagePattern pattern, int stageNumber)
+    {
+        return pattern.PayoutDayType switch
+        {
+            PayoutDayType.FromStartDate => AddFrequencyIntervals(startDate, pattern.Frequency, stageNumber),
+            PayoutDayType.SpecificDayOfMonth => ComputeSpecificDayOfMonth(startDate, pattern, stageNumber),
+            PayoutDayType.SpecificDayOfWeek => ComputeSpecificDayOfWeek(startDate, pattern, stageNumber),
+            _ => AddFrequencyIntervals(startDate, pattern.Frequency, stageNumber)
+        };
+    }
+
+    private static DateTimeOffset AddFrequencyIntervals(DateTimeOffset startDate, StageFrequency frequency, int intervals)
+    {
+        return frequency switch
+        {
+            StageFrequency.Weekly => startDate.AddDays(7 * intervals),
+            StageFrequency.Biweekly => startDate.AddDays(14 * intervals),
+            StageFrequency.Monthly => startDate.AddMonths(intervals),
+            StageFrequency.BiMonthly => startDate.AddMonths(2 * intervals),
+            StageFrequency.Quarterly => startDate.AddMonths(3 * intervals),
+            _ => startDate.AddMonths(intervals)
+        };
+    }
+
+    private static DateTimeOffset ComputeSpecificDayOfMonth(DateTimeOffset startDate, DynamicStagePattern pattern, int stageNumber)
+    {
+        var monthsToAdd = pattern.Frequency switch
+        {
+            StageFrequency.Monthly => stageNumber,
+            StageFrequency.BiMonthly => 2 * stageNumber,
+            StageFrequency.Quarterly => 3 * stageNumber,
+            _ => stageNumber
+        };
+
+        var target = startDate.AddMonths(monthsToAdd);
+        var day = Math.Min(pattern.PayoutDay, DateTime.DaysInMonth(target.Year, target.Month));
+        return new DateTimeOffset(target.Year, target.Month, day, 0, 0, 0, target.Offset);
+    }
+
+    private static DateTimeOffset ComputeSpecificDayOfWeek(DateTimeOffset startDate, DynamicStagePattern pattern, int stageNumber)
+    {
+        var weeksToAdd = pattern.Frequency switch
+        {
+            StageFrequency.Weekly => stageNumber,
+            StageFrequency.Biweekly => 2 * stageNumber,
+            _ => stageNumber
+        };
+
+        var target = startDate.AddDays(7 * weeksToAdd);
+        var currentDay = (int)target.DayOfWeek;
+        var targetDay = pattern.PayoutDay;
+        var diff = targetDay - currentDay;
+        return target.AddDays(diff);
     }
 
     /// <summary>
@@ -544,6 +728,19 @@ public partial class InvestPageViewModel : ReactiveObject
         var amount = ParseAmount();
         var prefix = StageRowPrefix;
         var newInvestRows = new List<InvestStageRow>();
+
+        // Fund type with a selected dynamic pattern: generate synthetic stages
+        if (IsFund && SelectedFundingPattern != null)
+        {
+            var pattern = Project.DynamicStagePatterns
+                .FirstOrDefault(p => p.PatternId == SelectedFundingPattern.PatternId);
+            if (pattern != null)
+            {
+                newInvestRows = GenerateStagesFromFundingPattern(pattern, amount);
+                UpdateStagesInPlace(newInvestRows);
+                return;
+            }
+        }
 
         if (Project.Stages.Count > 0)
         {
@@ -709,9 +906,13 @@ public partial class InvestPageViewModel : ReactiveObject
 
             // Determine pattern index for Fund/Subscription projects
             byte? patternIndex = null;
-            if (IsSubscription || Project.ProjectType == "Fund")
+            if (IsSubscription)
             {
                 patternIndex = SelectedSubscriptionPattern == "pattern2" ? (byte)1 : (byte)0;
+            }
+            else if (IsFund && SelectedFundingPattern != null)
+            {
+                patternIndex = SelectedFundingPattern.PatternId;
             }
 
             // Build investment draft
@@ -1234,9 +1435,13 @@ public partial class InvestPageViewModel : ReactiveObject
 
         // Fund/Subscription projects require a pattern index (same logic as PayWithWalletAsync).
         byte? patternIndex = null;
-        if (IsSubscription || Project.ProjectType == "Fund")
+        if (IsSubscription)
         {
             patternIndex = SelectedSubscriptionPattern == "pattern2" ? (byte)1 : (byte)0;
+        }
+        else if (IsFund && SelectedFundingPattern != null)
+        {
+            patternIndex = SelectedFundingPattern.PatternId;
         }
 
         PaymentStatusText = "Building investment transaction...";

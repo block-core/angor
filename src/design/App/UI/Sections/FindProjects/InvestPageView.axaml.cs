@@ -19,6 +19,7 @@ public partial class InvestPageView : UserControl
     private IDisposable? _layoutSubscription;
     private Border? _selectedQuickAmountBorder;
     private Border? _selectedSubPlanBorder;
+    private Border? _selectedFundPatternBorder;
 
     // Cached controls for responsive layout
     private DockPanel? _navBar;
@@ -238,6 +239,23 @@ public partial class InvestPageView : UserControl
                     }
                 }, Avalonia.Threading.DispatcherPriority.Loaded);
             }
+
+            // If fund type with patterns, apply initial pattern selection styling after layout.
+            if (vm.ShowFundingPatternSelector)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    foreach (var border in this.GetVisualDescendants().OfType<Border>())
+                    {
+                        if (border.Name == "FundPatternBorder" &&
+                            border.DataContext is FundingPatternOption { IsSelected: true })
+                        {
+                            UpdateFundPatternSelection(border);
+                            break;
+                        }
+                    }
+                }, Avalonia.Threading.DispatcherPriority.Loaded);
+            }
         }
     }
 
@@ -312,6 +330,7 @@ public partial class InvestPageView : UserControl
                 var name = b.Name;
                 if (name == "QuickAmountBorder" || name == "SubmitButton" ||
                     name == "CopyProjectIdButton" || name == "SubPlanBorder" ||
+                    name == "FundPatternBorder" ||
                     name == "MobileSubmitButton")
                 {
                     found = b;
@@ -358,6 +377,15 @@ public partial class InvestPageView : UserControl
                 }
                 break;
 
+            case "FundPatternBorder":
+                if (found.DataContext is FundingPatternOption fundPattern)
+                {
+                    Vm?.SelectFundingPattern(fundPattern);
+                    UpdateFundPatternSelection(found);
+                    e.Handled = true;
+                }
+                break;
+
             case "CopyProjectIdButton":
                 ClipboardHelper.CopyToClipboard(this, Vm?.ProjectId);
                 e.Handled = true;
@@ -395,5 +423,13 @@ public partial class InvestPageView : UserControl
         // Select new
         newSelected.Classes.Set("SubPlanSelected", true);
         _selectedSubPlanBorder = newSelected;
+    }
+
+    /// <summary>Update funding pattern borders via CSS class toggling.</summary>
+    private void UpdateFundPatternSelection(Border newSelected)
+    {
+        _selectedFundPatternBorder?.Classes.Set("SubPlanSelected", false);
+        newSelected.Classes.Set("SubPlanSelected", true);
+        _selectedFundPatternBorder = newSelected;
     }
 }

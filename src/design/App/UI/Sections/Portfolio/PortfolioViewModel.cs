@@ -485,6 +485,13 @@ public partial class PortfolioViewModel : ReactiveObject
     // ── Right panel investments ──
     public ObservableCollection<InvestmentViewModel> Investments { get; } = new();
 
+    /// <summary>Investments currently in penalty (for PenaltiesModal).</summary>
+    public IEnumerable<InvestmentViewModel> PenaltyInvestments =>
+        Investments.Where(i => i.RecoveryState.HasSpendableItemsInPenalty);
+
+    /// <summary>Whether there are any penalty investments (for XAML empty-state binding).</summary>
+    public bool HasPenaltyInvestments => PenaltyInvestments.Any();
+
     /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
     public string CurrencySymbol => _currencyService.Symbol;
 
@@ -637,6 +644,19 @@ public partial class PortfolioViewModel : ReactiveObject
                         CurrencySymbol = _currencyService.Symbol
                     };
 
+                    // Carry over recovery state from previous load so that PenaltyInvestments
+                    // is not lost when WalletsUpdated triggers a reload (see #19).
+                    if (existingInvestment != null)
+                    {
+                        vm.RecoveryState = existingInvestment.RecoveryState;
+                        vm.PenaltyDuration = existingInvestment.PenaltyDuration;
+                        vm.PenaltyDaysRemaining = existingInvestment.PenaltyDaysRemaining;
+                        foreach (var stage in existingInvestment.Stages)
+                        {
+                            vm.Stages.Add(stage);
+                        }
+                    }
+
                     Investments.Add(vm);
                 }
             }
@@ -673,6 +693,8 @@ public partial class PortfolioViewModel : ReactiveObject
             this.RaisePropertyChanged(nameof(TotalInvested));
             this.RaisePropertyChanged(nameof(RecoveredToPenalty));
             this.RaisePropertyChanged(nameof(ProjectsInRecovery));
+            this.RaisePropertyChanged(nameof(PenaltyInvestments));
+            this.RaisePropertyChanged(nameof(HasPenaltyInvestments));
             this.RaisePropertyChanged(nameof(TotalAvailable));
         }
         catch (Exception ex)
@@ -812,6 +834,9 @@ public partial class PortfolioViewModel : ReactiveObject
                 investment.ProjectIdentifier, recovery.HasUnspentItems, recovery.HasSpendableItemsInPenalty,
                 recovery.HasReleaseSignatures, recovery.EndOfProject, recovery.IsAboveThreshold,
                 investment.RecoveryState.ActionKey);
+
+            this.RaisePropertyChanged(nameof(PenaltyInvestments));
+            this.RaisePropertyChanged(nameof(HasPenaltyInvestments));
         }
         catch (Exception ex)
         {
@@ -1159,6 +1184,8 @@ public partial class PortfolioViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(TotalInvested));
         this.RaisePropertyChanged(nameof(RecoveredToPenalty));
         this.RaisePropertyChanged(nameof(ProjectsInRecovery));
+        this.RaisePropertyChanged(nameof(PenaltyInvestments));
+        this.RaisePropertyChanged(nameof(HasPenaltyInvestments));
         this.RaisePropertyChanged(nameof(TotalAvailable));
     }
 
