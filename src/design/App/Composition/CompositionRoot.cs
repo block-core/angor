@@ -180,8 +180,6 @@ public static class CompositionRoot
             project => new EditProfileViewModel(
                 project,
                 sp.GetRequiredService<IProjectAppService>(),
-                sp.GetRequiredService<IProjectService>(),
-                sp.GetRequiredService<IRelayService>(),
                 sp.GetRequiredService<ILoggerFactory>().CreateLogger<EditProfileViewModel>()));
 
         // ── Section Views (transient — each receives its VM via constructor injection) ──

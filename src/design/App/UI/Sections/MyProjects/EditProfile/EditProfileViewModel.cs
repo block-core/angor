@@ -1,14 +1,10 @@
 using System.Collections.ObjectModel;
 using Angor.Sdk.Common;
-using Angor.Sdk.Funding.Founder.Dtos;
 using Angor.Sdk.Funding.Projects;
-using Angor.Sdk.Funding.Projects.Domain;
-using Angor.Sdk.Funding.Services;
+using Angor.Sdk.Funding.Projects.Operations;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Models;
-using Angor.Shared.Services;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using ReactiveUI;
 using ReactiveUI.SourceGenerators;
 
@@ -19,8 +15,8 @@ namespace App.UI.Sections.MyProjects.EditProfile;
 /// </summary>
 public partial class FaqItemViewModel : ReactiveObject
 {
-    [Reactive] private string _question = "";
-    [Reactive] private string _answer = "";
+    [Reactive] private string question = "";
+    [Reactive] private string answer = "";
 }
 
 /// <summary>
@@ -28,8 +24,8 @@ public partial class FaqItemViewModel : ReactiveObject
 /// </summary>
 public partial class MediaItemViewModel : ReactiveObject
 {
-    [Reactive] private string _url = "";
-    [Reactive] private string _type = "image";
+    [Reactive] private string url = "";
+    [Reactive] private string type = "image";
 }
 
 /// <summary>
@@ -41,41 +37,39 @@ public partial class EditProfileViewModel : ReactiveObject
 {
     private readonly MyProjectItemViewModel _project;
     private readonly IProjectAppService _projectAppService;
-    private readonly IProjectService _projectService;
-    private readonly IRelayService _relayService;
     private readonly ILogger<EditProfileViewModel> _logger;
 
     public event Action<string>? ToastRequested;
 
     // ── Active tab ──
-    [Reactive] private string _activeTab = "profile";
+    [Reactive] private string activeTab = "profile";
 
     // ── Loading / Saving state ──
-    [Reactive] private bool _isLoading;
-    [Reactive] private bool _isSaving;
+    [Reactive] private bool isLoading;
+    [Reactive] private bool isSaving;
 
     // ── Profile tab ──
-    [Reactive] private string _profileName = "";
-    [Reactive] private string _profileDisplayName = "";
-    [Reactive] private string _profileAbout = "";
-    [Reactive] private string _profilePicture = "";
-    [Reactive] private string _profileBanner = "";
-    [Reactive] private string _profileNip05 = "";
-    [Reactive] private string _profileLud16 = "";
-    [Reactive] private string _profileWebsite = "";
+    [Reactive] private string profileName = "";
+    [Reactive] private string profileDisplayName = "";
+    [Reactive] private string profileAbout = "";
+    [Reactive] private string profilePicture = "";
+    [Reactive] private string profileBanner = "";
+    [Reactive] private string profileNip05 = "";
+    [Reactive] private string profileLud16 = "";
+    [Reactive] private string profileWebsite = "";
 
     // ── Project tab ──
-    [Reactive] private string _projectContent = "";
+    [Reactive] private string projectContent = "";
 
     // ── Members tab ──
-    [Reactive] private string _newMemberPubKey = "";
+    [Reactive] private string newMemberPubKey = "";
 
     // ── Media tab ──
-    [Reactive] private string _newMediaUrl = "";
-    [Reactive] private string _newMediaType = "image";
+    [Reactive] private string newMediaUrl = "";
+    [Reactive] private string newMediaType = "image";
 
     // ── Relays tab ──
-    [Reactive] private string _newRelayUrl = "";
+    [Reactive] private string newRelayUrl = "";
 
     // ── Collections ──
     public ObservableCollection<FaqItemViewModel> FaqItems { get; } = new();
@@ -83,22 +77,15 @@ public partial class EditProfileViewModel : ReactiveObject
     public ObservableCollection<MediaItemViewModel> MediaItems { get; } = new();
     public ObservableCollection<string> Relays { get; } = new();
 
-    // ── Derived project info ──
-    private ProjectSeedDto? _projectSeedDto;
-
     public string ProjectName => _project.Name;
 
     public EditProfileViewModel(
         MyProjectItemViewModel project,
         IProjectAppService projectAppService,
-        IProjectService projectService,
-        IRelayService relayService,
         ILogger<EditProfileViewModel> logger)
     {
         _project = project;
         _projectAppService = projectAppService;
-        _projectService = projectService;
-        _relayService = relayService;
         _logger = logger;
 
         // Add one empty FAQ item to start
@@ -115,92 +102,53 @@ public partial class EditProfileViewModel : ReactiveObject
 
         try
         {
-            await LoadProjectSeedDtoAsync();
-
-            var nostrPubKeyHex = _projectSeedDto?.NostrPubKey;
-            if (string.IsNullOrEmpty(nostrPubKeyHex))
+            var projectId = new ProjectId(_project.ProjectIdentifier);
+            var profileResult = await _projectAppService.FetchProjectProfileData(projectId);
+            if (profileResult.IsFailure)
             {
-                _logger.LogWarning("No Nostr public key found for project {ProjectId}", _project.ProjectIdentifier);
+                _logger.LogWarning("Failed to load profile for project {ProjectId}: {Error}",
+                    _project.ProjectIdentifier, profileResult.Error);
                 return;
             }
 
-            // Load kind-0 profile metadata
-            var metadata = await _relayService.FetchProfileMetadataAsync(nostrPubKeyHex);
-            if (metadata != null)
+            var data = profileResult.Value;
+
+            if (data.Metadata != null)
             {
-                ProfileName = metadata.Name ?? "";
-                ProfileDisplayName = metadata.DisplayName ?? "";
-                ProfileAbout = metadata.About ?? "";
-                ProfilePicture = metadata.Picture ?? "";
-                ProfileBanner = metadata.Banner ?? "";
-                ProfileNip05 = metadata.Nip05 ?? "";
-                ProfileLud16 = metadata.Lud16 ?? "";
-                ProfileWebsite = metadata.Website ?? "";
+                ProfileName = data.Metadata.Name ?? "";
+                ProfileDisplayName = data.Metadata.DisplayName ?? "";
+                ProfileAbout = data.Metadata.About ?? "";
+                ProfilePicture = data.Metadata.Picture ?? "";
+                ProfileBanner = data.Metadata.Banner ?? "";
+                ProfileNip05 = data.Metadata.Nip05 ?? "";
+                ProfileLud16 = data.Metadata.Lud16 ?? "";
+                ProfileWebsite = data.Metadata.Website ?? "";
             }
 
-            // Load project content
-            var projectJson = await _relayService.FetchAppSpecificDataAsync(nostrPubKeyHex, "angor:project");
-            if (!string.IsNullOrEmpty(projectJson))
-                ProjectContent = projectJson;
+            if (!string.IsNullOrEmpty(data.ProjectContent))
+                ProjectContent = data.ProjectContent;
 
-            // Load FAQ
-            var faqJson = await _relayService.FetchAppSpecificDataAsync(nostrPubKeyHex, "angor:faq");
-            if (!string.IsNullOrEmpty(faqJson))
+            if (data.FaqItems != null)
             {
-                try
-                {
-                    var items = JsonConvert.DeserializeObject<List<FaqJsonItem>>(faqJson);
-                    if (items != null)
-                    {
-                        FaqItems.Clear();
-                        foreach (var item in items)
-                            FaqItems.Add(new FaqItemViewModel { Question = item.Question ?? "", Answer = item.Answer ?? "" });
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to deserialize FAQ content");
-                }
+                FaqItems.Clear();
+                foreach (var item in data.FaqItems)
+                    FaqItems.Add(new FaqItemViewModel { Question = item.Question ?? "", Answer = item.Answer ?? "" });
+                if (FaqItems.Count == 0)
+                    FaqItems.Add(new FaqItemViewModel());
             }
 
-            // Load members
-            var membersJson = await _relayService.FetchAppSpecificDataAsync(nostrPubKeyHex, "angor:members");
-            if (!string.IsNullOrEmpty(membersJson))
+            if (data.MemberPubkeys != null)
             {
-                try
-                {
-                    var membersObj = JsonConvert.DeserializeObject<MembersJson>(membersJson);
-                    if (membersObj?.Pubkeys != null)
-                    {
-                        Members.Clear();
-                        foreach (var pk in membersObj.Pubkeys)
-                            Members.Add(pk);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to deserialize members content");
-                }
+                Members.Clear();
+                foreach (var pk in data.MemberPubkeys)
+                    Members.Add(pk);
             }
 
-            // Load media
-            var mediaJson = await _relayService.FetchAppSpecificDataAsync(nostrPubKeyHex, "angor:media");
-            if (!string.IsNullOrEmpty(mediaJson))
+            if (data.MediaItems != null)
             {
-                try
-                {
-                    var items = JsonConvert.DeserializeObject<List<MediaJson>>(mediaJson);
-                    if (items != null)
-                    {
-                        MediaItems.Clear();
-                        foreach (var item in items)
-                            MediaItems.Add(new MediaItemViewModel { Url = item.Url ?? "", Type = item.Type ?? "image" });
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to deserialize media content");
-                }
+                MediaItems.Clear();
+                foreach (var item in data.MediaItems)
+                    MediaItems.Add(new MediaItemViewModel { Url = item.Url ?? "", Type = item.Type ?? "image" });
             }
         }
         catch (Exception ex)
@@ -221,17 +169,8 @@ public partial class EditProfileViewModel : ReactiveObject
 
         try
         {
-            if (_projectSeedDto == null)
-            {
-                await LoadProjectSeedDtoAsync();
-                if (_projectSeedDto == null)
-                {
-                    ToastRequested?.Invoke("Failed to load project keys. Please try again.");
-                    return false;
-                }
-            }
-
             var walletId = new WalletId(_project.OwnerWalletId);
+            var projectId = new ProjectId(_project.ProjectIdentifier);
             var metadata = new ProjectMetadata
             {
                 Name = ProfileName,
@@ -244,28 +183,22 @@ public partial class EditProfileViewModel : ReactiveObject
                 Website = ProfileWebsite,
             };
 
-            var faqJson = FaqItems.Count > 0
-                ? JsonConvert.SerializeObject(FaqItems.Select(f => new FaqJsonItem { Question = f.Question, Answer = f.Answer }))
-                : null;
+            var faqItems = FaqItems
+                .Select(f => new FaqItem { Question = f.Question, Answer = f.Answer })
+                .ToList();
 
-            var membersJson = Members.Count > 0
-                ? JsonConvert.SerializeObject(new MembersJson { Pubkeys = Members.ToList() })
-                : null;
-
-            var mediaJson = MediaItems.Count > 0
-                ? JsonConvert.SerializeObject(MediaItems.Select(m => new MediaJson { Url = m.Url, Type = m.Type }))
-                : null;
-
-            var projectContentJson = string.IsNullOrEmpty(ProjectContent) ? null : ProjectContent;
+            var mediaItems = MediaItems
+                .Select(m => new MediaItem { Url = m.Url, Type = m.Type })
+                .ToList();
 
             var result = await _projectAppService.UpdateProjectProfile(
                 walletId,
-                _projectSeedDto,
+                projectId,
                 metadata,
-                projectContentJson,
-                faqJson,
-                membersJson,
-                mediaJson);
+                string.IsNullOrEmpty(ProjectContent) ? null : ProjectContent,
+                faqItems.Count > 0 ? faqItems : null,
+                Members.Count > 0 ? Members.ToList() : null,
+                mediaItems.Count > 0 ? mediaItems : null);
 
             if (result.IsFailure)
             {
@@ -334,47 +267,5 @@ public partial class EditProfileViewModel : ReactiveObject
     {
         if (Relays.Count > 1)
             Relays.Remove(url);
-    }
-
-    // ── Private helpers ──
-    private async Task LoadProjectSeedDtoAsync()
-    {
-        if (_projectSeedDto != null) return;
-        if (string.IsNullOrEmpty(_project.ProjectIdentifier)) return;
-
-        try
-        {
-            var projectResult = await _projectService.GetAsync(new ProjectId(_project.ProjectIdentifier));
-            if (projectResult.IsFailure) return;
-
-            var project = projectResult.Value;
-            _projectSeedDto = new ProjectSeedDto(
-                project.FounderKey ?? "",
-                project.FounderRecoveryKey ?? "",
-                project.NostrPubKey ?? "",
-                _project.ProjectIdentifier);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "LoadProjectSeedDtoAsync failed");
-        }
-    }
-
-    // ── JSON helper records ──
-    private record FaqJsonItem
-    {
-        [JsonProperty("question")] public string? Question { get; set; }
-        [JsonProperty("answer")] public string? Answer { get; set; }
-    }
-
-    private record MembersJson
-    {
-        [JsonProperty("pubkeys")] public List<string>? Pubkeys { get; set; }
-    }
-
-    private record MediaJson
-    {
-        [JsonProperty("url")] public string? Url { get; set; }
-        [JsonProperty("type")] public string? Type { get; set; }
     }
 }
