@@ -19,6 +19,7 @@ using App.UI.Sections.MyProjects;
 using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Sections.Portfolio;
 using App.UI.Sections.Settings;
+using App.UI.Shared.Controls;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using System.Globalization;
@@ -672,6 +673,75 @@ public class MultiInvestClaimAndRecoverTest
 
         investment.Stages.Any(s => s.Status == "Spent by investor" || s.Status == "Recovered after penalty" || s.Status == "Project Unfunded, Spent back to investor").Should().BeTrue(
             "at least one stage should show a recovered status after release");
+
+        // ── Verify PenaltiesModal shows empty state (no penalty for unfunded release) ──
+        Log(profileName, "Verifying PenaltiesModal shows empty state (no penalties for unfunded release)...");
+        await VerifyPenaltiesModalEmptyAsync(window, portfolioVm, profileName);
+    }
+
+    private async Task VerifyPenaltiesModalEmptyAsync(
+        Window window,
+        PortfolioViewModel portfolioVm,
+        string profileName)
+    {
+        // VM-level: no penalty investments expected after unfunded release
+        portfolioVm.HasPenaltyInvestments.Should().BeFalse(
+            "unfunded release should not produce penalty investments");
+        portfolioVm.PenaltyInvestments.Should().BeEmpty();
+
+        // Navigate to Funded section so PortfolioView (and PenaltiesButton) is in the visual tree
+        window.NavigateToSection("Funded");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        // Click PenaltiesButton to open the modal
+        var penaltiesBtn = window.GetVisualDescendants()
+            .OfType<Button>()
+            .FirstOrDefault(b => b.Name == "PenaltiesButton");
+        penaltiesBtn.Should().NotBeNull("PenaltiesButton should exist in the portfolio view");
+        penaltiesBtn!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, penaltiesBtn));
+        Dispatcher.UIThread.RunJobs();
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        // Find the PenaltiesModal in the visual tree
+        var modal = window.GetVisualDescendants()
+            .OfType<PenaltiesModal>()
+            .FirstOrDefault();
+        modal.Should().NotBeNull("PenaltiesModal should be visible after clicking PenaltiesButton");
+        modal!.DataContext.Should().Be(portfolioVm, "PenaltiesModal should have PortfolioViewModel as DataContext");
+
+        // Verify ItemsControl has zero items (empty state)
+        var itemsControl = modal.GetVisualDescendants()
+            .OfType<ItemsControl>()
+            .FirstOrDefault();
+        itemsControl.Should().NotBeNull("PenaltiesModal should contain an ItemsControl");
+        itemsControl!.ItemCount.Should().Be(0,
+            "ItemsControl should have zero rows when there are no penalty investments");
+
+        // Verify empty state message is visible
+        var emptyText = modal.GetVisualDescendants()
+            .OfType<TextBlock>()
+            .FirstOrDefault(tb => tb.Text != null && tb.Text.Contains("No investments currently in penalty"));
+        emptyText.Should().NotBeNull("empty state message should be displayed when no penalties exist");
+
+        Log(profileName, "PenaltiesModal empty state verified: no penalty rows, empty message visible.");
+
+        // Close the modal
+        var closeBtn = modal.GetVisualDescendants()
+            .OfType<Button>()
+            .FirstOrDefault(b => b.Name == "CloseButton");
+        if (closeBtn != null)
+        {
+            closeBtn.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, closeBtn));
+            Dispatcher.UIThread.RunJobs();
+            await Task.Delay(200);
+            Dispatcher.UIThread.RunJobs();
+        }
+        else
+        {
+            window.HideModal();
+        }
     }
 
     private async Task<bool> ExecuteActionWithRetry(

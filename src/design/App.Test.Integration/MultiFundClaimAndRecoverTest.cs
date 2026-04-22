@@ -20,6 +20,7 @@ using App.UI.Sections.MyProjects;
 using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Sections.Portfolio;
 using App.UI.Sections.Settings;
+using App.UI.Shared.Controls;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using System.Globalization;
@@ -654,6 +655,10 @@ public class MultiFundClaimAndRecoverTest
         var postPenaltyState = await WaitForRecoveryActionAsync(portfolioVm, investment, profileName, expectedActionKey: "penaltyRelease");
         postPenaltyState.ActionKey.Should().Be("penaltyRelease");
 
+        // ── Verify PenaltiesModal shows real penalty data via UI button ──
+        Log(profileName, "Verifying PenaltiesModal displays penalty investment...");
+        await VerifyPenaltiesModalAsync(window, portfolioVm, investment, profileName);
+
         Log(profileName, "Recovering from penalty (penalty days = 0)...");
         await EnsureWalletHasFeeFunds(window, profileName, investment.InvestmentWalletId, "before penalty release");
         var penaltyReleaseResult = await ExecuteRecoveryActionWithRetry(
@@ -1081,6 +1086,90 @@ public class MultiFundClaimAndRecoverTest
     {
         var prefix = string.IsNullOrWhiteSpace(profileName) ? "GLOBAL" : profileName;
         Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss.fff}] [{prefix}] {message}");
+    }
+
+    private async Task VerifyPenaltiesModalAsync(
+        Window window,
+        PortfolioViewModel portfolioVm,
+        InvestmentViewModel investment,
+        string profileName)
+    {
+        // The investment reference may be stale (replaced by LoadInvestmentsFromSdkAsync
+        // triggered via WalletsUpdated). Re-fetch from the Investments collection and
+        // reload recovery status on the current reference so PenaltyInvestments is populated.
+        var currentInvestment = portfolioVm.Investments
+            .FirstOrDefault(i => i.ProjectIdentifier == investment.ProjectIdentifier);
+        currentInvestment.Should().NotBeNull("investment should still be in the Investments collection");
+
+        if (!currentInvestment!.RecoveryState.HasSpendableItemsInPenalty)
+        {
+            Log(profileName, "Current investment reference lacks penalty state — reloading recovery status...");
+            await portfolioVm.LoadRecoveryStatusAsync(currentInvestment);
+            Dispatcher.UIThread.RunJobs();
+        }
+
+        // Verify VM-level data
+        portfolioVm.PenaltyInvestments.Should().NotBeEmpty("there should be at least one penalty investment");
+        portfolioVm.HasPenaltyInvestments.Should().BeTrue();
+        var penaltyItem = portfolioVm.PenaltyInvestments
+            .FirstOrDefault(i => i.ProjectIdentifier == investment.ProjectIdentifier);
+        penaltyItem.Should().NotBeNull("the current investment should appear in PenaltyInvestments");
+
+        // Navigate to the portfolio section so the PenaltiesButton is in the visual tree
+        window.NavigateToSection("Funded");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        // Click the PenaltiesButton in the PortfolioView to open the modal
+        var penaltiesBtn = window.GetVisualDescendants()
+            .OfType<Button>()
+            .FirstOrDefault(b => b.Name == "PenaltiesButton");
+        penaltiesBtn.Should().NotBeNull("PenaltiesButton should exist in the portfolio view");
+        penaltiesBtn!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, penaltiesBtn));
+        Dispatcher.UIThread.RunJobs();
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        // Find the PenaltiesModal in the visual tree
+        var modal = window.GetVisualDescendants()
+            .OfType<PenaltiesModal>()
+            .FirstOrDefault();
+        modal.Should().NotBeNull("PenaltiesModal should be visible after clicking PenaltiesButton");
+        modal!.DataContext.Should().Be(portfolioVm, "PenaltiesModal should have PortfolioViewModel as DataContext");
+
+        // Verify the ItemsControl rendered rows with penalty data
+        var itemsControl = modal.GetVisualDescendants()
+            .OfType<ItemsControl>()
+            .FirstOrDefault();
+        itemsControl.Should().NotBeNull("PenaltiesModal should contain an ItemsControl for penalty rows");
+        itemsControl!.ItemCount.Should().BeGreaterThan(0,
+            "ItemsControl should render at least one penalty investment row");
+
+        // Verify a TextBlock shows the project identifier
+        var projectIdTexts = modal.GetVisualDescendants()
+            .OfType<TextBlock>()
+            .Where(tb => !string.IsNullOrEmpty(tb.Text) && tb.Text.Contains(investment.ProjectIdentifier))
+            .ToList();
+        projectIdTexts.Should().NotBeEmpty(
+            $"PenaltiesModal should display the project identifier '{investment.ProjectIdentifier}'");
+
+        Log(profileName, $"PenaltiesModal verified: {itemsControl.ItemCount} penalty row(s) displayed, project ID visible.");
+
+        // Close the modal
+        var closeBtn = modal.GetVisualDescendants()
+            .OfType<Button>()
+            .FirstOrDefault(b => b.Name == "CloseButton");
+        if (closeBtn != null)
+        {
+            closeBtn.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, closeBtn));
+            Dispatcher.UIThread.RunJobs();
+            await Task.Delay(200);
+            Dispatcher.UIThread.RunJobs();
+        }
+        else
+        {
+            window.HideModal();
+        }
     }
 
     private enum RecoveryAction
