@@ -47,7 +47,8 @@ public class LightningFundingExamples
             WalletId: walletId,
             ProjectId: projectId,
             InvestmentAmount: new Amount(amountSats),
-            ReceivingAddress: receivingAddress
+            ReceivingAddress: receivingAddress,
+            StageCount: 4 // example default
         );
 
         var createResult = await _investmentAppService.CreateLightningSwap(createRequest);
@@ -108,7 +109,8 @@ public class LightningFundingExamples
             WalletId: walletId,
             ProjectId: projectId,
             InvestmentAmount: new Amount(amountSats),
-            ReceivingAddress: receivingAddress
+            ReceivingAddress: receivingAddress,
+            StageCount: 4 // example default
         );
 
         var result = await _investmentAppService.CreateLightningSwap(request);

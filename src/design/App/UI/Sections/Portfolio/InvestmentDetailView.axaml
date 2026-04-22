@@ -48,7 +48,8 @@
         <!-- padding:16px 8px, bg:transparent          -->
         <!-- pointer-events:none on bar, all on children -->
         <!-- ═══════════════════════════════════════ -->
-        <DockPanel VerticalAlignment="Top"
+        <DockPanel Name="NavBar"
+                   VerticalAlignment="Top"
                    ZIndex="100"
                    Margin="24,24,24,0"
                    IsHitTestVisible="True">
@@ -99,7 +100,8 @@
             <!-- Vue: .progress-steps flex, gap:12px, each .progress-step is a pill
                  bg:white, border:1px solid #e5e7eb, border-radius:8px, padding:8px 16px, h:44px
                  Connected by .progress-step-line: 2px wide, 24px tall -->
-            <StackPanel DockPanel.Dock="Right"
+            <StackPanel Name="ProgressSteps"
+                        DockPanel.Dock="Right"
                         Orientation="Horizontal" Spacing="12"
                         HorizontalAlignment="Right"
                         VerticalAlignment="Center">
@@ -269,10 +271,112 @@
         <!-- ═══════════════════════════════════════ -->
         <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="0">
+            <StackPanel Name="ContentStack" Spacing="0">
 
             <!-- Spacer for the fixed nav bar: 24px top margin + 44px nav height + 24px gap = 92px -->
-            <Panel Height="92" />
+            <Panel Name="NavSpacer" Height="92" />
+
+            <!-- ═══════════════════════════════════════ -->
+            <!-- MOBILE PROGRESS STAGES (hidden on desktop) -->
+            <!-- Vue: .mobile-progress-stages — vertical list of step items, shown at <=768px -->
+            <!-- ═══════════════════════════════════════ -->
+            <StackPanel Name="MobileProgressStages" Spacing="12" Margin="24,20,24,20" IsVisible="False">
+
+                <!-- Step 1: Agreement Signed -->
+                <Border CornerRadius="12" Padding="16"
+                        Background="{DynamicResource Surface}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Panel Width="32" Height="32">
+                            <Border Width="32" Height="32" CornerRadius="16"
+                                    Background="White"
+                                    IsVisible="{Binding IsStepAtLeast2}">
+                                <Viewbox Width="16" Height="16">
+                                    <Path Data="{StaticResource CheckCircleSolid}"
+                                          Fill="{DynamicResource PrimaryGreenBrush}"
+                                          Width="512" Height="512" Stretch="Uniform" />
+                                </Viewbox>
+                            </Border>
+                            <Border Width="32" Height="32" CornerRadius="16"
+                                    Background="{DynamicResource SurfaceLow}"
+                                    IsVisible="{Binding IsStep1}">
+                                <TextBlock Text="1" FontSize="14" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                        </Panel>
+                        <TextBlock Text="Agreement Signed"
+                                   FontSize="14" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource PrimaryGreenBrush}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Step 2: Preview -->
+                <Border CornerRadius="12" Padding="16"
+                        Background="{DynamicResource Surface}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Panel Width="32" Height="32">
+                            <Border Width="32" Height="32" CornerRadius="16"
+                                    Background="White"
+                                    IsVisible="{Binding IsStepAtLeast2}">
+                                <Viewbox Width="16" Height="16">
+                                    <Path Data="{StaticResource CheckCircleSolid}"
+                                          Fill="{DynamicResource PrimaryGreenBrush}"
+                                          Width="512" Height="512" Stretch="Uniform" />
+                                </Viewbox>
+                            </Border>
+                            <Border Width="32" Height="32" CornerRadius="16"
+                                    Background="{DynamicResource SurfaceLow}"
+                                    IsVisible="{Binding IsStep1}">
+                                <TextBlock Text="2" FontSize="14" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                        </Panel>
+                        <TextBlock FontSize="14" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   VerticalAlignment="Center">
+                            <Run Text="Preview " /><Run Text="{Binding AmountNoun, Mode=OneWay}" />
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- Step 3: Confirm & Transfer -->
+                <Border CornerRadius="12" Padding="16"
+                        Background="{DynamicResource Surface}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Panel Width="32" Height="32">
+                            <Border Width="32" Height="32" CornerRadius="16"
+                                    Background="White"
+                                    IsVisible="{Binding IsStep3}">
+                                <Viewbox Width="16" Height="16">
+                                    <Path Data="{StaticResource CheckCircleSolid}"
+                                          Fill="{DynamicResource PrimaryGreenBrush}"
+                                          Width="512" Height="512" Stretch="Uniform" />
+                                </Viewbox>
+                            </Border>
+                            <Border Width="32" Height="32" CornerRadius="16"
+                                    Background="{DynamicResource SurfaceLow}"
+                                    IsVisible="{Binding !IsStep3}">
+                                <TextBlock Text="3" FontSize="14" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                        </Panel>
+                        <TextBlock Text="Funds Transferred"
+                                   FontSize="14" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
 
             <!-- ═══════════════════════════════════════ -->
             <!-- MAIN CONTENT (padded)                   -->
@@ -285,12 +389,12 @@
             <!-- TOP SECTION: Project card + Status card  -->
             <!-- Vue: .top-section grid 1fr 400px, gap:24px -->
             <!-- ═══════════════════════════════════════ -->
-            <Grid ColumnDefinitions="*,400">
+            <Grid Name="TopSectionGrid" ColumnDefinitions="*,400" RowDefinitions="Auto,Auto,Auto">
 
                 <!-- LEFT: Project Card Compact -->
                 <!-- Vue: .project-card-compact bg:white, border-radius:16px, shadow:0 2px 8px rgba(0,0,0,0.1) -->
                 <!-- Dark: bg:#1a1a1a, border:1px solid #333 -->
-                <Border Grid.Column="0"
+                <Border Name="TopLeftCard" Grid.Column="0"
                         Background="{DynamicResource Surface}"
                         BorderBrush="{DynamicResource Stroke}"
                         BorderThickness="1"
@@ -335,7 +439,7 @@
                 </Border>
 
                 <!-- RIGHT: Status Card (varies by step) -->
-                <Panel Grid.Column="1">
+                <Panel Name="TopRightCard" Grid.Column="1">
 
                     <!-- ╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌ -->
                     <!-- STEP 1: Waiting for Approval           -->
@@ -612,9 +716,9 @@
                     </StackPanel>
 
                     <!-- 4 stat cards — Vue: .stats-grid grid, .stat-card border-radius:12px, padding:20px -->
-                    <Grid ColumnDefinitions="*,*,*,*">
+                    <Grid Name="StatsGrid4" ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,Auto,Auto,Auto">
                         <!-- Target Amount -->
-                        <Border Grid.Column="0"
+                        <Border Name="Stat4Card0" Grid.Column="0"
                                 Background="{DynamicResource StatsDetailInnerBackground}"
                                 CornerRadius="12"
                                 Padding="20"
@@ -637,7 +741,7 @@
                         </Border>
 
                         <!-- Total Raised -->
-                        <Border Grid.Column="1"
+                        <Border Name="Stat4Card1" Grid.Column="1"
                                 Background="{DynamicResource StatsDetailInnerBackground}"
                                 CornerRadius="12"
                                 Padding="20"
@@ -660,7 +764,7 @@
                         </Border>
 
                         <!-- Total Investors -->
-                        <Border Grid.Column="2"
+                        <Border Name="Stat4Card2" Grid.Column="2"
                                 Background="{DynamicResource StatsDetailInnerBackground}"
                                 CornerRadius="12"
                                 Padding="20"
@@ -684,7 +788,7 @@
                         </Border>
 
                         <!-- Your Investment -->
-                        <Border Grid.Column="3"
+                        <Border Name="Stat4Card3" Grid.Column="3"
                                 Background="{DynamicResource StatsDetailInnerBackground}"
                                 CornerRadius="12"
                                 Padding="20"
@@ -769,9 +873,9 @@
                     </StackPanel>
 
                     <!-- Vue: .stats-grid — 4 stat cards in a row, each with icon + label + value -->
-                    <Grid ColumnDefinitions="*,*,*,*">
+                    <Grid Name="InfoGrid4" ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,Auto,Auto,Auto">
                         <!-- Start Date -->
-                        <Border Grid.Column="0"
+                        <Border Name="Info4Card0" Grid.Column="0"
                                 Background="{DynamicResource SurfaceMedium}"
                                 CornerRadius="12"
                                 Padding="20"
@@ -798,7 +902,7 @@
                         </Border>
 
                         <!-- End Date -->
-                        <Border Grid.Column="1"
+                        <Border Name="Info4Card1" Grid.Column="1"
                                 Background="{DynamicResource SurfaceMedium}"
                                 CornerRadius="12"
                                 Padding="20"
@@ -825,7 +929,7 @@
                         </Border>
 
                         <!-- Transaction Date -->
-                        <Border Grid.Column="2"
+                        <Border Name="Info4Card2" Grid.Column="2"
                                 Background="{DynamicResource SurfaceMedium}"
                                 CornerRadius="12"
                                 Padding="20"
@@ -851,7 +955,7 @@
                         </Border>
 
                         <!-- Status -->
-                        <Border Grid.Column="3"
+                        <Border Name="Info4Card3" Grid.Column="3"
                                 Background="{DynamicResource SurfaceMedium}"
                                 CornerRadius="12"
                                 Padding="20"
@@ -930,6 +1034,8 @@
                         </Button>
                     </DockPanel>
 
+                    <!-- Desktop table view (hidden on mobile) -->
+                    <StackPanel Name="StagesTableDesktop" Spacing="16">
                     <!-- Table header — Vue: .stages-table thead th — bg:#f9f9f9, font-size:13px -->
                     <Border Background="{DynamicResource SurfaceMedium}"
                             CornerRadius="8"
@@ -1063,6 +1169,81 @@
                                             <Run Text="{Binding Amount, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding $parent[UserControl].DataContext.CurrencySymbol, Mode=OneWay}" />
                                         </TextBlock>
                                     </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Mobile card view of stages (hidden on desktop) -->
+                    <!-- Vue: .stages-cards-container — shown at <=768px when table is hidden -->
+                    <ItemsControl Name="StagesCardsMobile" ItemsSource="{Binding Stages}" IsVisible="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="portfolio:InvestmentStageViewModel">
+                                <Border Background="{DynamicResource SurfaceMedium}"
+                                        BorderBrush="{DynamicResource Stroke}"
+                                        BorderThickness="1"
+                                        CornerRadius="12"
+                                        Padding="14"
+                                        Margin="0,0,0,12">
+                                    <StackPanel Spacing="8">
+                                        <!-- Row 1: Stage number + Status badge -->
+                                        <DockPanel>
+                                            <TextBlock FontSize="15" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextStrong}"
+                                                       VerticalAlignment="Center">
+                                                <Run Text="{Binding StagePrefix, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding StageNumber, Mode=OneWay}" />
+                                            </TextBlock>
+                                            <Panel HorizontalAlignment="Right" VerticalAlignment="Center">
+                                                <Border CornerRadius="16" Padding="14,6"
+                                                        Background="{DynamicResource BadgePendingBackground}"
+                                                        BorderBrush="{DynamicResource BadgePendingBorder}"
+                                                        BorderThickness="1"
+                                                        IsVisible="{Binding IsStatusPending}">
+                                                    <TextBlock Text="{Binding Status}" FontSize="12" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource BadgePendingForeground}" />
+                                                </Border>
+                                                <Border CornerRadius="16" Padding="14,6"
+                                                        Background="{DynamicResource BadgeReleasedBackground}"
+                                                        BorderBrush="{DynamicResource BadgeReleasedBorder}"
+                                                        BorderThickness="1"
+                                                        IsVisible="{Binding IsStatusReleased}">
+                                                    <TextBlock Text="{Binding Status}" FontSize="12" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource BadgeReleasedForeground}" />
+                                                </Border>
+                                                <Border CornerRadius="16" Padding="14,6"
+                                                        Background="{DynamicResource BadgeNotSpentBackground}"
+                                                        BorderBrush="{DynamicResource BadgeNotSpentBorder}"
+                                                        BorderThickness="1"
+                                                        IsVisible="{Binding IsStatusNotSpent}">
+                                                    <TextBlock Text="{Binding Status}" FontSize="12" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource BadgeNotSpentForeground}" />
+                                                </Border>
+                                                <Border CornerRadius="16" Padding="14,6"
+                                                        Background="{DynamicResource BadgeRecoveredBackground}"
+                                                        BorderBrush="{DynamicResource BadgeRecoveredBorder}"
+                                                        BorderThickness="1"
+                                                        IsVisible="{Binding IsStatusRecovered}">
+                                                    <TextBlock Text="{Binding Status}" FontSize="12" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource BadgeRecoveredForeground}" />
+                                                </Border>
+                                            </Panel>
+                                        </DockPanel>
+                                        <!-- Row 2: Percentage + Release Date -->
+                                        <DockPanel>
+                                            <TextBlock FontSize="12" Foreground="{DynamicResource TextMuted}">
+                                                <Run Text="Stage: " /><Run Text="{Binding Percentage, Mode=OneWay}" />
+                                            </TextBlock>
+                                            <TextBlock FontSize="12" Foreground="{DynamicResource TextMuted}"
+                                                       HorizontalAlignment="Right"
+                                                       Text="{Binding ReleaseDate}" />
+                                        </DockPanel>
+                                        <!-- Row 3: Amount -->
+                                        <TextBlock FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource StageAmountGreen}">
+                                            <Run Text="{Binding Amount, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding $parent[UserControl].DataContext.CurrencySymbol, Mode=OneWay}" />
+                                        </TextBlock>
+                                    </StackPanel>
                                 </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

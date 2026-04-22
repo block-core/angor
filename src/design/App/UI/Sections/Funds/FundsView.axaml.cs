@@ -75,13 +75,12 @@ public partial class FundsView : UserControl
 
         if (isCompact)
         {
-            // Stats grid: single column stacked
-            _fundsStatsGrid.ColumnDefinitions.Clear();
-            _fundsStatsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            _fundsStatsGrid.RowDefinitions.Clear();
-            _fundsStatsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            _fundsStatsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-            _fundsStatsGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+            // Stats grid: collapse cols 1-2 to 0, stack cards vertically (SIGABRT-safe in-place mutation)
+            if (_fundsStatsGrid.ColumnDefinitions.Count >= 3)
+            {
+                _fundsStatsGrid.ColumnDefinitions[1].Width = new GridLength(0);
+                _fundsStatsGrid.ColumnDefinitions[2].Width = new GridLength(0);
+            }
 
             if (_fundsStatCard0 != null)
             {
@@ -99,22 +98,21 @@ public partial class FundsView : UserControl
                 _fundsStatCard2.Margin = new Thickness(0);
             }
 
-            // Vue: summary card padding 16px on mobile
             if (_fundsSummaryCard != null)
                 _fundsSummaryCard.Padding = new Thickness(16);
 
-            // Vue: container padding 16px on mobile, 96px bottom for tab bar clearance
             if (_scrollableView != null)
                 _scrollableView.ContentPadding = new Thickness(16, 16, 16, 96);
         }
         else
         {
-            // Stats grid: 3 columns
-            _fundsStatsGrid.ColumnDefinitions.Clear();
-            _fundsStatsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            _fundsStatsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            _fundsStatsGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-            _fundsStatsGrid.RowDefinitions.Clear();
+            // Stats grid: restore 3 Star columns in-place
+            if (_fundsStatsGrid.ColumnDefinitions.Count >= 3)
+            {
+                _fundsStatsGrid.ColumnDefinitions[0].Width = GridLength.Star;
+                _fundsStatsGrid.ColumnDefinitions[1].Width = GridLength.Star;
+                _fundsStatsGrid.ColumnDefinitions[2].Width = GridLength.Star;
+            }
 
             if (_fundsStatCard0 != null)
             {
@@ -132,11 +130,9 @@ public partial class FundsView : UserControl
                 _fundsStatCard2.Margin = new Thickness(8, 0, 0, 0);
             }
 
-            // Vue: summary card padding 24px on desktop
             if (_fundsSummaryCard != null)
                 _fundsSummaryCard.Padding = new Thickness(24);
 
-            // Vue: container padding 24px on desktop
             if (_scrollableView != null)
                 _scrollableView.ContentPadding = new Thickness(24);
         }
