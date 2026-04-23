@@ -45,6 +45,7 @@
         <!-- rounded-2xl shadow-2xl max-w-md -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsWalletSelector}"
+                AutomationProperties.AutomationId="DeployWalletSelectorPanel"
                 HorizontalAlignment="Center" VerticalAlignment="Center"
                 MinWidth="448" MaxWidth="480"
                 CornerRadius="16"
@@ -251,6 +252,7 @@
         <!-- rounded-2xl shadow-2xl max-w-md, p-6                       -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsPayFee}"
+                AutomationProperties.AutomationId="DeployPayFeePanel"
                 HorizontalAlignment="Center" VerticalAlignment="Center"
                 MinWidth="448" MaxWidth="480"
                 CornerRadius="16"
@@ -414,6 +416,7 @@
         <!-- rounded-2xl shadow-2xl max-w-md p-8                        -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsSuccess}"
+                AutomationProperties.AutomationId="DeploySuccessPanel"
                 HorizontalAlignment="Center" VerticalAlignment="Center"
                 MinWidth="448" MaxWidth="480"
                 CornerRadius="16"
@@ -443,6 +446,7 @@
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
                             Spacing="8" Margin="0,0,0,12">
                     <TextBlock Text="{Binding ProjectName}"
+                               AutomationProperties.AutomationId="DeploySuccessProjectName"
                                FontSize="28" FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}" />
                     <TextBlock Text="Deployed!"

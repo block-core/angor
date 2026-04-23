@@ -12,7 +12,7 @@
         <fp:FindProjectsViewModel />
     </Design.DataContext>
 
-    <Panel>
+    <Panel AutomationProperties.AutomationId="FindProjectsRootPanel">
         <!-- ═══════════════════════════════════════════════════════ -->
         <!-- INVEST PAGE: shown when InvestPageViewModel != null     -->
         <!-- Third drill-down: grid → detail → invest                -->

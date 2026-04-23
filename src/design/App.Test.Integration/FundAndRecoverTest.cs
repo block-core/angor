@@ -100,9 +100,7 @@ public class FundAndRecoverTest
         // STEP 2: Navigate to Funds → create wallet via Generate path
         // ──────────────────────────────────────────────────────────────
         TestHelpers.Log("[STEP 2] Navigating to Funds section...");
-        window.NavigateToSection("Funds");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funds");
 
         var emptyState = await window.WaitForControl<Panel>("EmptyStatePanel", TestHelpers.UiTimeout);
         TestHelpers.Log($"[STEP 2] EmptyStatePanel found: {emptyState != null}");
@@ -130,9 +128,7 @@ public class FundAndRecoverTest
         // STEP 4: Create + deploy fund project
         // ──────────────────────────────────────────────────────────────
         TestHelpers.Log("[STEP 4] Navigating to My Projects section...");
-        window.NavigateToSection("My Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("My Projects");
 
         var myProjectsVm = window.GetMyProjectsViewModel();
         myProjectsVm.Should().NotBeNull("MyProjectsViewModel should be available");
@@ -265,9 +261,7 @@ public class FundAndRecoverTest
         // STEP 5: Navigate to Find Projects → find our project
         // ──────────────────────────────────────────────────────────────
         TestHelpers.Log("[STEP 5] Navigating to Find Projects...");
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Find Projects");
 
         var findProjectsVm = window.GetFindProjectsViewModel();
         findProjectsVm.Should().NotBeNull("FindProjectsViewModel should be available");
@@ -405,6 +399,8 @@ public class FundAndRecoverTest
         // STEP 7: Add investment to portfolio + verify no duplicates
         // ──────────────────────────────────────────────────────────────
         TestHelpers.Log("[STEP 7] Adding investment to portfolio...");
+        // DIRECT DI RESOLVE: PortfolioViewModel is a singleton not reachable from the visual
+        // tree while we're still on the Find Projects invest flow. Mirrors internal DI wiring.
         var portfolioVm = global::App.App.Services.GetRequiredService<PortfolioViewModel>();
         var countBefore = portfolioVm.Investments.Count;
 
@@ -473,9 +469,7 @@ public class FundAndRecoverTest
         findProjectsVm.CloseProjectDetail();
         Dispatcher.UIThread.RunJobs();
 
-        window.NavigateToSection("Funders");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funders");
 
         var fundersVm = window.GetFundersViewModel();
         fundersVm.Should().NotBeNull("FundersViewModel should be available for founder approval flow");
@@ -538,9 +532,7 @@ public class FundAndRecoverTest
         // STEP 9: Investor reloads signed investment and confirms it
         // ──────────────────────────────────────────────────────────────
         TestHelpers.Log("[STEP 9] Reloading funded investments and confirming signed investment...");
-        window.NavigateToSection("Funded");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funded");
 
         InvestmentViewModel? signedInvestment = null;
         var signedDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
@@ -588,9 +580,7 @@ public class FundAndRecoverTest
         findProjectsVm.CloseProjectDetail();
         Dispatcher.UIThread.RunJobs();
 
-        window.NavigateToSection("My Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("My Projects");
 
         var founderProjectsVm = window.GetMyProjectsViewModel();
         founderProjectsVm.Should().NotBeNull("MyProjectsViewModel should be available for founder manage flow");
@@ -727,9 +717,7 @@ public class FundAndRecoverTest
         // STEP 11: Navigate to Funded → find our investment
         // ──────────────────────────────────────────────────────────────
         TestHelpers.Log("[STEP 11] Navigating to Funded section...");
-        window.NavigateToSection("Funded");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funded");
 
         // Find our investment in the portfolio (it was added locally via AddToPortfolio)
         var investment = portfolioVm.Investments.FirstOrDefault(i =>

@@ -20,7 +20,7 @@
         </Style>
     </UserControl.Styles>
 
-    <Panel>
+    <Panel AutomationProperties.AutomationId="PortfolioRootPanel">
         <!-- ═══════════════════════════════════════════════════════ -->
         <!-- EMPTY STATE: shown when HasInvestments = false          -->
         <!-- Vue: "FUNDED" title, "You haven't funded any projects   -->
