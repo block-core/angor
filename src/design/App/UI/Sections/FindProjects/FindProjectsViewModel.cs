@@ -557,44 +557,40 @@ public partial class FindProjectsViewModel : ReactiveObject
     }
 
     /// <summary>
-    /// Number of cards added per page (initial seed and each LoadMore).
-    /// Mobile and desktop both use 12 so a phone viewport fills with cached
-    /// content without requiring the user to trigger infinite-scroll (which
-    /// previously stranded 26+ cached projects in <see cref="pendingItems"/>
-    /// when the short list didn't overflow).
+    /// Number of cards revealed per page. Mobile uses a small batch (4) paired
+    /// with an explicit "Load More" button so users control reveal pacing and
+    /// we never stutter-inflate a long list during a scroll flick. Desktop
+    /// keeps the larger batch — the viewport has room and no auto-scroll
+    /// trigger runs there either.
     /// </summary>
-    public static readonly int PageSize = 12;
-
-    /// <summary>
-    /// Mobile-only: size of each chunk revealed during the smooth staggered
-    /// initial seed. The initial page is revealed in chunks of this size across
-    /// consecutive ApplicationIdle dispatches so the render pipeline paints
-    /// between chunks — the user sees cards appear progressively instead of a
-    /// single long freeze. 3 cards/chunk ≈ one phone viewport row on mobile.
-    /// </summary>
-    private const int MobileSeedChunkSize = 3;
+    public static int PageSize =>
+        (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS()) ? 4 : 12;
 
     private readonly List<ProjectItemViewModel> pendingItems = new();
 
     /// <summary>
     /// True when there are more items waiting to be revealed via <see cref="LoadMore"/>.
-    /// Bound by the view to show/hide a "Load more" affordance or drive scroll triggers.
+    /// Bound by the view to show/hide the "Load More" button.
     /// </summary>
     [Reactive] private bool hasMoreItems;
 
     /// <summary>
+    /// True while a <see cref="LoadMore"/> batch is being drained. Used by the
+    /// view to disable the Load More button and show a spinner so repeated
+    /// taps don't pile up concurrent layout invalidations.
+    /// </summary>
+    [Reactive] private bool isLoadingMore;
+
+    /// <summary>
     /// Replace <see cref="Projects"/> with the first <see cref="PageSize"/> items from
     /// <paramref name="all"/>, and stash the remainder in <see cref="pendingItems"/>
-    /// for <see cref="LoadMore"/> to reveal incrementally as the user scrolls.
-    /// Must be called on the UI thread.
+    /// for <see cref="LoadMore"/> to reveal when the user taps the "Load More"
+    /// button. Must be called on the UI thread.
     ///
-    /// Mobile perf: the initial page is revealed in chunks of
-    /// <see cref="MobileSeedChunkSize"/> across successive ApplicationIdle dispatches
-    /// so the render pipeline paints between chunks. Unlike the previous
-    /// one-card-per-dispatch approach, chunks are batched (one layout pass per
-    /// chunk) and dropped dispatches only lose 3 cards in the worst case — plus
-    /// the first chunk lands synchronously, guaranteeing visible content on
-    /// first frame. Desktop inflates the whole initial page synchronously.
+    /// Both mobile (PageSize=4) and desktop (PageSize=12) inflate the initial
+    /// page synchronously. The mobile batch is small enough that there's no
+    /// stagger benefit, and synchronous inflate guarantees visible content on
+    /// first frame without any dispatcher fragility.
     /// </summary>
     private void SeedPaged(List<ProjectItemViewModel> all)
     {
@@ -602,32 +598,8 @@ public partial class FindProjectsViewModel : ReactiveObject
         pendingItems.Clear();
 
         var initial = Math.Min(PageSize, all.Count);
-        var isMobile = OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
-
-        if (!isMobile)
-        {
-            // Desktop: inflate the whole initial page synchronously.
-            for (var i = 0; i < initial; i++)
-                Projects.Add(all[i]);
-        }
-        else
-        {
-            // Mobile: first chunk synchronously so first paint has content,
-            // then stagger remaining chunks across ApplicationIdle dispatches.
-            var firstChunk = Math.Min(MobileSeedChunkSize, initial);
-            for (var i = 0; i < firstChunk; i++)
-                Projects.Add(all[i]);
-
-            if (firstChunk < initial)
-            {
-                // Capture the remaining slice — post chunks sequentially so each
-                // one gets its own render frame but the whole initial page is
-                // guaranteed to land (unlike one-per-idle which could drop cards
-                // when the view detaches mid-stagger).
-                var remaining = all.GetRange(firstChunk, initial - firstChunk);
-                PostMobileSeedChunk(remaining, 0);
-            }
-        }
+        for (var i = 0; i < initial; i++)
+            Projects.Add(all[i]);
 
         for (var i = initial; i < all.Count; i++)
             pendingItems.Add(all[i]);
@@ -638,45 +610,16 @@ public partial class FindProjectsViewModel : ReactiveObject
     }
 
     /// <summary>
-    /// Post the next chunk of mobile initial-seed items on ApplicationIdle,
-    /// then chain the next chunk. Keeps the stagger smooth without the
-    /// one-dispatch-per-card fragility that sometimes dropped the final card.
+    /// Reveal the next page of projects. Called by the view when the user taps
+    /// the "Load More" button. Safe to call when there are no pending items
+    /// (no-op). Toggles <see cref="IsLoadingMore"/> across the insert so the
+    /// view can show a spinner and disable the button while the batch drains.
     /// </summary>
-    private void PostMobileSeedChunk(List<ProjectItemViewModel> remaining, int startIndex)
-    {
-        if (startIndex >= remaining.Count) return;
-
-        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-        {
-            var end = Math.Min(startIndex + MobileSeedChunkSize, remaining.Count);
-            for (var i = startIndex; i < end; i++)
-                Projects.Add(remaining[i]);
-
-            // Chain next chunk on the following idle frame
-            if (end < remaining.Count)
-                PostMobileSeedChunk(remaining, end);
-        }, Avalonia.Threading.DispatcherPriority.ApplicationIdle);
-    }
-
-    /// <summary>
-    /// Reveal the next page of projects. Called by the view when the user scrolls
-    /// near the bottom of the list, or taps a "Load more" button.
-    /// Safe to call when there are no pending items (no-op).
-    /// On mobile, cards are staggered one per ApplicationIdle dispatch so the
-    /// render pipeline can paint between each inflate — prevents scroll jank.
-    /// </summary>
-    private bool _loadMoreInFlight;
-
     public void LoadMore()
     {
         if (pendingItems.Count == 0) return;
-        // Gate: prevent LoadMore re-entry while inserts from the previous
-        // batch are still draining through ApplicationIdle dispatches. Without
-        // this, a user scroll near the bottom fires LoadMore many times in
-        // rapid succession, piling up concurrent layout invalidations and
-        // causing visible stutter while the user is still flicking.
-        if (_loadMoreInFlight) return;
-        _loadMoreInFlight = true;
+        if (IsLoadingMore) return;
+        IsLoadingMore = true;
 
         var take = Math.Min(PageSize, pendingItems.Count);
         var batch = pendingItems.GetRange(0, take);
@@ -686,13 +629,14 @@ public partial class FindProjectsViewModel : ReactiveObject
         if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
         {
             // Post the whole batch in a single ApplicationIdle tick so the
-            // ResponsiveGrid does one layout pass per batch, not one per card.
+            // ResponsiveGrid does one layout pass per batch, and the button's
+            // spinner gets a frame to paint before we block on inflate.
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
                 foreach (var item in batch)
                     Projects.Add(item);
                 UpdateHasInvestedFlags();
-                _loadMoreInFlight = false;
+                IsLoadingMore = false;
             }, Avalonia.Threading.DispatcherPriority.ApplicationIdle);
         }
         else
@@ -700,7 +644,7 @@ public partial class FindProjectsViewModel : ReactiveObject
             foreach (var item in batch)
                 Projects.Add(item);
             UpdateHasInvestedFlags();
-            _loadMoreInFlight = false;
+            IsLoadingMore = false;
         }
 
         _logger.LogInformation("[Paged] LoadMore revealed={Take} visible={Visible} pending={Pending}",

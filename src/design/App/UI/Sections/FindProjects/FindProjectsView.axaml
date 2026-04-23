@@ -110,6 +110,60 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <!-- "Load More" button: explicit reveal of the next batch.  -->
+                <!-- Replaces the previous auto-scroll-trigger wiring which  -->
+                <!-- caused ANR on Android when layout re-entry piled up     -->
+                <!-- Dispatcher posts. Button is hidden once pendingItems    -->
+                <!-- drains (HasMoreItems=false), and disables itself during -->
+                <!-- an in-flight batch insert (IsLoadingMore=true) so       -->
+                <!-- repeated taps can't stack concurrent layout passes.     -->
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <Button Name="LoadMoreButton"
+                        Classes="Secondary"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        Padding="16,12"
+                        Margin="0,8,0,0"
+                        IsVisible="{Binding HasMoreItems}"
+                        IsEnabled="{Binding !IsLoadingMore}">
+                    <StackPanel Orientation="Horizontal" Spacing="8"
+                                HorizontalAlignment="Center">
+                        <!-- Idle state: "Load More" with plus icon -->
+                        <i:Icon Value="fa-solid fa-plus"
+                                FontSize="13"
+                                IsVisible="{Binding !IsLoadingMore}"
+                                VerticalAlignment="Center" />
+                        <!-- Loading state: spinner -->
+                        <i:Icon Value="fa-solid fa-spinner"
+                                FontSize="13"
+                                IsVisible="{Binding IsLoadingMore}"
+                                VerticalAlignment="Center"
+                                RenderTransformOrigin="50%,50%">
+                            <i:Icon.RenderTransform>
+                                <RotateTransform />
+                            </i:Icon.RenderTransform>
+                            <i:Icon.Styles>
+                                <Style Selector="i|Icon[IsVisible=True]">
+                                    <Style.Animations>
+                                        <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                            <KeyFrame Cue="0%">
+                                                <Setter Property="RotateTransform.Angle" Value="0" />
+                                            </KeyFrame>
+                                            <KeyFrame Cue="100%">
+                                                <Setter Property="RotateTransform.Angle" Value="360" />
+                                            </KeyFrame>
+                                        </Animation>
+                                    </Style.Animations>
+                                </Style>
+                            </i:Icon.Styles>
+                        </i:Icon>
+                        <TextBlock VerticalAlignment="Center"
+                                   FontSize="14" FontWeight="SemiBold"
+                                   Text="Load More" />
+                    </StackPanel>
+                </Button>
             </StackPanel>
         </controls:ScrollableView>
     </Panel>

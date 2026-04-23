@@ -22,7 +22,6 @@ public partial class FindProjectsView : UserControl, ISectionView
     private Panel? _detailPanel;
     private Panel? _investPanel;
     private ScrollableView? _projectListScrollable;
-    private ScrollViewer? _listScrollViewer;
 
     // Lazy-mounted drill-down children — materialised on first visibility
     // to avoid the ~1800-line XAML inflate cost on the initial tab switch.
@@ -56,6 +55,19 @@ public partial class FindProjectsView : UserControl, ISectionView
             {
                 if (DataContext is FindProjectsViewModel fvm)
                     await fvm.LoadProjectsFromSdkAsync();
+            };
+        }
+
+        // Wire "Load More" button — explicit reveal only, no scroll trigger.
+        // The VM's IsLoadingMore flag disables the button across the batch
+        // insert so repeated taps can't pile up concurrent layout passes.
+        var loadMoreBtn = this.FindControl<Button>("LoadMoreButton");
+        if (loadMoreBtn != null)
+        {
+            loadMoreBtn.Click += (_, _) =>
+            {
+                if (DataContext is FindProjectsViewModel fvm)
+                    fvm.LoadMore();
             };
         }
 
@@ -174,43 +186,6 @@ public partial class FindProjectsView : UserControl, ISectionView
         // Re-subscribe if subscriptions were disposed (view re-attached from cache)
         if (_visibilitySubscription == null)
             SubscribeToVisibility();
-
-        // Wire infinite scroll: hook the inner ScrollViewer and trigger LoadMore
-        // when the user nears the bottom of the list. Done here (not in ctor)
-        // because the template is applied lazily.
-        WireInfiniteScroll();
-    }
-
-    private void WireInfiniteScroll()
-    {
-        if (_listScrollViewer != null) return;
-        if (_projectListScrollable == null) return;
-
-        _listScrollViewer = _projectListScrollable.GetVisualDescendants()
-            .OfType<ScrollViewer>()
-            .FirstOrDefault();
-
-        if (_listScrollViewer != null)
-        {
-            _listScrollViewer.ScrollChanged += OnListScrollChanged;
-        }
-    }
-
-    private void OnListScrollChanged(object? sender, ScrollChangedEventArgs e)
-    {
-        if (sender is not ScrollViewer sv) return;
-        if (DataContext is not FindProjectsViewModel vm) return;
-        if (!vm.HasMoreItems) return;
-
-        // Trigger LoadMore when the user scrolls within two viewport-heights of
-        // the bottom. The VM's _loadMoreInFlight gate prevents re-entry while
-        // inserts drain, so repeated ScrollChanged events during a flick don't
-        // pile up concurrent layout invalidations.
-        var distanceFromBottom = sv.Extent.Height - (sv.Offset.Y + sv.Viewport.Height);
-        if (distanceFromBottom < sv.Viewport.Height * 2)
-        {
-            vm.LoadMore();
-        }
     }
 
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
@@ -219,11 +194,6 @@ public partial class FindProjectsView : UserControl, ISectionView
         _visibilitySubscription = null;
         _layoutSubscription?.Dispose();
         _layoutSubscription = null;
-        if (_listScrollViewer != null)
-        {
-            _listScrollViewer.ScrollChanged -= OnListScrollChanged;
-            _listScrollViewer = null;
-        }
         base.OnDetachedFromLogicalTree(e);
     }
 
