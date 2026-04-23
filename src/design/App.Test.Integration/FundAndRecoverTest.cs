@@ -272,8 +272,7 @@ public class FundAndRecoverTest
         var findDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
         while (DateTime.UtcNow < findDeadline)
         {
-            await findProjectsVm!.LoadProjectsFromSdkAsync();
-            Dispatcher.UIThread.RunJobs();
+            await findProjectsVm!.LoadAllProjectsFromSdkAsync();
 
             foundProject = findProjectsVm.Projects.FirstOrDefault(p =>
                 p.Description.Contains(runId) || p.ShortDescription.Contains(runId));

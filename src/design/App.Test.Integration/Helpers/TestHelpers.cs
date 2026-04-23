@@ -381,6 +381,26 @@ public static class TestHelpers
     }
 
     /// <summary>
+    /// Load projects from SDK and expand all paged items so every project is searchable.
+    /// The FindProjectsViewModel pages results (first 12 visible, rest in pending).
+    /// This helper expands all pending items so tests can search the full set.
+    /// </summary>
+    public static async Task<IReadOnlyList<ProjectItemViewModel>> LoadAllProjectsFromSdkAsync(
+        this FindProjectsViewModel vm)
+    {
+        await vm.LoadProjectsFromSdkAsync();
+        Dispatcher.UIThread.RunJobs();
+
+        while (vm.HasMoreItems)
+        {
+            vm.LoadMore();
+            Dispatcher.UIThread.RunJobs();
+        }
+
+        return vm.Projects;
+    }
+
+    /// <summary>
     /// Get the FundersViewModel from the current Funders view.
     /// </summary>
     public static FundersViewModel? GetFundersViewModel(this Window window)

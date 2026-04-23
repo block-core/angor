@@ -203,8 +203,7 @@ public class InvestAndRecoverTest
         var findDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
         while (DateTime.UtcNow < findDeadline)
         {
-            await findProjectsVm!.LoadProjectsFromSdkAsync();
-            Dispatcher.UIThread.RunJobs();
+            await findProjectsVm!.LoadAllProjectsFromSdkAsync();
 
             foundProject = findProjectsVm.Projects.FirstOrDefault(p =>
                 p.Description.Contains(runId) || p.ShortDescription.Contains(runId));
@@ -255,8 +254,7 @@ public class InvestAndRecoverTest
 
         TestHelpers.Log("[STEP 6] Opening project detail...");
         // Re-load projects since we navigated away
-        await findProjectsVm!.LoadProjectsFromSdkAsync();
-        Dispatcher.UIThread.RunJobs();
+        await findProjectsVm!.LoadAllProjectsFromSdkAsync();
         foundProject = findProjectsVm.Projects.FirstOrDefault(p =>
             p.Description.Contains(runId) || p.ShortDescription.Contains(runId));
         foundProject.Should().NotBeNull();
