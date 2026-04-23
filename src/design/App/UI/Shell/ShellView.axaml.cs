@@ -346,7 +346,9 @@ public partial class ShellView : UserControl
                 if (isCompact)
                 {
                     toastBorder.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
-                    toastBorder.Margin = new Avalonia.Thickness(16, 16, 16, 0);
+                    // 72dp top clears Android status bar (~24–32dp) with breathing room.
+                    // Avalonia Android does not auto-inset under the status bar.
+                    toastBorder.Margin = new Avalonia.Thickness(16, 72, 16, 0);
                     toastBorder.Padding = new Avalonia.Thickness(16, 14);
                     toastBorder.MinHeight = 52;
                     toastBorder.CornerRadius = new Avalonia.CornerRadius(12);
