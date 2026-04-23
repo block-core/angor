@@ -562,7 +562,7 @@ public partial class FindProjectsViewModel : ReactiveObject
     /// render pipeline. Desktop: 12 to fill typical window widths.
     /// </summary>
     public static readonly int PageSize =
-        OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() ? 2 : 12;
+        OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() ? 4 : 12;
 
     private readonly List<ProjectItemViewModel> pendingItems = new();
 
@@ -633,9 +633,18 @@ public partial class FindProjectsViewModel : ReactiveObject
     /// On mobile, cards are staggered one per ApplicationIdle dispatch so the
     /// render pipeline can paint between each inflate — prevents scroll jank.
     /// </summary>
+    private bool _loadMoreInFlight;
+
     public void LoadMore()
     {
         if (pendingItems.Count == 0) return;
+        // Gate: prevent LoadMore re-entry while inserts from the previous
+        // batch are still draining through ApplicationIdle dispatches. Without
+        // this, a user scroll near the bottom fires LoadMore many times in
+        // rapid succession, piling up concurrent layout invalidations and
+        // causing visible stutter while the user is still flicking.
+        if (_loadMoreInFlight) return;
+        _loadMoreInFlight = true;
 
         var take = Math.Min(PageSize, pendingItems.Count);
         var batch = pendingItems.GetRange(0, take);
@@ -644,17 +653,14 @@ public partial class FindProjectsViewModel : ReactiveObject
 
         if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
         {
-            foreach (var item in batch)
-            {
-                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                {
-                    Projects.Add(item);
-                }, Avalonia.Threading.DispatcherPriority.ApplicationIdle);
-            }
-            // Post flag update after the last card so scroll trigger re-evaluates
+            // Post the whole batch in a single ApplicationIdle tick so the
+            // ResponsiveGrid does one layout pass per batch, not one per card.
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
+                foreach (var item in batch)
+                    Projects.Add(item);
                 UpdateHasInvestedFlags();
+                _loadMoreInFlight = false;
             }, Avalonia.Threading.DispatcherPriority.ApplicationIdle);
         }
         else
@@ -662,6 +668,7 @@ public partial class FindProjectsViewModel : ReactiveObject
             foreach (var item in batch)
                 Projects.Add(item);
             UpdateHasInvestedFlags();
+            _loadMoreInFlight = false;
         }
 
         _logger.LogInformation("[Paged] LoadMore revealed={Take} visible={Visible} pending={Pending}",

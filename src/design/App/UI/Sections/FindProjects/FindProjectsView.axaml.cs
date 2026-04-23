@@ -202,9 +202,12 @@ public partial class FindProjectsView : UserControl, ISectionView
         if (DataContext is not FindProjectsViewModel vm) return;
         if (!vm.HasMoreItems) return;
 
-        // Trigger LoadMore when the user scrolls within one viewport-height of the bottom.
+        // Trigger LoadMore when the user scrolls within two viewport-heights of
+        // the bottom. The VM's _loadMoreInFlight gate prevents re-entry while
+        // inserts drain, so repeated ScrollChanged events during a flick don't
+        // pile up concurrent layout invalidations.
         var distanceFromBottom = sv.Extent.Height - (sv.Offset.Y + sv.Viewport.Height);
-        if (distanceFromBottom < sv.Viewport.Height)
+        if (distanceFromBottom < sv.Viewport.Height * 2)
         {
             vm.LoadMore();
         }
