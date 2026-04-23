@@ -45,7 +45,7 @@
                 CornerRadius="16"
                 Padding="24"
                 BoxShadow="0 2 8 0 #1A000000">
-            <Grid x:Name="ProjectIdGrid" ColumnDefinitions="*,Auto">
+            <Grid x:Name="ProjectIdGrid" ColumnDefinitions="*,Auto" RowDefinitions="Auto,0,0">
                 <!-- Left: Label + value -->
                 <StackPanel x:Name="ProjectIdInfo" Grid.Column="0" Spacing="4" VerticalAlignment="Center">
                     <!-- Vue: .project-id-label — font-size 13px -->
@@ -151,7 +151,7 @@
                 <!-- Stats Grid: 4 columns (desktop) / 1 column (mobile) -->
                 <!-- Vue: .stats-grid — grid-template-columns repeat(4,1fr), gap 16
                      Mobile: grid-template-columns 1fr (stack). Toggled in code-behind. -->
-                <Grid x:Name="ManageStatsGrid" ColumnDefinitions="*,*,*,*">
+                <Grid x:Name="ManageStatsGrid" ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,0,0,0">
                     <!-- Total Investment -->
                     <Border x:Name="ManageStatCard0" Grid.Column="0"
                             Background="{DynamicResource StatCardBackground}"
@@ -247,7 +247,7 @@
 
         <!-- ═══ 3. NEXT STAGE + TRANSACTION STATISTICS (side by side desktop, stacked mobile) ═══ -->
         <!-- Vue: .stats-row-container — grid-template-columns 1fr 1fr, gap 24 desktop / 1fr stacked mobile -->
-        <Grid x:Name="ManageStatsRowGrid" ColumnDefinitions="*,24,*" RowDefinitions="Auto">
+        <Grid x:Name="ManageStatsRowGrid" ColumnDefinitions="*,24,*" RowDefinitions="Auto,0,0">
             <!-- ── Left: Next Stage Countdown ── -->
             <!-- Vue: .detail-card.next-stage-detail-card — green gradient bg/border -->
             <Border x:Name="ManageNextStageCard" Grid.Column="0"

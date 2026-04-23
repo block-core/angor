@@ -153,6 +153,12 @@ public partial class CreateProjectView : UserControl
     /// Vue: App.vue lines 585-650 — completely different template branch on mobile.
     /// Desktop (>=1024px): two-column — left stepper sidebar (250px) + right content.
     /// Mobile (<1024px): no stepper sidebar, mobile header with step title + close + progress bar.
+    ///
+    /// IMPORTANT: XAML pre-declares <c>ColumnDefinitions="250,*"</c>. Mutate the
+    /// existing <c>GridLength</c> values only — never <c>Clear()</c>+<c>Add()</c>
+    /// the collection. Replacing it causes SIGABRT on macOS because children
+    /// briefly reference invalid column indices during the swap. Pattern
+    /// established in c19cd35f.
     /// </summary>
     private void ApplyResponsiveLayout(bool isCompact)
     {
@@ -160,15 +166,19 @@ public partial class CreateProjectView : UserControl
 
         if (_wizardMainGrid == null) return;
 
+        var cols = _wizardMainGrid.ColumnDefinitions;
+
         if (isCompact)
         {
             // Hide stepper sidebar column
             if (_stepperColumn != null) _stepperColumn.IsVisible = false;
 
             // Collapse the stepper column width to 0
-            _wizardMainGrid.ColumnDefinitions.Clear();
-            _wizardMainGrid.ColumnDefinitions.Add(new ColumnDefinition(new GridLength(0)));
-            _wizardMainGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            if (cols.Count >= 2)
+            {
+                cols[0].Width = new GridLength(0);
+                cols[1].Width = GridLength.Star;
+            }
 
             // Show mobile header
             if (_mobileWizardHeader != null) _mobileWizardHeader.IsVisible = true;
@@ -193,9 +203,11 @@ public partial class CreateProjectView : UserControl
             if (_stepperColumn != null) _stepperColumn.IsVisible = true;
 
             // Restore two-column layout
-            _wizardMainGrid.ColumnDefinitions.Clear();
-            _wizardMainGrid.ColumnDefinitions.Add(new ColumnDefinition(new GridLength(250)));
-            _wizardMainGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            if (cols.Count >= 2)
+            {
+                cols[0].Width = new GridLength(250);
+                cols[1].Width = GridLength.Star;
+            }
 
             // Hide mobile header
             if (_mobileWizardHeader != null) _mobileWizardHeader.IsVisible = false;
