@@ -70,8 +70,9 @@ public partial class HomeView : UserControl, ISectionView
         // ── Responsive layout: two-col (desktop) → stacked (compact) ──
         // No ScrollableView wrapping — the HomeGrid fills available space directly,
         // so star rows work correctly on both desktop and mobile.
-        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
-            .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
+        // Subscription is (re)established in OnAttachedToVisualTree so the view
+        // keeps responding to IsCompact changes after being detached and re-attached
+        // by the ShellView ContentControl swap during tab navigation.
 
         // ── Mobile perf: defer the second card (below the fold in stacked
         // layout) so first paint only inflates one Viewbox+Path SVG icon
@@ -260,15 +261,23 @@ public partial class HomeView : UserControl, ISectionView
     public void OnBecameInactive() { }
 
     /// <summary>
-    /// Desktop path (ContentControl swap): when the view is re-attached to the
-    /// visual tree after navigating away and back, star-sized grid cols/rows
-    /// can carry stale widths from the previous available size (observed after
-    /// a window resize on another tab → Home no longer scales to the new width).
-    /// Force a fresh measure/arrange pass on re-attach.
+    /// Desktop path (ContentControl swap): the HomeView is cached and re-attached
+    /// when returning to the Home tab. On detach, <see cref="_layoutSubscription"/>
+    /// is disposed; on re-attach we must re-subscribe so the view keeps responding
+    /// to <see cref="LayoutModeService.IsCompact"/> changes (e.g. resizing the
+    /// window to mobile width while on Home after returning from another tab).
+    /// Also force a fresh measure/arrange pass because star-sized grid cols/rows
+    /// can carry stale widths from the previous available size.
     /// </summary>
     protected override void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
+
+        // Re-subscribe (idempotent: dispose any stale subscription first).
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
+            .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
+
         ApplyResponsiveLayout(LayoutModeService.Instance.IsCompact);
         _homeGrid?.InvalidateMeasure();
         _homeGrid?.InvalidateArrange();
