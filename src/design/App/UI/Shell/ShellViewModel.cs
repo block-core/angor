@@ -934,7 +934,18 @@ public partial class ShellViewModel : ReactiveObject
             {
                 result = SelectedNavItem?.Label switch
                 {
-                    "Home" => GetOrCreateView("Home"),
+                    // Home: re-apply responsive layout on tab return. Avalonia's layout
+                    // engine retains stale measure caches on the HomeGrid columns/rows
+                    // when returning via the desktop ContentControl swap, so star cols
+                    // can keep a stale width that doesn't match the new available size
+                    // (visible as the Home page not scaling after resizing the window
+                    // while on another tab and coming back).
+                    "Home" => GetOrCreateView("Home",
+                        onReuse: v =>
+                        {
+                            if (v is Sections.Home.HomeView homeView)
+                                homeView.OnBecameActive();
+                        }),
                     "Funds" => GetOrCreateView("Funds"),
                     "Find Projects" => GetOrCreateView("Find Projects",
                         onReuse: v =>

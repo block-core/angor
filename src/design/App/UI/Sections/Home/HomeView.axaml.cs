@@ -259,6 +259,21 @@ public partial class HomeView : UserControl, ISectionView
     }
     public void OnBecameInactive() { }
 
+    /// <summary>
+    /// Desktop path (ContentControl swap): when the view is re-attached to the
+    /// visual tree after navigating away and back, star-sized grid cols/rows
+    /// can carry stale widths from the previous available size (observed after
+    /// a window resize on another tab → Home no longer scales to the new width).
+    /// Force a fresh measure/arrange pass on re-attach.
+    /// </summary>
+    protected override void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        ApplyResponsiveLayout(LayoutModeService.Instance.IsCompact);
+        _homeGrid?.InvalidateMeasure();
+        _homeGrid?.InvalidateArrange();
+    }
+
     private void OnButtonClick(object? sender, RoutedEventArgs e)
     {
         if (e.Source is not Button btn) return;
