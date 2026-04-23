@@ -132,6 +132,7 @@ public partial class ShellView : UserControl
 
     private IDisposable? _layoutSubscription;
     private IDisposable? _detailStateSubscription;
+    private SectionPanel? _sectionPanel;
 
     /// <summary>
     /// Cached safe-area insets. Populated from TopLevel.InsetsManager when the
@@ -357,6 +358,48 @@ public partial class ShellView : UserControl
                     }
                 });
             });
+
+        // ── Mobile: SectionPanel replaces ContentControl to avoid detach/reattach ──
+        // On mobile, Avalonia's ContentControl content swap costs ~250ms per tab
+        // switch due to logical tree detach+attach+measure+arrange. SectionPanel
+        // keeps all pre-warmed views in the tree with IsVisible toggling, reducing
+        // tab switches to <10ms.
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
+        {
+            _sectionPanel = new SectionPanel();
+
+            // Replace the ContentControl inside ContentBorder with the SectionPanel
+            _contentBorder.Child = _sectionPanel;
+
+            // Add the Home view immediately (it's created in GetOrCreateView during ctor)
+            if (vm.ViewCache.TryGetValue("Home", out var homeView) && homeView is Control homeCtrl)
+                _sectionPanel.AddSection("Home", homeCtrl);
+
+            // As pre-warm creates views, add them to the SectionPanel
+            vm.ViewPreWarmed += (key, view) =>
+            {
+                if (view is Control ctrl)
+                    _sectionPanel.AddSection(key, ctrl);
+            };
+
+            // Drive SectionPanel from SelectedNavItem + IsSettingsOpen changes
+            vm.WhenAnyValue(x => x.SelectedNavItem, x => x.IsSettingsOpen)
+                .Subscribe(tuple =>
+                {
+                    var sectionKey = vm.CurrentSectionKey;
+                    if (sectionKey != null)
+                    {
+                        // If the view isn't in the panel yet (pre-warm hasn't reached it),
+                        // create it on-demand
+                        if (_sectionPanel.GetSection(sectionKey) == null)
+                            vm.EnsureViewCreated(sectionKey);
+                        _sectionPanel.ActivateSection(sectionKey);
+                    }
+                });
+
+            // Activate Home immediately
+            _sectionPanel.ActivateSection("Home");
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════

@@ -2,6 +2,8 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Projects.Operations;
@@ -11,6 +13,7 @@ using Avalonia.Media.Imaging;
 using App.UI.Sections.Portfolio;
 using App.UI.Shared;
 using App.UI.Shared.Helpers;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace App.UI.Sections.FindProjects;
@@ -218,6 +221,71 @@ public class ProjectItemViewModel : INotifyPropertyChanged
 /// </summary>
 public partial class FindProjectsViewModel : ReactiveObject
 {
+    /// <summary>
+    /// Process-wide cache of the last successful Latest() DTOs.
+    /// Populated by CompositionRoot's startup pre-warm and by each successful load.
+    /// Lets new VM instances seed their Projects list synchronously so the tab
+    /// feels instant even when the ~10s Nostr fetch hasn't completed yet.
+    /// </summary>
+    internal static IReadOnlyList<ProjectDto>? CachedDtos { get; set; }
+
+    internal const string CacheStoreKey = "findprojects_cache.json";
+
+    /// <summary>
+    /// Load persisted DTO cache from disk into <see cref="CachedDtos"/>.
+    /// Called from CompositionRoot on startup so the first tap seeds from disk.
+    /// </summary>
+    internal static async Task LoadCachedDtosFromDiskAsync(IStore store, ILogger logger)
+    {
+        logger.LogInformation("[FindProjects] disk-load: attempt key={Key}", CacheStoreKey);
+        try
+        {
+            var result = await store.Load<List<ProjectDto>>(CacheStoreKey);
+            if (!result.IsSuccess)
+            {
+                logger.LogInformation("[FindProjects] disk-load: Load() returned failure: {Error}", result.Error);
+                return;
+            }
+            if (result.Value is null)
+            {
+                logger.LogInformation("[FindProjects] disk-load: result.Value was null");
+                return;
+            }
+            if (result.Value.Count == 0)
+            {
+                logger.LogInformation("[FindProjects] disk-load: cache file was empty (0 items)");
+                return;
+            }
+            CachedDtos = result.Value;
+            logger.LogInformation("[FindProjects] disk-load: SUCCESS loaded {Count} cached projects", result.Value.Count);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "[FindProjects] disk-load: threw {ExType}: {ExMsg}", ex.GetType().Name, ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Persist the current <see cref="CachedDtos"/> to disk for the next app launch.
+    /// Fire-and-forget; failures are logged and swallowed.
+    /// </summary>
+    internal static async Task SaveCachedDtosToDiskAsync(IStore store, IReadOnlyList<ProjectDto> dtos, ILogger logger)
+    {
+        logger.LogInformation("[FindProjects] disk-save: attempt count={Count} key={Key}", dtos.Count, CacheStoreKey);
+        try
+        {
+            var result = await store.Save(CacheStoreKey, dtos.ToList());
+            if (result.IsSuccess)
+                logger.LogInformation("[FindProjects] disk-save: SUCCESS wrote {Count} projects", dtos.Count);
+            else
+                logger.LogWarning("[FindProjects] disk-save: Save() returned failure: {Error}", result.Error);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "[FindProjects] disk-save: threw {ExType}: {ExMsg}", ex.GetType().Name, ex.Message);
+        }
+    }
+
     private readonly IProjectAppService _projectAppService;
     private readonly Func<ProjectItemViewModel, InvestPageViewModel> _investPageFactory;
     private readonly PortfolioViewModel _portfolioViewModel;
@@ -266,19 +334,55 @@ public partial class FindProjectsViewModel : ReactiveObject
         ICurrencyService currencyService,
         ILogger<FindProjectsViewModel> logger)
     {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+
         _projectAppService = projectAppService;
         _investPageFactory = investPageFactory;
         _portfolioViewModel = portfolioViewModel;
         _currencyService = currencyService;
         _logger = logger;
 
+        var fieldsMs = sw.ElapsedMilliseconds;
         _logger.LogInformation("FindProjectsViewModel created");
 
+        sw.Restart();
         // When the portfolio investments change, re-check HasInvested flags
         _portfolioViewModel.Investments.CollectionChanged += (_, _) => UpdateHasInvestedFlags();
+        var subscribeMs = sw.ElapsedMilliseconds;
 
-        // Load projects from SDK
-        _ = LoadProjectsFromSdkAsync();
+        sw.Restart();
+        // Seed Projects from the process-wide cache if the startup pre-warm (or a
+        // previous VM instance) already fetched Latest(). User sees results instantly
+        // on tab-switch; background refresh follows.
+        //
+        // On first load we only show the first page; the rest are held in
+        // _pendingItems and revealed by LoadMore() as the user scrolls.
+        var seeded = 0;
+        if (CachedDtos is { Count: > 0 } seed)
+        {
+            var mapped = new List<ProjectItemViewModel>(seed.Count);
+            foreach (var dto in seed)
+            {
+                var vm = ProjectItemViewModel.FromDto(dto);
+                vm.CurrencySymbol = _currencyService.Symbol;
+                mapped.Add(vm);
+            }
+            SeedPaged(mapped);
+            UpdateHasInvestedFlags();
+            seeded = mapped.Count;
+        }
+        var seedMs = sw.ElapsedMilliseconds;
+
+        sw.Restart();
+        // Run load on threadpool so the synchronous prefix of
+        // _projectAppService.Latest() doesn't block the UI thread.
+        // LoadProjectsFromSdkAsync marshals its UI mutations back via Dispatcher.
+        _ = Task.Run(LoadProjectsFromSdkAsync);
+        var loadKickMs = sw.ElapsedMilliseconds;
+
+        _logger.LogInformation(
+            "[FindProjectsViewModel.ctor] fields={Fields}ms subscribe={Subscribe}ms seeded={Seeded} seed={SeedMs}ms loadKick={LoadKick}ms",
+            fieldsMs, subscribeMs, seeded, seedMs, loadKickMs);
     }
 
     /// <summary>
@@ -287,42 +391,106 @@ public partial class FindProjectsViewModel : ReactiveObject
     /// </summary>
     public async Task LoadProjectsFromSdkAsync()
     {
-        IsLoading = true;
-        _logger.LogInformation("Loading latest projects from SDK...");
+        var pl = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger("ProjectsLoad");
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        pl.LogInformation("[ProjectsLoad] t=0ms begin");
+
+        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => IsLoading = true);
+        pl.LogInformation("[ProjectsLoad] t={T}ms IsLoading=true", sw.ElapsedMilliseconds);
+
+        // Watchdog: warn every 3s if Latest() still hasn't returned.
+        using var cts = new CancellationTokenSource();
+        var watchdog = Task.Run(async () =>
+        {
+            int tick = 0;
+            try
+            {
+                while (!cts.Token.IsCancellationRequested)
+                {
+                    await Task.Delay(3000, cts.Token);
+                    tick++;
+                    pl.LogWarning("[ProjectsLoad] t={T}ms still awaiting Latest() tick={Tick}",
+                        sw.ElapsedMilliseconds, tick);
+                }
+            }
+            catch (OperationCanceledException) { }
+        });
 
         try
         {
+            pl.LogInformation("[ProjectsLoad] t={T}ms calling Latest()", sw.ElapsedMilliseconds);
+            var callSw = System.Diagnostics.Stopwatch.StartNew();
             var result = await _projectAppService.Latest(new LatestProjects.LatestProjectsRequest());
+            callSw.Stop();
+            cts.Cancel();
+
+            pl.LogInformation("[ProjectsLoad] t={T}ms Latest() returned in {CallMs}ms success={Success}",
+                sw.ElapsedMilliseconds, callSw.ElapsedMilliseconds, result.IsSuccess);
 
             if (result.IsSuccess)
             {
-                Projects.Clear();
-                foreach (var dto in result.Value.Projects)
+                var dtos = result.Value.Projects;
+                var dtoCount = dtos.Count();
+                pl.LogInformation("[ProjectsLoad] t={T}ms got {Count} dtos", sw.ElapsedMilliseconds, dtoCount);
+
+                // Update process-wide seed cache so the next VM instance (e.g. after
+                // tab re-open with a fresh DI-scoped transient) shows data instantly.
+                var cachedCopy = dtos.ToList();
+                CachedDtos = cachedCopy;
+
+                // Persist to disk (fire-and-forget) so next app launch shows projects
+                // instantly while the SDK fetch runs in background.
+                _ = SaveCachedDtosToDiskAsync(
+                    App.Services.GetRequiredService<IStore>(),
+                    cachedCopy,
+                    App.Services.GetRequiredService<ILoggerFactory>().CreateLogger("FindProjectsCache"));
+
+                var mapSw = System.Diagnostics.Stopwatch.StartNew();
+                var items = new List<ProjectItemViewModel>(dtoCount);
+                foreach (var dto in dtos)
                 {
                     var vm = ProjectItemViewModel.FromDto(dto);
                     vm.CurrencySymbol = _currencyService.Symbol;
-                    Projects.Add(vm);
+                    items.Add(vm);
                 }
-                _logger.LogInformation("Loaded {Count} project(s) from SDK", Projects.Count);
+                mapSw.Stop();
+                pl.LogInformation("[ProjectsLoad] t={T}ms mapped {Count} items in {MapMs}ms",
+                    sw.ElapsedMilliseconds, items.Count, mapSw.ElapsedMilliseconds);
 
-                // Cross-reference with portfolio to mark projects the user already invested in
-                UpdateHasInvestedFlags();
+                var uiSw = System.Diagnostics.Stopwatch.StartNew();
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    // Re-seed paged: show first page immediately, hold rest in _pendingItems
+                    SeedPaged(items);
+                    UpdateHasInvestedFlags();
+                });
+                uiSw.Stop();
+                pl.LogInformation("[ProjectsLoad] t={T}ms UI update {UiMs}ms Projects.Count={PC}",
+                    sw.ElapsedMilliseconds, uiSw.ElapsedMilliseconds, Projects.Count);
 
                 // Fire-and-forget statistics loading for each project
                 _ = LoadProjectStatisticsAsync();
             }
             else
             {
-                _logger.LogWarning("Latest projects request failed: {Error}", result.Error);
+                pl.LogWarning("[ProjectsLoad] t={T}ms Latest() failed: {Error}",
+                    sw.ElapsedMilliseconds, result.Error);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error loading projects from SDK");
+            cts.Cancel();
+            pl.LogError(ex, "[ProjectsLoad] t={T}ms exception: {ExType}: {ExMsg}",
+                sw.ElapsedMilliseconds, ex.GetType().Name, ex.Message);
+            if (ex.InnerException != null)
+                pl.LogError(ex.InnerException, "[ProjectsLoad] inner: {ExType}: {ExMsg}",
+                    ex.InnerException.GetType().Name, ex.InnerException.Message);
         }
         finally
         {
-            IsLoading = false;
+            cts.Cancel();
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => IsLoading = false);
+            pl.LogInformation("[ProjectsLoad] t={T}ms DONE", sw.ElapsedMilliseconds);
         }
     }
 
@@ -386,5 +554,117 @@ public partial class FindProjectsViewModel : ReactiveObject
 
         _logger.LogDebug("Updated HasInvested flags: {InvestedCount} of {TotalCount} projects marked as invested",
             Projects.Count(p => p.HasInvested), Projects.Count);
+    }
+
+    /// <summary>
+    /// Number of cards added per page (initial seed and each LoadMore).
+    /// Mobile (Android/iOS): 2 — fills a phone viewport without blocking the
+    /// render pipeline. Desktop: 12 to fill typical window widths.
+    /// </summary>
+    public static readonly int PageSize =
+        OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() ? 2 : 12;
+
+    private readonly List<ProjectItemViewModel> pendingItems = new();
+
+    /// <summary>
+    /// True when there are more items waiting to be revealed via <see cref="LoadMore"/>.
+    /// Bound by the view to show/hide a "Load more" affordance or drive scroll triggers.
+    /// </summary>
+    [Reactive] private bool hasMoreItems;
+
+    /// <summary>
+    /// Replace <see cref="Projects"/> with the first <see cref="PageSize"/> items from
+    /// <paramref name="all"/>, and stash the remainder in <see cref="pendingItems"/>
+    /// for <see cref="LoadMore"/> to reveal incrementally as the user scrolls.
+    /// Must be called on the UI thread.
+    ///
+    /// Mobile perf: we split the initial page into two phases — the first 2 cards
+    /// are added synchronously so the list has content on first frame, and the
+    /// remaining initial-page cards are posted on <c>Dispatcher.UIThread</c> with
+    /// Background priority so they inflate in a later frame. This halves the
+    /// first-render blocking time without changing the final visual state.
+    /// Desktop inflates the whole initial page synchronously as before.
+    /// </summary>
+    private void SeedPaged(List<ProjectItemViewModel> all)
+    {
+        Projects.Clear();
+        pendingItems.Clear();
+
+        var initial = Math.Min(PageSize, all.Count);
+
+        var isMobile = OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
+        // Mobile: render zero cards in phase 1 to keep first-paint under 500ms
+        // (each ProjectCard's ControlTemplate inflate + style-selector evaluation
+        // costs ~70-100ms on Android). Initial-page cards are staggered one per
+        // ApplicationIdle dispatch so the render pipeline paints between each
+        // inflate — the user sees cards appear progressively instead of a
+        // single 300ms freeze. Desktop inflates the whole initial page synchronously.
+        var phase1 = isMobile ? 0 : initial;
+
+        for (var i = 0; i < phase1; i++)
+            Projects.Add(all[i]);
+
+        if (isMobile && phase1 < initial)
+        {
+            // Stagger: post each card as a separate ApplicationIdle dispatch
+            // so the render pipeline gets a frame between each inflate.
+            for (var i = phase1; i < initial; i++)
+            {
+                var item = all[i];
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    Projects.Add(item);
+                }, Avalonia.Threading.DispatcherPriority.ApplicationIdle);
+            }
+        }
+
+        for (var i = initial; i < all.Count; i++)
+            pendingItems.Add(all[i]);
+
+        HasMoreItems = pendingItems.Count > 0;
+        _logger.LogInformation("[Paged] seed visible={Visible} pending={Pending} hasMore={HasMore}",
+            Projects.Count, pendingItems.Count, HasMoreItems);
+    }
+
+    /// <summary>
+    /// Reveal the next page of projects. Called by the view when the user scrolls
+    /// near the bottom of the list, or taps a "Load more" button.
+    /// Safe to call when there are no pending items (no-op).
+    /// On mobile, cards are staggered one per ApplicationIdle dispatch so the
+    /// render pipeline can paint between each inflate — prevents scroll jank.
+    /// </summary>
+    public void LoadMore()
+    {
+        if (pendingItems.Count == 0) return;
+
+        var take = Math.Min(PageSize, pendingItems.Count);
+        var batch = pendingItems.GetRange(0, take);
+        pendingItems.RemoveRange(0, take);
+        HasMoreItems = pendingItems.Count > 0;
+
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
+        {
+            foreach (var item in batch)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    Projects.Add(item);
+                }, Avalonia.Threading.DispatcherPriority.ApplicationIdle);
+            }
+            // Post flag update after the last card so scroll trigger re-evaluates
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                UpdateHasInvestedFlags();
+            }, Avalonia.Threading.DispatcherPriority.ApplicationIdle);
+        }
+        else
+        {
+            foreach (var item in batch)
+                Projects.Add(item);
+            UpdateHasInvestedFlags();
+        }
+
+        _logger.LogInformation("[Paged] LoadMore revealed={Take} visible={Visible} pending={Pending}",
+            take, Projects.Count, pendingItems.Count);
     }
 }

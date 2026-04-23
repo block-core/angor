@@ -209,6 +209,23 @@ public static class CompositionRoot
         var networkConfig = provider.GetRequiredService<INetworkConfiguration>();
         networkConfig.SetDebugMode(prototypeSettings.IsDebugMode);
 
+        // Load persisted Find Projects cache on a background thread so the first
+        // Find Projects tap seeds from disk instantly. Cheap and non-contending.
+        // The full Latest() fetch runs when the user actually opens Find Projects.
+        _ = Task.Run(async () =>
+        {
+            var prewarmLogger = provider.GetRequiredService<ILoggerFactory>().CreateLogger("Prewarm");
+            try
+            {
+                await FindProjectsViewModel.LoadCachedDtosFromDiskAsync(
+                    provider.GetRequiredService<IStore>(), prewarmLogger);
+            }
+            catch (Exception ex)
+            {
+                prewarmLogger.LogWarning(ex, "Disk cache load failed");
+            }
+        });
+
         return provider;
     }
 

@@ -9,7 +9,7 @@ using ReactiveUI;
 
 namespace App.UI.Sections.Home;
 
-public partial class HomeView : UserControl
+public partial class HomeView : UserControl, ISectionView
 {
     private IDisposable? _layoutSubscription;
 
@@ -72,6 +72,30 @@ public partial class HomeView : UserControl
         // so star rows work correctly on both desktop and mobile.
         _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
             .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
+
+        // ── Mobile perf: defer the second card (below the fold in stacked
+        // layout) so first paint only inflates one Viewbox+Path SVG icon
+        // instead of two. GetFunded card arrives on ApplicationIdle — the
+        // user needs to scroll to see it anyway. Desktop renders both cards
+        // synchronously side-by-side.
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
+        {
+            if (_homeGrid != null && _getFundedCard != null)
+            {
+                var idx = _homeGrid.Children.IndexOf(_getFundedCard);
+                if (idx >= 0)
+                {
+                    _homeGrid.Children.RemoveAt(idx);
+                    var gridRef = _homeGrid;
+                    var cardRef = _getFundedCard;
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        var safeIdx = Math.Min(idx, gridRef.Children.Count);
+                        gridRef.Children.Insert(safeIdx, cardRef);
+                    }, Avalonia.Threading.DispatcherPriority.ApplicationIdle);
+                }
+            }
+        }
     }
 
     private void ApplyResponsiveLayout(bool isCompact)
@@ -89,8 +113,10 @@ public partial class HomeView : UserControl
         var cols = _homeGrid.ColumnDefinitions;
         var rows = _homeGrid.RowDefinitions;
 
+        // Tiled logo VisualBrush with SVG TileMode is expensive on mobile GPU.
+        // Desktop keeps the watermark; mobile hides it entirely.
         if (_tiledLogoBorder != null)
-            _tiledLogoBorder.IsVisible = true;
+            _tiledLogoBorder.IsVisible = !isCompact;
 
         if (isCompact)
         {
@@ -220,6 +246,9 @@ public partial class HomeView : UserControl
         _layoutSubscription = null;
         base.OnDetachedFromLogicalTree(e);
     }
+
+    public void OnBecameActive() { }
+    public void OnBecameInactive() { }
 
     private void OnButtonClick(object? sender, RoutedEventArgs e)
     {

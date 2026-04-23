@@ -15,7 +15,7 @@ using System.Reactive.Linq;
 
 namespace App.UI.Sections.Funders;
 
-public partial class FundersView : UserControl
+public partial class FundersView : UserControl, ISectionView
 {
     private CompositeDisposable? _subscriptions;
     private IDisposable? _layoutSubscription;
@@ -123,6 +123,9 @@ public partial class FundersView : UserControl
         _layoutSubscription = null;
         base.OnDetachedFromLogicalTree(e);
     }
+
+    public void OnBecameActive() { }
+    public void OnBecameInactive() { }
 
     /// <summary>
     /// Updates tab CSS classes to reflect the active filter.
