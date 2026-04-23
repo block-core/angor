@@ -247,7 +247,18 @@ public partial class HomeView : UserControl, ISectionView
         base.OnDetachedFromLogicalTree(e);
     }
 
-    public void OnBecameActive() { }
+    public void OnBecameActive()
+    {
+        // When SectionPanel toggles IsVisible back to true after a tab switch,
+        // Avalonia's layout engine can retain stale measure caches on the Grid
+        // columns/rows — buttons sometimes render with clipped text because
+        // StackPanel content was measured under the wrong constraints.
+        // Re-apply the responsive layout and invalidate the grid to force a
+        // fresh measure pass.
+        ApplyResponsiveLayout(LayoutModeService.Instance.IsCompact);
+        _homeGrid?.InvalidateMeasure();
+        _homeGrid?.InvalidateArrange();
+    }
     public void OnBecameInactive() { }
 
     private void OnButtonClick(object? sender, RoutedEventArgs e)
