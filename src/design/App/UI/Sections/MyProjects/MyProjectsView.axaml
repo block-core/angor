@@ -190,35 +190,36 @@
                 <controls:ScrollableView Name="MyProjectsContent" Grid.Column="1" Grid.Row="0" ContentPadding="0">
                     <StackPanel Spacing="20">
                         <!-- ── Mobile action buttons (compact only, hidden on desktop) ── -->
-                        <!-- Vue mobile: full-width "Scan for your projects" + "Launch a Project" -->
-                        <StackPanel Name="MobileActionPanel" Spacing="8" IsVisible="False">
-                            <Button HorizontalAlignment="Stretch"
+                        <!-- Vue mobile (App.vue lines 492-533): full-width btn-primary Scan + Launch, 52px height -->
+                        <StackPanel Name="MobileActionPanel" Spacing="12" IsVisible="False">
+                            <Button Name="MobileScanButton"
+                                    Classes="Primary"
+                                    HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Center"
-                                    Padding="14,12" CornerRadius="10"
-                                    Background="Transparent"
-                                    BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                                    Height="52"
+                                    Padding="16,0"
                                     Cursor="Hand">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                     <i:Icon Value="fa-solid fa-rotate" FontSize="14"
-                                            Foreground="{DynamicResource TextStrong}" />
+                                            Foreground="{DynamicResource PrimaryButtonForeground}" />
                                     <TextBlock Text="Scan for your projects"
                                                FontSize="14" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource TextStrong}" />
+                                               Foreground="{DynamicResource PrimaryButtonForeground}" />
                                 </StackPanel>
                             </Button>
                             <Button Name="MobileLaunchButton"
+                                    Classes="Primary"
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Center"
-                                    Padding="14,12" CornerRadius="10"
-                                    Background="Transparent"
-                                    BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                                    Height="52"
+                                    Padding="16,0"
                                     Cursor="Hand">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                     <i:Icon Value="fa-solid fa-plus" FontSize="14"
-                                            Foreground="{DynamicResource TextStrong}" />
+                                            Foreground="{DynamicResource PrimaryButtonForeground}" />
                                     <TextBlock Text="Launch a Project"
                                                FontSize="14" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource TextStrong}" />
+                                               Foreground="{DynamicResource PrimaryButtonForeground}" />
                                 </StackPanel>
                             </Button>
                         </StackPanel>

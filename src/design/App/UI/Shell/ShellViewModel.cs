@@ -1017,6 +1017,7 @@ public partial class ShellViewModel : ReactiveObject
     /// <summary>
     /// After tab views are warm, pre-inflate the investor drill-down views
     /// (ProjectDetailView + InvestPageView) inside FindProjectsView. Mobile only.
+    /// Also primes ManageProjectView inside MyProjectsView for fast founder drill-down.
     /// </summary>
     private void PreWarmDrillDownViews()
     {
@@ -1024,6 +1025,12 @@ public partial class ShellViewModel : ReactiveObject
             && view is global::App.UI.Sections.FindProjects.FindProjectsView fpView)
         {
             fpView.PreWarmDrillDownViews();
+        }
+
+        if (_viewCache.TryGetValue("My Projects", out var mpView)
+            && mpView is global::App.UI.Sections.MyProjects.MyProjectsView myProjectsView)
+        {
+            myProjectsView.PreWarmManageView();
         }
     }
 
