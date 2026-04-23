@@ -113,10 +113,8 @@ public partial class HomeView : UserControl, ISectionView
         var cols = _homeGrid.ColumnDefinitions;
         var rows = _homeGrid.RowDefinitions;
 
-        // Tiled logo VisualBrush with SVG TileMode is expensive on mobile GPU.
-        // Desktop keeps the watermark; mobile hides it entirely.
-        if (_tiledLogoBorder != null)
-            _tiledLogoBorder.IsVisible = !isCompact;
+        // Tiled logo watermark shown on both desktop and mobile (matches Vue prototype).
+        // Previously hidden on mobile for perf — verified smooth on Android test device.
 
         if (isCompact)
         {
