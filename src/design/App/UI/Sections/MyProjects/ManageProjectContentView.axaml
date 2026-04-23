@@ -15,6 +15,22 @@
         Shares DataContext (ManageProjectViewModel) with parent via inheritance.
     -->
 
+    <!-- Compact (mobile) style overrides — toggled by Classes.Set("Compact", true) in code-behind.
+         Vue: @media (max-width: 768px) stage-header-left/stage-pills flex-column full width. -->
+    <UserControl.Styles>
+        <!-- Stage header: stack left-section above right-section on mobile -->
+        <Style Selector="UserControl.Compact StackPanel.StageHeaderLeft">
+            <Setter Property="Orientation" Value="Vertical" />
+            <Setter Property="Spacing" Value="12" />
+        </Style>
+        <!-- Stage pills: stretch full width, stack vertically on mobile -->
+        <Style Selector="UserControl.Compact StackPanel.StagePills">
+            <Setter Property="Orientation" Value="Vertical" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="Spacing" Value="8" />
+        </Style>
+    </UserControl.Styles>
+
     <StackPanel x:Name="ContentStack" Spacing="24">
 
         <!-- ═══ 1. PROJECT ID CARD ═══ -->
@@ -449,10 +465,10 @@
                                             BorderThickness="0,0,0,1"
                                             Padding="0,0,0,12"
                                             Margin="0,0,0,12">
-                                        <Grid ColumnDefinitions="*,Auto">
+                                        <Grid Classes="StageHeader" ColumnDefinitions="*,Auto">
                                             <!-- Left: Stage number + pills -->
                                             <!-- Vue: .stage-header-left — gap 12 -->
-                                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12"
+                                            <StackPanel Classes="StageHeaderLeft" Grid.Column="0" Orientation="Horizontal" Spacing="12"
                                                         VerticalAlignment="Center">
                                                 <!-- Vue: .stage-number — 16px, 600, #1a1a1a/#fafafa -->
                                                 <TextBlock Text="{Binding Number, StringFormat=Stage {0}}"
@@ -462,7 +478,7 @@
 
                                                 <!-- Pills -->
                                                 <!-- Vue: .stage-pills — gap 8 -->
-                                                <StackPanel Orientation="Horizontal" Spacing="8"
+                                                <StackPanel Classes="StagePills" Orientation="Horizontal" Spacing="8"
                                                             VerticalAlignment="Center">
                                                     <!-- BTC pill -->
                                                     <!-- Vue: .stage-pill — pad 4 12, rounded 16, font 12px 600 -->
