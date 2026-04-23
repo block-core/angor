@@ -22,6 +22,7 @@ public partial class ManageProjectView : UserControl
     private DockPanel? _navBar;
     private Panel? _navSpacer;
     private StackPanel? _contentStack;
+    private StackPanel? _mobileNavBar;
 
     public ManageProjectView()
     {
@@ -32,6 +33,7 @@ public partial class ManageProjectView : UserControl
         _navBar = this.FindControl<DockPanel>("ManageNavBar");
         _navSpacer = this.FindControl<Panel>("ManageNavSpacer");
         _contentStack = this.FindControl<StackPanel>("ManageContentStack");
+        _mobileNavBar = this.FindControl<StackPanel>("MobileNavBar");
 
         // ── Wire content -> modals bridge: stage buttons open claim/spent modals ──
         var contentView = this.FindControl<ManageProjectContentView>("ContentView");
@@ -66,6 +68,12 @@ public partial class ManageProjectView : UserControl
         var viewPKBtn = this.FindControl<Button>("ViewPrivateKeysButton");
         if (viewPKBtn != null) viewPKBtn.Click += OnViewPrivateKeysClick;
 
+        // ── Mobile nav buttons (compact only) ──
+        var mobileRefresh = this.FindControl<Button>("MobileRefreshButton");
+        if (mobileRefresh != null) mobileRefresh.Click += OnRefreshClick;
+        var mobileViewPK = this.FindControl<Button>("MobileViewPrivateKeysButton");
+        if (mobileViewPK != null) mobileViewPK.Click += OnViewPrivateKeysClick;
+
         // Subscribe to layout mode changes
         _layoutSubscription = LayoutModeService.Instance
             .WhenAnyValue(x => x.IsCompact)
@@ -79,21 +87,26 @@ public partial class ManageProjectView : UserControl
     /// </summary>
     private void ApplyResponsiveLayout(bool isCompact)
     {
-        // Hide desktop nav bar on compact — the shell's bottom tab bar provides navigation
+        // Hide desktop nav bar on compact — the shell's bottom tab bar + inline mobile nav provide navigation
         // Vue: .sticky-nav-bar { display: none !important; } at <=768px
         if (_navBar != null) _navBar.IsVisible = !isCompact;
 
-        // Adjust spacer: no nav bar means no spacer needed
-        if (_navSpacer != null) _navSpacer.Height = isCompact ? 0 : 92;
+        // Show inline mobile nav (Refresh + View Private Keys) on compact only
+        // Vue: .sticky-nav-bar-mobile — md:hidden
+        if (_mobileNavBar != null) _mobileNavBar.IsVisible = isCompact;
 
-        // Adjust content margins and spacing
+        // Adjust spacer: on compact use 16px top (no floating nav); on desktop use 92px
+        if (_navSpacer != null) _navSpacer.Height = isCompact ? 16 : 92;
+
+        // Adjust content margins and spacing.
         // Vue: <=768px → .content-grid { gap: 16px; padding: 0 16px 96px 16px; }
-        // Note: the 96px bottom padding is handled by ManageProjectContentView's _contentStack
+        // 96px bottom on compact clears the shell-level fixed "Back to My Projects" green bar
+        // (52px button at bottom-20 → ~20+52+24 safe gap).
         if (_contentStack != null)
         {
             _contentStack.Spacing = isCompact ? 16 : 24;
             _contentStack.Margin = isCompact
-                ? new Avalonia.Thickness(16, 0, 16, 0)
+                ? new Avalonia.Thickness(16, 0, 16, 96)
                 : new Avalonia.Thickness(24, 0, 24, 24);
         }
     }

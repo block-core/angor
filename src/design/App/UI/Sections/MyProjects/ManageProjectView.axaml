@@ -44,7 +44,8 @@
             justify-content: space-between.
             Standardized pattern: DockPanel with Margin="24,24,24,0".
         -->
-        <DockPanel VerticalAlignment="Top"
+        <DockPanel x:Name="ManageNavBar"
+                   VerticalAlignment="Top"
                    ZIndex="100"
                    Margin="24,24,24,0"
                    IsHitTestVisible="True">
@@ -269,10 +270,69 @@
         -->
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <Panel>
-                <StackPanel Spacing="24"
+                <StackPanel x:Name="ManageContentStack"
+                            Spacing="24"
                             Margin="24,0,24,24">
                     <!-- Spacer for floating nav: 24 (nav top margin) + 44 (nav h) + 24 (gap below) = 92 -->
-                    <Panel Height="92" />
+                    <Panel x:Name="ManageNavSpacer" Height="92" />
+
+                    <!-- ═══ MOBILE INLINE NAV (compact only) ═══
+                         Vue: .sticky-nav-bar-mobile — flex flex-col gap-2 w-full.
+                         Two stacked outline buttons: Refresh + View Private Keys.
+                         Hidden on desktop; shown on compact in place of floating DockPanel.
+                         Visibility toggled from code-behind ApplyResponsiveLayout. -->
+                    <StackPanel x:Name="MobileNavBar"
+                                Orientation="Vertical"
+                                Spacing="8"
+                                IsVisible="False">
+                        <Border Background="{DynamicResource FloatingBtnBg}"
+                                BorderBrush="{DynamicResource FloatingBtnBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Height="48">
+                            <Button x:Name="MobileRefreshButton"
+                                    Classes="NavBtn"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    VerticalContentAlignment="Center"
+                                    Cursor="Hand"
+                                    IsEnabled="{Binding !IsRefreshing}">
+                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <i:Icon Value="fa-solid fa-arrows-rotate"
+                                            FontSize="14"
+                                            Foreground="{DynamicResource TextStrong}" />
+                                    <TextBlock Text="Refresh"
+                                               FontSize="14" FontWeight="Medium"
+                                               Foreground="{DynamicResource TextStrong}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </Border>
+                        <Border Background="{DynamicResource FloatingBtnBg}"
+                                BorderBrush="{DynamicResource FloatingBtnBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Height="48">
+                            <Button x:Name="MobileViewPrivateKeysButton"
+                                    Classes="NavBtn"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    VerticalContentAlignment="Center"
+                                    Cursor="Hand">
+                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <i:Icon Value="fa-solid fa-lock"
+                                            FontSize="14"
+                                            Foreground="{DynamicResource PrivateKeysBtnText}" />
+                                    <TextBlock Text="View Private Keys"
+                                               FontSize="14" FontWeight="Medium"
+                                               Foreground="{DynamicResource PrivateKeysBtnText}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </Border>
+                    </StackPanel>
 
                     <!-- Content sections (Project ID, Stats, Next Stage, Stages) -->
                     <mp:ManageProjectContentView Name="ContentView" />

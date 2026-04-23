@@ -29,6 +29,8 @@ public partial class ManageProjectContentView : UserControl
     private Border? _manageNextStageCard;
     private Border? _manageTxStatsCard;
     private StackPanel? _contentStack;
+    private Grid? _projectIdGrid;
+    private StackPanel? _projectIdActions;
 
     public ManageProjectContentView()
     {
@@ -60,6 +62,8 @@ public partial class ManageProjectContentView : UserControl
         _manageNextStageCard = this.FindControl<Border>("ManageNextStageCard");
         _manageTxStatsCard = this.FindControl<Border>("ManageTxStatsCard");
         _contentStack = this.FindControl<StackPanel>("ContentStack");
+        _projectIdGrid = this.FindControl<Grid>("ProjectIdGrid");
+        _projectIdActions = this.FindControl<StackPanel>("ProjectIdActions");
 
         // Subscribe to layout mode changes
         _layoutSubscription = LayoutModeService.Instance
@@ -85,6 +89,32 @@ public partial class ManageProjectContentView : UserControl
         // Vue: <=768px → .content-grid { padding-bottom: 96px }
         if (_contentStack != null)
             _contentStack.Margin = isCompact ? new Thickness(0, 0, 0, 96) : new Thickness(0);
+
+        // Project ID card: on mobile stack actions below info (single column, two rows).
+        // Vue mobile: .project-id-card content flex-direction: column.
+        if (_projectIdGrid != null && _projectIdActions != null)
+        {
+            _projectIdGrid.ColumnDefinitions.Clear();
+            _projectIdGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+            if (isCompact)
+            {
+                // Add a second column so Auto doesn't collapse — we just put everything in col 0.
+                _projectIdGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
+                _projectIdGrid.RowDefinitions.Clear();
+                _projectIdGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                _projectIdGrid.RowDefinitions.Add(new RowDefinition(new GridLength(12)));
+                _projectIdGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
+                Grid.SetColumn(_projectIdActions, 0);
+                Grid.SetRow(_projectIdActions, 2);
+            }
+            else
+            {
+                _projectIdGrid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
+                _projectIdGrid.RowDefinitions.Clear();
+                Grid.SetColumn(_projectIdActions, 1);
+                Grid.SetRow(_projectIdActions, 0);
+            }
+        }
 
         if (isCompact)
         {
