@@ -280,9 +280,7 @@ public class InvestmentCancellationTest
         string profileName,
         ProjectHandle project)
     {
-        window.NavigateToSection("Funders");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funders");
 
         var fundersVm = window.GetFundersViewModel();
         fundersVm.Should().NotBeNull();
@@ -439,9 +437,7 @@ public class InvestmentCancellationTest
         string profileName,
         string balanceBeforeCancel)
     {
-        window.NavigateToSection("Funds");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funds");
 
         await window.ClickWalletCardButton("WalletCardBtnRefresh");
         await Task.Delay(2000);
@@ -532,6 +528,8 @@ public class InvestmentCancellationTest
             "Above-threshold investment should show 'Pending Approval'");
 
         // Add to portfolio
+        // DIRECT DI RESOLVE: PortfolioViewModel is a singleton not reachable from the visual
+        // tree while we're still on the Find Projects invest flow. Mirrors internal DI wiring.
         var portfolioVm = global::App.App.Services.GetRequiredService<PortfolioViewModel>();
         investVm.AddToPortfolio();
         Dispatcher.UIThread.RunJobs();
@@ -567,10 +565,9 @@ public class InvestmentCancellationTest
         ProjectHandle project,
         Func<InvestmentViewModel, bool> predicate)
     {
-        window.NavigateToSection("Funded");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funded");
 
+        // DIRECT DI RESOLVE: Need the singleton PortfolioViewModel to poll SDK reload.
         var portfolioVm = global::App.App.Services.GetRequiredService<PortfolioViewModel>();
         var deadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
 
@@ -618,9 +615,7 @@ public class InvestmentCancellationTest
         string payoutDay,
         string runId)
     {
-        window.NavigateToSection("My Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("My Projects");
 
         var myProjectsVm = window.GetMyProjectsViewModel();
         myProjectsVm.Should().NotBeNull();
@@ -769,9 +764,7 @@ public class InvestmentCancellationTest
 
     private async Task CreateWalletAndFundAsync(Window window, string profileName)
     {
-        window.NavigateToSection("Funds");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funds");
 
         var fundsVm = window.GetFundsViewModel();
         fundsVm.Should().NotBeNull();
@@ -798,9 +791,7 @@ public class InvestmentCancellationTest
         string profileName,
         ProjectHandle project)
     {
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Find Projects");
 
         var findProjectsVm = window.GetFindProjectsViewModel();
         findProjectsVm.Should().NotBeNull();
@@ -808,8 +799,7 @@ public class InvestmentCancellationTest
         var deadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
         while (DateTime.UtcNow < deadline)
         {
-            await findProjectsVm!.LoadProjectsFromSdkAsync();
-            Dispatcher.UIThread.RunJobs();
+            await findProjectsVm!.LoadAllProjectsFromSdkAsync();
 
             var foundProject = findProjectsVm.Projects.FirstOrDefault(p =>
                 string.Equals(p.ProjectId, project.ProjectIdentifier, StringComparison.Ordinal) ||

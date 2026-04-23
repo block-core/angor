@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
 using Angor.Sdk.Common;
@@ -372,6 +373,15 @@ public partial class ShellViewModel : ReactiveObject
         _investmentAppService = investmentAppService;
         _currencyService = currencyService;
         _prototypeSettings = prototypeSettings;
+        _instance = this;
+
+        // Mobile perf: pre-warm all tab views after first render so the first
+        // tap on any tab is a cache hit. Each view is created one at a time on
+        // ApplicationIdle so we don't block any user interaction.
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
+        {
+            PreWarmTabViews();
+        }
 
         // Hide profile tag for the default profile, show for all others
         var profile = profileContext.ProfileName;
@@ -796,8 +806,9 @@ public partial class ShellViewModel : ReactiveObject
     /// and restarts with the new message.
     /// </summary>
     /// <param name="message">Toast text (e.g. "Copied to clipboard").</param>
-    /// <param name="durationMs">Auto-dismiss delay. Vue: 2000-3000ms for copy, 5000ms for save.</param>
-    public void ShowToast(string message, int durationMs = 2000)
+    /// <param name="durationMs">Auto-dismiss delay. If 0 or not specified, auto-scales based on message length
+    /// (min 3s, +1s per 30 chars, max 10s). Vue: 2000-3000ms for copy, 5000ms for save.</param>
+    public void ShowToast(string message, int durationMs = 0)
     {
         // Cancel any previous dismiss timer
         _toastCts?.Cancel();
@@ -805,6 +816,13 @@ public partial class ShellViewModel : ReactiveObject
         var token = _toastCts.Token;
 
         ToastMessage = message;
+
+        // Auto-scale duration based on message length if not explicitly specified
+        if (durationMs <= 0)
+        {
+            var charBasedMs = 3000 + (message.Length / 30) * 1000;
+            durationMs = Math.Clamp(charBasedMs, 3000, 10000);
+        }
 
         // Auto-dismiss after duration
         _ = DismissToastAsync(durationMs, token);
@@ -863,42 +881,175 @@ public partial class ShellViewModel : ReactiveObject
     /// <summary>Clear the view cache so sections are recreated with fresh data on next navigation.</summary>
     public void ClearViewCache() => _viewCache.Clear();
 
+    /// <summary>
+    /// Ensure a view exists in the cache for the given key. Creates it via the
+    /// view factory if missing. Used by SectionPanel on mobile for on-demand
+    /// creation when pre-warm hasn't reached the view yet.
+    /// </summary>
+    public void EnsureViewCreated(string key)
+    {
+        if (_viewCache.ContainsKey(key)) return;
+        var sw = Stopwatch.StartNew();
+        var view = _viewFactory(key);
+        sw.Stop();
+        if (view != null)
+        {
+            _viewCache[key] = view;
+            ViewPreWarmed?.Invoke(key, view);
+            AttachRenderTiming(key, view, sw.ElapsedMilliseconds);
+        }
+        PerfLog("EnsureViewCreated", $"key={key} factoryMs={sw.ElapsedMilliseconds}");
+    }
+
+    /// <summary>Read-only access to the view cache for SectionPanel population.</summary>
+    public IReadOnlyDictionary<string, object> ViewCache => _viewCache;
+
+    /// <summary>
+    /// Raised after each view is pre-warmed, with (key, view). ShellView uses
+    /// this to incrementally add views to the SectionPanel on mobile.
+    /// </summary>
+    public event Action<string, object>? ViewPreWarmed;
+
+    /// <summary>
+    /// Resolves the current section key from SelectedNavItem / IsSettingsOpen.
+    /// Used by ShellView to drive SectionPanel on mobile without duplicating logic.
+    /// </summary>
+    public string? CurrentSectionKey
+    {
+        get
+        {
+            if (IsSettingsOpen) return "Settings";
+            return SelectedNavItem?.Label;
+        }
+    }
+
     public object? CurrentSectionContent
     {
         get
         {
+            // On mobile, SectionPanel manages views via IsVisible toggling.
+            // Returning views here would cause Avalonia to parent them to the
+            // ContentControl AND the SectionPanel simultaneously → SIGABRT.
+            if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
+                return null;
+            var swGetter = Stopwatch.StartNew();
+            object? result;
             if (IsSettingsOpen)
-                return GetOrCreateView("Settings");
-
-            return SelectedNavItem?.Label switch
             {
-                "Home" => GetOrCreateView("Home"),
-                "Funds" => GetOrCreateView("Funds"),
-                "Find Projects" => GetOrCreateView("Find Projects",
-                    onReuse: v =>
-                    {
-                        // Reset sub-nav state when re-selecting Find Projects from sidebar
-                        if (v is FindProjectsView { DataContext: FindProjectsViewModel fpVm })
+                result = GetOrCreateView("Settings");
+            }
+            else
+            {
+                result = SelectedNavItem?.Label switch
+                {
+                    // Home: re-apply responsive layout on tab return. Avalonia's layout
+                    // engine retains stale measure caches on the HomeGrid columns/rows
+                    // when returning via the desktop ContentControl swap, so star cols
+                    // can keep a stale width that doesn't match the new available size
+                    // (visible as the Home page not scaling after resizing the window
+                    // while on another tab and coming back).
+                    "Home" => GetOrCreateView("Home",
+                        onReuse: v =>
                         {
-                            fpVm.CloseInvestPage();
-                            fpVm.CloseProjectDetail();
-                        }
-                    }),
-                "Funded" => GetOrCreateView("Funded",
-                    onReuse: _ => _portfolioVm.CloseInvestmentDetail()),
-                "My Projects" => GetOrCreateView("My Projects",
-                    onReuse: v =>
-                    {
-                        // Reset sub-nav state when re-selecting My Projects from sidebar
-                        if (v is MyProjectsView { DataContext: MyProjectsViewModel mpVm })
+                            if (v is Sections.Home.HomeView homeView)
+                                homeView.OnBecameActive();
+                        }),
+                    "Funds" => GetOrCreateView("Funds"),
+                    "Find Projects" => GetOrCreateView("Find Projects",
+                        onReuse: v =>
                         {
-                            mpVm.CloseCreateWizard();
-                            mpVm.CloseManageProject();
-                        }
-                    }),
-                "Funders" => GetOrCreateView("Funders"),
-                _ => null,
-            };
+                            // Reset sub-nav state when re-selecting Find Projects from sidebar
+                            if (v is FindProjectsView { DataContext: FindProjectsViewModel fpVm })
+                            {
+                                fpVm.CloseInvestPage();
+                                fpVm.CloseProjectDetail();
+                            }
+                        }),
+                    "Funded" => GetOrCreateView("Funded",
+                        onReuse: _ => _portfolioVm.CloseInvestmentDetail()),
+                    "My Projects" => GetOrCreateView("My Projects",
+                        onReuse: v =>
+                        {
+                            // Reset sub-nav state when re-selecting My Projects from sidebar
+                            if (v is MyProjectsView { DataContext: MyProjectsViewModel mpVm })
+                            {
+                                mpVm.CloseCreateWizard();
+                                mpVm.CloseManageProject();
+                            }
+                        }),
+                    "Funders" => GetOrCreateView("Funders"),
+                    _ => null,
+                };
+            }
+            swGetter.Stop();
+            PerfLog("CurrentSectionContent", $"label={SelectedNavItem?.Label} getterMs={swGetter.ElapsedMilliseconds}");
+            return result;
+        }
+    }
+
+    /// <summary>
+    /// Pre-create all tab views one-by-one on ApplicationIdle dispatches so
+    /// the first user tap on any tab is a cache hit. Each dispatch creates
+    /// one view, allowing the render pipeline to paint between inflates.
+    /// Only runs on mobile where XAML inflate cost is high.
+    /// </summary>
+    private void PreWarmTabViews()
+    {
+        var tabKeys = new[] { "Find Projects", "My Projects", "Funds", "Settings", "Funded", "Funders" };
+        var index = 0;
+
+        void WarmNext()
+        {
+            if (index >= tabKeys.Length)
+            {
+                // After tabs are warm, pre-inflate drill-down views so first drill
+                // is a DataContext swap rather than a ~350ms XAML inflate.
+                Avalonia.Threading.Dispatcher.UIThread.Post(
+                    PreWarmDrillDownViews,
+                    Avalonia.Threading.DispatcherPriority.ApplicationIdle);
+                return;
+            }
+            var key = tabKeys[index++];
+            if (_viewCache.ContainsKey(key))
+            {
+                // Already cached, skip to next
+                Avalonia.Threading.Dispatcher.UIThread.Post(WarmNext, Avalonia.Threading.DispatcherPriority.ApplicationIdle);
+                return;
+            }
+            var sw = Stopwatch.StartNew();
+            var view = _viewFactory(key);
+            sw.Stop();
+            if (view != null)
+            {
+                _viewCache[key] = view;
+                ViewPreWarmed?.Invoke(key, view);
+            }
+            PerfLog("PreWarm", $"key={key} factoryMs={sw.ElapsedMilliseconds}");
+            // Schedule next view on next idle frame
+            Avalonia.Threading.Dispatcher.UIThread.Post(WarmNext, Avalonia.Threading.DispatcherPriority.ApplicationIdle);
+        }
+
+        // Delay the first pre-warm slightly so first-paint of Home completes
+        Avalonia.Threading.Dispatcher.UIThread.Post(WarmNext, Avalonia.Threading.DispatcherPriority.ApplicationIdle);
+    }
+
+    /// <summary>
+    /// After tab views are warm, pre-inflate the investor drill-down views
+    /// (ProjectDetailView + InvestPageView) inside FindProjectsView. Mobile only.
+    /// Also primes ManageProjectView inside MyProjectsView for fast founder drill-down.
+    /// </summary>
+    private void PreWarmDrillDownViews()
+    {
+        if (_viewCache.TryGetValue("Find Projects", out var view)
+            && view is global::App.UI.Sections.FindProjects.FindProjectsView fpView)
+        {
+            fpView.PreWarmDrillDownViews();
+        }
+
+        if (_viewCache.TryGetValue("My Projects", out var mpView)
+            && mpView is global::App.UI.Sections.MyProjects.MyProjectsView myProjectsView)
+        {
+            myProjectsView.PreWarmManageView();
         }
     }
 
@@ -911,13 +1062,287 @@ public partial class ShellViewModel : ReactiveObject
     {
         if (_viewCache.TryGetValue(key, out var existing))
         {
+            var swReuse = Stopwatch.StartNew();
             onReuse?.Invoke(existing);
+            swReuse.Stop();
+            PerfLog("GetOrCreateView", $"key={key} cached=true onReuseMs={swReuse.ElapsedMilliseconds}");
             return existing;
         }
 
+        var sw = Stopwatch.StartNew();
         var view = _viewFactory(key);
+        sw.Stop();
+        PerfLog("GetOrCreateView", $"key={key} cached=false factoryMs={sw.ElapsedMilliseconds}");
+
         if (view != null)
+        {
             _viewCache[key] = view;
+            ViewPreWarmed?.Invoke(key, view);
+            AttachRenderTiming(key, view, sw.ElapsedMilliseconds);
+        }
         return view;
+    }
+
+    // ── Perf: programmatic tab switch for adb-driven benchmarks ──
+    private static ShellViewModel? _instance;
+
+    /// <summary>
+    /// Called from Android BroadcastReceiver to switch tabs via adb.
+    /// Usage: adb shell am broadcast -a io.angor.app.PERF_TAB --es tab "Investor"
+    /// </summary>
+    public static void SwitchTabForPerf(string tabName)
+    {
+        PerfLog("SwitchTabForPerf", $"ENTER tab={tabName} hasInstance={_instance != null}");
+        if (_instance == null) return;
+        var vm = _instance;
+        var sw = Stopwatch.StartNew();
+
+        // ── Drill-down perf commands ─────────────────────────────────
+        // These simulate user taps on list items so we can benchmark
+        // child view render times without needing touch input.
+        if (tabName == "OpenFirstProject")
+        {
+            // Open the first project in Find Projects
+            OpenFirstProjectForPerf();
+            sw.Stop();
+            PerfLog("SwitchTabForPerf", $"tab=OpenFirstProject switchMs={sw.ElapsedMilliseconds}");
+            return;
+        }
+        if (tabName == "CloseProject")
+        {
+            CloseProjectForPerf();
+            sw.Stop();
+            PerfLog("SwitchTabForPerf", $"tab=CloseProject switchMs={sw.ElapsedMilliseconds}");
+            return;
+        }
+        if (tabName == "LoadMore")
+        {
+            LoadMoreForPerf();
+            sw.Stop();
+            PerfLog("SwitchTabForPerf", $"tab=LoadMore switchMs={sw.ElapsedMilliseconds}");
+            return;
+        }
+        if (tabName == "OpenInvestPage")
+        {
+            // Requires project already open
+            OpenInvestPageForPerf();
+            sw.Stop();
+            PerfLog("SwitchTabForPerf", $"tab=OpenInvestPage switchMs={sw.ElapsedMilliseconds}");
+            return;
+        }
+        if (tabName == "OpenCreateWizard")
+        {
+            OpenCreateWizardForPerf();
+            sw.Stop();
+            PerfLog("SwitchTabForPerf", $"tab=OpenCreateWizard switchMs={sw.ElapsedMilliseconds}");
+            return;
+        }
+        if (tabName == "OpenFounderProject")
+        {
+            OpenFounderProjectForPerf();
+            sw.Stop();
+            PerfLog("SwitchTabForPerf", $"tab=OpenFounderProject switchMs={sw.ElapsedMilliseconds}");
+            return;
+        }
+        if (tabName == "CloseFounderProject")
+        {
+            CloseFounderProjectForPerf();
+            sw.Stop();
+            PerfLog("SwitchTabForPerf", $"tab=CloseFounderProject switchMs={sw.ElapsedMilliseconds}");
+            return;
+        }
+
+        // Map mobile/perf tab names to actual nav labels
+        if (tabName == "Investor" || tabName == "FindProjects") tabName = "Find Projects";
+        else if (tabName == "Founder" || tabName == "MyProjects") tabName = "My Projects";
+        else if (tabName == "Portfolio") tabName = "Funded";
+
+        if (tabName == "Settings")
+        {
+            vm.IsSettingsOpen = true;
+            vm.RaisePropertyChanged(nameof(CurrentSectionContent));
+            sw.Stop();
+            PerfLog("SwitchTabForPerf", $"tab=Settings switchMs={sw.ElapsedMilliseconds}");
+            return;
+        }
+
+        vm.IsSettingsOpen = false;
+        var navItem = vm.NavEntries.OfType<NavItem>().FirstOrDefault(n => n.Label == tabName);
+        if (navItem != null)
+        {
+            var swSet = Stopwatch.StartNew();
+            vm.SelectedNavItem = navItem;
+            swSet.Stop();
+            PerfLog("SwitchTabForPerf", $"tab={tabName} setNavItemMs={swSet.ElapsedMilliseconds}");
+            var swRaise = Stopwatch.StartNew();
+            // Force re-evaluation of CurrentSectionContent
+            vm.RaisePropertyChanged(nameof(CurrentSectionContent));
+            swRaise.Stop();
+            sw.Stop();
+            PerfLog("SwitchTabForPerf", $"tab={tabName} raiseMs={swRaise.ElapsedMilliseconds} switchMs={sw.ElapsedMilliseconds}");
+        }
+        else
+        {
+            sw.Stop();
+            PerfLog("SwitchTabForPerf", $"tab={tabName} NOT_FOUND switchMs={sw.ElapsedMilliseconds}");
+        }
+    }
+
+    // ── Perf instrumentation (tab-switch cost attribution) ──
+    // Temporary. Remove once Investor + Settings perf is characterised.
+    private static ILogger? _perfLogger;
+    private static ILogger PerfLogger =>
+        _perfLogger ??= App.Services.GetRequiredService<ILoggerFactory>().CreateLogger("ShellPerf");
+
+    private static void PerfLog(string stage, string data)
+    {
+        PerfLogger.LogInformation("[{Stage}] {Data}", stage, data);
+        // Debug.WriteLine is piped to adb logcat on .NET for Android (tag "DOTNET")
+        // and to the debug output window on desktop.
+        Debug.WriteLine($"[ShellPerf][{stage}] {data}");
+    }
+
+    // ── Perf drill-down helpers (broadcast-driven) ──
+    // These let adb-driven perf tests open/close drill-down views without touch input.
+
+    private static void OpenFirstProjectForPerf()
+    {
+        if (_instance == null) return;
+        // Ensure Find Projects tab is selected first
+        var navItem = _instance.NavEntries.OfType<NavItem>()
+            .FirstOrDefault(n => n.Label == "Find Projects");
+        if (navItem != null) _instance.SelectedNavItem = navItem;
+
+        // Grab the Find Projects VM via the cached view
+        if (_instance._viewCache.TryGetValue("Find Projects", out var view)
+            && view is global::App.UI.Sections.FindProjects.FindProjectsView { DataContext: global::App.UI.Sections.FindProjects.FindProjectsViewModel fpVm })
+        {
+            var first = fpVm.Projects.FirstOrDefault();
+            if (first != null)
+            {
+                PerfLog("OpenFirstProject", $"name={first.ProjectName} id={first.ProjectId}");
+                fpVm.OpenProjectDetail(first);
+            }
+            else
+            {
+                PerfLog("OpenFirstProject", "NO_PROJECTS");
+            }
+        }
+        else
+        {
+            PerfLog("OpenFirstProject", "FindProjectsView_NOT_CACHED");
+        }
+    }
+
+    private static void CloseProjectForPerf()
+    {
+        if (_instance == null) return;
+        if (_instance._viewCache.TryGetValue("Find Projects", out var view)
+            && view is global::App.UI.Sections.FindProjects.FindProjectsView { DataContext: global::App.UI.Sections.FindProjects.FindProjectsViewModel fpVm })
+        {
+            fpVm.CloseInvestPage();
+            fpVm.CloseProjectDetail();
+        }
+    }
+
+    private static void LoadMoreForPerf()
+    {
+        if (_instance == null) return;
+        if (_instance._viewCache.TryGetValue("Find Projects", out var view)
+            && view is global::App.UI.Sections.FindProjects.FindProjectsView { DataContext: global::App.UI.Sections.FindProjects.FindProjectsViewModel fpVm })
+        {
+            fpVm.LoadMore();
+        }
+    }
+
+    private static void OpenInvestPageForPerf()
+    {
+        if (_instance == null) return;
+        if (_instance._viewCache.TryGetValue("Find Projects", out var view)
+            && view is global::App.UI.Sections.FindProjects.FindProjectsView { DataContext: global::App.UI.Sections.FindProjects.FindProjectsViewModel fpVm })
+        {
+            if (fpVm.SelectedProject == null)
+            {
+                var first = fpVm.Projects.FirstOrDefault();
+                if (first != null) fpVm.OpenProjectDetail(first);
+            }
+            fpVm.OpenInvestPage();
+        }
+    }
+
+    private static void OpenCreateWizardForPerf()
+    {
+        if (_instance == null) return;
+        // Ensure My Projects tab is selected
+        var navItem = _instance.NavEntries.OfType<NavItem>()
+            .FirstOrDefault(n => n.Label == "My Projects");
+        if (navItem != null) _instance.SelectedNavItem = navItem;
+
+        if (_instance._viewCache.TryGetValue("My Projects", out var view)
+            && view is global::App.UI.Sections.MyProjects.MyProjectsView { DataContext: global::App.UI.Sections.MyProjects.MyProjectsViewModel mpVm })
+        {
+            // Match the real user flow: reset wizard before opening
+            mpVm.CreateProjectVm.ResetWizard();
+            mpVm.LaunchCreateWizard();
+        }
+    }
+
+    private static void OpenFounderProjectForPerf()
+    {
+        if (_instance == null) return;
+        // Ensure My Projects tab is selected first
+        var navItem = _instance.NavEntries.OfType<NavItem>()
+            .FirstOrDefault(n => n.Label == "My Projects");
+        if (navItem != null) _instance.SelectedNavItem = navItem;
+
+        if (_instance._viewCache.TryGetValue("My Projects", out var view)
+            && view is global::App.UI.Sections.MyProjects.MyProjectsView { DataContext: global::App.UI.Sections.MyProjects.MyProjectsViewModel mpVm })
+        {
+            var first = mpVm.Projects.FirstOrDefault();
+            if (first != null)
+            {
+                PerfLog("OpenFounderProject", $"name={first.Name} id={first.ProjectIdentifier}");
+                mpVm.OpenManageProject(first);
+            }
+            else
+            {
+                PerfLog("OpenFounderProject", "NO_PROJECTS");
+            }
+        }
+        else
+        {
+            PerfLog("OpenFounderProject", "MyProjectsView_NOT_CACHED");
+        }
+    }
+
+    private static void CloseFounderProjectForPerf()
+    {
+        if (_instance == null) return;
+        if (_instance._viewCache.TryGetValue("My Projects", out var view)
+            && view is global::App.UI.Sections.MyProjects.MyProjectsView { DataContext: global::App.UI.Sections.MyProjects.MyProjectsViewModel mpVm })
+        {
+            mpVm.CloseManageProject();
+        }
+    }
+
+    private static void AttachRenderTiming(string key, object view, long factoryMs)
+    {
+        if (view is not Avalonia.Controls.Control control) return;
+
+        var attachSw = Stopwatch.StartNew();
+        void OnAttached(object? _, Avalonia.VisualTreeAttachmentEventArgs __)
+        {
+            attachSw.Stop();
+            control.AttachedToVisualTree -= OnAttached;
+
+            var renderSw = Stopwatch.StartNew();
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                renderSw.Stop();
+                PerfLog("FirstRender",
+                    $"key={key} factoryMs={factoryMs} attachMs={attachSw.ElapsedMilliseconds} firstRenderIdleMs={renderSw.ElapsedMilliseconds} totalMs={factoryMs + attachSw.ElapsedMilliseconds + renderSw.ElapsedMilliseconds}");
+            }, Avalonia.Threading.DispatcherPriority.Background);
+        }
+        control.AttachedToVisualTree += OnAttached;
     }
 }

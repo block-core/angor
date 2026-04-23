@@ -408,3 +408,4 @@ ai-tasks/
 
 # Windows reserved device names
 nul
+perf-reports/

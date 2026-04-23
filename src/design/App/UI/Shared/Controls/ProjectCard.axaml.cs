@@ -35,6 +35,17 @@ public class ProjectCard : TemplatedControl
             ImageCacheService.LoadBitmapAsync(card.Avatar, bmp => card.AvatarBitmap = bmp));
     }
 
+    public ProjectCard()
+    {
+        // On touch-only platforms (Android/iOS) hover effects are dead weight —
+        // they allocate transitions and run animation ticks for no visible effect.
+        // Tag the card so the style sheet can skip those.
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
+        {
+            Classes.Add("Mobile");
+        }
+    }
+
     public static readonly StyledProperty<string?> ProjectNameProperty =
         AvaloniaProperty.Register<ProjectCard, string?>(nameof(ProjectName));
 

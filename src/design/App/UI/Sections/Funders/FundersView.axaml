@@ -43,7 +43,7 @@
         </Style>
     </UserControl.Styles>
 
-    <Panel>
+    <Panel AutomationProperties.AutomationId="FundersRootPanel">
         <!-- ═══════════════════════════════════════════════════════ -->
         <!-- EMPTY STATE: shown when HasFunders = false              -->
         <!-- Vue: Users icon, "No Funders Yet", description          -->

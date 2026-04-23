@@ -65,6 +65,7 @@
                                            TextTrimming="CharacterEllipsis" />
                                 <TextBlock Grid.Column="1"
                                            Text="{TemplateBinding Balance}"
+                                           AutomationProperties.AutomationId="WalletCardBalanceText"
                                            FontSize="15"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextStrong}"

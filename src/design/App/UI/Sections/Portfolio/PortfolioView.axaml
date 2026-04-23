@@ -18,9 +18,19 @@
             <Setter Property="RenderTransform" Value="translate(0px, -4px)" />
             <Setter Property="BoxShadow" Value="{DynamicResource ItemShadowHover}" />
         </Style>
+        <!--
+            Mobile perf: strip hover transitions + BoxShadow on touch-only platforms.
+            Hover pseudo-selectors never fire on Android/iOS, so the transitions only
+            waste allocations and animator ticks. BoxShadow is one of the most expensive
+            Skia ops on mobile GPU. The .Mobile class is added by code-behind.
+        -->
+        <Style Selector="portfolio|PortfolioView.Mobile Border#InvestmentCardBorder">
+            <Setter Property="Transitions" Value="{x:Null}" />
+            <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />
+        </Style>
     </UserControl.Styles>
 
-    <Panel>
+    <Panel AutomationProperties.AutomationId="PortfolioRootPanel">
         <!-- ═══════════════════════════════════════════════════════ -->
         <!-- EMPTY STATE: shown when HasInvestments = false          -->
         <!-- Vue: "FUNDED" title, "You haven't funded any projects   -->
@@ -36,11 +46,11 @@
                              IsVisible="{Binding !HasInvestments}" />
 
         <!-- ═══════════════════════════════════════════════════════ -->
-        <!-- INVESTMENT DETAIL: shown when SelectedInvestment != null -->
+        <!-- INVESTMENT DETAIL: lazy-mounted by code-behind on first  -->
+        <!-- visibility to avoid the 1258-line XAML inflate cost on   -->
+        <!-- the initial Funded tab switch.                           -->
         <!-- ═══════════════════════════════════════════════════════ -->
-        <Panel IsVisible="{Binding SelectedInvestment, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <portfolio:InvestmentDetailView DataContext="{Binding SelectedInvestment}" />
-        </Panel>
+        <Panel Name="InvestmentDetailPanel" IsVisible="False" />
 
         <!-- ═══════════════════════════════════════════════════════ -->
         <!-- PORTFOLIO LIST: shown when HasInvestments = true         -->
@@ -49,7 +59,7 @@
         <!-- Portfolio list visible when: has investments AND no detail selected -->
         <!-- Grid with fixed left column + scrollable right column -->
         <!-- Visibility managed by code-behind: visible when HasInvestments && SelectedInvestment == null -->
-        <Grid ColumnDefinitions="380,*" RowDefinitions="*" Margin="24" Name="PortfolioListPanel"
+        <Grid ColumnDefinitions="380,*" RowDefinitions="Auto,*" Margin="24" Name="PortfolioListPanel"
               IsVisible="False">
 
                 <!-- ═══════════════════════════════════════ -->

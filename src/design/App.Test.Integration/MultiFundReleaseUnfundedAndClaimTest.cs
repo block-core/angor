@@ -181,9 +181,7 @@ public class MultiFundReleaseUnfundedAndClaimTest
 
     private async Task CreateWalletAndFundAsync(Window window, string profileName)
     {
-        window.NavigateToSection("Funds");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funds");
 
         var fundsVm = GetFundsViewModel(window);
         fundsVm.Should().NotBeNull();
@@ -216,9 +214,7 @@ public class MultiFundReleaseUnfundedAndClaimTest
         string payoutDay,
         string runId)
     {
-        window.NavigateToSection("My Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("My Projects");
 
         var myProjectsVm = GetMyProjectsViewModel(window);
         myProjectsVm.Should().NotBeNull();
@@ -409,6 +405,8 @@ public class MultiFundReleaseUnfundedAndClaimTest
                 "below-threshold (auto-approved) investment should show 'Successful' in SuccessTitle");
         }
 
+        // DIRECT DI RESOLVE: PortfolioViewModel is a singleton not reachable from the visual
+        // tree while we're still on the Find Projects invest flow. Mirrors internal DI wiring.
         var portfolioVm = global::App.App.Services.GetRequiredService<PortfolioViewModel>();
         investVm.AddToPortfolio();
         Dispatcher.UIThread.RunJobs();
@@ -427,9 +425,7 @@ public class MultiFundReleaseUnfundedAndClaimTest
 
     private async Task ApprovePendingInvestmentAsync(Window window, string profileName, ProjectHandle project)
     {
-        window.NavigateToSection("Funders");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funders");
 
         var fundersVm = GetFundersViewModel(window);
         fundersVm.Should().NotBeNull();
@@ -512,9 +508,7 @@ public class MultiFundReleaseUnfundedAndClaimTest
 
     private async Task ClaimStageOneAsync(Window window, string profileName, ProjectHandle project)
     {
-        window.NavigateToSection("My Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("My Projects");
 
         var myProjectsVm = GetMyProjectsViewModel(window);
         myProjectsVm.Should().NotBeNull();
@@ -575,9 +569,7 @@ public class MultiFundReleaseUnfundedAndClaimTest
 
     private async Task ReleaseRemainingStagesToInvestorsAsync(Window window, string profileName, ProjectHandle project)
     {
-        window.NavigateToSection("My Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("My Projects");
 
         var myProjectsVm = GetMyProjectsViewModel(window);
         myProjectsVm.Should().NotBeNull();
@@ -748,10 +740,9 @@ public class MultiFundReleaseUnfundedAndClaimTest
         ProjectHandle project,
         Func<InvestmentViewModel, bool> predicate)
     {
-        window.NavigateToSection("Funded");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funded");
 
+        // DIRECT DI RESOLVE: Need the singleton PortfolioViewModel to poll SDK reload.
         var portfolioVm = global::App.App.Services.GetRequiredService<PortfolioViewModel>();
         var deadline = DateTime.UtcNow + IndexerLagTimeout;
 
@@ -784,9 +775,7 @@ public class MultiFundReleaseUnfundedAndClaimTest
 
     private async Task EnsureWalletHasFeeFunds(Window window, string profileName, string walletId, string context)
     {
-        window.NavigateToSection("Funds");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funds");
 
         var fundsVm = GetFundsViewModel(window);
         fundsVm.Should().NotBeNull();
@@ -794,6 +783,8 @@ public class MultiFundReleaseUnfundedAndClaimTest
         var deadline = DateTime.UtcNow + TimeSpan.FromMinutes(2);
         while (DateTime.UtcNow < deadline)
         {
+            // DIRECT SDK CALL: FundsViewModel.TotalBalance doesn't expose the raw sats breakdown
+            // (confirmed + unconfirmed + reserved) needed to check fee-level funding.
             var refresh = await global::App.App.Services.GetRequiredService<Angor.Sdk.Wallet.Application.IWalletAppService>()
                 .RefreshAndGetAccountBalanceInfo(new WalletId(walletId));
 
@@ -822,9 +813,7 @@ public class MultiFundReleaseUnfundedAndClaimTest
 
     private async Task<ProjectItemViewModel> FindProjectFromSdkAsync(Window window, string profileName, ProjectHandle project)
     {
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Find Projects");
 
         var findProjectsVm = GetFindProjectsViewModel(window);
         findProjectsVm.Should().NotBeNull();
@@ -832,8 +821,7 @@ public class MultiFundReleaseUnfundedAndClaimTest
         var deadline = DateTime.UtcNow + IndexerLagTimeout;
         while (DateTime.UtcNow < deadline)
         {
-            await findProjectsVm!.LoadProjectsFromSdkAsync();
-            Dispatcher.UIThread.RunJobs();
+            await findProjectsVm!.LoadAllProjectsFromSdkAsync();
 
             var foundProject = findProjectsVm.Projects.FirstOrDefault(p =>
                 string.Equals(p.ProjectId, project.ProjectIdentifier, StringComparison.Ordinal) ||
@@ -855,9 +843,7 @@ public class MultiFundReleaseUnfundedAndClaimTest
 
     private async Task WipeExistingData(Window window, string profileName)
     {
-        window.NavigateToSettings();
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(500);
+        await window.NavigateToSettingsAndVerify();
 
         var settingsView = window.GetVisualDescendants().OfType<SettingsView>().FirstOrDefault();
         if (settingsView?.DataContext is SettingsViewModel settingsVm)
