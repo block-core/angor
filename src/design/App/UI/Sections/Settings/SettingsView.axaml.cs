@@ -11,7 +11,7 @@ using ReactiveUI;
 
 namespace App.UI.Sections.Settings;
 
-public partial class SettingsView : UserControl
+public partial class SettingsView : UserControl, ISectionView
 {
     private readonly ILogger<SettingsView> _logger;
     private SettingsViewModel? _subscribedVm;
@@ -43,6 +43,79 @@ public partial class SettingsView : UserControl
                         ? new Thickness(16, 16, 16, 96)
                         : new Thickness(24);
             });
+
+        // Mobile perf: detach the settings cards below the fold AND both modals
+        // from the visual tree until first render is painted, then re-insert
+        // them on an ApplicationIdle-priority dispatch. IsVisible=false would
+        // still force layout allocation; detaching skips measure/arrange
+        // entirely. ApplicationIdle (rather than Background) ensures the
+        // re-insert runs AFTER the first-paint timing window — Background
+        // priority would race with (and get charged against) perceived render.
+        // Desktop keeps the full list rendered synchronously.
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
+        {
+            var panel = this.FindControl<StackPanel>("SettingsCardsPanel");
+            var rootPanel = panel?.GetLogicalAncestors().OfType<Panel>().FirstOrDefault();
+            var networkModal = this.FindControl<Border>("NetworkModal");
+            var wipeModal = this.FindControl<Border>("WipeDataModal");
+
+            var detachedCards = new List<(int Index, Control Child)>();
+            var detachedModals = new List<(int Index, Control Child)>();
+
+            if (panel != null)
+            {
+                // First card visible (Network only) for instant paint on mobile.
+                // Theme card deferred below the fold with the rest.
+                const int visibleAboveFold = 1;
+
+                for (var i = panel.Children.Count - 1; i >= visibleAboveFold; i--)
+                {
+                    if (panel.Children[i] is Control c)
+                    {
+                        detachedCards.Add((i, c));
+                        panel.Children.RemoveAt(i);
+                    }
+                }
+            }
+
+            if (rootPanel != null)
+            {
+                foreach (var modal in new Control?[] { networkModal, wipeModal })
+                {
+                    if (modal == null) continue;
+                    var idx = rootPanel.Children.IndexOf(modal);
+                    if (idx >= 0)
+                    {
+                        detachedModals.Add((idx, modal));
+                        rootPanel.Children.RemoveAt(idx);
+                    }
+                }
+            }
+
+            if (detachedCards.Count > 0 || detachedModals.Count > 0)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    if (panel != null)
+                    {
+                        foreach (var (idx, c) in detachedCards.OrderBy(t => t.Index))
+                        {
+                            var safeIdx = Math.Min(idx, panel.Children.Count);
+                            panel.Children.Insert(safeIdx, c);
+                        }
+                    }
+
+                    if (rootPanel != null)
+                    {
+                        foreach (var (idx, c) in detachedModals.OrderBy(t => t.Index))
+                        {
+                            var safeIdx = Math.Min(idx, rootPanel.Children.Count);
+                            rootPanel.Children.Insert(safeIdx, c);
+                        }
+                    }
+                }, Avalonia.Threading.DispatcherPriority.ApplicationIdle);
+            }
+        }
     }
 
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
@@ -51,6 +124,9 @@ public partial class SettingsView : UserControl
         _layoutSubscription = null;
         base.OnDetachedFromLogicalTree(e);
     }
+
+    public void OnBecameActive() { }
+    public void OnBecameInactive() { }
 
     private SettingsViewModel? Vm => DataContext as SettingsViewModel;
 

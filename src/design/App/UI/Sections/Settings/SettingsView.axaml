@@ -54,7 +54,7 @@
 
     <Panel AutomationProperties.AutomationId="SettingsRootPanel">
         <controls:ScrollableView ContentPadding="24,24,24,24">
-            <StackPanel Spacing="24">
+            <StackPanel x:Name="SettingsCardsPanel" Spacing="24">
 
                 <!-- ═══ 1. Network ═══ -->
                 <Border Background="{DynamicResource CardSurface}"
@@ -633,7 +633,8 @@
 
         <!-- ═══ Network Selection Modal Overlay ═══ -->
         <!-- Vue: full modal with warning, network options with checkmarks, confirmation checkbox, footer buttons -->
-        <Border Background="{DynamicResource ModalBackdrop}"
+        <Border x:Name="NetworkModal"
+                Background="{DynamicResource ModalBackdrop}"
                 IsVisible="{Binding IsNetworkModalOpen}"
                 IsHitTestVisible="{Binding IsNetworkModalOpen}"
                 PointerPressed="OnModalBackdropPressed">
@@ -841,7 +842,8 @@
         </Border>
 
         <!-- ═══ Wipe Data Confirmation Modal ═══ -->
-        <Border Background="{DynamicResource ModalBackdrop}"
+        <Border x:Name="WipeDataModal"
+                Background="{DynamicResource ModalBackdrop}"
                 IsVisible="{Binding IsWipeDataModalOpen}"
                 IsHitTestVisible="{Binding IsWipeDataModalOpen}"
                 PointerPressed="OnWipeModalBackdropPressed">

@@ -14,22 +14,15 @@
 
     <Panel AutomationProperties.AutomationId="FindProjectsRootPanel">
         <!-- ═══════════════════════════════════════════════════════ -->
-        <!-- INVEST PAGE: shown when InvestPageViewModel != null     -->
-        <!-- Third drill-down: grid → detail → invest                -->
-        <!-- Visibility managed by code-behind SubscribeToVisibility -->
+        <!-- INVEST PAGE + PROJECT DETAIL: children are lazy-mounted -->
+        <!-- by code-behind on first visibility to avoid paying the  -->
+        <!-- ~1800-line XAML inflate cost on Find Projects tab-switch -->
+        <!-- (measured 6.5s first-tap with eager children; the child -->
+        <!-- views live in the same file in Vue and do not render     -->
+        <!-- until the user drills in from the project list).        -->
         <!-- ═══════════════════════════════════════════════════════ -->
-        <Panel Name="InvestPagePanel" IsVisible="False">
-            <fp:InvestPageView DataContext="{Binding InvestPageViewModel}" />
-        </Panel>
-
-        <!-- ═══════════════════════════════════════════════════════ -->
-        <!-- PROJECT DETAIL: shown when SelectedProject != null      -->
-        <!-- and InvestPage is not active                             -->
-        <!-- Visibility managed by code-behind SubscribeToVisibility -->
-        <!-- ═══════════════════════════════════════════════════════ -->
-        <Panel Name="ProjectDetailPanel" IsVisible="False">
-            <fp:ProjectDetailView DataContext="{Binding SelectedProject}" />
-        </Panel>
+        <Panel Name="InvestPagePanel" IsVisible="False" />
+        <Panel Name="ProjectDetailPanel" IsVisible="False" />
 
         <!-- ═══════════════════════════════════════════════════════ -->
         <!-- PROJECT GRID: shown when no project detail is selected  -->

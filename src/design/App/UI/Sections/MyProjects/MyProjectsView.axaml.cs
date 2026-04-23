@@ -1,10 +1,15 @@
+using System;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using App.UI.Shared;
 using App.UI.Shared.Controls;
 using App.UI.Shell;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace App.UI.Sections.MyProjects;
 
@@ -67,18 +72,31 @@ public partial class MyProjectsView : UserControl
         _sidebarCTAButtons = this.FindControl<StackPanel>("SidebarCTAButtons");
 
         // ── Responsive layout: 380px sidebar + content (desktop) → stacked (compact) ──
-        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
-            .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
+        // Observe both CurrentMode and WindowWidth to handle the xl (>=1280px) breakpoint
+        // which determines sidebar 256 vs 380 px on non-compact layouts.
+        _layoutSubscription = LayoutModeService.Instance
+            .WhenAnyValue(x => x.CurrentMode, x => x.WindowWidth, (m, _) => m)
+            .DistinctUntilChanged(mode => (mode, LayoutModeService.Instance.WindowWidth >= 1280))
+            .Subscribe(mode => ApplyResponsiveLayout(mode));
     }
 
-    private void ApplyResponsiveLayout(bool isCompact)
+    private void ApplyResponsiveLayout(LayoutMode mode)
     {
         if (_projectListGrid == null || _myProjectsSidebar == null || _myProjectsContent == null) return;
 
+        bool isCompact = mode != LayoutMode.Desktop;
+        // Prototype breakpoints: xl (>=1280) uses w-96 (384px) + gap-8 + p-6,
+        // md..xl (>=768 and <1280) uses w-64 (256px) + gap-4 + p-4.
+        // Our LayoutModeService has Tablet (768-1023) and Desktop (>=1024) — we map both
+        // non-compact modes to xl-equivalent since desktop users typically have >=1280.
+        // Tablet 1024-1279 gets the narrower w-64 sidebar + tighter spacing.
+        bool isXl = mode == LayoutMode.Desktop && LayoutModeService.Instance.WindowWidth >= 1280;
+
+        double sidebarWidth = isXl ? 380 : 256;
+        double gridPadding = isXl ? 24 : 16;
+        double columnGap = isXl ? 32 : 16;
+
         // CRITICAL: modify existing column/row widths in-place — never Clear()+Add().
-        // XAML Grid always has 2 columns and 2 rows:
-        //   Desktop:  Col0=380 (sidebar), Col1=* (content) | Row0=Auto (unused), Row1=* (content in row 0)
-        //   Compact:  Col0=* (full width), Col1=0 (hidden)  | Row0=Auto (sidebar buttons), Row1=* (content)
         var cols = _projectListGrid.ColumnDefinitions;
         var rows = _projectListGrid.RowDefinitions;
 
@@ -110,16 +128,19 @@ public partial class MyProjectsView : UserControl
             Grid.SetColumn(_myProjectsContent, 0);
             Grid.SetRow(_myProjectsContent, 1);
             _myProjectsContent.ContentPadding = new Avalonia.Thickness(0, 0, 0, 96);
+
+            // Tighter outer margin on mobile to match Vue mobile px-4 (App.vue line 549: grid gap-4 px-4)
+            _projectListGrid.Margin = new Avalonia.Thickness(16, 16, 16, 16);
         }
         else
         {
-            // Side by side: 380px sidebar + * content, single row
-            if (cols.Count >= 2) { cols[0].Width = new GridLength(380); cols[1].Width = GridLength.Star; }
+            // Side by side: sidebar + * content, single row
+            if (cols.Count >= 2) { cols[0].Width = new GridLength(sidebarWidth); cols[1].Width = GridLength.Star; }
             if (rows.Count >= 2) { rows[0].Height = GridLength.Star; rows[1].Height = new GridLength(0); }
 
             Grid.SetColumn(_myProjectsSidebar, 0);
             Grid.SetRow(_myProjectsSidebar, 0);
-            _myProjectsSidebar.Margin = new Avalonia.Thickness(0, 0, 24, 0);
+            _myProjectsSidebar.Margin = new Avalonia.Thickness(0, 0, columnGap, 0);
             _myProjectsSidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch;
             // Restore card styling — clear local overrides so XAML DynamicResource values take effect
             _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.BackgroundProperty);
@@ -130,7 +151,42 @@ public partial class MyProjectsView : UserControl
             Grid.SetColumn(_myProjectsContent, 1);
             Grid.SetRow(_myProjectsContent, 0);
             _myProjectsContent.ContentPadding = new Avalonia.Thickness(0);
+
+            // Outer padding matches Vue p-4 (16) at tablet, p-6 (24) at desktop
+            _projectListGrid.Margin = new Avalonia.Thickness(gridPadding);
         }
+    }
+
+    /// <summary>
+    /// Mobile perf: force a measure pass on the hidden ManageProjectView so its
+    /// template, resources, and layout are realized before the first drill-down.
+    /// This converts a first-drill "cold inflate + measure + arrange" (~300ms on
+    /// Android) into a warm DataContext swap (&lt;100ms).
+    /// Called by ShellViewModel after tab pre-warm completes.
+    /// Idempotent — safe to call multiple times.
+    /// </summary>
+    public void PreWarmManageView()
+    {
+        if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS()) return;
+        if (ManageProjectViewControl == null || ManageProjectPanel == null) return;
+
+        // The panel stays IsVisible=false, but we can still force a measure pass
+        // on the hidden child to realize its template and resolve all DynamicResource
+        // lookups ahead of time. Measure with Size.Infinity is cheap (no arrange,
+        // no render) but primes the control tree.
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        try
+        {
+            ManageProjectViewControl.Measure(Size.Infinity);
+        }
+        catch
+        {
+            // Measure can throw if the control can't resolve resources yet — safe to skip
+        }
+        sw.Stop();
+        global::App.App.Services.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("ShellPerf")
+            .LogInformation("[PreWarm] ManageProjectView measureMs={Ms}", sw.ElapsedMilliseconds);
     }
 
     private void OnAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
@@ -257,6 +313,7 @@ public partial class MyProjectsView : UserControl
                 return;
 
             case "ScanProjectsButton":
+            case "MobileScanButton":
                 _ = vm.ScanForProjectsAsync();
                 e.Handled = true;
                 return;

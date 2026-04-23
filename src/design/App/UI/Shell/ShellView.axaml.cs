@@ -132,6 +132,7 @@ public partial class ShellView : UserControl
 
     private IDisposable? _layoutSubscription;
     private IDisposable? _detailStateSubscription;
+    private SectionPanel? _sectionPanel;
 
     /// <summary>
     /// Cached safe-area insets. Populated from TopLevel.InsetsManager when the
@@ -334,6 +335,38 @@ public partial class ShellView : UserControl
         var toastBorder = this.FindControl<Border>("ToastOverlay")!;
         toastBorder.Transitions = ToastTransitions;
 
+        // Responsive toast layout:
+        //   Desktop: fixed top-right, auto-width, compact padding (existing behavior).
+        //   Mobile:  full-width banner under status bar, 16px side margin, 52px min height,
+        //            centered content. Matches Android Material toast standard.
+        var toastContent = this.FindControl<StackPanel>("ToastContent");
+        LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
+            .Subscribe(isCompact =>
+            {
+                if (isCompact)
+                {
+                    toastBorder.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
+                    // 72dp top clears Android status bar (~24–32dp) with breathing room.
+                    // Avalonia Android does not auto-inset under the status bar.
+                    toastBorder.Margin = new Avalonia.Thickness(16, 72, 16, 0);
+                    toastBorder.Padding = new Avalonia.Thickness(16, 14);
+                    toastBorder.MinHeight = 52;
+                    toastBorder.CornerRadius = new Avalonia.CornerRadius(12);
+                    if (toastContent != null)
+                        toastContent.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center;
+                }
+                else
+                {
+                    toastBorder.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right;
+                    toastBorder.Margin = new Avalonia.Thickness(0, 24, 56, 0);
+                    toastBorder.Padding = new Avalonia.Thickness(16, 8);
+                    toastBorder.MinHeight = 0;
+                    toastBorder.CornerRadius = new Avalonia.CornerRadius(8);
+                    if (toastContent != null)
+                        toastContent.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left;
+                }
+            });
+
         vm.WhenAnyValue(x => x.ToastMessage)
             .Subscribe(message =>
             {
@@ -357,6 +390,48 @@ public partial class ShellView : UserControl
                     }
                 });
             });
+
+        // ── Mobile: SectionPanel replaces ContentControl to avoid detach/reattach ──
+        // On mobile, Avalonia's ContentControl content swap costs ~250ms per tab
+        // switch due to logical tree detach+attach+measure+arrange. SectionPanel
+        // keeps all pre-warmed views in the tree with IsVisible toggling, reducing
+        // tab switches to <10ms.
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
+        {
+            _sectionPanel = new SectionPanel();
+
+            // Replace the ContentControl inside ContentBorder with the SectionPanel
+            _contentBorder.Child = _sectionPanel;
+
+            // Add the Home view immediately (it's created in GetOrCreateView during ctor)
+            if (vm.ViewCache.TryGetValue("Home", out var homeView) && homeView is Control homeCtrl)
+                _sectionPanel.AddSection("Home", homeCtrl);
+
+            // As pre-warm creates views, add them to the SectionPanel
+            vm.ViewPreWarmed += (key, view) =>
+            {
+                if (view is Control ctrl)
+                    _sectionPanel.AddSection(key, ctrl);
+            };
+
+            // Drive SectionPanel from SelectedNavItem + IsSettingsOpen changes
+            vm.WhenAnyValue(x => x.SelectedNavItem, x => x.IsSettingsOpen)
+                .Subscribe(tuple =>
+                {
+                    var sectionKey = vm.CurrentSectionKey;
+                    if (sectionKey != null)
+                    {
+                        // If the view isn't in the panel yet (pre-warm hasn't reached it),
+                        // create it on-demand
+                        if (_sectionPanel.GetSection(sectionKey) == null)
+                            vm.EnsureViewCreated(sectionKey);
+                        _sectionPanel.ActivateSection(sectionKey);
+                    }
+                });
+
+            // Activate Home immediately
+            _sectionPanel.ActivateSection("Home");
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════

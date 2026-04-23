@@ -9,7 +9,7 @@ using ReactiveUI;
 
 namespace App.UI.Sections.Home;
 
-public partial class HomeView : UserControl
+public partial class HomeView : UserControl, ISectionView
 {
     private IDisposable? _layoutSubscription;
 
@@ -72,6 +72,30 @@ public partial class HomeView : UserControl
         // so star rows work correctly on both desktop and mobile.
         _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
             .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
+
+        // ── Mobile perf: defer the second card (below the fold in stacked
+        // layout) so first paint only inflates one Viewbox+Path SVG icon
+        // instead of two. GetFunded card arrives on ApplicationIdle — the
+        // user needs to scroll to see it anyway. Desktop renders both cards
+        // synchronously side-by-side.
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
+        {
+            if (_homeGrid != null && _getFundedCard != null)
+            {
+                var idx = _homeGrid.Children.IndexOf(_getFundedCard);
+                if (idx >= 0)
+                {
+                    _homeGrid.Children.RemoveAt(idx);
+                    var gridRef = _homeGrid;
+                    var cardRef = _getFundedCard;
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        var safeIdx = Math.Min(idx, gridRef.Children.Count);
+                        gridRef.Children.Insert(safeIdx, cardRef);
+                    }, Avalonia.Threading.DispatcherPriority.ApplicationIdle);
+                }
+            }
+        }
     }
 
     private void ApplyResponsiveLayout(bool isCompact)
@@ -89,8 +113,8 @@ public partial class HomeView : UserControl
         var cols = _homeGrid.ColumnDefinitions;
         var rows = _homeGrid.RowDefinitions;
 
-        if (_tiledLogoBorder != null)
-            _tiledLogoBorder.IsVisible = true;
+        // Tiled logo watermark shown on both desktop and mobile (matches Vue prototype).
+        // Previously hidden on mobile for perf — verified smooth on Android test device.
 
         if (isCompact)
         {
@@ -219,6 +243,35 @@ public partial class HomeView : UserControl
         _layoutSubscription?.Dispose();
         _layoutSubscription = null;
         base.OnDetachedFromLogicalTree(e);
+    }
+
+    public void OnBecameActive()
+    {
+        // When SectionPanel toggles IsVisible back to true after a tab switch,
+        // Avalonia's layout engine can retain stale measure caches on the Grid
+        // columns/rows — buttons sometimes render with clipped text because
+        // StackPanel content was measured under the wrong constraints.
+        // Re-apply the responsive layout and invalidate the grid to force a
+        // fresh measure pass.
+        ApplyResponsiveLayout(LayoutModeService.Instance.IsCompact);
+        _homeGrid?.InvalidateMeasure();
+        _homeGrid?.InvalidateArrange();
+    }
+    public void OnBecameInactive() { }
+
+    /// <summary>
+    /// Desktop path (ContentControl swap): when the view is re-attached to the
+    /// visual tree after navigating away and back, star-sized grid cols/rows
+    /// can carry stale widths from the previous available size (observed after
+    /// a window resize on another tab → Home no longer scales to the new width).
+    /// Force a fresh measure/arrange pass on re-attach.
+    /// </summary>
+    protected override void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        ApplyResponsiveLayout(LayoutModeService.Instance.IsCompact);
+        _homeGrid?.InvalidateMeasure();
+        _homeGrid?.InvalidateArrange();
     }
 
     private void OnButtonClick(object? sender, RoutedEventArgs e)

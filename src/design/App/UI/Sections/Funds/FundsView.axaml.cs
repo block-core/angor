@@ -14,7 +14,7 @@ using ReactiveUI;
 
 namespace App.UI.Sections.Funds;
 
-public partial class FundsView : UserControl
+public partial class FundsView : UserControl, ISectionView
 {
     private IDisposable? _layoutSubscription;
 
@@ -147,7 +147,8 @@ public partial class FundsView : UserControl
         base.OnAttachedToLogicalTree(e);
 
         // Reload wallet data when the view re-enters the tree (e.g. after wipe or navigation)
-        if (DataContext is FundsViewModel vm)
+        // On mobile with SectionPanel, OnBecameActive() handles this instead.
+        if (DataContext is FundsViewModel vm && !OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())
             _ = vm.ReloadWalletsAsync();
 
         // Force layout invalidation so bindings re-evaluate when the cached view re-enters.
@@ -381,4 +382,12 @@ public partial class FundsView : UserControl
         _layoutSubscription = null;
         base.OnDetachedFromLogicalTree(e);
     }
+
+    public void OnBecameActive()
+    {
+        if (DataContext is FundsViewModel vm)
+            _ = vm.ReloadWalletsAsync();
+    }
+
+    public void OnBecameInactive() { }
 }
