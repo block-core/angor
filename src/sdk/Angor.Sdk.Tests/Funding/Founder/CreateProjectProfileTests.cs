@@ -46,7 +46,7 @@ public class CreateProjectProfileTests
     }
 
     [Fact]
-    public async Task Handle_WhenSeedwordsProviderFails_ThrowsException()
+    public async Task Handle_WhenSeedwordsProviderFails_ReturnsFailure()
     {
         // Arrange
         var request = CreateValidRequest();
@@ -55,11 +55,12 @@ public class CreateProjectProfileTests
             .Setup(x => x.GetSensitiveData("wallet-1"))
             .ReturnsAsync(Result.Failure<(string Words, Maybe<string> Passphrase)>("Wallet locked"));
 
-        // Act - the handler accesses .Value on a failed result without checking, which throws
-        var act = () => _sut.Handle(request, CancellationToken.None);
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<Exception>();
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Contain("Wallet locked");
     }
 
     [Fact]
