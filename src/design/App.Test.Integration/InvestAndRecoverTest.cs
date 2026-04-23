@@ -1,4 +1,5 @@
 using System.Globalization;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
@@ -51,9 +52,7 @@ public class InvestAndRecoverTest
         await window.WipeExistingData();
 
         TestHelpers.Log("[STEP 2] Navigating to Funds section...");
-        window.NavigateToSection("Funds");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funds");
 
         var emptyState = await window.WaitForControl<Panel>("EmptyStatePanel", TestHelpers.UiTimeout);
         emptyState.Should().NotBeNull("Funds should show empty state after wipe");
@@ -73,9 +72,7 @@ public class InvestAndRecoverTest
         TestHelpers.Log("[STEP 3] Set SimplePasswordProvider key to 'default-key'.");
 
         TestHelpers.Log("[STEP 4] Navigating to My Projects section...");
-        window.NavigateToSection("My Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("My Projects");
 
         var myProjectsVm = window.GetMyProjectsViewModel();
         myProjectsVm.Should().NotBeNull("MyProjectsViewModel should be available");
@@ -197,9 +194,7 @@ public class InvestAndRecoverTest
         project.OwnerWalletId.Should().NotBeNullOrEmpty();
 
         TestHelpers.Log("[STEP 5] Navigating to Find Projects...");
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Find Projects");
 
         var findProjectsVm = window.GetFindProjectsViewModel();
         findProjectsVm.Should().NotBeNull("FindProjectsViewModel should be available");
@@ -225,8 +220,48 @@ public class InvestAndRecoverTest
         foundProject.Target.Should().Be("1.00000");
         foundProject.ProjectId.Should().NotBeNullOrEmpty();
 
+        // Refresh wallet UTXOs before investing — the deploy tx consumed UTXOs from the same
+        // wallet, and the investment tx must be built against the post-deploy UTXO set to avoid
+        // txn-mempool-conflict when publishing later. We poll until the balance reflects the
+        // deploy fee deduction (i.e., the indexer has processed the deploy tx).
+        TestHelpers.Log("[STEP 5.1] Waiting for wallet UTXOs to reflect deploy tx...");
+        await window.NavigateToSectionAndVerify("Funds");
+        var utxoDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
+        while (DateTime.UtcNow < utxoDeadline)
+        {
+            await window.ClickWalletCardButton("WalletCardBtnRefresh");
+            await Task.Delay(3000);
+            Dispatcher.UIThread.RunJobs();
+
+            // After a deploy, balance should be less than the original ~2 BTC faucet amount
+            // (deploy fee was deducted). If the balance changed from the original, the indexer
+            // has processed the deploy tx and UTXOs are current.
+            var fundsVm = window.GetFundsViewModel();
+            if (fundsVm != null)
+            {
+                var balanceText = fundsVm.TotalBalance;
+                TestHelpers.Log($"[STEP 5.1] Current balance: {balanceText}");
+                // Balance should have decreased from original 2.0000 after paying deploy fee
+                if (!string.IsNullOrEmpty(balanceText) && balanceText != "0.0000" &&
+                    decimal.TryParse(balanceText, NumberStyles.Float, CultureInfo.InvariantCulture, out var bal) &&
+                    bal < 2.0m)
+                {
+                    TestHelpers.Log($"[STEP 5.1] Balance reflects deploy fee deduction: {balanceText}");
+                    break;
+                }
+            }
+        }
+        await window.NavigateToSectionAndVerify("Find Projects");
+
         TestHelpers.Log("[STEP 6] Opening project detail...");
-        findProjectsVm!.OpenProjectDetail(foundProject);
+        // Re-load projects since we navigated away
+        await findProjectsVm!.LoadProjectsFromSdkAsync();
+        Dispatcher.UIThread.RunJobs();
+        foundProject = findProjectsVm.Projects.FirstOrDefault(p =>
+            p.Description.Contains(runId) || p.ShortDescription.Contains(runId));
+        foundProject.Should().NotBeNull();
+
+        findProjectsVm.OpenProjectDetail(foundProject!);
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(300);
 
@@ -286,10 +321,20 @@ public class InvestAndRecoverTest
         investVm.CurrentScreen.Should().Be(InvestScreen.Success,
             $"Invest should reach success. Last status: {investVm.PaymentStatusText}");
 
+        // Verify invest success UI elements
+        var investSuccessModal = await window.WaitForControl<Visual>("InvestSuccessModal", TestHelpers.UiTimeout);
+        investSuccessModal.Should().NotBeNull("Invest success modal should be visible in the UI");
+        var investSuccessTitle = await window.GetText("InvestSuccessTitle", TestHelpers.UiTimeout);
+        investSuccessTitle.Should().NotBeNullOrEmpty("Invest success title should be displayed");
+        TestHelpers.Log($"[STEP 6] Invest success title: '{investSuccessTitle}'");
+
         TestHelpers.Log("[STEP 7] Adding investment to portfolio...");
         investVm.AddToPortfolio();
         Dispatcher.UIThread.RunJobs();
 
+        // DIRECT DI RESOLVE: PortfolioViewModel is a singleton that isn't easily reachable
+        // from the visual tree at this point — we just left the Find Projects section.
+        // Resolving from DI mirrors what the navigation framework does internally.
         var portfolioVm = global::App.App.Services.GetRequiredService<PortfolioViewModel>();
         portfolioVm.HasInvestments.Should().BeTrue();
 
@@ -315,9 +360,7 @@ public class InvestAndRecoverTest
         findProjectsVm.CloseProjectDetail();
         Dispatcher.UIThread.RunJobs();
 
-        window.NavigateToSection("Funders");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funders");
 
         var fundersVm = window.GetFundersViewModel();
         fundersVm.Should().NotBeNull();
@@ -362,9 +405,7 @@ public class InvestAndRecoverTest
         founderApproved.Should().BeTrue();
 
         TestHelpers.Log("[STEP 9] Reloading funded investments and confirming signed investment...");
-        window.NavigateToSection("Funded");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funded");
 
         InvestmentViewModel? signedInvestment = null;
         var signedDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
@@ -387,17 +428,43 @@ public class InvestAndRecoverTest
         signedInvestment!.Step.Should().Be(2);
         signedInvestment.ProjectType.Should().Be("invest");
 
-        var confirmResult = await portfolioVm.ConfirmInvestmentAsync(signedInvestment);
-        Dispatcher.UIThread.RunJobs();
-        confirmResult.Should().BeTrue();
+        // Retry ConfirmInvestmentAsync with backoff — the publish can fail with
+        // txn-mempool-conflict when the indexer hasn't yet reflected the deploy tx's
+        // UTXO changes or when a previous test run left stale transactions in the mempool.
+        var confirmResult = false;
+        var confirmDeadline = DateTime.UtcNow + TimeSpan.FromMinutes(2);
+        var confirmAttempt = 0;
+        while (DateTime.UtcNow < confirmDeadline)
+        {
+            confirmAttempt++;
+            confirmResult = await portfolioVm.ConfirmInvestmentAsync(signedInvestment);
+            Dispatcher.UIThread.RunJobs();
+
+            if (confirmResult)
+            {
+                TestHelpers.Log($"[STEP 9] ConfirmInvestmentAsync succeeded on attempt #{confirmAttempt}");
+                break;
+            }
+
+            TestHelpers.Log($"[STEP 9] ConfirmInvestmentAsync failed on attempt #{confirmAttempt}, retrying after delay...");
+            // Reset step back to 2 so the next attempt doesn't skip due to state
+            signedInvestment.Step = 2;
+            var backoff = Math.Min(15_000, 5_000 * confirmAttempt);
+            await Task.Delay(backoff);
+
+            // Refresh wallet balance to pick up new UTXO state
+            await window.ClickButton("PortfolioRefreshButton");
+            await Task.Delay(500);
+            Dispatcher.UIThread.RunJobs();
+        }
+
+        confirmResult.Should().BeTrue("ConfirmInvestmentAsync should eventually succeed after retries");
         signedInvestment.Step.Should().Be(3);
         signedInvestment.StatusText.Should().Be("Investment Active");
         signedInvestment.StatusClass.Should().Be("active");
 
         TestHelpers.Log("[STEP 10] Founder spending stage 1...");
-        window.NavigateToSection("My Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("My Projects");
 
         var founderProjectsVm = window.GetMyProjectsViewModel();
         founderProjectsVm.Should().NotBeNull();
@@ -504,9 +571,7 @@ public class InvestAndRecoverTest
         manageVm.Stages.Any(s => s.Number == 1 && s.SpentTransactionCount > 0).Should().BeTrue();
 
         TestHelpers.Log("[STEP 11] Navigating to Funded section...");
-        window.NavigateToSection("Funded");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funded");
 
         var investment = portfolioVm.Investments.FirstOrDefault(i =>
             i.ProjectName == foundProject.ProjectName || i.ProjectIdentifier == foundProject.ProjectId);
@@ -592,9 +657,7 @@ public class InvestAndRecoverTest
 
     private async Task EnsureWalletHasFeeFunds(Window window, string walletId, string context)
     {
-        window.NavigateToSection("Funds");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funds");
 
         var fundsVm = window.GetFundsViewModel();
         fundsVm.Should().NotBeNull();
@@ -602,6 +665,9 @@ public class InvestAndRecoverTest
         var deadline = DateTime.UtcNow + TimeSpan.FromMinutes(2);
         while (DateTime.UtcNow < deadline)
         {
+            // DIRECT SDK CALL: FundsViewModel.TotalBalance is a formatted string that doesn't
+            // expose the raw sats breakdown (confirmed + unconfirmed + reserved) we need to
+            // determine whether the wallet has enough for fee-only transactions.
             var refresh = await global::App.App.Services.GetRequiredService<Angor.Sdk.Wallet.Application.IWalletAppService>()
                 .RefreshAndGetAccountBalanceInfo(new WalletId(walletId));
 

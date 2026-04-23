@@ -1,4 +1,5 @@
 using System.Globalization;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
@@ -106,6 +107,9 @@ public class CreateProjectTest
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
+        var portfolioPanel1 = await window.WaitForControl<Visual>("PortfolioRootPanel", TestHelpers.UiTimeout);
+        portfolioPanel1.Should().NotBeNull("Funded section root panel should appear after navigation");
+
         var portfolioVmAfterWipe = window.GetPortfolioViewModel();
         portfolioVmAfterWipe.Should().NotBeNull("PortfolioViewModel should be available after navigating to Funded");
         portfolioVmAfterWipe!.HasInvestments.Should().BeFalse("wipe data should clear funded investments without needing refresh");
@@ -121,9 +125,7 @@ public class CreateProjectTest
         // STEP 2: Navigate to Funds → create wallet via Generate path
         // ──────────────────────────────────────────────────────────────
         TestHelpers.Log("[STEP 2] Navigating to Funds section...");
-        window.NavigateToSection("Funds");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funds");
 
         var emptyState = await window.WaitForControl<Panel>("EmptyStatePanel", TestHelpers.UiTimeout);
         TestHelpers.Log($"[STEP 2] EmptyStatePanel found: {emptyState != null}");
@@ -157,9 +159,7 @@ public class CreateProjectTest
             fundsVm!.TotalBalance + " TBTC",
             "header available balance should match the confirmed Funds total balance");
 
-        window.NavigateToSection("Funded");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funded");
 
         var portfolioVmBeforeCreate = window.GetPortfolioViewModel();
         portfolioVmBeforeCreate.Should().NotBeNull("PortfolioViewModel should be available before project creation");
@@ -170,9 +170,7 @@ public class CreateProjectTest
         // STEP 4: Navigate to My Projects → open create wizard
         // ──────────────────────────────────────────────────────────────
         TestHelpers.Log("[STEP 4] Navigating to My Projects section...");
-        window.NavigateToSection("My Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("My Projects");
 
         // My Projects should show empty state (no projects yet)
         var myProjectsVm = window.GetMyProjectsViewModel();
@@ -206,6 +204,8 @@ public class CreateProjectTest
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
         wizardVm.CurrentStep.Should().Be(2, "Should advance to step 2 after selecting type");
+        var step2Panel = await window.WaitForControl<Visual>("CreateProjectStep2", TestHelpers.UiTimeout);
+        step2Panel.Should().NotBeNull("Step 2 panel should be visible after advancing to step 2");
 
         // ── Step 2: Project profile — name and about ──
         TestHelpers.Log("[STEP 5.2] Filling project name and about...");
@@ -217,6 +217,8 @@ public class CreateProjectTest
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
         wizardVm.CurrentStep.Should().Be(3, "Should advance to step 3 after filling profile");
+        var step3Panel = await window.WaitForControl<Visual>("CreateProjectStep3", TestHelpers.UiTimeout);
+        step3Panel.Should().NotBeNull("Step 3 panel should be visible after advancing to step 3");
 
         // ── Step 3: Project images — set random picsum.photos URLs ──
         TestHelpers.Log("[STEP 5.3] Setting banner and profile image URLs...");
@@ -232,6 +234,8 @@ public class CreateProjectTest
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
         wizardVm.CurrentStep.Should().Be(4, "Should advance to step 4 after setting images");
+        var step4Panel = await window.WaitForControl<Visual>("CreateProjectStep4", TestHelpers.UiTimeout);
+        step4Panel.Should().NotBeNull("Step 4 panel should be visible after advancing to step 4");
 
         // ── Step 4: Funding configuration — target amount + end date + penalty ──
         TestHelpers.Log("[STEP 5.4] Setting target amount, end date, and penalty days...");
@@ -251,6 +255,10 @@ public class CreateProjectTest
         wizardVm.DismissStep5Welcome();
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(200);
+
+        // UI: verify step 5 form is visible after welcome is dismissed (IsStep5Form = CurrentStep==5 && !ShowStep5Welcome)
+        var step5Panel = await window.WaitForControl<Visual>("CreateProjectStep5", TestHelpers.UiTimeout);
+        step5Panel.Should().NotBeNull("Step 5 panel should be visible after dismissing welcome");
 
         TestHelpers.Log("[STEP 5.5] Setting duration to 6 months, frequency to Monthly...");
         wizardVm.DurationValue = durationValue;
@@ -290,6 +298,8 @@ public class CreateProjectTest
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
         wizardVm.CurrentStep.Should().Be(6, "Should advance to step 6 after generating stages");
+        var step6Panel = await window.WaitForControl<Visual>("CreateProjectStep6", TestHelpers.UiTimeout);
+        step6Panel.Should().NotBeNull("Step 6 panel should be visible after advancing to step 6");
 
         // ──────────────────────────────────────────────────────────────
         // STEP 6: Deploy the project
@@ -362,6 +372,15 @@ public class CreateProjectTest
 
         deployVm.CurrentScreen.Should().Be(DeployScreen.Success,
             $"Deploy should reach success screen. Last status: {deployVm.DeployStatusText}");
+
+        // Verify success panel is visible in the visual tree (not just VM state)
+        var deploySuccessPanel = await window.WaitForControl<Visual>("DeploySuccessPanel", TestHelpers.UiTimeout);
+        deploySuccessPanel.Should().NotBeNull("DeploySuccessPanel should be visible in the UI after successful deploy");
+
+        // Verify the project name is displayed in the success screen
+        var deployProjectNameText = await window.GetText("DeploySuccessProjectName", TestHelpers.UiTimeout);
+        deployProjectNameText.Should().Be(projectName,
+            "Deploy success screen should show the correct project name");
 
         // Click "Go to My Projects" — closes modal, adds project to list
         TestHelpers.Log("[STEP 6] Clicking 'Go to My Projects'...");

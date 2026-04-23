@@ -52,7 +52,7 @@
         </Style>
     </UserControl.Styles>
 
-    <Panel>
+    <Panel AutomationProperties.AutomationId="SettingsRootPanel">
         <controls:ScrollableView ContentPadding="24,24,24,24">
             <StackPanel Spacing="24">
 

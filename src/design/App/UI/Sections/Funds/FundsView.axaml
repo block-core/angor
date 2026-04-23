@@ -106,6 +106,7 @@
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" Spacing="4">
                                             <TextBlock Text="{Binding TotalBalance}"
+                                                       AutomationProperties.AutomationId="FundsTotalBalanceText"
                                                        FontSize="20" FontWeight="Bold"
                                                        Foreground="{DynamicResource StatsDetailValue}" />
                                             <TextBlock Text="{Binding CurrencySymbol}"
