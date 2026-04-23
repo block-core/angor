@@ -6,6 +6,7 @@ using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Projects.Operations;
 using Angor.Sdk.Funding.Shared;
+using Angor.Shared.Models;
 using Avalonia.Media.Imaging;
 using App.UI.Sections.Portfolio;
 using App.UI.Shared;
@@ -103,6 +104,12 @@ public class ProjectItemViewModel : INotifyPropertyChanged
 
     public ObservableCollection<InvestmentStageViewModel> Stages { get; set; } = new();
 
+    /// <summary>
+    /// Dynamic stage patterns from the project (Fund/Subscribe types).
+    /// Investors select which pattern to use when funding.
+    /// </summary>
+    public List<DynamicStagePattern> DynamicStagePatterns { get; set; } = new();
+
     private Shared.ProjectType TypeEnum => ProjectTypeExtensions.FromDisplayString(ProjectType);
     public string OpportunityTitle => ProjectTypeTerminology.OpportunityTitle(TypeEnum);
     public string ActionButtonText => ProjectTypeTerminology.ActionButtonText(TypeEnum);
@@ -196,6 +203,7 @@ public class ProjectItemViewModel : INotifyPropertyChanged
             PenaltyDays = dto.PenaltyDuration.Days.ToString(),
             PenaltyThresholdSats = dto.PenaltyThreshold,
             Stages = stages,
+            DynamicStagePatterns = dto.DynamicStagePatterns ?? new List<DynamicStagePattern>(),
             BannerUrl = dto.Banner?.ToString(),
             AvatarUrl = dto.Avatar?.ToString()
         };

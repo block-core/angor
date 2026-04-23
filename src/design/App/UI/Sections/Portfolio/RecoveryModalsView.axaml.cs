@@ -147,7 +147,7 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
             var (success, error) = Vm.RecoveryActionKey switch
             {
                 "recovery" => await portfolioVm.RecoverFundsAsync(Vm, feeRate.Value),
-                "belowThreshold" => await portfolioVm.RecoverFundsAsync(Vm, feeRate.Value),
+                "belowThreshold" => await portfolioVm.ClaimEndOfProjectAsync(Vm, feeRate.Value),
                 "unfundedRelease" => await portfolioVm.ReleaseFundsAsync(Vm, feeRate.Value),
                 "endOfProject" => await portfolioVm.ClaimEndOfProjectAsync(Vm, feeRate.Value),
                 "penaltyRelease" => await portfolioVm.PenaltyReleaseFundsAsync(Vm, feeRate.Value),

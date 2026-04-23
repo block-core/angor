@@ -177,6 +177,7 @@ public partial class PortfolioView : UserControl
     private void OnPenaltiesClick(object? sender, RoutedEventArgs e)
     {
         var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
-        shellVm?.ShowModal(new PenaltiesModal());
+        var vm = DataContext as PortfolioViewModel;
+        shellVm?.ShowModal(new PenaltiesModal(vm!));
     }
 }

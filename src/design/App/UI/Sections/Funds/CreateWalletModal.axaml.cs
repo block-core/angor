@@ -161,14 +161,10 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         var btn = this.FindControl<Button>("BtnContinueBackup");
         if (btn != null) btn.IsEnabled = !isProcessing;
 
-        var spinner = this.FindControl<Projektanker.Icons.Avalonia.Icon>("ContinueSpinner");
-        if (spinner != null)
-        {
-            spinner.IsVisible = isProcessing;
-            spinner.Classes.Set("Spinning", isProcessing);
-        }
+        var spinner = this.FindControl<StackPanel>("ContinueBtnSpinner");
+        if (spinner != null) spinner.IsVisible = isProcessing;
 
-        var text = this.FindControl<TextBlock>("ContinueText");
+        var text = this.FindControl<TextBlock>("ContinueBtnContent");
         if (text != null) text.Text = isProcessing ? "Creating Wallet..." : "Continue";
     }
 

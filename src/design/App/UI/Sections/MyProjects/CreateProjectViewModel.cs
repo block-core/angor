@@ -44,6 +44,7 @@ public class ProjectStageViewModel
     /// Fund/Sub: "33% paid on 28th April 2026"
     /// </summary>
     public string DisplayText { get; set; } = "";
+    public double PercentageValue { get; set; }
 }
 
 /// <summary>
@@ -284,6 +285,25 @@ public partial class CreateProjectViewModel : ReactiveObject
     public bool IsFund => ProjectType == "fund";
     public bool IsSubscription => ProjectType == "subscription";
     public bool IsTypeSelected => !string.IsNullOrEmpty(ProjectType);
+
+    // ── Review summary helpers (Step 6) ──
+    /// <summary>Formatted installment options for review, e.g. "3, 6, 9 installments".</summary>
+    public string InstallmentOptionsText =>
+        SelectedInstallmentCounts.Count > 0
+            ? string.Join(", ", SelectedInstallmentCounts.OrderBy(x => x)) + " installments"
+            : "";
+
+    public bool HasInstallmentOptions => SelectedInstallmentCounts.Count > 0;
+
+    /// <summary>Formatted payout day for review, e.g. "Day 15" or "Wednesday".</summary>
+    public string PayoutDayText =>
+        PayoutFrequency == "Monthly" && MonthlyPayoutDate.HasValue
+            ? $"Day {MonthlyPayoutDate.Value}"
+            : PayoutFrequency == "Weekly" && !string.IsNullOrEmpty(WeeklyPayoutDay)
+                ? WeeklyPayoutDay
+                : "";
+
+    public bool HasPayoutDay => !string.IsNullOrEmpty(PayoutDayText);
 
     // ── Validation error visibility helpers (for XAML binding) ──
     public bool HasFormError => !string.IsNullOrEmpty(FormError);
@@ -899,6 +919,40 @@ public partial class CreateProjectViewModel : ReactiveObject
     }
 
     /// <summary>Toggle between simple and advanced editor (Investment).</summary>
+    public bool IsNotAdvancedEditor => !IsAdvancedEditor;
+    public string AdvancedEditorButtonText => IsAdvancedEditor ? "Simple Editor" : "Advanced Editor";
+
+    /// <summary>Add a new stage to the advanced editor with default values.</summary>
+    public void AddStage()
+    {
+        var nextNum = Stages.Count + 1;
+        var stage = new ProjectStageViewModel
+        {
+            StageNumber = nextNum,
+            Percentage = "0%",
+            PercentageValue = 0,
+            ReleaseDate = "",
+            ReleaseDateValue = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(nextNum)),
+            StageLabel = IsInvestment ? "Stage" : "Payout",
+            DisplayText = ""
+        };
+        stage.ReleaseDate = stage.ReleaseDateValue.ToString("dd MMMM yyyy");
+        Stages.Add(stage);
+        this.RaisePropertyChanged(nameof(HasStages));
+        this.RaisePropertyChanged(nameof(ScheduleSummary));
+    }
+
+    /// <summary>Remove a stage from the advanced editor.</summary>
+    public void RemoveStage(ProjectStageViewModel stage)
+    {
+        Stages.Remove(stage);
+        // Renumber remaining stages
+        for (int i = 0; i < Stages.Count; i++)
+            Stages[i].StageNumber = i + 1;
+        this.RaisePropertyChanged(nameof(HasStages));
+        this.RaisePropertyChanged(nameof(ScheduleSummary));
+    }
+
     public void ToggleAdvancedEditor()
     {
         IsAdvancedEditor = !IsAdvancedEditor;

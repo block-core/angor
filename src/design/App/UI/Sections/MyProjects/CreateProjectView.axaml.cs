@@ -359,6 +359,11 @@ public partial class CreateProjectView : UserControl
             case "GeneratePayoutsButton": Vm?.GeneratePayoutSchedule(); break;
             case "DeleteStagesButton": Vm?.ClearStages(); break;
             case "ToggleEditorButton": Vm?.ToggleAdvancedEditor(); break;
+            case "AddStageButton": Vm?.AddStage(); break;
+            case "RemoveStageButton":
+                if (btn.Tag is ProjectStageViewModel stageToRemove)
+                    Vm?.RemoveStage(stageToRemove);
+                break;
             case "RegenerateStagesButton": Vm?.ShowRegenerateForm(); break;
             case "RegeneratePayoutsButton": Vm?.ShowRegenerateForm(); break;
             // Stepper step buttons

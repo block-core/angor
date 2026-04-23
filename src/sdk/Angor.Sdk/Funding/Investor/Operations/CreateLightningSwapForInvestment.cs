@@ -24,12 +24,14 @@ public static class CreateLightningSwapForInvestment
     /// <param name="ProjectId">The project to invest in</param>
     /// <param name="InvestmentAmount">Amount to invest in satoshis</param>
     /// <param name="ReceivingAddress">On-chain address to receive the swapped funds</param>
+    /// <param name="StageCount">Number of stage outputs in the investment transaction (drives tx size estimate)</param>
     /// <param name="EstimatedFeeRateSatsPerVbyte">Estimated fee rate for the investment transaction (used to calculate total on-chain amount needed)</param>
     public record CreateLightningSwapRequest(
         WalletId WalletId,
         ProjectId ProjectId,
         Amount InvestmentAmount,
         string ReceivingAddress,
+        int StageCount,
         int EstimatedFeeRateSatsPerVbyte = 2) : IRequest<Result<CreateLightningSwapResponse>>;
 
     /// <summary>
@@ -61,20 +63,28 @@ public static class CreateLightningSwapForInvestment
                 // This includes:
                 // - Investment amount (what goes to the project)
                 // - Angor fee (1% of investment amount)
-                // - Estimated investment transaction miner fee (based on provided fee rate)
-                
+                // - Estimated investment transaction miner fee (based on provided fee rate and actual tx size)
+
                 const int AngorFeePercentage = 1; // 1% Angor fee
-                // Estimate investment tx size at ~250 vbytes (typical for 1-in, 2-out segwit tx)
-                const int EstimatedInvestmentTxVbytes = 250;
-                long estimatedInvestmentTxFee = request.EstimatedFeeRateSatsPerVbyte * EstimatedInvestmentTxVbytes;
+
+                // Investment tx structure is deterministic:
+                //   ~10.5 vB  tx overhead (version + marker/flag + in/out counts + locktime)
+                //   ~68   vB  1 P2WPKH input (from funding address)
+                //    43   vB  1 P2WSH output (angor fee)
+                //   ~99   vB  1 OP_RETURN output (investor info, max ~88 byte script)
+                //  N×43   vB  N P2TR stage outputs (taproot, 34-byte scriptPubKey each)
+                //    31   vB  1 P2WPKH change output
+                // Total ≈ 252 + (stageCount × 43) vbytes
+                int estimatedInvestmentTxVbytes = 252 + (request.StageCount * 43);
+                long estimatedInvestmentTxFee = request.EstimatedFeeRateSatsPerVbyte * estimatedInvestmentTxVbytes;
                 
                 long investmentAmount = request.InvestmentAmount.Sats;
                 long angorFee = (investmentAmount * AngorFeePercentage) / 100;
                 long totalOnChainNeeded = investmentAmount + angorFee + estimatedInvestmentTxFee;
                 
                 logger.LogInformation(
-                    "Total on-chain amount needed: {Total} sats (investment: {Investment} + angorFee: {AngorFee} + txFee: {TxFee} @ {FeeRate} sat/vb)",
-                    totalOnChainNeeded, investmentAmount, angorFee, estimatedInvestmentTxFee, request.EstimatedFeeRateSatsPerVbyte);
+                    "Total on-chain amount needed: {Total} sats (investment: {Investment} + angorFee: {AngorFee} + txFee: {TxFee} [{EstVbytes} vB @ {FeeRate} sat/vb, {Stages} stages])",
+                    totalOnChainNeeded, investmentAmount, angorFee, estimatedInvestmentTxFee, estimatedInvestmentTxVbytes, request.EstimatedFeeRateSatsPerVbyte, request.StageCount);
 
                 // Step 2: Calculate the invoice amount needed to receive the required on-chain amount
                 // Boltz deducts fees from the invoice amount, so we need to pay more

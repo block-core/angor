@@ -47,6 +47,7 @@ public partial class ManageProjectView : UserControl
                 else if (mode == "Spent")
                     modalsView.OpenSpentModal(stageIndex);
             };
+
         }
 
         // ── Share button ──
@@ -56,6 +57,10 @@ public partial class ManageProjectView : UserControl
         // ── Refresh button ──
         var refreshBtn = this.FindControl<Button>("RefreshButton");
         if (refreshBtn != null) refreshBtn.Click += OnRefreshClick;
+
+        // ── Release Funds to Investors button ──
+        var releaseFundsBtn = this.FindControl<Button>("ReleaseFundsNavButton");
+        if (releaseFundsBtn != null) releaseFundsBtn.Click += (_, _) => OpenReleaseFundsModal();
 
         // ── View Private Keys button (opens shell modal password step) ──
         var viewPKBtn = this.FindControl<Button>("ViewPrivateKeysButton");

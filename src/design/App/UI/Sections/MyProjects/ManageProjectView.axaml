@@ -52,6 +52,43 @@
             <!-- RIGHT: Private Keys, Refresh, Share (docked first so it hugs the right edge) -->
             <!-- Vue: .nav-right-buttons — gap 12 -->
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="12">
+                <!-- Release Funds to Investors button -->
+                <!-- Vue: .release-funds-button-floating — green gradient, h44, hidden after release -->
+                <Border Name="ReleaseFundsNavBorder"
+                        Classes="FloatingBtn"
+                        Background="{DynamicResource FloatingBtnBg}"
+                        BorderBrush="{DynamicResource FloatingBtnBorder}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        BoxShadow="{DynamicResource FloatingBtnShadow}"
+                        Padding="16,0,16,0"
+                        Height="44"
+                        VerticalAlignment="Center"
+                        Cursor="Hand"
+                        IsVisible="{Binding !FundsReleasedToInvestors}"
+                        RenderTransform="translate(0px, 0px)">
+                    <Border.Transitions>
+                        <Transitions>
+                            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" />
+                            <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
+                        </Transitions>
+                    </Border.Transitions>
+                    <Button Name="ReleaseFundsNavButton"
+                            Classes="NavBtn"
+                            AutomationProperties.AutomationId="ReleaseFundsNavButton"
+                            VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Cursor="Hand">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <i:Icon Value="fa-solid fa-hand-holding-dollar"
+                                   FontSize="16"
+                                   Foreground="#4B7C5A" />
+                            <TextBlock Text="Release Funds"
+                                       FontSize="14" FontWeight="Medium"
+                                       Foreground="#4B7C5A"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </Border>
+
                 <!-- View Private Keys button -->
                 <!-- Vue: .private-keys-button-floating — color #ea580c, h44 -->
                 <Border Classes="FloatingBtn"
