@@ -75,8 +75,17 @@
                     <StackPanel Spacing="0">
                         <!-- Banner area — fixed height for consistent card sizing -->
                         <Panel Height="150">
-                            <!-- Fallback gradient when no banner (below image) -->
-                            <Border Background="{DynamicResource SurfaceLow}" />
+                            <!-- Fallback: Vue .banner-placeholder — dark gradient + tiled Angor pattern at 20% opacity.
+                                 Shown behind the Image; visible when BannerBitmap is null or still loading. -->
+                            <Border>
+                                <Border.Background>
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                        <GradientStop Color="#1A1A1A" Offset="0" />
+                                        <GradientStop Color="#0F0F0F" Offset="1" />
+                                    </LinearGradientBrush>
+                                </Border.Background>
+                            </Border>
+                            <Border Background="{DynamicResource TiledLogoBrush}" Opacity="1" />
                             <Image Stretch="UniformToFill"
                                    Source="{Binding BannerBitmap, RelativeSource={RelativeSource TemplatedParent}}" />
                             <!-- Avatar — Vue: 64x64, bottom -32px, left 20px, shadow -->
