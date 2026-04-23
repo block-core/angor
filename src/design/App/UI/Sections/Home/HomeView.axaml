@@ -77,8 +77,6 @@
             <Grid Name="GetFundedCard" Grid.Column="2" MinHeight="480" ClipToBounds="False">
                 <!-- Card background -->
                 <Border Classes="Panel" ClipToBounds="False" />
-                <!-- Tiled logo watermark overlay (matches Vue invest-column ::before) -->
-                <Border Name="GetFundedTiledLogoBorder" CornerRadius="12" Background="{DynamicResource TiledLogoBrush}" IsHitTestVisible="False" />
                 <!-- Content -->
                 <StackPanel Name="GetFundedCardContent" Spacing="0" VerticalAlignment="Center" Margin="48">
                     <!-- Lightning bolt outline — Vue desktop: w-24 h-24 mb-8, mobile: w-10 h-10 mb-3 -->
