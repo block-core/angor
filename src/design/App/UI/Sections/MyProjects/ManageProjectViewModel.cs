@@ -464,7 +464,7 @@ public partial class ManageProjectViewModel : ReactiveObject
             {
                 _logger.LogError("SpendStageFunds failed for project {ProjectId}: {Error}", Project.ProjectIdentifier,
                     spendResult.Error);
-                ToastRequested?.Invoke("Failed to claim stage funds. Please try again.");
+                ToastRequested?.Invoke($"Failed to claim stage funds: {spendResult.Error}");
                 return false;
             }
 
@@ -480,12 +480,12 @@ public partial class ManageProjectViewModel : ReactiveObject
             _logger.LogError("SubmitTransactionFromDraft failed while claiming stage funds for project {ProjectId}: {Error}",
                 Project.ProjectIdentifier,
                 publishResult.Error);
-            ToastRequested?.Invoke("Failed to claim stage funds. Please try again.");
+            ToastRequested?.Invoke($"Failed to claim stage funds: {publishResult.Error}");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "ClaimStageFundsAsync threw exception for project {ProjectId}", Project.ProjectIdentifier);
-            ToastRequested?.Invoke("Failed to claim stage funds. Please try again.");
+            ToastRequested?.Invoke($"Failed to claim stage funds: {ex.Message}");
         }
 
         return false;
@@ -513,7 +513,7 @@ public partial class ManageProjectViewModel : ReactiveObject
                 _logger.LogError("GetReleasableTransactions failed for project {ProjectId}: {Error}",
                     Project.ProjectIdentifier,
                     releasableResult.Error);
-                ToastRequested?.Invoke("Failed to release funds to investors. Please try again.");
+                ToastRequested?.Invoke($"Failed to release funds to investors: {releasableResult.Error}");
                 return false;
             }
 
@@ -542,13 +542,13 @@ public partial class ManageProjectViewModel : ReactiveObject
 
             _logger.LogError("ReleaseFunds failed for project {ProjectId}: {Error}", Project.ProjectIdentifier,
                 releaseResult.Error);
-            ToastRequested?.Invoke("Failed to release funds to investors. Please try again.");
+            ToastRequested?.Invoke($"Failed to release funds to investors: {releaseResult.Error}");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "ReleaseFundsToInvestorsAsync threw exception for project {ProjectId}",
                 Project.ProjectIdentifier);
-            ToastRequested?.Invoke("Failed to release funds to investors. Please try again.");
+            ToastRequested?.Invoke($"Failed to release funds to investors: {ex.Message}");
         }
 
         return false;
