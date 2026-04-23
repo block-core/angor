@@ -540,7 +540,8 @@
                 BoxShadow="{StaticResource ToastShadow}"
                 CornerRadius="8"
                 Padding="16,8">
-            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <StackPanel Name="ToastContent" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
+                        HorizontalAlignment="Left">
                 <!-- Checkmark icon — fa-solid fa-check, white -->
                 <i:Icon Value="fa-solid fa-check"
                         FontSize="14"

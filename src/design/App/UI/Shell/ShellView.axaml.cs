@@ -335,6 +335,36 @@ public partial class ShellView : UserControl
         var toastBorder = this.FindControl<Border>("ToastOverlay")!;
         toastBorder.Transitions = ToastTransitions;
 
+        // Responsive toast layout:
+        //   Desktop: fixed top-right, auto-width, compact padding (existing behavior).
+        //   Mobile:  full-width banner under status bar, 16px side margin, 52px min height,
+        //            centered content. Matches Android Material toast standard.
+        var toastContent = this.FindControl<StackPanel>("ToastContent");
+        LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
+            .Subscribe(isCompact =>
+            {
+                if (isCompact)
+                {
+                    toastBorder.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
+                    toastBorder.Margin = new Avalonia.Thickness(16, 16, 16, 0);
+                    toastBorder.Padding = new Avalonia.Thickness(16, 14);
+                    toastBorder.MinHeight = 52;
+                    toastBorder.CornerRadius = new Avalonia.CornerRadius(12);
+                    if (toastContent != null)
+                        toastContent.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center;
+                }
+                else
+                {
+                    toastBorder.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right;
+                    toastBorder.Margin = new Avalonia.Thickness(0, 24, 56, 0);
+                    toastBorder.Padding = new Avalonia.Thickness(16, 8);
+                    toastBorder.MinHeight = 0;
+                    toastBorder.CornerRadius = new Avalonia.CornerRadius(8);
+                    if (toastContent != null)
+                        toastContent.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left;
+                }
+            });
+
         vm.WhenAnyValue(x => x.ToastMessage)
             .Subscribe(message =>
             {
