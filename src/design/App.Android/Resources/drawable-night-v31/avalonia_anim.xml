@@ -4,16 +4,18 @@
   <aapt:attr name="android:drawable">
     <vector
       android:name="vector"
-      android:width="128dp"
-      android:height="128dp"
-      android:viewportWidth="120"
-      android:viewportHeight="129">
+      android:width="288dp"
+      android:height="288dp"
+      android:viewportWidth="288"
+      android:viewportHeight="288">
       <group
         android:name="wrapper"
-        android:pivotX="60"
-        android:pivotY="64.5"
-        android:scaleX="0.5"
-        android:scaleY="0.5">
+        android:pivotX="65.15"
+        android:pivotY="65.5"
+        android:scaleX="1.0"
+        android:scaleY="1.0"
+        android:translateX="78.85"
+        android:translateY="78.5">
         <group android:name="logo_group">
           <!-- Main triangular shape with inner cutout -->
           <path
@@ -62,15 +64,15 @@
         <objectAnimator
           android:propertyName="scaleX"
           android:duration="1000"
-          android:valueFrom="0.3"
-          android:valueTo="0.5"
+          android:valueFrom="0.6"
+          android:valueTo="1.0"
           android:valueType="floatType"
           android:interpolator="@android:interpolator/overshoot"/>
         <objectAnimator
           android:propertyName="scaleY"
           android:duration="1000"
-          android:valueFrom="0.3"
-          android:valueTo="0.5"
+          android:valueFrom="0.6"
+          android:valueTo="1.0"
           android:valueType="floatType"
           android:interpolator="@android:interpolator/overshoot"/>
       </set>
