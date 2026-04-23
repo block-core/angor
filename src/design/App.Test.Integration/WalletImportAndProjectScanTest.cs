@@ -124,9 +124,7 @@ public class WalletImportAndProjectScanTest
         string runId)
     {
         // ── Step 1: Create wallet and capture seed words ──
-        window.NavigateToSection("Funds");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funds");
 
         Log(profileName, "Creating wallet via Generate flow and capturing seed words...");
         var seedWords = await CreateWalletAndCaptureSeed(window, profileName);
@@ -151,9 +149,7 @@ public class WalletImportAndProjectScanTest
         SetPasswordProvider(profileName);
 
         // ── Step 4: Create and deploy a project ──
-        window.NavigateToSection("My Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("My Projects");
 
         var myProjectsVm = window.GetMyProjectsViewModel();
         myProjectsVm.Should().NotBeNull();
@@ -270,9 +266,7 @@ public class WalletImportAndProjectScanTest
         CreatorState creatorState)
     {
         // ── Step 1: Import wallet from seed words ──
-        window.NavigateToSection("Funds");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funds");
 
         Log(profileName, "Importing wallet from creator's seed words...");
         await ImportWalletViaSeedWords(window, profileName, creatorState.SeedWords);
@@ -314,9 +308,7 @@ public class WalletImportAndProjectScanTest
             "Imported wallet should discover on-chain UTXOs and show non-zero balance");
 
         // ── Step 4: Navigate to My Projects — should be empty before scan ──
-        window.NavigateToSection("My Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("My Projects");
 
         var myProjectsVm = window.GetMyProjectsViewModel();
         myProjectsVm.Should().NotBeNull();

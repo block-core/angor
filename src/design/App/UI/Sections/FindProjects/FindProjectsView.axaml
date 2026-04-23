@@ -12,7 +12,7 @@
         <fp:FindProjectsViewModel />
     </Design.DataContext>
 
-    <Panel>
+    <Panel AutomationProperties.AutomationId="FindProjectsRootPanel">
         <!-- ═══════════════════════════════════════════════════════ -->
         <!-- INVEST PAGE + PROJECT DETAIL: children are lazy-mounted -->
         <!-- by code-behind on first visibility to avoid paying the  -->

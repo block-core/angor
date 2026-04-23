@@ -12,7 +12,7 @@
         <mp:MyProjectsViewModel />
     </Design.DataContext>
 
-    <Panel>
+    <Panel AutomationProperties.AutomationId="MyProjectsRootPanel">
         <!-- ═══ EMPTY STATE (no projects, wizard not open) ═══ -->
         <!--
             Vue: Centered layout with Angor logo, "WELCOME TO ANGOR FOUNDER HUB",

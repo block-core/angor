@@ -84,13 +84,15 @@
                     <TextBlock Text="{Binding ProfileName}" FontSize="12" Foreground="White" />
                 </Border>
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Right" Spacing="16" Orientation="Horizontal">
-                    <TextBlock VerticalAlignment="Center">
+                    <TextBlock VerticalAlignment="Center"
+                             AutomationProperties.AutomationId="ShellInvestedBalanceText">
                         <TextBlock.Inlines>
                             <Run Classes="Thin">Invested:</Run>
                             <Run Classes="Label" Text="{Binding InvestedBalanceDisplay}" />
                         </TextBlock.Inlines>
                     </TextBlock>
-                    <TextBlock VerticalAlignment="Center">
+                    <TextBlock VerticalAlignment="Center"
+                             AutomationProperties.AutomationId="ShellAvailableBalanceText">
                         <TextBlock.Inlines>
                             <Run Classes="Thin">Available:</Run>
                             <Run Classes="Label" Text="{Binding AvailableBalanceDisplay}" />
