@@ -54,8 +54,7 @@
         <!-- Vue: max-w-md, Use an Existing Wallet, wallet list            -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsWalletSelector}"
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="448" MaxWidth="480"
+                Classes="ModalCard"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"
@@ -255,8 +254,7 @@
         <!-- Vue: max-w-md, Pay Invoice, network tabs, QR, address        -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsInvoice}"
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="448" MaxWidth="480"
+                Classes="ModalCard"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"
@@ -450,8 +448,7 @@
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsSuccess}"
                 AutomationProperties.AutomationId="InvestSuccessModal"
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="448" MaxWidth="480"
+                Classes="ModalCard"
                 CornerRadius="16"
                 Background="{DynamicResource DeploySuccessBg}"
                 BoxShadow="0 8 32 0 #40000000"

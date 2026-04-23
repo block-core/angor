@@ -45,8 +45,7 @@
         <!-- rounded-2xl shadow-2xl max-w-md -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsWalletSelector}"
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="448" MaxWidth="480"
+                Classes="ModalCard"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"
@@ -251,8 +250,7 @@
         <!-- rounded-2xl shadow-2xl max-w-md, p-6                       -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsPayFee}"
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="448" MaxWidth="480"
+                Classes="ModalCard"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"
@@ -414,8 +412,7 @@
         <!-- rounded-2xl shadow-2xl max-w-md p-8                        -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsSuccess}"
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="448" MaxWidth="480"
+                Classes="ModalCard"
                 CornerRadius="16"
                 Background="{DynamicResource DeploySuccessBg}"
                 BoxShadow="0 8 32 0 #40000000"

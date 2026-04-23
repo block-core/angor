@@ -16,8 +16,7 @@
     -->
 
     <Panel>
-        <Border HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="560" MaxWidth="672"
+        <Border Classes="ModalCard Wide"
                 CornerRadius="16"
                 Background="{DynamicResource RecoveryModalBg}"
                 BorderBrush="{DynamicResource RecoveryModalBorder}"

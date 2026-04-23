@@ -17,6 +17,7 @@
     <StyleInclude Source="/UI/Shared/Controls/StatCard.axaml" />
     <StyleInclude Source="/UI/Shared/Controls/WalletCard.axaml" />
     <StyleInclude Source="/UI/Shared/Styles/Cards.axaml" />
+    <StyleInclude Source="/UI/Shared/Styles/Modals.axaml" />
     <StyleInclude Source="/UI/Shared/Styles/TextBlock.axaml" />
     <StyleInclude Source="/UI/Shared/Styles/ToggleButton.axaml" />
     <StyleInclude Source="/UI/Shared/Styles/FlyoutPresenter.axaml" />

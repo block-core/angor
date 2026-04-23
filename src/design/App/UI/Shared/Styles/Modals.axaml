@@ -1,0 +1,47 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Global modal sizing — three tiers driven by width tokens in Tokens.axaml.
+        Apply to the outer card <Border> of any modal. The class controls ONLY sizing
+        and centering; visual chrome (background, border, corner radius, shadow) and
+        internal layout (DockPanel footers, StackPanel bodies) remain per-modal.
+
+        Mobile: ALL tiers stretch horizontally with a 16px margin on every side, so
+        phones always get a 16px gutter left/right. On desktop, MaxWidth caps the
+        card at the tier's ceiling and the overlay centers it horizontally via the
+        ShellView layout (which hosts the modal in a centered Panel).
+
+        Tiers (token keys in Tokens.axaml):
+          - Border.ModalCard         Standard   min 320 / max 512   (default; reference = Deploy/Invest wallet picker)
+          - Border.ModalCard.Wide    Wide       min 320 / max 672   (tabular content: recovery, penalties, JSON, UTXO)
+          - Border.ModalCard.Full    Full-panel min 320 / max 1030  (reserved; not currently used)
+
+        Keep existing inline CornerRadius / Background / BoxShadow / Padding on each
+        modal — those are intentional per-modal chrome. This style only standardises
+        width and centers the card within the overlay host.
+    -->
+
+    <!-- Standard (default) -->
+    <Style Selector="Border.ModalCard">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="MinWidth" Value="{StaticResource ModalMinWidth}" />
+        <Setter Property="MaxWidth" Value="{StaticResource ModalMaxWidth}" />
+        <Setter Property="Margin" Value="16" />
+    </Style>
+
+    <!-- Wide: tabular / multi-column content -->
+    <Style Selector="Border.ModalCard.Wide">
+        <Setter Property="MinWidth" Value="{StaticResource ModalWideMinWidth}" />
+        <Setter Property="MaxWidth" Value="{StaticResource ModalWideMaxWidth}" />
+    </Style>
+
+    <!-- Full: panel-like modals that stretch horizontally to fill available space -->
+    <Style Selector="Border.ModalCard.Full">
+        <Setter Property="MinWidth" Value="{StaticResource ModalFullMinWidth}" />
+        <Setter Property="MaxWidth" Value="{StaticResource ModalFullMaxWidth}" />
+        <Setter Property="MaxHeight" Value="{StaticResource ModalFullMaxHeight}" />
+    </Style>
+
+</Styles>
