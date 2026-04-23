@@ -558,11 +558,21 @@ public partial class FindProjectsViewModel : ReactiveObject
 
     /// <summary>
     /// Number of cards added per page (initial seed and each LoadMore).
-    /// Mobile (Android/iOS): 2 — fills a phone viewport without blocking the
-    /// render pipeline. Desktop: 12 to fill typical window widths.
+    /// Mobile and desktop both use 12 so a phone viewport fills with cached
+    /// content without requiring the user to trigger infinite-scroll (which
+    /// previously stranded 26+ cached projects in <see cref="pendingItems"/>
+    /// when the short list didn't overflow).
     /// </summary>
-    public static readonly int PageSize =
-        OperatingSystem.IsAndroid() || OperatingSystem.IsIOS() ? 4 : 12;
+    public static readonly int PageSize = 12;
+
+    /// <summary>
+    /// Mobile-only: size of each chunk revealed during the smooth staggered
+    /// initial seed. The initial page is revealed in chunks of this size across
+    /// consecutive ApplicationIdle dispatches so the render pipeline paints
+    /// between chunks — the user sees cards appear progressively instead of a
+    /// single long freeze. 3 cards/chunk ≈ one phone viewport row on mobile.
+    /// </summary>
+    private const int MobileSeedChunkSize = 3;
 
     private readonly List<ProjectItemViewModel> pendingItems = new();
 
@@ -578,12 +588,13 @@ public partial class FindProjectsViewModel : ReactiveObject
     /// for <see cref="LoadMore"/> to reveal incrementally as the user scrolls.
     /// Must be called on the UI thread.
     ///
-    /// Mobile perf: we split the initial page into two phases — the first 2 cards
-    /// are added synchronously so the list has content on first frame, and the
-    /// remaining initial-page cards are posted on <c>Dispatcher.UIThread</c> with
-    /// Background priority so they inflate in a later frame. This halves the
-    /// first-render blocking time without changing the final visual state.
-    /// Desktop inflates the whole initial page synchronously as before.
+    /// Mobile perf: the initial page is revealed in chunks of
+    /// <see cref="MobileSeedChunkSize"/> across successive ApplicationIdle dispatches
+    /// so the render pipeline paints between chunks. Unlike the previous
+    /// one-card-per-dispatch approach, chunks are batched (one layout pass per
+    /// chunk) and dropped dispatches only lose 3 cards in the worst case — plus
+    /// the first chunk lands synchronously, guaranteeing visible content on
+    /// first frame. Desktop inflates the whole initial page synchronously.
     /// </summary>
     private void SeedPaged(List<ProjectItemViewModel> all)
     {
@@ -591,30 +602,30 @@ public partial class FindProjectsViewModel : ReactiveObject
         pendingItems.Clear();
 
         var initial = Math.Min(PageSize, all.Count);
-
         var isMobile = OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
-        // Mobile: render zero cards in phase 1 to keep first-paint under 500ms
-        // (each ProjectCard's ControlTemplate inflate + style-selector evaluation
-        // costs ~70-100ms on Android). Initial-page cards are staggered one per
-        // ApplicationIdle dispatch so the render pipeline paints between each
-        // inflate — the user sees cards appear progressively instead of a
-        // single 300ms freeze. Desktop inflates the whole initial page synchronously.
-        var phase1 = isMobile ? 0 : initial;
 
-        for (var i = 0; i < phase1; i++)
-            Projects.Add(all[i]);
-
-        if (isMobile && phase1 < initial)
+        if (!isMobile)
         {
-            // Stagger: post each card as a separate ApplicationIdle dispatch
-            // so the render pipeline gets a frame between each inflate.
-            for (var i = phase1; i < initial; i++)
+            // Desktop: inflate the whole initial page synchronously.
+            for (var i = 0; i < initial; i++)
+                Projects.Add(all[i]);
+        }
+        else
+        {
+            // Mobile: first chunk synchronously so first paint has content,
+            // then stagger remaining chunks across ApplicationIdle dispatches.
+            var firstChunk = Math.Min(MobileSeedChunkSize, initial);
+            for (var i = 0; i < firstChunk; i++)
+                Projects.Add(all[i]);
+
+            if (firstChunk < initial)
             {
-                var item = all[i];
-                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                {
-                    Projects.Add(item);
-                }, Avalonia.Threading.DispatcherPriority.ApplicationIdle);
+                // Capture the remaining slice — post chunks sequentially so each
+                // one gets its own render frame but the whole initial page is
+                // guaranteed to land (unlike one-per-idle which could drop cards
+                // when the view detaches mid-stagger).
+                var remaining = all.GetRange(firstChunk, initial - firstChunk);
+                PostMobileSeedChunk(remaining, 0);
             }
         }
 
@@ -624,6 +635,27 @@ public partial class FindProjectsViewModel : ReactiveObject
         HasMoreItems = pendingItems.Count > 0;
         _logger.LogInformation("[Paged] seed visible={Visible} pending={Pending} hasMore={HasMore}",
             Projects.Count, pendingItems.Count, HasMoreItems);
+    }
+
+    /// <summary>
+    /// Post the next chunk of mobile initial-seed items on ApplicationIdle,
+    /// then chain the next chunk. Keeps the stagger smooth without the
+    /// one-dispatch-per-card fragility that sometimes dropped the final card.
+    /// </summary>
+    private void PostMobileSeedChunk(List<ProjectItemViewModel> remaining, int startIndex)
+    {
+        if (startIndex >= remaining.Count) return;
+
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            var end = Math.Min(startIndex + MobileSeedChunkSize, remaining.Count);
+            for (var i = startIndex; i < end; i++)
+                Projects.Add(remaining[i]);
+
+            // Chain next chunk on the following idle frame
+            if (end < remaining.Count)
+                PostMobileSeedChunk(remaining, end);
+        }, Avalonia.Threading.DispatcherPriority.ApplicationIdle);
     }
 
     /// <summary>
