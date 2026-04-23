@@ -5,6 +5,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
+using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Projects;
 using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
@@ -133,6 +134,22 @@ public class CreateProjectTest
 
         TestHelpers.Log("[STEP 2] Creating wallet via Generate path...");
         await window.CreateWalletViaGenerate();
+
+        // ── Regression guard: verify the wallet can be decrypted with the default key ──
+        // This catches mismatches between the encryption key used during wallet creation
+        // and the key returned by SimplePasswordProvider for SDK operations (deploy, sign, etc.).
+        TestHelpers.Log("[STEP 2b] Verifying wallet encryption key roundtrip...");
+        var walletAppService2 = global::App.App.Services.GetRequiredService<Angor.Sdk.Wallet.Application.IWalletAppService>();
+        var metadatas2 = await walletAppService2.GetMetadatas();
+        metadatas2.IsSuccess.Should().BeTrue("should be able to list wallet metadatas after creation");
+        metadatas2.Value.Should().NotBeEmpty("at least one wallet should exist after Generate");
+
+        var seedwordsProvider = global::App.App.Services.GetRequiredService<Angor.Sdk.Common.ISeedwordsProvider>();
+        var walletIdForKeyCheck = metadatas2.Value.First().Id;
+        var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(walletIdForKeyCheck.Value);
+        sensitiveDataResult.IsSuccess.Should().BeTrue(
+            $"wallet decryption with default key should succeed — got error: {(sensitiveDataResult.IsFailure ? sensitiveDataResult.Error : "none")}. " +
+            "If this fails, the encryption key used during wallet creation doesn't match SimplePasswordProvider.DefaultKey.");
 
         // ──────────────────────────────────────────────────────────────
         // STEP 3: Wait for WalletCard, fund via faucet, wait for balance

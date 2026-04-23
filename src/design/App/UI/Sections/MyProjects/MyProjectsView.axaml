@@ -229,6 +229,47 @@
                             <TextBlock Text="My Projects" FontSize="24" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center" />
+                            <!-- Scan for projects — queries indexer for all 15 derived key slots -->
+                            <Button Name="ScanProjectsButton" Grid.Column="1"
+                                    Classes="Primary"
+                                    Padding="12,8"
+                                    VerticalAlignment="Center"
+                                    IsEnabled="{Binding !IsLoading}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <i:Icon Value="fa-solid fa-arrows-rotate"
+                                            FontSize="14"
+                                            IsVisible="{Binding !IsLoading}"
+                                            Foreground="{DynamicResource PrimaryButtonForeground}"
+                                            VerticalAlignment="Center" />
+                                    <i:Icon Value="fa-solid fa-spinner"
+                                            FontSize="14"
+                                            IsVisible="{Binding IsLoading}"
+                                            Foreground="{DynamicResource PrimaryButtonForeground}"
+                                            VerticalAlignment="Center"
+                                            RenderTransformOrigin="50%,50%">
+                                        <i:Icon.RenderTransform>
+                                            <RotateTransform />
+                                        </i:Icon.RenderTransform>
+                                        <i:Icon.Styles>
+                                            <Style Selector="i|Icon[IsVisible=True]">
+                                                <Style.Animations>
+                                                    <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                        <KeyFrame Cue="0%">
+                                                            <Setter Property="RotateTransform.Angle" Value="0" />
+                                                        </KeyFrame>
+                                                        <KeyFrame Cue="100%">
+                                                            <Setter Property="RotateTransform.Angle" Value="360" />
+                                                        </KeyFrame>
+                                                    </Animation>
+                                                </Style.Animations>
+                                            </Style>
+                                        </i:Icon.Styles>
+                                    </i:Icon>
+                                    <TextBlock Text="Scan for Projects"
+                                               VerticalAlignment="Center"
+                                               FontSize="13" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
                         </Grid>
 
                         <!-- Project cards in responsive grid -->

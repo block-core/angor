@@ -237,7 +237,7 @@ public class WalletAppService(
     public Task<Result<WalletId>> CreateWalletWithoutPassword(BitcoinNetwork network)
     {
         // TODO: replace "DEFAULT" with ISecureKeyProvider.GetOrCreateKey() when secure storage is available
-        return CreateWallet(network + " Wallet", "DEFAULT", network);
+        return CreateWallet(network + " Wallet", "default-key", network);
     }
     
     public async Task<Result> DeleteWallet(WalletId walletId)
