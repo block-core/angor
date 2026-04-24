@@ -12,11 +12,13 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
     private readonly LiteDatabase _database;
     private readonly ILiteCollection<T> _collection;
     private readonly ILogger _logger;
+    private readonly SemaphoreSlim _semaphore;
 
-    public LiteDbDocumentCollection(LiteDatabase database, ILogger logger, string? collectionName = null)
+    public LiteDbDocumentCollection(LiteDatabase database, ILogger logger, SemaphoreSlim semaphore, string? collectionName = null)
     {
         _logger = logger;
         _database = database;
+        _semaphore = semaphore;
         
         _database.CheckpointSize = 10;
         
@@ -43,19 +45,27 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
                 document.UpdatedAt = DateTime.UtcNow;
             }
 
-            var result = _collection.Insert(documents);
-
-            if (result != documents.Length)
+            await _semaphore.WaitAsync();
+            try
             {
-                _logger.LogWarning("Expected to insert {expected} documents but only inserted {actual}", 
-                    documents.Length, result);
+                var result = _collection.Insert(documents);
+
+                if (result != documents.Length)
+                {
+                    _logger.LogWarning("Expected to insert {expected} documents but only inserted {actual}", 
+                        documents.Length, result);
+                    
+                    return Result.Success(result);
+                }
+                
+                _logger.LogDebug("Inserted {total} document {Type}", result, typeof(T).Name);
                 
                 return Result.Success(result);
             }
-            
-            _logger.LogDebug("Inserted {total} document {Type}",result, typeof(T).Name);
-            
-            return await Task.FromResult(Result.Success(result));
+            finally
+            {
+                _semaphore.Release();
+            }
         }
         catch (Exception ex)
         {
@@ -75,12 +85,19 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
                 return Result.Failure<bool>("Document ID cannot be null or empty");
 
             document.UpdatedAt = DateTime.UtcNow;
-            var result = _collection.Update(document);
-            
-            _logger.LogDebug("Updated document {Type} with ID: {Id}, Success: {Success}", 
-                typeof(T).Name, document.Id, result);
-            
-            return await Task.FromResult(Result.Success(result));
+
+            await _semaphore.WaitAsync();
+            try
+            {
+                var result = _collection.Update(document);
+                _logger.LogDebug("Updated document {Type} with ID: {Id}, Success: {Success}", 
+                    typeof(T).Name, document.Id, result);
+                return Result.Success(result);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
         }
         catch (Exception ex)
         {
@@ -98,24 +115,29 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
 
             document.UpdatedAt = DateTime.UtcNow;
 
-            var existsResult = await ExistsAsync(document.Id);
-            if (existsResult.IsFailure)
-                return Result.Failure<bool>($"Failed to check document existence: {existsResult.Error}");
-
-            // LiteDB: upserts returns false for updates, true for inserts so we handle manually
-            if (existsResult.Value)
+            await _semaphore.WaitAsync();
+            try
             {
-                var result = _collection.Update(document);
-                _logger.LogDebug("Updated document {Type} with ID: {Id}, Success: {Success}", 
-                    typeof(T).Name, document.Id, result);
-                return Result.Success(result);
+                // LiteDB: upserts returns false for updates, true for inserts so we handle manually
+                var exists = _collection.Exists(Query.EQ("_id", new BsonValue(document.Id)));
+                if (exists)
+                {
+                    var result = _collection.Update(document);
+                    _logger.LogDebug("Updated document {Type} with ID: {Id}, Success: {Success}", 
+                        typeof(T).Name, document.Id, result);
+                    return Result.Success(result);
+                }
+                else
+                {
+                    var result = _collection.Insert(document);
+                    _logger.LogDebug("Inserted document {Type} with ID: {Id}, Success: {Success}", 
+                        typeof(T).Name, document.Id, result != null);
+                    return Result.Success(result != null);
+                }
             }
-            else
+            finally
             {
-                var result = _collection.Insert(document);
-                _logger.LogDebug("Inserted document {Type} with ID: {Id}, Success: {Success}", 
-                    typeof(T).Name, document.Id, result != null);
-                return Result.Success(result != null);
+                _semaphore.Release();
             }
         }
         catch (Exception ex)
@@ -132,11 +154,18 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
             if (string.IsNullOrEmpty(id))
                 return Result.Failure<bool>("ID cannot be null or empty");
 
-            var result = _collection.Delete(new BsonValue(id));
-            _logger.LogDebug("Deleted document {Type} with ID: {Id}, Success: {Success}", 
-                typeof(T).Name, id, result);
-            
-            return await Task.FromResult(Result.Success(result));
+            await _semaphore.WaitAsync();
+            try
+            {
+                var result = _collection.Delete(new BsonValue(id));
+                _logger.LogDebug("Deleted document {Type} with ID: {Id}, Success: {Success}", 
+                    typeof(T).Name, id, result);
+                return Result.Success(result);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
         }
         catch (Exception ex)
         {
@@ -149,9 +178,17 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
     {
         try
         {
-            var count = _collection.DeleteAll();
-            _logger.LogDebug("Deleted all {Count} documents of type {Type}", count, typeof(T).Name);
-            return await Task.FromResult(Result.Success(count));
+            await _semaphore.WaitAsync();
+            try
+            {
+                var count = _collection.DeleteAll();
+                _logger.LogDebug("Deleted all {Count} documents of type {Type}", count, typeof(T).Name);
+                return Result.Success(count);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
         }
         catch (Exception ex)
         {
@@ -167,11 +204,18 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
             if (string.IsNullOrEmpty(id))
                 return Result.Failure<T?>("ID cannot be null or empty");
 
-            var result = _collection.FindById(new BsonValue(id));
-            _logger.LogDebug("Found document {Type} with ID: {Id}, Exists: {Exists}", 
-                typeof(T).Name, id, result != null);
-            
-            return await Task.FromResult(Result.Success(result));
+            await _semaphore.WaitAsync();
+            try
+            {
+                var result = _collection.FindById(new BsonValue(id));
+                _logger.LogDebug("Found document {Type} with ID: {Id}, Exists: {Exists}", 
+                    typeof(T).Name, id, result != null);
+                return Result.Success(result);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
         }
         catch (Exception ex)
         {
@@ -187,11 +231,18 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
             if (string.IsNullOrEmpty(id))
                 return Result.Failure<bool>("ID cannot be null or empty");
 
-            var exists = _collection.Exists(Query.EQ("_id", new BsonValue(id)));
-            _logger.LogDebug("Document {Type} with ID: {Id} exists: {Exists}", 
-                typeof(T).Name, id, exists);
-            
-            return await Task.FromResult(Result.Success(exists));
+            await _semaphore.WaitAsync();
+            try
+            {
+                var exists = _collection.Exists(Query.EQ("_id", new BsonValue(id)));
+                _logger.LogDebug("Document {Type} with ID: {Id} exists: {Exists}", 
+                    typeof(T).Name, id, exists);
+                return Result.Success(exists);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
         }
         catch (Exception ex)
         {
@@ -207,10 +258,17 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
             if (predicate == null)
                 return Result.Failure<IEnumerable<T>>("Predicate cannot be null");
 
-            var results = _collection.Find(predicate).ToList();
-            _logger.LogDebug("Found {Count} documents of type {Type}", results.Count, typeof(T).Name);
-            
-            return await Task.FromResult(Result.Success<IEnumerable<T>>(results));
+            await _semaphore.WaitAsync();
+            try
+            {
+                var results = _collection.Find(predicate).ToList();
+                _logger.LogDebug("Found {Count} documents of type {Type}", results.Count, typeof(T).Name);
+                return Result.Success<IEnumerable<T>>(results);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
         }
         catch (Exception ex)
         {
@@ -223,10 +281,17 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
     {
         try
         {
-            var results = _collection.FindAll().ToList();
-            _logger.LogDebug("Found {Count} documents of type {Type}", results.Count, typeof(T).Name);
-            
-            return await Task.FromResult(Result.Success<IEnumerable<T>>(results));
+            await _semaphore.WaitAsync();
+            try
+            {
+                var results = _collection.FindAll().ToList();
+                _logger.LogDebug("Found {Count} documents of type {Type}", results.Count, typeof(T).Name);
+                return Result.Success<IEnumerable<T>>(results);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
         }
         catch (Exception ex)
         {
@@ -244,10 +309,17 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
     {
         try
         {
-            var count = _collection.Count();
-            _logger.LogDebug("Count of documents {Type}: {Count}", typeof(T).Name, count);
-            
-            return await Task.FromResult(Result.Success(count));
+            await _semaphore.WaitAsync();
+            try
+            {
+                var count = _collection.Count();
+                _logger.LogDebug("Count of documents {Type}: {Count}", typeof(T).Name, count);
+                return Result.Success(count);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
         }
         catch (Exception ex)
         {
@@ -260,13 +332,19 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
     {
         try
         {
-            var count = predicate != null 
-                ? _collection.Count(predicate) 
-                : _collection.Count();
-                
-            _logger.LogDebug("Count of documents {Type} with predicate: {Count}", typeof(T).Name, count);
-            
-            return await Task.FromResult(Result.Success(count));
+            await _semaphore.WaitAsync();
+            try
+            {
+                var count = predicate != null 
+                    ? _collection.Count(predicate) 
+                    : _collection.Count();
+                _logger.LogDebug("Count of documents {Type} with predicate: {Count}", typeof(T).Name, count);
+                return Result.Success(count);
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
         }
         catch (Exception ex)
         {
