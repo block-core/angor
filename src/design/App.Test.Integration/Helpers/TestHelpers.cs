@@ -200,6 +200,76 @@ public static class TestHelpers
     }
 
     /// <summary>
+    /// Maps section labels to the AutomationId of the root panel in that section's view.
+    /// Used by <see cref="NavigateToSectionAndVerify"/> to confirm the target view appeared.
+    /// </summary>
+    private static readonly Dictionary<string, string[]> SectionRootPanelIds = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Funds"] = ["EmptyStatePanel", "PopulatedPanel"],  // FundsView shows one or the other depending on wallet state
+        ["My Projects"] = ["MyProjectsRootPanel"],
+        ["Find Projects"] = ["FindProjectsRootPanel"],
+        ["Funded"] = ["PortfolioRootPanel"],
+        ["Funders"] = ["FundersRootPanel"],
+    };
+
+    /// <summary>
+    /// Navigates to a section and verifies the target view's root panel appeared in the visual tree.
+    /// Falls back to <see cref="NavigateToSection"/> + delay if no root panel mapping exists.
+    /// </summary>
+    public static async Task NavigateToSectionAndVerify(this Window window, string sectionLabel, TimeSpan? timeout = null)
+    {
+        window.NavigateToSection(sectionLabel);
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        if (SectionRootPanelIds.TryGetValue(sectionLabel, out var rootPanelIds))
+        {
+            var maxWait = timeout ?? UiTimeout;
+            Visual? panel = null;
+            foreach (var id in rootPanelIds)
+            {
+                panel = await window.WaitForControl<Visual>(id, TimeSpan.FromSeconds(2));
+                if (panel != null) break;
+            }
+            panel.Should().NotBeNull(
+                $"Section '{sectionLabel}' should show one of [{string.Join(", ", rootPanelIds)}] after navigation");
+        }
+    }
+
+    /// <summary>
+    /// Navigates to Settings and verifies the SettingsView root panel appeared.
+    /// </summary>
+    public static async Task NavigateToSettingsAndVerify(this Window window, TimeSpan? timeout = null)
+    {
+        window.NavigateToSettings();
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        var maxWait = timeout ?? UiTimeout;
+        var panel = await window.WaitForControl<Visual>("SettingsRootPanel", maxWait);
+        panel.Should().NotBeNull("Settings root panel should appear after navigation");
+    }
+
+    /// <summary>
+    /// Reads the total balance text from the FundsView UI control (FundsTotalBalanceText).
+    /// Returns the text content, or null if the control is not found.
+    /// This is preferred over reading fundsVm.TotalBalance because it validates the data binding.
+    /// </summary>
+    public static async Task<string?> GetFundsTotalBalanceFromUi(this Window window, TimeSpan? timeout = null)
+    {
+        return await window.GetText("FundsTotalBalanceText", timeout ?? UiTimeout);
+    }
+
+    /// <summary>
+    /// Reads the WalletCard balance text from the UI control (WalletCardBalanceText).
+    /// Returns the text content, or null if the control is not found.
+    /// </summary>
+    public static async Task<string?> GetWalletCardBalanceFromUi(this Window window, TimeSpan? timeout = null)
+    {
+        return await window.GetText("WalletCardBalanceText", timeout ?? UiTimeout);
+    }
+
+    /// <summary>
     /// Navigates to Settings by calling ShellViewModel.NavigateToSettings().
     /// </summary>
     public static void NavigateToSettings(this Window window)
@@ -308,6 +378,26 @@ public static class TestHelpers
             .OfType<FindProjectsView>()
             .FirstOrDefault();
         return findProjectsView?.DataContext as FindProjectsViewModel;
+    }
+
+    /// <summary>
+    /// Load projects from SDK and expand all paged items so every project is searchable.
+    /// The FindProjectsViewModel pages results (first 12 visible, rest in pending).
+    /// This helper expands all pending items so tests can search the full set.
+    /// </summary>
+    public static async Task<IReadOnlyList<ProjectItemViewModel>> LoadAllProjectsFromSdkAsync(
+        this FindProjectsViewModel vm)
+    {
+        await vm.LoadProjectsFromSdkAsync();
+        Dispatcher.UIThread.RunJobs();
+
+        while (vm.HasMoreItems)
+        {
+            vm.LoadMore();
+            Dispatcher.UIThread.RunJobs();
+        }
+
+        return vm.Projects;
     }
 
     /// <summary>
@@ -486,10 +576,20 @@ public static class TestHelpers
         {
             Dispatcher.UIThread.RunJobs();
 
-            // Check if balance is already non-zero
+            // Check if balance is already non-zero (check both VM and UI to validate binding)
             if (fundsVm.TotalBalance != "0.0000")
             {
-                Log($"  [Faucet] Non-zero balance detected: {fundsVm.TotalBalance} (after {faucetAttempts} faucet attempt(s))");
+                Log($"  [Faucet] Non-zero balance detected (VM): {fundsVm.TotalBalance} (after {faucetAttempts} faucet attempt(s))");
+
+                // Also verify the UI TextBlock reflects the same balance
+                var uiBalance = await window.GetFundsTotalBalanceFromUi(TimeSpan.FromSeconds(5));
+                if (uiBalance != null)
+                {
+                    uiBalance.Should().Be(fundsVm.TotalBalance,
+                        "UI balance TextBlock should match VM TotalBalance (validates data binding)");
+                    Log($"  [Faucet] UI balance confirmed: {uiBalance}");
+                }
+
                 return;
             }
 
@@ -517,6 +617,11 @@ public static class TestHelpers
 
         fundsVm.TotalBalance.Should().NotBe("0.0000",
             $"Balance should become non-zero within {FaucetBalanceTimeout.TotalSeconds}s. Faucet was attempted {faucetAttempts} time(s).");
+
+        // Final UI-level balance verification
+        var finalUiBalance = await window.GetFundsTotalBalanceFromUi(TimeSpan.FromSeconds(5));
+        finalUiBalance.Should().NotBeNull("FundsTotalBalanceText should be visible in the UI after funding");
+        finalUiBalance.Should().NotBe("0.0000", "UI balance should also reflect non-zero after funding");
     }
 
     /// <summary>

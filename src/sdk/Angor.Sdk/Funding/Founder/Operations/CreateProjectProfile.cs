@@ -40,6 +40,12 @@ public static class CreateProjectProfile
         {
             var wallet = await seedwordsProvider.GetSensitiveData(request.WalletId.Value);
 
+            if (wallet.IsFailure)
+            {
+                logger.LogDebug("Failed to get sensitive data for WalletId {WalletId}: {Error}", request.WalletId, wallet.Error);
+                return Result.Failure<CreateProjectProfileResponse>(wallet.Error);
+            }
+
             ProjectSeedDto newProjectKeys = request.ProjectSeedDto;
 
             var nostrPrivateKey = await derivationOperations.DeriveProjectNostrPrivateKeyAsync(wallet.Value.ToWalletWords(), newProjectKeys.FounderKey);

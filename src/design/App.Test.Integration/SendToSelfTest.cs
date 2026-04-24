@@ -71,9 +71,7 @@ public class SendToSelfTest
         // STEP 2: Navigate to Funds — verify empty state
         // ──────────────────────────────────────────────────────────────
         TestHelpers.Log("[STEP 2] Navigating to Funds section...");
-        window.NavigateToSection("Funds");
-        await Task.Delay(500); // let the view load and call LoadWalletsFromSdkAsync
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funds");
 
         var emptyState = await window.WaitForControl<Panel>("EmptyStatePanel", TestHelpers.UiTimeout);
         TestHelpers.Log($"[STEP 2] EmptyStatePanel found: {emptyState != null}");
@@ -171,21 +169,21 @@ public class SendToSelfTest
             await Task.Delay(TestHelpers.PollInterval);
             Dispatcher.UIThread.RunJobs();
 
-            var vm = window.GetFundsViewModel();
+            var uiBalance = await window.GetFundsTotalBalanceFromUi();
             step9Polls++;
-            if (vm != null && vm.TotalBalance != "0.0000")
+            if (uiBalance != null && uiBalance != "0.0000")
             {
-                TestHelpers.Log($"[STEP 9] Final balance: {vm.TotalBalance} (after {step9Polls} polls)");
+                TestHelpers.Log($"[STEP 9] Final balance (from UI): {uiBalance} (after {step9Polls} polls)");
                 break;
             }
 
-            TestHelpers.Log($"[STEP 9] Poll #{step9Polls}: balance is '{vm?.TotalBalance ?? "N/A"}', retrying...");
+            TestHelpers.Log($"[STEP 9] Poll #{step9Polls}: balance is '{uiBalance ?? "N/A"}', retrying...");
         }
 
-        var fundsVm = window.GetFundsViewModel();
-        fundsVm.Should().NotBeNull();
-        TestHelpers.Log($"[STEP 9] Final balance: {fundsVm!.TotalBalance}");
-        fundsVm!.TotalBalance.Should().NotBe("0.0000", "balance should be > 0 after send-to-self (minus fee)");
+        var finalBalance = await window.GetFundsTotalBalanceFromUi();
+        finalBalance.Should().NotBeNull("FundsTotalBalanceText should be visible in the UI");
+        TestHelpers.Log($"[STEP 9] Final balance (from UI): {finalBalance}");
+        finalBalance.Should().NotBe("0.0000", "balance should be > 0 after send-to-self (minus fee)");
 
         // Cleanup: close window
         window.Close();

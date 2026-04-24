@@ -46,6 +46,7 @@
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsWalletSelector}"
                 Classes="ModalCard"
+                AutomationProperties.AutomationId="DeployWalletSelectorPanel"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"
@@ -251,6 +252,7 @@
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsPayFee}"
                 Classes="ModalCard"
+                AutomationProperties.AutomationId="DeployPayFeePanel"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"
@@ -413,6 +415,7 @@
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsSuccess}"
                 Classes="ModalCard"
+                AutomationProperties.AutomationId="DeploySuccessPanel"
                 CornerRadius="16"
                 Background="{DynamicResource DeploySuccessBg}"
                 BoxShadow="0 8 32 0 #40000000"
@@ -440,6 +443,7 @@
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
                             Spacing="8" Margin="0,0,0,12">
                     <TextBlock Text="{Binding ProjectName}"
+                               AutomationProperties.AutomationId="DeploySuccessProjectName"
                                FontSize="28" FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}" />
                     <TextBlock Text="Deployed!"

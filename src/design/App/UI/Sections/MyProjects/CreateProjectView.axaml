@@ -547,22 +547,28 @@
                         </Border>
 
                         <!-- Step 1: Project Type Selection -->
-                        <steps:CreateProjectStep1View Name="Step1View" IsVisible="{Binding IsStep1}" />
+                        <steps:CreateProjectStep1View Name="Step1View" IsVisible="{Binding IsStep1}"
+                                                      AutomationProperties.AutomationId="CreateProjectStep1" />
 
                         <!-- Step 2: Project Profile -->
-                        <steps:CreateProjectStep2View Name="Step2View" IsVisible="{Binding IsStep2}" />
+                        <steps:CreateProjectStep2View Name="Step2View" IsVisible="{Binding IsStep2}"
+                                                      AutomationProperties.AutomationId="CreateProjectStep2" />
 
                         <!-- Step 3: Project Images -->
-                        <steps:CreateProjectStep3View Name="Step3View" IsVisible="{Binding IsStep3}" />
+                        <steps:CreateProjectStep3View Name="Step3View" IsVisible="{Binding IsStep3}"
+                                                      AutomationProperties.AutomationId="CreateProjectStep3" />
 
                         <!-- Step 4: Funding Configuration -->
-                        <steps:CreateProjectStep4View Name="Step4View" IsVisible="{Binding IsStep4}" />
+                        <steps:CreateProjectStep4View Name="Step4View" IsVisible="{Binding IsStep4}"
+                                                      AutomationProperties.AutomationId="CreateProjectStep4" />
 
                         <!-- Step 5: Stages / Payouts -->
-                        <steps:CreateProjectStep5View Name="Step5View" IsVisible="{Binding IsStep5Form}" />
+                        <steps:CreateProjectStep5View Name="Step5View" IsVisible="{Binding IsStep5Form}"
+                                                      AutomationProperties.AutomationId="CreateProjectStep5" />
 
                         <!-- Step 6: Review & Deploy -->
-                        <steps:CreateProjectStep6View Name="Step6View" IsVisible="{Binding IsStep6}" />
+                        <steps:CreateProjectStep6View Name="Step6View" IsVisible="{Binding IsStep6}"
+                                                      AutomationProperties.AutomationId="CreateProjectStep6" />
 
                     </StackPanel>
                     </ScrollViewer>

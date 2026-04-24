@@ -1,5 +1,6 @@
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
+using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -38,9 +39,13 @@ public class InvestModalsViewFixesTest
 
         // ── Navigate to Find Projects and get an open project ──
         Log("[0] Navigating to Find Projects and loading projects...");
-        window.NavigateToSection("Find Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Find Projects");
+
+        // UI assertion: verify the FindProjectsView is in the visual tree
+        var findProjectsView = window.GetVisualDescendants()
+            .OfType<FindProjectsView>()
+            .FirstOrDefault();
+        findProjectsView.Should().NotBeNull("FindProjectsView should be in the visual tree after navigation");
 
         var findVm = window.GetFindProjectsViewModel();
         findVm.Should().NotBeNull("FindProjectsViewModel should be available");
@@ -54,6 +59,12 @@ public class InvestModalsViewFixesTest
         Dispatcher.UIThread.RunJobs();
         findVm.OpenInvestPage();
         Dispatcher.UIThread.RunJobs();
+
+        // UI assertion: verify InvestPageView appeared in the visual tree
+        var investPageView = window.GetVisualDescendants()
+            .OfType<InvestPageView>()
+            .FirstOrDefault();
+        investPageView.Should().NotBeNull("InvestPageView should be in the visual tree after opening invest page");
 
         var vm = findVm.InvestPageViewModel;
         vm.Should().NotBeNull("InvestPageViewModel should be created via factory");

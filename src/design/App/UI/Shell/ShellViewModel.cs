@@ -844,8 +844,9 @@ public partial class ShellViewModel : ReactiveObject
     /// and restarts with the new message.
     /// </summary>
     /// <param name="message">Toast text (e.g. "Copied to clipboard").</param>
-    /// <param name="durationMs">Auto-dismiss delay. Vue: 2000-3000ms for copy, 5000ms for save.</param>
-    public void ShowToast(string message, int durationMs = 2000)
+    /// <param name="durationMs">Auto-dismiss delay. If 0 or not specified, auto-scales based on message length
+    /// (min 3s, +1s per 30 chars, max 10s). Vue: 2000-3000ms for copy, 5000ms for save.</param>
+    public void ShowToast(string message, int durationMs = 0)
     {
         // Cancel any previous dismiss timer
         _toastCts?.Cancel();
@@ -853,6 +854,13 @@ public partial class ShellViewModel : ReactiveObject
         var token = _toastCts.Token;
 
         ToastMessage = message;
+
+        // Auto-scale duration based on message length if not explicitly specified
+        if (durationMs <= 0)
+        {
+            var charBasedMs = 3000 + (message.Length / 30) * 1000;
+            durationMs = Math.Clamp(charBasedMs, 3000, 10000);
+        }
 
         // Auto-dismiss after duration
         _ = DismissToastAsync(durationMs, token);
