@@ -312,6 +312,13 @@ public partial class ShellViewModel : ReactiveObject
     [Reactive] private bool pendingLaunchWizard;
 
     /// <summary>
+    /// Nav label of the section that launched the create-project wizard.
+    /// When the wizard closes, we route back here. Null means the user opened
+    /// the wizard from within My Projects itself (no routing needed).
+    /// </summary>
+    public string? WizardOriginNavLabel { get; set; }
+
+    /// <summary>
     /// Shell-level modal overlay state. Any section can push a modal view here
     /// to have it rendered above the entire app (sidebar + content).
     /// </summary>
@@ -461,11 +468,37 @@ public partial class ShellViewModel : ReactiveObject
     /// </summary>
     public void NavigateToMyProjectsAndLaunch()
     {
+        // Remember where the user came from so the wizard can route back on close.
+        WizardOriginNavLabel = SelectedNavItem?.Label;
         PendingLaunchWizard = true;
         var myProjectsItem = NavEntries.OfType<NavItem>().FirstOrDefault(n => n.Label == "My Projects");
         if (myProjectsItem != null)
         {
             SelectedNavItem = myProjectsItem;
+        }
+    }
+
+    /// <summary>
+    /// Called when the create-project wizard is dismissed. If the wizard was
+    /// opened from another section (e.g. Home), route back there; otherwise
+    /// stay on My Projects.
+    /// </summary>
+    public void OnCreateWizardClosed()
+    {
+        var origin = WizardOriginNavLabel;
+        WizardOriginNavLabel = null;
+        if (string.IsNullOrEmpty(origin) || origin == "My Projects") return;
+
+        // Only route back if we're currently on My Projects. If the user already
+        // navigated elsewhere (e.g. clicked a different sidebar item while the
+        // wizard was open), the close was triggered by onReuse resetting state —
+        // we shouldn't override the navigation they just performed.
+        if (SelectedNavItem?.Label != "My Projects") return;
+
+        var target = NavEntries.OfType<NavItem>().FirstOrDefault(n => n.Label == origin);
+        if (target != null)
+        {
+            SelectedNavItem = target;
         }
     }
 
@@ -659,6 +692,11 @@ public partial class ShellViewModel : ReactiveObject
             case "Funders":
                 MobileActiveTab = "founder";
                 MobileFounderSubTab = "funders";
+                break;
+            default:
+                // Unknown / null label — clear tab to avoid stale overlays leaking
+                // (e.g. Founder sub-tabs lingering after navigating elsewhere).
+                MobileActiveTab = "";
                 break;
         }
     }
@@ -962,10 +1000,14 @@ public partial class ShellViewModel : ReactiveObject
                     "My Projects" => GetOrCreateView("My Projects",
                         onReuse: v =>
                         {
-                            // Reset sub-nav state when re-selecting My Projects from sidebar
+                            // Reset sub-nav state when re-selecting My Projects from sidebar.
+                            // Skip when a wizard-launch is pending (e.g. Home → Launch a Project
+                            // while the previous wizard was never explicitly closed) — otherwise
+                            // we'd close the wizard we're about to open and route back to the origin.
                             if (v is MyProjectsView { DataContext: MyProjectsViewModel mpVm })
                             {
-                                mpVm.CloseCreateWizard();
+                                if (!PendingLaunchWizard)
+                                    mpVm.CloseCreateWizard();
                                 mpVm.CloseManageProject();
                             }
                         }),

@@ -156,9 +156,12 @@
             <!-- ─── LEFT COLUMN: Vertical Stepper (hidden on compact) ─── -->
             <!-- Lighter surface background with logo pattern overlay.
                  Stepper is vertically centered. -->
-            <Grid Name="StepperColumn" Grid.Column="0">
-                <!-- Solid lighter background (no tiled pattern — clean surface) -->
-                <Border Background="{DynamicResource SurfaceMedium}" />
+            <Grid Name="StepperColumn" Grid.Column="0" ClipToBounds="True">
+                <!-- Edge-to-edge stepper fill. CornerRadius is 1px larger than the
+                     outer ContentBorder (Border.Panel = 16) so the fill's arc covers
+                     the stroke's inner ring (radius 15) without leaving a gap. -->
+                <Border Background="{DynamicResource SurfaceMedium}"
+                        CornerRadius="17,0,0,17" />
                 <!-- Subtle right-edge separator -->
                 <Border BorderBrush="{DynamicResource Stroke}"
                         BorderThickness="0,0,1,0" />

@@ -281,17 +281,17 @@
                 <!-- Vue: flex gap-2 — Back (flex-1) + CTA (flex-1) + Share (52px fixed)
                      Use Grid: col 0 = *, col 1 = *, col 2 = 52px -->
                 <Grid ColumnDefinitions="*,*,52" ColumnSpacing="8">
-                    <!-- Back button — Vue line 6207: ALWAYS bg-[#1a1a1a] border-[#333] text-white, NOT theme-aware -->
+                    <!-- Back button — uses Button.Secondary.Light preset:
+                         light mode = white card w/ dark text, dark mode = #1a1a1a w/ #333 border.
+                         Centralized so all secondary/ghost buttons can be restyled from one place. -->
                     <Button Name="InvestorBackBtn" Grid.Column="0"
+                            Classes="Secondary Light"
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Center"
                             VerticalContentAlignment="Center"
                             Height="52"
                             CornerRadius="16"
-                            Background="{StaticResource MobileBackBtnBg}"
-                            BorderBrush="{StaticResource MobileBackBtnBorder}"
                             BorderThickness="1"
-                            Foreground="{StaticResource MobileBackBtnText}"
                             FontWeight="SemiBold" FontSize="14"
                             Content="Back"
                             Cursor="Hand"

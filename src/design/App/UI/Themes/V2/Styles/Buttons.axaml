@@ -197,6 +197,32 @@
         <Setter Property="Padding" Value="32,12" />
     </Style>
 
+    <!-- Ensure nested TextBlocks inside a Primary button don't fall back to the default
+         (dark) foreground in light mode. The dark gradient background requires a white text. -->
+    <Style Selector="Button.Primary TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
+    </Style>
+    <Style Selector="Button.Primary i|Icon">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
+    </Style>
+
+    <!-- Button.Primary.Light — opt-in variant that renders as a white card button in
+         light mode (dark gradient is reserved for Home screen CTAs). In dark mode
+         this is visually identical to the base Primary so the same markup works
+         across themes. Apply with Classes="Primary Light". -->
+    <Style Selector="Button.Primary.Light">
+        <Setter Property="Foreground" Value="{DynamicResource LightPrimaryButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource LightPrimaryButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource LightPrimaryButtonBorder}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="Button.Primary.Light TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource LightPrimaryButtonForeground}" />
+    </Style>
+    <Style Selector="Button.Primary.Light i|Icon">
+        <Setter Property="Foreground" Value="{DynamicResource LightPrimaryButtonForeground}" />
+    </Style>
+
     <!-- ══════════════════════════════════════════════════════════════════════
          Border.ButtonShadow — wrapper for Button that adds drop shadow
          and hover scale-up effect (Vue: translateY(-1px) on hover).
@@ -235,6 +261,23 @@
         <Setter Property="Background" Value="{DynamicResource SecondaryButtonBackground}" />
         <Setter Property="BorderBrush" Value="{DynamicResource SecondaryButtonBorder}" />
         <Setter Property="Padding" Value="24,12" />
+    </Style>
+
+    <!-- Button.Secondary.Light — opt-in preset for "ghost / back / cancel" buttons that
+         should render as a clean white card in light mode (dark text, subtle border) and
+         retain the existing dark appearance (#1a1a1a + #333) in dark mode. Apply with
+         Classes="Secondary Light". Centralized so the whole set can be restyled later. -->
+    <Style Selector="Button.Secondary.Light">
+        <Setter Property="Foreground" Value="{DynamicResource LightSecondaryButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource LightSecondaryButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource LightSecondaryButtonBorder}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="Button.Secondary.Light TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource LightSecondaryButtonForeground}" />
+    </Style>
+    <Style Selector="Button.Secondary.Light i|Icon">
+        <Setter Property="Foreground" Value="{DynamicResource LightSecondaryButtonForeground}" />
     </Style>
 
     <!-- Button.Widget — icon-only square button (matches ToggleButton.Widget) -->

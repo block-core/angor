@@ -137,6 +137,7 @@
                                         VerticalAlignment="Center"
                                         IsVisible="False" />
                                 <TextBlock Text="{TemplateBinding ButtonText}"
+                                           Foreground="{DynamicResource PrimaryButtonForeground}"
                                            VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
