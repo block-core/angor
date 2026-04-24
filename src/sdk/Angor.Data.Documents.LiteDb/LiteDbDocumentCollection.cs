@@ -12,13 +12,13 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
     private readonly LiteDatabase _database;
     private readonly ILiteCollection<T> _collection;
     private readonly ILogger _logger;
-    private readonly SemaphoreSlim _semaphore;
+    private readonly object _lock;
 
-    public LiteDbDocumentCollection(LiteDatabase database, ILogger logger, SemaphoreSlim semaphore, string? collectionName = null)
+    public LiteDbDocumentCollection(LiteDatabase database, ILogger logger, object syncLock, string? collectionName = null)
     {
         _logger = logger;
         _database = database;
-        _semaphore = semaphore;
+        _lock = syncLock;
         
         _database.CheckpointSize = 10;
         
@@ -32,12 +32,12 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
         _collection.EnsureIndex(x => x.UpdatedAt);
     }
 
-    public async Task<Result<int>> InsertAsync(params T[] documents)
+    public Task<Result<int>> InsertAsync(params T[] documents)
     {
         try
         {
             if (documents.Length == 0)
-                return Result.Failure<int>("Document cannot be null");
+                return Task.FromResult(Result.Failure<int>("Document cannot be null"));
 
             foreach (var document in documents)
             {
@@ -45,8 +45,7 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
                 document.UpdatedAt = DateTime.UtcNow;
             }
 
-            await _semaphore.WaitAsync();
-            try
+            lock (_lock)
             {
                 var result = _collection.Insert(documents);
 
@@ -55,68 +54,58 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
                     _logger.LogWarning("Expected to insert {expected} documents but only inserted {actual}", 
                         documents.Length, result);
                     
-                    return Result.Success(result);
+                    return Task.FromResult(Result.Success(result));
                 }
                 
                 _logger.LogDebug("Inserted {total} document {Type}", result, typeof(T).Name);
                 
-                return Result.Success(result);
-            }
-            finally
-            {
-                _semaphore.Release();
+                return Task.FromResult(Result.Success(result));
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to insert document {Type}", typeof(T).Name);
-            return Result.Failure<int>($"Failed to insert document: {ex.Message}");
+            return Task.FromResult(Result.Failure<int>($"Failed to insert document: {ex.Message}"));
         }
     }
 
-    public async Task<Result<bool>> UpdateAsync(T document)
+    public Task<Result<bool>> UpdateAsync(T document)
     {
         try
         {
             if (document == null)
-                return Result.Failure<bool>("Document cannot be null");
+                return Task.FromResult(Result.Failure<bool>("Document cannot be null"));
 
             if (string.IsNullOrEmpty(document.Id))
-                return Result.Failure<bool>("Document ID cannot be null or empty");
+                return Task.FromResult(Result.Failure<bool>("Document ID cannot be null or empty"));
 
             document.UpdatedAt = DateTime.UtcNow;
 
-            await _semaphore.WaitAsync();
-            try
+            lock (_lock)
             {
                 var result = _collection.Update(document);
                 _logger.LogDebug("Updated document {Type} with ID: {Id}, Success: {Success}", 
                     typeof(T).Name, document.Id, result);
-                return Result.Success(result);
-            }
-            finally
-            {
-                _semaphore.Release();
+                return Task.FromResult(Result.Success(result));
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to update document {Type} with ID: {Id}", typeof(T).Name, document?.Id);
-            return Result.Failure<bool>($"Failed to update document: {ex.Message}");
+            return Task.FromResult(Result.Failure<bool>($"Failed to update document: {ex.Message}"));
         }
     }
 
-    public async Task<Result<bool>> UpsertAsync(T document)
+    public Task<Result<bool>> UpsertAsync(T document)
     {
         try
         {
             if (document == null)
-                return Result.Failure<bool>("Document cannot be null");
+                return Task.FromResult(Result.Failure<bool>("Document cannot be null"));
 
             document.UpdatedAt = DateTime.UtcNow;
 
-            await _semaphore.WaitAsync();
-            try
+            lock (_lock)
             {
                 // LiteDB: upserts returns false for updates, true for inserts so we handle manually
                 var exists = _collection.Exists(Query.EQ("_id", new BsonValue(document.Id)));
@@ -125,231 +114,187 @@ public class LiteDbDocumentCollection<T> : IDocumentCollection<T> where T : Base
                     var result = _collection.Update(document);
                     _logger.LogDebug("Updated document {Type} with ID: {Id}, Success: {Success}", 
                         typeof(T).Name, document.Id, result);
-                    return Result.Success(result);
+                    return Task.FromResult(Result.Success(result));
                 }
                 else
                 {
                     var result = _collection.Insert(document);
                     _logger.LogDebug("Inserted document {Type} with ID: {Id}, Success: {Success}", 
                         typeof(T).Name, document.Id, result != null);
-                    return Result.Success(result != null);
+                    return Task.FromResult(Result.Success(result != null));
                 }
-            }
-            finally
-            {
-                _semaphore.Release();
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to upsert document {Type} with ID: {Id}", typeof(T).Name, document?.Id);
-            return Result.Failure<bool>($"Failed to upsert document: {ex.Message}");
+            return Task.FromResult(Result.Failure<bool>($"Failed to upsert document: {ex.Message}"));
         }
     }
 
-    public async Task<Result<bool>> DeleteAsync(string id)
+    public Task<Result<bool>> DeleteAsync(string id)
     {
         try
         {
             if (string.IsNullOrEmpty(id))
-                return Result.Failure<bool>("ID cannot be null or empty");
+                return Task.FromResult(Result.Failure<bool>("ID cannot be null or empty"));
 
-            await _semaphore.WaitAsync();
-            try
+            lock (_lock)
             {
                 var result = _collection.Delete(new BsonValue(id));
                 _logger.LogDebug("Deleted document {Type} with ID: {Id}, Success: {Success}", 
                     typeof(T).Name, id, result);
-                return Result.Success(result);
-            }
-            finally
-            {
-                _semaphore.Release();
+                return Task.FromResult(Result.Success(result));
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to delete document {Type} with ID: {Id}", typeof(T).Name, id);
-            return Result.Failure<bool>($"Failed to delete document: {ex.Message}");
+            return Task.FromResult(Result.Failure<bool>($"Failed to delete document: {ex.Message}"));
         }
     }
 
-    public async Task<Result<int>> DeleteAllAsync()
+    public Task<Result<int>> DeleteAllAsync()
     {
         try
         {
-            await _semaphore.WaitAsync();
-            try
+            lock (_lock)
             {
                 var count = _collection.DeleteAll();
                 _logger.LogDebug("Deleted all {Count} documents of type {Type}", count, typeof(T).Name);
-                return Result.Success(count);
-            }
-            finally
-            {
-                _semaphore.Release();
+                return Task.FromResult(Result.Success(count));
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to delete all documents of type {Type}", typeof(T).Name);
-            return Result.Failure<int>($"Failed to delete all documents: {ex.Message}");
+            return Task.FromResult(Result.Failure<int>($"Failed to delete all documents: {ex.Message}"));
         }
     }
 
-    public async Task<Result<T?>> FindByIdAsync(string id)
+    public Task<Result<T?>> FindByIdAsync(string id)
     {
         try
         {
             if (string.IsNullOrEmpty(id))
-                return Result.Failure<T?>("ID cannot be null or empty");
+                return Task.FromResult(Result.Failure<T?>("ID cannot be null or empty"));
 
-            await _semaphore.WaitAsync();
-            try
+            lock (_lock)
             {
                 var result = _collection.FindById(new BsonValue(id));
                 _logger.LogDebug("Found document {Type} with ID: {Id}, Exists: {Exists}", 
                     typeof(T).Name, id, result != null);
-                return Result.Success(result);
-            }
-            finally
-            {
-                _semaphore.Release();
+                return Task.FromResult(Result.Success(result));
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to find document {Type} with ID: {Id}", typeof(T).Name, id);
-            return Result.Failure<T?>($"Failed to find document: {ex.Message}");
+            return Task.FromResult(Result.Failure<T?>($"Failed to find document: {ex.Message}"));
         }
     }
 
-    public async Task<Result<bool>> ExistsAsync(string id)
+    public Task<Result<bool>> ExistsAsync(string id)
     {
         try
         {
             if (string.IsNullOrEmpty(id))
-                return Result.Failure<bool>("ID cannot be null or empty");
+                return Task.FromResult(Result.Failure<bool>("ID cannot be null or empty"));
 
-            await _semaphore.WaitAsync();
-            try
+            lock (_lock)
             {
                 var exists = _collection.Exists(Query.EQ("_id", new BsonValue(id)));
                 _logger.LogDebug("Document {Type} with ID: {Id} exists: {Exists}", 
                     typeof(T).Name, id, exists);
-                return Result.Success(exists);
-            }
-            finally
-            {
-                _semaphore.Release();
+                return Task.FromResult(Result.Success(exists));
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to check existence of document {Type} with ID: {Id}", typeof(T).Name, id);
-            return Result.Failure<bool>($"Failed to check document existence: {ex.Message}");
+            return Task.FromResult(Result.Failure<bool>($"Failed to check document existence: {ex.Message}"));
         }
     }
 
-    public async Task<Result<IEnumerable<T>>> FindAsync(Expression<Func<T, bool>> predicate)
+    public Task<Result<IEnumerable<T>>> FindAsync(Expression<Func<T, bool>> predicate)
     {
         try
         {
             if (predicate == null)
-                return Result.Failure<IEnumerable<T>>("Predicate cannot be null");
+                return Task.FromResult(Result.Failure<IEnumerable<T>>("Predicate cannot be null"));
 
-            await _semaphore.WaitAsync();
-            try
+            lock (_lock)
             {
                 var results = _collection.Find(predicate).ToList();
                 _logger.LogDebug("Found {Count} documents of type {Type}", results.Count, typeof(T).Name);
-                return Result.Success<IEnumerable<T>>(results);
-            }
-            finally
-            {
-                _semaphore.Release();
+                return Task.FromResult(Result.Success<IEnumerable<T>>(results));
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to find documents of type {Type}", typeof(T).Name);
-            return Result.Failure<IEnumerable<T>>($"Failed to find documents: {ex.Message}");
+            return Task.FromResult(Result.Failure<IEnumerable<T>>($"Failed to find documents: {ex.Message}"));
         }
     }
 
-    public async Task<Result<IEnumerable<T>>> FindAllAsync()
+    public Task<Result<IEnumerable<T>>> FindAllAsync()
     {
         try
         {
-            await _semaphore.WaitAsync();
-            try
+            lock (_lock)
             {
                 var results = _collection.FindAll().ToList();
                 _logger.LogDebug("Found {Count} documents of type {Type}", results.Count, typeof(T).Name);
-                return Result.Success<IEnumerable<T>>(results);
-            }
-            finally
-            {
-                _semaphore.Release();
+                return Task.FromResult(Result.Success<IEnumerable<T>>(results));
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to find all documents of type {Type}", typeof(T).Name);
-            return Result.Failure<IEnumerable<T>>($"Failed to find all documents: {ex.Message}");
+            return Task.FromResult(Result.Failure<IEnumerable<T>>($"Failed to find all documents: {ex.Message}"));
         }
     }
 
-    public async Task<Result<IEnumerable<T>>> GetAllAsync()
+    public Task<Result<IEnumerable<T>>> GetAllAsync()
     {
-        return await FindAllAsync();
+        return FindAllAsync();
     }
 
-    public async Task<Result<int>> CountAsync()
+    public Task<Result<int>> CountAsync()
     {
         try
         {
-            await _semaphore.WaitAsync();
-            try
+            lock (_lock)
             {
                 var count = _collection.Count();
                 _logger.LogDebug("Count of documents {Type}: {Count}", typeof(T).Name, count);
-                return Result.Success(count);
-            }
-            finally
-            {
-                _semaphore.Release();
+                return Task.FromResult(Result.Success(count));
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to count documents of type {Type}", typeof(T).Name);
-            return Result.Failure<int>($"Failed to count documents: {ex.Message}");
+            return Task.FromResult(Result.Failure<int>($"Failed to count documents: {ex.Message}"));
         }
     }
 
-    public async Task<Result<int>> CountAsync(Expression<Func<T, bool>>? predicate = null)
+    public Task<Result<int>> CountAsync(Expression<Func<T, bool>>? predicate = null)
     {
         try
         {
-            await _semaphore.WaitAsync();
-            try
+            lock (_lock)
             {
                 var count = predicate != null 
                     ? _collection.Count(predicate) 
                     : _collection.Count();
                 _logger.LogDebug("Count of documents {Type} with predicate: {Count}", typeof(T).Name, count);
-                return Result.Success(count);
-            }
-            finally
-            {
-                _semaphore.Release();
+                return Task.FromResult(Result.Success(count));
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to count documents of type {Type} with predicate", typeof(T).Name);
-            return Result.Failure<int>($"Failed to count documents: {ex.Message}");
+            return Task.FromResult(Result.Failure<int>($"Failed to count documents: {ex.Message}"));
         }
     }
 }

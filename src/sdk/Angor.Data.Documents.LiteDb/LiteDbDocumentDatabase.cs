@@ -10,7 +10,7 @@ public class LiteDbDocumentDatabase : IAngorDocumentDatabase
     private readonly LiteDatabase _database;
     private readonly ILogger<LiteDbDocumentDatabase> _logger;
     private readonly string _databasePath;
-    private readonly SemaphoreSlim _semaphore = new(1, 1);
+    private readonly object _lock = new();
 
     public LiteDbDocumentDatabase(string connectionString, ILogger<LiteDbDocumentDatabase> logger)
     {
@@ -32,7 +32,7 @@ public class LiteDbDocumentDatabase : IAngorDocumentDatabase
     public IDocumentCollection<T> GetCollection<T>() where T : BaseDocument
     {
         // Create a new wrapper each time - it's lightweight
-        return new LiteDbDocumentCollection<T>(_database, _logger, _semaphore);
+        return new LiteDbDocumentCollection<T>(_database, _logger, _lock);
     }
 
     public IDocumentCollection<T> GetCollection<T>(string collectionName) where T : BaseDocument
@@ -40,7 +40,7 @@ public class LiteDbDocumentDatabase : IAngorDocumentDatabase
         // If no custom name provided, use the standard approach
         return string.IsNullOrEmpty(collectionName) 
             ? GetCollection<T>() 
-            : new LiteDbDocumentCollection<T>(_database, _logger, _semaphore, collectionName);
+            : new LiteDbDocumentCollection<T>(_database, _logger, _lock, collectionName);
     }
 
     public async Task<bool> BeginTransactionAsync()
@@ -160,7 +160,6 @@ public class LiteDbDocumentDatabase : IAngorDocumentDatabase
     {
         _database.Checkpoint();
         _database.Dispose();
-        _semaphore.Dispose();
         _logger.LogInformation("LiteDB database disposed");
     }
 }
