@@ -29,6 +29,7 @@
     <StyleInclude Source="Controls/CalendarPicker.axaml" />
     <StyleInclude Source="Controls/NumericUpDown.axaml" />
     
+    <StyleInclude Source="Styles/Skeleton.axaml" />
     <StyleInclude Source="Styles/HeaderedContainer.axaml" />
     <StyleInclude Source="Styles/EdgePanel.axaml" />
     <StyleInclude Source="Styles/Border.axaml" />

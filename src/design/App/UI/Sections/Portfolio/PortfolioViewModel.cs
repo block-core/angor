@@ -474,6 +474,7 @@ public partial class PortfolioViewModel : ReactiveObject
     [Reactive] private bool hasInvestments;
     [Reactive] private InvestmentViewModel? selectedInvestment;
     [Reactive] private bool isLoading;
+    [Reactive] private bool isInitialLoad = true;
 
     // ── Left panel stats ──
     public int FundedProjects { get; private set; }
@@ -705,6 +706,7 @@ public partial class PortfolioViewModel : ReactiveObject
         finally
         {
             IsLoading = false;
+            IsInitialLoad = false;
         }
     }
 

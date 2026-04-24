@@ -82,8 +82,26 @@
                     </Button>
                 </Grid>
 
+                <!-- Skeleton placeholder grid — visible until first data arrives -->
+                <ItemsControl IsVisible="{Binding IsInitialLoad}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <controls:ResponsiveGrid MinItemWidth="320"
+                                                     ColumnSpacing="16"
+                                                     RowSpacing="16" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <controls:SkeletonProjectCard />
+                    <controls:SkeletonProjectCard />
+                    <controls:SkeletonProjectCard />
+                    <controls:SkeletonProjectCard />
+                    <controls:SkeletonProjectCard />
+                    <controls:SkeletonProjectCard />
+                </ItemsControl>
+
                 <!-- Project cards in responsive grid -->
-                <ItemsControl ItemsSource="{Binding Projects}">
+                <ItemsControl ItemsSource="{Binding Projects}"
+                              IsVisible="{Binding !IsInitialLoad}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <controls:ResponsiveGrid MinItemWidth="320"

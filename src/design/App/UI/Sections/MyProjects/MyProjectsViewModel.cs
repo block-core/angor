@@ -65,7 +65,7 @@ public partial class MyProjectsViewModel : ReactiveObject
     [Reactive] private bool showCreateWizard;
     [Reactive] private ManageProjectViewModel? selectedManageProject;
     [Reactive] private bool isLoading;
-
+    [Reactive] private bool isInitialLoad = true;
     /// <summary>The create project wizard VM, injected via DI.</summary>
     public CreateProjectViewModel CreateProjectVm { get; }
 
@@ -162,6 +162,7 @@ public partial class MyProjectsViewModel : ReactiveObject
         finally
         {
             IsLoading = false;
+            IsInitialLoad = false;
         }
     }
 
@@ -202,6 +203,7 @@ public partial class MyProjectsViewModel : ReactiveObject
         finally
         {
             IsLoading = false;
+            IsInitialLoad = false;
         }
 
         // Reload from local DB (now includes any newly discovered projects)

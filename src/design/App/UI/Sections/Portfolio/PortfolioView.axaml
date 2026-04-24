@@ -263,8 +263,22 @@
                                FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}" />
 
+                    <!-- Skeleton placeholder grid — visible until first data arrives -->
+                    <ItemsControl IsVisible="{Binding IsInitialLoad}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <controls:ResponsiveGrid MinItemWidth="320" ColumnSpacing="16" RowSpacing="16" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <controls:SkeletonInvestmentCard />
+                        <controls:SkeletonInvestmentCard />
+                        <controls:SkeletonInvestmentCard />
+                        <controls:SkeletonInvestmentCard />
+                    </ItemsControl>
+
                     <!-- Investment Cards — responsive grid for 2 columns -->
-                    <ItemsControl ItemsSource="{Binding Investments}">
+                    <ItemsControl ItemsSource="{Binding Investments}"
+                                  IsVisible="{Binding !IsInitialLoad}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <controls:ResponsiveGrid MinItemWidth="320" ColumnSpacing="16" RowSpacing="16" />

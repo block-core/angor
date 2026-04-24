@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="App.UI.Shared.Controls.SkeletonInvestmentCard">
+    <Border CornerRadius="16" BorderThickness="1"
+            BorderBrush="{DynamicResource Stroke}"
+            Background="{DynamicResource Surface}"
+            BoxShadow="{DynamicResource ItemShadow}"
+            ClipToBounds="True">
+        <StackPanel>
+            <Border Classes="Skeleton" Height="120" CornerRadius="0" />
+            <Panel Margin="20,0,0,0" Height="32" VerticalAlignment="Top">
+                <Border Classes="Skeleton Circle"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Margin="0,-32,0,0" />
+            </Panel>
+            <StackPanel Spacing="12" Margin="20,16,20,20">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Border Classes="Skeleton Pill" />
+                    <Border Classes="Skeleton Pill" Width="50" />
+                </StackPanel>
+                <Border Classes="Skeleton TextHeading" HorizontalAlignment="Left" Width="180" />
+                <StackPanel Spacing="6">
+                    <DockPanel>
+                        <Border Classes="Skeleton TextLine" DockPanel.Dock="Left"
+                                Width="60" HorizontalAlignment="Left" />
+                        <Border Classes="Skeleton TextLine" DockPanel.Dock="Right"
+                                Width="100" HorizontalAlignment="Right" />
+                    </DockPanel>
+                    <DockPanel>
+                        <Border Classes="Skeleton TextLine" DockPanel.Dock="Left"
+                                Width="40" HorizontalAlignment="Left" />
+                        <Border Classes="Skeleton TextLine" DockPanel.Dock="Right"
+                                Width="100" HorizontalAlignment="Right" />
+                    </DockPanel>
+                </StackPanel>
+                <Border Classes="Skeleton Bar" Height="6" CornerRadius="3" />
+                <Border Classes="Skeleton" Height="40" CornerRadius="8" Margin="0,4,0,0" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>
