@@ -364,10 +364,16 @@ public partial class InvestPageViewModel : ReactiveObject
             _logger.LogError(ex, "Unhandled exception in PayWithWalletCommand");
             PaymentStatusText = $"Error: {ex.Message}";
         });
-        PayViaInvoiceCommand = ReactiveCommand.CreateFromTask(PayViaInvoiceAsync);
-        PayViaInvoiceCommand.ThrownExceptions.Subscribe(ex =>
+        GenerateReceiveAddressCommand = ReactiveCommand.CreateFromTask(GenerateReceiveAddressAsync);
+        GenerateReceiveAddressCommand.ThrownExceptions.Subscribe(ex =>
         {
-            _logger.LogError(ex, "Unhandled exception in PayViaInvoiceCommand");
+            _logger.LogError(ex, "Unhandled exception in GenerateReceiveAddressCommand");
+            PaymentStatusText = $"Error: {ex.Message}";
+        });
+        PayToOnChainAddressCommand = ReactiveCommand.CreateFromTask(PayToOnChainAddressAsync);
+        PayToOnChainAddressCommand.ThrownExceptions.Subscribe(ex =>
+        {
+            _logger.LogError(ex, "Unhandled exception in PayToOnChainAddressCommand");
             PaymentStatusText = $"Error: {ex.Message}";
         });
         PayViaLightningCommand = ReactiveCommand.CreateFromTask(PayViaLightningAsync);
@@ -1021,22 +1027,99 @@ public partial class InvestPageViewModel : ReactiveObject
         }
     }
 
-    /// <summary>Switch to invoice payment screen and default to the On-Chain tab.
-    /// Auto-kicks PayViaInvoice so the address is generated and monitoring is live by the time the user sees the modal.
+    /// <summary>Switch to invoice payment screen. Generates the receive address once
+    /// (wallet creation + refresh + address generation), then starts on-chain monitoring.
+    /// Both on-chain and Lightning tabs reuse this address.
     /// Vue ref: "Or pay an invoice instead" button.</summary>
     public void ShowInvoice()
     {
         CurrentScreen = InvestScreen.Invoice;
         SelectedNetworkTab = NetworkTab.OnChain;
-        // Reset prior payload so a stale Lightning invoice from a closed flow doesn't bleed through.
         LightningInvoice = null;
         LightningSwapId = null;
         OnChainAddress = null;
         ErrorMessage = null;
         IsProcessing = true;
         PaymentStatusText = "Generating invoice address...";
-        // Auto-start on-chain monitoring — on-chain is the default 1-click experience.
-        PayViaInvoice();
+        GenerateReceiveAddressCommand.Execute().Subscribe();
+    }
+
+    /// <summary>Generates the receive address (creating a wallet if needed), then starts on-chain monitoring.</summary>
+    public ReactiveCommand<Unit, Unit> GenerateReceiveAddressCommand { get; }
+
+    private async Task GenerateReceiveAddressAsync()
+    {
+        var wallet = Wallets.FirstOrDefault();
+        if (wallet == null)
+        {
+            var createResult = await EnsureWalletExistsAsync();
+            if (createResult.IsFailure)
+            {
+                ErrorMessage = createResult.Error;
+                IsProcessing = false;
+                return;
+            }
+            wallet = Wallets.FirstOrDefault();
+            if (wallet == null)
+            {
+                ErrorMessage = "Wallet was created but not found after reload.";
+                IsProcessing = false;
+                return;
+            }
+        }
+        if (wallet.Id is null || string.IsNullOrEmpty(wallet.Id.Value))
+        {
+            ErrorMessage = "Wallet has no ID — wallet store may be in an inconsistent state.";
+            IsProcessing = false;
+            return;
+        }
+        if (string.IsNullOrEmpty(Project?.ProjectId))
+        {
+            ErrorMessage = "Project has no ID.";
+            IsProcessing = false;
+            return;
+        }
+
+        PaymentStatusText = "Refreshing wallet...";
+        _logger.LogInformation("Refreshing wallet UTXOs...");
+        try
+        {
+            await _walletContext.RefreshAllBalancesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "RefreshAllBalancesAsync failed");
+            ErrorMessage = $"Refresh wallet failed: {ex.Message}";
+            IsProcessing = false;
+            return;
+        }
+
+        PaymentStatusText = "Generating invoice address...";
+        Result<Address> addressResult;
+        try
+        {
+            addressResult = await _walletAppService.GetNextReceiveAddress(wallet.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "GetNextReceiveAddress threw for wallet {WalletId}", wallet.Id.Value);
+            ErrorMessage = $"GetNextReceiveAddress threw: {ex.GetType().Name}: {ex.Message}";
+            IsProcessing = false;
+            return;
+        }
+        if (addressResult.IsFailure)
+        {
+            _logger.LogError("GetNextReceiveAddress failed: {Error}", addressResult.Error);
+            ErrorMessage = $"GetNextReceiveAddress failed: {addressResult.Error}";
+            IsProcessing = false;
+            return;
+        }
+
+        OnChainAddress = addressResult.Value.Value;
+        _logger.LogInformation("Receive address generated: {Address}", OnChainAddress);
+
+        // Start on-chain monitoring (default tab)
+        PayToOnChainAddress();
     }
 
     /// <summary>Go back to wallet selector from invoice.</summary>
@@ -1054,9 +1137,9 @@ public partial class InvestPageViewModel : ReactiveObject
     /// </summary>
     public void SelectNetworkTab(NetworkTab tab)
     {
-        if (SelectedNetworkTab == tab && IsProcessing) return;
+        if (SelectedNetworkTab == tab) return;
 
-        // Cancel whatever monitoring loop is running before we change paths.
+        // Cancel whatever monitoring/swap loop is running before switching paths.
         _invoiceMonitorCts?.Cancel();
         _invoiceMonitorCts = null;
         ErrorMessage = null;
@@ -1070,21 +1153,14 @@ public partial class InvestPageViewModel : ReactiveObject
         switch (tab)
         {
             case NetworkTab.OnChain:
-                OnChainAddress = null;
                 LightningInvoice = null;
                 LightningSwapId = null;
-                // Synchronous status before the async task takes over — gives the user
-                // immediate feedback even before any await yields back.
                 IsProcessing = true;
-                PaymentStatusText = "Generating invoice address...";
-                PayViaInvoice();
+                PayToOnChainAddress();
                 break;
             case NetworkTab.Lightning:
-                OnChainAddress = null;
                 LightningInvoice = null;
                 LightningSwapId = null;
-                // Same synchronous-feedback trick + spinner flag so the QR area
-                // shows the loader the moment the tab is tapped.
                 IsProcessing = true;
                 IsGeneratingLightningInvoice = true;
                 PaymentStatusText = "Creating Lightning invoice...";
@@ -1092,7 +1168,6 @@ public partial class InvestPageViewModel : ReactiveObject
                 break;
             case NetworkTab.Liquid:
             case NetworkTab.Import:
-                // Stubs — no SDK call yet. Modal shows the coming-soon placeholder.
                 break;
         }
     }
@@ -1100,107 +1175,47 @@ public partial class InvestPageViewModel : ReactiveObject
     /// <summary>Generate an on-chain receive address, monitor it for incoming funds,
     /// and on detection run the build → threshold → publish pipeline.
     /// Vue ref: handlePayment() → paymentStatus "received" → success.</summary>
-    public ReactiveCommand<Unit, Unit> PayViaInvoiceCommand { get; }
+    public ReactiveCommand<Unit, Unit> PayToOnChainAddressCommand { get; }
 
-    public void PayViaInvoice() => PayViaInvoiceCommand.Execute().Subscribe(
+    public void PayToOnChainAddress() => PayToOnChainAddressCommand.Execute().Subscribe(
         onNext: _ => { },
-        onError: ex => _logger.LogError(ex, "PayViaInvoice subscription error"));
+        onError: ex => _logger.LogError(ex, "PayToOnChainAddress subscription error"));
 
-    private async Task PayViaInvoiceAsync()
+    private async Task PayToOnChainAddressAsync()
     {
-        // Use the first available wallet for address generation and monitoring.
-        // If no wallet exists, create one silently (1-click experience).
         var wallet = Wallets.FirstOrDefault();
-        if (wallet == null)
+        if (wallet?.Id is null || string.IsNullOrEmpty(wallet.Id.Value) ||
+            string.IsNullOrEmpty(OnChainAddress))
         {
-            var createResult = await EnsureWalletExistsAsync();
-            if (createResult.IsFailure)
-            {
-                ErrorMessage = createResult.Error;
-                return;
-            }
-            wallet = Wallets.FirstOrDefault();
-            if (wallet == null)
-            {
-                ErrorMessage = "Wallet was created but not found after reload.";
-                return;
-            }
-        }
-        if (wallet.Id is null || string.IsNullOrEmpty(wallet.Id.Value))
-        {
-            ErrorMessage = "Wallet has no ID — wallet store may be in an inconsistent state.";
-            return;
-        }
-        if (string.IsNullOrEmpty(Project?.ProjectId))
-        {
-            ErrorMessage = "Project has no ID — cannot build investment for an unidentified project.";
+            ErrorMessage = "Wallet or receive address not ready.";
             return;
         }
 
         ErrorMessage = null;
         IsProcessing = true;
 
-        // Refresh wallet UTXOs from the indexer before building the transaction.
-        PaymentStatusText = "Refreshing wallet...";
-        _logger.LogInformation("Refreshing wallet UTXOs before building invoice investment draft...");
-        try
-        {
-            await _walletContext.RefreshAllBalancesAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "RefreshAllBalancesAsync failed during on-chain invoice flow");
-            ErrorMessage = $"Refresh wallet failed: {ex.Message}";
-            IsProcessing = false;
-            return;
-        }
-
         _invoiceMonitorCts?.Cancel();
-        _invoiceMonitorCts = new CancellationTokenSource();
+        var cts = new CancellationTokenSource();
+        _invoiceMonitorCts = cts;
 
         try
         {
             var walletId = wallet.Id;
             var amountSats = ((decimal)ParseAmount()).ToUnitSatoshi();
 
-            PaymentStatusText = "Generating invoice address...";
-            Result<Address> addressResult;
-            try
-            {
-                addressResult = await _walletAppService.GetNextReceiveAddress(walletId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "GetNextReceiveAddress threw for wallet {WalletId}", walletId.Value);
-                ErrorMessage = $"GetNextReceiveAddress threw: {ex.GetType().Name}: {ex.Message}";
-                IsProcessing = false;
-                return;
-            }
-            if (addressResult.IsFailure)
-            {
-                _logger.LogError("GetNextReceiveAddress returned failure for wallet {WalletId}: {Error}", walletId.Value, addressResult.Error);
-                ErrorMessage = $"GetNextReceiveAddress failed: {addressResult.Error}";
-                IsProcessing = false;
-                return;
-            }
-            OnChainAddress = addressResult.Value.Value;
-            _logger.LogInformation("On-chain receive address generated: {Address}", OnChainAddress);
-
             PaymentStatusText = "Waiting for payment...";
             var monitorRequest = new MonitorOp.MonitorAddressForFundsRequest(
                 walletId,
-                addressResult.Value.Value,
+                OnChainAddress,
                 new Angor.Sdk.Common.Amount(amountSats),
                 TimeSpan.FromMinutes(30));
 
             var monitorResult = await _investmentAppService.MonitorAddressForFunds(
-                monitorRequest, _invoiceMonitorCts.Token);
+                monitorRequest, cts.Token);
 
             if (monitorResult.IsFailure)
             {
-                // If the token was cancelled (tab switch / modal close) don't surface the
-                // SDK error — the user intentionally left this path.
-                if (_invoiceMonitorCts?.IsCancellationRequested != false)
+                if (cts.IsCancellationRequested)
                 {
                     _logger.LogInformation("On-chain monitoring returned failure after cancellation — suppressing error");
                     return;
@@ -1213,16 +1228,15 @@ public partial class InvestPageViewModel : ReactiveObject
             PaymentStatusText = "Payment received!";
             PaymentReceived = true;
 
-            await CompleteInvestmentAfterFundingAsync(walletId, addressResult.Value.Value, amountSats);
+            await CompleteInvestmentAfterFundingAsync(walletId, OnChainAddress, amountSats);
         }
         catch (OperationCanceledException)
         {
-            // Tab switch or modal close — not a user-facing error.
-            _logger.LogInformation("On-chain invoice monitoring was cancelled");
+            _logger.LogInformation("On-chain monitoring was cancelled");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "PayViaInvoiceAsync failed");
+            _logger.LogError(ex, "PayToOnChainAddressAsync failed");
             ErrorMessage = $"An error occurred: {ex.Message}";
         }
         finally
@@ -1244,31 +1258,11 @@ public partial class InvestPageViewModel : ReactiveObject
     private async Task PayViaLightningAsync()
     {
         var wallet = Wallets.FirstOrDefault();
-        if (wallet == null)
+        if (wallet?.Id is null || string.IsNullOrEmpty(wallet.Id.Value) ||
+            string.IsNullOrEmpty(OnChainAddress) || string.IsNullOrEmpty(Project?.ProjectId))
         {
-            var createResult = await EnsureWalletExistsAsync();
-            if (createResult.IsFailure)
-            {
-                ErrorMessage = createResult.Error;
-                IsGeneratingLightningInvoice = false;
-                return;
-            }
-            wallet = Wallets.FirstOrDefault();
-            if (wallet == null)
-            {
-                ErrorMessage = "Wallet was created but not found after reload.";
-                IsGeneratingLightningInvoice = false;
-                return;
-            }
-        }
-        if (wallet.Id is null || string.IsNullOrEmpty(wallet.Id.Value))
-        {
-            ErrorMessage = "Wallet has no ID — wallet store may be in an inconsistent state.";
-            return;
-        }
-        if (string.IsNullOrEmpty(Project?.ProjectId))
-        {
-            ErrorMessage = "Project has no ID — cannot create Lightning swap for an unidentified project.";
+            ErrorMessage = "Wallet or receive address not ready.";
+            IsGeneratingLightningInvoice = false;
             return;
         }
 
@@ -1276,55 +1270,16 @@ public partial class InvestPageViewModel : ReactiveObject
         IsProcessing = true;
         IsGeneratingLightningInvoice = true;
 
-        PaymentStatusText = "Refreshing wallet...";
-        _logger.LogInformation("Refreshing wallet UTXOs before creating Lightning swap...");
-        try
-        {
-            await _walletContext.RefreshAllBalancesAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "RefreshAllBalancesAsync failed during Lightning swap flow");
-            ErrorMessage = $"Refresh wallet failed: {ex.Message}";
-            IsProcessing = false;
-            IsGeneratingLightningInvoice = false;
-            return;
-        }
-
         _invoiceMonitorCts?.Cancel();
-        _invoiceMonitorCts = new CancellationTokenSource();
+        var cts = new CancellationTokenSource();
+        _invoiceMonitorCts = cts;
 
         try
         {
             var walletId = wallet.Id;
+            var receivingAddress = OnChainAddress;
             var projectId = new ProjectId(Project.ProjectId);
             var amountSats = ((decimal)ParseAmount()).ToUnitSatoshi();
-
-            PaymentStatusText = "Generating receive address...";
-            Result<Address> addressResult;
-            try
-            {
-                addressResult = await _walletAppService.GetNextReceiveAddress(walletId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "GetNextReceiveAddress threw for wallet {WalletId} (Lightning path)", walletId.Value);
-                ErrorMessage = $"GetNextReceiveAddress threw: {ex.GetType().Name}: {ex.Message}";
-                IsProcessing = false;
-                IsGeneratingLightningInvoice = false;
-                return;
-            }
-            if (addressResult.IsFailure)
-            {
-                _logger.LogError("GetNextReceiveAddress returned failure for wallet {WalletId} (Lightning path): {Error}", walletId.Value, addressResult.Error);
-                ErrorMessage = $"GetNextReceiveAddress failed: {addressResult.Error}";
-                IsProcessing = false;
-                IsGeneratingLightningInvoice = false;
-                return;
-            }
-            var receivingAddress = addressResult.Value.Value;
-            OnChainAddress = receivingAddress;
-            _logger.LogInformation("Lightning swap receive address generated: {Address}", receivingAddress);
 
             PaymentStatusText = "Creating Lightning invoice...";
             _logger.LogInformation("Creating Boltz Lightning swap: wallet={WalletId}, project={ProjectId}, amount={AmountSats} sats",
@@ -1381,7 +1336,6 @@ public partial class InvestPageViewModel : ReactiveObject
             }
 
             PaymentStatusText = "Confirming on-chain claim...";
-            // The claim transaction has been broadcast — wait for the UTXO to surface at our receive address.
             var monitorAddressRequest = new MonitorOp.MonitorAddressForFundsRequest(
                 walletId,
                 receivingAddress,
@@ -1389,10 +1343,10 @@ public partial class InvestPageViewModel : ReactiveObject
                 TimeSpan.FromMinutes(30));
 
             var monitorAddressResult = await _investmentAppService.MonitorAddressForFunds(
-                monitorAddressRequest, _invoiceMonitorCts.Token);
+                monitorAddressRequest, cts.Token);
             if (monitorAddressResult.IsFailure)
             {
-                if (_invoiceMonitorCts?.IsCancellationRequested != false)
+                if (cts.IsCancellationRequested)
                 {
                     _logger.LogInformation("Lightning on-chain monitoring returned failure after cancellation — suppressing error");
                     return;
@@ -1516,6 +1470,14 @@ public partial class InvestPageViewModel : ReactiveObject
 
         _ = _walletContext.RefreshBalanceAsync(walletId);
         CurrentScreen = InvestScreen.Success;
+    }
+
+    /// <summary>Cancel the active invoice/address monitoring loop (if any).
+    /// Used by tests to let the on-chain path settle before switching tabs.</summary>
+    public void CancelInvoiceMonitor()
+    {
+        _invoiceMonitorCts?.Cancel();
+        _invoiceMonitorCts = null;
     }
 
     /// <summary>Close modal overlays, return to invest form.</summary>
