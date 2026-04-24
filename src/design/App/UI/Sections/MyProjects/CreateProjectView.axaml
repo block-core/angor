@@ -156,12 +156,13 @@
             <!-- ─── LEFT COLUMN: Vertical Stepper (hidden on compact) ─── -->
             <!-- Lighter surface background with logo pattern overlay.
                  Stepper is vertically centered. -->
-            <Grid Name="StepperColumn" Grid.Column="0" ClipToBounds="True">
-                <!-- Edge-to-edge stepper fill. CornerRadius is 1px larger than the
-                     outer ContentBorder (Border.Panel = 16) so the fill's arc covers
-                     the stroke's inner ring (radius 15) without leaving a gap. -->
+            <Grid Name="StepperColumn" Grid.Column="0">
+                <!-- Edge-to-edge stepper fill. Rounded left corners match the
+                     outer ContentBorder radius (16). The stroke overlay Border
+                     at the end of WizardMainGrid paints the 1px outer stroke
+                     on top of this fill, so corner alignment is handled there. -->
                 <Border Background="{DynamicResource SurfaceMedium}"
-                        CornerRadius="17,0,0,17" />
+                        CornerRadius="16,0,0,16" />
                 <!-- Subtle right-edge separator -->
                 <Border BorderBrush="{DynamicResource Stroke}"
                         BorderThickness="0,0,1,0" />
@@ -568,6 +569,19 @@
 
                 </Panel>
             </DockPanel>
+
+            <!-- Stroke overlay: ContentBorder's stroke gets covered by the
+                 SurfaceMedium stepper fill at the rounded corners. We paint
+                 our own matching rounded stroke on top of both columns so it
+                 wins no matter what the clip does. Matches ContentBorder's
+                 CornerRadius=16 and BorderThickness=1. IsHitTestVisible=False
+                 so it doesn't block clicks on the stepper/content beneath. -->
+            <Border Grid.Column="0" Grid.ColumnSpan="2"
+                    BorderBrush="{DynamicResource Stroke}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    Background="Transparent"
+                    IsHitTestVisible="False" />
         </Grid>
 
     <!-- Deploy flow overlay is now rendered at shell level -->

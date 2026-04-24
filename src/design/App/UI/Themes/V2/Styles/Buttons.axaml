@@ -209,18 +209,17 @@
     <!-- Button.Primary.Light — opt-in variant that renders as a white card button in
          light mode (dark gradient is reserved for Home screen CTAs). In dark mode
          this is visually identical to the base Primary so the same markup works
-         across themes. Apply with Classes="Primary Light". -->
+         across themes. Apply with Classes="Primary Light".
+         NOTE: nested TextBlock / i|Icon selectors on compound class selectors
+         (Button.Primary.Light TextBlock) segfault Avalonia on Android. We set
+         Foreground on the Button itself and rely on natural inheritance. For
+         buttons whose Content is a string, Avalonia wraps in ContentPresenter
+         which respects the Button's Foreground via TemplateBinding. -->
     <Style Selector="Button.Primary.Light">
         <Setter Property="Foreground" Value="{DynamicResource LightPrimaryButtonForeground}" />
         <Setter Property="Background" Value="{DynamicResource LightPrimaryButtonBackground}" />
         <Setter Property="BorderBrush" Value="{DynamicResource LightPrimaryButtonBorder}" />
         <Setter Property="BorderThickness" Value="1" />
-    </Style>
-    <Style Selector="Button.Primary.Light TextBlock">
-        <Setter Property="Foreground" Value="{DynamicResource LightPrimaryButtonForeground}" />
-    </Style>
-    <Style Selector="Button.Primary.Light i|Icon">
-        <Setter Property="Foreground" Value="{DynamicResource LightPrimaryButtonForeground}" />
     </Style>
 
     <!-- ══════════════════════════════════════════════════════════════════════
@@ -266,18 +265,14 @@
     <!-- Button.Secondary.Light — opt-in preset for "ghost / back / cancel" buttons that
          should render as a clean white card in light mode (dark text, subtle border) and
          retain the existing dark appearance (#1a1a1a + #333) in dark mode. Apply with
-         Classes="Secondary Light". Centralized so the whole set can be restyled later. -->
+         Classes="Secondary Light". Centralized so the whole set can be restyled later.
+         NOTE: see Primary.Light note — no nested selectors on compound classes
+         (crashes Avalonia Android). Foreground inherits naturally. -->
     <Style Selector="Button.Secondary.Light">
         <Setter Property="Foreground" Value="{DynamicResource LightSecondaryButtonForeground}" />
         <Setter Property="Background" Value="{DynamicResource LightSecondaryButtonBackground}" />
         <Setter Property="BorderBrush" Value="{DynamicResource LightSecondaryButtonBorder}" />
         <Setter Property="BorderThickness" Value="1" />
-    </Style>
-    <Style Selector="Button.Secondary.Light TextBlock">
-        <Setter Property="Foreground" Value="{DynamicResource LightSecondaryButtonForeground}" />
-    </Style>
-    <Style Selector="Button.Secondary.Light i|Icon">
-        <Setter Property="Foreground" Value="{DynamicResource LightSecondaryButtonForeground}" />
     </Style>
 
     <!-- Button.Widget — icon-only square button (matches ToggleButton.Widget) -->
