@@ -14,8 +14,7 @@
     -->
 
     <Panel>
-        <Border HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                MinWidth="320" MaxWidth="1030" MaxHeight="720" Margin="16"
+        <Border Classes="ModalCard"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"

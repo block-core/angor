@@ -71,8 +71,8 @@
         <!-- MODAL CARD — max-w-4xl = 896px                          -->
         <!-- Vue: rounded-2xl shadow-2xl bg-[#111]/bg-white          -->
         <!-- ════════════════════════════════════════════════════════ -->
-        <Border HorizontalAlignment="Stretch" VerticalAlignment="Center"
-                MinWidth="320" MaxWidth="1030" MaxHeight="720" Margin="16"
+        <Border Classes="ModalCard Wide"
+                MaxWidth="896"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"

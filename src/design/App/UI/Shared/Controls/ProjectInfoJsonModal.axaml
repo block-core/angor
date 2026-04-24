@@ -23,8 +23,7 @@
     </UserControl.Styles>
 
     <Panel>
-        <Border HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="500" MaxWidth="700"
+        <Border Classes="ModalCard Wide"
                 MaxHeight="600"
                 CornerRadius="16"
                 Background="{DynamicResource ShareModalBg}"

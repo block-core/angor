@@ -2,18 +2,28 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt">
     <aapt:attr name="android:drawable">
+        <!--
+            Android 12+ splash applies a circular mask at ~2/3 of the drawable size.
+            Use a 288x288dp canvas (Android splash standard without icon background).
+            Scale the 120x129 logo to ~135dp and center its geometric centroid
+            (roughly 58.6, 65.5 in local path coords) at the canvas center (144, 144)
+            so the full A + bottom triangle dots fit inside the 192dp safe circle.
+            Ref: https://developer.android.com/about/versions/12/features/splash-screen
+        -->
         <vector
             android:name="vector"
-            android:width="128dp"
-            android:height="128dp"
-            android:viewportWidth="120"
-            android:viewportHeight="129">
+            android:width="288dp"
+            android:height="288dp"
+            android:viewportWidth="288"
+            android:viewportHeight="288">
             <group
                 android:name="wrapper"
-                android:pivotX="60"
-                android:pivotY="64.5"
-                android:scaleX="0.5"
-                android:scaleY="0.5">
+                android:pivotX="65.15"
+                android:pivotY="65.5"
+                android:scaleX="1.0"
+                android:scaleY="1.0"
+                android:translateX="78.85"
+                android:translateY="78.5">
                 <group android:name="logo_group">
                     <!-- Main triangular shape with inner cutout -->
                     <path
@@ -62,15 +72,15 @@
                 <objectAnimator
                     android:propertyName="scaleX"
                     android:duration="1000"
-                    android:valueFrom="0.3"
-                    android:valueTo="0.5"
+                    android:valueFrom="0.6"
+                    android:valueTo="1.0"
                     android:valueType="floatType"
                     android:interpolator="@android:interpolator/overshoot"/>
                 <objectAnimator
                     android:propertyName="scaleY"
                     android:duration="1000"
-                    android:valueFrom="0.3"
-                    android:valueTo="0.5"
+                    android:valueFrom="0.6"
+                    android:valueTo="1.0"
                     android:valueType="floatType"
                     android:interpolator="@android:interpolator/overshoot"/>
             </set>

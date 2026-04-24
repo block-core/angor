@@ -31,4 +31,19 @@
     <Thickness x:Key="PaddingBadge">12,8,12,8</Thickness>
     <Thickness x:Key="MarginT4">0,16,0,0</Thickness>
 
+    <!-- Modal sizing tiers (reference: Deploy/Invest Wallet Selector) -->
+    <!-- MinWidth kept at 320 on every tier so mobile respects a 16px gutter left/right via
+         Margin=16 in Modals.axaml instead of forcing overflow. MaxWidth caps desktop card size. -->
+    <!-- Standard: default for most modals (password prompts, wallet pickers, confirmations) -->
+    <x:Double x:Key="ModalMinWidth">320</x:Double>
+    <x:Double x:Key="ModalMaxWidth">512</x:Double>
+    <!-- Wide: for tabular / multi-column content (recovery, penalties, JSON viewers)
+         MinWidth kept small for mobile-safe behavior; MaxWidth drives desktop expansion. -->
+    <x:Double x:Key="ModalWideMinWidth">320</x:Double>
+    <x:Double x:Key="ModalWideMaxWidth">672</x:Double>
+    <!-- Full: panel-like modals (Funds section: Create/Send/Receive/UTXOs) -->
+    <x:Double x:Key="ModalFullMinWidth">320</x:Double>
+    <x:Double x:Key="ModalFullMaxWidth">1030</x:Double>
+    <x:Double x:Key="ModalFullMaxHeight">720</x:Double>
+
 </ResourceDictionary>

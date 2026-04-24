@@ -58,6 +58,17 @@ public partial class MyProjectsView : UserControl
 
         // Check if we should auto-open the wizard (from Home "Launch a Project" button)
         AttachedToVisualTree += OnAttachedToVisualTree;
+        // On mobile the SectionPanel toggles IsVisible rather than swapping content,
+        // so OnAttachedToVisualTree only fires once. Also listen to visibility flips
+        // so repeated Home → "Launch a Project" taps reliably reopen the wizard.
+        this.GetObservable(IsVisibleProperty)
+            .Subscribe(visible =>
+            {
+                if (!visible) return;
+                var shell = this.FindAncestorOfType<ShellView>();
+                if (shell?.DataContext is ShellViewModel shellVm)
+                    TryConsumePendingLaunchWizard(shellVm);
+            });
 
         // ── Cache responsive layout controls ──
         _projectListGrid = this.FindControl<Grid>("ProjectListGrid");
@@ -192,17 +203,26 @@ public partial class MyProjectsView : UserControl
     private void OnAttachedToVisualTree(object? sender, VisualTreeAttachmentEventArgs e)
     {
         var shell = this.FindAncestorOfType<ShellView>();
-        if (shell?.DataContext is ShellViewModel shellVm && shellVm.PendingLaunchWizard)
-        {
-            shellVm.PendingLaunchWizard = false;
-            if (DataContext is MyProjectsViewModel vm)
-                OpenCreateWizard(vm);
-        }
+        if (shell?.DataContext is not ShellViewModel shellVm) return;
+
+        // Handle any pending wizard request. We consume on every re-attach so that
+        // repeated Home → "Launch a Project" clicks reliably open the wizard — the
+        // cached MyProjectsView gets re-attached on every nav-back to My Projects.
+        TryConsumePendingLaunchWizard(shellVm);
+    }
+
+    private void TryConsumePendingLaunchWizard(ShellViewModel shellVm)
+    {
+        if (!shellVm.PendingLaunchWizard) return;
+        shellVm.PendingLaunchWizard = false;
+        if (DataContext is MyProjectsViewModel vm)
+            OpenCreateWizard(vm);
     }
 
     private void SubscribeToVisibility(MyProjectsViewModel vm)
     {
         // ShowCreateWizard drives the wizard panel
+        bool wizardWasOpen = false;
         vm.WhenAnyValue(x => x.ShowCreateWizard)
             .Subscribe(showWizard =>
             {
@@ -214,7 +234,11 @@ public partial class MyProjectsView : UserControl
                 {
                     shellVm.SectionTitleOverride = showWizard ? "Create New Project" : null;
                     shellVm.IsCreatingProject = showWizard;
+                    // When the wizard transitions from open → closed, route back to the
+                    // origin section (e.g. Home) if the wizard was launched from elsewhere.
+                    if (wizardWasOpen && !showWizard) shellVm.OnCreateWizardClosed();
                 }
+                wizardWasOpen = showWizard;
             })
             .DisposeWith(_subscriptions!);
 

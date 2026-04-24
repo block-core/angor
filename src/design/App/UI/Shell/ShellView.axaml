@@ -283,7 +283,10 @@
                 <!-- Vue: flex gap-2 — Back (flex-1) + CTA (flex-1) + Share (52px fixed)
                      Use Grid: col 0 = *, col 1 = *, col 2 = 52px -->
                 <Grid ColumnDefinitions="*,*,52" ColumnSpacing="8">
-                    <!-- Back button — Vue line 6207: ALWAYS bg-[#1a1a1a] border-[#333] text-white, NOT theme-aware -->
+                    <!-- Back button — Vue line 6207: ALWAYS bg-[#1a1a1a] border-[#333] text-white, NOT theme-aware.
+                         NOTE: Classes="Secondary Light" segfaults Avalonia Android at render time.
+                         Use inline brushes until the root cause is resolved. The Secondary.Light
+                         preset exists in Buttons.axaml for future use on desktop-only buttons. -->
                     <Button Name="InvestorBackBtn" Grid.Column="0"
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Center"

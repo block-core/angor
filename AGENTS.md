@@ -43,6 +43,26 @@ dotnet build src/avalonia/AngorApp.Desktop/AngorApp.Desktop.csproj
 dotnet build src/design/App.Desktop/App.Desktop.csproj
 ```
 
+### Deploying to USB-connected Android device (src/design rewrite)
+
+The new `App.Android` project requires `JavaSdkDirectory` set explicitly on macOS (the SDK can't auto-detect via `/usr/libexec/java_home`). Use openjdk@17:
+
+```bash
+# One-shot install + launch on the connected device
+export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+dotnet build src/design/App.Android/App.Android.csproj \
+  -t:Install -f net9.0-android -c Debug \
+  -p:JavaSdkDirectory=$JAVA_HOME \
+  -p:AndroidAttachDebugger=false
+adb shell monkey -p io.angor.app 1   # launch installed app
+
+# Verify device + package
+adb devices
+adb shell pm list packages | grep -i angor
+```
+
+Package id is `io.angor.app`. When iterating on UI changes, deploy to BOTH desktop and the USB-connected Android in parallel so both surfaces are validated each cycle.
+
 ## Test Commands
 
 All test projects use **xUnit** with **FluentAssertions** and **Moq**.
@@ -172,6 +192,26 @@ public partial class MyViewModel : ReactiveObject, IDisposable
 - Use `RxApp.MainThreadScheduler` when pushing values that trigger UI updates from background threads
 - Use `EnhancedCommand` (from Zafiro) for commands with built-in `IsExecuting` and `Successes()`
 - AXAML bindings to observables use the `^` operator: `{Binding Status^}`
+
+## Modal Sizing (src/design rewrite)
+
+All modals in `src/design/App/` use a global sizing system. **Never hardcode `MinWidth`/`MaxWidth` on a modal root `<Border>`** — apply one of three classes from `UI/Shared/Styles/Modals.axaml`:
+
+| Class | Min/Max Width | Use for |
+|---|---|---|
+| `ModalCard` (default) | 320 / 512 | Password prompts, wallet pickers, confirmations, success screens, deploy/invest flow |
+| `ModalCard Wide` | 320 / 672 | Tabular content (recovery, penalties, JSON, UTXO lists) |
+| `ModalCard Full` | 320 / 1030 | Reserved for true panel-like modals; not currently used |
+
+Width tokens live in `UI/Themes/V2/Resources/Tokens.axaml` (`ModalMinWidth`, `ModalMaxWidth`, `ModalWide*`, `ModalFull*`). Modify tokens to change tier sizing globally; modify `Modals.axaml` to add tiers.
+
+**Mobile gutter**: every tier sets `HorizontalAlignment=Stretch` + `Margin=16` so phones get a guaranteed 16px gutter left/right/top/bottom on any viewport. Do NOT add inline `Margin="16"` to a modal root — it duplicates and produces 32px gutters.
+
+**Per-modal overrides** are fine for one-offs (e.g. WalletDetail UTXO modal sets `MaxWidth="896"` inline alongside `Classes="ModalCard Wide"`). Inline `MaxWidth`/`MinWidth` overrides the class. Keep per-modal chrome (`Background`, `BorderBrush`, `CornerRadius`, `BoxShadow`, `Padding`, `DockPanel.Dock="Bottom"` footers) inline — the class governs sizing only.
+
+**Reference modal** (use as the visual benchmark when sizing feels off): the wallet selector in `UI/Sections/MyProjects/Deploy/DeployFlowOverlay.axaml` (Screen 1).
+
+**Modal host**: `ShellViewModel.ShowModal(object content)` mounts content into `ShellView`'s `ModalOverlay` Panel. The shell handles backdrop, blur, scale-in transitions and backdrop-click close. Modal content is just a `UserControl` whose root `<Border>` carries the `ModalCard` class. ManageProject modals (`UI/Sections/MyProjects/Modals/ManageProjectModalsView.axaml`) use their own inline backdrop (`ZIndex=200`) but still apply the same `ModalCard` classes.
 
 ## Test Conventions
 

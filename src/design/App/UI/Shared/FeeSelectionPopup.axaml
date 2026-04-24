@@ -41,8 +41,7 @@
 
     <Panel>
         <!-- Modal card: max-w-md (448px) centered -->
-        <Border HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="420" MaxWidth="480"
+        <Border Classes="ModalCard"
                 CornerRadius="16"
                 Background="{DynamicResource RecoveryModalBg}"
                 BorderBrush="{DynamicResource RecoveryModalBorder}"

@@ -132,9 +132,23 @@
             <BoxShadows x:Key="PrimaryButtonShadow">0 4 16 0 #00000099</BoxShadows>
             <BoxShadows x:Key="PrimaryButtonShadowHover">0 8 24 0 #000000B3</BoxShadows>
 
+            <!-- Light-variant Primary (Button.Primary.Light): white card with dark text
+                 for sections where the heavy black gradient is too visually dominant
+                 (e.g. My Projects sidebar + mobile action buttons). -->
+            <SolidColorBrush x:Key="LightPrimaryButtonBackground" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="LightPrimaryButtonForeground" Color="{StaticResource TextStrong}" />
+            <SolidColorBrush x:Key="LightPrimaryButtonBorder" Color="{StaticResource Stroke}" />
+
             <SolidColorBrush x:Key="SecondaryButtonForeground" Color="{StaticResource TextStrong}" />
             <SolidColorBrush x:Key="SecondaryButtonBackground" Color="{DynamicResource SurfaceHover}" />
             <SolidColorBrush x:Key="SecondaryButtonBorder" Color="{StaticResource TextStrong}" />
+
+            <!-- Light-variant Secondary (Button.Secondary.Light): white card with subtle
+                 border and dark text. Centralized preset for every "ghost / back / cancel"
+                 button so the whole set can be restyled from one place later. -->
+            <SolidColorBrush x:Key="LightSecondaryButtonBackground" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="LightSecondaryButtonForeground" Color="{StaticResource TextStrong}" />
+            <SolidColorBrush x:Key="LightSecondaryButtonBorder" Color="{StaticResource Stroke}" />
 
             <!-- Decorative Brushes -->
             <!-- Tiled logo background pattern (higher opacity on dark background, matching web: opacity .08) -->
@@ -327,6 +341,17 @@
             <BoxShadows x:Key="PrimaryButtonShadow">0 4 16 0 #000000AA</BoxShadows>
             <BoxShadows x:Key="PrimaryButtonShadowHover">0 8 24 0 #000000CC</BoxShadows>
 
+            <!-- Light-variant Primary in dark mode: fall back to the same dark-gradient
+                 as the base Primary so Classes="Primary Light" renders identically. -->
+            <LinearGradientBrush x:Key="LightPrimaryButtonBackground" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStops>
+                    <GradientStop Offset="0" Color="#2A2A2A" />
+                    <GradientStop Offset="1" Color="#1A1A1A" />
+                </GradientStops>
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="LightPrimaryButtonForeground" Color="{StaticResource TextStrong}" />
+            <SolidColorBrush x:Key="LightPrimaryButtonBorder" Color="#3A3A3A" />
+
             <SolidColorBrush x:Key="AccentButtonForeground" Color="{DynamicResource SurfaceHover}" />
             <SolidColorBrush x:Key="AccentButtonBackground" Color="{StaticResource Accent}" />
             <SolidColorBrush x:Key="AccentButtonBorder" Color="{StaticResource Stroke}" />
@@ -334,6 +359,13 @@
             <SolidColorBrush x:Key="SecondaryButtonForeground" Color="{StaticResource TextStrong}" />
             <SolidColorBrush x:Key="SecondaryButtonBackground" Color="{StaticResource Surface}" />
             <SolidColorBrush x:Key="SecondaryButtonBorder" Color="{StaticResource Stroke}" />
+
+            <!-- Light-variant Secondary in dark mode: keep the existing hardcoded
+                 mobile back-button appearance (#1a1a1a with #333 border, white text)
+                 so the back bar matches the Vue reference on dark. -->
+            <SolidColorBrush x:Key="LightSecondaryButtonBackground" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="LightSecondaryButtonForeground" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="LightSecondaryButtonBorder" Color="#333333" />
 
             <!-- Nav group header divider: transparent → gray-600 → transparent (matches Vue bg-gradient-to-r via-gray-600) -->
             <LinearGradientBrush x:Key="NavGroupDivider" StartPoint="0%,50%" EndPoint="100%,50%">

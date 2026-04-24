@@ -35,9 +35,7 @@
                ZIndex="200"
                Background="{DynamicResource ModalBackdrop}">
             <!-- Mobile-responsive: fluid width with min/max bounds + 16px margin for breathing room on phones. -->
-            <Border MinWidth="320" MaxWidth="672" Margin="16"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
+            <Border Classes="ModalCard Wide"
                     Background="{DynamicResource DetailCardBg}"
                     BorderBrush="{DynamicResource ModalHeaderBorder}"
                     BorderThickness="1"
@@ -176,9 +174,7 @@
                ZIndex="201"
                Background="{DynamicResource ModalBackdrop}">
             <!-- Mobile-responsive: fluid width with min/max bounds + 16px margin for breathing room on phones. -->
-            <Border MinWidth="300" MaxWidth="448" Margin="16"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
+            <Border Classes="ModalCard"
                     Background="{DynamicResource DetailCardBg}"
                     BorderBrush="{DynamicResource ModalHeaderBorder}"
                     BorderThickness="1"
@@ -271,9 +267,7 @@
                ZIndex="202"
                Background="{DynamicResource ModalBackdrop}">
             <!-- Mobile-responsive: fluid width with min/max bounds + 16px margin for breathing room on phones. -->
-            <Border MinWidth="300" MaxWidth="448" Margin="16"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
+            <Border Classes="ModalCard"
                     Background="{DynamicResource SuccessModalBg}"
                     BorderBrush="{DynamicResource ModalHeaderBorder}"
                     BorderThickness="1"
@@ -360,9 +354,7 @@
                ZIndex="200"
                Background="{DynamicResource ModalBackdrop}">
             <!-- Mobile-responsive: fluid width with min/max bounds + 16px margin for breathing room on phones. -->
-            <Border MinWidth="320" MaxWidth="672" Margin="16"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
+            <Border Classes="ModalCard Wide"
                     Background="{DynamicResource DetailCardBg}"
                     BorderBrush="{DynamicResource ModalHeaderBorder}"
                     BorderThickness="1"
@@ -486,9 +478,7 @@
                ZIndex="201"
                Background="{DynamicResource ModalBackdrop}">
             <!-- Mobile-responsive: fluid width with min/max bounds + 16px margin for breathing room on phones. -->
-            <Border MinWidth="300" MaxWidth="448" Margin="16"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
+            <Border Classes="ModalCard"
                     Background="{DynamicResource DetailCardBg}"
                     BorderBrush="{DynamicResource ModalHeaderBorder}"
                     BorderThickness="1"
@@ -577,9 +567,7 @@
                ZIndex="202"
                Background="{DynamicResource ModalBackdrop}">
             <!-- Mobile-responsive: fluid width with min/max bounds + 16px margin for breathing room on phones. -->
-            <Border MinWidth="300" MaxWidth="448" Margin="16"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
+            <Border Classes="ModalCard"
                     Background="{DynamicResource DetailCardBg}"
                     BorderBrush="{DynamicResource ModalHeaderBorder}"
                     BorderThickness="1"
@@ -661,9 +649,7 @@
                ZIndex="200"
                Background="{DynamicResource ModalBackdrop}">
             <!-- Mobile-responsive: fluid width with min/max bounds + 16px margin for breathing room on phones. -->
-            <Border MinWidth="320" MaxWidth="672" Margin="16"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
+            <Border Classes="ModalCard Wide"
                     Background="{DynamicResource DetailCardBg}"
                     BorderBrush="{DynamicResource ModalHeaderBorder}"
                     BorderThickness="1"

@@ -59,6 +59,19 @@ public partial class FindProjectsView : UserControl, ISectionView
             };
         }
 
+        // Wire "Load More" button — explicit reveal only, no scroll trigger.
+        // The VM's IsLoadingMore flag disables the button across the batch
+        // insert so repeated taps can't pile up concurrent layout passes.
+        var loadMoreBtn = this.FindControl<Button>("LoadMoreButton");
+        if (loadMoreBtn != null)
+        {
+            loadMoreBtn.Click += (_, _) =>
+            {
+                if (DataContext is FindProjectsViewModel fvm)
+                    fvm.LoadMore();
+            };
+        }
+
         // Listen for taps on ProjectCard elements to open project detail
         AddHandler(InputElement.TappedEvent, OnCardTapped, RoutingStrategies.Bubble);
         var findMs = sw.ElapsedMilliseconds;

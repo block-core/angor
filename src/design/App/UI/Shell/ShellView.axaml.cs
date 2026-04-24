@@ -223,6 +223,7 @@ public partial class ShellView : UserControl
                 x => x.IsManageFundsOpen,
                 x => x.IsCreatingProject,
                 x => x.ProjectDetailActionVerb)
+            .CombineLatest(vm.WhenAnyValue(x => x.SelectedNavItem), (a, b) => Unit.Default)
             .Subscribe(_ => UpdateCompactOverlays(vm));
 
         // ── React to MobileInvestorSubTab changes — update sub-tab active states ──
@@ -715,11 +716,19 @@ public partial class ShellView : UserControl
     {
         var isCompact = LayoutModeService.Instance.IsCompact;
         var tab = vm.MobileActiveTab;
+        var navLabel = vm.SelectedNavItem?.Label;
+
+        // Section-group guards: the tab must match the currently-active sidebar
+        // section. Prevents stale overlays leaking onto unrelated screens
+        // (e.g. Founder sub-tabs lingering on the Funds page).
+        var isInvestorSection = navLabel == "Find Projects" || navLabel == "Funded";
+        var isFounderSection = navLabel == "My Projects" || navLabel == "Funders";
 
         // ── Investor sub-tabs ──
         // Vue (line 6163): v-if="mobileActiveTab === 'investor' && !isCreatingProject && !showProjectDetail && !showInvestPage && !showInvestmentDetail"
         _investorSubTabs.IsVisible = isCompact
             && tab == "investor"
+            && isInvestorSection
             && !vm.IsCreatingProject
             && !vm.IsProjectDetailOpen
             && !vm.IsInvestPageOpen
@@ -729,6 +738,7 @@ public partial class ShellView : UserControl
         // Vue (line 6500): v-if="mobileActiveTab === 'founder' && !isCreatingProject && !showManageFunds"
         _founderSubTabs.IsVisible = isCompact
             && tab == "founder"
+            && isFounderSection
             && !vm.IsCreatingProject
             && !vm.IsManageFundsOpen;
 
@@ -736,6 +746,7 @@ public partial class ShellView : UserControl
         // Vue (line 6203): v-if="(showProjectDetail || showInvestPage) && mobileActiveTab === 'investor'"
         _investorBackBar.IsVisible = isCompact
             && tab == "investor"
+            && isInvestorSection
             && (vm.IsProjectDetailOpen || vm.IsInvestPageOpen);
 
         // Update CTA text: use the project-type action verb on both detail and invest pages
@@ -744,17 +755,18 @@ public partial class ShellView : UserControl
 
         // ── Investment detail back bar ──
         // Vue (line 6234): v-if="showInvestmentDetail && currentPage === 'investments'"
-        // currentPage === 'investments' maps to mobileActiveTab === 'investor' && mobileInvestorSubTab === 'investments'
         _investmentDetailBackBar.IsVisible = isCompact
             && vm.IsInvestmentDetailOpen
-            && tab == "investor";
+            && tab == "investor"
+            && isInvestorSection;
 
         // ── Manage funds back bar ──
         // Vue (line 6247): v-if="showManageFunds && selectedManageFundsProject && currentPage === 'my-projects' && !isCreatingProject"
         _manageFundsBackBar.IsVisible = isCompact
             && vm.IsManageFundsOpen
             && !vm.IsCreatingProject
-            && tab == "founder";
+            && tab == "founder"
+            && isFounderSection;
     }
 
     // ═══════════════════════════════════════════════════════════════

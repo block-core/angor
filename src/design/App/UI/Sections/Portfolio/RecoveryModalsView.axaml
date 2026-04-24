@@ -38,8 +38,7 @@
         <!-- Vue: .recovery-modal                                        -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding ShowRecoveryModal}"
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="600" MaxWidth="672"
+                Classes="ModalCard Wide"
                 MaxHeight="{Binding $parent[Panel].Bounds.Height, FallbackValue=800}"
                 CornerRadius="16"
                 Background="{DynamicResource RecoveryModalBg}"
@@ -243,8 +242,7 @@
         <!-- Vue: .claim-modal — table with inline action button          -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding ShowClaimModal}"
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="600" MaxWidth="672"
+                Classes="ModalCard Wide"
                 CornerRadius="16"
                 Background="{DynamicResource RecoveryModalBg}"
                 BorderBrush="{DynamicResource RecoveryModalBorder}"
@@ -395,8 +393,7 @@
         <!-- Vue: .release-modal — info fields + fee selector             -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding ShowReleaseModal}"
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="600" MaxWidth="672"
+                Classes="ModalCard Wide"
                 MaxHeight="{Binding $parent[Panel].Bounds.Height, FallbackValue=800}"
                 CornerRadius="16"
                 Background="{DynamicResource RecoveryModalBg}"
@@ -571,8 +568,7 @@
         <!-- Vue: 64x64 gradient circle + white checkmark, "Funds Released" -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding ShowSuccessModal}"
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="380" MaxWidth="448"
+                Classes="ModalCard"
                 CornerRadius="16"
                 Background="{DynamicResource RecoveryModalBg}"
                 BorderBrush="{DynamicResource RecoveryModalBorder}"

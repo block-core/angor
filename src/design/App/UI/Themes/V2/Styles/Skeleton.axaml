@@ -1,0 +1,53 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         Skeleton — pulsing placeholder primitive.
+         Apply Classes="Skeleton" to any Border to get the pulse animation.
+         Customise Width/Height/CornerRadius per instance.
+         ═══════════════════════════════════════════════════════════════ -->
+    <Style Selector="Border.Skeleton">
+        <Setter Property="Background" Value="{DynamicResource SurfaceMedium}" />
+        <Setter Property="Opacity" Value="0.6" />
+        <Style.Animations>
+            <Animation Duration="0:0:1.4"
+                       IterationCount="INFINITE"
+                       PlaybackDirection="Alternate"
+                       Easing="CubicEaseInOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0.4" />
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="0.9" />
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <Style Selector="Border.Skeleton.TextLine">
+        <Setter Property="Height" Value="14" />
+        <Setter Property="CornerRadius" Value="4" />
+    </Style>
+
+    <Style Selector="Border.Skeleton.TextHeading">
+        <Setter Property="Height" Value="20" />
+        <Setter Property="CornerRadius" Value="4" />
+    </Style>
+
+    <Style Selector="Border.Skeleton.Circle">
+        <Setter Property="Width" Value="64" />
+        <Setter Property="Height" Value="64" />
+        <Setter Property="CornerRadius" Value="32" />
+    </Style>
+
+    <Style Selector="Border.Skeleton.Pill">
+        <Setter Property="Width" Value="60" />
+        <Setter Property="Height" Value="22" />
+        <Setter Property="CornerRadius" Value="11" />
+    </Style>
+
+    <Style Selector="Border.Skeleton.Bar">
+        <Setter Property="Height" Value="8" />
+        <Setter Property="CornerRadius" Value="4" />
+    </Style>
+</Styles>

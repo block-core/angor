@@ -156,16 +156,16 @@
                         <StackPanel Name="SidebarCTAButtons" Spacing="12">
                             <!-- Launch a Project — primary CTA -->
                             <Border Classes="ButtonShadow">
-                                <Button Name="LaunchFromListButton" Classes="Primary"
+                                <Button Name="LaunchFromListButton" Classes="Primary Light"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Center"
                                         Padding="16,12">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <i:Icon Value="fa-solid fa-plus"
                                                FontSize="14"
-                                               Foreground="{DynamicResource PrimaryButtonForeground}"
                                                VerticalAlignment="Center" />
-                                        <TextBlock Text="Launch a Project" VerticalAlignment="Center" />
+                                        <TextBlock Text="Launch a Project"
+                                                   VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
                             </Border>
@@ -193,33 +193,29 @@
                         <!-- Vue mobile (App.vue lines 492-533): full-width btn-primary Scan + Launch, 52px height -->
                         <StackPanel Name="MobileActionPanel" Spacing="12" IsVisible="False">
                             <Button Name="MobileScanButton"
-                                    Classes="Primary"
+                                    Classes="Primary Light"
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Center"
                                     Height="52"
                                     Padding="16,0"
                                     Cursor="Hand">
                                 <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                    <i:Icon Value="fa-solid fa-rotate" FontSize="14"
-                                            Foreground="{DynamicResource PrimaryButtonForeground}" />
+                                    <i:Icon Value="fa-solid fa-rotate" FontSize="14" />
                                     <TextBlock Text="Scan for your projects"
-                                               FontSize="14" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource PrimaryButtonForeground}" />
+                                               FontSize="14" FontWeight="SemiBold" />
                                 </StackPanel>
                             </Button>
                             <Button Name="MobileLaunchButton"
-                                    Classes="Primary"
+                                    Classes="Primary Light"
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Center"
                                     Height="52"
                                     Padding="16,0"
                                     Cursor="Hand">
                                 <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                    <i:Icon Value="fa-solid fa-plus" FontSize="14"
-                                            Foreground="{DynamicResource PrimaryButtonForeground}" />
+                                    <i:Icon Value="fa-solid fa-plus" FontSize="14" />
                                     <TextBlock Text="Launch a Project"
-                                               FontSize="14" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource PrimaryButtonForeground}" />
+                                               FontSize="14" FontWeight="SemiBold" />
                                 </StackPanel>
                             </Button>
                         </StackPanel>
@@ -278,7 +274,24 @@
                             Since the sidebar takes ~280px, the available width is narrower than FindProjects.
                             MinItemWidth=320 + 2 cols = ~660px minimum (fits well in remaining space).
                         -->
-                        <ItemsControl ItemsSource="{Binding Projects}">
+                        <!-- Skeleton placeholder grid — visible until first data arrives -->
+                        <ItemsControl IsVisible="{Binding IsInitialLoad}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <controls:ResponsiveGrid MinItemWidth="320"
+                                                             ColumnSpacing="16"
+                                                             RowSpacing="16" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <controls:SkeletonProjectCard />
+                            <controls:SkeletonProjectCard />
+                            <controls:SkeletonProjectCard />
+                            <controls:SkeletonProjectCard />
+                        </ItemsControl>
+
+                        <!-- Project cards grid -->
+                        <ItemsControl ItemsSource="{Binding Projects}"
+                                      IsVisible="{Binding !IsInitialLoad}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <controls:ResponsiveGrid MinItemWidth="320"
