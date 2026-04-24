@@ -65,4 +65,22 @@ public class ProjectAppService(
     {
         return mediator.Send(new GetProjectInfoJson.GetProjectInfoJsonRequest(projectId));
     }
+
+    public Task<Result<FetchProjectProfileData.FetchProjectProfileDataResponse>> FetchProjectProfileData(ProjectId projectId)
+    {
+        return mediator.Send(new FetchProjectProfileData.FetchProjectProfileDataRequest(projectId));
+    }
+
+    public Task<Result<UpdateProjectProfile.UpdateProjectProfileResponse>> UpdateProjectProfile(
+        WalletId walletId,
+        ProjectId projectId,
+        ProjectMetadata metadata,
+        string? projectContent,
+        IReadOnlyList<FaqItem>? faqItems,
+        IReadOnlyList<string>? memberPubkeys,
+        IReadOnlyList<MediaItem>? mediaItems)
+    {
+        return mediator.Send(new UpdateProjectProfile.UpdateProjectProfileRequest(
+            walletId, projectId, metadata, projectContent, faqItems, memberPubkeys, mediaItems));
+    }
 }
