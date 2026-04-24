@@ -301,7 +301,11 @@
                                                    Foreground="{DynamicResource TextMuted}"
                                                    FontSize="13"
                                                    HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center" />
+                                                   VerticalAlignment="Center"
+                                                   IsVisible="{Binding ProfilePictureBitmap, Converter={x:Static ObjectConverters.IsNull}}" />
+                                        <Image Source="{Binding ProfilePictureBitmap}"
+                                               Stretch="UniformToFill"
+                                               IsVisible="{Binding ProfilePictureBitmap, Converter={x:Static ObjectConverters.IsNotNull}}" />
                                     </Panel>
                                 </Border>
                                 <TextBlock Classes="FieldLabel" Text="Picture URL" />
@@ -358,6 +362,24 @@
                             Padding="20">
                         <StackPanel Spacing="12">
                             <TextBlock Classes="SectionHeader" Text="Banner Image" />
+                            <Border CornerRadius="8"
+                                    Background="{DynamicResource SurfaceLow}"
+                                    BorderBrush="{DynamicResource Stroke}"
+                                    BorderThickness="1"
+                                    Height="140"
+                                    ClipToBounds="True">
+                                <Panel>
+                                    <TextBlock Text="No banner set"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               FontSize="13"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               IsVisible="{Binding ProfileBannerBitmap, Converter={x:Static ObjectConverters.IsNull}}" />
+                                    <Image Source="{Binding ProfileBannerBitmap}"
+                                           Stretch="UniformToFill"
+                                           IsVisible="{Binding ProfileBannerBitmap, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                </Panel>
+                            </Border>
                             <TextBox Classes="EditField"
                                      Text="{Binding ProfileBanner}"
                                      Watermark="https://example.com/banner.jpg" />

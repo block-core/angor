@@ -1,9 +1,12 @@
 using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Operations;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Models;
+using App.UI.Shared.Helpers;
+using Avalonia.Media.Imaging;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using ReactiveUI.SourceGenerators;
@@ -54,6 +57,8 @@ public partial class EditProfileViewModel : ReactiveObject
     [Reactive] private string profileAbout = "";
     [Reactive] private string profilePicture = "";
     [Reactive] private string profileBanner = "";
+    [Reactive] private Bitmap? profilePictureBitmap;
+    [Reactive] private Bitmap? profileBannerBitmap;
     [Reactive] private string profileNip05 = "";
     [Reactive] private string profileLud16 = "";
     [Reactive] private string profileWebsite = "";
@@ -90,6 +95,17 @@ public partial class EditProfileViewModel : ReactiveObject
 
         // Add one empty FAQ item to start
         FaqItems.Add(new FaqItemViewModel());
+
+        // Load image previews when URLs change
+        this.WhenAnyValue(x => x.ProfilePicture)
+            .Throttle(TimeSpan.FromMilliseconds(500))
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(url => ImageCacheService.LoadBitmapAsync(url, bmp => ProfilePictureBitmap = bmp));
+
+        this.WhenAnyValue(x => x.ProfileBanner)
+            .Throttle(TimeSpan.FromMilliseconds(500))
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(url => ImageCacheService.LoadBitmapAsync(url, bmp => ProfileBannerBitmap = bmp));
 
         _ = LoadAsync();
     }
