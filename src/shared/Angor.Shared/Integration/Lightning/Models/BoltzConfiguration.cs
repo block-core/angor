@@ -7,7 +7,7 @@ namespace Angor.Shared.Integration.Lightning.Models
     public class BoltzConfiguration
     {
         public const string MainnetUrl = "https://api.boltz.exchange";
-        public const string TestnetUrl = "https://boltz.thedude.cloud/"; //todo move to angor domain
+        public const string TestnetUrl = "https://boltz.thedude.cloud/";
 
         /// <summary>
         /// The Boltz API base URL. Defaults to mainnet.
@@ -24,7 +24,7 @@ namespace Angor.Shared.Integration.Lightning.Models
         /// Mainnet API uses no prefix (endpoints like /swap/reverse).
         /// Some local/test instances may require /v2/ prefix.
         /// </summary>
-        public bool UseV2Prefix { get; set; } = false;
+        public bool UseV2Prefix { get; set; } = true;
 
         /// <summary>
         /// Gets the API path prefix based on configuration.
