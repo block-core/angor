@@ -1127,6 +1127,11 @@ public partial class PortfolioViewModel : ReactiveObject
                 investment.StatusClass = "recovered";
                 investment.StatusPill2 = "Cancelled";
                 investment.Status = "Cancelled";
+
+                // Remove the cancelled investment and navigate back to list
+                Investments.Remove(investment);
+                SelectedInvestment = null;
+                HasInvestments = Investments.Count > 0;
                 return true;
             }
 

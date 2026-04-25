@@ -490,22 +490,86 @@
                                         Background="{DynamicResource WaitingBtnBg}"
                                         BorderBrush="{DynamicResource WaitingBtnBorder}"
                                         BorderThickness="1"
-                                        CornerRadius="8">
-                                    <TextBlock Text="Cancel"
-                                               FontSize="14"
-                                               FontWeight="SemiBold"
-                                               Foreground="{DynamicResource WaitingBtnFg}" />
+                                        CornerRadius="8"
+                                        IsEnabled="{Binding !IsProcessing}">
+                                    <Panel>
+                                        <TextBlock Text="Cancel"
+                                                   FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource WaitingBtnFg}"
+                                                   IsVisible="{Binding !IsProcessing}"
+                                                   HorizontalAlignment="Center" />
+                                        <StackPanel Name="CancelStep1BtnSpinner" Orientation="Horizontal" Spacing="6"
+                                                    IsVisible="{Binding IsProcessing}"
+                                                    HorizontalAlignment="Center">
+                                            <i:Icon Value="fa-solid fa-spinner" FontSize="14"
+                                                    Foreground="{DynamicResource WaitingBtnFg}"
+                                                    RenderTransformOrigin="50%,50%">
+                                                <i:Icon.RenderTransform>
+                                                    <RotateTransform />
+                                                </i:Icon.RenderTransform>
+                                                <i:Icon.Styles>
+                                                    <Style Selector="i|Icon[IsVisible=True]">
+                                                        <Style.Animations>
+                                                            <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                                <KeyFrame Cue="0%">
+                                                                    <Setter Property="RotateTransform.Angle" Value="0" />
+                                                                </KeyFrame>
+                                                                <KeyFrame Cue="100%">
+                                                                    <Setter Property="RotateTransform.Angle" Value="360" />
+                                                                </KeyFrame>
+                                                            </Animation>
+                                                        </Style.Animations>
+                                                    </Style>
+                                                </i:Icon.Styles>
+                                            </i:Icon>
+                                            <TextBlock Text="Cancelling..." FontSize="14" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource WaitingBtnFg}" />
+                                        </StackPanel>
+                                    </Panel>
                                 </Button>
                                 <Button Name="RefreshInvestmentButton"
                                         Padding="14,8"
                                         Background="{DynamicResource WaitingBtnBg}"
                                         BorderBrush="{DynamicResource WaitingBtnBorder}"
                                         BorderThickness="1"
-                                        CornerRadius="8">
-                                    <TextBlock Text="Refresh"
-                                               FontSize="14"
-                                               FontWeight="SemiBold"
-                                               Foreground="{DynamicResource WaitingBtnFg}" />
+                                        CornerRadius="8"
+                                        IsEnabled="{Binding !IsProcessing}">
+                                    <Panel>
+                                        <TextBlock Text="Refresh"
+                                                   FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource WaitingBtnFg}"
+                                                   IsVisible="{Binding !IsProcessing}"
+                                                   HorizontalAlignment="Center" />
+                                        <StackPanel Name="RefreshBtnSpinner" Orientation="Horizontal" Spacing="6"
+                                                    IsVisible="{Binding IsProcessing}"
+                                                    HorizontalAlignment="Center">
+                                            <i:Icon Value="fa-solid fa-spinner" FontSize="14"
+                                                    Foreground="{DynamicResource WaitingBtnFg}"
+                                                    RenderTransformOrigin="50%,50%">
+                                                <i:Icon.RenderTransform>
+                                                    <RotateTransform />
+                                                </i:Icon.RenderTransform>
+                                                <i:Icon.Styles>
+                                                    <Style Selector="i|Icon[IsVisible=True]">
+                                                        <Style.Animations>
+                                                            <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                                <KeyFrame Cue="0%">
+                                                                    <Setter Property="RotateTransform.Angle" Value="0" />
+                                                                </KeyFrame>
+                                                                <KeyFrame Cue="100%">
+                                                                    <Setter Property="RotateTransform.Angle" Value="360" />
+                                                                </KeyFrame>
+                                                            </Animation>
+                                                        </Style.Animations>
+                                                    </Style>
+                                                </i:Icon.Styles>
+                                            </i:Icon>
+                                            <TextBlock Text="Refreshing..." FontSize="14" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource WaitingBtnFg}" />
+                                        </StackPanel>
+                                    </Panel>
                                 </Button>
                                 <Button Padding="14,8"
                                         Background="{DynamicResource WaitingBtnBg}"
@@ -595,11 +659,43 @@
                                             HorizontalContentAlignment="Center"
                                             Padding="20,12"
                                             Background="Transparent"
-                                            CornerRadius="8">
-                                        <TextBlock Text="Cancel"
-                                                   FontSize="14"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource PreviewCardTitle}" />
+                                            CornerRadius="8"
+                                            IsEnabled="{Binding !IsProcessing}">
+                                        <Panel>
+                                            <TextBlock Text="Cancel"
+                                                       FontSize="14"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource PreviewCardTitle}"
+                                                       IsVisible="{Binding !IsProcessing}"
+                                                       HorizontalAlignment="Center" />
+                                            <StackPanel Name="CancelBtnSpinner" Orientation="Horizontal" Spacing="6"
+                                                        IsVisible="{Binding IsProcessing}"
+                                                        HorizontalAlignment="Center">
+                                                <i:Icon Value="fa-solid fa-spinner" FontSize="14"
+                                                        Foreground="{DynamicResource PreviewCardTitle}"
+                                                        RenderTransformOrigin="50%,50%">
+                                                    <i:Icon.RenderTransform>
+                                                        <RotateTransform />
+                                                    </i:Icon.RenderTransform>
+                                                    <i:Icon.Styles>
+                                                        <Style Selector="i|Icon[IsVisible=True]">
+                                                            <Style.Animations>
+                                                                <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                                    <KeyFrame Cue="0%">
+                                                                        <Setter Property="RotateTransform.Angle" Value="0" />
+                                                                    </KeyFrame>
+                                                                    <KeyFrame Cue="100%">
+                                                                        <Setter Property="RotateTransform.Angle" Value="360" />
+                                                                    </KeyFrame>
+                                                                </Animation>
+                                                            </Style.Animations>
+                                                        </Style>
+                                                    </i:Icon.Styles>
+                                                </i:Icon>
+                                                <TextBlock Text="Cancelling..." FontSize="14" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource PreviewCardTitle}" />
+                                            </StackPanel>
+                                        </Panel>
                                     </Button>
                                 </Border>
                             </StackPanel>

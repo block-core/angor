@@ -1,6 +1,7 @@
 using System.Globalization;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
+using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
@@ -237,14 +238,71 @@ public class InvestmentCancellationTest
         var balanceBeforeCancel = fundsVm?.TotalBalance ?? "0.0000";
         Log(profileName, $"Balance before cancellation: {balanceBeforeCancel}");
 
+        // Record investment count before cancel
+        var investmentCountBefore = portfolioVm.Investments.Count;
+
         // ── Step 2: Cancel the pending investment (before founder approval) ──
         Log(profileName, "Cancelling pending investment (before founder approval)...");
-        await window.ClickInvestmentDetailActionAsync(portfolioVm, pendingInvestment, "CancelInvestmentStep1Button");
+
+        // Open investment detail and verify UI elements before clicking cancel
+        await window.NavigateToSectionAndVerify("Funded");
+        portfolioVm.OpenInvestmentDetail(pendingInvestment);
         Dispatcher.UIThread.RunJobs();
 
+        var detailOpened = await TestHelpers.WaitForCondition(
+            () => ReferenceEquals(portfolioVm.SelectedInvestment, pendingInvestment),
+            TestHelpers.UiTimeout);
+        detailOpened.Should().BeTrue("Investment detail should open");
+
+        // Verify cancel button is visible and enabled before clicking
+        var cancelBtnVisible = await TestHelpers.WaitForCondition(
+            () => window.GetVisualDescendants().OfType<Button>().Any(b => b.IsVisible && b.Name == "CancelInvestmentStep1Button"),
+            TestHelpers.UiTimeout);
+        cancelBtnVisible.Should().BeTrue("CancelInvestmentStep1Button should be visible in Step 1 detail");
+
+        var cancelBtn = window.GetVisualDescendants().OfType<Button>().First(b => b.IsVisible && b.Name == "CancelInvestmentStep1Button");
+        cancelBtn.IsEnabled.Should().BeTrue("Cancel button should be enabled before clicking");
+
+        // Verify spinner is NOT visible before clicking
+        var cancelSpinner = window.FindByName<StackPanel>("CancelStep1BtnSpinner");
+        if (cancelSpinner != null)
+        {
+            cancelSpinner.IsVisible.Should().BeFalse("Cancel spinner should be hidden before clicking");
+        }
+
+        // Click the cancel button
+        cancelBtn.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, cancelBtn));
+        Dispatcher.UIThread.RunJobs();
+
+        // Verify spinner appears during processing (may complete instantly in test)
+        if (pendingInvestment.IsProcessing)
+        {
+            cancelBtn.IsEnabled.Should().BeFalse("Cancel button should be disabled during processing");
+            cancelSpinner = window.FindByName<StackPanel>("CancelStep1BtnSpinner");
+            if (cancelSpinner != null)
+            {
+                cancelSpinner.IsVisible.Should().BeTrue("Cancel spinner should be visible during processing");
+                Log(profileName, "Verified: Cancel spinner visible during processing.");
+            }
+        }
+
+        // Wait for processing to complete (cancel involves Nostr notification, may take time)
+        var actionCompleted = await TestHelpers.WaitForCondition(
+            () => !pendingInvestment.IsProcessing,
+            TimeSpan.FromSeconds(60));
+        actionCompleted.Should().BeTrue("Cancel action should complete");
+
+        // ── Step 2b: Verify cancel removed the investment and closed detail ──
         pendingInvestment.StatusText.Should().Be("Cancelled", "Status should be 'Cancelled' after cancellation");
         pendingInvestment.Status.Should().Be("Cancelled", "Status field should be 'Cancelled'");
-        Log(profileName, $"Investment cancelled. Status='{pendingInvestment.StatusText}'");
+
+        portfolioVm.SelectedInvestment.Should().BeNull("Detail should be closed after cancellation (navigated back to list)");
+        portfolioVm.Investments.Should().NotContain(pendingInvestment,
+            "Cancelled investment should be removed from the Investments collection");
+        portfolioVm.Investments.Count.Should().Be(investmentCountBefore - 1,
+            "Investment count should decrease by one after cancellation");
+
+        Log(profileName, $"Investment cancelled and removed from list. Remaining investments: {portfolioVm.Investments.Count}");
 
         // ── Step 3: Verify funds are released ──
         await VerifyFundsReleasedAsync(window, profileName, balanceBeforeCancel);
@@ -363,14 +421,71 @@ public class InvestmentCancellationTest
         var balanceBeforeCancel = fundsVm?.TotalBalance ?? "0.0000";
         Log(profileName, $"Balance before cancellation: {balanceBeforeCancel}");
 
+        // Record investment count before cancel
+        var investmentCountBefore = portfolioVm.Investments.Count;
+
         // Cancel the approved investment
         Log(profileName, "Cancelling approved investment (after founder approval)...");
-        await window.ClickInvestmentDetailActionAsync(portfolioVm, approvedInvestment, "CancelInvestmentButton");
+
+        // Open investment detail and verify UI elements before clicking cancel
+        await window.NavigateToSectionAndVerify("Funded");
+        portfolioVm.OpenInvestmentDetail(approvedInvestment);
         Dispatcher.UIThread.RunJobs();
 
+        var detailOpened = await TestHelpers.WaitForCondition(
+            () => ReferenceEquals(portfolioVm.SelectedInvestment, approvedInvestment),
+            TestHelpers.UiTimeout);
+        detailOpened.Should().BeTrue("Investment detail should open");
+
+        // Verify cancel button is visible and enabled (Step 2 uses CancelInvestmentButton)
+        var cancelBtnVisible = await TestHelpers.WaitForCondition(
+            () => window.GetVisualDescendants().OfType<Button>().Any(b => b.IsVisible && b.Name == "CancelInvestmentButton"),
+            TestHelpers.UiTimeout);
+        cancelBtnVisible.Should().BeTrue("CancelInvestmentButton should be visible in Step 2 detail");
+
+        var cancelBtn = window.GetVisualDescendants().OfType<Button>().First(b => b.IsVisible && b.Name == "CancelInvestmentButton");
+        cancelBtn.IsEnabled.Should().BeTrue("Cancel button should be enabled before clicking");
+
+        // Verify spinner is NOT visible before clicking
+        var cancelSpinner = window.FindByName<StackPanel>("CancelBtnSpinner");
+        if (cancelSpinner != null)
+        {
+            cancelSpinner.IsVisible.Should().BeFalse("Cancel spinner should be hidden before clicking");
+        }
+
+        // Click the cancel button
+        cancelBtn.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, cancelBtn));
+        Dispatcher.UIThread.RunJobs();
+
+        // Verify spinner appears during processing (may complete instantly in test)
+        if (approvedInvestment.IsProcessing)
+        {
+            cancelBtn.IsEnabled.Should().BeFalse("Cancel button should be disabled during processing");
+            cancelSpinner = window.FindByName<StackPanel>("CancelBtnSpinner");
+            if (cancelSpinner != null)
+            {
+                cancelSpinner.IsVisible.Should().BeTrue("Cancel spinner should be visible during processing");
+                Log(profileName, "Verified: Cancel spinner visible during processing.");
+            }
+        }
+
+        // Wait for processing to complete (cancel involves Nostr notification, may take time)
+        var actionCompleted = await TestHelpers.WaitForCondition(
+            () => !approvedInvestment.IsProcessing,
+            TimeSpan.FromSeconds(60));
+        actionCompleted.Should().BeTrue("Cancel action should complete");
+
+        // Verify cancel removed the investment and closed detail
         approvedInvestment.StatusText.Should().Be("Cancelled", "Status should be 'Cancelled' after cancellation");
         approvedInvestment.Status.Should().Be("Cancelled", "Status field should be 'Cancelled'");
-        Log(profileName, $"Investment cancelled after approval. Status='{approvedInvestment.StatusText}'");
+
+        portfolioVm.SelectedInvestment.Should().BeNull("Detail should be closed after cancellation (navigated back to list)");
+        portfolioVm.Investments.Should().NotContain(approvedInvestment,
+            "Cancelled investment should be removed from the Investments collection");
+        portfolioVm.Investments.Count.Should().Be(investmentCountBefore - 1,
+            "Investment count should decrease by one after cancellation");
+
+        Log(profileName, $"Investment cancelled after approval and removed. Remaining investments: {portfolioVm.Investments.Count}");
 
         // Verify funds are released
         await VerifyFundsReleasedAsync(window, profileName, balanceBeforeCancel);
