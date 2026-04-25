@@ -303,8 +303,13 @@ public class InvestmentCancellationTest
             "Investment count should decrease by one after cancellation");
 
         Log(profileName, $"Investment cancelled and removed from list. Remaining investments: {portfolioVm.Investments.Count}");
+        portfolioVm.HasInvestments.Should().Be(portfolioVm.Investments.Count > 0,
+            "HasInvestments should reflect the updated collection count");
 
-        // ── Step 3: Verify funds are released ──
+        // ── Step 3: Verify project is investable again on Find Projects ──
+        await VerifyProjectIsInvestableAsync(window, profileName, project);
+
+        // ── Step 4: Verify funds are released ──
         await VerifyFundsReleasedAsync(window, profileName, balanceBeforeCancel);
 
         Log(profileName, "Cancel-before-approval flow validated.");
@@ -486,6 +491,11 @@ public class InvestmentCancellationTest
             "Investment count should decrease by one after cancellation");
 
         Log(profileName, $"Investment cancelled after approval and removed. Remaining investments: {portfolioVm.Investments.Count}");
+        portfolioVm.HasInvestments.Should().Be(portfolioVm.Investments.Count > 0,
+            "HasInvestments should reflect the updated collection count");
+
+        // Verify project is investable again on Find Projects
+        await VerifyProjectIsInvestableAsync(window, profileName, project);
 
         // Verify funds are released
         await VerifyFundsReleasedAsync(window, profileName, balanceBeforeCancel);
@@ -565,6 +575,45 @@ public class InvestmentCancellationTest
 
         balanceAfterCancel.Should().NotBe("0.0000",
             "Balance should be non-zero after cancellation (funds released)");
+    }
+
+    /// <summary>
+    /// Navigate to Find Projects, locate the project, and verify that the invest/fund
+    /// button is available (IsOpenAndNotInvested == true, HasInvested == false).
+    /// This confirms that cancelling an investment correctly unmarks the project
+    /// so the user can invest again.
+    /// </summary>
+    private async Task VerifyProjectIsInvestableAsync(
+        Window window,
+        string profileName,
+        ProjectHandle project)
+    {
+        Log(profileName, "Verifying project is investable again on Find Projects...");
+
+        var foundProject = await FindProjectFromSdkAsync(window, profileName, project);
+
+        foundProject.HasInvested.Should().BeFalse(
+            "HasInvested should be false after cancellation removed the investment from the portfolio");
+        foundProject.IsOpenAndNotInvested.Should().BeTrue(
+            "IsOpenAndNotInvested should be true so the Invest/Fund button is available");
+
+        // Open project detail and verify the InvestButton is visible in the UI
+        var findProjectsVm = window.GetFindProjectsViewModel()!;
+        findProjectsVm.OpenProjectDetail(foundProject);
+        Dispatcher.UIThread.RunJobs();
+        await Task.Delay(300);
+
+        var investBtnVisible = await TestHelpers.WaitForCondition(
+            () => window.FindByName<Avalonia.Controls.Border>("InvestButton") is { IsVisible: true },
+            TestHelpers.UiTimeout);
+        investBtnVisible.Should().BeTrue(
+            "InvestButton should be visible on the project detail after cancellation");
+
+        Log(profileName, "Verified: Invest button is available. Project is investable again.");
+
+        // Close project detail to leave a clean state
+        findProjectsVm.CloseProjectDetail();
+        Dispatcher.UIThread.RunJobs();
     }
 
     // ═══════════════════════════════════════════════════════════════════
