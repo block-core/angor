@@ -7,6 +7,7 @@ using Avalonia.VisualTree;
 using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Sections.MyProjects.Steps;
 using App.UI.Shared;
+using App.UI.Shared.PaymentFlow;
 using App.UI.Shell;
 using ReactiveUI;
 
@@ -454,20 +455,19 @@ public partial class CreateProjectView : UserControl
     }
 
     /// <summary>
-    /// Create DeployFlowOverlay and push it to the shell-level modal overlay.
-    /// Same pattern as InvestPageView.ShowShellModal().
+    /// Create PaymentFlowView backed by the deploy flow's PaymentFlowViewModel
+    /// and push it to the shell-level modal overlay.
     /// </summary>
     private void ShowDeployShellModal(CreateProjectViewModel vm)
     {
         var shellVm = GetShellVm();
         if (shellVm == null || shellVm.IsModalOpen) return;
 
-        var overlay = new DeployFlowOverlay
-        {
-            DataContext = vm.DeployFlow
-        };
+        var paymentFlow = vm.DeployFlow.PaymentFlow;
+        if (paymentFlow == null) return;
 
-        shellVm.ShowModal(overlay);
+        var paymentFlowView = new PaymentFlowView { DataContext = paymentFlow };
+        shellVm.ShowModal(paymentFlowView);
     }
 
     /// <summary>

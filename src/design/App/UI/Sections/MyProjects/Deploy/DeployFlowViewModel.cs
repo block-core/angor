@@ -7,8 +7,12 @@ using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Wallet.Application;
+using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Wallet.Domain;
 using App.UI.Shared;
+using App.UI.Shared.PaymentFlow;
 using App.UI.Shared.Services;
+using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 
@@ -32,10 +36,12 @@ public enum DeployScreen
 public partial class DeployFlowViewModel : ReactiveObject
 {
     private readonly IWalletAppService _walletAppService;
+    private readonly IInvestmentAppService _investmentAppService;
     private readonly IProjectAppService _projectAppService;
     private readonly IFounderAppService _founderAppService;
     private readonly ICurrencyService _currencyService;
     private readonly IWalletContext _walletContext;
+    private readonly Func<BitcoinNetwork> _getNetwork;
     private readonly ILogger<DeployFlowViewModel> _logger;
     private CancellationTokenSource? _invoiceMonitorCts;
 
@@ -47,6 +53,9 @@ public partial class DeployFlowViewModel : ReactiveObject
     [Reactive] private string deployStatusText = "Waiting for payment...";
     [Reactive] private long selectedFeeRate = 20;
     [Reactive] private string? deployErrorMessage;
+
+    /// <summary>The reusable payment flow VM. Created when the deploy overlay is shown.</summary>
+    public PaymentFlowViewModel? PaymentFlow { get; private set; }
 
     // ── Derived visibility ──
     public bool IsWalletSelector => CurrentScreen == DeployScreen.WalletSelector;
@@ -77,17 +86,21 @@ public partial class DeployFlowViewModel : ReactiveObject
 
     public DeployFlowViewModel(
         IWalletAppService walletAppService,
+        IInvestmentAppService investmentAppService,
         IProjectAppService projectAppService,
         IFounderAppService founderAppService,
         ICurrencyService currencyService,
         IWalletContext walletContext,
+        Func<BitcoinNetwork> getNetwork,
         ILogger<DeployFlowViewModel> logger)
     {
         _walletAppService = walletAppService;
+        _investmentAppService = investmentAppService;
         _projectAppService = projectAppService;
         _founderAppService = founderAppService;
         _currencyService = currencyService;
         _walletContext = walletContext;
+        _getNetwork = getNetwork;
         _logger = logger;
         // Initialize ReactiveCommands for async payment operations
         PayWithWalletCommand = ReactiveCommand.CreateFromTask(PayWithWalletAsync);
@@ -137,6 +150,82 @@ public partial class DeployFlowViewModel : ReactiveObject
         DeployStatusText = "Waiting for payment...";
         DeployErrorMessage = null;
         IsVisible = true;
+
+        // Create the reusable payment flow for this deploy session
+        var deployFeeSats = 10_000L; // 0.0001 BTC deploy fee
+        PaymentFlow = new PaymentFlowViewModel(
+            _walletAppService,
+            _investmentAppService,
+            _walletContext,
+            _currencyService,
+            _getNetwork,
+            _logger,
+            new PaymentFlowConfig
+            {
+                AmountSats = deployFeeSats,
+                StageCount = 0,
+                FeeRateSatsPerVbyte = (int)SelectedFeeRate,
+                Title = "Fund Deployment",
+                SuccessTitle = $"{projectName} Deployed!",
+                SuccessDescription = "Your project has been successfully deployed to the blockchain.",
+                SuccessButtonText = "Go to My Projects",
+                OnSuccessButtonClicked = GoToMyProjects,
+                OnPaymentReceived = DeployAfterPaymentAsync,
+                OnPayWithWallet = DeployWithWalletAsync,
+            });
+    }
+
+    /// <summary>Callback for PaymentFlowViewModel: deploy project after external payment received.</summary>
+    private async Task<Result> DeployAfterPaymentAsync(WalletId walletId, string fundingAddress, long amountSats)
+    {
+        return await RunDeployStepsAsync(walletId);
+    }
+
+    /// <summary>Callback for PaymentFlowViewModel: deploy project using wallet UTXOs directly.</summary>
+    private async Task<Result> DeployWithWalletAsync(WalletId walletId, long amountSats, long feeRate)
+    {
+        SelectedFeeRate = feeRate;
+        await _walletContext.RefreshAllBalancesAsync();
+        return await RunDeployStepsAsync(walletId);
+    }
+
+    /// <summary>Shared deploy logic: create keys → Nostr profile → project info → blockchain tx → publish.</summary>
+    private async Task<Result> RunDeployStepsAsync(WalletId walletId)
+    {
+        if (ProjectData == null)
+            return Result.Failure("No project data available.");
+
+        // Step 1: Create project keys
+        var keysResult = await _founderAppService.CreateProjectKeys(
+            new CreateProjectKeys.CreateProjectKeysRequest(walletId));
+        if (keysResult.IsFailure)
+            return Result.Failure($"Failed to create project keys: {keysResult.Error}");
+
+        var projectSeed = keysResult.Value.ProjectSeedDto;
+
+        // Step 2: Create Nostr profile
+        var profileResult = await _projectAppService.CreateProjectProfile(walletId, projectSeed, ProjectData);
+        if (profileResult.IsFailure)
+            return Result.Failure($"Failed to create profile: {profileResult.Error}");
+
+        // Step 3: Create project info
+        var infoResult = await _projectAppService.CreateProjectInfo(walletId, ProjectData, projectSeed);
+        if (infoResult.IsFailure)
+            return Result.Failure($"Failed to create project info: {infoResult.Error}");
+
+        // Step 4: Create blockchain transaction
+        var txResult = await _projectAppService.CreateProject(
+            walletId, SelectedFeeRate, ProjectData, infoResult.Value.EventId, projectSeed);
+        if (txResult.IsFailure)
+            return Result.Failure($"Failed to create transaction: {txResult.Error}");
+
+        // Step 5: Publish to blockchain
+        var publishResult = await _founderAppService.SubmitTransactionFromDraft(
+            new PublishFounderTransaction.PublishFounderTransactionRequest(txResult.Value.TransactionDraft));
+        if (publishResult.IsFailure)
+            return Result.Failure($"Failed to publish: {publishResult.Error}");
+
+        return Result.Success();
     }
 
     /// <summary>Close the overlay without completing.
