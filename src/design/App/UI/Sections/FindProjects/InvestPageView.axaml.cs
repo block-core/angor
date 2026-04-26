@@ -8,6 +8,7 @@ using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
 using App.UI.Shared;
 using App.UI.Shared.Helpers;
+using App.UI.Shared.PaymentFlow;
 using App.UI.Shell;
 using ReactiveUI;
 
@@ -277,27 +278,23 @@ public partial class InvestPageView : UserControl
     }
 
     /// <summary>
-    /// Create InvestModalsView and push it to the shell-level modal overlay.
+    /// Create PaymentFlowView backed by the VM's PaymentFlowViewModel
+    /// and push it to the shell-level modal overlay.
     /// </summary>
     private void ShowShellModal(InvestPageViewModel vm)
     {
         var shellVm = GetShellVm();
-        if (shellVm == null || shellVm.IsModalOpen) return;
+        if (shellVm == null || shellVm.IsModalOpen || vm.PaymentFlow == null) return;
 
-        var modalsView = new InvestModalsView
+        // Subscribe to invest completion — navigate to Funded section
+        vm.InvestCompleted += () =>
         {
-            DataContext = vm,
-            OnNavigateBackToList = () =>
-            {
-                // Add the invested project to the Portfolio section
-                vm.AddToPortfolio();
-                // Navigate to the Funded section to show the new investment
-                var shell = GetShellVm();
-                shell?.NavigateToFunded();
-            }
+            shellVm.HideModal();
+            shellVm.NavigateToFunded();
         };
 
-        shellVm.ShowModal(modalsView);
+        var paymentFlowView = new PaymentFlowView { DataContext = vm.PaymentFlow };
+        shellVm.ShowModal(paymentFlowView);
     }
 
     private void OnButtonClick(object? sender, RoutedEventArgs e)

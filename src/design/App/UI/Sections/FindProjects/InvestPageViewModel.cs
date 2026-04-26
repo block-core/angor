@@ -10,6 +10,7 @@ using Angor.Sdk.Wallet.Domain;
 using App.UI.Sections.Portfolio;
 using Angor.Shared.Models;
 using App.UI.Shared;
+using App.UI.Shared.PaymentFlow;
 using ProjectType = App.UI.Shared.ProjectType;
 using App.UI.Shared.Services;
 using Microsoft.Extensions.Logging;
@@ -117,6 +118,9 @@ public partial class InvestPageViewModel : ReactiveObject
 
     // ── Project Reference ──
     public ProjectItemViewModel Project { get; }
+
+    /// <summary>The reusable payment flow VM. Created when the user advances past the invest form.</summary>
+    [Reactive] private PaymentFlowViewModel? paymentFlow;
 
     // ── Type helpers ──
     public bool IsSubscription => Project.ProjectType == "Subscription";
@@ -835,7 +839,7 @@ public partial class InvestPageViewModel : ReactiveObject
         InvestmentAmount = amount.ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
 
-    /// <summary>Submit the invest form → show wallet selector.
+    /// <summary>Submit the invest form → create payment flow and show wallet selector.
     /// Vue ref: proceedToPayment() checks balances, opens wallet modal.</summary>
     public void Submit()
     {
@@ -845,7 +849,128 @@ public partial class InvestPageViewModel : ReactiveObject
             return;
         }
         _logger.LogInformation("Invest form submitted — amount: {Amount}, advancing to WalletSelector", InvestmentAmount);
+
+        var amountSats = ((decimal)ParseAmount()).ToUnitSatoshi();
+        PaymentFlow = CreatePaymentFlow(amountSats);
         CurrentScreen = InvestScreen.WalletSelector;
+    }
+
+    /// <summary>Creates a PaymentFlowViewModel configured for the current investment.</summary>
+    private PaymentFlowViewModel CreatePaymentFlow(long amountSats)
+    {
+        var projectType = Project.ProjectType;
+        var typeEnum = ProjectTypeExtensions.FromDisplayString(projectType);
+        var actionVerb = ProjectTypeTerminology.ActionVerb(typeEnum);
+        var successTitle = ProjectTypeTerminology.SuccessTitle(typeEnum, true);
+
+        var config = new PaymentFlowConfig
+        {
+            AmountSats = amountSats,
+            StageCount = Stages.Count,
+            FeeRateSatsPerVbyte = (int)SelectedFeeRate,
+            Title = $"Pay to {actionVerb}",
+            SuccessTitle = successTitle,
+            SuccessDescription = $"Your {actionVerb.ToLowerInvariant()} of {FormattedAmount} {_currencyService.Symbol} has been submitted.",
+            SuccessButtonText = $"View My {ProjectTypeTerminology.InvestorNounTotal(ProjectTypeExtensions.FromDisplayString(projectType))}",
+            OnSuccessButtonClicked = OnInvestSuccess,
+            OnPaymentReceived = async (walletId, fundingAddress, amount) =>
+                await InvestAfterPaymentAsync(walletId, fundingAddress, amount),
+            OnPayWithWallet = async (walletId, amount, feeRate) =>
+                await InvestWithWalletAsync(walletId, amount, feeRate),
+        };
+
+        return new PaymentFlowViewModel(
+            _walletAppService,
+            _investmentAppService,
+            _walletContext,
+            _currencyService,
+            _getNetwork,
+            _logger,
+            config);
+    }
+
+    /// <summary>Callback for PaymentFlowViewModel: build + publish investment after external payment.</summary>
+    private async Task<Result> InvestAfterPaymentAsync(WalletId walletId, string fundingAddress, long amountSats)
+    {
+        var projectId = new ProjectId(Project.ProjectId);
+        byte? patternIndex = GetPatternIndex();
+
+        var buildRequest = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
+            walletId, projectId, new Amount(amountSats),
+            new DomainFeerate(PaymentFlow?.SelectedFeeRate ?? 20),
+            PatternId: patternIndex,
+            FundingAddress: fundingAddress);
+
+        var buildResult = await _investmentAppService.BuildInvestmentDraft(buildRequest);
+        if (buildResult.IsFailure)
+            return Result.Failure(buildResult.Error);
+
+        return await PublishOrRequestApprovalAsync(walletId, projectId, amountSats, buildResult.Value.InvestmentDraft);
+    }
+
+    /// <summary>Callback for PaymentFlowViewModel: build + publish investment from wallet UTXOs.</summary>
+    private async Task<Result> InvestWithWalletAsync(WalletId walletId, long amountSats, long feeRate)
+    {
+        await _walletContext.RefreshAllBalancesAsync();
+
+        var projectId = new ProjectId(Project.ProjectId);
+        byte? patternIndex = GetPatternIndex();
+
+        var buildRequest = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
+            walletId, projectId, new Amount(amountSats),
+            new DomainFeerate(feeRate),
+            patternIndex);
+
+        var buildResult = await _investmentAppService.BuildInvestmentDraft(buildRequest);
+        if (buildResult.IsFailure)
+            return Result.Failure(buildResult.Error);
+
+        return await PublishOrRequestApprovalAsync(walletId, projectId, amountSats, buildResult.Value.InvestmentDraft);
+    }
+
+    /// <summary>Shared logic: threshold check → request signatures or publish directly.</summary>
+    private async Task<Result> PublishOrRequestApprovalAsync(
+        WalletId walletId, ProjectId projectId, long amountSats,
+        Angor.Sdk.Funding.Shared.TransactionDrafts.InvestmentDraft draft)
+    {
+        var isAboveThreshold = Project.ProjectType == "Invest";
+        if (Project.ProjectType == "Fund")
+        {
+            var thresholdResult = await _investmentAppService.IsInvestmentAbovePenaltyThreshold(
+                new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(projectId, new Amount(amountSats)));
+            if (thresholdResult.IsFailure)
+                return Result.Failure(thresholdResult.Error);
+            isAboveThreshold = thresholdResult.Value.IsAboveThreshold;
+        }
+
+        if (isAboveThreshold)
+        {
+            IsAutoApproved = false;
+            var submitResult = await _investmentAppService.SubmitInvestment(
+                new RequestInvestmentSignatures.RequestFounderSignaturesRequest(walletId, projectId, draft));
+            if (submitResult.IsFailure)
+                return Result.Failure(submitResult.Error);
+        }
+        else
+        {
+            IsAutoApproved = true;
+            var publishResult = await _investmentAppService.SubmitTransactionFromDraft(
+                new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(
+                    walletId.Value, projectId, draft));
+            if (publishResult.IsFailure)
+                return Result.Failure(publishResult.Error);
+        }
+
+        return Result.Success();
+    }
+
+    private byte? GetPatternIndex()
+    {
+        if (IsSubscription)
+            return SelectedSubscriptionPattern == "pattern2" ? (byte)1 : (byte)0;
+        if (IsFund && SelectedFundingPattern != null)
+            return SelectedFundingPattern.PatternId;
+        return null;
     }
 
     /// <summary>Select a wallet from the list.</summary>
@@ -1496,6 +1621,16 @@ public partial class InvestPageViewModel : ReactiveObject
         LightningInvoice = null;
         LightningSwapId = null;
         IsGeneratingLightningInvoice = false;
+    }
+
+    /// <summary>Raised when the invest flow completes and the user clicks the success button.
+    /// The view subscribes to navigate to the Funded section.</summary>
+    public event Action? InvestCompleted;
+
+    private void OnInvestSuccess()
+    {
+        AddToPortfolio();
+        InvestCompleted?.Invoke();
     }
 
     /// <summary>
