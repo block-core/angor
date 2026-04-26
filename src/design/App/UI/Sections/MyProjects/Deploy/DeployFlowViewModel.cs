@@ -405,4 +405,18 @@ public partial class DeployFlowViewModel : ReactiveObject
         IsVisible = false;
         OnDeployCompleted?.Invoke();
     }
+
+    /// <summary>
+    /// Callback invoked when the user clicks "Complete Profile" on the deploy success screen.
+    /// The parent wires this to navigate to the edit profile page for the newly created project.
+    /// </summary>
+    public Action? OnCompleteProfileRequested { get; set; }
+
+    /// <summary>Complete the flow and request navigation to the edit profile page.</summary>
+    public void CompleteProfile()
+    {
+        IsVisible = false;
+        OnDeployCompleted?.Invoke();
+        OnCompleteProfileRequested?.Invoke();
+    }
 }

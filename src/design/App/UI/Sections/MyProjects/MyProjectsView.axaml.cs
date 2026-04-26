@@ -259,6 +259,12 @@ public partial class MyProjectsView : UserControl
                 {
                     ManageProjectViewControl.DataContext = manageVm;
                     ManageProjectViewControl.SetBackAction(() => vm.CloseManageProject());
+                    ManageProjectViewControl.OnEditProjectRequested = () =>
+                    {
+                        // Close manage view and open edit profile for the same project
+                        vm.CloseManageProject();
+                        vm.OpenEditProfile(manageVm.Project);
+                    };
                 }
 
                 UpdateListVisibility(vm);
@@ -459,6 +465,13 @@ public partial class MyProjectsView : UserControl
             {
                 vm.OnProjectDeployed(wvm);
                 vm.CloseCreateWizard(); // Close wizard -> shows my-projects list with new project at top
+            };
+            wvm.OnCompleteProfileRequested = () =>
+            {
+                // Open edit profile for the last added project (the one just deployed)
+                var lastProject = vm.Projects.LastOrDefault();
+                if (lastProject != null)
+                    vm.OpenEditProfile(lastProject);
             };
         }
     }

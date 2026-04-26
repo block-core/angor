@@ -25,6 +25,11 @@ public class InvestedProjectDto
     /// Project type: Invest, Fund, or Subscribe. Defaults to Invest for backward compatibility.
     /// </summary>
     public ProjectType ProjectType { get; set; } = ProjectType.Invest;
+
+    /// <summary>
+    /// Total number of unique investors in this project (from indexer stats).
+    /// </summary>
+    public int TotalInvestors { get; set; }
 }
 
 public enum FounderStatus

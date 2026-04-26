@@ -625,7 +625,7 @@ public partial class PortfolioViewModel : ReactiveObject
                         ShortDescription = dto.Description ?? "",
                         TotalInvested = investedBtc.ToString("F8", CultureInfo.InvariantCulture),
                         FundingAmount = $"{investedBtc:F4} {_currencyService.Symbol}",
-                        FundingDate = DateTime.UtcNow.ToString("M/dd/yyyy"),
+                        FundingDate = dto.RequestedOn?.ToString("dd MMM yyyy") ?? DateTime.UtcNow.ToString("dd MMM yyyy"),
                         TypeLabel = typeLabel,
                         StatusText = statusText,
                         StatusClass = statusClass,
@@ -633,6 +633,7 @@ public partial class PortfolioViewModel : ReactiveObject
                         StatusPill2 = statusText,
                         TargetAmount = targetBtc.ToString("F4", CultureInfo.InvariantCulture),
                         TotalRaised = raisedBtc.ToString("F4", CultureInfo.InvariantCulture),
+                        TotalInvestors = dto.TotalInvestors,
                         Progress = targetBtc > 0 ? Math.Min(100, raisedBtc / targetBtc * 100) : 0,
                         Status = statusClass == "active" ? "Active" : "Pending",
                         ProjectType = projectType,
@@ -810,6 +811,9 @@ public partial class PortfolioViewModel : ReactiveObject
             }
 
             // Populate recovery details from SDK data
+            // TODO: Verify penalty duration matches the on-chain timelock. The SDK's PenaltyDays
+            // is derived from the recovery transaction's nLockTime — confirm this value is correct
+            // for all project types (invest/fund/subscribe) and edge cases (e.g. mid-stage recovery).
             investment.PenaltyDuration = recovery.PenaltyDays > 0 ? $"{recovery.PenaltyDays} days" : "";
             var daysLeft = (recovery.ExpiryDate - DateTime.UtcNow).Days;
             investment.PenaltyDaysRemaining = Math.Max(0, daysLeft);
@@ -1266,7 +1270,7 @@ public partial class PortfolioViewModel : ReactiveObject
             ProjectName = project.ProjectName,
             ShortDescription = project.ShortDescription,
             FundingAmount = $"{investmentAmount} {_currencyService.Symbol}",
-            FundingDate = DateTime.UtcNow.ToString("M/dd/yyyy"),
+            FundingDate = DateTime.UtcNow.ToString("dd MMM yyyy"),
             TypeLabel = typeLabel,
             StatusText = isAutoApproved ? $"{typeLabel} Active" : "Awaiting Approval",
             StatusClass = isAutoApproved ? "active" : "waiting",
@@ -1287,9 +1291,9 @@ public partial class PortfolioViewModel : ReactiveObject
             TargetAmount = project.Target,
             TotalRaised = project.Raised,
             TotalInvestors = project.InvestorCount,
-             StartDate = DateTime.UtcNow.ToString("MMM dd, yyyy"),
+             StartDate = DateTime.UtcNow.ToString("dd MMM yyyy"),
             EndDate = project.EndDate,
-             TransactionDate = DateTime.UtcNow.ToString("MMM dd, yyyy"),
+             TransactionDate = DateTime.UtcNow.ToString("dd MMM yyyy"),
             ApprovalStatus = isAutoApproved ? "Approved" : "Pending",
             ProjectIdentifier = project.ProjectId,
             Stages = stages,

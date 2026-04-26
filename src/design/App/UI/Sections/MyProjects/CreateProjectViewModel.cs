@@ -138,6 +138,12 @@ public partial class CreateProjectViewModel : ReactiveObject
     /// </summary>
     public Action? OnProjectDeployed { get; set; }
 
+    /// <summary>
+    /// Called when the user clicks "Complete Profile" on the deploy success screen.
+    /// The parent wires this to navigate to the edit profile page.
+    /// </summary>
+    public Action? OnCompleteProfileRequested { get; set; }
+
     /// <summary>The deploy flow overlay ViewModel.</summary>
     public DeployFlowViewModel DeployFlow { get; }
 
@@ -605,6 +611,10 @@ public partial class CreateProjectViewModel : ReactiveObject
             this.RaisePropertyChanged(nameof(DeployButtonText));
             // Matches Vue goToMyProjects(): add project to list + close wizard + navigate to list
             OnProjectDeployed?.Invoke();
+        };
+        DeployFlow.OnCompleteProfileRequested = () =>
+        {
+            OnCompleteProfileRequested?.Invoke();
         };
         DeployFlow.Show(ProjectName ?? "My Project");
     }

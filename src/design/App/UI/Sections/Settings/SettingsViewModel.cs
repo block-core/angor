@@ -68,6 +68,10 @@ public partial class SettingsViewModel : ReactiveObject
     public ObservableCollection<RelayItem> NostrRelays { get; } = new();
     [Reactive] private string newRelayUrl = "";
 
+    // Refresh state
+    [Reactive] private bool isRefreshingIndexer;
+    [Reactive] private bool isRefreshingRelay;
+
     // Currency Display
     [Reactive] private string currencyDisplay;
 
@@ -330,6 +334,8 @@ public partial class SettingsViewModel : ReactiveObject
     /// </summary>
     public async Task RefreshIndexerStatusAsync()
     {
+        if (IsRefreshingIndexer) return;
+        IsRefreshingIndexer = true;
         try
         {
             await _networkService.CheckServices(true);
@@ -340,6 +346,10 @@ public partial class SettingsViewModel : ReactiveObject
             _logger.LogError(ex, "Failed to refresh indexer status");
             ToastRequested?.Invoke("Failed to refresh indexer status.");
         }
+        finally
+        {
+            IsRefreshingIndexer = false;
+        }
     }
 
     /// <summary>
@@ -347,6 +357,8 @@ public partial class SettingsViewModel : ReactiveObject
     /// </summary>
     public async Task RefreshRelayStatusAsync()
     {
+        if (IsRefreshingRelay) return;
+        IsRefreshingRelay = true;
         try
         {
             await _networkService.CheckServices(true);
@@ -356,6 +368,10 @@ public partial class SettingsViewModel : ReactiveObject
         {
             _logger.LogError(ex, "Failed to refresh relay status");
             ToastRequested?.Invoke("Failed to refresh relay status.");
+        }
+        finally
+        {
+            IsRefreshingRelay = false;
         }
     }
 

@@ -243,6 +243,7 @@ public partial class InvestmentDetailView : UserControl
                 break;
 
             case "RefreshInvestmentButton":
+            case "RefreshDetailButton":
                 _ = RefreshInvestmentAsync();
                 break;
 

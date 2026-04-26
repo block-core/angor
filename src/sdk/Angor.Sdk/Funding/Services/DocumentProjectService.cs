@@ -161,7 +161,7 @@ public class DocumentProjectService(
 
         // Step 2: Validate each project exists on-chain in parallel
         var validationTasks = nostrProjects
-            .Where(p => !string.IsNullOrEmpty(p.Data.ProjectIdentifier))
+            .Where(p => p != null && !string.IsNullOrEmpty(p.Data?.ProjectIdentifier))
             .Select(async eventInfo =>
             {
                 try
