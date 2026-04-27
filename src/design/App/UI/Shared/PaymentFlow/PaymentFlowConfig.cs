@@ -10,6 +10,9 @@ namespace App.UI.Shared.PaymentFlow;
 /// </summary>
 public record PaymentFlowConfig
 {
+    /// <summary>Project ID for Lightning swap claim key derivation. Required for Lightning payment.</summary>
+    public string? ProjectId { get; init; }
+
     /// <summary>Amount to receive in satoshis.</summary>
     public required long AmountSats { get; init; }
 

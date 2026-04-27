@@ -865,6 +865,7 @@ public partial class InvestPageViewModel : ReactiveObject
 
         var config = new PaymentFlowConfig
         {
+            ProjectId = Project.ProjectId,
             AmountSats = amountSats,
             StageCount = Stages.Count,
             FeeRateSatsPerVbyte = (int)SelectedFeeRate,

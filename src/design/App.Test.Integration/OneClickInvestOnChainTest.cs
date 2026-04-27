@@ -1,6 +1,8 @@
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
+using App.UI.Shared.PaymentFlow;
 using Avalonia.Headless.XUnit;
+using NetworkTab = App.UI.Shared.PaymentFlow.NetworkTab;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
@@ -55,103 +57,98 @@ public class OneClickInvestOnChainTest
         // ── Step 1: Initial state ──
         Log("[1] Verify initial form state...");
         vm!.CurrentScreen.Should().Be(InvestScreen.InvestForm);
-        vm.IsProcessing.Should().BeFalse();
-        vm.HasError.Should().BeFalse();
-        vm.SelectedNetworkTab.Should().Be(NetworkTab.OnChain);
 
-        // ── Step 2: Set investment amount ──
-        Log("[2] Set investment amount...");
+        // ── Step 2: Set investment amount and submit ──
+        Log("[2] Set investment amount and submit...");
         vm.InvestmentAmount = "0.001";
         Dispatcher.UIThread.RunJobs();
         vm.CanSubmit.Should().BeTrue("0.001 meets the minimum investment threshold");
         vm.FormattedAmount.Should().Be("0.00100000");
 
+        vm.Submit();
+        Dispatcher.UIThread.RunJobs();
+        vm.CurrentScreen.Should().Be(InvestScreen.WalletSelector);
+
+        var pf = vm.PaymentFlow;
+        pf.Should().NotBeNull("PaymentFlow should be created after Submit()");
+
         // ── Step 3: ShowInvoice transitions to Invoice screen, starts on-chain flow ──
         Log("[3] ShowInvoice — on-chain default...");
-        vm.ShowInvoice();
+        pf!.ShowInvoice();
         Dispatcher.UIThread.RunJobs();
 
-        vm.CurrentScreen.Should().Be(InvestScreen.Invoice);
-        vm.SelectedNetworkTab.Should().Be(NetworkTab.OnChain, "on-chain is the default tab");
-        vm.IsProcessing.Should().BeTrue("monitoring starts synchronously");
-        vm.PaymentStatusText.Should().NotBeNullOrEmpty(
-            "status text should show progress — exact value depends on wallet state");
+        pf.CurrentScreen.Should().Be(PaymentFlowScreen.Invoice);
+        pf.SelectedNetworkTab.Should().Be(NetworkTab.OnChain, "on-chain is the default tab");
+        pf.IsProcessing.Should().BeTrue("monitoring starts synchronously");
 
         // Derived tab visibility
-        vm.IsOnChainTab.Should().BeTrue();
-        vm.IsLightningTab.Should().BeFalse();
-        vm.InvoiceFieldLabel.Should().Be("On-Chain Address");
-        vm.InvoiceTabIcon.Should().Contain("bitcoin");
+        pf.IsOnChainTab.Should().BeTrue();
+        pf.IsLightningTab.Should().BeFalse();
+        pf.InvoiceFieldLabel.Should().Be("On-Chain Address");
+        pf.InvoiceTabIcon.Should().Contain("bitcoin");
 
-        // ── Step 4: Let the async on-chain flow run — expect error (no wallet/no testnet) ──
+        // ── Step 4: Let the async on-chain flow run — expect error or address ──
         Log("[4] Pumping UI to let on-chain flow complete...");
         await PumpUntilAsync(
-            () => !string.IsNullOrEmpty(vm.ErrorMessage) || vm.OnChainAddress != null,
+            () => !string.IsNullOrEmpty(pf.ErrorMessage) || pf.OnChainAddress != null,
             TimeSpan.FromSeconds(10));
 
-        Log($"    OnChainAddress: '{vm.OnChainAddress}'");
-        Log($"    ErrorMessage: '{vm.ErrorMessage}'");
-        Log($"    PaymentStatusText: '{vm.PaymentStatusText}'");
+        Log($"    OnChainAddress: '{pf.OnChainAddress}'");
+        Log($"    ErrorMessage: '{pf.ErrorMessage}'");
+        Log($"    PaymentStatusText: '{pf.PaymentStatusText}'");
 
-        // Without a funded testnet wallet we expect a labeled error
-        if (vm.ErrorMessage != null)
+        if (pf.ErrorMessage != null)
         {
-            vm.ErrorMessage.Should().NotContain("Parameter 'key'",
+            pf.ErrorMessage.Should().NotContain("Parameter 'key'",
                 "raw ArgumentNullException must not leak — defensive pre-checks should catch it");
-            vm.HasError.Should().BeTrue("HasError must reflect the ErrorMessage state");
+            pf.HasError.Should().BeTrue("HasError must reflect the ErrorMessage state");
         }
 
         // ── Step 5: Switch to Lightning — on-chain error must clear (bug fix) ──
         Log("[5] Switch to Lightning tab — error must clear...");
-        vm.SelectNetworkTab(NetworkTab.Lightning);
+        pf.SelectNetworkTab(NetworkTab.Lightning);
         Dispatcher.UIThread.RunJobs();
 
-        vm.SelectedNetworkTab.Should().Be(NetworkTab.Lightning);
-        vm.IsLightningTab.Should().BeTrue();
-        vm.IsOnChainTab.Should().BeFalse();
-        vm.InvoiceFieldLabel.Should().Be("Lightning Invoice");
-        vm.InvoiceTabIcon.Should().Contain("bolt");
+        pf.SelectedNetworkTab.Should().Be(NetworkTab.Lightning);
+        pf.IsLightningTab.Should().BeTrue();
+        pf.IsOnChainTab.Should().BeFalse();
+        pf.InvoiceFieldLabel.Should().Be("Lightning Invoice");
+        pf.InvoiceTabIcon.Should().Contain("bolt");
 
-        // The critical bug fix: on-chain monitoring error must not bleed through.
-        // The Lightning path may set its own error (e.g. "No wallet available for Lightning swap")
-        // which is fine — what matters is the on-chain monitoring error is gone.
-        // Give a moment for any racing cancelled-monitor result to arrive.
         await PumpUntilAsync(
-            () => !string.IsNullOrEmpty(vm.ErrorMessage) || vm.LightningInvoice != null,
+            () => !string.IsNullOrEmpty(pf.ErrorMessage) || pf.LightningInvoice != null,
             TimeSpan.FromSeconds(5));
         Dispatcher.UIThread.RunJobs();
 
-        if (vm.ErrorMessage != null)
+        if (pf.ErrorMessage != null)
         {
-            vm.ErrorMessage.Should().NotContain("monitoring",
+            pf.ErrorMessage.Should().NotContain("monitoring",
                 "cancelled on-chain monitoring errors must not leak into the Lightning tab — " +
                 "any error here must come from the Lightning path itself");
         }
 
         // ── Step 6: Switch back to on-chain — fresh flow starts ──
         Log("[6] Switch back to OnChain tab...");
-        vm.SelectNetworkTab(NetworkTab.OnChain);
+        pf.SelectNetworkTab(NetworkTab.OnChain);
         Dispatcher.UIThread.RunJobs();
 
-        vm.SelectedNetworkTab.Should().Be(NetworkTab.OnChain);
-        vm.IsOnChainTab.Should().BeTrue();
-        // The on-chain flow starts but may complete instantly (no wallet → immediate error),
-        // so we only verify the tab switched correctly.
+        pf.SelectedNetworkTab.Should().Be(NetworkTab.OnChain);
+        pf.IsOnChainTab.Should().BeTrue();
 
-        // ── Step 7: CloseModal resets everything ──
-        Log("[7] CloseModal resets all state...");
-        vm.CloseModal();
+        // ── Step 7: Reset resets everything ──
+        Log("[7] Reset clears all payment flow state...");
+        pf.Reset();
         Dispatcher.UIThread.RunJobs();
 
-        vm.CurrentScreen.Should().Be(InvestScreen.InvestForm);
-        vm.IsProcessing.Should().BeFalse();
-        vm.ErrorMessage.Should().BeNull();
-        vm.OnChainAddress.Should().BeNull();
-        vm.LightningInvoice.Should().BeNull();
-        vm.LightningSwapId.Should().BeNull();
-        vm.IsGeneratingLightningInvoice.Should().BeFalse();
-        vm.SelectedNetworkTab.Should().Be(NetworkTab.OnChain);
-        vm.PaymentReceived.Should().BeFalse();
+        pf.CurrentScreen.Should().Be(PaymentFlowScreen.WalletSelector);
+        pf.IsProcessing.Should().BeFalse();
+        pf.ErrorMessage.Should().BeNull();
+        pf.OnChainAddress.Should().BeNull();
+        pf.LightningInvoice.Should().BeNull();
+        pf.LightningSwapId.Should().BeNull();
+        pf.IsGeneratingLightningInvoice.Should().BeFalse();
+        pf.SelectedNetworkTab.Should().Be(NetworkTab.OnChain);
+        pf.PaymentReceived.Should().BeFalse();
 
         window.Close();
         Log("========== 1-click invest ON-CHAIN test PASSED ==========");
@@ -185,32 +182,36 @@ public class OneClickInvestOnChainTest
         vm.InvestmentAmount = "0.001";
         Dispatcher.UIThread.RunJobs();
 
+        vm.Submit();
+        Dispatcher.UIThread.RunJobs();
+
+        var pf = vm.PaymentFlow!;
+
         // Start on-chain monitoring
-        vm.ShowInvoice();
+        pf.ShowInvoice();
         Dispatcher.UIThread.RunJobs();
 
         // Rapidly switch tabs — simulates a user clicking around
-        vm.SelectNetworkTab(NetworkTab.Lightning);
+        pf.SelectNetworkTab(NetworkTab.Lightning);
         Dispatcher.UIThread.RunJobs();
-        vm.SelectNetworkTab(NetworkTab.OnChain);
+        pf.SelectNetworkTab(NetworkTab.OnChain);
         Dispatcher.UIThread.RunJobs();
-        vm.SelectNetworkTab(NetworkTab.Lightning);
+        pf.SelectNetworkTab(NetworkTab.Lightning);
         Dispatcher.UIThread.RunJobs();
 
         // Wait for any cancelled operations to settle
         await PumpUntilAsync(
-            () => !vm.IsProcessing || !string.IsNullOrEmpty(vm.ErrorMessage) || vm.LightningInvoice != null,
+            () => !pf.IsProcessing || !string.IsNullOrEmpty(pf.ErrorMessage) || pf.LightningInvoice != null,
             TimeSpan.FromSeconds(10));
         Dispatcher.UIThread.RunJobs();
 
         // After rapid switching, we should be on Lightning with no on-chain error bleeding through
-        vm.SelectedNetworkTab.Should().Be(NetworkTab.Lightning);
-        if (vm.ErrorMessage != null)
+        pf.SelectedNetworkTab.Should().Be(NetworkTab.Lightning);
+        if (pf.ErrorMessage != null)
         {
-            // Any error should be from the Lightning path, not stale on-chain monitoring
-            vm.ErrorMessage.Should().NotContain("monitoring has stopped",
+            pf.ErrorMessage.Should().NotContain("monitoring has stopped",
                 "stale on-chain monitoring errors must not leak after tab switch");
-            vm.ErrorMessage.Should().NotContain("monitoring was cancelled",
+            pf.ErrorMessage.Should().NotContain("monitoring was cancelled",
                 "cancelled on-chain operations must not surface as user-facing errors");
         }
 

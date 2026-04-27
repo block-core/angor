@@ -473,6 +473,12 @@ public partial class PaymentFlowViewModel : ReactiveObject
             IsGeneratingLightningInvoice = false;
             return;
         }
+        if (string.IsNullOrEmpty(_config.ProjectId))
+        {
+            ErrorMessage = "Lightning payment requires a project ID.";
+            IsGeneratingLightningInvoice = false;
+            return;
+        }
 
         ErrorMessage = null;
         IsProcessing = true;
@@ -490,7 +496,7 @@ public partial class PaymentFlowViewModel : ReactiveObject
             PaymentStatusText = "Creating Lightning invoice...";
             var swapRequest = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
                 walletId,
-                new ProjectId("lightning-swap"), // Generic — the swap doesn't need a real project ID
+                new ProjectId(_config.ProjectId),
                 new Amount(_config.AmountSats),
                 receivingAddress,
                 StageCount: _config.StageCount,
