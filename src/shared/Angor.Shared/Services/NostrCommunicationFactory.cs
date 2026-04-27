@@ -172,12 +172,12 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
 
     public bool EoseEventReceivedOnAllRelays(string subscription)
     {
-        if (!_eoseCalledOnSubscriptionClients.ContainsKey(subscription))
+        if (!_eoseCalledOnSubscriptionClients.TryGetValue(subscription, out var clients))
             return true; //If not monitoring than no need to block
 
         _logger.LogDebug($"Checking for all Eose on monitored subscription {subscription}");
 
-        var response = _eoseCalledOnSubscriptionClients[subscription].IsEmpty;
+        var response = clients.IsEmpty;
         
         _logger.LogDebug($"Eose on monitored subscription {subscription} received from all clients - {response}");
         
@@ -198,12 +198,12 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
     
     public bool OkEventReceivedOnAllRelays(string eventId)
     {
-        if (!_okCalledOnSubscriptionClients.ContainsKey(eventId))
+        if (!_okCalledOnSubscriptionClients.TryGetValue(eventId, out var clients))
             return true; //If not monitoring than no need to block
 
         _logger.LogDebug($"Checking for all Ok on monitored subscription {eventId}");
         
-        bool response = _okCalledOnSubscriptionClients[eventId].IsEmpty;
+        bool response = clients.IsEmpty;
         
         _logger.LogDebug($"Eose on monitored subscription {eventId} received from all clients - {response}");
 

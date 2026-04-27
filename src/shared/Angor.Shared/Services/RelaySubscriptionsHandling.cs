@@ -124,15 +124,14 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
 
     public void CloseSubscription(string subscriptionKey)
     {
-        if (!relaySubscriptions.ContainsKey(subscriptionKey))
+        if (!relaySubscriptions.TryRemove(subscriptionKey, out var subscription))
             return;
         
         _communicationFactory
             .GetOrCreateClient(_networkService)
             .Send(new NostrCloseRequest(subscriptionKey));
        
-        relaySubscriptions[subscriptionKey].Dispose();
-        relaySubscriptions.Remove(subscriptionKey, out _);
+        subscription.Dispose();
         relaySubscriptionsKeepActive.Remove(subscriptionKey, out _);
 
         _logger.LogDebug($"subscription disposed - {subscriptionKey}");

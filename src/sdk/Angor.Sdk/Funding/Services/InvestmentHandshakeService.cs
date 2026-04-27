@@ -332,7 +332,7 @@ public class InvestmentHandshakeService(
                             break;
                     }
                 },
-                () => tcs.SetResult(true)
+                () => tcs.TrySetResult(true)
             );
 
             await tcs.Task;
