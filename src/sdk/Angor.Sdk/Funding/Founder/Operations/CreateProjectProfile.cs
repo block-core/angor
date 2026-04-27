@@ -87,7 +87,7 @@ public static class CreateProjectProfile
                       if (!okResponse.Accepted)
                       {
                           logger.LogDebug("Failed to store the project profile on relay for Project {ProjectName}: Communicator {CommunicatorName} - {Message}", project.ProjectName, okResponse.CommunicatorName, okResponse.Message);
-                          tcs.SetResult(Result.Failure<string>($"Failed to store the project profile on the relay: {okResponse.CommunicatorName} - {okResponse.Message}"));
+                          tcs.TrySetResult(Result.Failure<string>($"Failed to store the project profile on the relay: {okResponse.CommunicatorName} - {okResponse.Message}"));
                           return;
                       }
 
@@ -99,7 +99,7 @@ public static class CreateProjectProfile
                          if (!nip65OkResponse.Accepted)
                              logger.LogDebug("Failed to publish NIP-65 list for Project {ProjectName}", project.ProjectName);
 
-                         tcs.SetResult(!nip65OkResponse.Accepted ?
+                         tcs.TrySetResult(!nip65OkResponse.Accepted ?
                                     Result.Failure<string>("Failed to publish NIP-65 list")
                                   : Result.Success(okResponse.EventId!));
                       });
