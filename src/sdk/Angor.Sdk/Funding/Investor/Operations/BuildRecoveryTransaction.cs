@@ -138,7 +138,7 @@ public static class BuildRecoveryTransaction
                         investorTransactionActions.CheckInvestorRecoverySignatures(project.ToProjectInfo(),
                             investment, signatureInfo);
 
-                    tcs.SetResult(validSignatures
+                    tcs.TrySetResult(validSignatures
                         ? Result.Success<SignatureInfo?>(signatureInfo)
                         : Result.Failure<SignatureInfo?>("Invalid signatures"));
                 },

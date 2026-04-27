@@ -84,7 +84,7 @@ public static class GetReleasableTransactions
                         });
                     },
                     // On end of messages
-                    () => { tcs.SetResult(collectedItems); });
+                    () => { tcs.TrySetResult(collectedItems); });
             }
             catch (Exception ex)
             {
@@ -148,7 +148,7 @@ public static class GetReleasableTransactions
                     signatureRequest.ReleaseSignaturesTime = item.EventCreatedAt;
                 }, () =>
                 {
-                    tcs.SetResult();
+                    tcs.TrySetResult();
                 });
             
             return tcs.Task;
@@ -181,7 +181,7 @@ public static class GetReleasableTransactions
                 },
                 () =>
                 {
-                    tcs.SetResult();
+                    tcs.TrySetResult();
                 });
             
             return tcs.Task;

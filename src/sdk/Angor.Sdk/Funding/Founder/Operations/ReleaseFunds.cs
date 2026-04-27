@@ -94,7 +94,7 @@ public static class ReleaseFunds
                         });
                     },
                     // On end of messages
-                    () => { tcs.SetResult(collectedItems); });
+                    () => { tcs.TrySetResult(collectedItems); });
             }
             catch (Exception ex)
             {
