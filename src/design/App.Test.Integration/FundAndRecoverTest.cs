@@ -559,6 +559,13 @@ public class FundAndRecoverTest
         signedInvestment.Should().NotBeNull("Signed investment should appear in the portfolio after founder approval");
         signedInvestment!.Step.Should().Be(2, "Founder approval should move the investment to the signed state before confirmation");
 
+        // Verify TotalInvested is populated from SDK after approval (fund-type project)
+        double.TryParse(signedInvestment.TotalInvested, NumberStyles.Float, CultureInfo.InvariantCulture, out var fundTotalInvestedPostApproval)
+            .Should().BeTrue("TotalInvested should parse as a numeric BTC amount");
+        fundTotalInvestedPostApproval.Should().BeGreaterThan(0,
+            "TotalInvested should be > 0 for fund-type project after SDK reload (uses indexer TotalAmount or InvestedAmountSats fallback)");
+        TestHelpers.Log($"[STEP 9] Fund-type TotalInvested after SDK reload={signedInvestment.TotalInvested}");
+
         var confirmResult = await portfolioVm.ConfirmInvestmentAsync(signedInvestment);
         Dispatcher.UIThread.RunJobs();
         confirmResult.Should().BeTrue("Investor confirmation should succeed after founder signatures are available and valid");

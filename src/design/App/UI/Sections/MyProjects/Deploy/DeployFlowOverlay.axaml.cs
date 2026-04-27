@@ -103,11 +103,10 @@ public partial class DeployFlowOverlay : UserControl, IBackdropCloseable
                 OnDeployCompleted?.Invoke();
                 break;
             case "CompleteProfileButton":
-                // Vue ref: completeProfile() opens /profile/{id} in new tab, does NOT close modal.
-                // Desktop stub: just go to my projects (same as "Go to My Projects").
+                // Navigate to edit profile for the newly created project
                 Vm?.GoToMyProjects();
+                Vm?.CompleteProfile();
                 GetShellVm()?.HideModal();
-                OnDeployCompleted?.Invoke();
                 break;
         }
     }

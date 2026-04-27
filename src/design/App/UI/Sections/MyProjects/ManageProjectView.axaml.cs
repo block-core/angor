@@ -50,6 +50,7 @@ public partial class ManageProjectView : UserControl
                     modalsView.OpenSpentModal(stageIndex);
             };
 
+            contentView.EditProjectRequested += () => OnEditProjectRequested?.Invoke();
         }
 
         // ── Share button ──
@@ -123,6 +124,12 @@ public partial class ManageProjectView : UserControl
     private EventHandler<RoutedEventArgs>? _backClickHandler;
 
     /// <summary>
+    /// Raised when the user clicks "Edit Project" in the content view.
+    /// The parent (MyProjectsView) wires this to open the edit profile panel.
+    /// </summary>
+    public Action? OnEditProjectRequested { get; set; }
+
+    /// <summary>
     /// Wire the Back button to navigate back to the project list.
     /// Called from MyProjectsView code-behind after the view is created.
     /// Removes any previous handler before adding the new one.
@@ -193,7 +200,8 @@ public partial class ManageProjectView : UserControl
         var shell = this.FindAncestorOfType<ShellView>();
         if (shell?.DataContext is ShellViewModel shellVm && !shellVm.IsModalOpen)
         {
-            var modal = new PrivateKeysPasswordModal(
+            // Skip password step — go directly to keys display (default password is used internally)
+            var modal = new PrivateKeysDisplayModal(
                 Vm.ProjectId, Vm.FounderKey, Vm.RecoveryKey,
                 Vm.NostrNpub, Vm.Nip05, Vm.NostrNsec, Vm.NostrHex);
             shellVm.ShowModal(modal);

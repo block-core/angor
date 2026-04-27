@@ -66,7 +66,8 @@
                             VerticalAlignment="Center">
                     <!-- Edit Project button -->
                     <!-- Vue: .edit-project-button — pad 6 12, rounded 6, border #d1d5db, color #4B7C5A, font 13px -->
-                    <Button Background="Transparent"
+                    <Button Name="EditProjectButton"
+                            Background="Transparent"
                             BorderBrush="{DynamicResource StrokeSubtle}"
                             BorderThickness="1"
                             CornerRadius="6"
