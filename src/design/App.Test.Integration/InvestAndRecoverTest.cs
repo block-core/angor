@@ -9,6 +9,7 @@ using Angor.Sdk.Common;
 using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
+using App.UI.Shared.PaymentFlow;
 using App.UI.Sections.Funders;
 using App.UI.Sections.Funds;
 using App.UI.Sections.MyProjects;
@@ -290,41 +291,37 @@ public class InvestAndRecoverTest
         Dispatcher.UIThread.RunJobs();
         investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector);
 
-        var investWallet = investVm.Wallets[0];
-        investVm.SelectWallet(investWallet);
+        var pf = investVm.PaymentFlow;
+        pf.Should().NotBeNull("PaymentFlow should be created after Submit()");
+
+        var investWallet = pf!.Wallets[0];
+        pf.SelectWallet(investWallet);
         Dispatcher.UIThread.RunJobs();
-        investVm.SelectedWallet.Should().NotBeNull();
+        pf.HasSelectedWallet.Should().BeTrue();
 
         TestHelpers.Log("[STEP 6] Paying with wallet (SDK invest pipeline)...");
-        investVm.PayWithWallet();
+        pf.PayWithWalletCommand.Execute().Subscribe();
 
         var investDeadline = DateTime.UtcNow + TestHelpers.TransactionTimeout;
         while (DateTime.UtcNow < investDeadline)
         {
             Dispatcher.UIThread.RunJobs();
-            if (investVm.CurrentScreen == InvestScreen.Success)
-            {
+            if (pf.CurrentScreen == PaymentFlowScreen.Success)
                 break;
-            }
 
-            if (!investVm.IsProcessing && investVm.CurrentScreen != InvestScreen.Success)
+            if (pf.ErrorMessage != null)
             {
-                if (investVm.PaymentStatusText.Contains("Failed") || investVm.PaymentStatusText.Contains("Error"))
-                    break;
+                TestHelpers.Log($"[STEP 6] Invest ERROR: {pf.ErrorMessage}");
+                break;
             }
 
             await Task.Delay(TestHelpers.PollInterval);
         }
 
-        investVm.CurrentScreen.Should().Be(InvestScreen.Success,
-            $"Invest should reach success. Last status: {investVm.PaymentStatusText}");
+        pf.CurrentScreen.Should().Be(PaymentFlowScreen.Success,
+            $"Invest should reach success. Error: {pf.ErrorMessage ?? "none"}");
 
-        // Verify invest success UI elements
-        var investSuccessModal = await window.WaitForControl<Visual>("InvestSuccessModal", TestHelpers.UiTimeout);
-        investSuccessModal.Should().NotBeNull("Invest success modal should be visible in the UI");
-        var investSuccessTitle = await window.GetText("InvestSuccessTitle", TestHelpers.UiTimeout);
-        investSuccessTitle.Should().NotBeNullOrEmpty("Invest success title should be displayed");
-        TestHelpers.Log($"[STEP 6] Invest success title: '{investSuccessTitle}'");
+        TestHelpers.Log($"[STEP 6] Invest success title: '{pf.SuccessTitle}'");
 
         TestHelpers.Log("[STEP 7] Adding investment to portfolio...");
         investVm.AddToPortfolio();

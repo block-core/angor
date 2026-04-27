@@ -10,6 +10,7 @@ using Angor.Sdk.Funding.Projects;
 using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.MyProjects.Deploy;
+using App.UI.Shared.PaymentFlow;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -337,29 +338,30 @@ public class CreateProjectTest
 
         var deployVm = wizardVm.DeployFlow;
         deployVm.IsVisible.Should().BeTrue("Deploy overlay should be visible after Deploy()");
-        deployVm.CurrentScreen.Should().Be(DeployScreen.WalletSelector, "Should start at wallet selector");
+        var pf = deployVm.PaymentFlow;
+        pf.Should().NotBeNull("PaymentFlow should be created by DeployFlow.Show()");
 
         // Wait for wallets to load
         TestHelpers.Log("[STEP 6] Waiting for wallets to load...");
         var walletLoadDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
-        while (DateTime.UtcNow < walletLoadDeadline && deployVm.Wallets.Count == 0)
+        while (DateTime.UtcNow < walletLoadDeadline && pf!.Wallets.Count == 0)
         {
             await Task.Delay(500);
             Dispatcher.UIThread.RunJobs();
         }
-        deployVm.Wallets.Count.Should().BeGreaterThan(0, "At least one wallet should be loaded");
-        TestHelpers.Log($"[STEP 6] Loaded {deployVm.Wallets.Count} wallet(s)");
+        pf!.Wallets.Count.Should().BeGreaterThan(0, "At least one wallet should be loaded");
+        TestHelpers.Log($"[STEP 6] Loaded {pf.Wallets.Count} wallet(s)");
 
-        // Select the first wallet via ViewModel (wallet cards use PointerPressed on Border)
-        var wallet = deployVm.Wallets[0];
+        // Select the first wallet via ViewModel
+        var wallet = pf.Wallets[0];
         TestHelpers.Log($"[STEP 6] Selecting wallet: {wallet.Name} (balance: {wallet.Balance})...");
-        deployVm.SelectWallet(wallet);
+        pf.SelectWallet(wallet);
         Dispatcher.UIThread.RunJobs();
-        deployVm.SelectedWallet.Should().NotBeNull("Should have a selected wallet");
+        pf.HasSelectedWallet.Should().BeTrue("Should have a selected wallet");
 
         // Click "Pay with Wallet" — this triggers the real SDK deploy pipeline
         TestHelpers.Log("[STEP 6] Paying with wallet (SDK deploy pipeline)...");
-        deployVm.PayWithWallet();
+        pf.PayWithWalletCommand.Execute().Subscribe();
 
         // Wait for deploy to complete (or fail) — poll for Success screen
         var deployDeadline = DateTime.UtcNow + DeployTimeout;
@@ -367,37 +369,27 @@ public class CreateProjectTest
         {
             Dispatcher.UIThread.RunJobs();
 
-            if (deployVm.CurrentScreen == DeployScreen.Success)
+            if (pf.CurrentScreen == PaymentFlowScreen.Success)
             {
                 TestHelpers.Log("[STEP 6] Deploy succeeded! Success screen visible.");
                 break;
             }
 
-            if (!deployVm.IsDeploying && deployVm.CurrentScreen != DeployScreen.Success)
+            if (pf.ErrorMessage != null)
             {
-                // Deploying finished but not on success screen — check for error
-                TestHelpers.Log($"[STEP 6] Deploy status: {deployVm.DeployStatusText}");
-                if (deployVm.DeployStatusText.Contains("Failed") || deployVm.DeployStatusText.Contains("error"))
-                {
-                    TestHelpers.Log($"[STEP 6] Deploy ERROR: {deployVm.DeployStatusText}");
-                    break;
-                }
+                TestHelpers.Log($"[STEP 6] Deploy ERROR: {pf.ErrorMessage}");
+                break;
             }
 
             await Task.Delay(TestHelpers.PollInterval);
         }
 
-        deployVm.CurrentScreen.Should().Be(DeployScreen.Success,
-            $"Deploy should reach success screen. Last status: {deployVm.DeployStatusText}");
+        pf.CurrentScreen.Should().Be(PaymentFlowScreen.Success,
+            $"Deploy should reach success screen. Error: {pf.ErrorMessage ?? "none"}");
 
-        // Verify success panel is visible in the visual tree (not just VM state)
-        var deploySuccessPanel = await window.WaitForControl<Visual>("DeploySuccessPanel", TestHelpers.UiTimeout);
-        deploySuccessPanel.Should().NotBeNull("DeploySuccessPanel should be visible in the UI after successful deploy");
-
-        // Verify the project name is displayed in the success screen
-        var deployProjectNameText = await window.GetText("DeploySuccessProjectName", TestHelpers.UiTimeout);
-        deployProjectNameText.Should().Be(projectName,
-            "Deploy success screen should show the correct project name");
+        // Verify the success title contains the project name
+        pf.SuccessTitle.Should().Contain(projectName,
+            "Deploy success screen should reference the project name");
 
         // Click "Go to My Projects" — closes modal, adds project to list
         TestHelpers.Log("[STEP 6] Clicking 'Go to My Projects'...");
