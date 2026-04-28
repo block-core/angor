@@ -66,6 +66,13 @@ public class FindProjectsPanelTests
 
         // ── ProjectCard controls rendered ──
         TestHelpers.Log("[1.4] Verifying ProjectCard controls...");
+        // Wait for IsInitialLoad to flip to false (skeleton → real cards transition)
+        var cardDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+        while (DateTime.UtcNow < cardDeadline && vm.IsInitialLoad)
+        {
+            Dispatcher.UIThread.RunJobs();
+            await Task.Delay(100);
+        }
         Dispatcher.UIThread.RunJobs();
         var cards = window.GetVisualDescendants().OfType<ProjectCard>().ToList();
         cards.Count.Should().BeGreaterThan(0, "at least one ProjectCard should render");

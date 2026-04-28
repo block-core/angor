@@ -186,10 +186,36 @@
                                         CornerRadius="8"
                                         FontWeight="SemiBold"
                                         FontSize="14"
-                                        Click="OnRefreshIndexer">
+                                        Click="OnRefreshIndexer"
+                                        IsEnabled="{Binding !IsRefreshingIndexer}">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="14"
-                                                Foreground="White" VerticalAlignment="Center" />
+                                        <Panel>
+                                            <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="14"
+                                                    Foreground="White" VerticalAlignment="Center"
+                                                    IsVisible="{Binding !IsRefreshingIndexer}" />
+                                            <i:Icon Value="fa-solid fa-spinner" FontSize="14"
+                                                    Foreground="White" VerticalAlignment="Center"
+                                                    IsVisible="{Binding IsRefreshingIndexer}"
+                                                    RenderTransformOrigin="50%,50%">
+                                                <i:Icon.RenderTransform>
+                                                    <RotateTransform />
+                                                </i:Icon.RenderTransform>
+                                                <i:Icon.Styles>
+                                                    <Style Selector="i|Icon[IsVisible=True]">
+                                                        <Style.Animations>
+                                                            <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                                <KeyFrame Cue="0%">
+                                                                    <Setter Property="RotateTransform.Angle" Value="0" />
+                                                                </KeyFrame>
+                                                                <KeyFrame Cue="100%">
+                                                                    <Setter Property="RotateTransform.Angle" Value="360" />
+                                                                </KeyFrame>
+                                                            </Animation>
+                                                        </Style.Animations>
+                                                    </Style>
+                                                </i:Icon.Styles>
+                                            </i:Icon>
+                                        </Panel>
                                         <TextBlock Text="Refresh" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
@@ -547,6 +573,7 @@
                                 <ToggleSwitch DockPanel.Dock="Right"
                                               IsChecked="{Binding IsDebugMode, Mode=TwoWay}"
                                               VerticalAlignment="Center"
+                                              Margin="16,0,0,0"
                                               OnContent="Enabled"
                                               OffContent="Disabled" />
                                 <StackPanel Spacing="4" VerticalAlignment="Center">

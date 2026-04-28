@@ -5,6 +5,7 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using App.UI.Sections.MyProjects.EditProfile;
 using App.UI.Shared;
 using App.UI.Shared.Controls;
 using App.UI.Shell;
@@ -258,6 +259,12 @@ public partial class MyProjectsView : UserControl
                 {
                     ManageProjectViewControl.DataContext = manageVm;
                     ManageProjectViewControl.SetBackAction(() => vm.CloseManageProject());
+                    ManageProjectViewControl.OnEditProjectRequested = () =>
+                    {
+                        // Close manage view and open edit profile for the same project
+                        vm.CloseManageProject();
+                        vm.OpenEditProfile(manageVm.Project);
+                    };
                 }
 
                 UpdateListVisibility(vm);
@@ -270,7 +277,36 @@ public partial class MyProjectsView : UserControl
 
                     if (manageVm != null)
                         shellVm.SectionTitleOverride = manageVm.Project.Name;
-                    else if (!vm.ShowCreateWizard)
+                    else if (!vm.ShowCreateWizard && vm.SelectedEditProject == null)
+                        shellVm.SectionTitleOverride = null;
+                }
+            })
+            .DisposeWith(_subscriptions!);
+
+        // SelectedEditProject drives the edit profile panel
+        vm.WhenAnyValue(x => x.SelectedEditProject)
+            .Subscribe(editVm =>
+            {
+                var editProfilePanel = this.FindControl<Panel>("EditProfilePanel");
+                if (editProfilePanel != null)
+                    editProfilePanel.IsVisible = editVm != null;
+
+                var editProfileViewControl = this.FindControl<EditProfileView>("EditProfileViewControl");
+                if (editProfileViewControl != null && editVm != null)
+                {
+                    editProfileViewControl.DataContext = editVm;
+                    editProfileViewControl.SetBackAction(() => vm.CloseEditProfile());
+                }
+
+                UpdateListVisibility(vm);
+
+                // Update shell title
+                var shell = this.FindAncestorOfType<ShellView>();
+                if (shell?.DataContext is ShellViewModel shellVm)
+                {
+                    if (editVm != null)
+                        shellVm.SectionTitleOverride = $"Edit Profile — {editVm.ProjectName}";
+                    else if (!vm.ShowCreateWizard && vm.SelectedManageProject == null)
                         shellVm.SectionTitleOverride = null;
                 }
             })
@@ -317,11 +353,12 @@ public partial class MyProjectsView : UserControl
     {
         var showWizard = vm.ShowCreateWizard;
         var showManage = vm.SelectedManageProject != null;
+        var showEdit = vm.SelectedEditProject != null;
 
         if (EmptyStatePanel != null)
-            EmptyStatePanel.IsVisible = !showWizard && !showManage && !vm.HasProjects;
+            EmptyStatePanel.IsVisible = !showWizard && !showManage && !showEdit && !vm.HasProjects;
         if (ProjectListPanel != null)
-            ProjectListPanel.IsVisible = !showWizard && !showManage && vm.HasProjects;
+            ProjectListPanel.IsVisible = !showWizard && !showManage && !showEdit && vm.HasProjects;
     }
 
     private void OnButtonClick(object? sender, RoutedEventArgs e)
@@ -352,6 +389,20 @@ public partial class MyProjectsView : UserControl
                     && card.DataContext is MyProjectItemViewModel project)
                 {
                     vm.OpenManageProject(project);
+                    e.Handled = true;
+                }
+                return;
+
+            case "PART_EditButton":
+                // Walk up from the button to find the ProjectCard, then get its DataContext
+                var editElement = btn as Control;
+                while (editElement != null && editElement is not ProjectCard)
+                    editElement = editElement.Parent as Control;
+
+                if (editElement is ProjectCard editCard
+                    && editCard.DataContext is MyProjectItemViewModel editProject)
+                {
+                    vm.OpenEditProfile(editProject);
                     e.Handled = true;
                 }
                 return;
@@ -414,6 +465,13 @@ public partial class MyProjectsView : UserControl
             {
                 vm.OnProjectDeployed(wvm);
                 vm.CloseCreateWizard(); // Close wizard -> shows my-projects list with new project at top
+            };
+            wvm.OnCompleteProfileRequested = () =>
+            {
+                // Open edit profile for the last added project (the one just deployed)
+                var lastProject = vm.Projects.LastOrDefault();
+                if (lastProject != null)
+                    vm.OpenEditProfile(lastProject);
             };
         }
     }

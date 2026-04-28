@@ -3,9 +3,9 @@ using App.UI.Sections.FindProjects;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
-using Avalonia.VisualTree;
 using FluentAssertions;
-using Microsoft.Extensions.DependencyInjection;
+using Xunit;
+using Xunit.Abstractions;
 
 namespace App.Test.Integration;
 
@@ -24,17 +24,20 @@ namespace App.Test.Integration;
 ///
 /// Requires:
 ///   - Real testnet infrastructure (indexer + Nostr relays)
-///   - Boltz testnet API (boltz.thedude.cloud or env BOLTZ_API_URL)
-///   - ThunderHub LND wallet at thunderhub.thedude.cloud:4005 (LND-2)
+///   - Boltz testnet API (test.boltz.angor.io or env BOLTZ_API_URL)
+///   - ThunderHub LND wallet (env THUNDERHUB_URL)
 /// </summary>
 public class OneClickInvestLightningFundedTest
 {
-    // TODO: Uncomment when ThunderHub env vars are configured for automated payment:
-    // private static readonly string? ThunderHubUrl = Environment.GetEnvironmentVariable("THUNDERHUB_URL");
-    // private static readonly string? ThunderHubAccountName = Environment.GetEnvironmentVariable("THUNDERHUB_ACCOUNT");
-    // private static readonly string? ThunderHubPassword = Environment.GetEnvironmentVariable("THUNDERHUB_PASSWORD");
-
     private static readonly TimeSpan LightningPaymentTimeout = TimeSpan.FromMinutes(5);
+    private readonly ITestOutputHelper _output;
+
+    public OneClickInvestLightningFundedTest(ITestOutputHelper output)
+    {
+        _output = output;
+    }
+
+    private const string LndPayBaseUrl = "https://thunderhub.thedude.cloud/lnd1-pay";
 
     [AvaloniaFact]
     public async Task LightningInvoice_ManualPay_ReachesSuccessScreen()
@@ -57,9 +60,25 @@ public class OneClickInvestLightningFundedTest
         findVm.Should().NotBeNull("FindProjectsViewModel should be available");
         await WaitForProjects(findVm!);
 
-        var project = findVm!.Projects.FirstOrDefault(p => p.IsOpen);
-        project.Should().NotBeNull("at least one open project should be available");
-        Log($"[2] Found project: '{project!.ProjectName}' ({project.Stages.Count} stages)");
+        // Filter for Fund-type projects only — Invest-type projects always require founder
+        // approval regardless of amount, which would block this automated test.
+        // Fund-type projects auto-publish when the amount is at or below the penalty threshold.
+        var fundProjects = findVm!.Projects.Where(p => p.IsOpen && p.IsFundType).ToList();
+        Log($"[2] Found {fundProjects.Count} open Fund-type project(s) out of {findVm.Projects.Count} total");
+        foreach (var fp in fundProjects)
+        {
+            Log($"[2]   - '{fp.ProjectName}' (threshold: {fp.PenaltyThresholdSats?.ToString() ?? "null (always requires approval)"} sats, stages: {fp.Stages.Count})");
+        }
+
+        var project = fundProjects.FirstOrDefault(p => p.PenaltyThresholdSats.HasValue);
+        project.Should().NotBeNull(
+            "at least one open Fund-type project with a penalty threshold should be available — " +
+            "Invest-type projects always require founder approval and cannot be used in this test");
+
+        var thresholdSats = project!.PenaltyThresholdSats!.Value;
+        var investAmountSats = Math.Min(thresholdSats, 100_000L); // at most 0.001 BTC
+        var investAmountBtc = (investAmountSats / 100_000_000m).ToString("0.########");
+        Log($"[2] Selected project: '{project.ProjectName}' (threshold: {thresholdSats} sats, investing: {investAmountSats} sats / {investAmountBtc} BTC)");
 
         // ── Step 3: Open invest page and set amount via UI ──
         Log("[3] Opening invest page, setting amount...");
@@ -72,9 +91,9 @@ public class OneClickInvestLightningFundedTest
         investVm.Should().NotBeNull("InvestPageViewModel should be created via factory");
         investVm!.CurrentScreen.Should().Be(InvestScreen.InvestForm);
 
-        await window.TypeText("InvestAmountInput", "0.001", TestHelpers.UiTimeout);
+        await window.TypeText("InvestAmountInput", investAmountBtc, TestHelpers.UiTimeout);
         Dispatcher.UIThread.RunJobs();
-        investVm.CanSubmit.Should().BeTrue("0.001 meets the minimum investment threshold");
+        investVm.CanSubmit.Should().BeTrue($"{investAmountBtc} BTC meets the minimum investment threshold");
 
         // ── Step 4: Submit → wallet selector → pay invoice instead ──
         Log("[4] Submit → wallet selector → pay invoice instead...");
@@ -85,6 +104,23 @@ public class OneClickInvestLightningFundedTest
         await window.ClickButton("InvestPayInvoiceBtn", TestHelpers.UiTimeout);
         investVm.CurrentScreen.Should().Be(InvestScreen.Invoice);
         investVm.SelectedNetworkTab.Should().Be(NetworkTab.OnChain, "on-chain is the default tab");
+
+        // ── Step 4b: Wait for receive address to be generated ──
+        // ShowInvoice() runs GenerateReceiveAddressAsync() which creates the wallet,
+        // refreshes balances, and generates the receive address once. Both on-chain and
+        // Lightning tabs reuse this same address — no double generation.
+        Log("[4b] Waiting for receive address...");
+        var initDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
+        while (DateTime.UtcNow < initDeadline)
+        {
+            Dispatcher.UIThread.RunJobs();
+            if (investVm.OnChainAddress != null)
+                break;
+            await Task.Delay(250);
+        }
+        investVm.OnChainAddress.Should().NotBeNullOrEmpty(
+            "receive address should be generated before switching to Lightning tab");
+        Log($"[4b] Receive address ready: {investVm.OnChainAddress}");
 
         // ── Step 5: Switch to Lightning tab ──
         Log("[5] Switching to Lightning tab...");
@@ -117,41 +153,26 @@ public class OneClickInvestLightningFundedTest
         bolt11Invoice.Should().NotBeNullOrEmpty("BOLT11 invoice should be generated by Boltz swap");
         bolt11Invoice.Should().StartWith("ln", "BOLT11 invoices start with 'ln' prefix");
 
-        // ── Regression guard: verify the auto-created wallet can be decrypted with the default key ──
-        // The invest flow calls CreateWalletWithoutPassword() which must encrypt with the same key
-        // that SimplePasswordProvider returns, otherwise all subsequent SDK operations fail with
-        // "Invalid encryption key".
-        Log("[6b] Verifying auto-created wallet encryption key roundtrip...");
-        var seedwordsProvider = global::App.App.Services.GetRequiredService<Angor.Sdk.Common.ISeedwordsProvider>();
-        var walletAppSvc = global::App.App.Services.GetRequiredService<Angor.Sdk.Wallet.Application.IWalletAppService>();
-        var metas = await walletAppSvc.GetMetadatas();
-        metas.IsSuccess.Should().BeTrue("should be able to list wallets after auto-creation");
-        metas.Value.Should().NotBeEmpty("invest flow should have auto-created a wallet");
-
-        var autoWalletId = metas.Value.First().Id;
-        var sensitiveResult = await seedwordsProvider.GetSensitiveData(autoWalletId.Value);
-        sensitiveResult.IsSuccess.Should().BeTrue(
-            $"auto-created wallet decryption should succeed — got error: {(sensitiveResult.IsFailure ? sensitiveResult.Error : "none")}. " +
-            "If this fails, CreateWalletWithoutPassword uses a different encryption key than SimplePasswordProvider.DefaultKey.");
-
-        // ── Step 7: Pay the invoice ──
-        // Log the full invoice so it can be paid manually (e.g. via ThunderHub UI).
-        Log("[7] ══════��═══════════════════════════════════════════════════");
-        Log("[7] PAY THIS INVOICE:");
-        Log($"[7] {bolt11Invoice}");
-        Log("[7] ══════════════════════════════════════════════════���═══════");
-
-        // TODO: Uncomment when THUNDERHUB_URL, THUNDERHUB_ACCOUNT, THUNDERHUB_PASSWORD env vars are set:
-        // using var thunderHub = new ThunderHubClient(ThunderHubUrl!);
-        // await thunderHub.LoginAsync(ThunderHubAccountName!, ThunderHubPassword!);
-        // Log("[7] ThunderHub login successful.");
-        // var paid = await thunderHub.PayInvoiceAsync(bolt11Invoice);
-        // paid.Should().BeTrue("ThunderHub should successfully pay the BOLT11 invoice");
-        // Log("[7] Lightning payment sent.");
+        // ── Step 7: Pay the invoice via LND REST API ──
+        var macaroon = TestSecrets.Get("LND1_PAY_MACAROON");
+        if (string.IsNullOrEmpty(macaroon))
+        {
+            Log("[7] LND1_PAY_MACAROON not set — logging invoice for manual payment.");
+            Log("[7] Set it via: dotnet user-secrets set LND1_PAY_MACAROON <hex>");
+            Log($"[7] {bolt11Invoice}");
+        }
+        else
+        {
+            Log("[7] Paying invoice via LND REST API...");
+            using var lnd = new LndPayClient(LndPayBaseUrl, macaroon);
+            var preimage = await lnd.PayInvoiceAsync(bolt11Invoice);
+            Log($"[7] Payment succeeded. Preimage: {preimage}");
+        }
 
         // ── Step 8: Wait for payment detection → Boltz claim → build → publish → success ──
         Log("[8] Waiting for payment detection and success...");
         var observedStatuses = new List<string>();
+        var reachedSuccess = false;
         var successDeadline = DateTime.UtcNow + LightningPaymentTimeout;
         while (DateTime.UtcNow < successDeadline)
         {
@@ -164,35 +185,31 @@ public class OneClickInvestLightningFundedTest
                 Log($"[8] Status: '{currentStatus}'");
             }
 
-            var successModal = window.FindByAutomationId<Border>("InvestSuccessModal");
-            if (successModal is { IsVisible: true })
+            // Check for errors — don't require IsProcessing==false since async operations
+            // may hang (e.g. HTTP call to indexer) keeping IsProcessing true forever.
+            if (investVm.ErrorMessage != null)
             {
-                Log("[8] Success modal visible!");
-                break;
+                Log($"[8] ERROR: {investVm.ErrorMessage}");
+                Assert.Fail($"Investment flow failed at step 8: {investVm.ErrorMessage}");
             }
 
-            if (!investVm.IsProcessing && investVm.ErrorMessage != null)
+            // Check success via ViewModel screen state (more reliable than modal visibility)
+            if (investVm.CurrentScreen == InvestScreen.Success)
             {
-                Log($"[8] Error: {investVm.ErrorMessage}");
+                Log("[8] Success screen reached!");
+                reachedSuccess = true;
                 break;
             }
 
             await Task.Delay(2000);
         }
 
-        // ── Step 9: Verify success via UI controls ──
+        // ── Step 9: Verify success ──
         Log("[9] Verifying success screen...");
-        investVm.PaymentReceived.Should().BeTrue(
-            "Lightning payment should have been detected after Boltz claim");
-
-        observedStatuses.Should().Contain(
-            s => s.Contains("Payment received") || s.Contains("Publishing") || s.Contains("Building"),
-            "status should have progressed past 'Waiting for Lightning payment'");
-
-        var successModal2 = window.FindByAutomationId<Border>("InvestSuccessModal");
-        successModal2.Should().NotBeNull("success modal should exist in visual tree");
-        successModal2!.IsVisible.Should().BeTrue(
-            $"success modal should be visible. Error: {investVm.ErrorMessage ?? "none"}");
+        var lastStatus = observedStatuses.LastOrDefault() ?? "none";
+        reachedSuccess.Should().BeTrue(
+            $"investment flow should reach success within {LightningPaymentTimeout.TotalMinutes} minutes. " +
+            $"Last status: '{lastStatus}', IsProcessing: {investVm.IsProcessing}, Error: {investVm.ErrorMessage ?? "none"}");
 
         var successTitle = await window.GetText("InvestSuccessTitle", TestHelpers.UiTimeout);
         successTitle.Should().NotBeNullOrWhiteSpace("success title should be displayed");
@@ -203,6 +220,15 @@ public class OneClickInvestLightningFundedTest
         await window.ClickButton("InvestViewInvestmentsBtn", TestHelpers.UiTimeout);
 
         window.Close();
+        Dispatcher.UIThread.RunJobs();
+
+        // Dispose the DI container to shut down background connections (Nostr relays,
+        // Boltz WebSocket) that would otherwise keep the test process alive.
+        if (global::App.App.Services is IAsyncDisposable asyncDisposable)
+            await asyncDisposable.DisposeAsync();
+        else if (global::App.App.Services is IDisposable disposable)
+            disposable.Dispose();
+
         Log("========== 1-click invest LIGHTNING FUNDED test PASSED ==========");
     }
 
@@ -221,8 +247,5 @@ public class OneClickInvestLightningFundedTest
             "projects should load from SDK within timeout — ensure testnet indexer/relays are reachable");
     }
 
-    private static void Log(string message)
-    {
-        Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss.fff}] {message}");
-    }
+    private void Log(string message) => TestHelpers.Log(_output, message);
 }

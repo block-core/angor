@@ -238,7 +238,7 @@ public static class PublishInvestment
 
                     //TODO do we need to store the signatures in the database at this point?
                     
-                    tcs.SetResult(Result.Success(validSignatures));
+                    tcs.TrySetResult(Result.Success(validSignatures));
                 },
                 () => { if (!tcs.Task.IsCompleted) tcs.TrySetResult(Result.Success(false));});
 

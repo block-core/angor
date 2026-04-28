@@ -243,6 +243,7 @@ public partial class InvestmentDetailView : UserControl
                 break;
 
             case "RefreshInvestmentButton":
+            case "RefreshDetailButton":
                 _ = RefreshInvestmentAsync();
                 break;
 
@@ -336,6 +337,8 @@ public partial class InvestmentDetailView : UserControl
             await portfolioVm.CancelInvestmentAsync(investVm);
         }
 
+        // Always reset IsProcessing — even on success the VM may still be observed by tests
+        // or pending bindings. On success the detail is already closed (SelectedInvestment=null).
         investVm.IsProcessing = false;
     }
 

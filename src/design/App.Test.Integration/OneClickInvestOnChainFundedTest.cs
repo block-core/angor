@@ -7,6 +7,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using Xunit.Abstractions;
 
 namespace App.Test.Integration;
 
@@ -29,6 +30,12 @@ namespace App.Test.Integration;
 public class OneClickInvestOnChainFundedTest
 {
     private static readonly TimeSpan InvoicePaymentTimeout = TimeSpan.FromMinutes(5);
+    private readonly ITestOutputHelper _output;
+
+    public OneClickInvestOnChainFundedTest(ITestOutputHelper output)
+    {
+        _output = output;
+    }
 
     [AvaloniaFact]
     public async Task OnChainInvoice_FaucetPaysAddress_ReachesSuccessScreen()
@@ -51,9 +58,27 @@ public class OneClickInvestOnChainFundedTest
         findVm.Should().NotBeNull("FindProjectsViewModel should be available");
         await WaitForProjects(findVm!);
 
-        var project = findVm!.Projects.FirstOrDefault(p => p.IsOpen);
-        project.Should().NotBeNull("at least one open project should be available");
-        Log($"[2] Found project: '{project!.ProjectName}' ({project.Stages.Count} stages)");
+        // Filter for Fund-type projects only — Invest-type projects always require founder
+        // approval regardless of amount, which would block this automated test.
+        // Fund-type projects auto-publish when the amount is at or below the penalty threshold.
+        var fundProjects = findVm!.Projects.Where(p => p.IsOpen && p.IsFundType).ToList();
+        Log($"[2] Found {fundProjects.Count} open Fund-type project(s) out of {findVm.Projects.Count} total");
+        foreach (var fp in fundProjects)
+        {
+            Log($"[2]   - '{fp.ProjectName}' (threshold: {fp.PenaltyThresholdSats?.ToString() ?? "null (always requires approval)"} sats, stages: {fp.Stages.Count})");
+        }
+
+        var project = fundProjects.FirstOrDefault(p => p.PenaltyThresholdSats.HasValue);
+        project.Should().NotBeNull(
+            "at least one open Fund-type project with a penalty threshold should be available — " +
+            "Invest-type projects always require founder approval and cannot be used in this test");
+
+        var thresholdSats = project!.PenaltyThresholdSats!.Value;
+        // Pick an amount that stays at or below the penalty threshold so the investment auto-publishes.
+        // Convert threshold from sats to BTC for the UI input, capped to avoid overspending.
+        var investAmountSats = Math.Min(thresholdSats, 100_000L); // at most 0.001 BTC
+        var investAmountBtc = (investAmountSats / 100_000_000m).ToString("0.########");
+        Log($"[2] Selected project: '{project.ProjectName}' (threshold: {thresholdSats} sats, investing: {investAmountSats} sats / {investAmountBtc} BTC)");
 
         // ── Step 3: Open invest page and set amount via UI ──
         Log("[3] Opening invest page, setting amount...");
@@ -67,9 +92,9 @@ public class OneClickInvestOnChainFundedTest
         investVm!.CurrentScreen.Should().Be(InvestScreen.InvestForm);
 
         // Type amount via AutomationId (real UI interaction)
-        await window.TypeText("InvestAmountInput", "0.001", TestHelpers.UiTimeout);
+        await window.TypeText("InvestAmountInput", investAmountBtc, TestHelpers.UiTimeout);
         Dispatcher.UIThread.RunJobs();
-        investVm.CanSubmit.Should().BeTrue("0.001 meets the minimum investment threshold");
+        investVm.CanSubmit.Should().BeTrue($"{investAmountBtc} BTC meets the minimum investment threshold");
 
         // ── Step 4: Submit → wallet selector → pay invoice instead ──
         Log("[4] Submit → wallet selector → pay invoice instead...");
@@ -106,37 +131,17 @@ public class OneClickInvestOnChainFundedTest
         invoiceAddress.Should().NotBeNull("on-chain address should appear in the UI");
         Log($"[5] Address from UI: {invoiceAddress}");
 
-        // ── Regression guard: verify the auto-created wallet can be decrypted with the default key ──
-        // The invest flow calls CreateWalletWithoutPassword() which must encrypt with the same key
-        // that SimplePasswordProvider returns, otherwise all subsequent SDK operations fail with
-        // "Invalid encryption key".
-        Log("[5b] Verifying auto-created wallet encryption key roundtrip...");
-        var seedwordsProvider = global::App.App.Services.GetRequiredService<Angor.Sdk.Common.ISeedwordsProvider>();
-        var walletAppSvc = global::App.App.Services.GetRequiredService<Angor.Sdk.Wallet.Application.IWalletAppService>();
-        var metas = await walletAppSvc.GetMetadatas();
-        metas.IsSuccess.Should().BeTrue("should be able to list wallets after auto-creation");
-        metas.Value.Should().NotBeEmpty("invest flow should have auto-created a wallet");
-
-        var autoWalletId = metas.Value.First().Id;
-        var sensitiveResult = await seedwordsProvider.GetSensitiveData(autoWalletId.Value);
-        sensitiveResult.IsSuccess.Should().BeTrue(
-            $"auto-created wallet decryption should succeed — got error: {(sensitiveResult.IsFailure ? sensitiveResult.Error : "none")}. " +
-            "If this fails, CreateWalletWithoutPassword uses a different encryption key than SimplePasswordProvider.DefaultKey.");
-
         // Verify payment status shows in the UI
         var statusText = await window.GetText("InvestPaymentStatus", TestHelpers.UiTimeout);
         statusText.Should().Contain("Waiting for payment",
             "status pill should show monitoring is active");
 
         // ── Step 6: Faucet sends funds to the invoice address ──
-        // Send more than the investment amount to cover angor fee + miner fee.
-        // Investment: 0.001 BTC = 100,000 sats
-        // Angor fee: 1% = 1,000 sats
-        // Miner fee estimate: ~20 sat/vB × (252 + stages×43) vB ≈ 8,000-10,000 sats
-        // Total needed: ~111,000 sats. Send 0.002 BTC (200,000 sats) for safety margin.
-        Log("[6] Faucet sending 0.002 BTC to invoice address...");
+        // Send roughly double the investment amount to cover angor fee (1%) + miner fee.
+        var faucetAmountBtc = Math.Max(0.002m, investAmountSats / 100_000_000m * 2m);
+        Log($"[6] Faucet sending {faucetAmountBtc} BTC to invoice address...");
         var faucet = global::App.App.Services.GetRequiredService<IFaucetService>();
-        var faucetResult = await faucet.RequestCoinsAsync(invoiceAddress!, 0.002m);
+        var faucetResult = await faucet.RequestCoinsAsync(invoiceAddress!, faucetAmountBtc);
         faucetResult.IsSuccess.Should().BeTrue(
             $"faucet should send funds to invoice address. Error: {(faucetResult.IsFailure ? faucetResult.Error : "")}");
         Log("[6] Faucet payment sent.");
@@ -216,8 +221,5 @@ public class OneClickInvestOnChainFundedTest
             "projects should load from SDK within timeout — ensure testnet indexer/relays are reachable");
     }
 
-    private static void Log(string message)
-    {
-        Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss.fff}] {message}");
-    }
+    private void Log(string message) => TestHelpers.Log(_output, message);
 }

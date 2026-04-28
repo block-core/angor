@@ -20,6 +20,7 @@ using App.UI.Sections.Funds;
 using App.UI.Sections.Home;
 using App.UI.Sections.MyProjects;
 using App.UI.Sections.MyProjects.Deploy;
+using App.UI.Sections.MyProjects.EditProfile;
 using App.UI.Sections.Portfolio;
 using App.UI.Sections.Settings;
 using App.UI.Shared;
@@ -174,6 +175,12 @@ public static class CompositionRoot
                 sp.GetRequiredService<IProjectService>(),
                 sp.GetRequiredService<ICurrencyService>(),
                 sp.GetRequiredService<ILoggerFactory>().CreateLogger<ManageProjectViewModel>()));
+
+        services.AddSingleton<Func<MyProjectItemViewModel, EditProfileViewModel>>(sp =>
+            project => new EditProfileViewModel(
+                project,
+                sp.GetRequiredService<IProjectAppService>(),
+                sp.GetRequiredService<ILoggerFactory>().CreateLogger<EditProfileViewModel>()));
 
         // ── Section Views (transient — each receives its VM via constructor injection) ──
         services.AddTransient<HomeView>();

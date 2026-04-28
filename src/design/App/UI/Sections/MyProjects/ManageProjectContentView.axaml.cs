@@ -52,6 +52,11 @@ public partial class ManageProjectContentView : UserControl
                     ClipboardHelper.CopyToClipboard(this, vm.ProjectId);
             };
 
+        // Wire Edit Project button
+        var editBtn = this.FindControl<Button>("EditProjectButton");
+        if (editBtn != null)
+            editBtn.Click += (_, _) => EditProjectRequested?.Invoke();
+
         // Cache responsive controls
         _manageStatsGrid = this.FindControl<Grid>("ManageStatsGrid");
         _manageStatCard0 = this.FindControl<Border>("ManageStatCard0");
@@ -226,6 +231,12 @@ public partial class ManageProjectContentView : UserControl
     /// The parent ManageProjectView subscribes to this to open the appropriate modal.
     /// </summary>
     public event System.Action<int, string>? StageButtonClicked;
+
+    /// <summary>
+    /// Raised when the Edit Project button is clicked.
+    /// The parent wires this to navigate to the edit profile view.
+    /// </summary>
+    public event System.Action? EditProjectRequested;
     private void OnStageButtonClick(object? sender, RoutedEventArgs e)
     {
         if (e.Source is not Button btn) return;

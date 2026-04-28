@@ -64,6 +64,7 @@ public static class CreateLightningSwapForInvestment
                 // - Investment amount (what goes to the project)
                 // - Angor fee (1% of investment amount)
                 // - Estimated investment transaction miner fee (based on provided fee rate and actual tx size)
+                // - Estimated Boltz claim transaction miner fee (our claim tx spending the HTLC lockup)
 
                 const int AngorFeePercentage = 1; // 1% Angor fee
 
@@ -77,14 +78,20 @@ public static class CreateLightningSwapForInvestment
                 // Total ≈ 252 + (stageCount × 43) vbytes
                 int estimatedInvestmentTxVbytes = 252 + (request.StageCount * 43);
                 long estimatedInvestmentTxFee = request.EstimatedFeeRateSatsPerVbyte * estimatedInvestmentTxVbytes;
-                
+
+                // Boltz claim tx: ~110 vB cooperative (MuSig2) or ~155 vB script-path fallback.
+                // Use 155 vB as worst case. The claim fee is deducted from the lockup output,
+                // reducing what arrives at our receive address. We must account for it here.
+                const int EstimatedClaimTxVbytes = 155;
+                long estimatedClaimTxFee = request.EstimatedFeeRateSatsPerVbyte * EstimatedClaimTxVbytes;
+
                 long investmentAmount = request.InvestmentAmount.Sats;
                 long angorFee = (investmentAmount * AngorFeePercentage) / 100;
-                long totalOnChainNeeded = investmentAmount + angorFee + estimatedInvestmentTxFee;
-                
+                long totalOnChainNeeded = investmentAmount + angorFee + estimatedInvestmentTxFee + estimatedClaimTxFee;
+
                 logger.LogInformation(
-                    "Total on-chain amount needed: {Total} sats (investment: {Investment} + angorFee: {AngorFee} + txFee: {TxFee} [{EstVbytes} vB @ {FeeRate} sat/vb, {Stages} stages])",
-                    totalOnChainNeeded, investmentAmount, angorFee, estimatedInvestmentTxFee, estimatedInvestmentTxVbytes, request.EstimatedFeeRateSatsPerVbyte, request.StageCount);
+                    "Total on-chain amount needed: {Total} sats (investment: {Investment} + angorFee: {AngorFee} + investTxFee: {InvestTxFee} [{EstVbytes} vB] + claimTxFee: {ClaimTxFee} [{ClaimVbytes} vB] @ {FeeRate} sat/vb, {Stages} stages)",
+                    totalOnChainNeeded, investmentAmount, angorFee, estimatedInvestmentTxFee, estimatedInvestmentTxVbytes, estimatedClaimTxFee, EstimatedClaimTxVbytes, request.EstimatedFeeRateSatsPerVbyte, request.StageCount);
 
                 // Step 2: Calculate the invoice amount needed to receive the required on-chain amount
                 // Boltz deducts fees from the invoice amount, so we need to pay more

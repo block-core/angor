@@ -1,0 +1,762 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ep="clr-namespace:App.UI.Sections.MyProjects.EditProfile"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="900"
+             x:Class="App.UI.Sections.MyProjects.EditProfile.EditProfileView"
+             x:DataType="ep:EditProfileViewModel">
+
+    <!--
+        Edit Project Profile — mirrors the tab structure of https://profile.angor.io/
+        Tabs: Profile | Project | FAQ | Members | Media | Relays
+        Floating nav bar at top (same pattern as ManageProjectView).
+    -->
+
+    <UserControl.Styles>
+        <Style Selector="Border.FloatingBtn:pointerover">
+            <Setter Property="RenderTransform" Value="translate(0px, -1px)" />
+            <Setter Property="BoxShadow" Value="0 6 16 0 #33000000" />
+        </Style>
+        <Style Selector="Button.NavBtn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+        <Style Selector="Button.NavBtn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.NavBtn:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
+        <!-- Tab button base style -->
+        <Style Selector="Button.TabBtn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="16,10" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="Button.TabBtn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource SurfaceLow}" />
+        </Style>
+        <Style Selector="Button.TabBtn.TabActive">
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
+        <Style Selector="Button.TabBtn.TabActive:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+        </Style>
+
+        <!-- Field label style -->
+        <Style Selector="TextBlock.FieldLabel">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+            <Setter Property="Margin" Value="0,0,0,6" />
+        </Style>
+
+        <!-- Section header -->
+        <Style Selector="TextBlock.SectionHeader">
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+            <Setter Property="Margin" Value="0,0,0,16" />
+        </Style>
+
+        <!-- Input field -->
+        <Style Selector="TextBox.EditField">
+            <Setter Property="Background" Value="{DynamicResource SurfaceLow}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+
+        <!-- Remove button for list items -->
+        <Style Selector="Button.RemoveBtn">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="6" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        </Style>
+        <Style Selector="Button.RemoveBtn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#1AFF3333" />
+        </Style>
+    </UserControl.Styles>
+
+    <Panel>
+        <!-- ═══ FLOATING NAV BAR ═══ -->
+        <DockPanel Name="EditNavBar"
+                   VerticalAlignment="Top"
+                   ZIndex="100"
+                   Margin="24,24,24,0"
+                   IsHitTestVisible="True">
+
+            <!-- RIGHT: Save button -->
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="12">
+                <Border Classes="FloatingBtn"
+                        Background="{DynamicResource FloatingBtnBg}"
+                        BorderBrush="{DynamicResource FloatingBtnBorder}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        BoxShadow="{DynamicResource FloatingBtnShadow}"
+                        Padding="16,0,16,0"
+                        Height="44"
+                        VerticalAlignment="Center"
+                        Cursor="Hand"
+                        RenderTransform="translate(0px, 0px)">
+                    <Border.Transitions>
+                        <Transitions>
+                            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" />
+                            <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
+                        </Transitions>
+                    </Border.Transitions>
+                    <Button Name="SaveButton"
+                            Classes="NavBtn"
+                            VerticalAlignment="Stretch"
+                            HorizontalAlignment="Stretch"
+                            Cursor="Hand"
+                            IsEnabled="{Binding !IsSaving}">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <Panel>
+                                <i:Icon Value="fa-solid fa-floppy-disk" FontSize="14"
+                                        Foreground="{DynamicResource PrimaryGreenBrush}"
+                                        IsVisible="{Binding !IsSaving}" />
+                                <i:Icon Value="fa-solid fa-spinner" FontSize="14"
+                                        Foreground="{DynamicResource PrimaryGreenBrush}"
+                                        IsVisible="{Binding IsSaving}"
+                                        RenderTransformOrigin="50%,50%">
+                                    <i:Icon.RenderTransform><RotateTransform /></i:Icon.RenderTransform>
+                                    <i:Icon.Styles>
+                                        <Style Selector="i|Icon[IsVisible=True]">
+                                            <Style.Animations>
+                                                <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                    <KeyFrame Cue="0%"><Setter Property="RotateTransform.Angle" Value="0" /></KeyFrame>
+                                                    <KeyFrame Cue="100%"><Setter Property="RotateTransform.Angle" Value="360" /></KeyFrame>
+                                                </Animation>
+                                            </Style.Animations>
+                                        </Style>
+                                    </i:Icon.Styles>
+                                </i:Icon>
+                            </Panel>
+                            <TextBlock Text="Save Profile"
+                                       FontSize="14" FontWeight="Medium"
+                                       Foreground="{DynamicResource PrimaryGreenBrush}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </Border>
+            </StackPanel>
+
+            <!-- LEFT: Back + Project Name -->
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="12">
+                <Border Classes="FloatingBtn"
+                        Background="{DynamicResource FloatingBtnBg}"
+                        BorderBrush="{DynamicResource FloatingBtnBorder}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        BoxShadow="{DynamicResource FloatingBtnShadow}"
+                        Padding="16,0,16,0"
+                        Height="44"
+                        VerticalAlignment="Center"
+                        Cursor="Hand"
+                        RenderTransform="translate(0px, 0px)">
+                    <Border.Transitions>
+                        <Transitions>
+                            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" />
+                            <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
+                        </Transitions>
+                    </Border.Transitions>
+                    <Button Name="EditBackButton"
+                            Classes="NavBtn"
+                            VerticalAlignment="Stretch"
+                            HorizontalAlignment="Stretch"
+                            Cursor="Hand">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <Viewbox Width="10" Height="16">
+                                <Path Data="{StaticResource ChevronLeftThick}"
+                                      Fill="{DynamicResource TextStrong}"
+                                      Width="320" Height="512" Stretch="Uniform" />
+                            </Viewbox>
+                            <TextBlock Text="Back"
+                                       FontSize="14" FontWeight="Medium"
+                                       Foreground="{DynamicResource TextStrong}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </Border>
+
+                <Border Classes="FloatingBtn"
+                        Background="{DynamicResource FloatingBtnBg}"
+                        BorderBrush="{DynamicResource FloatingBtnBorder}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        BoxShadow="{DynamicResource FloatingBtnShadow}"
+                        Height="44"
+                        Padding="16,0,16,0"
+                        VerticalAlignment="Center"
+                        RenderTransform="translate(0px, 0px)">
+                    <Border.Transitions>
+                        <Transitions>
+                            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" />
+                            <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
+                        </Transitions>
+                    </Border.Transitions>
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <i:Icon Value="fa-solid fa-pen" FontSize="12" Foreground="{DynamicResource TextStrong}" />
+                        <TextBlock Text="{Binding ProjectName}"
+                                   FontSize="14" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextStrong}"
+                                   VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"
+                                   MaxWidth="400" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- ═══ SCROLLABLE CONTENT ═══ -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Name="EditContentStack" Spacing="24" Margin="24,0,24,24">
+
+                <!-- Spacer for nav bar: 24 + 44 + 24 = 92px -->
+                <Panel Height="92" />
+
+                <!-- ── Loading indicator ── -->
+                <Border Background="{DynamicResource Surface}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1"
+                        CornerRadius="12"
+                        Padding="20,16"
+                        IsVisible="{Binding IsLoading}">
+                    <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
+                        <i:Icon Value="fa-solid fa-spinner" FontSize="16"
+                                Foreground="{DynamicResource TextMuted}"
+                                RenderTransformOrigin="50%,50%">
+                            <i:Icon.RenderTransform><RotateTransform /></i:Icon.RenderTransform>
+                            <i:Icon.Styles>
+                                <Style Selector="i|Icon[IsVisible=True]">
+                                    <Style.Animations>
+                                        <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                            <KeyFrame Cue="0%"><Setter Property="RotateTransform.Angle" Value="0" /></KeyFrame>
+                                            <KeyFrame Cue="100%"><Setter Property="RotateTransform.Angle" Value="360" /></KeyFrame>
+                                        </Animation>
+                                    </Style.Animations>
+                                </Style>
+                            </i:Icon.Styles>
+                        </i:Icon>
+                        <TextBlock Text="Loading profile data..."
+                                   FontSize="14"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Border>
+
+                <!-- ── Tab Bar ── -->
+                <Border Background="{DynamicResource SurfaceLow}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1"
+                        CornerRadius="12"
+                        Padding="6">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Button Name="TabProfile" Classes="TabBtn" Content="Profile" />
+                        <Button Name="TabProject" Classes="TabBtn" Content="Project" />
+                        <Button Name="TabFaq" Classes="TabBtn" Content="FAQ" />
+                        <Button Name="TabMembers" Classes="TabBtn" Content="Members" />
+                        <Button Name="TabMedia" Classes="TabBtn" Content="Media" />
+                        <Button Name="TabRelays" Classes="TabBtn" Content="Relays" />
+                    </StackPanel>
+                </Border>
+
+                <!-- ═══ TAB CONTENT ═══ -->
+
+                <!-- ── PROFILE TAB ── -->
+                <StackPanel Name="ProfileTabContent" Spacing="20">
+                    <!-- Profile picture + basic info -->
+                    <Grid ColumnDefinitions="260,*" ColumnSpacing="20">
+                        <!-- Left: profile picture -->
+                        <Border Grid.Column="0"
+                                Background="{DynamicResource Surface}"
+                                BorderBrush="{DynamicResource Stroke}"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="20">
+                            <StackPanel Spacing="12">
+                                <TextBlock Classes="SectionHeader" Text="Profile Picture" />
+                                <Border CornerRadius="8"
+                                        Background="{DynamicResource SurfaceLow}"
+                                        BorderBrush="{DynamicResource Stroke}"
+                                        BorderThickness="1"
+                                        Height="180"
+                                        ClipToBounds="True">
+                                    <Panel>
+                                        <TextBlock Text="No image set"
+                                                   Foreground="{DynamicResource TextMuted}"
+                                                   FontSize="13"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   IsVisible="{Binding ProfilePictureBitmap, Converter={x:Static ObjectConverters.IsNull}}" />
+                                        <Image Source="{Binding ProfilePictureBitmap}"
+                                               Stretch="UniformToFill"
+                                               IsVisible="{Binding ProfilePictureBitmap, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                    </Panel>
+                                </Border>
+                                <TextBlock Classes="FieldLabel" Text="Picture URL" />
+                                <TextBox Classes="EditField"
+                                         Text="{Binding ProfilePicture}"
+                                         Watermark="https://example.com/avatar.jpg" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Right: basic info -->
+                        <Border Grid.Column="1"
+                                Background="{DynamicResource Surface}"
+                                BorderBrush="{DynamicResource Stroke}"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="20">
+                            <StackPanel Spacing="16">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <i:Icon Value="fa-solid fa-user" FontSize="14" Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center" />
+                                    <TextBlock Classes="SectionHeader" Text="Basic Information" Margin="0" />
+                                </StackPanel>
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                                    <StackPanel Grid.Column="0" Spacing="6">
+                                        <TextBlock Classes="FieldLabel" Text="Username" />
+                                        <TextBox Classes="EditField"
+                                                 Text="{Binding ProfileName}"
+                                                 Watermark="Your username" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Spacing="6">
+                                        <TextBlock Classes="FieldLabel" Text="Display Name" />
+                                        <TextBox Classes="EditField"
+                                                 Text="{Binding ProfileDisplayName}"
+                                                 Watermark="Your display name" />
+                                    </StackPanel>
+                                </Grid>
+                                <StackPanel Spacing="6">
+                                    <TextBlock Classes="FieldLabel" Text="About" />
+                                    <TextBox Classes="EditField"
+                                             Text="{Binding ProfileAbout}"
+                                             Watermark="Tell us about yourself"
+                                             TextWrapping="Wrap"
+                                             AcceptsReturn="True"
+                                             Height="120" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Banner image -->
+                    <Border Background="{DynamicResource Surface}"
+                            BorderBrush="{DynamicResource Stroke}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="20">
+                        <StackPanel Spacing="12">
+                            <TextBlock Classes="SectionHeader" Text="Banner Image" />
+                            <Border CornerRadius="8"
+                                    Background="{DynamicResource SurfaceLow}"
+                                    BorderBrush="{DynamicResource Stroke}"
+                                    BorderThickness="1"
+                                    Height="140"
+                                    ClipToBounds="True">
+                                <Panel>
+                                    <TextBlock Text="No banner set"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               FontSize="13"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               IsVisible="{Binding ProfileBannerBitmap, Converter={x:Static ObjectConverters.IsNull}}" />
+                                    <Image Source="{Binding ProfileBannerBitmap}"
+                                           Stretch="UniformToFill"
+                                           IsVisible="{Binding ProfileBannerBitmap, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                                </Panel>
+                            </Border>
+                            <TextBox Classes="EditField"
+                                     Text="{Binding ProfileBanner}"
+                                     Watermark="https://example.com/banner.jpg" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Additional info -->
+                    <Border Background="{DynamicResource Surface}"
+                            BorderBrush="{DynamicResource Stroke}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="20">
+                        <StackPanel Spacing="16">
+                            <TextBlock Classes="SectionHeader" Text="Additional Information" />
+                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="16">
+                                <StackPanel Grid.Column="0" Spacing="6">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <i:Icon Value="fa-solid fa-at" FontSize="12" Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center" />
+                                        <TextBlock Classes="FieldLabel" Text="NIP-05 Verification" Margin="0" />
+                                    </StackPanel>
+                                    <TextBox Classes="EditField"
+                                             Text="{Binding ProfileNip05}"
+                                             Watermark="you@example.com" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Spacing="6">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <i:Icon Value="fa-solid fa-bolt" FontSize="12" Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center" />
+                                        <TextBlock Classes="FieldLabel" Text="Lightning Address" Margin="0" />
+                                    </StackPanel>
+                                    <TextBox Classes="EditField"
+                                             Text="{Binding ProfileLud16}"
+                                             Watermark="your@lightning.address" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Spacing="6">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <i:Icon Value="fa-solid fa-globe" FontSize="12" Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center" />
+                                        <TextBlock Classes="FieldLabel" Text="Website" Margin="0" />
+                                    </StackPanel>
+                                    <TextBox Classes="EditField"
+                                             Text="{Binding ProfileWebsite}"
+                                             Watermark="https://your-website.com" />
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ── PROJECT TAB ── -->
+                <StackPanel Name="ProjectTabContent" Spacing="20" IsVisible="False">
+                    <Border Background="{DynamicResource Surface}"
+                            BorderBrush="{DynamicResource Stroke}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="20">
+                        <StackPanel Spacing="16">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <i:Icon Value="fa-solid fa-file-alt" FontSize="14" Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center" />
+                                <TextBlock Classes="SectionHeader" Text="Project Description" Margin="0" />
+                            </StackPanel>
+                            <TextBlock Text="Write a detailed description of your project. This will be displayed as your main project content. Markdown is supported."
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMuted}"
+                                       TextWrapping="Wrap" />
+                            <TextBox Classes="EditField"
+                                     Name="ProjectContentBox"
+                                     Text="{Binding ProjectContent}"
+                                     Watermark="Describe your project in detail..."
+                                     TextWrapping="Wrap"
+                                     AcceptsReturn="True"
+                                     Height="400"
+                                     FontFamily="Cascadia Code,Consolas,monospace"
+                                     FontSize="13" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ── FAQ TAB ── -->
+                <StackPanel Name="FaqTabContent" Spacing="20" IsVisible="False">
+                    <Border Background="{DynamicResource Surface}"
+                            BorderBrush="{DynamicResource Stroke}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="20">
+                        <StackPanel Spacing="16">
+                            <DockPanel>
+                                <Button Name="AddFaqButton"
+                                        DockPanel.Dock="Right"
+                                        Classes="Primary"
+                                        Padding="12,8"
+                                        VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <i:Icon Value="fa-solid fa-plus" FontSize="12"
+                                                Foreground="{DynamicResource PrimaryButtonForeground}" />
+                                        <TextBlock Text="Add Question" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <i:Icon Value="fa-solid fa-circle-question" FontSize="14" Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center" />
+                                    <TextBlock Classes="SectionHeader" Text="Frequently Asked Questions" Margin="0" />
+                                </StackPanel>
+                            </DockPanel>
+                            <ItemsControl ItemsSource="{Binding FaqItems}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="ep:FaqItemViewModel">
+                                        <Border Background="{DynamicResource SurfaceLow}"
+                                                BorderBrush="{DynamicResource Stroke}"
+                                                BorderThickness="1"
+                                                CornerRadius="8"
+                                                Padding="16"
+                                                Margin="0,0,0,12">
+                                            <StackPanel Spacing="10">
+                                                <DockPanel>
+                                                    <Button Name="RemoveFaqButton"
+                                                            Classes="RemoveBtn"
+                                                            DockPanel.Dock="Right"
+                                                            VerticalAlignment="Top">
+                                                        <i:Icon Value="fa-solid fa-trash" FontSize="12"
+                                                                Foreground="{DynamicResource TextMuted}" />
+                                                    </Button>
+                                                    <TextBlock Text="Question"
+                                                               Classes="FieldLabel"
+                                                               VerticalAlignment="Center" />
+                                                </DockPanel>
+                                                <TextBox Classes="EditField"
+                                                         Text="{Binding Question}"
+                                                         Watermark="Enter a question..." />
+                                                <TextBlock Classes="FieldLabel" Text="Answer" />
+                                                <TextBox Classes="EditField"
+                                                         Text="{Binding Answer}"
+                                                         Watermark="Enter the answer..."
+                                                         TextWrapping="Wrap"
+                                                         AcceptsReturn="True"
+                                                         Height="100" />
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ── MEMBERS TAB ── -->
+                <StackPanel Name="MembersTabContent" Spacing="20" IsVisible="False">
+                    <Border Background="{DynamicResource Surface}"
+                            BorderBrush="{DynamicResource Stroke}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="20">
+                        <StackPanel Spacing="16">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <i:Icon Value="fa-solid fa-users" FontSize="14" Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center" />
+                                <TextBlock Classes="SectionHeader" Text="Team Members" Margin="0" />
+                            </StackPanel>
+                            <TextBlock Text="Add Nostr public keys of team members (npub or hex format)."
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMuted}"
+                                       TextWrapping="Wrap" />
+
+                            <!-- Add member input -->
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <TextBox Classes="EditField"
+                                         Grid.Column="0"
+                                         Text="{Binding NewMemberPubKey}"
+                                         Watermark="npub1... or hex public key" />
+                                <Button Name="AddMemberButton"
+                                        Grid.Column="1"
+                                        Classes="Primary"
+                                        Padding="12,10"
+                                        VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <i:Icon Value="fa-solid fa-plus" FontSize="12"
+                                                Foreground="{DynamicResource PrimaryButtonForeground}" />
+                                        <TextBlock Text="Add" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <!-- Members list -->
+                            <ItemsControl ItemsSource="{Binding Members}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="x:String">
+                                        <Border Background="{DynamicResource SurfaceLow}"
+                                                BorderBrush="{DynamicResource Stroke}"
+                                                BorderThickness="1"
+                                                CornerRadius="8"
+                                                Padding="12,10"
+                                                Margin="0,0,0,8">
+                                            <DockPanel>
+                                                <Button Name="RemoveMemberButton"
+                                                        Classes="RemoveBtn"
+                                                        DockPanel.Dock="Right"
+                                                        VerticalAlignment="Center">
+                                                    <i:Icon Value="fa-solid fa-trash" FontSize="12"
+                                                            Foreground="{DynamicResource TextMuted}" />
+                                                </Button>
+                                                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                                    <Border CornerRadius="16" Width="32" Height="32"
+                                                            Background="{DynamicResource SurfaceLow}"
+                                                            BorderBrush="{DynamicResource Stroke}"
+                                                            BorderThickness="1">
+                                                        <i:Icon Value="fa-solid fa-user" FontSize="12"
+                                                                Foreground="{DynamicResource TextMuted}"
+                                                                HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center" />
+                                                    </Border>
+                                                    <TextBlock Text="{Binding}"
+                                                               FontSize="13"
+                                                               FontFamily="Cascadia Code,Consolas,monospace"
+                                                               Foreground="{DynamicResource TextStrong}"
+                                                               VerticalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+                                            </DockPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ── MEDIA TAB ── -->
+                <StackPanel Name="MediaTabContent" Spacing="20" IsVisible="False">
+                    <Border Background="{DynamicResource Surface}"
+                            BorderBrush="{DynamicResource Stroke}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="20">
+                        <StackPanel Spacing="16">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <i:Icon Value="fa-solid fa-images" FontSize="14" Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center" />
+                                <TextBlock Classes="SectionHeader" Text="Media Gallery" Margin="0" />
+                            </StackPanel>
+
+                            <!-- Add media input -->
+                            <Grid ColumnDefinitions="*,140,Auto" ColumnSpacing="12">
+                                <TextBox Classes="EditField"
+                                         Grid.Column="0"
+                                         Text="{Binding NewMediaUrl}"
+                                         Watermark="https://example.com/image.jpg" />
+                                <ComboBox Grid.Column="1"
+                                          Name="MediaTypeCombo"
+                                          SelectedItem="{Binding NewMediaType}"
+                                          Background="{DynamicResource SurfaceLow}"
+                                          BorderBrush="{DynamicResource Stroke}"
+                                          BorderThickness="1"
+                                          CornerRadius="8"
+                                          Padding="10,8">
+                                    <ComboBoxItem Content="image" />
+                                    <ComboBoxItem Content="video" />
+                                </ComboBox>
+                                <Button Name="AddMediaButton"
+                                        Grid.Column="2"
+                                        Classes="Primary"
+                                        Padding="12,10"
+                                        VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <i:Icon Value="fa-solid fa-plus" FontSize="12"
+                                                Foreground="{DynamicResource PrimaryButtonForeground}" />
+                                        <TextBlock Text="Add" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <!-- Media list -->
+                            <ItemsControl ItemsSource="{Binding MediaItems}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="ep:MediaItemViewModel">
+                                        <Border Background="{DynamicResource SurfaceLow}"
+                                                BorderBrush="{DynamicResource Stroke}"
+                                                BorderThickness="1"
+                                                CornerRadius="8"
+                                                Padding="12,10"
+                                                Margin="0,0,0,8">
+                                            <DockPanel>
+                                                <Button Name="RemoveMediaButton"
+                                                        Classes="RemoveBtn"
+                                                        DockPanel.Dock="Right"
+                                                        VerticalAlignment="Center">
+                                                    <i:Icon Value="fa-solid fa-trash" FontSize="12"
+                                                            Foreground="{DynamicResource TextMuted}" />
+                                                </Button>
+                                                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                                    <i:Icon Value="fa-solid fa-image" FontSize="14"
+                                                            Foreground="{DynamicResource TextMuted}" />
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding Url}"
+                                                                   FontSize="13"
+                                                                   Foreground="{DynamicResource TextStrong}"
+                                                                   TextTrimming="CharacterEllipsis" />
+                                                        <TextBlock Text="{Binding Type}"
+                                                                   FontSize="11"
+                                                                   Foreground="{DynamicResource TextMuted}" />
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </DockPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ── RELAYS TAB ── -->
+                <StackPanel Name="RelaysTabContent" Spacing="20" IsVisible="False">
+                    <Border Background="{DynamicResource Surface}"
+                            BorderBrush="{DynamicResource Stroke}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="20">
+                        <StackPanel Spacing="16">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <i:Icon Value="fa-solid fa-network-wired" FontSize="14" Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center" />
+                                <TextBlock Classes="SectionHeader" Text="Nostr Relays" Margin="0" />
+                            </StackPanel>
+                            <TextBlock Text="Manage the Nostr relays used for publishing and fetching your project data."
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMuted}"
+                                       TextWrapping="Wrap" />
+
+                            <!-- Add relay input -->
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <TextBox Classes="EditField"
+                                         Grid.Column="0"
+                                         Text="{Binding NewRelayUrl}"
+                                         Watermark="wss://relay.example.com" />
+                                <Button Name="AddRelayButton"
+                                        Grid.Column="1"
+                                        Classes="Primary"
+                                        Padding="12,10"
+                                        VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <i:Icon Value="fa-solid fa-plus" FontSize="12"
+                                                Foreground="{DynamicResource PrimaryButtonForeground}" />
+                                        <TextBlock Text="Add Relay" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <!-- Relays list -->
+                            <ItemsControl ItemsSource="{Binding Relays}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="x:String">
+                                        <Border Background="{DynamicResource SurfaceLow}"
+                                                BorderBrush="{DynamicResource Stroke}"
+                                                BorderThickness="1"
+                                                CornerRadius="8"
+                                                Padding="12,10"
+                                                Margin="0,0,0,8">
+                                            <DockPanel>
+                                                <Button Name="RemoveRelayButton"
+                                                        Classes="RemoveBtn"
+                                                        DockPanel.Dock="Right"
+                                                        VerticalAlignment="Center">
+                                                    <i:Icon Value="fa-solid fa-trash" FontSize="12"
+                                                            Foreground="{DynamicResource TextMuted}" />
+                                                </Button>
+                                                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                                                    <i:Icon Value="fa-solid fa-server" FontSize="12"
+                                                            Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                                    <TextBlock Text="{Binding}"
+                                                               FontSize="13"
+                                                               Foreground="{DynamicResource TextStrong}"
+                                                               VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </DockPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Panel>
+</UserControl>

@@ -157,7 +157,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
                             ProjectTitle = project.Name ?? "Unknown Project",
                             Amount = amountBtc.ToString("F4", System.Globalization.CultureInfo.InvariantCulture),
                             Currency = _currencyService.Symbol,
-                            Date = investment.CreatedOn.ToString("MMM dd, yyyy"),
+                            Date = investment.CreatedOn.ToString("dd MMM yyyy"),
                             Time = investment.CreatedOn.ToString("HH:mm"),
                             Status = status,
                             Npub = investment.InvestorNostrPubKey ?? "",

@@ -213,9 +213,27 @@ public partial class ManageProjectViewModel : ReactiveObject
         NostrHex = "";
 
         // Load claimable transactions and project keys from SDK
-        _ = LoadClaimableTransactionsAsync();
-        _ = LoadProjectKeysAsync();
-        _ = LoadProjectStatisticsAsync();
+        // Set IsRefreshing so the spinner shows during initial load
+        IsRefreshing = true;
+        _ = InitialLoadAsync();
+    }
+
+    /// <summary>
+    /// Performs the initial data load and clears the refreshing state when done.
+    /// </summary>
+    private async Task InitialLoadAsync()
+    {
+        try
+        {
+            await Task.WhenAll(
+                LoadClaimableTransactionsAsync(),
+                LoadProjectKeysAsync(),
+                LoadProjectStatisticsAsync());
+        }
+        finally
+        {
+            IsRefreshing = false;
+        }
     }
 
     /// <summary>

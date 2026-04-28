@@ -108,7 +108,7 @@ public class SignatureStore
             ProjectTitle = projectTitle,
             Amount = amount,
             Currency = _currencyService.Symbol,
-            Date = now.ToString("MMM dd, yyyy"),
+            Date = now.ToString("dd MMM yyyy"),
             Time = now.ToString("HH:mm"),
             Status = requiresApproval ? SignatureStatus.Waiting.ToLowerString() : SignatureStatus.Approved.ToLowerString(),
             InvestorName = $"Investor {AllSignatures.Count(s => s.ProjectId == projectId) + 1}",

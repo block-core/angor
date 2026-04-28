@@ -79,18 +79,27 @@ public static class GetInvestments
                         Target = new Amount(project.TargetAmount),
                         FounderStatus = investment == null ? FounderStatus.Requested : FounderStatus.Approved,
                         InvestmentStatus = investment == null ? InvestmentStatus.Invalid : InvestmentStatus.Invested,
-                        Investment = new Amount(investment?.TotalAmount ?? 0),
+                        Investment = new Amount(investment?.TotalAmount > 0
+                            ? investment.TotalAmount
+                            : investmentRecord.InvestedAmountSats),
                         InvestmentId = investmentRecord.InvestmentTransactionHash,
                         Raised = new Amount(stats.stats?.AmountInvested ?? 0),
                         InRecovery = new Amount(stats.stats?.AmountInPenalties ?? 0),
                         RequestedOn = investmentRecord.RequestEventTime.HasValue
                             ? new DateTimeOffset(investmentRecord.RequestEventTime.Value)
                             : null,
-                        ProjectType = project.ProjectType
+                        ProjectType = project.ProjectType,
+                        TotalInvestors = (int)(stats.stats?.InvestorCount ?? 0)
                     };
 
-                    if (investment != null)
+                    if (investment != null && investment.TotalAmount > 0)
                         return Result.Success(dto);
+
+                    // When the indexer knows about the investment but reports
+                    // TotalAmount == 0 (lag / partial data), fall through to
+                    // the handshake path which can compute the amount from the
+                    // signed transaction hex stored locally.
+                    var indexerKnowsInvestment = investment != null;
 
                     // Sync Handshakes from Nostr for this project
                     var syncResult = await HandshakeService.SyncHandshakesFromNostrAsync(
@@ -154,13 +163,18 @@ public static class GetInvestments
                         return Result.Success(dto);
                     }
 
-                    // Update dto with Handshake information
-                    dto.FounderStatus = Handshake.Status == InvestmentRequestStatus.Approved
-                        ? FounderStatus.Approved
-                        : FounderStatus.Requested;
-                    dto.RequestedOn = new DateTimeOffset(Handshake.RequestCreated);
-
-                    dto.InvestmentStatus = DetermineInvestmentStatus(Handshake);
+                    // Update dto with Handshake information.
+                    // Only override status/founder when the indexer didn't
+                    // already confirm the investment (we only fell through
+                    // because TotalAmount was 0).
+                    if (!indexerKnowsInvestment)
+                    {
+                        dto.FounderStatus = Handshake.Status == InvestmentRequestStatus.Approved
+                            ? FounderStatus.Approved
+                            : FounderStatus.Requested;
+                        dto.RequestedOn = new DateTimeOffset(Handshake.RequestCreated);
+                        dto.InvestmentStatus = DetermineInvestmentStatus(Handshake);
+                    }
 
                     if (!string.IsNullOrEmpty(Handshake.InvestmentTransactionHex))
                     {
