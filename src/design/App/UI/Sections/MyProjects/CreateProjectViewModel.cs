@@ -601,8 +601,18 @@ public partial class CreateProjectViewModel : ReactiveObject
     /// </summary>
     public void Deploy()
     {
-        // Build the CreateProjectDto from wizard fields
-        var dto = BuildCreateProjectDto();
+        CreateProjectDto dto;
+        try
+        {
+            // Build the CreateProjectDto from wizard fields
+            dto = BuildCreateProjectDto();
+        }
+        catch (InvalidOperationException ex)
+        {
+            FormError = ex.Message;
+            return;
+        }
+
         DeployFlow.ProjectData = dto;
 
         DeployFlow.OnDeployCompleted = () =>
