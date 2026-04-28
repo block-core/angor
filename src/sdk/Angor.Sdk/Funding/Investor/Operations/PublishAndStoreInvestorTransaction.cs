@@ -5,6 +5,7 @@ using Angor.Sdk.Funding.Shared.TransactionDrafts;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Angor.Sdk.Funding.Investor.Operations;
 
@@ -14,7 +15,7 @@ public static class PublishAndStoreInvestorTransaction
 
     public record PublishAndStoreInvestorTransactionResponse(string TransactionId);
 
-    public class Handler(IIndexerService indexerService, IPortfolioService portfolioService, IMediator mediator) : IRequestHandler<PublishAndStoreInvestorTransactionRequest, Result<PublishAndStoreInvestorTransactionResponse>>
+    public class Handler(IIndexerService indexerService, IPortfolioService portfolioService, IMediator mediator, ILogger<Handler> logger) : IRequestHandler<PublishAndStoreInvestorTransactionRequest, Result<PublishAndStoreInvestorTransactionResponse>>
     {
         public async Task<Result<PublishAndStoreInvestorTransactionResponse>> Handle(PublishAndStoreInvestorTransactionRequest request, CancellationToken cancellationToken)
         {
@@ -31,11 +32,43 @@ public static class PublishAndStoreInvestorTransaction
             if (cancellationToken.IsCancellationRequested)
                 return Result.Failure<PublishAndStoreInvestorTransactionResponse>("Operation was cancelled");
 
-            // Publish the transaction
-            var errorMessage = await indexerService.PublishTransactionAsync(request.TransactionDraft.SignedTxHex);
+            // Publish the transaction with retry
+            const int maxAttempts = 3;
+            var txId = request.TransactionDraft.TransactionId;
+            string? lastError = null;
 
-            if (!string.IsNullOrEmpty(errorMessage))
-                return Result.Failure<PublishAndStoreInvestorTransactionResponse>(errorMessage);
+            for (int attempt = 1; attempt <= maxAttempts; attempt++)
+            {
+                var errorMessage = await indexerService.PublishTransactionAsync(request.TransactionDraft.SignedTxHex);
+
+                if (string.IsNullOrEmpty(errorMessage))
+                {
+                    logger.LogInformation("PublishAndStoreInvestorTransaction: broadcast succeeded on attempt {Attempt} for TxId={TxId}", attempt, txId);
+                    break;
+                }
+
+                // "Already in block chain" or similar means the tx exists — treat as success
+                if (errorMessage.Contains("already in block", StringComparison.OrdinalIgnoreCase) ||
+                    errorMessage.Contains("already known", StringComparison.OrdinalIgnoreCase) ||
+                    errorMessage.Contains("txn-already-in-mempool", StringComparison.OrdinalIgnoreCase))
+                {
+                    logger.LogInformation("PublishAndStoreInvestorTransaction: tx {TxId} already exists (attempt {Attempt}): {Message}", txId, attempt, errorMessage);
+                    break;
+                }
+
+                lastError = errorMessage;
+                logger.LogError("PublishAndStoreInvestorTransaction: broadcast attempt {Attempt}/{Max} failed for TxId={TxId}: {Message}",
+                    attempt, maxAttempts, txId, errorMessage);
+
+                if (attempt < maxAttempts)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(2 * attempt), cancellationToken);
+                }
+                else
+                {
+                    return Result.Failure<PublishAndStoreInvestorTransactionResponse>(lastError);
+                }
+            }
 
             // Update or create the investment record with the transaction ID
             var updateResult = await UpdateInvestmentRecordWithTransaction(
