@@ -51,7 +51,7 @@ public class LightningFundingExamples
             StageCount: 4 // example default
         );
 
-        var createResult = await _investmentAppService.CreateLightningSwap(createRequest);
+        var createResult = await _investmentAppService.CreateLightningSwapForInvestment(createRequest);
 
         if (createResult.IsFailure)
         {
@@ -113,7 +113,7 @@ public class LightningFundingExamples
             StageCount: 4 // example default
         );
 
-        var result = await _investmentAppService.CreateLightningSwap(request);
+        var result = await _investmentAppService.CreateLightningSwapForInvestment(request);
 
         if (result.IsSuccess)
         {

@@ -31,4 +31,10 @@ public interface IWalletOperations
         WalletWords walletWords, AccountInfo accountInfo, long feeRate);
 
     List<UtxoData> UpdateAccountUnconfirmedInfoWithSpentTransaction(AccountInfo accountInfo, Transaction transaction);
+
+    /// <summary>Derive the compressed public key hex for a given HD path from wallet words.</summary>
+    string DerivePublicKey(WalletWords walletWords, string hdPath);
+
+    /// <summary>Derive the private key hex for a given HD path from wallet words.</summary>
+    string DerivePrivateKey(WalletWords walletWords, string hdPath);
 }

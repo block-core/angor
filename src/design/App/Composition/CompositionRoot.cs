@@ -12,6 +12,7 @@ using Angor.Sdk.Wallet.Domain;
 using Angor.Sdk.Wallet.Infrastructure.Impl;
 using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using Angor.Shared;
+using Angor.Shared.Integration.Lightning;
 using Angor.Shared.Services;
 using App.Composition.Adapters;
 using App.UI.Sections.FindProjects;
@@ -161,6 +162,7 @@ public static class CompositionRoot
                 project,
                 sp.GetRequiredService<IWalletAppService>(),
                 sp.GetRequiredService<IInvestmentAppService>(),
+                sp.GetRequiredService<IBoltzSwapService>(),
                 sp.GetRequiredService<PortfolioViewModel>(),
                 sp.GetRequiredService<ICurrencyService>(),
                 sp.GetRequiredService<IWalletContext>(),

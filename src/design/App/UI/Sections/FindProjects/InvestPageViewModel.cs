@@ -9,6 +9,7 @@ using Angor.Sdk.Wallet.Application;
 using Angor.Sdk.Wallet.Domain;
 using App.UI.Sections.Portfolio;
 using Angor.Shared.Models;
+using Angor.Shared.Integration.Lightning;
 using App.UI.Shared;
 using App.UI.Shared.PaymentFlow;
 using ProjectType = App.UI.Shared.ProjectType;
@@ -109,6 +110,7 @@ public partial class InvestPageViewModel : ReactiveObject
 {
     private readonly IWalletAppService _walletAppService;
     private readonly IInvestmentAppService _investmentAppService;
+    private readonly IBoltzSwapService _boltzSwapService;
     private readonly PortfolioViewModel _portfolioVm;
     private readonly ICurrencyService _currencyService;
     private readonly IWalletContext _walletContext;
@@ -336,6 +338,7 @@ public partial class InvestPageViewModel : ReactiveObject
         ProjectItemViewModel project,
         IWalletAppService walletAppService,
         IInvestmentAppService investmentAppService,
+        IBoltzSwapService boltzSwapService,
         PortfolioViewModel portfolioVm,
         ICurrencyService currencyService,
         IWalletContext walletContext,
@@ -345,6 +348,7 @@ public partial class InvestPageViewModel : ReactiveObject
         Project = project;
         _walletAppService = walletAppService;
         _investmentAppService = investmentAppService;
+        _boltzSwapService = boltzSwapService;
         _portfolioVm = portfolioVm;
         _currencyService = currencyService;
         _walletContext = walletContext;
@@ -865,7 +869,6 @@ public partial class InvestPageViewModel : ReactiveObject
 
         var config = new PaymentFlowConfig
         {
-            ProjectId = Project.ProjectId,
             AmountSats = amountSats,
             StageCount = Stages.Count,
             FeeRateSatsPerVbyte = (int)SelectedFeeRate,
@@ -883,6 +886,7 @@ public partial class InvestPageViewModel : ReactiveObject
         return new PaymentFlowViewModel(
             _walletAppService,
             _investmentAppService,
+            _boltzSwapService,
             _walletContext,
             _currencyService,
             _getNetwork,
@@ -1421,7 +1425,7 @@ public partial class InvestPageViewModel : ReactiveObject
             Result<CreateLightningSwapForInvestment.CreateLightningSwapResponse> swapResult;
             try
             {
-                swapResult = await _investmentAppService.CreateLightningSwap(swapRequest);
+                swapResult = await _investmentAppService.CreateLightningSwapForInvestment(swapRequest);
             }
             catch (Exception ex)
             {

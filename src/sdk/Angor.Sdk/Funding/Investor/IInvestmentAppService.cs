@@ -44,7 +44,13 @@ public interface IInvestmentAppService
     /// Creates a Boltz submarine swap for funding an investment via Lightning.
     /// User pays the Lightning invoice, funds go directly on-chain - no intermediate custody.
     /// </summary>
-    Task<Result<CreateLightningSwapForInvestment.CreateLightningSwapResponse>> CreateLightningSwap(CreateLightningSwapForInvestment.CreateLightningSwapRequest request);
+    Task<Result<CreateLightningSwapForInvestment.CreateLightningSwapResponse>> CreateLightningSwapForInvestment(CreateLightningSwapForInvestment.CreateLightningSwapRequest request);
+
+    /// <summary>
+    /// Creates a generic Boltz swap using a provided claim public key.
+    /// No project lookup needed — works for both invest and deploy flows.
+    /// </summary>
+    Task<Result<CreateLightningSwap.CreateLightningSwapResponse>> CreateLightningSwap(CreateLightningSwap.CreateLightningSwapRequest request);
 
     /// <summary>
     /// Monitors a Boltz swap until funds arrive on-chain.

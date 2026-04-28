@@ -25,4 +25,8 @@ public interface IWalletAppService
     Task<Result> GetTestCoins(WalletId walletId);
     Task<Result> DeleteWallet(WalletId walletId);
     Task<Result> RebuildAllWalletBalancesAsync();
+
+    /// <summary>Get the compressed public key hex for a receive address owned by this wallet.
+    /// Used as the claim key for Boltz Lightning swaps.</summary>
+    Task<Result<string>> GetPublicKeyForAddress(WalletId walletId, string address);
 }

@@ -5,6 +5,7 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Wallet.Application;
+using Angor.Shared.Integration.Lightning;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Wallet.Domain;
 using App.UI.Shared.Services;
@@ -41,6 +42,7 @@ public partial class PaymentFlowViewModel : ReactiveObject
 {
     private readonly IWalletAppService _walletAppService;
     private readonly IInvestmentAppService _investmentAppService;
+    private readonly IBoltzSwapService _boltzSwapService;
     private readonly IWalletContext _walletContext;
     private readonly ICurrencyService _currencyService;
     private readonly Func<BitcoinNetwork> _getNetwork;
@@ -95,6 +97,9 @@ public partial class PaymentFlowViewModel : ReactiveObject
         _ => "fa-brands fa-bitcoin"
     };
 
+    /// <summary>Minimum Lightning swap amount from Boltz, formatted for display. Fetched on first Lightning tab switch.</summary>
+    [Reactive] private string? lightningMinAmountText;
+
     /// <summary>The text to show in the invoice/address field (on-chain or Lightning).</summary>
     public string? InvoiceString => SelectedNetworkTab == NetworkTab.Lightning
         ? LightningInvoice
@@ -125,6 +130,7 @@ public partial class PaymentFlowViewModel : ReactiveObject
     public PaymentFlowViewModel(
         IWalletAppService walletAppService,
         IInvestmentAppService investmentAppService,
+        IBoltzSwapService boltzSwapService,
         IWalletContext walletContext,
         ICurrencyService currencyService,
         Func<BitcoinNetwork> getNetwork,
@@ -133,12 +139,25 @@ public partial class PaymentFlowViewModel : ReactiveObject
     {
         _walletAppService = walletAppService;
         _investmentAppService = investmentAppService;
+        _boltzSwapService = boltzSwapService;
         _walletContext = walletContext;
         _currencyService = currencyService;
         _getNetwork = getNetwork;
         _logger = logger;
         _config = config;
         SelectedFeeRate = config.FeeRateSatsPerVbyte;
+
+        // Fetch Boltz minimum for the Lightning tab label
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var fees = await boltzSwapService.GetReverseSwapFeesAsync();
+                if (fees.IsSuccess)
+                    LightningMinAmountText = $"Lightning min: {fees.Value.MinAmount:N0} sats";
+            }
+            catch { /* non-critical */ }
+        });
 
         GenerateReceiveAddressCommand = ReactiveCommand.CreateFromTask(GenerateReceiveAddressAsync);
         GenerateReceiveAddressCommand.ThrownExceptions.Subscribe(ex =>
@@ -473,12 +492,6 @@ public partial class PaymentFlowViewModel : ReactiveObject
             IsGeneratingLightningInvoice = false;
             return;
         }
-        if (string.IsNullOrEmpty(_config.ProjectId))
-        {
-            ErrorMessage = "Lightning payment requires a project ID.";
-            IsGeneratingLightningInvoice = false;
-            return;
-        }
 
         ErrorMessage = null;
         IsProcessing = true;
@@ -493,16 +506,27 @@ public partial class PaymentFlowViewModel : ReactiveObject
             var walletId = wallet.Id;
             var receivingAddress = OnChainAddress;
 
+            // Derive the claim public key from the receive address
+            PaymentStatusText = "Preparing Lightning swap...";
+            var pubKeyResult = await _walletAppService.GetPublicKeyForAddress(walletId, receivingAddress);
+            if (pubKeyResult.IsFailure)
+            {
+                ErrorMessage = $"Failed to derive claim key: {pubKeyResult.Error}";
+                IsProcessing = false;
+                IsGeneratingLightningInvoice = false;
+                return;
+            }
+
             PaymentStatusText = "Creating Lightning invoice...";
-            var swapRequest = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
+            var swapRequest = new CreateLightningSwap.CreateLightningSwapRequest(
                 walletId,
-                new ProjectId(_config.ProjectId),
+                pubKeyResult.Value,
                 new Amount(_config.AmountSats),
                 receivingAddress,
                 StageCount: _config.StageCount,
                 EstimatedFeeRateSatsPerVbyte: _config.FeeRateSatsPerVbyte);
 
-            Result<CreateLightningSwapForInvestment.CreateLightningSwapResponse> swapResult;
+            Result<CreateLightningSwap.CreateLightningSwapResponse> swapResult;
             try
             {
                 swapResult = await _investmentAppService.CreateLightningSwap(swapRequest);

@@ -1,11 +1,7 @@
 ﻿using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Services;
-using Angor.Sdk.Funding.Shared;
-using Angor.Shared.Integration.Lightning;
 using Angor.Shared;
-using Angor.Shared.Services;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.DataEncoders;
+using Angor.Shared.Integration.Lightning;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -53,9 +49,9 @@ public static class ClaimLightningSwap
     public class ClaimLightningSwapByIdHandler(
         IBoltzClaimService boltzClaimService,
         IBoltzSwapStorageService swapStorageService,
-        IProjectService projectService,
         ISeedwordsProvider seedwordsProvider,
-        IDerivationOperations derivationOperations,
+        IHdOperations hdOperations,
+        IWalletAccountBalanceService walletAccountBalanceService,
         ILogger<ClaimLightningSwapByIdHandler> logger)
         : IRequestHandler<ClaimLightningSwapByIdRequest, Result<ClaimLightningSwapResponse>>
     {
@@ -78,24 +74,9 @@ public static class ClaimLightningSwap
                 var swapDoc = swapResult.Value;
                 var swap = swapDoc.ToSwapModel();
 
-                // Step 2: Get founder key from project service using project ID
-                if (string.IsNullOrEmpty(swapDoc.ProjectId))
-                {
-                    return Result.Failure<ClaimLightningSwapResponse>(
-                        "Swap has no associated project ID - cannot derive claim key");
-                }
-
-                var projectResult = await projectService.GetAsync(new ProjectId(swapDoc.ProjectId));
-                if (projectResult.IsFailure)
-                {
-                    return Result.Failure<ClaimLightningSwapResponse>(
-                        $"Project not found: {projectResult.Error}");
-                }
-
-                var founderKey = projectResult.Value.FounderKey;
-
-                // Step 3: Derive the claim private key using founder key
-                var privateKeyResult = await DeriveClaimPrivateKey(request.WalletId, founderKey);
+                // Step 2: Derive the claim private key from the receive address HD path
+                var privateKeyResult = await DeriveClaimPrivateKeyFromAddress(
+                    request.WalletId, swap.Address);
                 if (privateKeyResult.IsFailure)
                 {
                     return Result.Failure<ClaimLightningSwapResponse>(privateKeyResult.Error);
@@ -143,27 +124,27 @@ public static class ClaimLightningSwap
             }
         }
 
-        private async Task<Result<string>> DeriveClaimPrivateKey(WalletId walletId, string founderKey)
+        private async Task<Result<string>> DeriveClaimPrivateKeyFromAddress(WalletId walletId, string address)
         {
-            if (string.IsNullOrEmpty(founderKey))
-            {
-                return Result.Failure<string>("Founder key is required to derive claim key");
-            }
+            if (string.IsNullOrEmpty(address))
+                return Result.Failure<string>("Swap has no receive address — cannot derive claim key");
 
             var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(walletId.Value);
             if (sensitiveDataResult.IsFailure)
-            {
                 return Result.Failure<string>($"Failed to get wallet data: {sensitiveDataResult.Error}");
-            }
 
-            var walletWords = sensitiveDataResult.Value.ToWalletWords();
+            var accountResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
+            if (accountResult.IsFailure)
+                return Result.Failure<string>($"Failed to get account info: {accountResult.Error}");
 
-            // The claim key was derived using the founder key from the project
-            Key claimPrivateKey = derivationOperations.DeriveInvestorPrivateKey(walletWords, founderKey);
-            
-            // Get the private key bytes and convert to hex
-            byte[] keyBytes = claimPrivateKey.ToBytes();
-            var privateKeyHex = Encoders.Hex.EncodeData(keyBytes);
+            var addressInfo = accountResult.Value.AccountInfo.AllAddresses()
+                .FirstOrDefault(a => a.Address == address);
+            if (addressInfo == null)
+                return Result.Failure<string>($"Address {address} not found in wallet — cannot derive claim key");
+
+            var (seed, passphrase) = sensitiveDataResult.Value;
+            var privateKeyHex = hdOperations.DerivePrivateKey(seed, passphrase.GetValueOrDefault(), addressInfo.HdPath);
+
             return Result.Success(privateKeyHex);
         }
     }

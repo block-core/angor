@@ -9,6 +9,7 @@ using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Wallet.Application;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Wallet.Domain;
+using Angor.Shared.Integration.Lightning;
 using App.UI.Shared;
 using App.UI.Shared.PaymentFlow;
 using App.UI.Shared.Services;
@@ -37,6 +38,7 @@ public partial class DeployFlowViewModel : ReactiveObject
 {
     private readonly IWalletAppService _walletAppService;
     private readonly IInvestmentAppService _investmentAppService;
+    private readonly IBoltzSwapService _boltzSwapService;
     private readonly IProjectAppService _projectAppService;
     private readonly IFounderAppService _founderAppService;
     private readonly ICurrencyService _currencyService;
@@ -87,6 +89,7 @@ public partial class DeployFlowViewModel : ReactiveObject
     public DeployFlowViewModel(
         IWalletAppService walletAppService,
         IInvestmentAppService investmentAppService,
+        IBoltzSwapService boltzSwapService,
         IProjectAppService projectAppService,
         IFounderAppService founderAppService,
         ICurrencyService currencyService,
@@ -96,6 +99,7 @@ public partial class DeployFlowViewModel : ReactiveObject
     {
         _walletAppService = walletAppService;
         _investmentAppService = investmentAppService;
+        _boltzSwapService = boltzSwapService;
         _projectAppService = projectAppService;
         _founderAppService = founderAppService;
         _currencyService = currencyService;
@@ -149,13 +153,15 @@ public partial class DeployFlowViewModel : ReactiveObject
         IsDeploying = false;
         DeployStatusText = "Waiting for payment...";
         DeployErrorMessage = null;
-        IsVisible = true;
 
-        // Create the reusable payment flow for this deploy session
+        // Create the reusable payment flow BEFORE setting IsVisible,
+        // since the view subscription fires immediately on IsVisible=true
+        // and needs PaymentFlow to be ready.
         var deployFeeSats = 10_000L; // 0.0001 BTC deploy fee
         PaymentFlow = new PaymentFlowViewModel(
             _walletAppService,
             _investmentAppService,
+            _boltzSwapService,
             _walletContext,
             _currencyService,
             _getNetwork,
@@ -173,6 +179,8 @@ public partial class DeployFlowViewModel : ReactiveObject
                 OnPaymentReceived = DeployAfterPaymentAsync,
                 OnPayWithWallet = DeployWithWalletAsync,
             });
+
+        IsVisible = true;
     }
 
     /// <summary>Callback for PaymentFlowViewModel: deploy project after external payment received.</summary>
