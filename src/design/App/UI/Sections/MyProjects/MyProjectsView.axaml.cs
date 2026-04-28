@@ -375,6 +375,7 @@ public partial class MyProjectsView : UserControl
 
             case "ScanProjectsButton":
             case "MobileScanButton":
+            case "EmptyScanButton":
                 _ = vm.ScanForProjectsAsync();
                 e.Handled = true;
                 return;
