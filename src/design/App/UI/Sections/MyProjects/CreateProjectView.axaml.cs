@@ -29,6 +29,7 @@ public partial class CreateProjectView : UserControl
     private Border[] _progressSegments = [];
     private Border? _navFooter;
     private StackPanel? _stepContentPanel;
+    private Border? _strokeOverlay;
 
     private IDisposable? _deploySubscription;
     private IDisposable? _stepSubscription;
@@ -53,6 +54,7 @@ public partial class CreateProjectView : UserControl
         _mobileStepTitle = this.FindControl<TextBlock>("MobileStepTitle");
         _navFooter = this.FindControl<Border>("NavFooter");
         _stepContentPanel = this.FindControl<StackPanel>("StepContentPanel");
+        _strokeOverlay = this.FindControl<Border>("StrokeOverlay");
 
         // Cache progress bar segments
         _progressSegments =
@@ -183,6 +185,9 @@ public partial class CreateProjectView : UserControl
             // Show mobile header
             if (_mobileWizardHeader != null) _mobileWizardHeader.IsVisible = true;
 
+            // Hide desktop stroke overlay (card border/radius)
+            if (_strokeOverlay != null) _strokeOverlay.IsVisible = false;
+
             // Add top margin to main grid to clear the mobile header
             // Mobile header height: ~16 (padding) + 22 (title) + 12 (spacing) + 6 (progress) + 16 (padding bottom) ≈ 72
             _wizardMainGrid.Margin = new Thickness(0, 72, 0, 0);
@@ -190,7 +195,7 @@ public partial class CreateProjectView : UserControl
             // Reduce content panel side margins for compact screens
             // Vue: mobile content uses p-4 (16px) instead of 32px
             if (_stepContentPanel != null)
-                _stepContentPanel.Margin = new Thickness(16, 16, 16, 120); // 120px bottom for tab bar clearance
+                _stepContentPanel.Margin = new Thickness(16, 24, 16, 120); // 120px bottom for tab bar clearance
 
             // Nav footer: flush with tab bar — no bottom margin needed since
             // the footer is docked to the bottom of Row 1, directly above Row 2 (tab bar)
@@ -211,6 +216,9 @@ public partial class CreateProjectView : UserControl
 
             // Hide mobile header
             if (_mobileWizardHeader != null) _mobileWizardHeader.IsVisible = false;
+
+            // Show desktop stroke overlay (card border/radius)
+            if (_strokeOverlay != null) _strokeOverlay.IsVisible = true;
 
             // Restore margins
             _wizardMainGrid.Margin = new Thickness(0);

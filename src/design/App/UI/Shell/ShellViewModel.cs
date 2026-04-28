@@ -784,6 +784,19 @@ public partial class ShellViewModel : ReactiveObject
     /// Action for the invest/submit CTA button on the mobile back bar.
     /// Vue: showInvestPage ? handleInvestPageAction() : viewInvestPage()
     /// </summary>
+    /// <summary>Returns the current InvestPageViewModel if the invest page is open, null otherwise.</summary>
+    public InvestPageViewModel? CurrentInvestPageViewModel
+    {
+        get
+        {
+            if (_viewCache.TryGetValue("Find Projects", out var v) &&
+                v is FindProjectsView { DataContext: FindProjectsViewModel fpVm } &&
+                fpVm.InvestPageViewModel is { } investVm)
+                return investVm;
+            return null;
+        }
+    }
+
     public void MobileInvestAction()
     {
         if (IsInvestPageOpen)

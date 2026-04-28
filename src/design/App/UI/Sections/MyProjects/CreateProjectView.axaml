@@ -582,7 +582,7 @@
                  wins no matter what the clip does. Matches ContentBorder's
                  CornerRadius=16 and BorderThickness=1. IsHitTestVisible=False
                  so it doesn't block clicks on the stepper/content beneath. -->
-            <Border Grid.Column="0" Grid.ColumnSpan="2"
+            <Border Name="StrokeOverlay" Grid.Column="0" Grid.ColumnSpan="2"
                     BorderBrush="{DynamicResource Stroke}"
                     BorderThickness="1"
                     CornerRadius="16"

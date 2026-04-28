@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using App.UI.Shared;
 using App.UI.Shared.Controls;
@@ -17,6 +18,7 @@ public partial class PortfolioView : UserControl, ISectionView
     // Cached controls for responsive layout
     private Grid? _portfolioGrid;
     private Border? _sidebar;
+    private Border? _mobileHeader;
     private ScrollableView? _content;
 
     // Lazy-mounted drill-down child — materialised on first visibility
@@ -48,10 +50,13 @@ public partial class PortfolioView : UserControl, ISectionView
         // Wire Penalties button to open shell modal
         var penaltiesBtn = this.FindControl<Button>("PenaltiesButton");
         if (penaltiesBtn != null) penaltiesBtn.Click += OnPenaltiesClick;
+        var mobilePenaltiesBtn = this.FindControl<Button>("MobilePenaltiesButton");
+        if (mobilePenaltiesBtn != null) mobilePenaltiesBtn.Click += OnPenaltiesClick;
 
         // ── Cache responsive layout controls ──
         _portfolioGrid = this.FindControl<Grid>("PortfolioListPanel");
         _sidebar = this.FindControl<Border>("PortfolioSidebar");
+        _mobileHeader = this.FindControl<Border>("MobilePortfolioHeader");
         _content = this.FindControl<ScrollableView>("PortfolioContent");
         _investmentDetailPanel = this.FindControl<Panel>("InvestmentDetailPanel");
 
@@ -59,30 +64,11 @@ public partial class PortfolioView : UserControl, ISectionView
         _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
             .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
 
-        // ── Mobile perf: detach the sidebar from the PortfolioListPanel grid.
-        // On compact layout the sidebar is hidden above the fold with all its
-        // children (SVG logo, 4 stat cards, 2 buttons) still costing
-        // measure/arrange. Detaching skips that entirely. Re-insert on
-        // ApplicationIdle so it's ready before the user can interact.
-        // Also strip hover transitions on investment card borders — they
-        // allocate animators that never fire on touch-only platforms.
+        // Mobile perf: sidebar is hidden via IsVisible=false on compact,
+        // so no need to detach children. Strip hover transitions via .Mobile class.
         if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
         {
-            if (_portfolioGrid != null && _sidebar != null)
-            {
-                var sidebarIndex = _portfolioGrid.Children.IndexOf(_sidebar);
-                if (sidebarIndex >= 0)
-                {
-                    _portfolioGrid.Children.RemoveAt(sidebarIndex);
-                    var gridRef = _portfolioGrid;
-                    var sidebarRef = _sidebar;
-                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                    {
-                        var safeIdx = Math.Min(sidebarIndex, gridRef.Children.Count);
-                        gridRef.Children.Insert(safeIdx, sidebarRef);
-                    }, Avalonia.Threading.DispatcherPriority.ApplicationIdle);
-                }
-            }
+            // .Mobile class already added above — strips hover transitions + BoxShadow
         }
     }
 
@@ -90,22 +76,19 @@ public partial class PortfolioView : UserControl, ISectionView
     {
         if (_portfolioGrid == null || _sidebar == null || _content == null) return;
 
+        // Toggle sidebar vs compact mobile header
+        _sidebar.IsVisible = !isCompact;
+        if (_mobileHeader != null)
+            _mobileHeader.IsVisible = isCompact;
+
         // CRITICAL: modify existing column/row widths in-place — never Clear()+Add().
-        // XAML Grid always has 2 columns and 2 rows:
-        //   Desktop:  Col0=380 (sidebar), Col1=* (content) | Row0=* (content), Row1=0
-        //   Compact:  Col0=* (full width), Col1=0 (hidden)  | Row0=Auto (sidebar), Row1=* (content)
         var cols = _portfolioGrid.ColumnDefinitions;
         var rows = _portfolioGrid.RowDefinitions;
 
         if (isCompact)
         {
             if (cols.Count >= 2) { cols[0].Width = GridLength.Star; cols[1].Width = new GridLength(0); }
-            if (rows.Count >= 2) { rows[0].Height = GridLength.Auto; rows[1].Height = GridLength.Star; }
-
-            Grid.SetColumn(_sidebar, 0);
-            Grid.SetRow(_sidebar, 0);
-            _sidebar.Margin = new Avalonia.Thickness(0, 0, 0, 24);
-            _sidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top;
+            if (rows.Count >= 2) { rows[0].Height = new GridLength(0); rows[1].Height = GridLength.Star; }
 
             Grid.SetColumn(_content, 0);
             Grid.SetRow(_content, 1);
@@ -143,14 +126,21 @@ public partial class PortfolioView : UserControl, ISectionView
             var visibilitySub = vm.WhenAnyValue(
                 x => x.HasInvestments,
                 x => x.SelectedInvestment,
-                (hasInvestments, selected) => (hasInvestments, selected))
+                x => x.IsInitialLoad,
+                (hasInvestments, selected, isInitialLoad) => (hasInvestments, selected, isInitialLoad))
               .Subscribe(tuple =>
               {
-                  var (hasInvestments, selected) = tuple;
-                  var visible = hasInvestments && selected == null;
+                  var (hasInvestments, selected, isInitialLoad) = tuple;
+                  // Show portfolio list when: loading skeletons OR has real investments (and no detail open)
+                  var visible = (hasInvestments || isInitialLoad) && selected == null;
 
                   if (PortfolioListPanel != null)
                       PortfolioListPanel.IsVisible = visible;
+
+                  // Empty state: only when not loading AND no investments AND no detail open
+                  var emptyState = this.FindControl<Control>("EmptyStatePanel");
+                  if (emptyState != null)
+                      emptyState.IsVisible = !hasInvestments && !isInitialLoad && selected == null;
 
                   // Lazy-mount InvestmentDetailView on first drill-down
                   if (_investmentDetailPanel != null)
@@ -159,15 +149,27 @@ public partial class PortfolioView : UserControl, ISectionView
                       {
                           if (_investmentDetailView == null)
                           {
-                              _investmentDetailView = new InvestmentDetailView { DataContext = selected };
-                              _investmentDetailPanel.Children.Add(_investmentDetailView);
+                              // Show skeleton immediately while real view inflates
+                              var skeleton = new SkeletonInvestmentDetailView();
+                              _investmentDetailPanel.Children.Add(skeleton);
+                              _investmentDetailPanel.IsVisible = true;
+
+                              var selectedVm = selected;
+                              Dispatcher.UIThread.Post(() =>
+                              {
+                                  _investmentDetailView = new InvestmentDetailView { DataContext = selectedVm };
+                                  _investmentDetailPanel.Children.Remove(skeleton);
+                                  _investmentDetailPanel.Children.Add(_investmentDetailView);
+                              }, DispatcherPriority.Background);
                           }
                           else
                           {
                               _investmentDetailView.DataContext = selected;
                           }
                       }
-                      _investmentDetailPanel.IsVisible = selected != null;
+                      // Don't hide while skeleton→real swap is in flight
+                      if (!(_investmentDetailView == null && selected != null))
+                          _investmentDetailPanel.IsVisible = selected != null;
                   }
 
                   // Publish detail view state to ShellViewModel for mobile back-button visibility
@@ -227,6 +229,7 @@ public partial class PortfolioView : UserControl, ISectionView
         switch (btn.Name)
         {
             case "RefreshButton":
+            case "MobileRefreshButton":
                 if (DataContext is PortfolioViewModel refreshVm)
                     _ = refreshVm.LoadInvestmentsFromSdkAsync();
                 e.Handled = true;

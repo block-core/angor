@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using App.UI.Shared;
 using App.UI.Shared.Controls;
@@ -128,20 +129,31 @@ public partial class FindProjectsView : UserControl, ISectionView
                       {
                           if (_projectDetailView == null)
                           {
-                              var dtSw = System.Diagnostics.Stopwatch.StartNew();
-                              _projectDetailView = new ProjectDetailView { DataContext = tuple.Item1 };
-                              _detailPanel.Children.Add(_projectDetailView);
-                              dtSw.Stop();
-                              global::App.App.Services.GetRequiredService<ILoggerFactory>()
-                                  .CreateLogger("ShellPerf")
-                                  .LogInformation("[DrillDown] ProjectDetailView create+attach={Ms}ms", dtSw.ElapsedMilliseconds);
+                              // Show skeleton immediately while real view inflates
+                              var skeleton = new SkeletonProjectDetailView();
+                              _detailPanel.Children.Add(skeleton);
+                              _detailPanel.IsVisible = true;
+
+                              var projectVm = tuple.Item1;
+                              Dispatcher.UIThread.Post(() =>
+                              {
+                                  var dtSw = System.Diagnostics.Stopwatch.StartNew();
+                                  _projectDetailView = new ProjectDetailView { DataContext = projectVm };
+                                  _detailPanel.Children.Remove(skeleton);
+                                  _detailPanel.Children.Add(_projectDetailView);
+                                  dtSw.Stop();
+                                  global::App.App.Services.GetRequiredService<ILoggerFactory>()
+                                      .CreateLogger("ShellPerf")
+                                      .LogInformation("[DrillDown] ProjectDetailView create+attach={Ms}ms (skeleton shown first)", dtSw.ElapsedMilliseconds);
+                              }, DispatcherPriority.Background);
                           }
                           else
                           {
                               _projectDetailView.DataContext = tuple.Item1;
                           }
                       }
-                      _detailPanel.IsVisible = hasProject && !hasInvest;
+                      if (!(_projectDetailView == null && hasProject && !hasInvest))
+                          _detailPanel.IsVisible = hasProject && !hasInvest;
                   }
 
                   if (_investPanel != null)
