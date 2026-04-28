@@ -129,9 +129,11 @@ public partial class ShellView : UserControl
     private Border _investmentDetailBackBar = null!;
     private Border _manageFundsBackBar = null!;
     private TextBlock _investorCtaText = null!;
+    private Button _investorCtaBtn = null!;
 
     private IDisposable? _layoutSubscription;
     private IDisposable? _detailStateSubscription;
+    private IDisposable? _investCanSubmitSubscription;
     private SectionPanel? _sectionPanel;
 
     /// <summary>
@@ -183,6 +185,7 @@ public partial class ShellView : UserControl
         _investmentDetailBackBar = this.FindControl<Border>("InvestmentDetailBackBar")!;
         _manageFundsBackBar = this.FindControl<Border>("ManageFundsBackBar")!;
         _investorCtaText = this.FindControl<TextBlock>("InvestorCtaText")!;
+        _investorCtaBtn = this.FindControl<Button>("InvestorCtaBtn")!;
 
         // ── Subscribe to layout mode changes — toggle desktop/compact elements ──
         ApplyShellLayout(!LayoutModeService.Instance.IsCompact);
@@ -752,6 +755,32 @@ public partial class ShellView : UserControl
         // Update CTA text: use the project-type action verb on both detail and invest pages
         if (_investorCtaText != null)
             _investorCtaText.Text = vm.ProjectDetailActionVerb;
+
+        // ── Invest CTA disabled state ──
+        // When on the invest page, bind IsEnabled to the invest VM's CanSubmit.
+        // When on project detail, always enabled (it navigates to invest page).
+        _investCanSubmitSubscription?.Dispose();
+        _investCanSubmitSubscription = null;
+        if (vm.IsInvestPageOpen)
+        {
+            var investVm = vm.CurrentInvestPageViewModel;
+            if (investVm != null)
+            {
+                _investorCtaBtn.IsEnabled = investVm.CanSubmit;
+                _investorCtaBtn.Opacity = investVm.CanSubmit ? 1.0 : 0.35;
+                _investCanSubmitSubscription = investVm.WhenAnyValue(x => x.CanSubmit)
+                    .Subscribe(canSubmit =>
+                    {
+                        _investorCtaBtn.IsEnabled = canSubmit;
+                        _investorCtaBtn.Opacity = canSubmit ? 1.0 : 0.35;
+                    });
+            }
+        }
+        else
+        {
+            _investorCtaBtn.IsEnabled = true;
+            _investorCtaBtn.Opacity = 1.0;
+        }
 
         // ── Investment detail back bar ──
         // Vue (line 6234): v-if="showInvestmentDetail && currentPage === 'investments'"

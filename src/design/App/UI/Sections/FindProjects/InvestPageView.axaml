@@ -78,12 +78,14 @@
         </Style>
         <!-- Disabled submit button: dim + no cursor (attribute selector — Border :disabled pseudo-class is unreliable) -->
         <Style Selector="Border#SubmitButton[IsEnabled=False]">
-            <Setter Property="Opacity" Value="0.45" />
+            <Setter Property="Opacity" Value="0.35" />
             <Setter Property="Cursor" Value="Arrow" />
+            <Setter Property="Background" Value="#3A3A3A" />
         </Style>
         <Style Selector="Border#MobileSubmitButton[IsEnabled=False]">
-            <Setter Property="Opacity" Value="0.45" />
+            <Setter Property="Opacity" Value="0.35" />
             <Setter Property="Cursor" Value="Arrow" />
+            <Setter Property="Background" Value="#3A3A3A" />
         </Style>
     </UserControl.Styles>
 
@@ -230,7 +232,8 @@
                BorderThickness="0,1,0,0"
                BorderBrush="{DynamicResource Stroke}"
                Background="{DynamicResource Surface}"
-               BoxShadow="0 -4 12 0 #14000000">
+               BoxShadow="0 -4 12 0 #14000000"
+               IsVisible="False">
             <!-- Vue: .footer-content { justify-content: flex-end } -->
             <StackPanel Orientation="Horizontal" Spacing="24"
                         HorizontalAlignment="Right" VerticalAlignment="Center"
@@ -291,7 +294,7 @@
                         BoxShadow="0 2 8 0 #4D4B7C5A"
                         VerticalAlignment="Center"
                         IsEnabled="{Binding CanSubmit}"
-                        Opacity="{Binding SubmitOpacity}">
+                        IsHitTestVisible="{Binding CanSubmit}">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                             <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
@@ -825,7 +828,7 @@
                         HorizontalAlignment="Stretch"
                         IsVisible="False"
                         IsEnabled="{Binding CanSubmit}"
-                        Opacity="{Binding SubmitOpacity}">
+                        IsHitTestVisible="{Binding CanSubmit}">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                             <GradientStop Color="#2D5A3D" Offset="0" />
