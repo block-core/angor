@@ -66,6 +66,8 @@ public static class CreateProjectProfile
         private async Task<Result<string>> CreateNostrProfileAsync(string nostrKey, CreateProjectDto project)
         {
             var tcs = new TaskCompletionSource<Result<string>>();
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            cts.Token.Register(() => { tcs.TrySetResult(Result.Failure<string>("Nostr profile creation timed out after 30s")); cts.Dispose(); });
 
             var nostrMetadata = new NostrMetadata
             {
