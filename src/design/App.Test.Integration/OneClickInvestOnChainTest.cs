@@ -151,6 +151,13 @@ public class OneClickInvestOnChainTest
         pf.PaymentReceived.Should().BeFalse();
 
         window.Close();
+        Dispatcher.UIThread.RunJobs();
+
+        if (global::App.App.Services is IAsyncDisposable asyncDisposable)
+            await asyncDisposable.DisposeAsync();
+        else if (global::App.App.Services is IDisposable disposable)
+            disposable.Dispose();
+
         Log("========== 1-click invest ON-CHAIN test PASSED ==========");
     }
 
@@ -216,6 +223,13 @@ public class OneClickInvestOnChainTest
         }
 
         window.Close();
+        Dispatcher.UIThread.RunJobs();
+
+        if (global::App.App.Services is IAsyncDisposable asyncDisposable)
+            await asyncDisposable.DisposeAsync();
+        else if (global::App.App.Services is IDisposable disposable)
+            disposable.Dispose();
+
         Log("========== Tab-switch race condition test PASSED ==========");
     }
 
