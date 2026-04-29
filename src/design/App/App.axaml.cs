@@ -4,6 +4,7 @@ using AsyncImageLoader.Loaders;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using App.Composition;
+using Microsoft.Extensions.DependencyInjection;
 using App.UI.Shared;
 using App.UI.Shell;
 using Projektanker.Icons.Avalonia;
@@ -14,6 +15,7 @@ namespace App;
 public partial class App : Application
 {
     public static IServiceProvider Services { get; private set; } = null!;
+    public static Action<ServiceCollection>? PlatformServices { get; set; }
 
     public override void Initialize()
     {
@@ -58,7 +60,7 @@ public partial class App : Application
         var profileName = ProfileNameResolver.GetProfileName(lifetime?.Args);
 
         // Build DI container with profile-specific data isolation
-        Services = CompositionRoot.BuildServiceProvider(profileName);
+        Services = CompositionRoot.BuildServiceProvider(profileName, platformServices: PlatformServices);
 
         if (lifetime != null)
         {

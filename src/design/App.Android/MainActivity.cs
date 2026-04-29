@@ -1,8 +1,10 @@
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
+using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using Avalonia;
 using Avalonia.Android;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace App.Android;
 
@@ -18,6 +20,11 @@ public class MainActivity : AvaloniaMainActivity<global::App.App>
 
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
     {
+        global::App.App.PlatformServices = services =>
+        {
+            services.AddSingleton<ISecureKeyProvider, AndroidKeyStoreSecureKeyProvider>();
+        };
+
         return base.CustomizeAppBuilder(builder)
             .WithInterFont();
     }
