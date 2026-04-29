@@ -9,6 +9,8 @@ using Angor.Sdk.Funding.Projects;
 using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
+using App.UI.Shared.PaymentFlow;
+using NetworkTab = App.UI.Shared.PaymentFlow.NetworkTab;
 using App.UI.Sections.Funders;
 using App.UI.Sections.Portfolio;
 using App.UI.Sections.MyProjects.Deploy;
@@ -334,13 +336,13 @@ public class FundAndRecoverTest
         // Select wallet
         var investWallet = investVm.Wallets[0];
         TestHelpers.Log($"[STEP 6] Selecting wallet: '{investWallet.Name}' (balance: {investWallet.Balance})...");
-        investVm.SelectWallet(investWallet);
+        investVm.PaymentFlow.SelectWallet(investWallet);
         Dispatcher.UIThread.RunJobs();
-        investVm.SelectedWallet.Should().NotBeNull("Should have a selected wallet");
+        investVm.PaymentFlow.SelectedWallet.Should().NotBeNull("Should have a selected wallet");
 
         // Pay with wallet → SDK pipeline
         TestHelpers.Log("[STEP 6] Paying with wallet (SDK invest pipeline)...");
-        investVm.PayWithWallet();
+        investVm.PaymentFlow.PayWithWalletCommand.Execute().Subscribe();
 
         // Track processing states during payment (merged from FindProjectsPaymentFlowTest)
         var observedStatusTexts = new List<string>();
@@ -351,33 +353,33 @@ public class FundAndRecoverTest
         {
             Dispatcher.UIThread.RunJobs();
 
-            if (investVm.IsProcessing && !wasProcessing)
+            if (investVm.PaymentFlow.IsProcessing && !wasProcessing)
             {
                 wasProcessing = true;
-                TestHelpers.Log($"[STEP 6] IsProcessing became true. Status: {investVm.PaymentStatusText}");
+                TestHelpers.Log($"[STEP 6] IsProcessing became true. Status: {investVm.PaymentFlow.PaymentStatusText}");
             }
 
-            if (investVm.IsProcessing && !observedStatusTexts.Contains(investVm.PaymentStatusText))
+            if (investVm.PaymentFlow.IsProcessing && !observedStatusTexts.Contains(investVm.PaymentFlow.PaymentStatusText))
             {
-                observedStatusTexts.Add(investVm.PaymentStatusText);
-                TestHelpers.Log($"[STEP 6] Status update: '{investVm.PaymentStatusText}'");
+                observedStatusTexts.Add(investVm.PaymentFlow.PaymentStatusText);
+                TestHelpers.Log($"[STEP 6] Status update: '{investVm.PaymentFlow.PaymentStatusText}'");
             }
 
-            if (investVm.CurrentScreen == InvestScreen.Success)
+            if (investVm.PaymentFlow.CurrentScreen == PaymentFlowScreen.Success)
             {
                 TestHelpers.Log("[STEP 6] Investment succeeded! Success screen visible.");
                 break;
             }
-            if (!investVm.IsProcessing && investVm.CurrentScreen != InvestScreen.Success)
+            if (!investVm.PaymentFlow.IsProcessing && investVm.PaymentFlow.CurrentScreen != PaymentFlowScreen.Success)
             {
-                TestHelpers.Log($"[STEP 6] Invest status: {investVm.PaymentStatusText}");
-                if (investVm.PaymentStatusText.Contains("Failed") || investVm.PaymentStatusText.Contains("Error"))
+                TestHelpers.Log($"[STEP 6] Invest status: {investVm.PaymentFlow.PaymentStatusText}");
+                if (investVm.PaymentFlow.PaymentStatusText.Contains("Failed") || investVm.PaymentFlow.PaymentStatusText.Contains("Error"))
                     break;
             }
             await Task.Delay(TestHelpers.PollInterval);
         }
-        investVm.CurrentScreen.Should().Be(InvestScreen.Success,
-            $"Invest should reach success. Last status: {investVm.PaymentStatusText}");
+        investVm.PaymentFlow.CurrentScreen.Should().Be(PaymentFlowScreen.Success,
+            $"Invest should reach success. Last status: {investVm.PaymentFlow.PaymentStatusText}");
 
         // Assert processing states were observed during payment
         wasProcessing.Should().BeTrue("IsProcessing should have been true during payment");
@@ -386,9 +388,9 @@ public class FundAndRecoverTest
             "should see at least one meaningful processing status");
 
         // Assert success screen content
-        investVm.IsSuccess.Should().BeTrue("IsSuccess should be true on success screen");
-        investVm.SuccessTitle.Should().NotBeNullOrWhiteSpace("success title should be rendered");
-        investVm.SuccessDescription.Should().NotBeNullOrWhiteSpace("success description should be rendered");
+        investVm.PaymentFlow.IsSuccess.Should().BeTrue("IsSuccess should be true on success screen");
+        investVm.PaymentFlow.SuccessTitle.Should().NotBeNullOrWhiteSpace("success title should be rendered");
+        investVm.PaymentFlow.SuccessDescription.Should().NotBeNullOrWhiteSpace("success description should be rendered");
 
         // Assert auto-approval detection: 0.02 BTC > 0.01 threshold → NOT auto-approved
         investVm.IsAutoApproved.Should().BeFalse(

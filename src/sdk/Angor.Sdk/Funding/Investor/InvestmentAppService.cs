@@ -64,6 +64,7 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
 
     #region Methods for Lightning Network integration (Boltz submarine swaps)
 
+    [Obsolete("Use CreateLightningSwap instead.")]
     public Task<Result<CreateLightningSwapForInvestment.CreateLightningSwapResponse>> CreateLightningSwapForInvestment(CreateLightningSwapForInvestment.CreateLightningSwapRequest request)
         => mediator.Send(request);
 

@@ -7,6 +7,8 @@ using FluentAssertions;
 using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
+using App.UI.Shared.PaymentFlow;
+using NetworkTab = App.UI.Shared.PaymentFlow.NetworkTab;
 using App.UI.Sections.Funds;
 using App.UI.Sections.MyProjects;
 using App.UI.Sections.MyProjects.Deploy;
@@ -207,11 +209,11 @@ public class FindProjectsInvoiceFlowTest
 
         // ── Step 5: Choose the invoice/QR path instead of a wallet ──
         Log("[STEP 5] Choosing 'Pay an invoice instead' (QR/on-chain) path...");
-        investVm.ShowInvoice();
+        investVm.PaymentFlow.ShowInvoice();
         Dispatcher.UIThread.RunJobs();
-        investVm.CurrentScreen.Should().Be(InvestScreen.Invoice,
+        investVm.PaymentFlow.CurrentScreen.Should().Be(PaymentFlowScreen.Invoice,
             "ShowInvoice should advance to the invoice/QR screen");
-        investVm.SelectedNetworkTab.Should().Be(NetworkTab.OnChain,
+        investVm.PaymentFlow.SelectedNetworkTab.Should().Be(NetworkTab.OnChain,
             "On-Chain is the default tab when the Invoice screen opens");
 
         // ShowInvoice auto-starts the on-chain monitor (PayViaInvoice) — no explicit kick needed.
@@ -222,15 +224,15 @@ public class FindProjectsInvoiceFlowTest
         while (DateTime.UtcNow < waitForInvoiceDeadline)
         {
             Dispatcher.UIThread.RunJobs();
-            if (investVm.IsProcessing && investVm.PaymentStatusText.Contains("Waiting for payment"))
+            if (investVm.PaymentFlow.IsProcessing && investVm.PaymentFlow.PaymentStatusText.Contains("Waiting for payment"))
                 break;
-            if (investVm.ErrorMessage != null)
-                throw new Exception($"PayViaInvoice errored before monitoring started: {investVm.ErrorMessage}");
+            if (investVm.PaymentFlow.ErrorMessage != null)
+                throw new Exception($"PayViaInvoice errored before monitoring started: {investVm.PaymentFlow.ErrorMessage}");
             await Task.Delay(500);
         }
-        investVm.PaymentStatusText.Should().Contain("Waiting for payment",
+        investVm.PaymentFlow.PaymentStatusText.Should().Contain("Waiting for payment",
             "PayViaInvoice should have generated the address and be monitoring for funds");
-        Log("[STEP 5] Invoice monitoring active. Status: " + investVm.PaymentStatusText);
+        Log("[STEP 5] Invoice monitoring active. Status: " + investVm.PaymentFlow.PaymentStatusText);
 
         // ── Step 6: Pay the invoice address via the faucet (external payer) ──
         // DIRECT SDK CALL: The InvestPageViewModel monitors a receive address internally but
@@ -260,23 +262,23 @@ public class FindProjectsInvoiceFlowTest
         {
             Dispatcher.UIThread.RunJobs();
 
-            if (!observedStatusTexts.Contains(investVm.PaymentStatusText))
+            if (!observedStatusTexts.Contains(investVm.PaymentFlow.PaymentStatusText))
             {
-                observedStatusTexts.Add(investVm.PaymentStatusText);
-                Log($"[STEP 7] Status: '{investVm.PaymentStatusText}' (Received={investVm.PaymentReceived})");
+                observedStatusTexts.Add(investVm.PaymentFlow.PaymentStatusText);
+                Log($"[STEP 7] Status: '{investVm.PaymentFlow.PaymentStatusText}' (Received={investVm.PaymentFlow.PaymentReceived})");
             }
 
-            if (investVm.CurrentScreen == InvestScreen.Success) break;
-            if (!investVm.IsProcessing && investVm.ErrorMessage != null)
+            if (investVm.PaymentFlow.CurrentScreen == PaymentFlowScreen.Success) break;
+            if (!investVm.PaymentFlow.IsProcessing && investVm.PaymentFlow.ErrorMessage != null)
             {
-                Log($"[STEP 7] Error: {investVm.ErrorMessage}");
+                Log($"[STEP 7] Error: {investVm.PaymentFlow.ErrorMessage}");
                 break;
             }
             await Task.Delay(2000);
         }
 
         // ── Assertions ──
-        investVm.PaymentReceived.Should().BeTrue(
+        investVm.PaymentFlow.PaymentReceived.Should().BeTrue(
             "the faucet payment to the invoice address should have been detected");
         // The "Payment received" status is transient and may be missed by polling.
         // We already verify PaymentReceived=true above. If the status flipped too fast,
@@ -286,11 +288,11 @@ public class FindProjectsInvoiceFlowTest
             s => s.Contains("Payment received") || s.Contains("Publishing") || s.Contains("Building"),
             "status should have progressed past 'Waiting for payment' (payment was detected)");
 
-        investVm.CurrentScreen.Should().Be(InvestScreen.Success,
-            $"invoice flow should reach Success. Error: {investVm.ErrorMessage ?? "none"}. Last status: {investVm.PaymentStatusText}");
-        investVm.IsSuccess.Should().BeTrue();
-        investVm.SuccessTitle.Should().NotBeNullOrWhiteSpace();
-        investVm.SuccessDescription.Should().NotBeNullOrWhiteSpace();
+        investVm.PaymentFlow.CurrentScreen.Should().Be(PaymentFlowScreen.Success,
+            $"invoice flow should reach Success. Error: {investVm.PaymentFlow.ErrorMessage ?? "none"}. Last status: {investVm.PaymentFlow.PaymentStatusText}");
+        investVm.PaymentFlow.IsSuccess.Should().BeTrue();
+        investVm.PaymentFlow.SuccessTitle.Should().NotBeNullOrWhiteSpace();
+        investVm.PaymentFlow.SuccessDescription.Should().NotBeNullOrWhiteSpace();
 
         // 0.001 < 0.5 threshold → auto-approved (published directly)
         investVm.IsAutoApproved.Should().BeTrue(

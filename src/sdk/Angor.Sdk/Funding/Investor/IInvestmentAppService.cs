@@ -44,6 +44,7 @@ public interface IInvestmentAppService
     /// Creates a Boltz submarine swap for funding an investment via Lightning.
     /// User pays the Lightning invoice, funds go directly on-chain - no intermediate custody.
     /// </summary>
+    [Obsolete("Use CreateLightningSwap instead — accepts a claim public key directly.")]
     Task<Result<CreateLightningSwapForInvestment.CreateLightningSwapResponse>> CreateLightningSwapForInvestment(CreateLightningSwapForInvestment.CreateLightningSwapRequest request);
 
     /// <summary>

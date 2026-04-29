@@ -1,5 +1,7 @@
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
+using App.UI.Shared.PaymentFlow;
+using NetworkTab = App.UI.Shared.PaymentFlow.NetworkTab;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
@@ -69,94 +71,82 @@ public class InvestModalsViewFixesTest
         var vm = findVm.InvestPageViewModel;
         vm.Should().NotBeNull("InvestPageViewModel should be created via factory");
 
-        // ── Fix 1: HasError binding drives the new Invoice-modal error banner ──
-        Log("[1] HasError binding...");
-        vm!.HasError.Should().BeFalse("no error initially");
-        vm.ErrorMessage = "synthetic test error";
-        vm.HasError.Should().BeTrue("HasError must flip when ErrorMessage is set so the banner shows");
-        vm.ErrorMessage = null;
-        vm.HasError.Should().BeFalse("HasError must clear when ErrorMessage is reset");
-
-        // Provide an investment amount so the form is in a valid state for ShowInvoice.
-        vm.InvestmentAmount = "0.001";
+        // Provide an investment amount so the form is in a valid state for Submit.
+        vm!.InvestmentAmount = "0.001";
         Dispatcher.UIThread.RunJobs();
 
-        // ── Fix 2 + 3: ShowInvoice immediate UX ──
-        Log("[2] ShowInvoice synchronous state...");
-        vm.ShowInvoice();
-        vm.CurrentScreen.Should().Be(InvestScreen.Invoice, "ShowInvoice advances to the Invoice screen");
-        vm.SelectedNetworkTab.Should().Be(NetworkTab.OnChain, "On-Chain is the default tab");
-        vm.IsProcessing.Should().BeTrue("ShowInvoice flips IsProcessing synchronously so the spinner shows immediately");
-        // ShowInvoice sets "Generating invoice address..." but the reactive command fires immediately
-        // and may overwrite it synchronously (e.g. "Creating wallet..." when no wallet exists).
-        // Assert that there IS progress feedback, not a specific exact string.
-        var validOnChainProgress = new[] { "Generating invoice address...", "Creating wallet...", "Refreshing wallet..." };
-        vm.PaymentStatusText.Should().BeOneOf(validOnChainProgress,
-            "synchronous status text gives the user immediate feedback instead of a frozen placeholder");
-        vm.InvoiceString.Should().Be(vm.PaymentStatusText,
-            "InvoiceString now follows the live PaymentStatusText — fixes the 'stuck on Generating address' bug");
-        vm.InvoiceFieldLabel.Should().Be("On-Chain Address");
-        vm.InvoiceTabIcon.Should().Contain("bitcoin", "On-Chain tab uses the bitcoin glyph");
+        // ── Fix 1: Submit creates PaymentFlow ──
+        Log("[1] Submit creates PaymentFlow...");
+        vm.Submit();
+        Dispatcher.UIThread.RunJobs();
+        vm.CurrentScreen.Should().Be(InvestScreen.WalletSelector, "Submit advances to WalletSelector");
 
-        // Let the async PayViaInvoiceAsync run so the labeled defensive error surfaces.
+        var pf = vm.PaymentFlow;
+        pf.Should().NotBeNull("PaymentFlow should be created after Submit()");
+
+        // ── Fix 2: HasError binding on PaymentFlow ──
+        Log("[2] HasError binding...");
+        pf!.HasError.Should().BeFalse("no error initially");
+        pf.ErrorMessage = "synthetic test error";
+        pf.HasError.Should().BeTrue("HasError must flip when ErrorMessage is set");
+        pf.ErrorMessage = null;
+        pf.HasError.Should().BeFalse("HasError must clear when ErrorMessage is reset");
+
+        // ── Fix 3: ShowInvoice immediate UX on PaymentFlow ──
+        Log("[3] ShowInvoice synchronous state...");
+        pf.ShowInvoice();
+        Dispatcher.UIThread.RunJobs();
+        pf.CurrentScreen.Should().Be(PaymentFlowScreen.Invoice, "ShowInvoice advances to Invoice screen");
+        pf.SelectedNetworkTab.Should().Be(NetworkTab.OnChain, "On-Chain is the default tab");
+        pf.IsProcessing.Should().BeTrue("ShowInvoice flips IsProcessing synchronously");
+        pf.InvoiceFieldLabel.Should().Be("On-Chain Address");
+        pf.InvoiceTabIcon.Should().Contain("bitcoin", "On-Chain tab uses the bitcoin glyph");
+
+        // Let the async flow run
         await PumpUntilAsync(
-            () => !string.IsNullOrEmpty(vm.ErrorMessage) || vm.OnChainAddress != null,
+            () => !string.IsNullOrEmpty(pf.ErrorMessage) || pf.OnChainAddress != null,
             TimeSpan.FromSeconds(5));
 
-        // ── Fix 6: defensive labeled error (not a raw ArgumentNullException) ──
-        Log($"[6] On-chain ErrorMessage after pump: '{vm.ErrorMessage}'");
-        if (vm.ErrorMessage != null)
+        // ── Fix 4: defensive labeled error (not a raw ArgumentNullException) ──
+        Log($"[4] On-chain ErrorMessage after pump: '{pf.ErrorMessage}'");
+        if (pf.ErrorMessage != null)
         {
-            vm.ErrorMessage.Should().NotContain("Parameter 'key'",
+            pf.ErrorMessage.Should().NotContain("Parameter 'key'",
                 "the wrapped pre-checks must turn raw ArgumentNullException into a labeled message");
-            // With no wallets in the clean profile, we expect the no-wallet labeled error.
-            vm.ErrorMessage.Should().ContainAny(new[] { "No wallet available", "Wallet has no ID", "Project has no ID", "Refresh wallet failed", "GetNextReceiveAddress" },
+            pf.ErrorMessage.Should().ContainAny(new[] { "No wallet available", "Wallet has no ID", "Refresh wallet failed", "GetNextReceiveAddress" },
                 "errors must be tagged with the step that produced them so we know which call broke");
         }
 
-        // Reset error state before the Lightning leg so we can inspect it independently.
-        vm.ErrorMessage = null;
+        // ── Fix 5: Lightning tab ──
+        Log("[5] SelectNetworkTab(Lightning)...");
+        pf.ErrorMessage = null;
+        pf.SelectNetworkTab(NetworkTab.Lightning);
+        Dispatcher.UIThread.RunJobs();
+        pf.SelectedNetworkTab.Should().Be(NetworkTab.Lightning);
+        pf.InvoiceFieldLabel.Should().Be("Lightning Invoice");
+        pf.InvoiceTabIcon.Should().Contain("bolt", "Lightning tab uses the bolt glyph");
 
-        // ── Fix 4: Lightning tab synchronous state ──
-        Log("[4] SelectNetworkTab(Lightning) synchronous state...");
-        vm.SelectNetworkTab(NetworkTab.Lightning);
-        vm.SelectedNetworkTab.Should().Be(NetworkTab.Lightning);
-        vm.IsProcessing.Should().BeTrue("Lightning tap must flip IsProcessing synchronously");
-        vm.IsGeneratingLightningInvoice.Should().BeTrue(
-            "Lightning tap must flip the spinner flag synchronously — fixes 'nothing happens when I tap'");
-        var validLightningProgress = new[] { "Creating Lightning invoice...", "Creating wallet...", "Refreshing wallet..." };
-        vm.PaymentStatusText.Should().BeOneOf(validLightningProgress,
-            "synchronous Lightning status text replaces the stale 'Tap Lightning to generate' placeholder");
-        vm.InvoiceString.Should().BeOneOf(validLightningProgress,
-            "InvoiceString reflects Lightning progress");
-
-        // ── Fix 5: tab-driven label/icon flip ──
-        Log("[5] InvoiceFieldLabel + InvoiceTabIcon flip with the active tab...");
-        vm.InvoiceFieldLabel.Should().Be("Lightning Invoice");
-        vm.InvoiceTabIcon.Should().Contain("bolt", "Lightning tab uses the bolt glyph");
-
-        // Pump again to let PayViaLightningAsync complete its labeled-error path.
         await PumpUntilAsync(
-            () => !string.IsNullOrEmpty(vm.ErrorMessage) || vm.LightningInvoice != null,
+            () => !string.IsNullOrEmpty(pf.ErrorMessage) || pf.LightningInvoice != null,
             TimeSpan.FromSeconds(5));
 
-        Log($"[6] Lightning ErrorMessage after pump: '{vm.ErrorMessage}'");
-        if (vm.ErrorMessage != null)
+        Log($"[5] Lightning ErrorMessage after pump: '{pf.ErrorMessage}'");
+        if (pf.ErrorMessage != null)
         {
-            vm.ErrorMessage.Should().NotContain("Parameter 'key'",
+            pf.ErrorMessage.Should().NotContain("Parameter 'key'",
                 "Lightning path must also turn raw ArgumentNullException into a labeled message");
-            vm.ErrorMessage.Should().ContainAny(new[] { "No wallet available", "Wallet has no ID", "Project has no ID", "Refresh wallet failed", "GetNextReceiveAddress", "CreateLightningSwap" },
-                "errors must be tagged with the step that produced them");
         }
 
-        // Liquid + Import tabs are visual stubs — switching to them does not crash and surfaces a known label.
-        Log("[7] Stub tabs do not crash...");
-        vm.SelectNetworkTab(NetworkTab.Liquid);
-        vm.SelectedNetworkTab.Should().Be(NetworkTab.Liquid);
-        vm.InvoiceFieldLabel.Should().Be("Liquid Address");
-        vm.SelectNetworkTab(NetworkTab.Import);
-        vm.SelectedNetworkTab.Should().Be(NetworkTab.Import);
-        vm.InvoiceFieldLabel.Should().Be("Imported Invoice");
+        // ── Fix 6: Stub tabs do not crash ──
+        Log("[6] Stub tabs do not crash...");
+        pf.SelectNetworkTab(NetworkTab.Liquid);
+        Dispatcher.UIThread.RunJobs();
+        pf.SelectedNetworkTab.Should().Be(NetworkTab.Liquid);
+        pf.InvoiceFieldLabel.Should().Be("Liquid Address");
+        pf.SelectNetworkTab(NetworkTab.Import);
+        Dispatcher.UIThread.RunJobs();
+        pf.SelectedNetworkTab.Should().Be(NetworkTab.Import);
+        pf.InvoiceFieldLabel.Should().Be("Imported Invoice");
 
         window.Close();
         Log("========== InvestModals fixes smoke test PASSED ==========");

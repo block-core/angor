@@ -7,6 +7,8 @@ using FluentAssertions;
 using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
+using App.UI.Shared.PaymentFlow;
+using NetworkTab = App.UI.Shared.PaymentFlow.NetworkTab;
 using App.UI.Shared.Controls;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -231,8 +233,8 @@ public class FindProjectsPanelTests
         investVm!.CurrentScreen.Should().Be(InvestScreen.InvestForm);
         investVm.IsInvestForm.Should().BeTrue();
         investVm.IsWalletSelector.Should().BeFalse();
-        investVm.IsInvoice.Should().BeFalse();
-        investVm.IsSuccess.Should().BeFalse();
+        investVm.PaymentFlow.IsInvoice.Should().BeFalse();
+        investVm.PaymentFlow.IsSuccess.Should().BeFalse();
         investVm.InvestmentAmount.Should().BeEmpty("amount should start empty");
 
         // ── Quick amount button ──
@@ -370,18 +372,18 @@ public class FindProjectsPanelTests
 
         // ── Wallet selection state ──
         TestHelpers.Log("[2.5] Testing wallet selection...");
-        investVm.SelectWallet(wallet);
+        investVm.PaymentFlow.SelectWallet(wallet);
         Dispatcher.UIThread.RunJobs();
 
-        investVm.SelectedWallet.Should().Be(wallet);
-        investVm.HasSelectedWallet.Should().BeTrue();
+        investVm.PaymentFlow.SelectedWallet.Should().Be(wallet);
+        investVm.PaymentFlow.HasSelectedWallet.Should().BeTrue();
         wallet.IsSelected.Should().BeTrue();
-        investVm.PayButtonText.Should().Contain(wallet.Name);
+        investVm.PaymentFlow.PayButtonText.Should().Contain(wallet.Name);
 
         // ── Insufficient balance error ──
         TestHelpers.Log("[2.6] Testing insufficient balance error...");
         // Reset and try with large amount
-        investVm.CloseModal();
+        investVm.PaymentFlow.Reset();
         Dispatcher.UIThread.RunJobs();
 
         vm.CloseInvestPage();
@@ -395,7 +397,7 @@ public class FindProjectsPanelTests
         Dispatcher.UIThread.RunJobs();
 
         wallet = investVm.Wallets[0];
-        investVm.SelectWallet(wallet);
+        investVm.PaymentFlow.SelectWallet(wallet);
         Dispatcher.UIThread.RunJobs();
 
         var passwordProvider = global::App.App.Services.GetRequiredService<SimplePasswordProvider>();
@@ -403,26 +405,26 @@ public class FindProjectsPanelTests
 
         var tcs = new TaskCompletionSource();
         var wasProcessingDuringExecution = false;
-        investVm.PayWithWalletCommand.Execute().Subscribe(
-            _ => { wasProcessingDuringExecution = wasProcessingDuringExecution || investVm.IsProcessing; },
+        investVm.PaymentFlow.PayWithWalletCommand.Execute().Subscribe(
+            _ => { wasProcessingDuringExecution = wasProcessingDuringExecution || investVm.PaymentFlow.IsProcessing; },
             ex => tcs.TrySetException(ex),
             () => tcs.TrySetResult());
         // Check IsProcessing is set immediately after command starts (comment #9)
         Dispatcher.UIThread.RunJobs();
-        wasProcessingDuringExecution = wasProcessingDuringExecution || investVm.IsProcessing;
+        wasProcessingDuringExecution = wasProcessingDuringExecution || investVm.PaymentFlow.IsProcessing;
         await tcs.Task.WaitAsync(TimeSpan.FromSeconds(30));
         Dispatcher.UIThread.RunJobs();
 
         wasProcessingDuringExecution.Should().BeTrue("IsProcessing should be true while PayWithWallet executes (comment #9)");
-        investVm.IsProcessing.Should().BeFalse("IsProcessing should be false after PayWithWallet completes (comment #9)");
+        investVm.PaymentFlow.IsProcessing.Should().BeFalse("IsProcessing should be false after PayWithWallet completes (comment #9)");
 
-        TestHelpers.Log($"[2.6] Error message: {investVm.ErrorMessage}");
-        investVm.ErrorMessage.Should().NotBeNullOrWhiteSpace("should show error for insufficient balance");
-        investVm.ErrorMessage.Should().Contain("Insufficient");
+        TestHelpers.Log($"[2.6] Error message: {investVm.PaymentFlow.ErrorMessage}");
+        investVm.PaymentFlow.ErrorMessage.Should().NotBeNullOrWhiteSpace("should show error for insufficient balance");
+        investVm.PaymentFlow.ErrorMessage.Should().Contain("Insufficient");
         investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector, "should stay on WalletSelector");
 
         // ── Reset, reopen invest page for invoice/modal tests ──
-        investVm.CloseModal();
+        investVm.PaymentFlow.Reset();
         Dispatcher.UIThread.RunJobs();
         vm.CloseInvestPage();
         Dispatcher.UIThread.RunJobs();
@@ -436,37 +438,37 @@ public class FindProjectsPanelTests
 
         // ── Invoice screen toggle ──
         TestHelpers.Log("[2.7] Testing invoice screen toggle...");
-        investVm.ShowInvoice();
+        investVm.PaymentFlow.ShowInvoice();
         Dispatcher.UIThread.RunJobs();
 
-        investVm.CurrentScreen.Should().Be(InvestScreen.Invoice);
-        investVm.IsInvoice.Should().BeTrue();
+        investVm.PaymentFlow.CurrentScreen.Should().Be(PaymentFlowScreen.Invoice);
+        investVm.PaymentFlow.IsInvoice.Should().BeTrue();
         investVm.IsWalletSelector.Should().BeFalse();
 
         // Back to wallet selector
-        investVm.BackToWalletSelector();
+        investVm.PaymentFlow.Reset();
         Dispatcher.UIThread.RunJobs();
 
         investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector);
         investVm.IsWalletSelector.Should().BeTrue();
-        investVm.IsInvoice.Should().BeFalse();
+        investVm.PaymentFlow.IsInvoice.Should().BeFalse();
 
         // ── Close modal reset ──
         TestHelpers.Log("[2.8] Testing close modal reset...");
         wallet = investVm.Wallets[0];
-        investVm.SelectWallet(wallet);
+        investVm.PaymentFlow.SelectWallet(wallet);
         Dispatcher.UIThread.RunJobs();
-        investVm.SelectedWallet.Should().NotBeNull("precondition: wallet should be selected");
+        investVm.PaymentFlow.SelectedWallet.Should().NotBeNull("precondition: wallet should be selected");
 
-        investVm.CloseModal();
+        investVm.PaymentFlow.Reset();
         Dispatcher.UIThread.RunJobs();
 
         investVm.CurrentScreen.Should().Be(InvestScreen.InvestForm, "should return to InvestForm");
-        investVm.SelectedWallet.Should().BeNull("wallet selection should be cleared");
-        investVm.IsProcessing.Should().BeFalse("processing flag should be reset");
-        investVm.PaymentReceived.Should().BeFalse("payment flag should be reset");
-        investVm.ErrorMessage.Should().BeNull("error message should be cleared");
-        investVm.PaymentStatusText.Should().Be("Awaiting payment...", "status text should reset");
+        investVm.PaymentFlow.SelectedWallet.Should().BeNull("wallet selection should be cleared");
+        investVm.PaymentFlow.IsProcessing.Should().BeFalse("processing flag should be reset");
+        investVm.PaymentFlow.PaymentReceived.Should().BeFalse("payment flag should be reset");
+        investVm.PaymentFlow.ErrorMessage.Should().BeNull("error message should be cleared");
+        investVm.PaymentFlow.PaymentStatusText.Should().Be("Awaiting payment...", "status text should reset");
 
         window.Close();
         TestHelpers.Log("═══ Flow 2 PASSED ═══");

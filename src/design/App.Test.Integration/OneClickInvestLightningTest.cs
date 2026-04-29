@@ -133,7 +133,7 @@ public class OneClickInvestLightningTest
         Dispatcher.UIThread.RunJobs();
         // The OnChain flow starts immediately and may set its own error (e.g. "No wallet available").
         // The key check is that the previous Lightning error was cleared — any new error is from OnChain.
-        if (vm.ErrorMessage != null)
+        if (pf.ErrorMessage != null)
         {
             pf.ErrorMessage.Should().NotContain("Lightning",
                 "previous Lightning error should not persist after switching to OnChain tab");

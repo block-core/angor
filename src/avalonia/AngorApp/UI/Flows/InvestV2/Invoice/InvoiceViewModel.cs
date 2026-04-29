@@ -229,6 +229,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             // Create Lightning swap to get invoice
             // TODO: Lightning invoices expire (~10 min). Consider showing expiry countdown in UI
             // or auto-regenerating the invoice when it expires.
+            // TODO: Migrate to CreateLightningSwap (generic, address-based claim key) — see PaymentFlowViewModel
             var lightningRequest = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
                 wallet.Id,
                 projectId,
