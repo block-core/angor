@@ -163,7 +163,7 @@ public partial class FundsViewModel : ReactiveObject
     /// Create a new wallet using the SDK.
     /// Generates random seed words, creates wallet with encryption key.
     /// </summary>
-    public async Task<(bool Success, string? SeedWords)> CreateWalletAsync(string walletName, string encryptionKey)
+    public async Task<(bool Success, string? SeedWords)> CreateWalletAsync(string walletName)
     {
         _logger.LogInformation("Creating new wallet '{WalletName}' (generating random seed words)", walletName);
         var seedWords = _walletAppService.GenerateRandomSeedwords();

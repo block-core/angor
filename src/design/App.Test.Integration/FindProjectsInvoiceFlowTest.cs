@@ -4,7 +4,6 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
-using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
 using App.UI.Shared.PaymentFlow;
@@ -66,9 +65,6 @@ public class FindProjectsInvoiceFlowTest
         await WipeExistingData(window);
         await CreateWalletViaGenerate(window);
         await FundWalletViaFaucet(window);
-
-        var passwordProvider = global::App.App.Services.GetRequiredService<SimplePasswordProvider>();
-        passwordProvider.SetKey("default-key");
 
         // ── Step 2: Create + deploy a fund project so we have something to invest in ──
         Log("[STEP 2] Creating and deploying fund project...");

@@ -107,8 +107,6 @@ public static class CompositionRoot
 
         // Security adapters
         services.AddSingleton<IPassphraseProvider, SimplePassphraseProvider>();
-        services.AddSingleton<SimplePasswordProvider>();
-        services.AddSingleton<IPasswordProvider>(sp => sp.GetRequiredService<SimplePasswordProvider>());
         services.AddSingleton<IWalletSecurityContext, WalletSecurityContext>();
         services.AddSingleton<IWalletEncryption, AesWalletEncryption>();
 
