@@ -238,7 +238,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
                 stageCount,
                 DefaultFeeRateSatsPerVbyte);
 
-            var lightningResult = await investmentAppService.CreateLightningSwap(lightningRequest);
+            var lightningResult = await investmentAppService.CreateLightningSwapForInvestment(lightningRequest);
 
             cancellationToken.ThrowIfCancellationRequested();
 
