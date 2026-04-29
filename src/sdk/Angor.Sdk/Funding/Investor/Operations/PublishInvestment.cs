@@ -272,23 +272,52 @@ public static class PublishInvestment
 
         private async Task<Result<string>> PublishSignedTransactionAsync(TransactionInfo signedTransaction)
         {
-            try
-            { 
-                var response = await walletOperations.PublishTransactionAsync(networkConfiguration.GetNetwork(),
-                    signedTransaction.Transaction);
-                
-                if (response.Success)
-                    return Result.Success(signedTransaction.Transaction.GetHash().ToString());
-                
-                logger.Error("Failed to publish investment transaction: {Message}", response.Message);
-                
-                return Result.Failure<string>($"Failed to publish the transaction to the blockchain: {response.Message}");
-            }
-            catch (Exception e)
+            const int maxAttempts = 3;
+            var txId = signedTransaction.Transaction.GetHash().ToString();
+
+            for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
-                logger.Error(e, "Error publishing signed transaction");
-                return Result.Failure<string>("An error occurred while publishing the transaction");
+                try
+                {
+                    var response = await walletOperations.PublishTransactionAsync(networkConfiguration.GetNetwork(),
+                        signedTransaction.Transaction);
+
+                    if (response.Success)
+                    {
+                        logger.Information("PublishInvestment: broadcast succeeded on attempt {Attempt} for TxId={TxId}", attempt, txId);
+                        return Result.Success(txId);
+                    }
+
+                    // "Transaction already in block chain" or similar means it was already broadcast — treat as success
+                    if (response.Message != null &&
+                        (response.Message.Contains("already in block", StringComparison.OrdinalIgnoreCase) ||
+                         response.Message.Contains("already known", StringComparison.OrdinalIgnoreCase) ||
+                         response.Message.Contains("txn-already-in-mempool", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        logger.Information("PublishInvestment: tx {TxId} already exists (attempt {Attempt}): {Message}", txId, attempt, response.Message);
+                        return Result.Success(txId);
+                    }
+
+                    logger.Error("PublishInvestment: broadcast attempt {Attempt}/{Max} failed for TxId={TxId}: {Message}",
+                        attempt, maxAttempts, txId, response.Message);
+
+                    if (attempt < maxAttempts)
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(2 * attempt));
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger.Error(e, "PublishInvestment: broadcast attempt {Attempt}/{Max} threw for TxId={TxId}", attempt, maxAttempts, txId);
+
+                    if (attempt < maxAttempts)
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(2 * attempt));
+                    }
+                }
             }
+
+            return Result.Failure<string>($"Failed to publish transaction {txId} after {maxAttempts} attempts");
         }
     }
 }
