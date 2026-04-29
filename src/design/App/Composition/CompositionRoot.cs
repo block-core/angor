@@ -39,7 +39,7 @@ namespace App.Composition;
 /// </summary>
 public static class CompositionRoot
 {
-    public static IServiceProvider BuildServiceProvider(string profileName = "Default", bool enableConsoleLogging = true)
+    public static IServiceProvider BuildServiceProvider(string profileName = "Default", bool enableConsoleLogging = true, Action<ServiceCollection>? platformServices = null)
     {
         var services = new ServiceCollection();
 
@@ -109,6 +109,19 @@ public static class CompositionRoot
         services.AddSingleton<IPassphraseProvider, SimplePassphraseProvider>();
         services.AddSingleton<IWalletSecurityContext, WalletSecurityContext>();
         services.AddSingleton<IWalletEncryption, AesWalletEncryption>();
+
+        // Platform-specific secure key storage — registered before SDK services
+        // so TryAddSingleton in WalletContextServices does not override.
+        platformServices?.Invoke(services);
+        if (!services.Any(d => d.ServiceType == typeof(ISecureKeyProvider)))
+        {
+            if (OperatingSystem.IsWindows())
+                services.AddSingleton<ISecureKeyProvider, DpapiSecureKeyProvider>();
+            else if (OperatingSystem.IsLinux())
+                services.AddSingleton<ISecureKeyProvider, LinuxSecureKeyProvider>();
+            else
+                services.AddSingleton<ISecureKeyProvider, InMemorySecureKeyProvider>();
+        }
 
         // Register SDK services
         WalletContextServices.Register(services, serilogLogger, network);
