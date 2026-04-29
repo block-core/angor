@@ -27,7 +27,8 @@ public class PublishAndStoreInvestorTransactionTests
         _sut = new PublishAndStoreInvestorTransaction.Handler(
             _mockIndexerService.Object,
             _mockPortfolioService.Object,
-            _mockMediator.Object);
+            _mockMediator.Object,
+            new Mock<Microsoft.Extensions.Logging.ILogger<PublishAndStoreInvestorTransaction.Handler>>().Object);
     }
 
     [Fact]

@@ -15,7 +15,7 @@ public class PublishFounderTransactionTests
     public PublishFounderTransactionTests()
     {
         _mockIndexerService = new Mock<IIndexerService>();
-        _sut = new PublishFounderTransaction.Handler(_mockIndexerService.Object);
+        _sut = new PublishFounderTransaction.Handler(_mockIndexerService.Object, new Mock<Microsoft.Extensions.Logging.ILogger<PublishFounderTransaction.Handler>>().Object);
     }
 
     [Fact]

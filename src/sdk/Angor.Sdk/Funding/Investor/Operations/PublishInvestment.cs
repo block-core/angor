@@ -272,23 +272,30 @@ public static class PublishInvestment
 
         private async Task<Result<string>> PublishSignedTransactionAsync(TransactionInfo signedTransaction)
         {
-            try
-            { 
-                var response = await walletOperations.PublishTransactionAsync(networkConfiguration.GetNetwork(),
-                    signedTransaction.Transaction);
-                
-                if (response.Success)
-                    return Result.Success(signedTransaction.Transaction.GetHash().ToString());
-                
-                logger.Error("Failed to publish investment transaction: {Message}", response.Message);
-                
-                return Result.Failure<string>($"Failed to publish the transaction to the blockchain: {response.Message}");
-            }
-            catch (Exception e)
-            {
-                logger.Error(e, "Error publishing signed transaction");
-                return Result.Failure<string>("An error occurred while publishing the transaction");
-            }
+            var txId = signedTransaction.Transaction.GetHash().ToString();
+
+            return await TransactionBroadcastHelper.BroadcastWithRetryAsync(
+                txId,
+                async () =>
+                {
+                    try
+                    {
+                        var response = await walletOperations.PublishTransactionAsync(networkConfiguration.GetNetwork(),
+                            signedTransaction.Transaction);
+                        return response.Success ? null : response.Message;
+                    }
+                    catch (Exception e)
+                    {
+                        logger.Error(e, "PublishInvestment: broadcast threw for TxId={TxId}", txId);
+                        return e.Message;
+                    }
+                },
+                (attempt, max, error) => logger.Error(
+                    "PublishInvestment: broadcast attempt {Attempt}/{Max} failed for TxId={TxId}: {Message}",
+                    attempt, max, txId, error),
+                attempt => logger.Information(
+                    "PublishInvestment: broadcast succeeded on attempt {Attempt} for TxId={TxId}",
+                    attempt, txId));
         }
     }
 }

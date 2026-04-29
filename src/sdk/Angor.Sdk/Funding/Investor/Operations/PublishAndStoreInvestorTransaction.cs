@@ -5,6 +5,7 @@ using Angor.Sdk.Funding.Shared.TransactionDrafts;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Angor.Sdk.Funding.Investor.Operations;
 
@@ -14,7 +15,7 @@ public static class PublishAndStoreInvestorTransaction
 
     public record PublishAndStoreInvestorTransactionResponse(string TransactionId);
 
-    public class Handler(IIndexerService indexerService, IPortfolioService portfolioService, IMediator mediator) : IRequestHandler<PublishAndStoreInvestorTransactionRequest, Result<PublishAndStoreInvestorTransactionResponse>>
+    public class Handler(IIndexerService indexerService, IPortfolioService portfolioService, IMediator mediator, ILogger<Handler> logger) : IRequestHandler<PublishAndStoreInvestorTransactionRequest, Result<PublishAndStoreInvestorTransactionResponse>>
     {
         public async Task<Result<PublishAndStoreInvestorTransactionResponse>> Handle(PublishAndStoreInvestorTransactionRequest request, CancellationToken cancellationToken)
         {
@@ -31,11 +32,21 @@ public static class PublishAndStoreInvestorTransaction
             if (cancellationToken.IsCancellationRequested)
                 return Result.Failure<PublishAndStoreInvestorTransactionResponse>("Operation was cancelled");
 
-            // Publish the transaction
-            var errorMessage = await indexerService.PublishTransactionAsync(request.TransactionDraft.SignedTxHex);
+            // Publish the transaction with retry
+            var txId = request.TransactionDraft.TransactionId;
+            var publishResult = await TransactionBroadcastHelper.BroadcastWithRetryAsync(
+                txId,
+                () => indexerService.PublishTransactionAsync(request.TransactionDraft.SignedTxHex),
+                (attempt, max, error) => logger.LogError(
+                    "PublishAndStoreInvestorTransaction: broadcast attempt {Attempt}/{Max} failed for TxId={TxId}: {Message}",
+                    attempt, max, txId, error),
+                attempt => logger.LogInformation(
+                    "PublishAndStoreInvestorTransaction: broadcast succeeded on attempt {Attempt} for TxId={TxId}",
+                    attempt, txId),
+                cancellationToken);
 
-            if (!string.IsNullOrEmpty(errorMessage))
-                return Result.Failure<PublishAndStoreInvestorTransactionResponse>(errorMessage);
+            if (publishResult.IsFailure)
+                return Result.Failure<PublishAndStoreInvestorTransactionResponse>(publishResult.Error);
 
             // Update or create the investment record with the transaction ID
             var updateResult = await UpdateInvestmentRecordWithTransaction(
