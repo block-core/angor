@@ -11,7 +11,7 @@ public class LiteDbDocumentDatabase : IAngorDocumentDatabase
     private readonly LiteDatabase _database;
     private readonly ILogger<LiteDbDocumentDatabase> _logger;
     private readonly string _databasePath;
-    private readonly ConcurrentDictionary<string, object> _collectionLocks = new();
+    private readonly ConcurrentDictionary<string, SemaphoreSlim> _collectionLocks = new();
 
     public LiteDbDocumentDatabase(string connectionString, ILogger<LiteDbDocumentDatabase> logger)
     {
@@ -32,8 +32,8 @@ public class LiteDbDocumentDatabase : IAngorDocumentDatabase
 
     public IDocumentCollection<T> GetCollection<T>() where T : BaseDocument
     {
-        var collectionLock = _collectionLocks.GetOrAdd(typeof(T).FullName!, _ => new object());
-        return new LiteDbDocumentCollection<T>(_database, _logger, collectionLock);
+        var semaphore = _collectionLocks.GetOrAdd(typeof(T).FullName!, _ => new SemaphoreSlim(1, 1));
+        return new LiteDbDocumentCollection<T>(_database, _logger, semaphore);
     }
 
     public IDocumentCollection<T> GetCollection<T>(string collectionName) where T : BaseDocument
@@ -41,8 +41,8 @@ public class LiteDbDocumentDatabase : IAngorDocumentDatabase
         if (string.IsNullOrEmpty(collectionName))
             return GetCollection<T>();
 
-        var collectionLock = _collectionLocks.GetOrAdd(collectionName, _ => new object());
-        return new LiteDbDocumentCollection<T>(_database, _logger, collectionLock, collectionName);
+        var semaphore = _collectionLocks.GetOrAdd(collectionName, _ => new SemaphoreSlim(1, 1));
+        return new LiteDbDocumentCollection<T>(_database, _logger, semaphore, collectionName);
     }
 
     public async Task<bool> BeginTransactionAsync()
