@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Angor.Data.Documents.Interfaces;
 using Angor.Data.Documents.Models;
 using LiteDB;
@@ -10,7 +11,7 @@ public class LiteDbDocumentDatabase : IAngorDocumentDatabase
     private readonly LiteDatabase _database;
     private readonly ILogger<LiteDbDocumentDatabase> _logger;
     private readonly string _databasePath;
-    private readonly object _lock = new();
+    private readonly ConcurrentDictionary<string, object> _collectionLocks = new();
 
     public LiteDbDocumentDatabase(string connectionString, ILogger<LiteDbDocumentDatabase> logger)
     {
@@ -31,16 +32,17 @@ public class LiteDbDocumentDatabase : IAngorDocumentDatabase
 
     public IDocumentCollection<T> GetCollection<T>() where T : BaseDocument
     {
-        // Create a new wrapper each time - it's lightweight
-        return new LiteDbDocumentCollection<T>(_database, _logger, _lock);
+        var collectionLock = _collectionLocks.GetOrAdd(typeof(T).FullName!, _ => new object());
+        return new LiteDbDocumentCollection<T>(_database, _logger, collectionLock);
     }
 
     public IDocumentCollection<T> GetCollection<T>(string collectionName) where T : BaseDocument
     {
-        // If no custom name provided, use the standard approach
-        return string.IsNullOrEmpty(collectionName) 
-            ? GetCollection<T>() 
-            : new LiteDbDocumentCollection<T>(_database, _logger, _lock, collectionName);
+        if (string.IsNullOrEmpty(collectionName))
+            return GetCollection<T>();
+
+        var collectionLock = _collectionLocks.GetOrAdd(collectionName, _ => new object());
+        return new LiteDbDocumentCollection<T>(_database, _logger, collectionLock, collectionName);
     }
 
     public async Task<bool> BeginTransactionAsync()
