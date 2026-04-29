@@ -54,6 +54,6 @@ internal static class TransactionBroadcastHelper
                 await Task.Delay(TimeSpan.FromSeconds(2 * attempt), cancellationToken);
         }
 
-        return Result.Failure<string>(lastError!);
+        return Result.Failure<string>(lastError ?? "Transaction broadcast failed after all retry attempts");
     }
 }

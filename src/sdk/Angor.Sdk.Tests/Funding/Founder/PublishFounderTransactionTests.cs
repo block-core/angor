@@ -10,12 +10,14 @@ namespace Angor.Sdk.Tests.Funding.Founder;
 public class PublishFounderTransactionTests
 {
     private readonly Mock<IIndexerService> _mockIndexerService;
+    private readonly Mock<Microsoft.Extensions.Logging.ILogger<PublishFounderTransaction.Handler>> _mockLogger;
     private readonly PublishFounderTransaction.Handler _sut;
 
     public PublishFounderTransactionTests()
     {
         _mockIndexerService = new Mock<IIndexerService>();
-        _sut = new PublishFounderTransaction.Handler(_mockIndexerService.Object, new Mock<Microsoft.Extensions.Logging.ILogger<PublishFounderTransaction.Handler>>().Object);
+        _mockLogger = new Mock<Microsoft.Extensions.Logging.ILogger<PublishFounderTransaction.Handler>>();
+        _sut = new PublishFounderTransaction.Handler(_mockIndexerService.Object, _mockLogger.Object);
     }
 
     [Fact]

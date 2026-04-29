@@ -16,6 +16,7 @@ public class PublishAndStoreInvestorTransactionTests
     private readonly Mock<IIndexerService> _mockIndexerService;
     private readonly Mock<IPortfolioService> _mockPortfolioService;
     private readonly Mock<IMediator> _mockMediator;
+    private readonly Mock<Microsoft.Extensions.Logging.ILogger<PublishAndStoreInvestorTransaction.Handler>> _mockLogger;
     private readonly PublishAndStoreInvestorTransaction.Handler _sut;
 
     public PublishAndStoreInvestorTransactionTests()
@@ -23,12 +24,13 @@ public class PublishAndStoreInvestorTransactionTests
         _mockIndexerService = new Mock<IIndexerService>();
         _mockPortfolioService = new Mock<IPortfolioService>();
         _mockMediator = new Mock<IMediator>();
+        _mockLogger = new Mock<Microsoft.Extensions.Logging.ILogger<PublishAndStoreInvestorTransaction.Handler>>();
 
         _sut = new PublishAndStoreInvestorTransaction.Handler(
             _mockIndexerService.Object,
             _mockPortfolioService.Object,
             _mockMediator.Object,
-            new Mock<Microsoft.Extensions.Logging.ILogger<PublishAndStoreInvestorTransaction.Handler>>().Object);
+            _mockLogger.Object);
     }
 
     [Fact]
