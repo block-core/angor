@@ -4,7 +4,6 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
-using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
 using App.UI.Shared.PaymentFlow;
@@ -398,9 +397,6 @@ public class FindProjectsPanelTests
         wallet = investVm.Wallets[0];
         investVm.PaymentFlow.SelectWallet(wallet);
         Dispatcher.UIThread.RunJobs();
-
-        var passwordProvider = global::App.App.Services.GetRequiredService<SimplePasswordProvider>();
-        passwordProvider.SetKey("default-key");
 
         var tcs = new TaskCompletionSource();
         var wasProcessingDuringExecution = false;

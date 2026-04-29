@@ -6,7 +6,6 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
 using Angor.Sdk.Common;
-using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
 using App.UI.Shared.PaymentFlow;
@@ -67,10 +66,6 @@ public class InvestAndRecoverTest
 
         TestHelpers.Log("[STEP 3] Requesting testnet coins and waiting for balance...");
         await window.FundWalletViaFaucet();
-
-        var passwordProvider = global::App.App.Services.GetRequiredService<SimplePasswordProvider>();
-        passwordProvider.SetKey("default-key");
-        TestHelpers.Log("[STEP 3] Set SimplePasswordProvider key to 'default-key'.");
 
         TestHelpers.Log("[STEP 4] Navigating to My Projects section...");
         await window.NavigateToSectionAndVerify("My Projects");

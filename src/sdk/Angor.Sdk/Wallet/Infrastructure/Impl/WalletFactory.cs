@@ -10,35 +10,50 @@ using CSharpFunctionalExtensions;
 namespace Angor.Sdk.Wallet.Infrastructure.Impl;
 
 public class WalletFactory(
-    IWalletStore walletStore, 
-    ISensitiveWalletDataProvider sensitiveWalletDataProvider, 
+    IWalletStore walletStore,
+    ISensitiveWalletDataProvider sensitiveWalletDataProvider,
     IWalletOperations walletOperations,
     IWalletAccountBalanceService accountBalanceService,
-    IDerivationOperations derivationOperations, 
+    IDerivationOperations derivationOperations,
     INetworkConfiguration networkConfiguration,
     IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection,
-    IWalletEncryption walletEncryption)
+    IWalletEncryption walletEncryption,
+    ISecureKeyProvider secureKeyProvider)
     : IWalletFactory
 {
-    public async Task<Result<Domain.Wallet>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network)
+    public Task<Result<Domain.Wallet>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, BitcoinNetwork network)
+    {
+        var encryptionKey = secureKeyProvider.GenerateKey();
+        return CreateWalletCore(name, seedwords, passphrase, encryptionKey, network);
+    }
+
+    public Task<Result<Domain.Wallet>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network)
+    {
+        return CreateWalletCore(name, seedwords, passphrase, encryptionKey, network);
+    }
+
+    private async Task<Result<Domain.Wallet>> CreateWalletCore(string name, string seedwords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network)
     {
         // Derive the wallet ID from the master public key (xpub) hash
         var walletWords = new WalletWords { Words = seedwords, Passphrase = passphrase.GetValueOrDefault() };
         var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
         var walletId = new WalletId(accountInfo.walletId);
-        
+
+        // Persist the encryption key in secure storage
+        await secureKeyProvider.Save(walletId, encryptionKey);
+
         var descriptor = WalletDescriptorFactory.Create(seedwords, passphrase, network.ToNBitcoin());
         var wallet = new Domain.Wallet(walletId, descriptor);
-        
+
         sensitiveWalletDataProvider.SetSensitiveData(walletId, (seedwords, passphrase));
 
         var walletData = new WalletData
         {
             DescriptorJson = JsonSerializer.Serialize(descriptor.ToDto()),
             RequiresPassphrase = passphrase.HasValue,
-            SeedWords = seedwords//
+            SeedWords = seedwords
         };
-        
+
         var saveResult = await SaveEncryptedWalletToStoreAsync(name, encryptionKey, walletData, walletId);
 
         if (saveResult.IsFailure)

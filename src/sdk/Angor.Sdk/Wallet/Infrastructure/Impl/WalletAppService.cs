@@ -210,6 +210,21 @@ public class WalletAppService(
         }
     }
 
+    public async Task<Result<WalletId>> CreateWallet(string name, string seedWords, Maybe<string> passphrase, BitcoinNetwork network)
+    {
+        var wallet = await walletFactory.CreateWallet(name ?? SingleWalletName, seedWords, passphrase, network);
+
+        if (wallet.IsFailure)
+            return Result.Failure<WalletId>(wallet.Error);
+
+        var accountInfoResult = await accountBalanceService.RefreshAccountBalanceInfoAsync(wallet.Value.Id);
+
+        if (accountInfoResult.IsFailure)
+            return Result.Failure<WalletId>(accountInfoResult.Error);
+
+        return Result.Success(wallet.Value.Id);
+    }
+
     public async Task<Result<WalletId>> CreateWallet(string name, string seedWords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network)
     {
         var wallet = await walletFactory.CreateWallet(name ?? SingleWalletName, seedWords, passphrase, encryptionKey, network);
@@ -221,11 +236,11 @@ public class WalletAppService(
 
         if (accountInfoResult.IsFailure)
             return Result.Failure<WalletId>(accountInfoResult.Error);
-        
+
         return Result.Success(wallet.Value.Id);
     }
-    
-    public Task<Result<WalletId>> CreateWallet(string name, string encryptionKey, BitcoinNetwork network)
+
+    public Task<Result<WalletId>> CreateWallet(string name, BitcoinNetwork network)
     {
         if (string.IsNullOrEmpty(name))
             name = network + " Wallet";
@@ -235,19 +250,8 @@ public class WalletAppService(
         var seedWords = mnemonic.ToString();
         var passphrase = Maybe<string>.None;
 
-        //No need to refresh the wallet as we create it from scratch here
-        return walletFactory.CreateWallet(name, seedWords, passphrase, encryptionKey, network)
+        return walletFactory.CreateWallet(name, seedWords, passphrase, network)
             .Map(_ => _.Id);
-    }
-
-    /// <summary>
-    /// Create a wallet without a user-provided password.
-    /// Uses a default encryption key; will be replaced by secure storage in a future iteration.
-    /// </summary>
-    public Task<Result<WalletId>> CreateWalletWithoutPassword(BitcoinNetwork network)
-    {
-        // TODO: replace "DEFAULT" with ISecureKeyProvider.GetOrCreateKey() when secure storage is available
-        return CreateWallet(network + " Wallet", "default-key", network);
     }
     
     public async Task<Result> DeleteWallet(WalletId walletId)
