@@ -69,9 +69,10 @@ public static class ReleaseFunds
         
         public Task<IEnumerable<SignatureReleaseItem>> FetchSignatureRequestsAsync(string projectNostrPubKey, List<string> eventIds)
         {
-            var tcs = new TaskCompletionSource<IEnumerable<SignatureReleaseItem>>();
-
             var collectedItems = new List<SignatureReleaseItem>();
+            var tcs = new TaskCompletionSource<IEnumerable<SignatureReleaseItem>>();
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            cts.Token.Register(() => { tcs.TrySetResult(collectedItems); cts.Dispose(); });
 
             try
             {
