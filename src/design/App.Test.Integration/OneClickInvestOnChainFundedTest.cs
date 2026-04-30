@@ -1,5 +1,6 @@
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
+using App.UI.Shared.PaymentFlow;
 using App.UI.Shared.Services;
 using Avalonia.Controls;
 using Avalonia.Headless.XUnit;
@@ -7,6 +8,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace App.Test.Integration;
@@ -103,9 +105,12 @@ public class OneClickInvestOnChainFundedTest
         Dispatcher.UIThread.RunJobs();
         investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector);
 
+        var pf = investVm.PaymentFlow;
+        pf.Should().NotBeNull("PaymentFlow should be created after Submit()");
+
         // PayInvoiceInsteadButton is a real Button — click via AutomationId
         await window.ClickButton("InvestPayInvoiceBtn", TestHelpers.UiTimeout);
-        investVm.CurrentScreen.Should().Be(InvestScreen.Invoice);
+        pf!.CurrentScreen.Should().Be(PaymentFlowScreen.Invoice);
 
         // ── Step 5: Wait for on-chain address to appear in the UI ──
         Log("[5] Waiting for on-chain address...");
@@ -123,8 +128,8 @@ public class OneClickInvestOnChainFundedTest
                 break;
             }
 
-            if (investVm.ErrorMessage != null)
-                throw new Exception($"Invoice flow errored: {investVm.ErrorMessage}");
+            if (pf.ErrorMessage != null)
+                throw new Exception($"Invoice flow errored: {pf.ErrorMessage}");
 
             await Task.Delay(500);
         }
@@ -170,9 +175,15 @@ public class OneClickInvestOnChainFundedTest
                 break;
             }
 
-            if (!investVm.IsProcessing && investVm.ErrorMessage != null)
+            if (pf.ErrorMessage != null)
             {
-                Log($"[7] Error: {investVm.ErrorMessage}");
+                Log($"[7] Error: {pf.ErrorMessage}");
+                Assert.Fail($"Investment flow failed at step 7: {pf.ErrorMessage}");
+            }
+
+            if (pf.CurrentScreen == PaymentFlowScreen.Success)
+            {
+                Log("[7] Success screen reached!");
                 break;
             }
 
@@ -181,17 +192,11 @@ public class OneClickInvestOnChainFundedTest
 
         // ── Step 8: Verify success via UI controls ──
         Log("[8] Verifying success screen...");
-        investVm.PaymentReceived.Should().BeTrue(
+        pf.PaymentReceived.Should().BeTrue(
             "faucet payment should have been detected by the address monitor");
 
-        observedStatuses.Should().Contain(
-            s => s.Contains("Payment received") || s.Contains("Publishing") || s.Contains("Building"),
-            "status should have progressed past 'Waiting for payment'");
-
-        var successModal2 = window.FindByAutomationId<Border>("InvestSuccessModal");
-        successModal2.Should().NotBeNull("success modal should exist in visual tree");
-        successModal2!.IsVisible.Should().BeTrue(
-            $"success modal should be visible. Error: {investVm.ErrorMessage ?? "none"}");
+        pf.CurrentScreen.Should().Be(PaymentFlowScreen.Success,
+            $"payment flow should reach success. Error: {pf.ErrorMessage ?? "none"}");
 
         // Read success title from the actual UI TextBlock
         var successTitle = await window.GetText("InvestSuccessTitle", TestHelpers.UiTimeout);

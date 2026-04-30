@@ -12,6 +12,7 @@ using Angor.Sdk.Wallet.Domain;
 using Angor.Sdk.Wallet.Infrastructure.Impl;
 using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using Angor.Shared;
+using Angor.Shared.Integration.Lightning;
 using Angor.Shared.Services;
 using App.Composition.Adapters;
 using App.UI.Sections.FindProjects;
@@ -161,6 +162,7 @@ public static class CompositionRoot
                 project,
                 sp.GetRequiredService<IWalletAppService>(),
                 sp.GetRequiredService<IInvestmentAppService>(),
+                sp.GetRequiredService<IBoltzSwapService>(),
                 sp.GetRequiredService<PortfolioViewModel>(),
                 sp.GetRequiredService<ICurrencyService>(),
                 sp.GetRequiredService<IWalletContext>(),
@@ -221,15 +223,17 @@ public static class CompositionRoot
         // The full Latest() fetch runs when the user actually opens Find Projects.
         _ = Task.Run(async () =>
         {
-            var prewarmLogger = provider.GetRequiredService<ILoggerFactory>().CreateLogger("Prewarm");
+            Microsoft.Extensions.Logging.ILogger? prewarmLogger = null;
             try
             {
+                prewarmLogger = provider.GetRequiredService<ILoggerFactory>().CreateLogger("Prewarm");
+
                 await FindProjectsViewModel.LoadCachedDtosFromDiskAsync(
                     provider.GetRequiredService<IStore>(), prewarmLogger);
             }
             catch (Exception ex)
             {
-                prewarmLogger.LogWarning(ex, "Disk cache load failed");
+                prewarmLogger?.LogWarning(ex, "Disk cache load failed");
             }
         });
 

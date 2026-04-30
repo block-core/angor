@@ -42,6 +42,99 @@ public class MempoolIndexerAngorApi : IAngorIndexerService
         return client;
     }
 
+    /// <summary>
+    /// Fetches all transactions for an address by paginating through the mempool.space API.
+    /// The API returns max 25 confirmed txs per page (newest first). To get older pages,
+    /// pass ?after_txid={last_txid_from_previous_page}.
+    /// Stops after <see cref="MaxAddressTransactions"/> to prevent runaway fetches.
+    /// </summary>
+    private const int MaxAddressTransactions = 1000;
+
+    private async Task<List<MempoolSpaceIndexerApi.MempoolTransaction>> FetchAllAddressTransactionsAsync(string projectAddress)
+    {
+        var allTransactions = new List<MempoolSpaceIndexerApi.MempoolTransaction>();
+        string? afterTxId = null;
+        var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
+        var client = GetIndexerClient();
+
+        while (allTransactions.Count < MaxAddressTransactions)
+        {
+            var url = $"{MempoolApiRoute}/address/{projectAddress}/txs";
+            if (afterTxId != null)
+            {
+                url += $"?after_txid={afterTxId}";
+            }
+
+            var response = await client.GetAsync(url);
+            _networkService.CheckAndHandleError(response);
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return allTransactions;
+            }
+
+            var page = await response.Content.ReadFromJsonAsync<List<MempoolSpaceIndexerApi.MempoolTransaction>>(jsonOptions);
+
+            if (page == null || page.Count == 0)
+            {
+                break;
+            }
+
+            allTransactions.AddRange(page);
+
+            // Use the last transaction's txid to request the next page.
+            // NOTE: We cannot rely on page.Count < 25 to detect the last page,
+            // because some indexer instances (e.g. signet) may return fewer than
+            // 25 items even when more pages exist. Instead, we always request
+            // the next page and stop only when the API returns an empty result.
+            var previousAfterTxId = afterTxId;
+            afterTxId = page.Last().Txid;
+
+            // Safety: if the last txid didn't change, stop to avoid infinite loop
+            if (afterTxId == previousAfterTxId)
+            {
+                break;
+            }
+        }
+
+        if (allTransactions.Count >= MaxAddressTransactions)
+        {
+            _logger.LogWarning("Address {Address} reached the {Max} transaction safety limit; results may be incomplete",
+                projectAddress, MaxAddressTransactions);
+        }
+
+        // Also fetch unconfirmed (mempool) transactions
+        try
+        {
+            var mempoolUrl = $"{MempoolApiRoute}/address/{projectAddress}/txs/mempool";
+            var mempoolResponse = await GetIndexerClient().GetAsync(mempoolUrl);
+            _networkService.CheckAndHandleError(mempoolResponse);
+
+            if (mempoolResponse.IsSuccessStatusCode)
+            {
+                var mempoolTxs = await mempoolResponse.Content.ReadFromJsonAsync<List<MempoolSpaceIndexerApi.MempoolTransaction>>(jsonOptions);
+                if (mempoolTxs != null && mempoolTxs.Count > 0)
+                {
+                    // Avoid duplicates (a tx might appear in both confirmed and mempool during transition)
+                    var existingTxIds = new HashSet<string>(allTransactions.Select(t => t.Txid));
+                    foreach (var tx in mempoolTxs)
+                    {
+                        if (!existingTxIds.Contains(tx.Txid))
+                        {
+                            allTransactions.Add(tx);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to fetch mempool transactions for address {Address}", projectAddress);
+        }
+
+        return allTransactions;
+    }
+
     public async Task<List<ProjectIndexerData>> GetProjectsAsync(int? offset, int limit)
     {
         // GetProjectsAsync only supports Angor API (no blockchain equivalent for listing all projects)
@@ -103,20 +196,9 @@ public class MempoolIndexerAngorApi : IAngorIndexerService
         {
             var projectAddress = _derivationOperations.ConvertAngorKeyToBitcoinAddress(projectId);
 
-            var response = await GetIndexerClient().GetAsync($"{MempoolApiRoute}/address/{projectAddress}/txs");
+            var trxs = await FetchAllAddressTransactionsAsync(projectAddress);
 
-            _networkService.CheckAndHandleError(response);
-
-            if (response.StatusCode == HttpStatusCode.NotFound)
-            {
-                _logger.LogWarning($"No transactions found for project address {projectAddress}");
-                return null;
-            }
-
-            var trxs = await response.Content.ReadFromJsonAsync<List<MempoolSpaceIndexerApi.MempoolTransaction>>(new JsonSerializerOptions()
-            { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
-
-            if (trxs == null || !trxs.Any())
+            if (!trxs.Any())
             {
                 _logger.LogWarning($"No transactions found for project {projectId}");
                 return null;
@@ -167,20 +249,9 @@ public class MempoolIndexerAngorApi : IAngorIndexerService
         {
             var projectAddress = _derivationOperations.ConvertAngorKeyToBitcoinAddress(projectId);
 
-            var response = await GetIndexerClient().GetAsync($"{MempoolApiRoute}/address/{projectAddress}/txs");
+            var trxs = await FetchAllAddressTransactionsAsync(projectAddress);
 
-            _networkService.CheckAndHandleError(response);
-
-            if (response.StatusCode == HttpStatusCode.NotFound)
-            {
-                _logger.LogWarning($"No transactions found for project address {projectAddress}");
-                return (projectId, null);
-            }
-
-            var trxs = await response.Content.ReadFromJsonAsync<List<MempoolSpaceIndexerApi.MempoolTransaction>>(new JsonSerializerOptions()
-            { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
-
-            if (trxs == null || !trxs.Any())
+            if (!trxs.Any())
             {
                 _logger.LogWarning($"No transactions found for project {projectId}");
                 return (projectId, null);
@@ -228,20 +299,9 @@ public class MempoolIndexerAngorApi : IAngorIndexerService
         {
             var projectAddress = _derivationOperations.ConvertAngorKeyToBitcoinAddress(projectId);
 
-            var response = await GetIndexerClient().GetAsync($"{MempoolApiRoute}/address/{projectAddress}/txs");
+            var trxs = await FetchAllAddressTransactionsAsync(projectAddress);
 
-            _networkService.CheckAndHandleError(response);
-
-            if (response.StatusCode == HttpStatusCode.NotFound)
-            {
-                _logger.LogWarning($"No transactions found for project address {projectAddress}");
-                return new List<ProjectInvestment>();
-            }
-
-            var trxs = await response.Content.ReadFromJsonAsync<List<MempoolSpaceIndexerApi.MempoolTransaction>>(new JsonSerializerOptions()
-            { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
-
-            if (trxs == null || !trxs.Any())
+            if (!trxs.Any())
             {
                 _logger.LogWarning($"No transactions found for project {projectId}");
                 return new List<ProjectInvestment>();

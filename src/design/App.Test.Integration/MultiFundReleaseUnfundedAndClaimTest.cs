@@ -14,6 +14,8 @@ using Angor.Shared.Utilities;
 using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
+using App.UI.Shared.PaymentFlow;
+using NetworkTab = App.UI.Shared.PaymentFlow.NetworkTab;
 using App.UI.Sections.Funders;
 using App.UI.Sections.Funds;
 using App.UI.Sections.MyProjects;
@@ -367,17 +369,17 @@ public class MultiFundReleaseUnfundedAndClaimTest
         investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector);
 
         var investWallet = investVm.Wallets[0];
-        investVm.SelectWallet(investWallet);
+        investVm.PaymentFlow.SelectWallet(investWallet);
         Dispatcher.UIThread.RunJobs();
 
         Log(profileName, $"Investing {amountBtc} BTC with wallet {investWallet.Id.Value}...");
-        investVm.PayWithWallet();
+        investVm.PaymentFlow.PayWithWalletCommand.Execute().Subscribe();
 
         var investDeadline = DateTime.UtcNow + TransactionTimeout;
         while (DateTime.UtcNow < investDeadline)
         {
             Dispatcher.UIThread.RunJobs();
-            if (investVm.CurrentScreen == InvestScreen.Success)
+            if (investVm.PaymentFlow.CurrentScreen == PaymentFlowScreen.Success)
             {
                 break;
             }
@@ -385,23 +387,23 @@ public class MultiFundReleaseUnfundedAndClaimTest
             await Task.Delay(PollInterval);
         }
 
-        investVm.CurrentScreen.Should().Be(InvestScreen.Success,
-            $"Invest should reach success. Last status: {investVm.PaymentStatusText}");
+        investVm.PaymentFlow.CurrentScreen.Should().Be(PaymentFlowScreen.Success,
+            $"Invest should reach success. Last status: {investVm.PaymentFlow.PaymentStatusText}");
         investVm.FormattedAmount.Should().Be(decimal.Parse(amountBtc, CultureInfo.InvariantCulture).ToString("F8", CultureInfo.InvariantCulture));
 
-        Log(profileName, $"[Bug7] IsAutoApproved={investVm.IsAutoApproved}, SuccessTitle='{investVm.SuccessTitle}'");
+        Log(profileName, $"[Bug7] IsAutoApproved={investVm.IsAutoApproved}, SuccessTitle='{investVm.PaymentFlow.SuccessTitle}'");
         if (expectFounderApproval)
         {
             investVm.IsAutoApproved.Should().BeFalse(
                 "above-threshold investment should NOT be auto-approved");
-            investVm.SuccessTitle.Should().Contain("Pending Approval",
+            investVm.PaymentFlow.SuccessTitle.Should().Contain("Pending Approval",
                 "above-threshold investment should show 'Pending Approval' in SuccessTitle");
         }
         else
         {
             investVm.IsAutoApproved.Should().BeTrue(
                 "below-threshold investment should be auto-approved");
-            investVm.SuccessTitle.Should().Contain("Successful",
+            investVm.PaymentFlow.SuccessTitle.Should().Contain("Successful",
                 "below-threshold (auto-approved) investment should show 'Successful' in SuccessTitle");
         }
 

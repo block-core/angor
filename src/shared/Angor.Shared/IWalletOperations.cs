@@ -1,7 +1,6 @@
 using Angor.Shared.Models;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
-using Blockcore.Networks;
 
 namespace Angor.Shared;
 
@@ -23,12 +22,15 @@ public interface IWalletOperations
     
     TransactionInfo AddInputsFromAddressAndSignTransaction(string fundingAddress, string changeAddress, 
         Transaction transaction, WalletWords walletWords, AccountInfo accountInfo, long feeRate);
-    
-    Task<OperationResult<Transaction>> PublishTransactionAsync(Network network,
-        Transaction signedTransaction);
 
     TransactionInfo AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo, long feeRate);
 
     List<UtxoData> UpdateAccountUnconfirmedInfoWithSpentTransaction(AccountInfo accountInfo, Transaction transaction);
+
+    /// <summary>Derive the compressed public key hex for a given HD path from wallet words.</summary>
+    string DerivePublicKey(WalletWords walletWords, string hdPath);
+
+    /// <summary>Derive the private key hex for a given HD path from wallet words.</summary>
+    string DerivePrivateKey(WalletWords walletWords, string hdPath);
 }

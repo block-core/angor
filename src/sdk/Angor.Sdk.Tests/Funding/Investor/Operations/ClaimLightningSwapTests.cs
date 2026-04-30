@@ -1,18 +1,15 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Projects.Domain;
-using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Integration.Lightning;
 using Angor.Shared.Integration.Lightning.Models;
 using Angor.Shared.Models;
-using Blockcore.NBitcoin;
 using CSharpFunctionalExtensions;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Stage = Angor.Sdk.Funding.Projects.Domain.Stage;
 
 namespace Angor.Sdk.Tests.Funding.Investor.Operations;
 
@@ -20,9 +17,9 @@ public class ClaimLightningSwapTests
 {
     private readonly Mock<IBoltzClaimService> _mockBoltzClaimService;
     private readonly Mock<IBoltzSwapStorageService> _mockSwapStorageService;
-    private readonly Mock<IProjectService> _mockProjectService;
     private readonly Mock<ISeedwordsProvider> _mockSeedwordsProvider;
-    private readonly Mock<IDerivationOperations> _mockDerivationOperations;
+    private readonly Mock<IHdOperations> _mockHdOperations;
+    private readonly Mock<IWalletAccountBalanceService> _mockWalletAccountBalanceService;
     private readonly Mock<ILogger<ClaimLightningSwap.ClaimLightningSwapByIdHandler>> _mockLogger;
     private readonly ClaimLightningSwap.ClaimLightningSwapByIdHandler _sut;
 
@@ -30,17 +27,17 @@ public class ClaimLightningSwapTests
     {
         _mockBoltzClaimService = new Mock<IBoltzClaimService>();
         _mockSwapStorageService = new Mock<IBoltzSwapStorageService>();
-        _mockProjectService = new Mock<IProjectService>();
         _mockSeedwordsProvider = new Mock<ISeedwordsProvider>();
-        _mockDerivationOperations = new Mock<IDerivationOperations>();
+        _mockHdOperations = new Mock<IHdOperations>();
+        _mockWalletAccountBalanceService = new Mock<IWalletAccountBalanceService>();
         _mockLogger = new Mock<ILogger<ClaimLightningSwap.ClaimLightningSwapByIdHandler>>();
 
         _sut = new ClaimLightningSwap.ClaimLightningSwapByIdHandler(
             _mockBoltzClaimService.Object,
             _mockSwapStorageService.Object,
-            _mockProjectService.Object,
             _mockSeedwordsProvider.Object,
-            _mockDerivationOperations.Object,
+            _mockHdOperations.Object,
+            _mockWalletAccountBalanceService.Object,
             _mockLogger.Object);
     }
 
@@ -64,73 +61,24 @@ public class ClaimLightningSwapTests
     }
 
     [Fact]
-    public async Task Handle_WhenSwapHasNoProjectId_ReturnsFailure()
-    {
-        // Arrange
-        var request = new ClaimLightningSwap.ClaimLightningSwapByIdRequest(
-            new WalletId("wallet-1"), "swap-123");
-
-        var swapDoc = CreateSwapDocument(projectId: null);
-        _mockSwapStorageService
-            .Setup(x => x.GetSwapForWalletAsync("swap-123", "wallet-1"))
-            .ReturnsAsync(Result.Success(swapDoc));
-
-        // Act
-        var result = await _sut.Handle(request, CancellationToken.None);
-
-        // Assert
-        result.IsFailure.Should().BeTrue();
-        result.Error.Should().Contain("no associated project ID");
-    }
-
-    [Fact]
-    public async Task Handle_WhenProjectNotFound_ReturnsFailure()
+    public async Task Handle_WhenSwapHasNoAddress_ReturnsFailure()
     {
         // Arrange
         var request = new ClaimLightningSwap.ClaimLightningSwapByIdRequest(
             new WalletId("wallet-1"), "swap-123");
 
         var swapDoc = CreateSwapDocument(projectId: "project-1");
+        swapDoc.Address = "";
         _mockSwapStorageService
             .Setup(x => x.GetSwapForWalletAsync("swap-123", "wallet-1"))
             .ReturnsAsync(Result.Success(swapDoc));
-
-        _mockProjectService
-            .Setup(x => x.GetAsync(It.Is<ProjectId>(p => p.Value == "project-1")))
-            .ReturnsAsync(Result.Failure<Project>("Project not found"));
 
         // Act
         var result = await _sut.Handle(request, CancellationToken.None);
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Should().Contain("Project not found");
-    }
-
-    [Fact]
-    public async Task Handle_WhenFounderKeyIsEmpty_ReturnsFailure()
-    {
-        // Arrange
-        var request = new ClaimLightningSwap.ClaimLightningSwapByIdRequest(
-            new WalletId("wallet-1"), "swap-123");
-
-        var swapDoc = CreateSwapDocument(projectId: "project-1");
-        _mockSwapStorageService
-            .Setup(x => x.GetSwapForWalletAsync("swap-123", "wallet-1"))
-            .ReturnsAsync(Result.Success(swapDoc));
-
-        var project = CreateTestProject();
-        project.FounderKey = "";
-        _mockProjectService
-            .Setup(x => x.GetAsync(It.IsAny<ProjectId>()))
-            .ReturnsAsync(Result.Success(project));
-
-        // Act
-        var result = await _sut.Handle(request, CancellationToken.None);
-
-        // Assert
-        result.IsFailure.Should().BeTrue();
-        result.Error.Should().Contain("Founder key is required");
+        result.Error.Should().Contain("no receive address");
     }
 
     [Fact]
@@ -145,10 +93,6 @@ public class ClaimLightningSwapTests
             .Setup(x => x.GetSwapForWalletAsync("swap-123", "wallet-1"))
             .ReturnsAsync(Result.Success(swapDoc));
 
-        _mockProjectService
-            .Setup(x => x.GetAsync(It.IsAny<ProjectId>()))
-            .ReturnsAsync(Result.Success(CreateTestProject()));
-
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData("wallet-1"))
             .ReturnsAsync(Result.Failure<(string Words, Maybe<string> Passphrase)>("Wallet locked"));
@@ -159,6 +103,68 @@ public class ClaimLightningSwapTests
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Contain("Failed to get wallet data");
+    }
+
+    [Fact]
+    public async Task Handle_WhenAccountBalanceServiceFails_ReturnsFailure()
+    {
+        // Arrange
+        var request = new ClaimLightningSwap.ClaimLightningSwapByIdRequest(
+            new WalletId("wallet-1"), "swap-123");
+
+        var swapDoc = CreateSwapDocument(projectId: "project-1");
+        _mockSwapStorageService
+            .Setup(x => x.GetSwapForWalletAsync("swap-123", "wallet-1"))
+            .ReturnsAsync(Result.Success(swapDoc));
+
+        var sensitiveData = (Words: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+            Passphrase: Maybe<string>.None);
+        _mockSeedwordsProvider
+            .Setup(x => x.GetSensitiveData("wallet-1"))
+            .ReturnsAsync(Result.Success(sensitiveData));
+
+        _mockWalletAccountBalanceService
+            .Setup(x => x.GetAccountBalanceInfoAsync(It.IsAny<WalletId>()))
+            .ReturnsAsync(Result.Failure<AccountBalanceInfo>("Failed to get account info"));
+
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Contain("Failed to get account info");
+    }
+
+    [Fact]
+    public async Task Handle_WhenAddressNotFoundInWallet_ReturnsFailure()
+    {
+        // Arrange
+        var request = new ClaimLightningSwap.ClaimLightningSwapByIdRequest(
+            new WalletId("wallet-1"), "swap-123");
+
+        var swapDoc = CreateSwapDocument(projectId: "project-1");
+        _mockSwapStorageService
+            .Setup(x => x.GetSwapForWalletAsync("swap-123", "wallet-1"))
+            .ReturnsAsync(Result.Success(swapDoc));
+
+        var sensitiveData = (Words: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+            Passphrase: Maybe<string>.None);
+        _mockSeedwordsProvider
+            .Setup(x => x.GetSensitiveData("wallet-1"))
+            .ReturnsAsync(Result.Success(sensitiveData));
+
+        // AccountInfo with no addresses matching "bc1..."
+        var accountBalanceInfo = new AccountBalanceInfo();
+        _mockWalletAccountBalanceService
+            .Setup(x => x.GetAccountBalanceInfoAsync(It.IsAny<WalletId>()))
+            .ReturnsAsync(Result.Success(accountBalanceInfo));
+
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Contain("not found in wallet");
     }
 
     [Fact]
@@ -306,19 +312,23 @@ public class ClaimLightningSwapTests
 
     private void SetupSuccessfulKeyDerivation()
     {
-        _mockProjectService
-            .Setup(x => x.GetAsync(It.IsAny<ProjectId>()))
-            .ReturnsAsync(Result.Success(CreateTestProject()));
-
         var sensitiveData = (Words: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
             Passphrase: Maybe<string>.None);
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData(It.IsAny<string>()))
             .ReturnsAsync(Result.Success(sensitiveData));
 
-        _mockDerivationOperations
-            .Setup(x => x.DeriveInvestorPrivateKey(It.IsAny<WalletWords>(), It.IsAny<string>()))
-            .Returns(new Key());
+        var accountInfo = new AccountInfo();
+        accountInfo.AddressesInfo.Add(new AddressInfo { Address = "bc1...", HdPath = "m/84'/0'/0'/0/0" });
+        var accountBalanceInfo = new AccountBalanceInfo();
+        accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, new List<UtxoData>());
+        _mockWalletAccountBalanceService
+            .Setup(x => x.GetAccountBalanceInfoAsync(It.IsAny<WalletId>()))
+            .ReturnsAsync(Result.Success(accountBalanceInfo));
+
+        _mockHdOperations
+            .Setup(x => x.DerivePrivateKey(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string>()))
+            .Returns("derived-private-key-hex");
     }
 
     private static BoltzSwapDocument CreateSwapDocument(string? projectId, string? lockupTxHex = "lockup-hex")
@@ -339,24 +349,6 @@ public class ClaimLightningSwapTests
             SwapTree = "{}",
             ExpectedAmount = 100_000,
             InvoiceAmount = 105_000
-        };
-    }
-
-    private static Project CreateTestProject()
-    {
-        return new Project
-        {
-            Id = new ProjectId("project-1"),
-            Name = "Test Project",
-            FounderKey = "founder-key-abc",
-            FounderRecoveryKey = "recovery-key",
-            NostrPubKey = "nostr-pub-key",
-            ShortDescription = "Test",
-            TargetAmount = 1_000_000,
-            StartingDate = DateTime.UtcNow,
-            ExpiryDate = DateTime.UtcNow.AddYears(1),
-            EndDate = DateTime.UtcNow.AddYears(1),
-            Stages = new List<Stage>()
         };
     }
 }

@@ -5,7 +5,6 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
 using Angor.Sdk.Common;
-using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Projects;
@@ -14,126 +13,149 @@ using Angor.Shared.Utilities;
 using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
-using App.UI.Shared.PaymentFlow;
-using NetworkTab = App.UI.Shared.PaymentFlow.NetworkTab;
 using App.UI.Sections.Funders;
 using App.UI.Sections.Funds;
 using App.UI.Sections.MyProjects;
 using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Sections.Portfolio;
 using App.UI.Sections.Settings;
-using App.UI.Shared.Controls;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using System.Globalization;
 
 namespace App.Test.Integration;
 
-public class MultiFundClaimAndRecoverTest
+/// <summary>
+/// Big multi-investor investment project test with 15 investors.
+/// 
+/// Setup:
+/// - 1 founder creates an investment-type project with 3 monthly stages
+///   (start date ~120 days ago so all stages are claimable).
+/// - All 15 investors invest above-threshold amounts requiring founder approval.
+/// - Investors use varying amounts (0.02-0.04 BTC).
+/// 
+/// Flow:
+/// 1. Founder creates the investment project.
+/// 2. All 15 investors invest (all require founder approval).
+/// 3. Founder approves all 15 pending requests in batch.
+/// 4. All 15 investors confirm their approved investments.
+/// 5. Founder claims stage 1 (should see UTXOs from all 15 investors).
+/// 6. Founder releases remaining stages back to investors.
+/// 7. All 15 investors claim their remaining (released) stages.
+/// </summary>
+public class BigInvestTest
 {
-    private const string TestName = "MultiFundClaimAndRecover";
-        private const string FounderProfile = TestName + "-Founder";
-        private const string BelowThresholdInvestorProfile = TestName + "-Investor1";
-        private const string AboveThresholdInvestorProfile = TestName + "-Investor2";
+    private const string TestName = "BigInvest";
+    private const string FounderProfile = TestName + "-Founder";
+    private const int TotalInvestors = 15;
 
     private static readonly TimeSpan FaucetBalanceTimeout = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan TransactionTimeout = TimeSpan.FromMinutes(2);
     private static readonly TimeSpan UiTimeout = TimeSpan.FromSeconds(15);
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(5);
-    private static readonly TimeSpan IndexerLagTimeout = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan IndexerLagTimeout = TimeSpan.FromMinutes(10);
 
     private sealed record ProjectHandle(string RunId, string ProjectName, string ProjectIdentifier, string FounderWalletId);
 
+    private sealed record InvestorConfig(string ProfileName, string AmountBtc);
+
+    private static string InvestorProfile(int index) => $"{TestName}-Investor{index}";
+
+    private static List<InvestorConfig> BuildInvestorConfigs()
+    {
+        var configs = new List<InvestorConfig>();
+        // Vary amounts across investors: 0.02, 0.025, 0.03, 0.035, 0.04, cycling
+        var amounts = new[] { "0.02", "0.025", "0.03", "0.035", "0.04" };
+
+        for (int i = 1; i <= TotalInvestors; i++)
+        {
+            var amount = amounts[(i - 1) % amounts.Length];
+            configs.Add(new InvestorConfig(InvestorProfile(i), amount));
+        }
+
+        return configs;
+    }
+
     [AvaloniaFact]
-    public async Task MultiFundClaimAndRecover()
+    public async Task BigInvest()
     {
         var initializedProfiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var runId = Guid.NewGuid().ToString("N")[..12];
-        var projectName = $"Multi Fund {runId}";
-        var projectAbout = $"{TestName} run {runId}. Founder claims stage 1, one investor recovers with penalty then from penalty, the other without penalty.";
+        var projectName = $"Big Invest {runId}";
+        var projectAbout = $"{TestName} run {runId}. 15-investor investment project: founder claims stage 1, releases rest, investors claim.";
         var bannerImageUrl = $"https://picsum.photos/seed/{Guid.NewGuid().ToString("N")[..8]}/320/200";
         var profileImageUrl = $"https://picsum.photos/seed/{Guid.NewGuid().ToString("N")[..8]}/100/100";
-        var thresholdAmountBtc = "0.01";
-        var belowThresholdInvestmentBtc = "0.001";
-        var aboveThresholdInvestmentBtc = "0.02";
-        var payoutDay = DateTime.UtcNow.DayOfWeek.ToString();
+        var investors = BuildInvestorConfigs();
 
-        Log(null, $"========== STARTING {nameof(MultiFundClaimAndRecover)} ==========");
+        Log(null, $"========== STARTING {nameof(BigInvest)} ==========");
         Log(null, $"Run ID: {runId}");
         Log(null, $"Founder profile: {FounderProfile}");
-        Log(null, $"Investor1 profile (below threshold): {BelowThresholdInvestorProfile}");
-        Log(null, $"Investor2 profile (above threshold): {AboveThresholdInvestorProfile}");
+        Log(null, $"Total investors: {TotalInvestors}");
+        foreach (var inv in investors)
+        {
+            Log(null, $"  {inv.ProfileName}: amount={inv.AmountBtc} BTC");
+        }
 
+        // ── Step 1: Founder creates the investment project ──
         ProjectHandle? project = null;
 
         await WithProfileWindow(FounderProfile, initializedProfiles, async window =>
         {
             await CreateWalletAndFundAsync(window, FounderProfile);
-            project = await CreateFundProjectAsync(
-                window,
-                FounderProfile,
-                projectName,
-                projectAbout,
-                bannerImageUrl,
-                profileImageUrl,
-                thresholdAmountBtc,
-                payoutDay,
-                runId);
+            project = await CreateInvestProjectAsync(
+                window, FounderProfile, projectName, projectAbout,
+                bannerImageUrl, profileImageUrl, runId);
         });
 
         project.Should().NotBeNull();
 
-        await WithProfileWindow(BelowThresholdInvestorProfile, initializedProfiles, async window =>
+        // ── Step 2: All 15 investors invest ──
+        foreach (var inv in investors)
         {
-            await CreateWalletAndFundAsync(window, BelowThresholdInvestorProfile);
-            await InvestInProjectAsync(
-                window,
-                BelowThresholdInvestorProfile,
-                project!,
-                belowThresholdInvestmentBtc,
-                expectFounderApproval: false,
-                targetPatternStageCount: 6);
-        });
+            await WithProfileWindow(inv.ProfileName, initializedProfiles, async window =>
+            {
+                await CreateWalletAndFundAsync(window, inv.ProfileName);
+                await InvestInProjectAsync(window, inv.ProfileName, project!, inv.AmountBtc);
+            });
+        }
 
-        await WithProfileWindow(AboveThresholdInvestorProfile, initializedProfiles, async window =>
-        {
-            await CreateWalletAndFundAsync(window, AboveThresholdInvestorProfile);
-            await InvestInProjectAsync(
-                window,
-                AboveThresholdInvestorProfile,
-                project!,
-                aboveThresholdInvestmentBtc,
-                expectFounderApproval: true,
-                targetPatternStageCount: 3);
-        });
-
+        // ── Step 3: Founder approves all 15 pending requests ──
         await WithProfileWindow(FounderProfile, initializedProfiles, async window =>
         {
-            await ApprovePendingInvestmentAsync(window, FounderProfile, project!);
+            await ApprovePendingInvestmentsAsync(window, FounderProfile, project!, TotalInvestors);
         });
 
-        await WithProfileWindow(AboveThresholdInvestorProfile, initializedProfiles, async window =>
+        // ── Step 4: All investors confirm their approved investments ──
+        foreach (var inv in investors)
         {
-            await ConfirmApprovedInvestmentAsync(window, AboveThresholdInvestorProfile, project!);
-        });
+            await WithProfileWindow(inv.ProfileName, initializedProfiles, async window =>
+            {
+                await ConfirmApprovedInvestmentAsync(window, inv.ProfileName, project!);
+            });
+        }
 
+        // ── Step 5: Founder claims stage 1 and releases remaining stages ──
         await WithProfileWindow(FounderProfile, initializedProfiles, async window =>
         {
-            await ClaimStageOneAsync(window, FounderProfile, project!);
+            await ClaimStageOneAsync(window, FounderProfile, project!, TotalInvestors);
+            await ReleaseRemainingStagesToInvestorsAsync(window, FounderProfile, project!);
         });
 
-        await WithProfileWindow(AboveThresholdInvestorProfile, initializedProfiles, async window =>
+        // ── Step 6: All investors claim their remaining (released) stages ──
+        foreach (var inv in investors)
         {
-            await RecoverAboveThresholdInvestmentAsync(window, AboveThresholdInvestorProfile, project!);
-        });
+            await WithProfileWindow(inv.ProfileName, initializedProfiles, async window =>
+            {
+                await ClaimRemainingStagesAsync(window, inv.ProfileName, project!);
+            });
+        }
 
-        await WithProfileWindow(BelowThresholdInvestorProfile, initializedProfiles, async window =>
-        {
-            await RecoverBelowThresholdInvestmentAsync(window, BelowThresholdInvestorProfile, project!);
-        });
-
-        Log(null, $"========== {nameof(MultiFundClaimAndRecover)} PASSED ==========");
+        Log(null, $"========== {nameof(BigInvest)} PASSED ==========");
     }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Profile Window Management
+    // ═══════════════════════════════════════════════════════════════════
 
     private async Task WithProfileWindow(
         string profileName,
@@ -182,6 +204,10 @@ public class MultiFundClaimAndRecoverTest
         Log(profileName, "Set SimplePasswordProvider key to 'default-key'.");
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // Wallet Creation & Funding
+    // ═══════════════════════════════════════════════════════════════════
+
     private async Task CreateWalletAndFundAsync(Window window, string profileName)
     {
         await window.NavigateToSectionAndVerify("Funds");
@@ -206,15 +232,17 @@ public class MultiFundClaimAndRecoverTest
         await FundWalletViaFaucet(window, profileName);
     }
 
-    private async Task<ProjectHandle> CreateFundProjectAsync(
+    // ═══════════════════════════════════════════════════════════════════
+    // Investment Project Creation
+    // ═══════════════════════════════════════════════════════════════════
+
+    private async Task<ProjectHandle> CreateInvestProjectAsync(
         Window window,
         string profileName,
         string projectName,
         string projectAbout,
         string bannerImageUrl,
         string profileImageUrl,
-        string thresholdAmountBtc,
-        string payoutDay,
         string runId)
     {
         await window.NavigateToSectionAndVerify("My Projects");
@@ -227,11 +255,11 @@ public class MultiFundClaimAndRecoverTest
         var wizardVm = myProjectsVm.CreateProjectVm;
         wizardVm.Should().NotBeNull();
 
-        Log(profileName, "Selecting Fund project type...");
+        Log(profileName, "Selecting investment project type...");
         wizardVm.DismissWelcome();
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(200);
-        wizardVm.SelectProjectType("fund");
+        wizardVm.SelectProjectType("investment");
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
@@ -251,28 +279,32 @@ public class MultiFundClaimAndRecoverTest
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
-        Log(profileName, "Configuring target amount, threshold, and zero penalty days...");
+        Log(profileName, "Configuring target amount and investment end date...");
         wizardVm.TargetAmount = "1.0";
-        wizardVm.ApprovalThreshold = thresholdAmountBtc;
-        wizardVm.PenaltyDays = 0;
+        wizardVm.InvestEndDate = DateTime.UtcNow.AddMonths(3);
         wizardVm.TargetAmount.Should().Be("1.0");
-        wizardVm.ApprovalThreshold.Should().Be(thresholdAmountBtc);
-        wizardVm.PenaltyDays.Should().Be(0);
+        wizardVm.InvestEndDate.Should().NotBeNull();
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
-        Log(profileName, $"Configuring payout schedule for today ({payoutDay})...");
+        Log(profileName, "Generating three monthly investment stages...");
         wizardVm.DismissStep5Welcome();
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(200);
-        wizardVm.PayoutFrequency = "Weekly";
-        wizardVm.ToggleInstallmentCount(3);
-        wizardVm.ToggleInstallmentCount(6);
-        wizardVm.WeeklyPayoutDay = payoutDay;
-        wizardVm.GeneratePayoutSchedule();
-        wizardVm.Stages.Count.Should().Be(6, "stages preview uses the max selected installment count");
-        wizardVm.Stages.Select(s => s.StageNumber).Should().ContainInOrder(1, 2, 3, 4, 5, 6);
-        wizardVm.SelectedInstallmentCounts.Should().HaveCount(2, "project should have two instalment patterns (3-month and 6-month)");
+        wizardVm.DurationValue = "3";
+        wizardVm.DurationUnit = "Months";
+        wizardVm.ReleaseFrequency = "Monthly";
+        // Set start date ~120 days in the past so all 3 monthly stages (baseDate+30/+60/+90)
+        // have release dates in the past, making them claimable (Unspent) instead of Locked.
+        wizardVm.StartDate = DateTime.UtcNow.AddDays(-120).ToString("yyyy-MM-dd");
+        wizardVm.GenerateInvestmentStages();
+        wizardVm.Stages.Count.Should().Be(3);
+        wizardVm.Stages.Select(s => s.StageNumber).Should().ContainInOrder(1, 2, 3);
+        var totalPercentage = wizardVm.Stages
+            .Select(s => s.Percentage.Replace("%", ""))
+            .Select(p => double.Parse(p, CultureInfo.InvariantCulture))
+            .Sum();
+        totalPercentage.Should().BeApproximately(100.0, 1.0);
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
@@ -315,30 +347,49 @@ public class MultiFundClaimAndRecoverTest
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
-        await myProjectsVm.LoadFounderProjectsAsync();
-        Dispatcher.UIThread.RunJobs();
+        // Poll for the project to appear (indexer may lag after deploy)
+        MyProjectItemViewModel? project = null;
+        var projectPollDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
+        while (DateTime.UtcNow < projectPollDeadline)
+        {
+            await myProjectsVm.LoadFounderProjectsAsync();
+            Dispatcher.UIThread.RunJobs();
+            project = myProjectsVm.Projects.FirstOrDefault(p => p.Description.Contains(runId, StringComparison.Ordinal));
+            if (project != null)
+            {
+                break;
+            }
 
-        var project = myProjectsVm.Projects.FirstOrDefault(p => p.Description.Contains(runId, StringComparison.Ordinal));
+            Log(profileName, "Project not found in MyProjects yet. Retrying...");
+            await Task.Delay(TimeSpan.FromSeconds(5));
+        }
+
         project.Should().NotBeNull();
         project!.ProjectIdentifier.Should().NotBeNullOrEmpty();
         project.OwnerWalletId.Should().NotBeNullOrEmpty();
         project.Name.Should().Be(projectName);
         project.Description.Should().Contain(runId);
-        project.ProjectType.Should().Be("fund");
+        project.ProjectType.Should().Be("investment");
 
         Log(profileName, $"Project deployed. ProjectId={project.ProjectIdentifier}, OwnerWalletId={project.OwnerWalletId}");
         return new ProjectHandle(runId, projectName, project.ProjectIdentifier!, project.OwnerWalletId!);
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // Investing
+    // ═══════════════════════════════════════════════════════════════════
+
     private async Task InvestInProjectAsync(
         Window window,
         string profileName,
         ProjectHandle project,
-        string amountBtc,
-        bool expectFounderApproval,
-        int? targetPatternStageCount = null)
+        string amountBtc)
     {
         var foundProject = await FindProjectFromSdkAsync(window, profileName, project);
+
+        // Verify target amount was stored correctly as 1 BTC.
+        foundProject.Target.Should().Be("1.00000",
+            "TargetAmount '1.0' means 1 BTC = 100_000_000 sats; the SDK should store sats and display converts back to BTC");
 
         var findProjectsVm = GetFindProjectsViewModel(window);
         findProjectsVm.Should().NotBeNull();
@@ -363,137 +414,100 @@ public class MultiFundClaimAndRecoverTest
         }
 
         investVm!.Wallets.Count.Should().BeGreaterThan(0);
-
-        // ── Select funding pattern via UI: find the FundPatternBorder, then invoke code-behind ──
-        if (targetPatternStageCount.HasValue)
-        {
-            Log(profileName, $"Selecting funding pattern with {targetPatternStageCount.Value} stages via UI...");
-
-            investVm.FundingPatterns.Should().HaveCountGreaterThan(1,
-                "project should expose multiple funding patterns");
-
-            // Find the InvestPageView in the visual tree
-            var investPageView = window.GetVisualDescendants()
-                .OfType<InvestPageView>()
-                .FirstOrDefault();
-            investPageView.Should().NotBeNull("InvestPageView should be in the visual tree");
-
-            // Find all FundPatternBorder elements — proves the UI rendered them
-            var patternBorders = investPageView!.GetVisualDescendants()
-                .OfType<Border>()
-                .Where(b => b.Name == "FundPatternBorder")
-                .ToList();
-            patternBorders.Should().HaveCountGreaterThan(1,
-                "invest page should render multiple FundPatternBorder elements");
-
-            // Find the border whose DataContext matches the target stage count
-            var targetBorder = patternBorders.FirstOrDefault(b =>
-                b.DataContext is FundingPatternOption opt && opt.StageCount == targetPatternStageCount.Value);
-            targetBorder.Should().NotBeNull(
-                $"a FundPatternBorder with StageCount={targetPatternStageCount.Value} should exist");
-
-            // Extract the FundingPatternOption and click via the ViewModel
-            // (PointerPressedEventArgs construction is not feasible in headless tests —
-            //  other tests in this suite also use VM calls for Border-based interactions)
-            var targetOption = (FundingPatternOption)targetBorder!.DataContext!;
-            investVm.SelectFundingPattern(targetOption);
-            Dispatcher.UIThread.RunJobs();
-            await Task.Delay(300);
-            Dispatcher.UIThread.RunJobs();
-
-            investVm.SelectedFundingPattern.Should().NotBeNull();
-            investVm.SelectedFundingPattern!.StageCount.Should().Be(targetPatternStageCount.Value,
-                $"selected funding pattern should have {targetPatternStageCount.Value} stages after selection");
-            Log(profileName, $"Funding pattern with {targetPatternStageCount.Value} stages selected. PatternId={investVm.SelectedFundingPattern.PatternId}");
-        }
-
         investVm.InvestmentAmount = amountBtc;
         investVm.CanSubmit.Should().BeTrue();
-        var expectedStageCount = targetPatternStageCount ?? 3;
-        investVm.Stages.Count.Should().BeGreaterThanOrEqualTo(expectedStageCount,
-            $"fund project should expose at least {expectedStageCount} stage outputs for the selected pattern");
+        investVm.Stages.Count.Should().Be(3, "investment project should expose the generated fixed stages");
         investVm.Stages.Select(s => s.LabelText).Should().Contain(label => label.Contains("Stage 1"));
         investVm.Submit();
         Dispatcher.UIThread.RunJobs();
         investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector);
 
         var investWallet = investVm.Wallets[0];
-        investVm.PaymentFlow.SelectWallet(investWallet);
+        investVm.SelectWallet(investWallet);
         Dispatcher.UIThread.RunJobs();
 
         Log(profileName, $"Investing {amountBtc} BTC with wallet {investWallet.Id.Value}...");
-        investVm.PaymentFlow.PayWithWalletCommand.Execute().Subscribe();
 
-        var investDeadline = DateTime.UtcNow + TransactionTimeout;
-        while (DateTime.UtcNow < investDeadline)
+        const int maxPayAttempts = 3;
+        for (var payAttempt = 1; payAttempt <= maxPayAttempts; payAttempt++)
         {
-            Dispatcher.UIThread.RunJobs();
-            if (investVm.PaymentFlow.CurrentScreen == PaymentFlowScreen.Success)
+            investVm.PayWithWallet();
+
+            var investDeadline = DateTime.UtcNow + TransactionTimeout;
+            while (DateTime.UtcNow < investDeadline)
+            {
+                Dispatcher.UIThread.RunJobs();
+                if (investVm.CurrentScreen == InvestScreen.Success)
+                {
+                    break;
+                }
+
+                if (investVm.CurrentScreen == InvestScreen.WalletSelector && investVm.HasError)
+                {
+                    break;
+                }
+
+                await Task.Delay(PollInterval);
+            }
+
+            if (investVm.CurrentScreen == InvestScreen.Success)
             {
                 break;
             }
 
-            await Task.Delay(PollInterval);
+            if (payAttempt < maxPayAttempts && investVm.CurrentScreen == InvestScreen.WalletSelector && investVm.HasError)
+            {
+                Log(profileName, $"PayWithWallet attempt #{payAttempt} failed: {investVm.ErrorMessage}. Retrying after delay...");
+                await Task.Delay(TimeSpan.FromSeconds(5));
+                Dispatcher.UIThread.RunJobs();
+                continue;
+            }
         }
 
-        investVm.PaymentFlow.CurrentScreen.Should().Be(PaymentFlowScreen.Success,
-            $"Invest should reach success. Last status: {investVm.PaymentFlow.PaymentStatusText}");
-        investVm.FormattedAmount.Should().Be(decimal.Parse(amountBtc, CultureInfo.InvariantCulture).ToString("F8", CultureInfo.InvariantCulture));
-
-        // ──────────────────────────────────────────────────────────────
-        // Bug 7 assertion: Verify SuccessTitle reflects auto-approval status
-        //
-        // Below-threshold investments (expectFounderApproval=false) are auto-approved
-        // and should show "Successful". Above-threshold investments
-        // (expectFounderApproval=true) need founder approval and should show
-        // "Pending Approval". Before the fix, SuccessTitle always said
-        // "Pending Approval" regardless of threshold.
-        // ──────────────────────────────────────────────────────────────
-        Log(profileName, $"[Bug7] IsAutoApproved={investVm.IsAutoApproved}, SuccessTitle='{investVm.PaymentFlow.SuccessTitle}'");
-        if (expectFounderApproval)
-        {
-            investVm.IsAutoApproved.Should().BeFalse(
-                "above-threshold investment should NOT be auto-approved");
-            investVm.PaymentFlow.SuccessTitle.Should().Contain("Pending Approval",
-                "above-threshold investment should show 'Pending Approval' in SuccessTitle");
-        }
-        else
-        {
-            investVm.IsAutoApproved.Should().BeTrue(
-                "below-threshold investment should be auto-approved");
-            investVm.PaymentFlow.SuccessTitle.Should().Contain("Successful",
-                "below-threshold (auto-approved) investment should show 'Successful' in SuccessTitle");
-        }
+        investVm.CurrentScreen.Should().Be(InvestScreen.Success,
+            $"Invest should reach success. Last status: {investVm.PaymentStatusText}, Error: {investVm.ErrorMessage}");
+        investVm.FormattedAmount.Should().Be(
+            decimal.Parse(amountBtc, CultureInfo.InvariantCulture).ToString("F8", CultureInfo.InvariantCulture));
 
         // DIRECT DI RESOLVE: PortfolioViewModel is a singleton not reachable from the visual
-        // tree while we're still on the Find Projects invest flow. Mirrors internal DI wiring.
+        // tree while we're still on the Find Projects invest flow.
         var portfolioVm = global::App.App.Services.GetRequiredService<PortfolioViewModel>();
         investVm.AddToPortfolio();
         Dispatcher.UIThread.RunJobs();
 
         var addedInvestment = portfolioVm.Investments.FirstOrDefault(i => i.ProjectIdentifier == project.ProjectIdentifier);
         addedInvestment.Should().NotBeNull();
-        addedInvestment.ProjectName.Should().Be(project.ProjectName);
-        // TotalInvested may reflect the exact requested amount (optimistic add) or the
-        // post-fee on-chain amount (SDK loaded before AddToPortfolio). Accept both.
-        // With the dedup fix, zero values from the SDK are now overwritten by the optimistic amount.
+        addedInvestment!.ProjectName.Should().Be(project.ProjectName);
         var actualInvested = decimal.Parse(addedInvestment.TotalInvested, CultureInfo.InvariantCulture);
         var expectedInvested = decimal.Parse(amountBtc, CultureInfo.InvariantCulture);
-        actualInvested.Should().BeGreaterThan(0, "TotalInvested should be non-zero after AddToPortfolio");
+        actualInvested.Should().BeGreaterThan(0, "TotalInvested should be non-zero");
         actualInvested.Should().BeLessThanOrEqualTo(expectedInvested, "TotalInvested should not exceed requested amount");
         (expectedInvested - actualInvested).Should().BeLessThan(0.001m, "TotalInvested should be within fee tolerance of requested amount");
-        Log(profileName, $"Investment completed. Founder approval expected: {expectFounderApproval}");
+        addedInvestment.ProjectType.Should().Be("invest");
+        addedInvestment.Step.Should().Be(1, "above-threshold investments should wait for founder approval");
+        addedInvestment.ApprovalStatus.Should().Be("Pending");
+        addedInvestment.StatusText.Should().Be("Awaiting Approval");
+        Log(profileName, "Investment request submitted and pending founder approval.");
     }
 
-    private async Task ApprovePendingInvestmentAsync(Window window, string profileName, ProjectHandle project)
+    // ═══════════════════════════════════════════════════════════════════
+    // Founder Approval (batch)
+    // ═══════════════════════════════════════════════════════════════════
+
+    private async Task ApprovePendingInvestmentsAsync(
+        Window window,
+        string profileName,
+        ProjectHandle project,
+        int expectedPendingCount)
     {
         await window.NavigateToSectionAndVerify("Funders");
 
         var fundersVm = GetFundersViewModel(window);
         fundersVm.Should().NotBeNull();
 
-        SignatureRequestViewModel? pendingSignature = null;
         var deadline = DateTime.UtcNow + IndexerLagTimeout;
+        List<SignatureRequestViewModel>? pendingSignatures = null;
+
         while (DateTime.UtcNow < deadline)
         {
             await fundersVm!.LoadInvestmentRequestsAsync();
@@ -501,52 +515,70 @@ public class MultiFundClaimAndRecoverTest
             fundersVm.SetFilter("waiting");
             Dispatcher.UIThread.RunJobs();
 
-            Log(profileName, $"Funders waiting count: {fundersVm.WaitingCount}, approved count: {fundersVm.ApprovedCount}");
+            pendingSignatures = fundersVm.FilteredSignatures
+                .Where(s => string.Equals(s.ProjectIdentifier, project.ProjectIdentifier, StringComparison.Ordinal))
+                .OrderBy(s => s.AmountSats)
+                .ToList();
 
-            pendingSignature = fundersVm.FilteredSignatures.FirstOrDefault(s =>
-                string.Equals(s.ProjectIdentifier, project.ProjectIdentifier, StringComparison.Ordinal));
-            if (pendingSignature != null)
+            Log(profileName,
+                $"Funders waiting count: {fundersVm.WaitingCount}, project waiting count: {pendingSignatures.Count}/{expectedPendingCount}");
+
+            if (pendingSignatures.Count == expectedPendingCount)
             {
                 break;
             }
 
-            Log(profileName, "Waiting for pending founder approval request...");
             await Task.Delay(PollInterval);
         }
 
-        pendingSignature.Should().NotBeNull("above-threshold investment should require founder approval");
-        Log(profileName, $"Approving signature request id={pendingSignature!.Id} for project {project.ProjectIdentifier}");
-        await window.ClickApproveSignatureAsync(fundersVm!, pendingSignature, UiTimeout);
+        pendingSignatures.Should().NotBeNull();
+        pendingSignatures!.Count.Should().Be(expectedPendingCount,
+            $"all {expectedPendingCount} investment requests should appear in Funders before approval");
+
+        foreach (var pendingSignature in pendingSignatures)
+        {
+            Log(profileName,
+                $"Approving signature request id={pendingSignature.Id} for project {project.ProjectIdentifier}");
+            await window.ClickApproveSignatureAsync(fundersVm!, pendingSignature, UiTimeout);
+        }
 
         var approvalDeadline = DateTime.UtcNow + IndexerLagTimeout;
         while (DateTime.UtcNow < approvalDeadline)
         {
-            await fundersVm.LoadInvestmentRequestsAsync();
+            await fundersVm!.LoadInvestmentRequestsAsync();
             Dispatcher.UIThread.RunJobs();
             fundersVm.SetFilter("approved");
             Dispatcher.UIThread.RunJobs();
 
-            var approved = fundersVm.FilteredSignatures.Any(s =>
+            var approvedCount = fundersVm.FilteredSignatures.Count(s =>
                 string.Equals(s.ProjectIdentifier, project.ProjectIdentifier, StringComparison.Ordinal));
-            if (approved)
+            if (approvedCount >= expectedPendingCount)
             {
-                Log(profileName, "Founder approval completed.");
+                Log(profileName, $"Founder approved {approvedCount} investment requests.");
                 return;
             }
 
             await Task.Delay(PollInterval);
         }
 
-        throw new InvalidOperationException("Founder approval did not complete in time.");
+        throw new InvalidOperationException("Founder approvals did not complete in time.");
     }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Investor Confirmation
+    // ═══════════════════════════════════════════════════════════════════
 
     private async Task ConfirmApprovedInvestmentAsync(Window window, string profileName, ProjectHandle project)
     {
-        var portfolioVm = await WaitForPortfolioInvestmentAsync(window, profileName, project, investment => investment.Step >= 2);
+        var portfolioVm = await WaitForPortfolioInvestmentAsync(
+            window, profileName, project,
+            investment => investment.Step >= 2);
         var investment = portfolioVm.Investments.First(i => i.ProjectIdentifier == project.ProjectIdentifier);
 
         Log(profileName, $"Confirming approved investment. Step={investment.Step}, Status={investment.StatusText}");
         investment.ApprovalStatus.Should().Be("Approved");
+        investment.Step.Should().Be(2, "approved investments should require explicit investor confirmation");
+
         await window.ClickInvestmentDetailActionAsync(portfolioVm, investment, "ConfirmInvestmentButton", UiTimeout);
 
         var activeDeadline = DateTime.UtcNow + IndexerLagTimeout;
@@ -568,7 +600,11 @@ public class MultiFundClaimAndRecoverTest
         throw new InvalidOperationException("Confirmed investment did not become active in time.");
     }
 
-    private async Task ClaimStageOneAsync(Window window, string profileName, ProjectHandle project)
+    // ═══════════════════════════════════════════════════════════════════
+    // Founder Claims Stage 1
+    // ═══════════════════════════════════════════════════════════════════
+
+    private async Task ClaimStageOneAsync(Window window, string profileName, ProjectHandle project, int expectedUtxoCount)
     {
         await window.NavigateToSectionAndVerify("My Projects");
 
@@ -594,17 +630,17 @@ public class MultiFundClaimAndRecoverTest
             Dispatcher.UIThread.RunJobs();
 
             var stageSnapshot = string.Join(", ", manageVm.Stages.Select(s =>
-                $"#{s.Number}:available={s.Available},canClaim={s.CanClaim},availableTxs={s.AvailableTransactions.Count},spent={s.SpentTransactionCount},date='{s.CompletionDate}'"));
+                $"#{s.Number}:available={s.Available},canClaim={s.CanClaim},availableTxs={s.AvailableTransactions.Count},spent={s.SpentTransactionCount}"));
             Log(profileName, $"Stage snapshot: {stageSnapshot}");
 
-            var stage1 = manageVm.Stages.FirstOrDefault(s => s.Number == 1 && s.AvailableTransactions.Count >= 2);
+            var stage1 = manageVm.Stages.FirstOrDefault(s => s.Number == 1 && s.AvailableTransactions.Count >= expectedUtxoCount);
             if (stage1 != null)
             {
-                stage1.AvailableTransactions.Count.Should().Be(2,
-                    "founder should claim stage 1 from both investor UTXOs");
+                stage1.AvailableTransactions.Count.Should().Be(expectedUtxoCount,
+                    $"founder should claim stage 1 from all {expectedUtxoCount} investor UTXOs");
 
                 await window.ClickManageProjectClaimStageAsync(myProjectsVm, founderProject!, stage1.Number, UiTimeout);
-                Log(profileName, "Founder claimed stage 1 using both available UTXOs.");
+                Log(profileName, $"Founder claimed stage 1 using {expectedUtxoCount} available UTXOs.");
                 break;
             }
 
@@ -629,43 +665,70 @@ public class MultiFundClaimAndRecoverTest
         throw new InvalidOperationException("Founder stage 1 spend was not indexed in time.");
     }
 
-    private async Task RecoverAboveThresholdInvestmentAsync(Window window, string profileName, ProjectHandle project)
+    // ═══════════════════════════════════════════════════════════════════
+    // Founder Releases Remaining Stages
+    // ═══════════════════════════════════════════════════════════════════
+
+    private async Task ReleaseRemainingStagesToInvestorsAsync(Window window, string profileName, ProjectHandle project)
+    {
+        await window.NavigateToSectionAndVerify("My Projects");
+
+        var myProjectsVm = GetMyProjectsViewModel(window);
+        myProjectsVm.Should().NotBeNull();
+
+        await myProjectsVm!.LoadFounderProjectsAsync();
+        Dispatcher.UIThread.RunJobs();
+
+        var founderProject = myProjectsVm.Projects.FirstOrDefault(p =>
+            string.Equals(p.ProjectIdentifier, project.ProjectIdentifier, StringComparison.Ordinal));
+        founderProject.Should().NotBeNull();
+
+        var deadline = DateTime.UtcNow + IndexerLagTimeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            await myProjectsVm.LoadFounderProjectsAsync();
+            myProjectsVm.OpenManageProject(founderProject!);
+            var manageVm = myProjectsVm.SelectedManageProject;
+            manageVm.Should().NotBeNull();
+
+            var releaseSucceeded = await window.ClickManageProjectReleaseFundsAsync(myProjectsVm, founderProject!, UiTimeout);
+            if (releaseSucceeded)
+            {
+                Log(profileName, "Founder released remaining stages to investors.");
+                return;
+            }
+
+            Log(profileName, "Remaining stage release not ready yet. Retrying...");
+            await Task.Delay(PollInterval);
+        }
+
+        throw new InvalidOperationException("Founder release signatures were not created in time.");
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Investors Claim Remaining Stages
+    // ═══════════════════════════════════════════════════════════════════
+
+    private async Task ClaimRemainingStagesAsync(Window window, string profileName, ProjectHandle project)
     {
         var portfolioVm = await WaitForPortfolioInvestmentAsync(window, profileName, project, investment => investment.Step == 3);
         var investment = portfolioVm.Investments.First(i => i.ProjectIdentifier == project.ProjectIdentifier);
         investment.InvestmentWalletId.Should().NotBeNullOrEmpty();
         investment.InvestmentTransactionId.Should().NotBeNullOrEmpty();
 
-        var recoveryState = await WaitForRecoveryActionAsync(portfolioVm, investment, profileName, expectedActionKey: "recovery");
-        recoveryState.ActionKey.Should().Be("recovery");
+        var releaseState = await WaitForRecoveryActionAsync(portfolioVm, investment, profileName, expectedActionKey: "unfundedRelease");
+        releaseState.ActionKey.Should().Be("unfundedRelease");
 
-        Log(profileName, "Recovering above-threshold investment to penalty...");
-        await EnsureWalletHasFeeFunds(window, profileName, investment.InvestmentWalletId, "before recover-to-penalty");
-        var recoverToPenaltyResult = await ExecuteRecoveryActionWithRetry(
+        Log(profileName, "Claiming remaining stages without penalty...");
+        await EnsureWalletHasFeeFunds(window, profileName, investment.InvestmentWalletId, "before unfunded release");
+        var releaseResult = await ExecuteActionWithRetry(
             profileName,
-            "recover-to-penalty",
-            () => portfolioVm.RecoverFundsAsync(investment).ContinueWith(t => t.Result.Success),
-            () => LogRecoveryBuildDiagnostics(investment, RecoveryAction.Recovery));
-        recoverToPenaltyResult.Should().BeTrue();
+            "unfunded-release",
+            () => portfolioVm.ReleaseFundsAsync(investment).ContinueWith(t => t.Result.Success),
+            () => LogUnfundedReleaseBuildDiagnostics(investment));
+        releaseResult.Should().BeTrue();
 
-        var postPenaltyState = await WaitForRecoveryActionAsync(portfolioVm, investment, profileName, expectedActionKey: "penaltyRelease");
-        postPenaltyState.ActionKey.Should().Be("penaltyRelease");
-
-        // ── Verify PenaltiesModal shows real penalty data via UI button ──
-        Log(profileName, "Verifying PenaltiesModal displays penalty investment...");
-        await VerifyPenaltiesModalAsync(window, portfolioVm, investment, profileName);
-
-        Log(profileName, "Recovering from penalty (penalty days = 0)...");
-        await EnsureWalletHasFeeFunds(window, profileName, investment.InvestmentWalletId, "before penalty release");
-        var penaltyReleaseResult = await ExecuteRecoveryActionWithRetry(
-            profileName,
-            "penalty-release",
-            () => portfolioVm.PenaltyReleaseFundsAsync(investment).ContinueWith(t => t.Result.Success),
-            () => LogRecoveryBuildDiagnostics(investment, RecoveryAction.PenaltyRelease));
-        penaltyReleaseResult.Should().BeTrue();
-
-        // #16 regression: after penalty release, stages should show "Recovered after penalty" or "Spent by investor" (not blank)
-        Log(profileName, "Verifying stage statuses after penalty release...");
+        Log(profileName, "Verifying stage statuses after unfunded release...");
         var statusDeadline = DateTime.UtcNow + IndexerLagTimeout;
         while (DateTime.UtcNow < statusDeadline)
         {
@@ -673,13 +736,12 @@ public class MultiFundClaimAndRecoverTest
             Dispatcher.UIThread.RunJobs();
 
             var recoveredStages = investment.Stages
-                .Where(s => s.Status == "Recovered after penalty" || s.Status == "Spent by investor")
+                .Where(s => s.Status == "Spent by investor" || s.Status == "Recovered after penalty" || s.Status == "Project Unfunded, Spent back to investor")
                 .ToList();
 
             if (recoveredStages.Count > 0)
             {
                 Log(profileName, $"Found {recoveredStages.Count} stage(s) with recovered status: {string.Join(", ", recoveredStages.Select(s => $"stage {s.StageNumber}='{s.Status}'"))}");
-                // Verify the UI helper recognizes them as recovered
                 foreach (var stage in recoveredStages)
                 {
                     stage.IsStatusRecovered.Should().BeTrue($"stage {stage.StageNumber} with status '{stage.Status}' should be recognized as recovered");
@@ -690,31 +752,15 @@ public class MultiFundClaimAndRecoverTest
             await Task.Delay(PollInterval);
         }
 
-        investment.Stages.Any(s => s.Status == "Recovered after penalty" || s.Status == "Spent by investor").Should().BeTrue(
-            "at least one stage should show 'Recovered after penalty' or 'Spent by investor' after penalty release");
+        investment.Stages.Any(s => s.Status == "Spent by investor" || s.Status == "Recovered after penalty" || s.Status == "Project Unfunded, Spent back to investor").Should().BeTrue(
+            "at least one stage should show a recovered status after release");
     }
 
-    private async Task RecoverBelowThresholdInvestmentAsync(Window window, string profileName, ProjectHandle project)
-    {
-        var portfolioVm = await WaitForPortfolioInvestmentAsync(window, profileName, project, investment => investment.Step == 3);
-        var investment = portfolioVm.Investments.First(i => i.ProjectIdentifier == project.ProjectIdentifier);
-        investment.InvestmentWalletId.Should().NotBeNullOrEmpty();
-        investment.InvestmentTransactionId.Should().NotBeNullOrEmpty();
+    // ═══════════════════════════════════════════════════════════════════
+    // Retry & Diagnostics
+    // ═══════════════════════════════════════════════════════════════════
 
-        var recoveryState = await WaitForRecoveryActionAsync(portfolioVm, investment, profileName, expectedActionKey: "belowThreshold");
-        recoveryState.ActionKey.Should().Be("belowThreshold");
-
-        Log(profileName, "Recovering below-threshold investment without penalty...");
-        await EnsureWalletHasFeeFunds(window, profileName, investment.InvestmentWalletId, "before end-of-project claim");
-        var recoverResult = await ExecuteRecoveryActionWithRetry(
-            profileName,
-            "end-of-project-claim",
-            () => portfolioVm.ClaimEndOfProjectAsync(investment).ContinueWith(t => t.Result.Success),
-            () => LogRecoveryBuildDiagnostics(investment, RecoveryAction.EndOfProject));
-        recoverResult.Should().BeTrue();
-    }
-
-    private async Task<bool> ExecuteRecoveryActionWithRetry(
+    private async Task<bool> ExecuteActionWithRetry(
         string profileName,
         string actionLabel,
         Func<Task<bool>> execute,
@@ -726,11 +772,11 @@ public class MultiFundClaimAndRecoverTest
         while (DateTime.UtcNow < deadline)
         {
             attempt++;
-            Log(profileName, $"Attempt #{attempt} for recovery action '{actionLabel}'...");
+            Log(profileName, $"Attempt #{attempt} for action '{actionLabel}'...");
             var result = await execute();
             if (result)
             {
-                Log(profileName, $"Recovery action '{actionLabel}' succeeded on attempt #{attempt}.");
+                Log(profileName, $"Action '{actionLabel}' succeeded on attempt #{attempt}.");
                 return true;
             }
 
@@ -741,46 +787,26 @@ public class MultiFundClaimAndRecoverTest
         return false;
     }
 
-    /// DIAGNOSTIC SDK CALL: Logs the raw Build*Transaction result to help diagnose
-    /// why the UI-level recovery/release retry may be failing. Not part of the test flow.
-    private static async Task LogRecoveryBuildDiagnostics(InvestmentViewModel investment, RecoveryAction action)
+    /// DIAGNOSTIC SDK CALL: Logs the raw BuildUnfundedReleaseTransaction result to help
+    /// diagnose why the UI-level release retry may be failing. Not part of the test flow.
+    private static async Task LogUnfundedReleaseBuildDiagnostics(InvestmentViewModel investment)
     {
         var investmentAppService = global::App.App.Services.GetRequiredService<IInvestmentAppService>();
         var walletId = new WalletId(investment.InvestmentWalletId);
         var projectId = new ProjectId(investment.ProjectIdentifier);
         var feeRate = new DomainFeerate(20);
 
-        switch (action)
-        {
-            case RecoveryAction.Recovery:
-            {
-                var buildResult = await investmentAppService.BuildRecoveryTransaction(
-                    new BuildRecoveryTransaction.BuildRecoveryTransactionRequest(walletId, projectId, feeRate));
-                Log(investment.ProjectIdentifier, buildResult.IsSuccess
-                    ? $"Diagnostic BuildRecoveryTransaction succeeded. TxId={buildResult.Value.TransactionDraft.TransactionId}"
-                    : $"Diagnostic BuildRecoveryTransaction failed: {buildResult.Error}");
-                break;
-            }
-            case RecoveryAction.PenaltyRelease:
-            {
-                var buildResult = await investmentAppService.BuildPenaltyReleaseTransaction(
-                    new BuildPenaltyReleaseTransaction.BuildPenaltyReleaseTransactionRequest(walletId, projectId, feeRate));
-                Log(investment.ProjectIdentifier, buildResult.IsSuccess
-                    ? $"Diagnostic BuildPenaltyReleaseTransaction succeeded. TxId={buildResult.Value.TransactionDraft.TransactionId}"
-                    : $"Diagnostic BuildPenaltyReleaseTransaction failed: {buildResult.Error}");
-                break;
-            }
-            case RecoveryAction.EndOfProject:
-            {
-                var buildResult = await investmentAppService.BuildEndOfProjectClaim(
-                    new BuildEndOfProjectClaim.BuildEndOfProjectClaimRequest(walletId, projectId, feeRate));
-                Log(investment.ProjectIdentifier, buildResult.IsSuccess
-                    ? $"Diagnostic BuildEndOfProjectClaim succeeded. TxId={buildResult.Value.TransactionDraft.TransactionId}"
-                    : $"Diagnostic BuildEndOfProjectClaim failed: {buildResult.Error}");
-                break;
-            }
-        }
+        var buildResult = await investmentAppService.BuildUnfundedReleaseTransaction(
+            new BuildUnfundedReleaseTransaction.BuildUnfundedReleaseTransactionRequest(walletId, projectId, feeRate));
+
+        Log(investment.ProjectIdentifier, buildResult.IsSuccess
+            ? $"Diagnostic BuildUnfundedReleaseTransaction succeeded. TxId={buildResult.Value.TransactionDraft.TransactionId}"
+            : $"Diagnostic BuildUnfundedReleaseTransaction failed: {buildResult.Error}");
     }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Wait Helpers
+    // ═══════════════════════════════════════════════════════════════════
 
     private async Task<RecoveryState> WaitForRecoveryActionAsync(
         PortfolioViewModel portfolioVm,
@@ -830,7 +856,7 @@ public class MultiFundClaimAndRecoverTest
 
             if (investment != null)
             {
-                Log(profileName, $"Portfolio investment found. Step={investment.Step}, Status={investment.StatusText}, Approval={investment.ApprovalStatus}, WalletId={investment.InvestmentWalletId}, InvestmentTxId={investment.InvestmentTransactionId}");
+                Log(profileName, $"Portfolio investment found. Step={investment.Step}, Status={investment.StatusText}, WalletId={investment.InvestmentWalletId}, InvestmentTxId={investment.InvestmentTransactionId}");
                 if (predicate(investment))
                 {
                     return portfolioVm;
@@ -885,6 +911,10 @@ public class MultiFundClaimAndRecoverTest
         throw new InvalidOperationException($"Wallet '{walletId}' did not receive enough fee funds {context}.");
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // Project Discovery
+    // ═══════════════════════════════════════════════════════════════════
+
     private async Task<ProjectItemViewModel> FindProjectFromSdkAsync(Window window, string profileName, ProjectHandle project)
     {
         await window.NavigateToSectionAndVerify("Find Projects");
@@ -914,6 +944,10 @@ public class MultiFundClaimAndRecoverTest
 
         throw new InvalidOperationException("Project was not found in the SDK project list in time.");
     }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Common UI Helpers
+    // ═══════════════════════════════════════════════════════════════════
 
     private async Task WipeExistingData(Window window, string profileName)
     {
@@ -1052,6 +1086,10 @@ public class MultiFundClaimAndRecoverTest
         Dispatcher.UIThread.RunJobs();
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // ViewModel Getters
+    // ═══════════════════════════════════════════════════════════════════
+
     private static FundsViewModel? GetFundsViewModel(Window window)
     {
         return window.GetVisualDescendants().OfType<FundsView>().FirstOrDefault()?.DataContext as FundsViewModel;
@@ -1072,98 +1110,13 @@ public class MultiFundClaimAndRecoverTest
         return window.GetVisualDescendants().OfType<FundersView>().FirstOrDefault()?.DataContext as FundersViewModel;
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // Logging
+    // ═══════════════════════════════════════════════════════════════════
+
     private static void Log(string? profileName, string message)
     {
         var prefix = string.IsNullOrWhiteSpace(profileName) ? "GLOBAL" : profileName;
         Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss.fff}] [{prefix}] {message}");
-    }
-
-    private async Task VerifyPenaltiesModalAsync(
-        Window window,
-        PortfolioViewModel portfolioVm,
-        InvestmentViewModel investment,
-        string profileName)
-    {
-        // The investment reference may be stale (replaced by LoadInvestmentsFromSdkAsync
-        // triggered via WalletsUpdated). Re-fetch from the Investments collection and
-        // reload recovery status on the current reference so PenaltyInvestments is populated.
-        var currentInvestment = portfolioVm.Investments
-            .FirstOrDefault(i => i.ProjectIdentifier == investment.ProjectIdentifier);
-        currentInvestment.Should().NotBeNull("investment should still be in the Investments collection");
-
-        if (!currentInvestment!.RecoveryState.HasSpendableItemsInPenalty)
-        {
-            Log(profileName, "Current investment reference lacks penalty state — reloading recovery status...");
-            await portfolioVm.LoadRecoveryStatusAsync(currentInvestment);
-            Dispatcher.UIThread.RunJobs();
-        }
-
-        // Verify VM-level data
-        portfolioVm.PenaltyInvestments.Should().NotBeEmpty("there should be at least one penalty investment");
-        portfolioVm.HasPenaltyInvestments.Should().BeTrue();
-        var penaltyItem = portfolioVm.PenaltyInvestments
-            .FirstOrDefault(i => i.ProjectIdentifier == investment.ProjectIdentifier);
-        penaltyItem.Should().NotBeNull("the current investment should appear in PenaltyInvestments");
-
-        // Navigate to the portfolio section so the PenaltiesButton is in the visual tree
-        await window.NavigateToSectionAndVerify("Funded");
-
-        // Click the PenaltiesButton in the PortfolioView to open the modal
-        var penaltiesBtn = window.GetVisualDescendants()
-            .OfType<Button>()
-            .FirstOrDefault(b => b.Name == "PenaltiesButton");
-        penaltiesBtn.Should().NotBeNull("PenaltiesButton should exist in the portfolio view");
-        penaltiesBtn!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, penaltiesBtn));
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        // Find the PenaltiesModal in the visual tree
-        var modal = window.GetVisualDescendants()
-            .OfType<PenaltiesModal>()
-            .FirstOrDefault();
-        modal.Should().NotBeNull("PenaltiesModal should be visible after clicking PenaltiesButton");
-        modal!.DataContext.Should().Be(portfolioVm, "PenaltiesModal should have PortfolioViewModel as DataContext");
-
-        // Verify the ItemsControl rendered rows with penalty data
-        var itemsControl = modal.GetVisualDescendants()
-            .OfType<ItemsControl>()
-            .FirstOrDefault();
-        itemsControl.Should().NotBeNull("PenaltiesModal should contain an ItemsControl for penalty rows");
-        itemsControl!.ItemCount.Should().BeGreaterThan(0,
-            "ItemsControl should render at least one penalty investment row");
-
-        // Verify a TextBlock shows the project identifier
-        var projectIdTexts = modal.GetVisualDescendants()
-            .OfType<TextBlock>()
-            .Where(tb => !string.IsNullOrEmpty(tb.Text) && tb.Text.Contains(investment.ProjectIdentifier))
-            .ToList();
-        projectIdTexts.Should().NotBeEmpty(
-            $"PenaltiesModal should display the project identifier '{investment.ProjectIdentifier}'");
-
-        Log(profileName, $"PenaltiesModal verified: {itemsControl.ItemCount} penalty row(s) displayed, project ID visible.");
-
-        // Close the modal
-        var closeBtn = modal.GetVisualDescendants()
-            .OfType<Button>()
-            .FirstOrDefault(b => b.Name == "CloseButton");
-        if (closeBtn != null)
-        {
-            closeBtn.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, closeBtn));
-            Dispatcher.UIThread.RunJobs();
-            await Task.Delay(200);
-            Dispatcher.UIThread.RunJobs();
-        }
-        else
-        {
-            window.HideModal();
-        }
-    }
-
-    private enum RecoveryAction
-    {
-        Recovery,
-        PenaltyRelease,
-        EndOfProject
     }
 }
