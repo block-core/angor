@@ -359,7 +359,7 @@ public partial class PaymentFlowViewModel : ReactiveObject
         _logger.LogInformation("No wallet found — auto-creating");
         PaymentStatusText = "Creating wallet...";
 
-        var result = await _walletAppService.CreateWalletWithoutPassword(_getNetwork());
+        var result = await _walletAppService.CreateWallet(_getNetwork() + " Wallet", _getNetwork());
         if (result.IsFailure)
         {
             _logger.LogError("Auto-create wallet failed: {Error}", result.Error);
