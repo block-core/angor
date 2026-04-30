@@ -349,6 +349,7 @@ public class WalletAppService(
         {
             return Result.Failure(string.Join("; ", errors));
         }
+
         return Result.Success();
     }
 
