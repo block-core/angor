@@ -11,6 +11,7 @@ using App.UI.Shared;
 using App.UI.Shared.Helpers;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Projektanker.Icons.Avalonia;
 
 namespace App.UI.Sections.Funds;
@@ -29,6 +30,7 @@ namespace App.UI.Sections.Funds;
 /// </summary>
 public partial class WalletDetailModal : UserControl, IBackdropCloseable
 {
+    private readonly ILogger<WalletDetailModal> _logger;
     private string _walletName = "";
     private string _walletType = "";
     private string _walletBalance = "";
@@ -42,6 +44,7 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
     public WalletDetailModal()
     {
         InitializeComponent();
+        _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<WalletDetailModal>();
         AddHandler(Button.ClickEvent, OnButtonClick);
     }
 
@@ -82,13 +85,20 @@ public partial class WalletDetailModal : UserControl, IBackdropCloseable
 
     private async Task LoadUtxosAsync(FundsViewModel fundsVm, string walletId)
     {
-        await fundsVm.RefreshUtxoCacheAsync(walletId);
-        var accountInfo = fundsVm.GetAccountBalanceInfo(walletId);
-        if (accountInfo?.AccountInfo != null)
+        try
         {
-            _utxos = accountInfo.AccountInfo.AllUtxos()
-                .Where(u => !u.PendingSpent)
-                .ToList();
+            await fundsVm.RefreshUtxoCacheAsync(walletId);
+            var accountInfo = fundsVm.GetAccountBalanceInfo(walletId);
+            if (accountInfo?.AccountInfo != null)
+            {
+                _utxos = accountInfo.AccountInfo.AllUtxos()
+                    .Where(u => !u.PendingSpent)
+                    .ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "LoadUtxosAsync failed");
         }
 
         UpdateSendButtonText();

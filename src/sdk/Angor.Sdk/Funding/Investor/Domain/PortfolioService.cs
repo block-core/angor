@@ -131,7 +131,9 @@ public class PortfolioService(
         var encrypted = await encryptionService.EncryptData(serializer.Serialize(investments), password);
 
         var tcs = new TaskCompletionSource<bool>();
-        relayService.SendDirectMessagesForPubKeyAsync(storageKeyHex, storageAccountKey, encrypted, result => { tcs.SetResult(result.Accepted); });
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        cts.Token.Register(() => tcs.TrySetResult(false));
+        relayService.SendDirectMessagesForPubKeyAsync(storageKeyHex, storageAccountKey, encrypted, result => { tcs.TrySetResult(result.Accepted); });
 
         var success = await tcs.Task;
         return success ? Result.Success(true) : Result.Failure<bool>("Failed to push investment records to relay");

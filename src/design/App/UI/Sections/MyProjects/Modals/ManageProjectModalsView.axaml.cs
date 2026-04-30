@@ -9,9 +9,8 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
-using App.UI.Shared;
-using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace App.UI.Sections.MyProjects.Modals;
 
@@ -24,11 +23,13 @@ namespace App.UI.Sections.MyProjects.Modals;
 /// </summary>
 public partial class ManageProjectModalsView : UserControl
 {
+    private readonly ILogger<ManageProjectModalsView> _logger;
     private ManageProjectViewModel? Vm => DataContext as ManageProjectViewModel;
 
     public ManageProjectModalsView()
     {
         InitializeComponent();
+        _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<ManageProjectModalsView>();
         DataContextChanged += (_, _) => SubscribeToVmEvents();
         SubscribeToVmEvents();
 
@@ -217,62 +218,79 @@ public partial class ManageProjectModalsView : UserControl
 
     private async void OnClaimSelectedClick()
     {
-        if (Vm == null) return;
-
-        // Calculate total amount from selected UTXOs
-        var stage = Vm.SelectedStage;
-        if (stage == null) return;
-
-        var selectedTxs = stage.AvailableTransactions.Where(t => t.IsSelected).ToList();
-        var selectedAmount = selectedTxs.Sum(t => double.TryParse(t.Amount, out var v) ? v : 0);
-
-        if (selectedAmount <= 0 || selectedTxs.Count == 0) return; // nothing selected
-
-        Vm.ClaimedAmount = selectedAmount.ToString("F8");
-        Vm.ShowClaimModal = false;
-
-        // Skip password modal — password is not used (SimplePasswordProvider returns "default-key").
-        // Go directly to fee selection and claim.
-        var feeRate = await AskForFeeRateAsync();
-        if (feeRate == null) return; // User cancelled
-
-        Vm.IsClaiming = true;
-        var success = await Vm.ClaimStageFundsAsync(stage.Number, selectedTxs, feeRate.Value);
-        Vm.IsClaiming = false;
-
-        if (success)
+        try
         {
-            Vm.ShowSuccessModal = true;
+            if (Vm == null) return;
+
+            // Calculate total amount from selected UTXOs
+            var stage = Vm.SelectedStage;
+            if (stage == null) return;
+
+            var selectedTxs = stage.AvailableTransactions.Where(t => t.IsSelected).ToList();
+            var selectedAmount = selectedTxs.Sum(t => double.TryParse(t.Amount, out var v) ? v : 0);
+
+            if (selectedAmount <= 0 || selectedTxs.Count == 0) return; // nothing selected
+
+            Vm.ClaimedAmount = selectedAmount.ToString("F8");
+
+            // Skip password modal — password is not used (SimplePasswordProvider returns "default-key").
+            // Go directly to fee selection and claim.
+            // NOTE: Keep claim modal visible during fee selection (#17) so user sees context.
+            var feeRate = await AskForFeeRateAsync();
+            if (feeRate == null) return; // User cancelled — claim modal stays visible
+
+            Vm.ShowClaimModal = false;
+            Vm.IsClaiming = true;
+            var success = await Vm.ClaimStageFundsAsync(stage.Number, selectedTxs, feeRate.Value);
+            Vm.IsClaiming = false;
+
+            if (success)
+            {
+                Vm.ShowSuccessModal = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "OnClaimSelectedClick failed");
+            GetShellVm()?.ShowToast($"Claim failed: {ex.Message}");
         }
     }
 
     private async void OnConfirmClaimClick()
     {
-        if (Vm == null) return;
-
-        var stage = Vm.SelectedStage;
-        if (stage == null) return;
-
-        var selectedTxs = stage.AvailableTransactions.Where(t => t.IsSelected).ToList();
-        if (selectedTxs.Count == 0) return;
-
-        // Show fee selection popup before claiming
-        var feeRate = await AskForFeeRateAsync();
-        if (feeRate == null) return; // User cancelled
-
-        Vm.IsClaiming = true;
-        var confirmText = this.FindControl<TextBlock>("ConfirmClaimText");
-        if (confirmText != null) confirmText.Text = "Claiming...";
-
-        var success = await Vm.ClaimStageFundsAsync(stage.Number, selectedTxs, feeRate.Value);
-
-        Vm.IsClaiming = false;
-        if (confirmText != null) confirmText.Text = "Confirm";
-
-        if (success)
+        try
         {
-            Vm.ShowPasswordModal = false;
-            Vm.ShowSuccessModal = true;
+            if (Vm == null) return;
+
+            var stage = Vm.SelectedStage;
+            if (stage == null) return;
+
+            var selectedTxs = stage.AvailableTransactions.Where(t => t.IsSelected).ToList();
+            if (selectedTxs.Count == 0) return;
+
+            // Show fee selection popup before claiming
+            var feeRate = await AskForFeeRateAsync();
+            if (feeRate == null) return; // User cancelled
+
+            Vm.IsClaiming = true;
+            var confirmText = this.FindControl<TextBlock>("ConfirmClaimText");
+            if (confirmText != null) confirmText.Text = "Claiming...";
+
+            var success = await Vm.ClaimStageFundsAsync(stage.Number, selectedTxs, feeRate.Value);
+
+            Vm.IsClaiming = false;
+            if (confirmText != null) confirmText.Text = "Confirm";
+
+            if (success)
+            {
+                Vm.ShowPasswordModal = false;
+                Vm.ShowSuccessModal = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "OnConfirmClaimClick failed");
+            GetShellVm()?.ShowToast($"Claim failed: {ex.Message}");
         }
     }
 
@@ -282,66 +300,82 @@ public partial class ManageProjectModalsView : UserControl
 
     private async void OnReleaseFundsConfirmClick()
     {
-        if (Vm == null) return;
-
-        // Populate release UTXO list with all available transactions from all stages
-        var releaseList = this.FindControl<ItemsControl>("ReleaseUtxoList");
-        if (releaseList != null)
+        try
         {
-            var allAvailable = Vm.Stages
+            if (Vm == null) return;
+
+            // Populate release UTXO list with all available transactions from all stages
+            var releaseList = this.FindControl<ItemsControl>("ReleaseUtxoList");
+            if (releaseList != null)
+            {
+                var allAvailable = Vm.Stages
+                    .SelectMany(s => s.AvailableTransactions)
+                    .ToList();
+
+                // Mark all as selected (pre-selected in release flow)
+                foreach (var tx in allAvailable)
+                    tx.IsSelected = true;
+
+                releaseList.ItemsSource = allAvailable;
+            }
+
+            Vm.ShowReleaseFundsModal = false;
+
+            // Skip password modal — password is not used (SimplePasswordProvider returns "default-key").
+            // Go directly to release.
+            var totalRelease = Vm.Stages
                 .SelectMany(s => s.AvailableTransactions)
-                .ToList();
+                .Sum(t => double.TryParse(t.Amount, out var v) ? v : 0);
 
-            // Mark all as selected (pre-selected in release flow)
-            foreach (var tx in allAvailable)
-                tx.IsSelected = true;
+            Vm.ReleasedAmount = totalRelease.ToString("F8");
 
-            releaseList.ItemsSource = allAvailable;
+            Vm.IsReleasingFunds = true;
+            var success = await Vm.ReleaseFundsToInvestorsAsync();
+            Vm.IsReleasingFunds = false;
+
+            if (success)
+            {
+                Vm.ShowReleaseFundsSuccessModal = true;
+            }
         }
-
-        Vm.ShowReleaseFundsModal = false;
-
-        // Skip password modal — password is not used (SimplePasswordProvider returns "default-key").
-        // Go directly to release.
-        var totalRelease = Vm.Stages
-            .SelectMany(s => s.AvailableTransactions)
-            .Sum(t => double.TryParse(t.Amount, out var v) ? v : 0);
-
-        Vm.ReleasedAmount = totalRelease.ToString("F8");
-
-        Vm.IsReleasingFunds = true;
-        var success = await Vm.ReleaseFundsToInvestorsAsync();
-        Vm.IsReleasingFunds = false;
-
-        if (success)
+        catch (Exception ex)
         {
-            Vm.ShowReleaseFundsSuccessModal = true;
+            _logger.LogWarning(ex, "OnReleaseFundsConfirmClick failed");
+            GetShellVm()?.ShowToast($"Release funds failed: {ex.Message}");
         }
     }
 
     private async void OnConfirmReleaseClick()
     {
-        if (Vm == null) return;
-
-        var totalRelease = Vm.Stages
-            .SelectMany(s => s.AvailableTransactions)
-            .Sum(t => double.TryParse(t.Amount, out var v) ? v : 0);
-
-        Vm.ReleasedAmount = totalRelease.ToString("F8");
-
-        Vm.IsReleasingFunds = true;
-        var confirmText = this.FindControl<TextBlock>("ConfirmReleaseText");
-        if (confirmText != null) confirmText.Text = "Releasing...";
-
-        var success = await Vm.ReleaseFundsToInvestorsAsync();
-
-        Vm.IsReleasingFunds = false;
-        if (confirmText != null) confirmText.Text = "Confirm";
-
-        if (success)
+        try
         {
-            Vm.ShowReleaseFundsPasswordModal = false;
-            Vm.ShowReleaseFundsSuccessModal = true;
+            if (Vm == null) return;
+
+            var totalRelease = Vm.Stages
+                .SelectMany(s => s.AvailableTransactions)
+                .Sum(t => double.TryParse(t.Amount, out var v) ? v : 0);
+
+            Vm.ReleasedAmount = totalRelease.ToString("F8");
+
+            Vm.IsReleasingFunds = true;
+            var confirmText = this.FindControl<TextBlock>("ConfirmReleaseText");
+            if (confirmText != null) confirmText.Text = "Releasing...";
+
+            var success = await Vm.ReleaseFundsToInvestorsAsync();
+
+            Vm.IsReleasingFunds = false;
+            if (confirmText != null) confirmText.Text = "Confirm";
+
+            if (success)
+            {
+                Vm.ShowReleaseFundsPasswordModal = false;
+                Vm.ShowReleaseFundsSuccessModal = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "OnConfirmReleaseClick failed");
+            GetShellVm()?.ShowToast($"Release failed: {ex.Message}");
         }
     }
 

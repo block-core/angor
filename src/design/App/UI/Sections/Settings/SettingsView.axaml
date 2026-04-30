@@ -34,6 +34,9 @@
         <Style Selector="Button.NetworkOption.NetworkOptionActive TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource NetworkOptionActiveText}" />
         </Style>
+        <Style Selector="Button.NetworkOption TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource NetworkOptionText}" />
+        </Style>
 
         <!-- Settings default-toggle checkbox: unchecked state -->
         <!-- Vue: 24x24, border 2px #e5e7eb / dark #404040, bg white / dark #2a2a2a, border-radius 4px -->
@@ -52,9 +55,9 @@
         </Style>
     </UserControl.Styles>
 
-    <Panel>
+    <Panel AutomationProperties.AutomationId="SettingsRootPanel">
         <controls:ScrollableView ContentPadding="24,24,24,24">
-            <StackPanel Spacing="24">
+            <StackPanel x:Name="SettingsCardsPanel" Spacing="24">
 
                 <!-- ═══ 1. Network ═══ -->
                 <Border Background="{DynamicResource CardSurface}"
@@ -86,6 +89,7 @@
                             <DockPanel>
                                 <!-- Vue: green gradient action button -->
                                 <Button DockPanel.Dock="Right"
+                                        Classes="MobileAction"
                                         VerticalAlignment="Center"
                                         Padding="20,14"
                                         Background="{DynamicResource GreenGradient}"
@@ -179,6 +183,7 @@
                             <DockPanel>
                                 <!-- Vue: Refresh button in header-right -->
                                 <Button DockPanel.Dock="Right"
+                                        Classes="MobileAction"
                                         Padding="20,14"
                                         Background="{DynamicResource GreenGradient}"
                                         Foreground="White"
@@ -186,10 +191,36 @@
                                         CornerRadius="8"
                                         FontWeight="SemiBold"
                                         FontSize="14"
-                                        Click="OnRefreshIndexer">
+                                        Click="OnRefreshIndexer"
+                                        IsEnabled="{Binding !IsRefreshingIndexer}">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="14"
-                                                Foreground="White" VerticalAlignment="Center" />
+                                        <Panel>
+                                            <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="14"
+                                                    Foreground="White" VerticalAlignment="Center"
+                                                    IsVisible="{Binding !IsRefreshingIndexer}" />
+                                            <i:Icon Value="fa-solid fa-spinner" FontSize="14"
+                                                    Foreground="White" VerticalAlignment="Center"
+                                                    IsVisible="{Binding IsRefreshingIndexer}"
+                                                    RenderTransformOrigin="50%,50%">
+                                                <i:Icon.RenderTransform>
+                                                    <RotateTransform />
+                                                </i:Icon.RenderTransform>
+                                                <i:Icon.Styles>
+                                                    <Style Selector="i|Icon[IsVisible=True]">
+                                                        <Style.Animations>
+                                                            <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                                <KeyFrame Cue="0%">
+                                                                    <Setter Property="RotateTransform.Angle" Value="0" />
+                                                                </KeyFrame>
+                                                                <KeyFrame Cue="100%">
+                                                                    <Setter Property="RotateTransform.Angle" Value="360" />
+                                                                </KeyFrame>
+                                                            </Animation>
+                                                        </Style.Animations>
+                                                    </Style>
+                                                </i:Icon.Styles>
+                                            </i:Icon>
+                                        </Panel>
                                         <TextBlock Text="Refresh" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
@@ -210,6 +241,7 @@
                                 <!-- Add input group -->
                                 <DockPanel>
                                     <Button DockPanel.Dock="Right"
+                                            Classes="MobileAction"
                                             Margin="12,0,0,0"
                                             Padding="20,14"
                                             Background="{DynamicResource PrimaryGreenBrush}"
@@ -329,6 +361,7 @@
                                 <!-- Add input group -->
                                 <DockPanel>
                                     <Button DockPanel.Dock="Right"
+                                            Classes="MobileAction"
                                             Margin="12,0,0,0"
                                             Padding="20,14"
                                             Background="{DynamicResource PrimaryGreenBrush}"
@@ -496,6 +529,7 @@
                                            TextWrapping="Wrap" />
                                 <!-- Vue: green gradient action button -->
                                 <Button HorizontalAlignment="Left"
+                                        Classes="MobileAction"
                                         Padding="20,14"
                                         Background="{DynamicResource GreenGradient}"
                                         Foreground="White"
@@ -517,52 +551,7 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ═══ 7. Prototype Settings ═══ -->
-                <!-- Toggle between populated and empty states for development/testing -->
-                <Border Background="{DynamicResource CardSurface}"
-                        BorderBrush="{DynamicResource Stroke}"
-                        BorderThickness="1"
-                        CornerRadius="16"
-                        ClipToBounds="True"
-                        BoxShadow="{DynamicResource ItemShadow}">
-                    <StackPanel>
-                        <Border BorderBrush="{DynamicResource Stroke}"
-                                BorderThickness="0,0,0,1"
-                                Padding="24,20">
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <i:Icon Value="fa-solid fa-eye"
-                                       FontSize="20"
-                                       Foreground="{DynamicResource TextMuted}" />
-                                <TextBlock Text="Prototype Settings"
-                                           FontSize="18"
-                                           FontWeight="Bold"
-                                           Foreground="{DynamicResource TextStrong}"
-                                           VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Border>
-                        <Border Padding="24">
-                            <DockPanel>
-                                <ToggleSwitch DockPanel.Dock="Right"
-                                              IsChecked="{Binding ShowPopulatedApp, Mode=TwoWay}"
-                                              VerticalAlignment="Center"
-                                              OnContent=""
-                                              OffContent="" />
-                                <StackPanel Spacing="4" VerticalAlignment="Center">
-                                    <TextBlock Text="Show Populated App"
-                                               FontSize="14"
-                                               FontWeight="Medium"
-                                               Foreground="{DynamicResource TextStrong}" />
-                                    <TextBlock Text="When enabled, sections display sample data. When disabled, sections show empty states."
-                                               FontSize="13"
-                                               Foreground="{DynamicResource TextMuted}"
-                                               TextWrapping="Wrap" />
-                                </StackPanel>
-                            </DockPanel>
-                        </Border>
-                    </StackPanel>
-                </Border>
-
-                <!-- ═══ 8. Debug Mode (testnet only) ═══ -->
+                <!-- ═══ 7. Debug Mode (testnet only) ═══ -->
                 <!-- Visible only on testnet networks. Enables debug features like project wizard
                      data prepopulation and relaxed validation for easier testing. -->
                 <Border Background="{DynamicResource CardSurface}"
@@ -592,6 +581,7 @@
                                 <ToggleSwitch DockPanel.Dock="Right"
                                               IsChecked="{Binding IsDebugMode, Mode=TwoWay}"
                                               VerticalAlignment="Center"
+                                              Margin="16,0,0,0"
                                               OnContent="Enabled"
                                               OffContent="Disabled" />
                                 <StackPanel Spacing="4" VerticalAlignment="Center">
@@ -643,6 +633,7 @@
                             <StackPanel Spacing="20">
                                 <!-- Vue: Wipe Data button (solid red) -->
                                 <Button HorizontalAlignment="Left"
+                                        Classes="MobileAction"
                                         AutomationProperties.AutomationId="BtnWipeData"
                                         Padding="20,14"
                                         Background="{DynamicResource DangerButtonBg}"
@@ -666,12 +657,20 @@
                     </StackPanel>
                 </Border>
 
+                <!-- ═══ App Version ═══ -->
+                <TextBlock Text="{Binding AppVersion, StringFormat='Version {0}'}"
+                           FontSize="12"
+                           Foreground="{DynamicResource TextMuted}"
+                           HorizontalAlignment="Center"
+                           Margin="0,8,0,0" />
+
             </StackPanel>
         </controls:ScrollableView>
 
         <!-- ═══ Network Selection Modal Overlay ═══ -->
         <!-- Vue: full modal with warning, network options with checkmarks, confirmation checkbox, footer buttons -->
-        <Border Background="{DynamicResource ModalBackdrop}"
+        <Border x:Name="NetworkModal"
+                Background="{DynamicResource ModalBackdrop}"
                 IsVisible="{Binding IsNetworkModalOpen}"
                 IsHitTestVisible="{Binding IsNetworkModalOpen}"
                 PointerPressed="OnModalBackdropPressed">
@@ -681,10 +680,13 @@
                 </Transitions>
             </Border.Transitions>
 
-            <Border Background="{DynamicResource CardSurface}"
+            <Border Name="NetworkModalCard"
+                    Background="{DynamicResource CardSurface}"
                     BorderBrush="{DynamicResource Stroke}"
                     BorderThickness="1"
                     CornerRadius="16"
+                    Margin="16"
+                    MinWidth="320"
                     MaxWidth="500"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
@@ -700,7 +702,8 @@
 
                 <StackPanel>
                     <!-- Modal header: Vue .modal-header -->
-                    <Border BorderBrush="{DynamicResource Stroke}"
+                    <Border Name="NetworkModalHeader"
+                            BorderBrush="{DynamicResource Stroke}"
                             BorderThickness="0,0,0,1"
                             Padding="24">
                         <DockPanel>
@@ -726,8 +729,8 @@
                     </Border>
 
                     <!-- Modal content -->
-                    <Border Padding="24">
-                        <StackPanel Spacing="20">
+                    <Border Name="NetworkModalBody" Padding="24">
+                        <StackPanel Name="NetworkModalBodyStack" Spacing="20">
                             <!-- Warning banner: Vue .network-warning-container -->
                             <Border Background="{DynamicResource NetworkWarningBg}"
                                     BorderBrush="{DynamicResource NetworkWarningBorder}"
@@ -749,7 +752,8 @@
                                         Click="OnSelectMainnet"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Stretch"
-                                        Padding="16,14"
+                                         Padding="16,14"
+                                         Foreground="{DynamicResource NetworkOptionText}"
                                         CornerRadius="8"
                                         Background="{DynamicResource NetworkOptionBg}"
                                         BorderBrush="{DynamicResource NetworkOptionBorder}"
@@ -771,7 +775,8 @@
                                         Click="OnSelectTestnet"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Stretch"
-                                        Padding="16,14"
+                                         Padding="16,14"
+                                         Foreground="{DynamicResource NetworkOptionText}"
                                         CornerRadius="8"
                                         Background="{DynamicResource NetworkOptionBg}"
                                         BorderBrush="{DynamicResource NetworkOptionBorder}"
@@ -793,7 +798,8 @@
                                         Click="OnSelectAngornet"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Stretch"
-                                        Padding="16,14"
+                                         Padding="16,14"
+                                         Foreground="{DynamicResource NetworkOptionText}"
                                         CornerRadius="8"
                                         Background="{DynamicResource NetworkOptionBg}"
                                         BorderBrush="{DynamicResource NetworkOptionBorder}"
@@ -815,7 +821,8 @@
                                         Click="OnSelectSignet"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Stretch"
-                                        Padding="16,14"
+                                         Padding="16,14"
+                                         Foreground="{DynamicResource NetworkOptionText}"
                                         CornerRadius="8"
                                         Background="{DynamicResource NetworkOptionBg}"
                                         BorderBrush="{DynamicResource NetworkOptionBorder}"
@@ -836,8 +843,10 @@
                             </StackPanel>
 
                             <!-- Confirmation checkbox: Vue .network-confirmation-checkbox -->
-                            <StackPanel Orientation="Horizontal" Spacing="12">
+                            <DockPanel Name="NetworkConfirmationRow">
                                 <CheckBox IsChecked="{Binding NetworkChangeConfirmed, Mode=TwoWay}"
+                                          DockPanel.Dock="Left"
+                                          Margin="0,0,12,0"
                                           VerticalAlignment="Top" />
                                 <TextBlock Text="By confirming, you agree to wiping all data from this device since you have a backup of your wallet words."
                                            FontSize="14"
@@ -845,16 +854,19 @@
                                            TextWrapping="Wrap"
                                            LineHeight="21"
                                            VerticalAlignment="Top" />
-                            </StackPanel>
+                            </DockPanel>
                         </StackPanel>
                     </Border>
 
                     <!-- Modal footer: Vue .modal-footer -->
-                    <Border BorderBrush="{DynamicResource Stroke}"
+                    <Border Name="NetworkModalFooter"
+                            BorderBrush="{DynamicResource Stroke}"
                             BorderThickness="0,1,0,0"
                             Padding="24,20">
-                        <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
-                            <Button Padding="20,10"
+                        <StackPanel Name="NetworkModalActions" Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+                            <Button Name="NetworkCancelButton"
+                                    Classes="MobileAction"
+                                    Padding="20,10"
                                     Background="{DynamicResource ModalCancelBg}"
                                     Foreground="{DynamicResource ModalCancelFg}"
                                     BorderThickness="0"
@@ -863,7 +875,9 @@
                                     FontSize="14"
                                     Click="OnCloseNetworkModal"
                                     Content="Cancel" />
-                            <Button Padding="20,10"
+                            <Button Name="NetworkConfirmButton"
+                                    Classes="MobileAction"
+                                    Padding="20,10"
                                     Background="{DynamicResource GreenGradient}"
                                     Foreground="White"
                                     BorderThickness="0"
@@ -879,7 +893,8 @@
         </Border>
 
         <!-- ═══ Wipe Data Confirmation Modal ═══ -->
-        <Border Background="{DynamicResource ModalBackdrop}"
+        <Border x:Name="WipeDataModal"
+                Background="{DynamicResource ModalBackdrop}"
                 IsVisible="{Binding IsWipeDataModalOpen}"
                 IsHitTestVisible="{Binding IsWipeDataModalOpen}"
                 PointerPressed="OnWipeModalBackdropPressed">
@@ -933,7 +948,7 @@
                                        TextWrapping="Wrap"
                                        LineHeight="22" />
                             <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
-                                <Button Padding="20,10"
+                                <Button Classes="MobileAction" Padding="20,10"
                                         Background="{DynamicResource ModalCancelBg}"
                                         Foreground="{DynamicResource ModalCancelFg}"
                                         BorderThickness="0"
@@ -942,7 +957,7 @@
                                         FontSize="14"
                                         Click="OnCloseWipeDataModal"
                                         Content="Cancel" />
-                                <Button Padding="20,10"
+                                <Button Classes="MobileAction" Padding="20,10"
                                         AutomationProperties.AutomationId="BtnConfirmWipeData"
                                         Background="#EF4444"
                                         Foreground="White"

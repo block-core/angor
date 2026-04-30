@@ -1,6 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:controls="clr-namespace:App.UI.Shared.Controls">
+        xmlns:controls="clr-namespace:App.UI.Shared.Controls"
+        xmlns:i="https://github.com/projektanker/icons.avalonia">
     <Design.PreviewWith>
         <StackPanel Spacing="10" HorizontalAlignment="Center">
             <ThemeVariantScope RequestedThemeVariant="Light">
@@ -196,6 +197,31 @@
         <Setter Property="Padding" Value="32,12" />
     </Style>
 
+    <!-- Ensure nested TextBlocks inside a Primary button don't fall back to the default
+         (dark) foreground in light mode. The dark gradient background requires a white text. -->
+    <Style Selector="Button.Primary TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
+    </Style>
+    <Style Selector="Button.Primary i|Icon">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryButtonForeground}" />
+    </Style>
+
+    <!-- Button.Primary.Light — opt-in variant that renders as a white card button in
+         light mode (dark gradient is reserved for Home screen CTAs). In dark mode
+         this is visually identical to the base Primary so the same markup works
+         across themes. Apply with Classes="Primary Light".
+         NOTE: nested TextBlock / i|Icon selectors on compound class selectors
+         (Button.Primary.Light TextBlock) segfault Avalonia on Android. We set
+         Foreground on the Button itself and rely on natural inheritance. For
+         buttons whose Content is a string, Avalonia wraps in ContentPresenter
+         which respects the Button's Foreground via TemplateBinding. -->
+    <Style Selector="Button.Primary.Light">
+        <Setter Property="Foreground" Value="{DynamicResource LightPrimaryButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource LightPrimaryButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource LightPrimaryButtonBorder}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
     <!-- ══════════════════════════════════════════════════════════════════════
          Border.ButtonShadow — wrapper for Button that adds drop shadow
          and hover scale-up effect (Vue: translateY(-1px) on hover).
@@ -236,6 +262,19 @@
         <Setter Property="Padding" Value="24,12" />
     </Style>
 
+    <!-- Button.Secondary.Light — opt-in preset for "ghost / back / cancel" buttons that
+         should render as a clean white card in light mode (dark text, subtle border) and
+         retain the existing dark appearance (#1a1a1a + #333) in dark mode. Apply with
+         Classes="Secondary Light". Centralized so the whole set can be restyled later.
+         NOTE: see Primary.Light note — no nested selectors on compound classes
+         (crashes Avalonia Android). Foreground inherits naturally. -->
+    <Style Selector="Button.Secondary.Light">
+        <Setter Property="Foreground" Value="{DynamicResource LightSecondaryButtonForeground}" />
+        <Setter Property="Background" Value="{DynamicResource LightSecondaryButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource LightSecondaryButtonBorder}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
     <!-- Button.Widget — icon-only square button (matches ToggleButton.Widget) -->
     <Style Selector="Button.Widget">
         <Setter Property="Height" Value="42" />
@@ -261,14 +300,17 @@
         <Setter Property="CornerRadius" Value="8" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="RenderTransform" Value="none" />
+        <Setter Property="Width" Value="36" />
+        <Setter Property="Height" Value="36" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="ContentTemplate">
             <DataTemplate>
-                <Viewbox Width="20" Height="20">
-                    <Path Data="{StaticResource XMark}"
-                          Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
-                          StrokeLineCap="Round" StrokeJoin="Round"
-                          Width="24" Height="24" Stretch="Uniform" />
-                </Viewbox>
+                <i:Icon Value="fa-solid fa-xmark"
+                        FontSize="18"
+                        Foreground="{DynamicResource ModalCloseBtn}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center" />
             </DataTemplate>
         </Setter>
     </Style>
@@ -282,14 +324,17 @@
         <Setter Property="CornerRadius" Value="6" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="RenderTransform" Value="none" />
+        <Setter Property="Width" Value="28" />
+        <Setter Property="Height" Value="28" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="ContentTemplate">
             <DataTemplate>
-                <Viewbox Width="20" Height="20">
-                    <Path Data="{StaticResource XMark}"
-                          Stroke="{DynamicResource ModalCloseBtn}" StrokeThickness="2"
-                          StrokeLineCap="Round" StrokeJoin="Round"
-                          Width="24" Height="24" Stretch="Uniform" />
-                </Viewbox>
+                <i:Icon Value="fa-solid fa-xmark"
+                        FontSize="14"
+                        Foreground="{DynamicResource ModalCloseBtn}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center" />
             </DataTemplate>
         </Setter>
     </Style>

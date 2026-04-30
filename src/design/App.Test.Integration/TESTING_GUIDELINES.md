@@ -28,6 +28,22 @@ The current test suite covers the following scenarios:
 
 6. **SmokeTest**: Basic tests to verify the headless platform and UI control finding functionality.
 
+7. **InvestAndRecoverTest**: Tests the investment and recovery flow for a single investor in an invest-type project.
+
+8. **InvestmentCancellationTest**: Tests cancelling an investment before the founder approves it.
+
+9. **FindProjectsPanelTests**: Tests the Find Projects section panel visibility state machine (list → detail → invest page transitions), project card rendering, wallet selector, and invoice flow.
+
+10. **FindProjectsInvoiceFlowTest**: Tests the complete 1-click invest invoice flow end-to-end, including faucet payment and payment detection.
+
+11. **OneClickInvestLightningTest**: Tests the Lightning invoice tab state machine in the invest flow (Boltz swap creation, tab switching, error isolation).
+
+12. **OneClickInvestOnChainTest**: Tests the on-chain invoice tab state machine (address generation, monitoring, tab switch race conditions).
+
+13. **InvestModalsViewFixesTest**: Smoke test verifying InvestPageViewModel fixes: HasError binding, ShowInvoice immediate UX, tab-driven labels, and defensive error labeling.
+
+14. **WalletImportAndProjectScanTest**: Tests importing an existing wallet via seed words and scanning for projects associated with it.
+
 ## What Can Still Be Tested
 
 1. **Additional UI Validations**: More detailed checks on UI elements such as labels, icons, and layouts.
@@ -41,6 +57,51 @@ The current test suite covers the following scenarios:
 5. **Localization**: Tests to verify that the application works correctly with different languages and locales.
 
 6. **Additional User Flows**: More complex user flows that involve multiple steps and interactions.
+
+## Interaction Hierarchy (UI > ViewModel > SDK)
+
+Tests should interact with the application at the **highest possible level**. The preferred order is:
+
+1. **UI-level** (best): Use `TestHelpers.Click*Async` helpers, find controls by `AutomationId`, click buttons, fill text boxes. This most closely simulates a real user.
+
+2. **ViewModel-level** (acceptable): Call ViewModel methods and read ViewModel properties. This is fine for:
+   - Checking state (e.g., `investVm.CurrentScreen.Should().Be(...)`)
+   - Triggering actions that don't have a corresponding UI click helper yet
+   - Loading/refreshing data via `Load*Async` methods (polling for state changes)
+
+3. **SDK service-level** (last resort): Directly call `IWalletAppService`, `IProjectAppService`, `IInvestmentAppService`, etc. **Avoid this whenever possible.** If a test must call an SDK service directly, add a comment explaining **why** — for example:
+   ```csharp
+   // DIRECT SDK CALL: No ViewModel exposes this data — we need the raw
+   // ProjectDto to validate stage configuration persisted correctly.
+   var projectDto = await projectAppService.GetFounderProjects(walletId);
+   ```
+
+### ViewModel Construction
+
+**Never construct ViewModels with `new`** in tests. Instead, navigate through the UI to reach the desired ViewModel:
+
+```csharp
+// ✗ Wrong — bypasses navigation and DI wiring
+var vm = new InvestPageViewModel(project, walletAppService, ...);
+
+// ✓ Correct — uses the app's navigation and factory
+window.NavigateToSection("Find Projects");
+var findVm = GetFindProjectsViewModel(window);
+findVm.OpenProjectDetail(project);
+findVm.OpenInvestPage();
+var investVm = findVm.InvestPageViewModel;
+```
+
+### Diagnostic SDK Calls
+
+Some tests call SDK services in diagnostic/retry helpers to log intermediate state for debugging test failures. These are acceptable but must be clearly marked:
+
+```csharp
+// DIAGNOSTIC SDK CALL: Logs the raw build result to help diagnose
+// why the UI-level retry is failing. Not part of the test flow.
+var buildResult = await investmentAppService.BuildRecoveryTransaction(...);
+Log(buildResult.IsSuccess ? "Build OK" : $"Build failed: {buildResult.Error}");
+```
 
 ## Best Practices
 

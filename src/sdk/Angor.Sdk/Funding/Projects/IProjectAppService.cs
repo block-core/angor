@@ -10,7 +10,6 @@ using static Angor.Sdk.Funding.Founder.Operations.CreateProjectInfo;
 using static Angor.Sdk.Funding.Founder.Operations.CreateProjectProfile;
 using static Angor.Sdk.Funding.Founder.Operations.CreateProjectConstants.CreateProject;
 using Angor.Sdk.Funding.Projects.Dtos;
-using Angor.Sdk.Funding.Projects.Operations;
 
 namespace Angor.Sdk.Funding.Projects;
 
@@ -26,4 +25,16 @@ public interface IProjectAppService
     Task<Result<CreateProjectResponse>> CreateProject(WalletId walletId, long selectedFee, CreateProjectDto project, string projectInfoEventId, ProjectSeedDto projectSeedDto);
     Task<Result<ProjectStatisticsDto>> GetProjectStatistics(ProjectId projectId);
     Task<Result<GetProjectRelays.GetProjectRelaysResponse>> GetRelaysForNpubAsync(string nostrPubKey);
+    Task<Result<GetProjectInfoJson.GetProjectInfoJsonResponse>> GetProjectInfoJson(ProjectId projectId);
+
+    Task<Result<FetchProjectProfileData.FetchProjectProfileDataResponse>> FetchProjectProfileData(ProjectId projectId);
+
+    Task<Result<UpdateProjectProfile.UpdateProjectProfileResponse>> UpdateProjectProfile(
+        WalletId walletId,
+        ProjectId projectId,
+        ProjectMetadata metadata,
+        string? projectContent,
+        IReadOnlyList<FaqItem>? faqItems,
+        IReadOnlyList<string>? memberPubkeys,
+        IReadOnlyList<MediaItem>? mediaItems);
 }

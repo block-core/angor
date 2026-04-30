@@ -20,15 +20,17 @@ namespace AngorApp.UI.Flows.InvestV2.PaymentSelector
         private readonly UIServices uiServices;
         private readonly byte? patternId;
         private readonly bool usesPenaltyThreshold;
+        private readonly int stageCount;
 
         [Reactive] private IWallet? selectedWallet;
 
-        public PaymentSelectorViewModel(ProjectId projectId, UIServices uiServices, IShellViewModel shell, IInvestmentAppService investmentAppService, IWalletContext walletContext, IAmountUI amountToInvest, byte? patternId = null, bool usesPenaltyThreshold = false, IWallet? preSelectedWallet = null)
+        public PaymentSelectorViewModel(ProjectId projectId, UIServices uiServices, IShellViewModel shell, IInvestmentAppService investmentAppService, IWalletContext walletContext, IAmountUI amountToInvest, int stageCount, byte? patternId = null, bool usesPenaltyThreshold = false, IWallet? preSelectedWallet = null)
         {
             this.projectId = projectId;
             this.uiServices = uiServices;
             this.shell = shell;
             this.investmentAppService = investmentAppService;
+            this.stageCount = stageCount;
             this.patternId = patternId;
             this.usesPenaltyThreshold = usesPenaltyThreshold;
             AmountToInvest = amountToInvest;
@@ -55,7 +57,7 @@ namespace AngorApp.UI.Flows.InvestV2.PaymentSelector
             IEnhancedCommand<Unit> command = EnhancedCommand.Create(async () =>
             {
                 closeable.Close();
-                using var invoiceViewModel = new InvoiceViewModel(SelectedWallet!, investmentAppService, uiServices, AmountToInvest, projectId, shell, patternId, usesPenaltyThreshold);
+                using var invoiceViewModel = new InvoiceViewModel(SelectedWallet!, investmentAppService, uiServices, AmountToInvest, projectId, shell, stageCount, patternId, usesPenaltyThreshold);
                 await uiServices.Dialog.Show(
                     invoiceViewModel,
                     "Pay Invoice to Invest",

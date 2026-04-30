@@ -7,8 +7,14 @@ using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Wallet.Application;
+using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Wallet.Domain;
+using Angor.Shared.Integration.Lightning;
 using App.UI.Shared;
+using App.UI.Shared.PaymentFlow;
 using App.UI.Shared.Services;
+using CSharpFunctionalExtensions;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 
 namespace App.UI.Sections.MyProjects.Deploy;
@@ -31,10 +37,14 @@ public enum DeployScreen
 public partial class DeployFlowViewModel : ReactiveObject
 {
     private readonly IWalletAppService _walletAppService;
+    private readonly IInvestmentAppService _investmentAppService;
+    private readonly IBoltzSwapService _boltzSwapService;
     private readonly IProjectAppService _projectAppService;
     private readonly IFounderAppService _founderAppService;
     private readonly ICurrencyService _currencyService;
     private readonly IWalletContext _walletContext;
+    private readonly Func<BitcoinNetwork> _getNetwork;
+    private readonly ILogger<DeployFlowViewModel> _logger;
     private CancellationTokenSource? _invoiceMonitorCts;
 
     // ── State ──
@@ -45,6 +55,9 @@ public partial class DeployFlowViewModel : ReactiveObject
     [Reactive] private string deployStatusText = "Waiting for payment...";
     [Reactive] private long selectedFeeRate = 20;
     [Reactive] private string? deployErrorMessage;
+
+    /// <summary>The reusable payment flow VM. Created when the deploy overlay is shown.</summary>
+    public PaymentFlowViewModel? PaymentFlow { get; private set; }
 
     // ── Derived visibility ──
     public bool IsWalletSelector => CurrentScreen == DeployScreen.WalletSelector;
@@ -75,19 +88,39 @@ public partial class DeployFlowViewModel : ReactiveObject
 
     public DeployFlowViewModel(
         IWalletAppService walletAppService,
+        IInvestmentAppService investmentAppService,
+        IBoltzSwapService boltzSwapService,
         IProjectAppService projectAppService,
         IFounderAppService founderAppService,
         ICurrencyService currencyService,
-        IWalletContext walletContext)
+        IWalletContext walletContext,
+        Func<BitcoinNetwork> getNetwork,
+        ILogger<DeployFlowViewModel> logger)
     {
         _walletAppService = walletAppService;
+        _investmentAppService = investmentAppService;
+        _boltzSwapService = boltzSwapService;
         _projectAppService = projectAppService;
         _founderAppService = founderAppService;
         _currencyService = currencyService;
         _walletContext = walletContext;
+        _getNetwork = getNetwork;
+        _logger = logger;
         // Initialize ReactiveCommands for async payment operations
         PayWithWalletCommand = ReactiveCommand.CreateFromTask(PayWithWalletAsync);
+        PayWithWalletCommand.ThrownExceptions.Subscribe(ex =>
+        {
+            _logger.LogError(ex, "PayWithWalletCommand error");
+            DeployStatusText = $"Deployment error: {ex.Message}";
+            DeployErrorMessage = ex.Message;
+        });
         PayViaInvoiceCommand = ReactiveCommand.CreateFromTask(PayViaInvoiceAsync);
+        PayViaInvoiceCommand.ThrownExceptions.Subscribe(ex =>
+        {
+            _logger.LogError(ex, "PayViaInvoiceCommand error");
+            DeployStatusText = $"Deployment error: {ex.Message}";
+            DeployErrorMessage = ex.Message;
+        });
 
         // Raise derived property notifications when screen changes
         this.WhenAnyValue(x => x.CurrentScreen)
@@ -120,7 +153,87 @@ public partial class DeployFlowViewModel : ReactiveObject
         IsDeploying = false;
         DeployStatusText = "Waiting for payment...";
         DeployErrorMessage = null;
+
+        // Create the reusable payment flow BEFORE setting IsVisible,
+        // since the view subscription fires immediately on IsVisible=true
+        // and needs PaymentFlow to be ready.
+        var deployFeeSats = 10_000L; // 0.0001 BTC deploy fee
+        PaymentFlow = new PaymentFlowViewModel(
+            _walletAppService,
+            _investmentAppService,
+            _boltzSwapService,
+            _walletContext,
+            _currencyService,
+            _getNetwork,
+            _logger,
+            new PaymentFlowConfig
+            {
+                AmountSats = deployFeeSats,
+                StageCount = 0,
+                FeeRateSatsPerVbyte = (int)SelectedFeeRate,
+                Title = "Fund Deployment",
+                SuccessTitle = $"{projectName} Deployed!",
+                SuccessDescription = "Your project has been successfully deployed to the blockchain.",
+                SuccessButtonText = "Go to My Projects",
+                OnSuccessButtonClicked = GoToMyProjects,
+                OnPaymentReceived = DeployAfterPaymentAsync,
+                OnPayWithWallet = DeployWithWalletAsync,
+            });
+
         IsVisible = true;
+    }
+
+    /// <summary>Callback for PaymentFlowViewModel: deploy project after external payment received.</summary>
+    private async Task<Result> DeployAfterPaymentAsync(WalletId walletId, string fundingAddress, long amountSats)
+    {
+        return await RunDeployStepsAsync(walletId);
+    }
+
+    /// <summary>Callback for PaymentFlowViewModel: deploy project using wallet UTXOs directly.</summary>
+    private async Task<Result> DeployWithWalletAsync(WalletId walletId, long amountSats, long feeRate)
+    {
+        SelectedFeeRate = feeRate;
+        await _walletContext.RefreshAllBalancesAsync();
+        return await RunDeployStepsAsync(walletId);
+    }
+
+    /// <summary>Shared deploy logic: create keys → Nostr profile → project info → blockchain tx → publish.</summary>
+    private async Task<Result> RunDeployStepsAsync(WalletId walletId)
+    {
+        if (ProjectData == null)
+            return Result.Failure("No project data available.");
+
+        // Step 1: Create project keys
+        var keysResult = await _founderAppService.CreateProjectKeys(
+            new CreateProjectKeys.CreateProjectKeysRequest(walletId));
+        if (keysResult.IsFailure)
+            return Result.Failure($"Failed to create project keys: {keysResult.Error}");
+
+        var projectSeed = keysResult.Value.ProjectSeedDto;
+
+        // Step 2: Create Nostr profile
+        var profileResult = await _projectAppService.CreateProjectProfile(walletId, projectSeed, ProjectData);
+        if (profileResult.IsFailure)
+            return Result.Failure($"Failed to create profile: {profileResult.Error}");
+
+        // Step 3: Create project info
+        var infoResult = await _projectAppService.CreateProjectInfo(walletId, ProjectData, projectSeed);
+        if (infoResult.IsFailure)
+            return Result.Failure($"Failed to create project info: {infoResult.Error}");
+
+        // Step 4: Create blockchain transaction
+        var txResult = await _projectAppService.CreateProject(
+            walletId, SelectedFeeRate, ProjectData, infoResult.Value.EventId, projectSeed);
+        if (txResult.IsFailure)
+            return Result.Failure($"Failed to create transaction: {txResult.Error}");
+
+        // Step 5: Publish to blockchain
+        var publishResult = await _founderAppService.SubmitTransactionFromDraft(
+            new PublishFounderTransaction.PublishFounderTransactionRequest(txResult.Value.TransactionDraft));
+        if (publishResult.IsFailure)
+            return Result.Failure($"Failed to publish: {publishResult.Error}");
+
+        return Result.Success();
     }
 
     /// <summary>Close the overlay without completing.
@@ -146,7 +259,9 @@ public partial class DeployFlowViewModel : ReactiveObject
     /// Vue ref: payWithDeployWallet() → 800ms spinner → QR "received" → 1500ms "Deploying..." → success.</summary>
     public ReactiveCommand<Unit, Unit> PayWithWalletCommand { get; }
 
-    public void PayWithWallet() => PayWithWalletCommand.Execute().Subscribe();
+    public void PayWithWallet() => PayWithWalletCommand.Execute().Subscribe(
+        onNext: _ => { },
+        onError: ex => _logger.LogError(ex, "PayWithWallet subscription error"));
 
     private async Task PayWithWalletAsync()
     {
@@ -265,7 +380,9 @@ public partial class DeployFlowViewModel : ReactiveObject
     /// Vue ref: handlePayment() → paymentStatus "received" → 1500ms → success.</summary>
     public ReactiveCommand<Unit, Unit> PayViaInvoiceCommand { get; }
 
-    public void PayViaInvoice() => PayViaInvoiceCommand.Execute().Subscribe();
+    public void PayViaInvoice() => PayViaInvoiceCommand.Execute().Subscribe(
+        onNext: _ => { },
+        onError: ex => _logger.LogError(ex, "PayViaInvoice subscription error"));
 
     private async Task PayViaInvoiceAsync()
     {
@@ -384,5 +501,19 @@ public partial class DeployFlowViewModel : ReactiveObject
     {
         IsVisible = false;
         OnDeployCompleted?.Invoke();
+    }
+
+    /// <summary>
+    /// Callback invoked when the user clicks "Complete Profile" on the deploy success screen.
+    /// The parent wires this to navigate to the edit profile page for the newly created project.
+    /// </summary>
+    public Action? OnCompleteProfileRequested { get; set; }
+
+    /// <summary>Complete the flow and request navigation to the edit profile page.</summary>
+    public void CompleteProfile()
+    {
+        IsVisible = false;
+        OnDeployCompleted?.Invoke();
+        OnCompleteProfileRequested?.Invoke();
     }
 }

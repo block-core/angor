@@ -5,24 +5,43 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.VisualTree;
-using App.UI.Shell;
+using App.UI.Shared;
+using App.UI.Shared.Controls;
 using App.UI.Shared.Helpers;
+using App.UI.Shell;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using ReactiveUI;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 
 namespace App.UI.Sections.Funders;
 
-public partial class FundersView : UserControl
+public partial class FundersView : UserControl, ISectionView
 {
     private CompositeDisposable? _subscriptions;
+    private IDisposable? _layoutSubscription;
+    private ScrollableView? _fundersScrollable;
+    private Border? _fundersTitleIcon;
+    private TextBlock? _fundersTitleText;
+    private TextBlock? _approveAllText;
 
     /// <summary>Design-time only.</summary>
     public FundersView() => InitializeComponent();
 
     public FundersView(FundersViewModel vm)
     {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
         InitializeComponent();
+        var initMs = sw.ElapsedMilliseconds;
+
+        sw.Restart();
         DataContext = vm;
+
+        // Strip hover transitions + BoxShadow on mobile — they never fire and waste GPU
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
+            Classes.Add("Mobile");
+
         AddHandler(Button.ClickEvent, OnButtonClick, RoutingStrategies.Bubble);
 
         // Wire up filter tab click handlers (Borders use Tapped, not Button.Click)
@@ -36,6 +55,40 @@ public partial class FundersView : UserControl
         // Subscribe to visibility states once DataContext is set
         DataContextChanged += (_, _) => SubscribeToVisibility();
         SubscribeToVisibility();
+
+        // Cache ScrollableView for responsive bottom padding
+        _fundersScrollable = this.FindControl<ScrollableView>("FundersListPanel");
+        _fundersTitleIcon = this.FindControl<Border>("FundersTitleIcon");
+        _fundersTitleText = this.FindControl<TextBlock>("FundersTitleText");
+        _approveAllText = this.FindControl<TextBlock>("ApproveAllText");
+
+        // ── Responsive layout: adjust bottom padding for tab bar clearance ──
+        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
+            .Subscribe(isCompact =>
+            {
+                if (_fundersScrollable != null)
+                    _fundersScrollable.ContentPadding = isCompact
+                        ? new Thickness(16, 16, 16, 96)
+                        : new Thickness(24);
+
+                if (_fundersTitleIcon != null)
+                {
+                    _fundersTitleIcon.Width = isCompact ? 32 : 40;
+                    _fundersTitleIcon.Height = isCompact ? 32 : 40;
+                }
+
+                if (_fundersTitleText != null)
+                    _fundersTitleText.FontSize = isCompact ? 22 : 24;
+
+                if (_approveAllText != null)
+                    _approveAllText.Text = isCompact ? "Approve" : "Approve All";
+            });
+
+        var totalMs = sw.ElapsedMilliseconds + initMs;
+        App.Services.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("FundersPerf")
+            .LogInformation("[FundersView.ctor] init={Init}ms wire={Wire}ms total={Total}ms",
+                initMs, sw.ElapsedMilliseconds, totalMs);
     }
 
     private void SetFilterFromTab(string filter)
@@ -69,6 +122,20 @@ public partial class FundersView : UserControl
           .Subscribe(filter => UpdateTabVisuals(filter));
         _subscriptions.Add(tabSub);
 
+        // Toggle spinning animation on refresh button icon
+        var refreshSub = vm.WhenAnyValue(x => x.IsRefreshing)
+          .Subscribe(isRefreshing =>
+          {
+              var refreshBtn = this.FindControl<Button>("RefreshButton");
+              var icon = refreshBtn?.GetLogicalDescendants().OfType<Projektanker.Icons.Avalonia.Icon>().FirstOrDefault();
+              icon?.Classes.Set("Spinning", isRefreshing);
+
+              var emptyRefreshBtn = this.FindControl<Button>("EmptyRefreshButton");
+              var emptyIcon = emptyRefreshBtn?.GetLogicalDescendants().OfType<Projektanker.Icons.Avalonia.Icon>().FirstOrDefault();
+              emptyIcon?.Classes.Set("Spinning", isRefreshing);
+          });
+        _subscriptions.Add(refreshSub);
+
         _subscriptions.Add(Disposable.Create(() => vm.ToastRequested -= OnToastRequested));
         vm.ToastRequested += OnToastRequested;
     }
@@ -91,8 +158,21 @@ public partial class FundersView : UserControl
     {
         _subscriptions?.Dispose();
         _subscriptions = null;
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = null;
         base.OnDetachedFromLogicalTree(e);
     }
+
+    public void OnBecameActive()
+    {
+        if (DataContext is FundersViewModel vm)
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(
+                () => _ = vm.RefreshAsync(),
+                Avalonia.Threading.DispatcherPriority.Background);
+        }
+    }
+    public void OnBecameInactive() { }
 
     /// <summary>
     /// Updates tab CSS classes to reflect the active filter.
@@ -115,6 +195,12 @@ public partial class FundersView : UserControl
         {
             case "ApproveAllButton":
                 vm.ApproveAll();
+                e.Handled = true;
+                break;
+
+            case "RefreshButton":
+            case "EmptyRefreshButton":
+                _ = vm.RefreshAsync();
                 e.Handled = true;
                 break;
 

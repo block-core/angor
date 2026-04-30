@@ -391,6 +391,77 @@ namespace Angor.Shared.Services
             }));
         }
 
+        public async Task<ProjectMetadata?> FetchProfileMetadataAsync(string nostrPubKeyHex)
+        {
+            var tcs = new TaskCompletionSource<ProjectMetadata?>();
+            ProjectMetadata? result = null;
+
+            LookupNostrProfileForNPub(
+                (_, metadata) => result = metadata,
+                () => tcs.TrySetResult(result),
+                nostrPubKeyHex);
+
+            using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(10));
+            cts.Token.Register(() => tcs.TrySetResult(result));
+
+            return await tcs.Task;
+        }
+
+        public async Task<string?> FetchAppSpecificDataAsync(string nostrPubKeyHex, string dTag)
+        {
+            var tcs = new TaskCompletionSource<string?>();
+            string? result = null;
+
+            var subscriptionKey = Guid.NewGuid().ToString().Replace("-", "");
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+
+            var subscription = nostrClient.Streams.EventStream
+                .Where(r => r.Subscription == subscriptionKey)
+                .Where(r => r.Event is not null)
+                .Select(r => r.Event)
+                .Subscribe(ev =>
+                {
+                    // Filter client-side by the "d" tag value
+                    var dTagValue = ev.Tags?.FirstOrDefault(t => t.TagIdentifier == "d")?.AdditionalData?.FirstOrDefault();
+                    if (dTagValue == dTag)
+                        result = ev.Content;
+                });
+
+            _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription);
+            _subscriptionsHandling.TryAddEoseAction(subscriptionKey, () => tcs.TrySetResult(result));
+
+            nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
+            {
+                Authors = new[] { nostrPubKeyHex },
+                Kinds = new[] { NostrKind.ApplicationSpecificData },
+            }));
+
+            using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(10));
+            cts.Token.Register(() => tcs.TrySetResult(result));
+
+            return await tcs.Task;
+        }
+
+        public Task<string> PublishAppSpecificDataAsync(string dTag, string content, string hexPrivateKey, Action<NostrOkResponse> action)
+        {
+            var key = NostrPrivateKey.FromHex(hexPrivateKey);
+
+            var signed = new NostrEvent
+            {
+                Kind = NostrKind.ApplicationSpecificData,
+                CreatedAt = DateTime.UtcNow,
+                Content = content,
+                Tags = new NostrEventTags(new NostrEventTag("d", dTag))
+            }.Sign(key);
+
+            _subscriptionsHandling.TryAddOKAction(signed.Id, action);
+
+            var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
+            nostrClient.Send(new NostrEventRequest(signed));
+
+            return Task.FromResult(signed.Id);
+        }
+
         private static NostrEvent GetNip3030NostrEvent(string content)
         {
             // https://github.com/block-core/nips/blob/peer-to-peer-decentralized-funding/3030.md

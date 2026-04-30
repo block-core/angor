@@ -1,23 +1,190 @@
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
+using App.UI.Shared;
+using App.UI.Shared.Controls;
 using App.UI.Shell;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using ReactiveUI;
 
 namespace App.UI.Sections.Settings;
 
-public partial class SettingsView : UserControl
+public partial class SettingsView : UserControl, ISectionView
 {
+    private readonly ILogger<SettingsView> _logger;
     private SettingsViewModel? _subscribedVm;
+    private IDisposable? _layoutSubscription;
+    private ScrollableView? _scrollableView;
+    private Border? _networkModalCard;
+    private Border? _networkModalHeader;
+    private Border? _networkModalBody;
+    private Border? _networkModalFooter;
+    private StackPanel? _networkModalActions;
+    private Button? _networkCancelButton;
+    private Button? _networkConfirmButton;
 
     /// <summary>Design-time only.</summary>
-    public SettingsView() => InitializeComponent();
+    public SettingsView()
+    {
+        InitializeComponent();
+        _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<SettingsView>();
+    }
 
     public SettingsView(SettingsViewModel vm)
     {
         InitializeComponent();
+        _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<SettingsView>();
         DataContext = vm;
         DataContextChanged += (_, _) => SubscribeToVmEvents();
         SubscribeToVmEvents();
+
+        _scrollableView = this.GetLogicalDescendants().OfType<ScrollableView>().FirstOrDefault();
+        CacheModalControls();
+
+        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
+            .Subscribe(isCompact =>
+            {
+                if (_scrollableView != null)
+                    _scrollableView.ContentPadding = isCompact
+                        ? new Thickness(16, 16, 16, 96)
+                        : new Thickness(24);
+
+                ApplyNetworkModalLayout(isCompact);
+            });
+
+        // Mobile perf: detach the settings cards below the fold AND both modals
+        // from the visual tree until first render is painted, then re-insert
+        // them on an ApplicationIdle-priority dispatch. IsVisible=false would
+        // still force layout allocation; detaching skips measure/arrange
+        // entirely. ApplicationIdle (rather than Background) ensures the
+        // re-insert runs AFTER the first-paint timing window — Background
+        // priority would race with (and get charged against) perceived render.
+        // Desktop keeps the full list rendered synchronously.
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
+        {
+            var panel = this.FindControl<StackPanel>("SettingsCardsPanel");
+            var rootPanel = panel?.GetLogicalAncestors().OfType<Panel>().FirstOrDefault();
+            var networkModal = this.FindControl<Border>("NetworkModal");
+            var wipeModal = this.FindControl<Border>("WipeDataModal");
+
+            var detachedCards = new List<(int Index, Control Child)>();
+            var detachedModals = new List<(int Index, Control Child)>();
+
+            if (panel != null)
+            {
+                // First card visible (Network only) for instant paint on mobile.
+                // Theme card deferred below the fold with the rest.
+                const int visibleAboveFold = 1;
+
+                for (var i = panel.Children.Count - 1; i >= visibleAboveFold; i--)
+                {
+                    if (panel.Children[i] is Control c)
+                    {
+                        detachedCards.Add((i, c));
+                        panel.Children.RemoveAt(i);
+                    }
+                }
+            }
+
+            if (rootPanel != null)
+            {
+                foreach (var modal in new Control?[] { networkModal, wipeModal })
+                {
+                    if (modal == null) continue;
+                    var idx = rootPanel.Children.IndexOf(modal);
+                    if (idx >= 0)
+                    {
+                        detachedModals.Add((idx, modal));
+                        rootPanel.Children.RemoveAt(idx);
+                    }
+                }
+            }
+
+            if (detachedCards.Count > 0 || detachedModals.Count > 0)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    if (panel != null)
+                    {
+                        foreach (var (idx, c) in detachedCards.OrderBy(t => t.Index))
+                        {
+                            var safeIdx = Math.Min(idx, panel.Children.Count);
+                            panel.Children.Insert(safeIdx, c);
+                        }
+                    }
+
+                    if (rootPanel != null)
+                    {
+                        foreach (var (idx, c) in detachedModals.OrderBy(t => t.Index))
+                        {
+                            var safeIdx = Math.Min(idx, rootPanel.Children.Count);
+                            rootPanel.Children.Insert(safeIdx, c);
+                        }
+                    }
+                }, Avalonia.Threading.DispatcherPriority.ApplicationIdle);
+            }
+        }
+    }
+
+    protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = null;
+        base.OnDetachedFromLogicalTree(e);
+    }
+
+    public void OnBecameActive() { }
+    public void OnBecameInactive() { }
+
+    private void CacheModalControls()
+    {
+        _networkModalCard = this.FindControl<Border>("NetworkModalCard");
+        _networkModalHeader = this.FindControl<Border>("NetworkModalHeader");
+        _networkModalBody = this.FindControl<Border>("NetworkModalBody");
+        _networkModalFooter = this.FindControl<Border>("NetworkModalFooter");
+        _networkModalActions = this.FindControl<StackPanel>("NetworkModalActions");
+        _networkCancelButton = this.FindControl<Button>("NetworkCancelButton");
+        _networkConfirmButton = this.FindControl<Button>("NetworkConfirmButton");
+    }
+
+    private void ApplyNetworkModalLayout(bool isCompact)
+    {
+        if (_networkModalCard != null)
+        {
+            _networkModalCard.HorizontalAlignment = isCompact
+                ? Avalonia.Layout.HorizontalAlignment.Stretch
+                : Avalonia.Layout.HorizontalAlignment.Center;
+            _networkModalCard.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
+            _networkModalCard.MaxWidth = isCompact ? double.PositiveInfinity : 500;
+        }
+
+        if (_networkModalHeader != null)
+            _networkModalHeader.Padding = isCompact ? new Thickness(20, 18) : new Thickness(24);
+        if (_networkModalBody != null)
+            _networkModalBody.Padding = isCompact ? new Thickness(20) : new Thickness(24);
+        if (_networkModalFooter != null)
+            _networkModalFooter.Padding = isCompact ? new Thickness(20, 16) : new Thickness(24, 20);
+
+        if (_networkModalActions != null)
+        {
+            _networkModalActions.Orientation = isCompact
+                ? Avalonia.Layout.Orientation.Vertical
+                : Avalonia.Layout.Orientation.Horizontal;
+            _networkModalActions.HorizontalAlignment = isCompact
+                ? Avalonia.Layout.HorizontalAlignment.Stretch
+                : Avalonia.Layout.HorizontalAlignment.Right;
+        }
+
+        if (_networkCancelButton != null)
+            _networkCancelButton.HorizontalAlignment = isCompact
+                ? Avalonia.Layout.HorizontalAlignment.Stretch
+                : Avalonia.Layout.HorizontalAlignment.Left;
+        if (_networkConfirmButton != null)
+            _networkConfirmButton.HorizontalAlignment = isCompact
+                ? Avalonia.Layout.HorizontalAlignment.Stretch
+                : Avalonia.Layout.HorizontalAlignment.Left;
     }
 
     private SettingsViewModel? Vm => DataContext as SettingsViewModel;
@@ -49,8 +216,17 @@ public partial class SettingsView : UserControl
     private void OnCloseNetworkModal(object? sender, RoutedEventArgs e) =>
         Vm?.CloseNetworkModal();
 
-    private async void OnConfirmNetworkSwitch(object? sender, RoutedEventArgs e) =>
-        await (Vm?.ConfirmNetworkSwitchAsync() ?? Task.CompletedTask);
+    private async void OnConfirmNetworkSwitch(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            await (Vm?.ConfirmNetworkSwitchAsync() ?? Task.CompletedTask);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "OnConfirmNetworkSwitch failed");
+        }
+    }
 
     private void OnSelectMainnet(object? sender, RoutedEventArgs e) => SelectNetworkOption("Mainnet");
     private void OnSelectTestnet(object? sender, RoutedEventArgs e) => SelectNetworkOption("Testnet");

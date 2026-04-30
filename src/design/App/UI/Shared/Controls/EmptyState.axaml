@@ -36,6 +36,7 @@
                 <StackPanel HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             MaxWidth="420"
+                            Margin="24,0"
                             Spacing="0">
 
                     <!-- ═══ ICON AREA ═══ -->
@@ -105,7 +106,7 @@
                     <Border HorizontalAlignment="Center"
                             Classes="ButtonShadow"
                             IsVisible="{TemplateBinding HasButton}">
-                        <Button Classes="Primary">
+                        <Button Classes="Primary MobileAction">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <!-- Optional button icon — Vue: w-4 h-4 (16px), stroke 1.5 -->
                                 <!-- Path-based icon (legacy, for ButtonIconData) -->
@@ -136,6 +137,7 @@
                                         VerticalAlignment="Center"
                                         IsVisible="False" />
                                 <TextBlock Text="{TemplateBinding ButtonText}"
+                                           Foreground="{DynamicResource PrimaryButtonForeground}"
                                            VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>

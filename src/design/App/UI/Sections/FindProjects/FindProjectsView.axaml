@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:fp="clr-namespace:App.UI.Sections.FindProjects"
              xmlns:controls="clr-namespace:App.UI.Shared.Controls"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="800"
              x:Class="App.UI.Sections.FindProjects.FindProjectsView"
              x:DataType="fp:FindProjectsViewModel">
@@ -11,24 +12,17 @@
         <fp:FindProjectsViewModel />
     </Design.DataContext>
 
-    <Panel>
+    <Panel AutomationProperties.AutomationId="FindProjectsRootPanel">
         <!-- ═══════════════════════════════════════════════════════ -->
-        <!-- INVEST PAGE: shown when InvestPageViewModel != null     -->
-        <!-- Third drill-down: grid → detail → invest                -->
-        <!-- Visibility managed by code-behind SubscribeToVisibility -->
+        <!-- INVEST PAGE + PROJECT DETAIL: children are lazy-mounted -->
+        <!-- by code-behind on first visibility to avoid paying the  -->
+        <!-- ~1800-line XAML inflate cost on Find Projects tab-switch -->
+        <!-- (measured 6.5s first-tap with eager children; the child -->
+        <!-- views live in the same file in Vue and do not render     -->
+        <!-- until the user drills in from the project list).        -->
         <!-- ═══════════════════════════════════════════════════════ -->
-        <Panel Name="InvestPagePanel" IsVisible="False">
-            <fp:InvestPageView DataContext="{Binding InvestPageViewModel}" />
-        </Panel>
-
-        <!-- ═══════════════════════════════════════════════════════ -->
-        <!-- PROJECT DETAIL: shown when SelectedProject != null      -->
-        <!-- and InvestPage is not active                             -->
-        <!-- Visibility managed by code-behind SubscribeToVisibility -->
-        <!-- ═══════════════════════════════════════════════════════ -->
-        <Panel Name="ProjectDetailPanel" IsVisible="False">
-            <fp:ProjectDetailView DataContext="{Binding SelectedProject}" />
-        </Panel>
+        <Panel Name="InvestPagePanel" IsVisible="False" />
+        <Panel Name="ProjectDetailPanel" IsVisible="False" />
 
         <!-- ═══════════════════════════════════════════════════════ -->
         <!-- PROJECT GRID: shown when no project detail is selected  -->
@@ -37,33 +31,158 @@
         <!-- investor+raised, target, progress bar.                  -->
         <!-- ═══════════════════════════════════════════════════════ -->
         <controls:ScrollableView Name="ProjectListPanel" ContentPadding="24,24,24,24">
-            <ItemsControl ItemsSource="{Binding Projects}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <controls:ResponsiveGrid MinItemWidth="320"
-                                                 ColumnSpacing="16"
-                                                 RowSpacing="16" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="fp:ProjectItemViewModel">
-                        <controls:ProjectCard
-                            ProjectName="{Binding ProjectName}"
-                            ShortDescription="{Binding ShortDescription}"
-                            InvestorCount="{Binding InvestorCount}"
-                            InvestorLabel="{Binding InvestorLabel}"
-                            Raised="{Binding Raised}"
-                            Target="{Binding Target}"
-                            TargetLabel="{Binding TargetLabel}"
-                            Progress="{Binding Progress}"
-                            ProjectType="{Binding ProjectType}"
-                            Status="{Binding Status}"
-                            Banner="{Binding BannerUrl}"
-                            Avatar="{Binding AvatarUrl}"
-                            CurrencySymbol="{Binding $parent[UserControl].DataContext.CurrencySymbol}" />
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+            <StackPanel Spacing="16">
+                <!-- Header with refresh button -->
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0"
+                               Text="Discover Projects"
+                               FontSize="20" FontWeight="Bold"
+                               VerticalAlignment="Center" />
+                     <Button Name="RefreshProjectsButton" Grid.Column="1"
+                             Classes="Primary MobileAction"
+                            Padding="12,8"
+                            VerticalAlignment="Center"
+                            IsEnabled="{Binding !IsLoading}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <!-- Normal state: refresh icon -->
+                            <i:Icon Value="fa-solid fa-arrows-rotate"
+                                    FontSize="14"
+                                    IsVisible="{Binding !IsLoading}"
+                                    Foreground="{DynamicResource PrimaryButtonForeground}"
+                                    VerticalAlignment="Center" />
+                            <!-- Loading state: spinning icon -->
+                            <i:Icon Value="fa-solid fa-spinner"
+                                    FontSize="14"
+                                    IsVisible="{Binding IsLoading}"
+                                    Foreground="{DynamicResource PrimaryButtonForeground}"
+                                    VerticalAlignment="Center"
+                                    RenderTransformOrigin="50%,50%">
+                                <i:Icon.RenderTransform>
+                                    <RotateTransform />
+                                </i:Icon.RenderTransform>
+                                <i:Icon.Styles>
+                                    <Style Selector="i|Icon[IsVisible=True]">
+                                        <Style.Animations>
+                                            <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                <KeyFrame Cue="0%">
+                                                    <Setter Property="RotateTransform.Angle" Value="0" />
+                                                </KeyFrame>
+                                                <KeyFrame Cue="100%">
+                                                    <Setter Property="RotateTransform.Angle" Value="360" />
+                                                </KeyFrame>
+                                            </Animation>
+                                        </Style.Animations>
+                                    </Style>
+                                </i:Icon.Styles>
+                            </i:Icon>
+                            <TextBlock Text="Refresh"
+                                       VerticalAlignment="Center"
+                                       FontSize="13" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <!-- Skeleton placeholder grid — visible until first data arrives -->
+                <ItemsControl IsVisible="{Binding IsInitialLoad}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <controls:ResponsiveGrid MinItemWidth="320"
+                                                     ColumnSpacing="16"
+                                                     RowSpacing="16" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <controls:SkeletonProjectCard />
+                    <controls:SkeletonProjectCard />
+                    <controls:SkeletonProjectCard />
+                    <controls:SkeletonProjectCard />
+                    <controls:SkeletonProjectCard />
+                    <controls:SkeletonProjectCard />
+                </ItemsControl>
+
+                <!-- Project cards in responsive grid -->
+                <ItemsControl ItemsSource="{Binding Projects}"
+                              IsVisible="{Binding !IsInitialLoad}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <controls:ResponsiveGrid MinItemWidth="320"
+                                                     ColumnSpacing="16"
+                                                     RowSpacing="16" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="fp:ProjectItemViewModel">
+                            <controls:ProjectCard
+                                ProjectName="{Binding ProjectName}"
+                                ShortDescription="{Binding ShortDescription}"
+                                InvestorCount="{Binding InvestorCount}"
+                                InvestorLabel="{Binding InvestorLabel}"
+                                Raised="{Binding Raised}"
+                                Target="{Binding Target}"
+                                TargetLabel="{Binding TargetLabel}"
+                                Progress="{Binding Progress}"
+                                ProjectType="{Binding ProjectType}"
+                                Status="{Binding Status}"
+                                Banner="{Binding BannerUrl}"
+                                Avatar="{Binding AvatarUrl}"
+                                CurrencySymbol="{Binding $parent[UserControl].DataContext.CurrencySymbol}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <!-- "Load More" button: explicit reveal of the next batch.  -->
+                <!-- Replaces the previous auto-scroll-trigger wiring which  -->
+                <!-- caused ANR on Android when layout re-entry piled up     -->
+                <!-- Dispatcher posts. Button is hidden once pendingItems    -->
+                <!-- drains (HasMoreItems=false), and disables itself during -->
+                <!-- an in-flight batch insert (IsLoadingMore=true) so       -->
+                <!-- repeated taps can't stack concurrent layout passes.     -->
+                <!-- ═══════════════════════════════════════════════════════ -->
+                <Button Name="LoadMoreButton"
+                        Classes="Secondary MobileAction"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        Padding="16,12"
+                        Margin="0,8,0,0"
+                        IsVisible="{Binding HasMoreItems}"
+                        IsEnabled="{Binding !IsLoadingMore}">
+                    <StackPanel Orientation="Horizontal" Spacing="8"
+                                HorizontalAlignment="Center">
+                        <!-- Idle state: "Load More" with plus icon -->
+                        <i:Icon Value="fa-solid fa-plus"
+                                FontSize="13"
+                                IsVisible="{Binding !IsLoadingMore}"
+                                VerticalAlignment="Center" />
+                        <!-- Loading state: spinner -->
+                        <i:Icon Value="fa-solid fa-spinner"
+                                FontSize="13"
+                                IsVisible="{Binding IsLoadingMore}"
+                                VerticalAlignment="Center"
+                                RenderTransformOrigin="50%,50%">
+                            <i:Icon.RenderTransform>
+                                <RotateTransform />
+                            </i:Icon.RenderTransform>
+                            <i:Icon.Styles>
+                                <Style Selector="i|Icon[IsVisible=True]">
+                                    <Style.Animations>
+                                        <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                            <KeyFrame Cue="0%">
+                                                <Setter Property="RotateTransform.Angle" Value="0" />
+                                            </KeyFrame>
+                                            <KeyFrame Cue="100%">
+                                                <Setter Property="RotateTransform.Angle" Value="360" />
+                                            </KeyFrame>
+                                        </Animation>
+                                    </Style.Animations>
+                                </Style>
+                            </i:Icon.Styles>
+                        </i:Icon>
+                        <TextBlock VerticalAlignment="Center"
+                                   FontSize="14" FontWeight="SemiBold"
+                                   Text="Load More" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
         </controls:ScrollableView>
     </Panel>
 </UserControl>

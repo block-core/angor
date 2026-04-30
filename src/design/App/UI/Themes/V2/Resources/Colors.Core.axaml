@@ -76,6 +76,30 @@
             <SolidColorBrush x:Key="ErrorFieldText" Color="#dc2626" />
             <SolidColorBrush x:Key="ErrorFieldBorder" Color="#EF4444" />
 
+            <!-- ── Bottom Tab Bar Colors (light) ──
+                 Vue: bg-white, border-gray-200, active #4B7C5A, inactive text-gray-600 (#4B5563)
+                 MD3 pill: brand green at 12% opacity -->
+            <SolidColorBrush x:Key="TabBarBackground" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="TabBarBorder" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="TabBarActiveText" Color="#4B7C5A" />
+            <SolidColorBrush x:Key="TabBarInactiveText" Color="#4B5563" />
+            <SolidColorBrush x:Key="TabBarPillActiveBg" Color="#4B7C5A" Opacity="0.15" />
+            <!-- Sub-tab panel (floating pill) — Vue: bg-white, border-gray-200, inactive text #4A5568 -->
+            <SolidColorBrush x:Key="SubTabPanelBg" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="SubTabPanelBorder" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="SubTabActiveBg" Color="#4B7C5A" />
+            <SolidColorBrush x:Key="SubTabActiveText" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="SubTabInactiveBg" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="SubTabInactiveText" Color="#4A5568" />
+            <SolidColorBrush x:Key="SubTabInactiveHoverBg" Color="#F9FAFB" />
+
+            <!-- ── Mobile Share Button Colors (light) ──
+                 Vue: Share btn bg-white text-gray-900 (light), bg-[#1a1a1a] text-white border-[#333] (dark)
+                 Back btn is always-dark — see theme-independent section below -->
+            <SolidColorBrush x:Key="MobileShareBtnBg" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="MobileShareBtnBorder" Color="#E5E7EB" />
+            <SolidColorBrush x:Key="MobileShareBtnText" Color="#111827" />
+
             <!-- Warning/Fee Box Colors (light mode: warm cream/amber) -->
             <SolidColorBrush x:Key="WarningBoxBackground" Color="#FFF7ED" />
             <SolidColorBrush x:Key="WarningBoxBorder" Color="#FDBA74" />
@@ -108,9 +132,23 @@
             <BoxShadows x:Key="PrimaryButtonShadow">0 4 16 0 #00000099</BoxShadows>
             <BoxShadows x:Key="PrimaryButtonShadowHover">0 8 24 0 #000000B3</BoxShadows>
 
+            <!-- Light-variant Primary (Button.Primary.Light): white card with dark text
+                 for sections where the heavy black gradient is too visually dominant
+                 (e.g. My Projects sidebar + mobile action buttons). -->
+            <SolidColorBrush x:Key="LightPrimaryButtonBackground" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="LightPrimaryButtonForeground" Color="{StaticResource TextStrong}" />
+            <SolidColorBrush x:Key="LightPrimaryButtonBorder" Color="#33000000" />
+
             <SolidColorBrush x:Key="SecondaryButtonForeground" Color="{StaticResource TextStrong}" />
             <SolidColorBrush x:Key="SecondaryButtonBackground" Color="{DynamicResource SurfaceHover}" />
             <SolidColorBrush x:Key="SecondaryButtonBorder" Color="{StaticResource TextStrong}" />
+
+            <!-- Light-variant Secondary (Button.Secondary.Light): white card with subtle
+                 border and dark text. Centralized preset for every "ghost / back / cancel"
+                 button so the whole set can be restyled from one place later. -->
+            <SolidColorBrush x:Key="LightSecondaryButtonBackground" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="LightSecondaryButtonForeground" Color="{StaticResource TextStrong}" />
+            <SolidColorBrush x:Key="LightSecondaryButtonBorder" Color="{StaticResource Stroke}" />
 
             <!-- Decorative Brushes -->
             <!-- Tiled logo background pattern (higher opacity on dark background, matching web: opacity .08) -->
@@ -222,6 +260,31 @@
             <SolidColorBrush x:Key="ErrorFieldText" Color="#f87171" />
             <SolidColorBrush x:Key="ErrorFieldBorder" Color="#EF4444" />
 
+            <!-- ── Bottom Tab Bar Colors (dark) ──
+                 MD3 bottom navigation: active = primary (bright), inactive = on-surface-variant (muted)
+                 Active uses #5FAF78 (brighter green from Vue Landing.vue dark accent) for
+                 luminance contrast against inactive gray. Inactive #9CA3AF per MD3 on-surface-variant.
+                 Pill: 20% opacity for clear active indicator on dark surface. -->
+            <SolidColorBrush x:Key="TabBarBackground" Color="#1C1C1C" />
+            <SolidColorBrush x:Key="TabBarBorder" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="TabBarActiveText" Color="#5FAF78" />
+            <SolidColorBrush x:Key="TabBarInactiveText" Color="#9CA3AF" />
+            <SolidColorBrush x:Key="TabBarPillActiveBg" Color="#5FAF78" Opacity="0.20" />
+            <!-- Sub-tab panel (floating pill) — Vue dark: bg #2A2A2A, border #3A3A3A, inactive text #FAFAFA -->
+            <SolidColorBrush x:Key="SubTabPanelBg" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="SubTabPanelBorder" Color="#3A3A3A" />
+            <SolidColorBrush x:Key="SubTabActiveBg" Color="#4B7C5A" />
+            <SolidColorBrush x:Key="SubTabActiveText" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="SubTabInactiveBg" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="SubTabInactiveText" Color="#FAFAFA" />
+            <SolidColorBrush x:Key="SubTabInactiveHoverBg" Color="#2A2A2A" />
+
+            <!-- ── Mobile Share Button Colors (dark) ──
+                 Vue: bg-[#1a1a1a] text-white hover:bg-[#2a2a2a] border border-[#333] -->
+            <SolidColorBrush x:Key="MobileShareBtnBg" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="MobileShareBtnBorder" Color="#333333" />
+            <SolidColorBrush x:Key="MobileShareBtnText" Color="#FFFFFF" />
+
             <!-- Warning/Fee Box Colors (dark mode: warm rust/brown) -->
             <SolidColorBrush x:Key="WarningBoxBackground" Color="#2A1A14" />
             <SolidColorBrush x:Key="WarningBoxBorder" Color="#7C3A2A" />
@@ -278,6 +341,17 @@
             <BoxShadows x:Key="PrimaryButtonShadow">0 4 16 0 #000000AA</BoxShadows>
             <BoxShadows x:Key="PrimaryButtonShadowHover">0 8 24 0 #000000CC</BoxShadows>
 
+            <!-- Light-variant Primary in dark mode: fall back to the same dark-gradient
+                 as the base Primary so Classes="Primary Light" renders identically. -->
+            <LinearGradientBrush x:Key="LightPrimaryButtonBackground" StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStops>
+                    <GradientStop Offset="0" Color="#2A2A2A" />
+                    <GradientStop Offset="1" Color="#1A1A1A" />
+                </GradientStops>
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="LightPrimaryButtonForeground" Color="{StaticResource TextStrong}" />
+            <SolidColorBrush x:Key="LightPrimaryButtonBorder" Color="#3A3A3A" />
+
             <SolidColorBrush x:Key="AccentButtonForeground" Color="{DynamicResource SurfaceHover}" />
             <SolidColorBrush x:Key="AccentButtonBackground" Color="{StaticResource Accent}" />
             <SolidColorBrush x:Key="AccentButtonBorder" Color="{StaticResource Stroke}" />
@@ -285,6 +359,13 @@
             <SolidColorBrush x:Key="SecondaryButtonForeground" Color="{StaticResource TextStrong}" />
             <SolidColorBrush x:Key="SecondaryButtonBackground" Color="{StaticResource Surface}" />
             <SolidColorBrush x:Key="SecondaryButtonBorder" Color="{StaticResource Stroke}" />
+
+            <!-- Light-variant Secondary in dark mode: keep the existing hardcoded
+                 mobile back-button appearance (#1a1a1a with #333 border, white text)
+                 so the back bar matches the Vue reference on dark. -->
+            <SolidColorBrush x:Key="LightSecondaryButtonBackground" Color="#1A1A1A" />
+            <SolidColorBrush x:Key="LightSecondaryButtonForeground" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="LightSecondaryButtonBorder" Color="#333333" />
 
             <!-- Nav group header divider: transparent → gray-600 → transparent (matches Vue bg-gradient-to-r via-gray-600) -->
             <LinearGradientBrush x:Key="NavGroupDivider" StartPoint="0%,50%" EndPoint="100%,50%">
@@ -344,6 +425,12 @@
     <SolidColorBrush x:Key="PrimaryGreenBrush12" Color="#4B7C5A" Opacity="0.12" />
     <SolidColorBrush x:Key="PrimaryGreenBrush08" Color="#4B7C5A" Opacity="0.08" />
     <SolidColorBrush x:Key="PrimaryGreenBrush04" Color="#4B7C5A" Opacity="0.04" />
+
+    <!-- ── Mobile Back Button (always dark, NOT theme-aware) ──
+         Vue line 6207: bg-[#1a1a1a] text-white border border-[#333] — same in light and dark -->
+    <SolidColorBrush x:Key="MobileBackBtnBg" Color="#1A1A1A" />
+    <SolidColorBrush x:Key="MobileBackBtnBorder" Color="#333333" />
+    <SolidColorBrush x:Key="MobileBackBtnText" Color="#FFFFFF" />
 
     <!--
         App-wide crosshatch texture replicating the web CSS:

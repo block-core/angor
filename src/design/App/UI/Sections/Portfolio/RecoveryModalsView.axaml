@@ -38,8 +38,7 @@
         <!-- Vue: .recovery-modal                                        -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding ShowRecoveryModal}"
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="600" MaxWidth="672"
+                Classes="ModalCard Wide"
                 MaxHeight="{Binding $parent[Panel].Bounds.Height, FallbackValue=800}"
                 CornerRadius="16"
                 Background="{DynamicResource RecoveryModalBg}"
@@ -76,7 +75,7 @@
                         Background="{DynamicResource RecoveryModalBg}">
                     <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
                         <!-- Cancel -->
-                        <Button Name="CancelRecoveryModal" Classes="ModalBtn" Cursor="Hand">
+                        <Button Name="CancelRecoveryModal" Classes="ModalBtn MobileAction" Cursor="Hand">
                             <Border CornerRadius="8" Padding="24,12"
                                     Background="{DynamicResource ModalCancelBg}">
                                 <TextBlock Text="Cancel" FontSize="14" FontWeight="SemiBold"
@@ -84,7 +83,7 @@
                             </Border>
                         </Button>
                         <!-- Confirm -->
-                        <Button Name="ConfirmRecoveryModal" Classes="ModalBtn" Cursor="Hand">
+                        <Button Name="ConfirmRecoveryModal" Classes="ModalBtn MobileAction" Cursor="Hand">
                             <Border CornerRadius="8" Padding="24,12"
                                     ClipToBounds="True"
                                     Background="{DynamicResource GreenGradient}">
@@ -210,6 +209,22 @@
                         <!-- Fee rate is selected via the reusable FeeSelectionPopup
                              when the user clicks Confirm -->
 
+                        <!-- Error message (shown when recovery operation fails) -->
+                        <Border CornerRadius="12" Padding="16"
+                                IsVisible="{Binding HasError}"
+                                Background="#331C1C"
+                                BorderBrush="#662222"
+                                BorderThickness="1">
+                            <DockPanel>
+                                <i:Icon Value="fa-solid fa-circle-exclamation" FontSize="18"
+                                        Foreground="#EF4444" VerticalAlignment="Top"
+                                        Margin="0,2,12,0" DockPanel.Dock="Left" />
+                                <TextBlock Text="{Binding ErrorMessage}"
+                                           FontSize="14" TextWrapping="Wrap"
+                                           Foreground="#FCA5A5" />
+                            </DockPanel>
+                        </Border>
+
                         <!-- Confirmation question -->
                         <TextBlock Text="Are you sure you want to recover these funds?"
                                    FontSize="15" FontWeight="SemiBold"
@@ -227,8 +242,7 @@
         <!-- Vue: .claim-modal — table with inline action button          -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding ShowClaimModal}"
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="600" MaxWidth="672"
+                Classes="ModalCard Wide"
                 CornerRadius="16"
                 Background="{DynamicResource RecoveryModalBg}"
                 BorderBrush="{DynamicResource RecoveryModalBorder}"
@@ -314,7 +328,7 @@
                                 <Run Text="{Binding PenaltyDaysRemaining, Mode=OneWay}" /><Run Text=" days" />
                             </TextBlock>
                             <!-- Claim Penalty button (green gradient, inline) -->
-                            <Button Name="ClaimPenaltyButton" Grid.Column="2" Classes="ModalBtn"
+                        <Button Name="ClaimPenaltyButton" Grid.Column="2" Classes="ModalBtn MobileAction"
                                     Cursor="Hand" VerticalAlignment="Center">
                                 <Border CornerRadius="8" Padding="16,8"
                                         Background="{DynamicResource GreenGradient}">
@@ -355,6 +369,22 @@
                         </Grid>
                     </Border>
                 </StackPanel>
+
+                <!-- Error message (shown when claim operation fails) -->
+                <Border CornerRadius="12" Padding="16" Margin="24,0,24,24"
+                        IsVisible="{Binding HasError}"
+                        Background="#331C1C"
+                        BorderBrush="#662222"
+                        BorderThickness="1">
+                    <DockPanel>
+                        <i:Icon Value="fa-solid fa-circle-exclamation" FontSize="18"
+                                Foreground="#EF4444" VerticalAlignment="Top"
+                                Margin="0,2,12,0" DockPanel.Dock="Left" />
+                        <TextBlock Text="{Binding ErrorMessage}"
+                                   FontSize="14" TextWrapping="Wrap"
+                                   Foreground="#FCA5A5" />
+                    </DockPanel>
+                </Border>
             </StackPanel>
         </Border>
 
@@ -363,8 +393,7 @@
         <!-- Vue: .release-modal — info fields + fee selector             -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding ShowReleaseModal}"
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="600" MaxWidth="672"
+                Classes="ModalCard Wide"
                 MaxHeight="{Binding $parent[Panel].Bounds.Height, FallbackValue=800}"
                 CornerRadius="16"
                 Background="{DynamicResource RecoveryModalBg}"
@@ -398,14 +427,14 @@
                         BorderBrush="{DynamicResource ModalHeaderBorder}"
                         Background="{DynamicResource RecoveryModalBg}">
                     <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
-                        <Button Name="CancelReleaseModal" Classes="ModalBtn" Cursor="Hand">
+                        <Button Name="CancelReleaseModal" Classes="ModalBtn MobileAction" Cursor="Hand">
                             <Border CornerRadius="8" Padding="24,12"
                                     Background="{DynamicResource ModalCancelBg}">
                                 <TextBlock Text="Cancel" FontSize="14" FontWeight="SemiBold"
                                            Foreground="{DynamicResource ModalCancelFg}" />
                             </Border>
                         </Button>
-                        <Button Name="ConfirmReleaseModal" Classes="ModalBtn" Cursor="Hand">
+                        <Button Name="ConfirmReleaseModal" Classes="ModalBtn MobileAction" Cursor="Hand">
                             <Border CornerRadius="8" Padding="24,12"
                                     ClipToBounds="True"
                                     Background="{DynamicResource GreenGradient}">
@@ -513,6 +542,22 @@
                         <!-- Fee rate is selected via the reusable FeeSelectionPopup
                              when the user clicks Confirm -->
 
+                        <!-- Error message (shown when release operation fails) -->
+                        <Border CornerRadius="12" Padding="16"
+                                IsVisible="{Binding HasError}"
+                                Background="#331C1C"
+                                BorderBrush="#662222"
+                                BorderThickness="1">
+                            <DockPanel>
+                                <i:Icon Value="fa-solid fa-circle-exclamation" FontSize="18"
+                                        Foreground="#EF4444" VerticalAlignment="Top"
+                                        Margin="0,2,12,0" DockPanel.Dock="Left" />
+                                <TextBlock Text="{Binding ErrorMessage}"
+                                           FontSize="14" TextWrapping="Wrap"
+                                           Foreground="#FCA5A5" />
+                            </DockPanel>
+                        </Border>
+
                     </StackPanel>
                 </ScrollViewer>
             </DockPanel>
@@ -523,8 +568,7 @@
         <!-- Vue: 64x64 gradient circle + white checkmark, "Funds Released" -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding ShowSuccessModal}"
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="380" MaxWidth="448"
+                Classes="ModalCard"
                 CornerRadius="16"
                 Background="{DynamicResource RecoveryModalBg}"
                 BorderBrush="{DynamicResource RecoveryModalBorder}"
@@ -565,7 +609,7 @@
                            Margin="0,0,0,32" />
 
                 <!-- Go to Funds Tab button (green gradient, full width) -->
-                <Button Name="GoToFundsButton" Classes="ModalBtn" Cursor="Hand"
+                <Button Name="GoToFundsButton" Classes="ModalBtn MobileAction" Cursor="Hand"
                         HorizontalAlignment="Stretch">
                     <Border CornerRadius="8" Padding="24,12"
                             HorizontalAlignment="Stretch"

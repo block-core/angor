@@ -34,9 +34,8 @@
                IsVisible="{Binding ShowClaimModal}"
                ZIndex="200"
                Background="{DynamicResource ModalBackdrop}">
-            <Border MaxWidth="672" Width="672"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
+            <!-- Mobile-responsive: fluid width with min/max bounds + 16px margin for breathing room on phones. -->
+            <Border Classes="ModalCard Wide"
                     Background="{DynamicResource DetailCardBg}"
                     BorderBrush="{DynamicResource ModalHeaderBorder}"
                     BorderThickness="1"
@@ -174,9 +173,8 @@
                IsVisible="{Binding ShowPasswordModal}"
                ZIndex="201"
                Background="{DynamicResource ModalBackdrop}">
-            <Border MaxWidth="448" Width="448"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
+            <!-- Mobile-responsive: fluid width with min/max bounds + 16px margin for breathing room on phones. -->
+            <Border Classes="ModalCard"
                     Background="{DynamicResource DetailCardBg}"
                     BorderBrush="{DynamicResource ModalHeaderBorder}"
                     BorderThickness="1"
@@ -268,9 +266,8 @@
                IsVisible="{Binding ShowSuccessModal}"
                ZIndex="202"
                Background="{DynamicResource ModalBackdrop}">
-            <Border MaxWidth="448" Width="448"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
+            <!-- Mobile-responsive: fluid width with min/max bounds + 16px margin for breathing room on phones. -->
+            <Border Classes="ModalCard"
                     Background="{DynamicResource SuccessModalBg}"
                     BorderBrush="{DynamicResource ModalHeaderBorder}"
                     BorderThickness="1"
@@ -356,9 +353,8 @@
                IsVisible="{Binding ShowReleaseFundsModal}"
                ZIndex="200"
                Background="{DynamicResource ModalBackdrop}">
-            <Border MaxWidth="672" Width="672"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
+            <!-- Mobile-responsive: fluid width with min/max bounds + 16px margin for breathing room on phones. -->
+            <Border Classes="ModalCard Wide"
                     Background="{DynamicResource DetailCardBg}"
                     BorderBrush="{DynamicResource ModalHeaderBorder}"
                     BorderThickness="1"
@@ -481,9 +477,8 @@
                IsVisible="{Binding ShowReleaseFundsPasswordModal}"
                ZIndex="201"
                Background="{DynamicResource ModalBackdrop}">
-            <Border MaxWidth="448" Width="448"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
+            <!-- Mobile-responsive: fluid width with min/max bounds + 16px margin for breathing room on phones. -->
+            <Border Classes="ModalCard"
                     Background="{DynamicResource DetailCardBg}"
                     BorderBrush="{DynamicResource ModalHeaderBorder}"
                     BorderThickness="1"
@@ -571,9 +566,8 @@
                IsVisible="{Binding ShowReleaseFundsSuccessModal}"
                ZIndex="202"
                Background="{DynamicResource ModalBackdrop}">
-            <Border MaxWidth="448" Width="448"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
+            <!-- Mobile-responsive: fluid width with min/max bounds + 16px margin for breathing room on phones. -->
+            <Border Classes="ModalCard"
                     Background="{DynamicResource DetailCardBg}"
                     BorderBrush="{DynamicResource ModalHeaderBorder}"
                     BorderThickness="1"
@@ -654,9 +648,8 @@
                IsVisible="{Binding ShowSpentModal}"
                ZIndex="200"
                Background="{DynamicResource ModalBackdrop}">
-            <Border MaxWidth="672" Width="672"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
+            <!-- Mobile-responsive: fluid width with min/max bounds + 16px margin for breathing room on phones. -->
+            <Border Classes="ModalCard Wide"
                     Background="{DynamicResource DetailCardBg}"
                     BorderBrush="{DynamicResource ModalHeaderBorder}"
                     BorderThickness="1"

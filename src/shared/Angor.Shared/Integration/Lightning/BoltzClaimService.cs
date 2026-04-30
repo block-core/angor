@@ -291,14 +291,14 @@ public class BoltzClaimService : IBoltzClaimService
         _logger.LogInformation("Built cooperative claim transaction: {TxId}", claimTxId);
         
         var broadcastResult = await _boltzSwapService.BroadcastTransactionAsync(signedTxHex);
-        
+
         if (broadcastResult.IsFailure)
         {
             _logger.LogWarning("Boltz broadcast failed: {Error}. Trying indexer...", broadcastResult.Error);
             try
             {
                 var indexerError = await _indexerService.PublishTransactionAsync(signedTxHex);
-                
+
                 if (!string.IsNullOrEmpty(indexerError))
                 {
                     return Result.Failure<BoltzClaimResult>(
@@ -312,7 +312,23 @@ public class BoltzClaimService : IBoltzClaimService
                     $"Failed to broadcast: Boltz: {broadcastResult.Error}, Indexer: {broadcastEx.Message}");
             }
         }
-        
+
+        // Also relay to the indexer so its node has the claim tx in mempool.
+        // The investment tx that spends this output will be broadcast via the indexer,
+        // and it needs to know about the parent tx.
+        try
+        {
+            var indexerError = await _indexerService.PublishTransactionAsync(signedTxHex);
+            if (!string.IsNullOrEmpty(indexerError))
+                _logger.LogWarning("Relay claim tx to indexer returned: {Error} (non-fatal)", indexerError);
+            else
+                _logger.LogInformation("Claim tx also relayed to indexer");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to relay claim tx to indexer (non-fatal)");
+        }
+
         _logger.LogInformation("Successfully claimed swap {SwapId} via MuSig2. TxId: {TxId}", swap.Id, claimTxId);
         
         return Result.Success(new BoltzClaimResult(claimTxId, signedTxHex));
@@ -455,14 +471,14 @@ public class BoltzClaimService : IBoltzClaimService
 
             // Broadcast
             var broadcastResult = await _boltzSwapService.BroadcastTransactionAsync(signedClaimHex);
-            
+
             if (broadcastResult.IsFailure)
             {
                 _logger.LogWarning("Boltz broadcast failed: {Error}. Trying indexer...", broadcastResult.Error);
                 try
                 {
                     var indexerError = await _indexerService.PublishTransactionAsync(signedClaimHex);
-                    
+
                     if (!string.IsNullOrEmpty(indexerError))
                     {
                         return Result.Failure<BoltzClaimResult>(
@@ -477,9 +493,21 @@ public class BoltzClaimService : IBoltzClaimService
                         $"Failed to broadcast via Boltz: {broadcastResult.Error}. Indexer: {broadcastEx.Message}");
                 }
             }
-            else
+
+            // Also relay to the indexer so its node has the claim tx in mempool.
+            // The investment tx that spends this output will be broadcast via the indexer,
+            // and it needs to know about the parent tx.
+            try
             {
-                _logger.LogInformation("Transaction broadcast successfully via Boltz: {TxId}", broadcastResult.Value);
+                var indexerError = await _indexerService.PublishTransactionAsync(signedClaimHex);
+                if (!string.IsNullOrEmpty(indexerError))
+                    _logger.LogWarning("Relay claim tx to indexer returned: {Error} (non-fatal)", indexerError);
+                else
+                    _logger.LogInformation("Claim tx also relayed to indexer");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to relay claim tx to indexer (non-fatal)");
             }
 
             _logger.LogInformation("Successfully claimed swap {SwapId}. Claim TxId: {TxId}", swap.Id, claimTxId);

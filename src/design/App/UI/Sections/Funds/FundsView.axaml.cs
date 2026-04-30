@@ -1,31 +1,156 @@
+using System;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
-using App.UI.Shared;
-using App.UI.Shared.Services;
+using Angor.Shared.Services;
 using App.UI.Shell;
+using App.UI.Shared;
 using App.UI.Shared.Controls;
+using App.UI.Shared.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using ReactiveUI;
 
 namespace App.UI.Sections.Funds;
 
-public partial class FundsView : UserControl
+public partial class FundsView : UserControl, ISectionView
 {
+    private IDisposable? _layoutSubscription;
+
+    // Cached responsive controls
+    private Border? _fundsSummaryCard;
+    private Grid? _fundsStatsGrid;
+    private Border? _fundsStatCard0;
+    private Border? _fundsStatCard1;
+    private Border? _fundsStatCard2;
+    private ScrollableView? _scrollableView;
+
     /// <summary>Design-time only.</summary>
-    public FundsView() => InitializeComponent();
+    public FundsView()
+    {
+        InitializeComponent();
+        CacheControls();
+        SubscribeLayout();
+    }
 
     public FundsView(FundsViewModel vm)
     {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
         InitializeComponent();
+        var initMs = sw.ElapsedMilliseconds;
+
+        sw.Restart();
         DataContext = vm;
+
+        // Strip hover transitions + BoxShadow on mobile — they never fire and waste GPU
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
+            Classes.Add("Mobile");
+
+        CacheControls();
+        SubscribeLayout();
 
         // Handle button clicks from EmptyState "Add Wallet", populated "Add Wallet",
         // and WalletCard action buttons (BtnSend, BtnReceive, BtnUtxo)
         AddHandler(Button.ClickEvent, OnButtonClick, RoutingStrategies.Bubble);
 
-        // Panel visibility is handled by AXAML bindings on HasWallets.
-        // The loading spinner panel binds to IsLoading directly.
+        var totalMs = sw.ElapsedMilliseconds + initMs;
+        App.Services.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("FundsPerf")
+            .LogInformation("[FundsView.ctor] init={Init}ms wire={Wire}ms total={Total}ms",
+                initMs, sw.ElapsedMilliseconds, totalMs);
+    }
+
+    private void CacheControls()
+    {
+        _fundsSummaryCard = this.FindControl<Border>("FundsSummaryCard");
+        _fundsStatsGrid = this.FindControl<Grid>("FundsStatsGrid");
+        _fundsStatCard0 = this.FindControl<Border>("FundsStatCard0");
+        _fundsStatCard1 = this.FindControl<Border>("FundsStatCard1");
+        _fundsStatCard2 = this.FindControl<Border>("FundsStatCard2");
+        _scrollableView = this.FindControl<ScrollableView>("FundsScrollableView");
+    }
+
+    private void SubscribeLayout()
+    {
+        _layoutSubscription = LayoutModeService.Instance
+            .WhenAnyValue(x => x.IsCompact)
+            .Subscribe(ApplyResponsiveLayout);
+    }
+
+    /// <summary>
+    /// Responsive layout: compact → stats stack single column, reduced padding.
+    /// Vue: <=768px → stats-grid repeat(2,1fr) gap 12; <=640px → 1fr.
+    /// We use single breakpoint (IsCompact = <=1024px) → 1-col stacked.
+    /// </summary>
+    private void ApplyResponsiveLayout(bool isCompact)
+    {
+        if (_fundsStatsGrid == null) return;
+
+        if (isCompact)
+        {
+            // Stats grid: collapse cols 1-2 to 0, stack cards vertically (SIGABRT-safe in-place mutation)
+            if (_fundsStatsGrid.ColumnDefinitions.Count >= 3)
+            {
+                _fundsStatsGrid.ColumnDefinitions[1].Width = new GridLength(0);
+                _fundsStatsGrid.ColumnDefinitions[2].Width = new GridLength(0);
+            }
+
+            if (_fundsStatCard0 != null)
+            {
+                Grid.SetColumn(_fundsStatCard0, 0); Grid.SetRow(_fundsStatCard0, 0);
+                _fundsStatCard0.Margin = new Thickness(0, 0, 0, 12);
+            }
+            if (_fundsStatCard1 != null)
+            {
+                Grid.SetColumn(_fundsStatCard1, 0); Grid.SetRow(_fundsStatCard1, 1);
+                _fundsStatCard1.Margin = new Thickness(0, 0, 0, 12);
+            }
+            if (_fundsStatCard2 != null)
+            {
+                Grid.SetColumn(_fundsStatCard2, 0); Grid.SetRow(_fundsStatCard2, 2);
+                _fundsStatCard2.Margin = new Thickness(0);
+            }
+
+            if (_fundsSummaryCard != null)
+                _fundsSummaryCard.Padding = new Thickness(16);
+
+            if (_scrollableView != null)
+                _scrollableView.ContentPadding = new Thickness(16, 16, 16, 96);
+        }
+        else
+        {
+            // Stats grid: restore 3 Star columns in-place
+            if (_fundsStatsGrid.ColumnDefinitions.Count >= 3)
+            {
+                _fundsStatsGrid.ColumnDefinitions[0].Width = GridLength.Star;
+                _fundsStatsGrid.ColumnDefinitions[1].Width = GridLength.Star;
+                _fundsStatsGrid.ColumnDefinitions[2].Width = GridLength.Star;
+            }
+
+            if (_fundsStatCard0 != null)
+            {
+                Grid.SetColumn(_fundsStatCard0, 0); Grid.SetRow(_fundsStatCard0, 0);
+                _fundsStatCard0.Margin = new Thickness(0, 0, 8, 0);
+            }
+            if (_fundsStatCard1 != null)
+            {
+                Grid.SetColumn(_fundsStatCard1, 1); Grid.SetRow(_fundsStatCard1, 0);
+                _fundsStatCard1.Margin = new Thickness(4, 0, 4, 0);
+            }
+            if (_fundsStatCard2 != null)
+            {
+                Grid.SetColumn(_fundsStatCard2, 2); Grid.SetRow(_fundsStatCard2, 0);
+                _fundsStatCard2.Margin = new Thickness(8, 0, 0, 0);
+            }
+
+            if (_fundsSummaryCard != null)
+                _fundsSummaryCard.Padding = new Thickness(24);
+
+            if (_scrollableView != null)
+                _scrollableView.ContentPadding = new Thickness(24);
+        }
     }
 
     /// <summary>
@@ -37,9 +162,11 @@ public partial class FundsView : UserControl
         base.OnAttachedToLogicalTree(e);
 
         // Reload wallet data when the view re-enters the tree (e.g. after wipe or navigation)
-        if (DataContext is FundsViewModel vm)
+        // On mobile with SectionPanel, OnBecameActive() handles this instead.
+        if (DataContext is FundsViewModel vm && !OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())
             _ = vm.ReloadWalletsAsync();
 
+        // Force layout invalidation so bindings re-evaluate when the cached view re-enters.
         InvalidateVisual();
     }
 
@@ -65,13 +192,13 @@ public partial class FundsView : UserControl
                 e.Handled = true;
                 return;
 
-            case "BtnFaucet":
-                _ = RequestTestCoinsAsync(btn);
+            case "BtnRefresh":
+                HandleRefresh(btn);
                 e.Handled = true;
                 return;
 
-            case "BtnRefresh":
-                RefreshWalletBalance(btn);
+            case "BtnFaucet":
+                HandleFaucet(btn);
                 e.Handled = true;
                 return;
         }
@@ -97,8 +224,6 @@ public partial class FundsView : UserControl
 
     /// <summary>
     /// Extract wallet info from a WalletCard and open the Send modal.
-    /// Uses AvailableSats (confirmed + unconfirmed) for the balance so users can spend
-    /// unconfirmed UTXOs. The display Balance property only shows confirmed.
     /// </summary>
     private void OpenSendModal(Button btn)
     {
@@ -145,7 +270,6 @@ public partial class FundsView : UserControl
 
     /// <summary>
     /// Extract wallet info from a WalletCard and open the UTXO management modal.
-    /// Uses AvailableSats (confirmed + unconfirmed) for the balance, consistent with SendFundsModal.
     /// </summary>
     private void OpenWalletDetailModal(Button btn)
     {
@@ -170,13 +294,38 @@ public partial class FundsView : UserControl
     }
 
     /// <summary>
-    /// Request testnet coins for a single wallet via its WalletCard.
-    /// Awaits the result and shows a toast notification on success or failure.
+    /// Refresh balance for the wallet associated with the clicked button.
     /// </summary>
-    private async Task RequestTestCoinsAsync(Button btn)
+    private async void HandleRefresh(Button btn)
     {
         var card = FindParentWalletCard(btn);
-        if (card?.WalletId == null) return;
+        if (card == null || string.IsNullOrEmpty(card.WalletId)) return;
+        if (DataContext is not FundsViewModel vm) return;
+
+        card.IsRefreshing = true;
+        try
+        {
+            await vm.RefreshBalanceAsync(card.WalletId);
+        }
+        catch (Exception ex)
+        {
+            var shellView = this.FindAncestorOfType<ShellView>();
+            if (shellView?.DataContext is ShellViewModel shellVm)
+                shellVm.ShowToast($"Failed to refresh balance: {ex.Message}");
+        }
+        finally
+        {
+            card.IsRefreshing = false;
+        }
+    }
+
+    /// <summary>
+    /// Request test coins for the wallet associated with the clicked button (testnet only).
+    /// </summary>
+    private async void HandleFaucet(Button btn)
+    {
+        var card = FindParentWalletCard(btn);
+        if (card == null || string.IsNullOrEmpty(card.WalletId)) return;
         if (DataContext is not FundsViewModel vm) return;
 
         btn.IsEnabled = false;
@@ -203,17 +352,6 @@ public partial class FundsView : UserControl
         {
             btn.IsEnabled = true;
         }
-    }
-
-    /// <summary>
-    /// Refresh balance for a single wallet via its WalletCard.
-    /// </summary>
-    private void RefreshWalletBalance(Button btn)
-    {
-        var card = FindParentWalletCard(btn);
-        if (card?.WalletId == null) return;
-        if (DataContext is FundsViewModel vm)
-            _ = vm.RefreshBalanceAsync(card.WalletId);
     }
 
     /// <summary>
@@ -252,4 +390,21 @@ public partial class FundsView : UserControl
             shellVm.ShowModal(modal);
         }
     }
+
+    protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = null;
+        base.OnDetachedFromLogicalTree(e);
+    }
+
+    public void OnBecameActive()
+    {
+        // WalletContext is already reloaded at startup and after wallet create/import/delete.
+        // Reloading on every mobile tab activation forces collection rebuild + wallet card
+        // layout before the tab can paint, which showed up as ~250ms on Android.
+        InvalidateVisual();
+    }
+
+    public void OnBecameInactive() { }
 }

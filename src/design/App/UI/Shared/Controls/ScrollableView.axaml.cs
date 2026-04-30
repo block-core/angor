@@ -1,5 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.VisualTree;
 
 namespace App.UI.Shared.Controls;
 
@@ -33,5 +35,27 @@ public class ScrollableView : ContentControl
     {
         get => GetValue(MaxContentWidthProperty);
         set => SetValue(MaxContentWidthProperty, value);
+    }
+
+    /// <summary>
+    /// Mobile (Android/iOS): hide the vertical scrollbar. Touch users flick to
+    /// scroll and the scrollbar track is visual noise that overlaps the right
+    /// edge of cards. Desktop keeps the default auto-visible scrollbar because
+    /// mouse users rely on it as a position indicator and drag target.
+    /// </summary>
+    protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+    {
+        base.OnApplyTemplate(e);
+
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
+        {
+            // Template root is the ScrollViewer — find it via the visual tree
+            // (GetTemplateChildren isn't exposed on ContentControl in this Avalonia version).
+            var sv = this.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+            if (sv != null)
+            {
+                sv.VerticalScrollBarVisibility = ScrollBarVisibility.Hidden;
+            }
+        }
     }
 }

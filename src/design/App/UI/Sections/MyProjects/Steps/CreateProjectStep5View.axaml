@@ -96,6 +96,18 @@
             <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
             <Setter Property="Foreground" Value="White" />
         </Style>
+
+        <!-- Compact padding for date/day picker grid items so they fit on narrow phones -->
+        <Style Selector="ListBox#MonthlyDateGrid ListBoxItem">
+            <Setter Property="Padding" Value="4,8" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
+        <Style Selector="ListBox#WeeklyDayList ListBoxItem">
+            <Setter Property="Padding" Value="4,8" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+        </Style>
     </UserControl.Styles>
 
     <!-- ═══════════════════════════════════════ -->
@@ -255,7 +267,7 @@
                         BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
                         Padding="16,14" CornerRadius="12"
                         FontSize="14" Foreground="{DynamicResource TextMuted}"
-                        Content="Advanced Editor" />
+                        Content="{Binding AdvancedEditorButtonText}" />
             </StackPanel>
         </Panel>
 
@@ -428,13 +440,13 @@
                             <TextBlock Text="What date do you want to receive funds each month?" FontSize="16" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
                         </Border>
-                        <StackPanel Margin="24">
+                        <StackPanel Margin="16">
                             <ListBox Name="MonthlyDateGrid" Classes="Transparent"
                                      ItemContainerTheme="{StaticResource ButtonizedAccentListBoxItem}"
                                      SelectionMode="Single" Background="Transparent">
                                 <ListBox.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <UniformGrid Columns="10" ColumnSpacing="8" RowSpacing="8" />
+                                        <UniformGrid Columns="7" ColumnSpacing="6" RowSpacing="6" />
                                     </ItemsPanelTemplate>
                                 </ListBox.ItemsPanel>
                                 <!-- Days 1-29 -->
@@ -481,10 +493,15 @@
                             <TextBlock Text="What day do you want to receive funds each week?" FontSize="16" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
                         </Border>
-                        <StackPanel Margin="24">
-                            <ListBox Name="WeeklyDayList" Classes="Transparent Horizontal"
+                        <StackPanel Margin="16">
+                            <ListBox Name="WeeklyDayList" Classes="Transparent"
                                      ItemContainerTheme="{StaticResource ButtonizedAccentListBoxItem}"
                                      SelectionMode="Single" Background="Transparent">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="7" ColumnSpacing="6" RowSpacing="6" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
                                 <ListBoxItem Tag="Mon"><TextBlock Text="Mon" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
                                 <ListBoxItem Tag="Tue"><TextBlock Text="Tue" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
                                 <ListBoxItem Tag="Wed"><TextBlock Text="Wed" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
@@ -511,7 +528,7 @@
             </StackPanel>
         </Panel>
 
-        <!-- Generated Stages/Payouts Card (shared by all types) — AngorApp pattern -->
+        <!-- Generated Stages/Payouts Card (shared by all types, read-only mode) — AngorApp pattern -->
         <Border CornerRadius="12" BorderBrush="{DynamicResource Accent}" BorderThickness="1"
                 Background="{DynamicResource BrandWash}" ClipToBounds="True"
                 IsVisible="{Binding HasStages}">

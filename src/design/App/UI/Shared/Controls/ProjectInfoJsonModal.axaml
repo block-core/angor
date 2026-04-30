@@ -1,0 +1,90 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="600"
+             x:Class="App.UI.Shared.Controls.ProjectInfoJsonModal">
+
+    <UserControl.Styles>
+        <Style Selector="Button.CopyJsonBtn">
+            <Setter Property="Padding" Value="16,8" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Background" Value="{DynamicResource AccentButtonBackground}" />
+        </Style>
+        <Style Selector="Button.CopyJsonBtn.CopiedState">
+            <Setter Property="Background" Value="{DynamicResource CopiedBtnBg}" />
+        </Style>
+    </UserControl.Styles>
+
+    <Panel>
+        <Border Classes="ModalCard Wide"
+                MaxHeight="600"
+                CornerRadius="16"
+                Background="{DynamicResource ShareModalBg}"
+                BorderBrush="{DynamicResource ShareModalBorder}"
+                BorderThickness="1"
+                BoxShadow="0 8 32 0 #40000000"
+                ClipToBounds="True"
+                Padding="24"
+                RenderTransformOrigin="50%,50%"
+                RenderTransform="scale(1)">
+            <Border.Transitions>
+                <Transitions>
+                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" />
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.3" />
+                </Transitions>
+            </Border.Transitions>
+
+            <DockPanel>
+                <!-- HEADER -->
+                <Panel DockPanel.Dock="Top" Margin="0,0,0,16">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <i:Icon Value="fa-solid fa-code" FontSize="20"
+                                Foreground="{DynamicResource TextStrong}" />
+                        <TextBlock Text="Project Info JSON"
+                                   FontSize="20" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextStrong}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                    <Button Name="CloseButton" Classes="ModalCloseBtnSmall"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" />
+                </Panel>
+
+                <!-- FOOTER: Copy button -->
+                <DockPanel DockPanel.Dock="Bottom" Margin="0,16,0,0">
+                    <Button Name="CopyJsonButton" Classes="CopyJsonBtn"
+                            DockPanel.Dock="Right"
+                            Content="Copy JSON"
+                            Background="{DynamicResource PrimaryGreenBrush}" />
+                    <TextBlock Name="StatusText"
+                               FontSize="13"
+                               Foreground="{DynamicResource TextMuted}"
+                               VerticalAlignment="Center" />
+                </DockPanel>
+
+                <!-- JSON CONTENT -->
+                <Border Background="{DynamicResource SurfaceMedium}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="16">
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Auto">
+                        <TextBlock Name="JsonContent"
+                                   Text="Loading..."
+                                   FontSize="13"
+                                   FontFamily="Cascadia Code,Consolas,monospace"
+                                   Foreground="{DynamicResource TextStrong}"
+                                   TextWrapping="Wrap" />
+                    </ScrollViewer>
+                </Border>
+            </DockPanel>
+        </Border>
+    </Panel>
+</UserControl>

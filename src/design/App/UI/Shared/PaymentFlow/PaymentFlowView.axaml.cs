@@ -1,32 +1,24 @@
-using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
-using App.UI.Shared;
+using App.UI.Sections.Funds;
 using App.UI.Shared.Helpers;
 using App.UI.Shared.Services;
 using App.UI.Shell;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace App.UI.Sections.FindProjects;
+namespace App.UI.Shared.PaymentFlow;
 
 /// <summary>
-/// Shell-level modal overlay for the Invest flow.
-/// Contains Wallet Selector, Invoice/QR, and Success modals.
-/// DataContext = InvestPageViewModel.
+/// Reusable payment flow modal overlay: Wallet Selector → Invoice/QR → Success.
+/// DataContext = PaymentFlowViewModel.
 /// Implements IBackdropCloseable so the shell can notify on backdrop clicks.
 /// </summary>
-public partial class InvestModalsView : UserControl, IBackdropCloseable
+public partial class PaymentFlowView : UserControl, IBackdropCloseable
 {
     private Border? _selectedWalletBorder;
 
-    /// <summary>
-    /// Callback invoked when the user completes the flow (success → "View My Investments").
-    /// The parent (InvestPageView) sets this to navigate back to the project list.
-    /// </summary>
-    public Action? OnNavigateBackToList { get; set; }
-
-    public InvestModalsView()
+    public PaymentFlowView()
     {
         InitializeComponent();
 
@@ -34,27 +26,24 @@ public partial class InvestModalsView : UserControl, IBackdropCloseable
         AddHandler(Border.PointerPressedEvent, OnBorderPressed, RoutingStrategies.Bubble);
     }
 
-    private InvestPageViewModel? Vm => DataContext as InvestPageViewModel;
+    private PaymentFlowViewModel? Vm => DataContext as PaymentFlowViewModel;
 
-    /// <summary>
-    /// Called by the shell when the backdrop is clicked.
-    /// Handles cleanup logic (resetting VM state) before the shell closes the modal.
-    /// </summary>
     public void OnBackdropCloseRequested()
     {
         if (Vm?.IsSuccess == true)
         {
-            OnNavigateBackToList?.Invoke();
+            GetShellVm()?.HideModal();
+            Vm.OnSuccessButtonClicked();
         }
         else
         {
-            Vm?.CloseModal();
+            Vm?.Reset();
+            GetShellVm()?.HideModal();
         }
     }
 
     private void OnButtonClick(object? sender, RoutedEventArgs e)
     {
-        // Walk up from e.Source to find the Button — e.Source may be a child (TextBlock, Icon, Panel)
         Button? btn = e.Source as Button;
         if (btn == null)
         {
@@ -70,7 +59,7 @@ public partial class InvestModalsView : UserControl, IBackdropCloseable
         switch (btn.Name)
         {
             case "CloseWalletSelector":
-                Vm?.CloseModal();
+                Vm?.Reset();
                 GetShellVm()?.HideModal();
                 break;
 
@@ -83,7 +72,7 @@ public partial class InvestModalsView : UserControl, IBackdropCloseable
                 break;
 
             case "CloseInvoice":
-                Vm?.CloseModal();
+                Vm?.Reset();
                 GetShellVm()?.HideModal();
                 break;
 
@@ -91,9 +80,9 @@ public partial class InvestModalsView : UserControl, IBackdropCloseable
                 ClipboardHelper.CopyToClipboard(this, Vm?.InvoiceString);
                 break;
 
-            case "ViewInvestmentsButton":
+            case "SuccessActionButton":
                 GetShellVm()?.HideModal();
-                OnNavigateBackToList?.Invoke();
+                Vm?.OnSuccessButtonClicked();
                 break;
         }
     }
@@ -104,10 +93,30 @@ public partial class InvestModalsView : UserControl, IBackdropCloseable
         return shellView?.DataContext as ShellViewModel;
     }
 
-    /// <summary>
-    /// Show fee selection popup, then proceed with wallet payment using the selected fee rate.
-    /// Follows the same hide-modal/show-popup/re-show-modal pattern used in DeployFlowOverlay and SendFundsModal.
-    /// </summary>
+    private void OpenImportWalletModal()
+    {
+        var shellVm = GetShellVm();
+        if (shellVm == null) return;
+
+        Vm?.SelectNetworkTab(NetworkTab.OnChain);
+
+        var fundsVm = global::App.App.Services.GetRequiredService<FundsViewModel>();
+        var modal = new CreateWalletModal { DataContext = fundsVm };
+        modal.ShowStep("import");
+
+        modal.OnDismissed = async walletCreated =>
+        {
+            if (walletCreated)
+            {
+                var walletContext = global::App.App.Services.GetRequiredService<IWalletContext>();
+                await walletContext.ReloadAsync();
+            }
+            shellVm.ShowModal(this);
+        };
+
+        shellVm.ShowModal(modal);
+    }
+
     private async Task PayWithWalletViaFeePopupAsync()
     {
         var shellVm = GetShellVm();
@@ -117,14 +126,13 @@ public partial class InvestModalsView : UserControl, IBackdropCloseable
 
         if (feeRate == null)
         {
-            // User cancelled — re-show the invest modals
             shellVm.ShowModal(this);
             return;
         }
 
         Vm.SelectedFeeRate = feeRate.Value;
         shellVm.ShowModal(this);
-        Vm.PayWithWallet();
+        Vm.PayWithWalletCommand.Execute().Subscribe();
     }
 
     private void OnBorderPressed(object? sender, PointerPressedEventArgs e)
@@ -138,7 +146,8 @@ public partial class InvestModalsView : UserControl, IBackdropCloseable
             if (source is Border b && !string.IsNullOrEmpty(b.Name))
             {
                 var name = b.Name;
-                if (name == "WalletBorder" || name == "QrCodePlaceholder")
+                if (name is "WalletBorder" or "OnChainTabBorder" or "LightningTabBorder"
+                    or "LiquidTabBorder" or "ImportTabBorder")
                 {
                     found = b;
                     foundName = name;
@@ -161,11 +170,18 @@ public partial class InvestModalsView : UserControl, IBackdropCloseable
                 }
                 break;
 
-            case "QrCodePlaceholder":
-                Vm?.PayViaInvoice();
+            case "OnChainTabBorder":
+                Vm?.SelectNetworkTab(NetworkTab.OnChain);
+                e.Handled = true;
+                break;
+            case "LightningTabBorder":
+                Vm?.SelectNetworkTab(NetworkTab.Lightning);
+                e.Handled = true;
+                break;
+            case "ImportTabBorder":
+                OpenImportWalletModal();
                 e.Handled = true;
                 break;
         }
     }
 }
-

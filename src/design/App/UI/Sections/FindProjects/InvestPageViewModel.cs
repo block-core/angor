@@ -1,18 +1,21 @@
 using System.Collections.ObjectModel;
-using System.Reactive;
 using System.Threading;
 using Angor.Sdk.Common;
+using CSharpFunctionalExtensions;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Operations;
-using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Wallet.Application;
+using Angor.Sdk.Wallet.Domain;
 using App.UI.Sections.Portfolio;
+using Angor.Shared.Models;
+using Angor.Shared.Integration.Lightning;
 using App.UI.Shared;
+using App.UI.Shared.PaymentFlow;
+using ProjectType = App.UI.Shared.ProjectType;
 using App.UI.Shared.Services;
 using Microsoft.Extensions.Logging;
 using MonitorOp = Angor.Sdk.Funding.Investor.Operations.MonitorAddressForFunds;
-using ReactiveUI;
 
 namespace App.UI.Sections.FindProjects;
 
@@ -23,6 +26,15 @@ public enum InvestScreen
     WalletSelector,
     Invoice,
     Success
+}
+
+/// <summary>Which payment-network tab is active inside the invoice screen.</summary>
+public enum NetworkTab
+{
+    OnChain,
+    Lightning,
+    Liquid,
+    Import
 }
 
 /// <summary>Quick amount option for the investment form.</summary>
@@ -68,6 +80,23 @@ public class SubscriptionPlanOption : ReactiveObject
     }
 }
 
+/// <summary>Funding pattern option for Fund-type projects (e.g. "3-Month Monthly", "6-Month Monthly").</summary>
+public class FundingPatternOption : ReactiveObject
+{
+    public byte PatternId { get; set; }
+    public string Name { get; set; } = "";
+    public string Description { get; set; } = "";
+    public int StageCount { get; set; }
+    public string FrequencyText { get; set; } = "";
+
+    private bool _isSelected;
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => this.RaiseAndSetIfChanged(ref _isSelected, value);
+    }
+}
+
 /// <summary>
 /// ViewModel for the InvestPage flow.
 /// Orchestrates: InvestForm → WalletSelector → Invoice → Success.
@@ -81,14 +110,17 @@ public partial class InvestPageViewModel : ReactiveObject
 {
     private readonly IWalletAppService _walletAppService;
     private readonly IInvestmentAppService _investmentAppService;
+    private readonly IBoltzSwapService _boltzSwapService;
     private readonly PortfolioViewModel _portfolioVm;
     private readonly ICurrencyService _currencyService;
     private readonly IWalletContext _walletContext;
+    private readonly Func<BitcoinNetwork> _getNetwork;
     private readonly ILogger<InvestPageViewModel> _logger;
-    private CancellationTokenSource? _invoiceMonitorCts;
-
     // ── Project Reference ──
     public ProjectItemViewModel Project { get; }
+
+    /// <summary>The reusable payment flow VM. Created when the user advances past the invest form.</summary>
+    [Reactive] private PaymentFlowViewModel? paymentFlow;
 
     // ── Type helpers ──
     public bool IsSubscription => Project.ProjectType == "Subscription";
@@ -98,19 +130,6 @@ public partial class InvestPageViewModel : ReactiveObject
     [Reactive] private string investmentAmount = "";
     [Reactive] private double? selectedQuickAmount;
     [Reactive] private InvestScreen currentScreen = InvestScreen.InvestForm;
-    [Reactive] private WalletInfo? selectedWallet;
-    [Reactive] private bool isProcessing;
-    [Reactive] private string paymentStatusText = "Awaiting payment...";
-    [Reactive] private bool paymentReceived;
-
-    /// <summary>
-    /// Error message displayed to the user on the wallet selector modal.
-    /// Cleared when processing starts; set when an SDK call fails.
-    /// </summary>
-    [Reactive] private string? errorMessage;
-
-    /// <summary>Fee rate in sat/vB, set by FeeSelectionPopup before payment.</summary>
-    [Reactive] private long selectedFeeRate = 20;
 
     /// <summary>Whether the investment was auto-approved (published directly, below penalty threshold).
     /// False means it requires founder approval. Used to determine success screen text.</summary>
@@ -119,16 +138,12 @@ public partial class InvestPageViewModel : ReactiveObject
     // ── Subscription State ──
     [Reactive] private string? selectedSubscriptionPattern;
 
+    // ── Fund Pattern State ──
+    [Reactive] private FundingPatternOption? selectedFundingPattern;
+
     // ── Derived visibility ──
     public bool IsInvestForm => CurrentScreen == InvestScreen.InvestForm;
     public bool IsWalletSelector => CurrentScreen == InvestScreen.WalletSelector;
-    public bool IsInvoice => CurrentScreen == InvestScreen.Invoice;
-    public bool IsSuccess => CurrentScreen == InvestScreen.Success;
-    public bool HasSelectedWallet => SelectedWallet != null;
-    public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
-    public string PayButtonText => SelectedWallet != null
-        ? $"Pay with {SelectedWallet.Name}"
-        : "Choose Wallet";
 
     // ── Quick Amounts (investment type only) ──
     // Vue ref: quickAmounts grid — 4 items, label is currency symbol
@@ -149,6 +164,11 @@ public partial class InvestPageViewModel : ReactiveObject
     // ── Subscription Plans (subscription type only) ──
     // Vue ref: subscription-patterns — 2 plan buttons
     public ObservableCollection<SubscriptionPlanOption> SubscriptionPlans { get; } = new();
+
+    // ── Funding Patterns (fund type only) ──
+    public ObservableCollection<FundingPatternOption> FundingPatterns { get; } = new();
+    public bool ShowFundingPatternSelector => Project.ProjectType == "Fund" && FundingPatterns.Count > 0;
+    public bool IsFund => Project.ProjectType == "Fund";
 
     // ── Release Schedule / Payment Schedule ──
     public ObservableCollection<InvestStageRow> Stages { get; } = new();
@@ -172,6 +192,26 @@ public partial class InvestPageViewModel : ReactiveObject
     public bool CanSubmit => IsSubscription
         ? SelectedSubscriptionPattern != null && ParseAmount() > 0
         : ParseAmount() >= Constants.MinInvestmentAmount;
+
+    // ── Penalty threshold indicator ──
+    /// <summary>Whether the project has a penalty threshold configured.</summary>
+    public bool HasPenaltyThreshold => Project.PenaltyThresholdSats.HasValue
+                                       || TypeEnum is ProjectType.Fund or ProjectType.Subscription;
+
+    /// <summary>Whether the current investment amount exceeds the penalty threshold (requires founder approval).</summary>
+    public bool IsAbovePenaltyThreshold
+    {
+        get
+        {
+            if (!Project.PenaltyThresholdSats.HasValue) return true; // no threshold = always requires approval
+            var amountSats = (long)((decimal)ParseAmount() * 100_000_000m);
+            return amountSats > Project.PenaltyThresholdSats.Value;
+        }
+    }
+
+    public string ThresholdStatusText => IsAbovePenaltyThreshold ? "Requires Approval" : "No Approval Needed";
+
+    public double SubmitOpacity => CanSubmit ? 1.0 : 0.35;
 
     // Vue ref: footer-summary stages/payments count
     private ProjectType TypeEnum => ProjectTypeExtensions.FromDisplayString(Project.ProjectType);
@@ -198,31 +238,28 @@ public partial class InvestPageViewModel : ReactiveObject
     // Vue ref: row label prefix
     public string StageRowPrefix => IsSubscription ? "Payment" : "Stage";
 
-    // ── Success message ──
-    public string SuccessTitle => ProjectTypeTerminology.SuccessTitle(TypeEnum, IsAutoApproved);
-    public string SuccessDescription => ProjectTypeTerminology.SuccessDescription(TypeEnum, IsAutoApproved, FormattedAmount, _currencyService.Symbol, Project.ProjectName);
-    public string SuccessButtonText => ProjectTypeTerminology.SuccessButtonText(TypeEnum);
-
     // ── Wallets loaded from IWalletContext ──
     public ReadOnlyObservableCollection<WalletInfo> Wallets => _walletContext.Wallets;
-
-    public string InvoiceString { get; } = Constants.InvoiceString;
 
     public InvestPageViewModel(
         ProjectItemViewModel project,
         IWalletAppService walletAppService,
         IInvestmentAppService investmentAppService,
+        IBoltzSwapService boltzSwapService,
         PortfolioViewModel portfolioVm,
         ICurrencyService currencyService,
         IWalletContext walletContext,
+        Func<BitcoinNetwork> getNetwork,
         ILogger<InvestPageViewModel> logger)
     {
         Project = project;
         _walletAppService = walletAppService;
         _investmentAppService = investmentAppService;
+        _boltzSwapService = boltzSwapService;
         _portfolioVm = portfolioVm;
         _currencyService = currencyService;
         _walletContext = walletContext;
+        _getNetwork = getNetwork;
         _logger = logger;
 
         _logger.LogInformation("InvestPageViewModel created for project '{ProjectName}' (ID: {ProjectId}, Type: {ProjectType})",
@@ -235,38 +272,12 @@ public partial class InvestPageViewModel : ReactiveObject
         QuickAmounts.Add(new QuickAmountOption { Amount = 0.1, AmountText = "0.1", Label = symbol });
         QuickAmounts.Add(new QuickAmountOption { Amount = 0.5, AmountText = "0.5", Label = symbol });
 
-        // Initialize ReactiveCommands for async payment operations
-        PayWithWalletCommand = ReactiveCommand.CreateFromTask(PayWithWalletAsync);
-        PayWithWalletCommand.ThrownExceptions.Subscribe(ex => PaymentStatusText = $"Error: {ex.Message}");
-        PayViaInvoiceCommand = ReactiveCommand.CreateFromTask(PayViaInvoiceAsync);
-        PayViaInvoiceCommand.ThrownExceptions.Subscribe(ex => PaymentStatusText = $"Error: {ex.Message}");
-
         // Raise derived property notifications when screen changes
         this.WhenAnyValue(x => x.CurrentScreen)
             .Subscribe(_ =>
             {
                 this.RaisePropertyChanged(nameof(IsInvestForm));
                 this.RaisePropertyChanged(nameof(IsWalletSelector));
-                this.RaisePropertyChanged(nameof(IsInvoice));
-                this.RaisePropertyChanged(nameof(IsSuccess));
-            });
-
-        this.WhenAnyValue(x => x.SelectedWallet)
-            .Subscribe(_ =>
-            {
-                this.RaisePropertyChanged(nameof(HasSelectedWallet));
-                this.RaisePropertyChanged(nameof(PayButtonText));
-            });
-
-        this.WhenAnyValue(x => x.ErrorMessage)
-            .Subscribe(_ => this.RaisePropertyChanged(nameof(HasError)));
-
-        // Update success messages when auto-approval status is determined
-        this.WhenAnyValue(x => x.IsAutoApproved)
-            .Subscribe(_ =>
-            {
-                this.RaisePropertyChanged(nameof(SuccessTitle));
-                this.RaisePropertyChanged(nameof(SuccessDescription));
             });
 
         // Recompute totals + stages when amount changes
@@ -277,9 +288,11 @@ public partial class InvestPageViewModel : ReactiveObject
                 this.RaisePropertyChanged(nameof(FormattedAmount));
                 this.RaisePropertyChanged(nameof(AngorFeeAmount));
                 this.RaisePropertyChanged(nameof(CanSubmit));
-                this.RaisePropertyChanged(nameof(SuccessDescription));
+                this.RaisePropertyChanged(nameof(SubmitOpacity));
                 this.RaisePropertyChanged(nameof(StagesSummary));
                 this.RaisePropertyChanged(nameof(TransactionAmountValue));
+                this.RaisePropertyChanged(nameof(IsAbovePenaltyThreshold));
+                this.RaisePropertyChanged(nameof(ThresholdStatusText));
                 RecomputeStages();
             });
 
@@ -288,15 +301,30 @@ public partial class InvestPageViewModel : ReactiveObject
             .Subscribe(_ =>
             {
                 this.RaisePropertyChanged(nameof(CanSubmit));
+                this.RaisePropertyChanged(nameof(SubmitOpacity));
             });
 
-        // Initialize subscription plans if subscription type
+        // Initialize subscription plans if subscription type.
+        // No auto-select: CanSubmit stays false until the user picks a plan,
+        // matching the Fund/Invest path (button dimmed until amount entered).
         if (IsSubscription)
         {
             InitializeSubscriptionPlans();
-            // Auto-select pattern1
-            SelectSubscriptionPlan("pattern1");
         }
+
+        // Initialize funding patterns if fund type
+        if (IsFund)
+        {
+            InitializeFundingPatterns();
+        }
+
+        // Recompute when funding pattern changes
+        this.WhenAnyValue(x => x.SelectedFundingPattern)
+            .Subscribe(_ =>
+            {
+                this.RaisePropertyChanged(nameof(StagesSummary));
+                RecomputeStages();
+            });
 
         // Initialize stages from project
         RecomputeStages();
@@ -352,6 +380,131 @@ public partial class InvestPageViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(SubscriptionPlans));
     }
 
+    // ── Fund Pattern helpers ──
+
+    private void InitializeFundingPatterns()
+    {
+        foreach (var pattern in Project.DynamicStagePatterns)
+        {
+            FundingPatterns.Add(new FundingPatternOption
+            {
+                PatternId = pattern.PatternId,
+                Name = pattern.Name ?? $"Pattern {pattern.PatternId}",
+                Description = pattern.DisplayDescription,
+                StageCount = pattern.StageCount,
+                FrequencyText = pattern.Frequency.ToString()
+            });
+        }
+
+        if (FundingPatterns.Count > 0)
+        {
+            SelectFundingPattern(FundingPatterns[0]);
+        }
+
+        this.RaisePropertyChanged(nameof(ShowFundingPatternSelector));
+    }
+
+    /// <summary>Select a funding pattern for Fund-type projects.</summary>
+    public void SelectFundingPattern(FundingPatternOption option)
+    {
+        SelectedFundingPattern = option;
+        foreach (var p in FundingPatterns)
+            p.IsSelected = p.PatternId == option.PatternId;
+
+        this.RaisePropertyChanged(nameof(FundingPatterns));
+    }
+
+    /// <summary>
+    /// Generate synthetic stages from a DynamicStagePattern (Fund-type projects).
+    /// Mirrors the Avalonia reference: GenerateStagesFromPattern in InvestViewModel.cs.
+    /// </summary>
+    private List<InvestStageRow> GenerateStagesFromFundingPattern(DynamicStagePattern pattern, double amount)
+    {
+        var stageCount = pattern.StageCount;
+        if (stageCount <= 0)
+            return new List<InvestStageRow>();
+
+        var ratioPerStage = 1.0 / stageCount;
+        var now = DateTimeOffset.UtcNow;
+        var rows = new List<InvestStageRow>(stageCount);
+
+        for (var i = 0; i < stageCount; i++)
+        {
+            var releaseDate = ComputePatternReleaseDate(now, pattern, i + 1);
+            var stageAmount = amount * ratioPerStage;
+            var pctStr = $"{ratioPerStage * 100:F0}%";
+            rows.Add(new InvestStageRow
+            {
+                StageNumber = i + 1,
+                ReleaseDate = releaseDate.ToString("dd MMM yyyy"),
+                Percentage = pctStr,
+                Amount = $"{stageAmount:F8}",
+                LabelText = $"Stage {i + 1}",
+                AmountDisplayText = $"{stageAmount:F8} {_currencyService.Symbol}",
+                IsSubscriptionRow = false
+            });
+        }
+
+        return rows;
+    }
+
+    private static DateTimeOffset ComputePatternReleaseDate(DateTimeOffset startDate, DynamicStagePattern pattern, int stageNumber)
+    {
+        return pattern.PayoutDayType switch
+        {
+            PayoutDayType.FromStartDate => AddFrequencyIntervals(startDate, pattern.Frequency, stageNumber),
+            PayoutDayType.SpecificDayOfMonth => ComputeSpecificDayOfMonth(startDate, pattern, stageNumber),
+            PayoutDayType.SpecificDayOfWeek => ComputeSpecificDayOfWeek(startDate, pattern, stageNumber),
+            _ => AddFrequencyIntervals(startDate, pattern.Frequency, stageNumber)
+        };
+    }
+
+    private static DateTimeOffset AddFrequencyIntervals(DateTimeOffset startDate, StageFrequency frequency, int intervals)
+    {
+        return frequency switch
+        {
+            StageFrequency.Weekly => startDate.AddDays(7 * intervals),
+            StageFrequency.Biweekly => startDate.AddDays(14 * intervals),
+            StageFrequency.Monthly => startDate.AddMonths(intervals),
+            StageFrequency.BiMonthly => startDate.AddMonths(2 * intervals),
+            StageFrequency.Quarterly => startDate.AddMonths(3 * intervals),
+            _ => startDate.AddMonths(intervals)
+        };
+    }
+
+    private static DateTimeOffset ComputeSpecificDayOfMonth(DateTimeOffset startDate, DynamicStagePattern pattern, int stageNumber)
+    {
+        var monthsToAdd = pattern.Frequency switch
+        {
+            StageFrequency.Monthly => stageNumber,
+            StageFrequency.BiMonthly => 2 * stageNumber,
+            StageFrequency.Quarterly => 3 * stageNumber,
+            _ => stageNumber
+        };
+
+        var target = startDate.AddMonths(monthsToAdd);
+        var day = Math.Min(pattern.PayoutDay, DateTime.DaysInMonth(target.Year, target.Month));
+        return new DateTimeOffset(target.Year, target.Month, day, 0, 0, 0, target.Offset);
+    }
+
+    private static DateTimeOffset ComputeSpecificDayOfWeek(DateTimeOffset startDate, DynamicStagePattern pattern, int stageNumber)
+    {
+        var weeksToAdd = pattern.Frequency switch
+        {
+            StageFrequency.Weekly => stageNumber,
+            StageFrequency.Biweekly => 2 * stageNumber,
+            _ => stageNumber
+        };
+
+        var target = startDate.AddDays(7 * weeksToAdd);
+        var currentDay = (int)target.DayOfWeek;
+        var targetDay = pattern.PayoutDay;
+        var diff = targetDay - currentDay;
+        return target.AddDays(diff);
+    }
+
+
+
     private double ParseAmount()
     {
         if (double.TryParse(InvestmentAmount, System.Globalization.NumberStyles.Float,
@@ -376,7 +529,7 @@ public partial class InvestPageViewModel : ReactiveObject
         {
             var months = SelectedSubscriptionPattern == "pattern1" ? 3 : 6;
             var pricePerMonth = Project.SubscriptionPrice;
-            var today = DateTime.Now;
+            var today = DateTime.UtcNow;
 
             var newRows = new List<InvestStageRow>(months);
             for (var i = 0; i < months; i++)
@@ -404,6 +557,19 @@ public partial class InvestPageViewModel : ReactiveObject
         var amount = ParseAmount();
         var prefix = StageRowPrefix;
         var newInvestRows = new List<InvestStageRow>();
+
+        // Fund type with a selected dynamic pattern: generate synthetic stages
+        if (IsFund && SelectedFundingPattern != null)
+        {
+            var pattern = Project.DynamicStagePatterns
+                .FirstOrDefault(p => p.PatternId == SelectedFundingPattern.PatternId);
+            if (pattern != null)
+            {
+                newInvestRows = GenerateStagesFromFundingPattern(pattern, amount);
+                UpdateStagesInPlace(newInvestRows);
+                return;
+            }
+        }
 
         if (Project.Stages.Count > 0)
         {
@@ -492,7 +658,7 @@ public partial class InvestPageViewModel : ReactiveObject
         InvestmentAmount = amount.ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
 
-    /// <summary>Submit the invest form → show wallet selector.
+    /// <summary>Submit the invest form → create payment flow and show wallet selector.
     /// Vue ref: proceedToPayment() checks balances, opens wallet modal.</summary>
     public void Submit()
     {
@@ -502,360 +668,148 @@ public partial class InvestPageViewModel : ReactiveObject
             return;
         }
         _logger.LogInformation("Invest form submitted — amount: {Amount}, advancing to WalletSelector", InvestmentAmount);
+
+        var amountSats = ((decimal)ParseAmount()).ToUnitSatoshi();
+        PaymentFlow = CreatePaymentFlow(amountSats);
         CurrentScreen = InvestScreen.WalletSelector;
     }
 
-    /// <summary>Select a wallet from the list.</summary>
-    public void SelectWallet(WalletInfo wallet)
+    /// <summary>Creates a PaymentFlowViewModel configured for the current investment.</summary>
+    private PaymentFlowViewModel CreatePaymentFlow(long amountSats)
     {
-        _logger.LogInformation("Wallet selected for investment: '{WalletName}' (ID: {WalletId}, Balance: {Balance})",
-            wallet.Name, wallet.Id.Value, wallet.Balance);
-        foreach (var w in Wallets) w.IsSelected = false;
-        wallet.IsSelected = true;
-        SelectedWallet = wallet;
+        var projectType = Project.ProjectType;
+        var typeEnum = ProjectTypeExtensions.FromDisplayString(projectType);
+        var actionVerb = ProjectTypeTerminology.ActionVerb(typeEnum);
+        var successTitle = ProjectTypeTerminology.SuccessTitle(typeEnum, true);
+
+        var config = new PaymentFlowConfig
+        {
+            AmountSats = amountSats,
+            StageCount = Stages.Count,
+            FeeRateSatsPerVbyte = 20,
+            Title = $"Pay to {actionVerb}",
+            SuccessTitle = successTitle,
+            SuccessDescription = $"Your {actionVerb.ToLowerInvariant()} of {FormattedAmount} {_currencyService.Symbol} has been submitted.",
+            SuccessButtonText = $"View My {ProjectTypeTerminology.InvestorNounTotal(ProjectTypeExtensions.FromDisplayString(projectType))}",
+            OnSuccessButtonClicked = OnInvestSuccess,
+            OnPaymentReceived = async (walletId, fundingAddress, amount) =>
+                await InvestAfterPaymentAsync(walletId, fundingAddress, amount),
+            OnPayWithWallet = async (walletId, amount, feeRate) =>
+                await InvestWithWalletAsync(walletId, amount, feeRate),
+        };
+
+        return new PaymentFlowViewModel(
+            _walletAppService,
+            _investmentAppService,
+            _boltzSwapService,
+            _walletContext,
+            _currencyService,
+            _getNetwork,
+            _logger,
+            config);
     }
 
-    /// <summary>Pay with selected wallet → build draft → check threshold → submit/publish → success.</summary>
-    public ReactiveCommand<Unit, Unit> PayWithWalletCommand { get; }
-
-    public void PayWithWallet() => PayWithWalletCommand.Execute().Subscribe();
-
-    private async Task PayWithWalletAsync()
+    /// <summary>Callback for PaymentFlowViewModel: build + publish investment after external payment.</summary>
+    private async Task<Result> InvestAfterPaymentAsync(WalletId walletId, string fundingAddress, long amountSats)
     {
-        if (SelectedWallet == null)
-        {
-            ErrorMessage = "No wallet selected.";
-            _logger.LogWarning("PayWithWallet called with no wallet selected");
-            return;
-        }
+        var projectId = new ProjectId(Project.ProjectId);
+        byte? patternIndex = GetPatternIndex();
 
-        ErrorMessage = null;
-        IsProcessing = true;
+        var buildRequest = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
+            walletId, projectId, new Amount(amountSats),
+            new DomainFeerate(PaymentFlow?.SelectedFeeRate ?? 20),
+            PatternId: patternIndex,
+            FundingAddress: fundingAddress);
 
-        // Refresh wallet UTXOs from the indexer before building the transaction.
-        // This ensures we don't pick UTXOs already consumed by a prior transaction
-        // (e.g. a project deploy) that haven't been synced to local LiteDB yet.
-        PaymentStatusText = "Refreshing wallet...";
-        _logger.LogInformation("Refreshing wallet UTXOs before building investment draft...");
+        var buildResult = await _investmentAppService.BuildInvestmentDraft(buildRequest);
+        if (buildResult.IsFailure)
+            return Result.Failure(buildResult.Error);
+
+        return await PublishOrRequestApprovalAsync(walletId, projectId, amountSats, buildResult.Value.InvestmentDraft);
+    }
+
+    /// <summary>Callback for PaymentFlowViewModel: build + publish investment from wallet UTXOs.</summary>
+    private async Task<Result> InvestWithWalletAsync(WalletId walletId, long amountSats, long feeRate)
+    {
         await _walletContext.RefreshAllBalancesAsync();
 
-        // Balance check: ensure wallet has enough funds for the investment
-        var amountBtc = ParseAmount();
-        var requiredSats = ((decimal)amountBtc).ToUnitSatoshi();
-        if (SelectedWallet.AvailableSats < requiredSats)
-        {
-            var walletBtc = SelectedWallet.AvailableSats.ToUnitBtc();
-            ErrorMessage = $"Insufficient balance. Wallet has {walletBtc:F8} {_currencyService.Symbol}, but {amountBtc:F8} {_currencyService.Symbol} is required.";
-            _logger.LogWarning("Insufficient balance: wallet {WalletId} has {BalanceSats} sats, need {RequiredSats} sats",
-                SelectedWallet.Id.Value, SelectedWallet.AvailableSats, requiredSats);
-            IsProcessing = false;
-            return;
-        }
+        var projectId = new ProjectId(Project.ProjectId);
+        byte? patternIndex = GetPatternIndex();
 
-        PaymentStatusText = "Building investment transaction...";
-        _logger.LogInformation("PayWithWallet starting — wallet: {WalletId}, project: {ProjectId}, amount: {Amount} BTC",
-            SelectedWallet.Id.Value, Project.ProjectId, InvestmentAmount);
+        var buildRequest = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
+            walletId, projectId, new Amount(amountSats),
+            new DomainFeerate(feeRate),
+            patternIndex);
 
-        // Yield to let the UI render the spinner before blocking on SDK calls
-        await Task.Yield();
+        var buildResult = await _investmentAppService.BuildInvestmentDraft(buildRequest);
+        if (buildResult.IsFailure)
+            return Result.Failure(buildResult.Error);
 
-        try
-        {
-            var walletId = SelectedWallet.Id;
-            var projectId = new ProjectId(Project.ProjectId);
-            var amountSats = ((decimal)ParseAmount()).ToUnitSatoshi();
-
-            // Determine pattern index for Fund/Subscription projects
-            byte? patternIndex = null;
-            if (IsSubscription || Project.ProjectType == "Fund")
-            {
-                patternIndex = SelectedSubscriptionPattern == "pattern2" ? (byte)1 : (byte)0;
-            }
-
-            // Build investment draft
-            var buildRequest = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
-                walletId,
-                projectId,
-                new Amount(amountSats),
-                new DomainFeerate(SelectedFeeRate),
-                patternIndex);
-
-            _logger.LogInformation("Building investment draft: wallet={WalletId}, project={ProjectId}, amount={AmountSats} sats, feeRate={FeeRate}, patternIndex={PatternIndex}",
-                walletId.Value, projectId.Value, amountSats, SelectedFeeRate, patternIndex);
-            var buildResult = await _investmentAppService.BuildInvestmentDraft(buildRequest);
-            if (buildResult.IsFailure)
-            {
-                _logger.LogError("BuildInvestmentDraft failed: {Error}", buildResult.Error);
-                ErrorMessage = buildResult.Error;
-                IsProcessing = false;
-                return;
-            }
-
-            var draft = buildResult.Value.InvestmentDraft;
-            _logger.LogInformation("Investment draft built successfully");
-
-            // Investment-type projects always require founder approval (no threshold check).
-            // Fund-type projects require approval only when the amount exceeds the penalty threshold.
-            var isAboveThreshold = Project.ProjectType == "Invest";
-            if (Project.ProjectType == "Fund")
-            {
-                PaymentStatusText = "Checking investment threshold...";
-
-                var thresholdRequest = new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(
-                    projectId,
-                    new Amount(amountSats));
-
-                var thresholdResult = await _investmentAppService.IsInvestmentAbovePenaltyThreshold(thresholdRequest);
-                if (thresholdResult.IsFailure)
-                {
-                    _logger.LogError("CheckPenaltyThreshold failed: {Error}", thresholdResult.Error);
-                    ErrorMessage = thresholdResult.Error;
-                    IsProcessing = false;
-                    return;
-                }
-
-                isAboveThreshold = thresholdResult.Value.IsAboveThreshold;
-            }
-
-            if (isAboveThreshold)
-            {
-                // Above threshold or investment-type: request founder signatures
-                IsAutoApproved = false;
-                _logger.LogInformation("Investment requires founder approval — requesting founder signatures");
-                PaymentStatusText = "Requesting founder approval...";
-                var submitRequest = new RequestInvestmentSignatures.RequestFounderSignaturesRequest(
-                    walletId,
-                    projectId,
-                    draft);
-
-                var submitResult = await _investmentAppService.SubmitInvestment(submitRequest);
-                if (submitResult.IsFailure)
-                {
-                    _logger.LogError("SubmitInvestment (founder signatures) failed: {Error}", submitResult.Error);
-                    ErrorMessage = submitResult.Error;
-                    IsProcessing = false;
-                    return;
-                }
-                _logger.LogInformation("Investment submitted for founder approval");
-            }
-            else
-            {
-                // Below threshold: publish directly
-                IsAutoApproved = true;
-                _logger.LogInformation("Investment is below penalty threshold — publishing directly");
-                PaymentStatusText = "Publishing transaction...";
-                var publishRequest = new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(
-                    walletId.Value,
-                    projectId,
-                    draft);
-
-                var publishResult = await _investmentAppService.SubmitTransactionFromDraft(publishRequest);
-                if (publishResult.IsFailure)
-                {
-                    _logger.LogError("SubmitTransactionFromDraft failed: {Error}", publishResult.Error);
-                    ErrorMessage = publishResult.Error;
-                    IsProcessing = false;
-                    return;
-                }
-                _logger.LogInformation("Investment transaction published successfully");
-            }
-
-            _logger.LogInformation("Investment flow completed — advancing to Success screen");
-            _ = _walletContext.RefreshBalanceAsync(walletId);
-            CurrentScreen = InvestScreen.Success;
-        }
-        catch (Exception ex)
-        {
-            PaymentStatusText = $"Error: {ex.Message}";
-        }
-        finally
-        {
-            IsProcessing = false;
-        }
+        return await PublishOrRequestApprovalAsync(walletId, projectId, amountSats, buildResult.Value.InvestmentDraft);
     }
 
-    /// <summary>Switch to invoice payment screen.
-    /// Vue ref: "Or pay an invoice instead" button.</summary>
-    public void ShowInvoice()
+    /// <summary>Shared logic: threshold check → request signatures or publish directly.</summary>
+    private async Task<Result> PublishOrRequestApprovalAsync(
+        WalletId walletId, ProjectId projectId, long amountSats,
+        Angor.Sdk.Funding.Shared.TransactionDrafts.InvestmentDraft draft)
     {
-        CurrentScreen = InvestScreen.Invoice;
+        var isAboveThreshold = Project.ProjectType == "Invest";
+        if (Project.ProjectType == "Fund")
+        {
+            var thresholdResult = await _investmentAppService.IsInvestmentAbovePenaltyThreshold(
+                new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(projectId, new Amount(amountSats)));
+            if (thresholdResult.IsFailure)
+                return Result.Failure(thresholdResult.Error);
+            isAboveThreshold = thresholdResult.Value.IsAboveThreshold;
+        }
+
+        if (isAboveThreshold)
+        {
+            IsAutoApproved = false;
+            var submitResult = await _investmentAppService.SubmitInvestment(
+                new RequestInvestmentSignatures.RequestFounderSignaturesRequest(walletId, projectId, draft));
+            if (submitResult.IsFailure)
+                return Result.Failure(submitResult.Error);
+        }
+        else
+        {
+            IsAutoApproved = true;
+            var publishResult = await _investmentAppService.SubmitTransactionFromDraft(
+                new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(
+                    walletId.Value, projectId, draft));
+            if (publishResult.IsFailure)
+                return Result.Failure(publishResult.Error);
+        }
+
+        // Update the success screen text now that we know if it was auto-approved
+        var typeEnum = ProjectTypeExtensions.FromDisplayString(Project.ProjectType);
+        if (PaymentFlow != null)
+        {
+            PaymentFlow.SuccessTitle = ProjectTypeTerminology.SuccessTitle(typeEnum, IsAutoApproved);
+            PaymentFlow.SuccessDescription = ProjectTypeTerminology.SuccessDescription(
+                typeEnum, IsAutoApproved, FormattedAmount, _currencyService.Symbol, Project.ProjectName);
+        }
+
+        return Result.Success();
     }
 
-    /// <summary>Go back to wallet selector from invoice.</summary>
-    public void BackToWalletSelector()
+    private byte? GetPatternIndex()
     {
-        CurrentScreen = InvestScreen.WalletSelector;
+        if (IsSubscription)
+            return SelectedSubscriptionPattern == "pattern2" ? (byte)1 : (byte)0;
+        if (IsFund && SelectedFundingPattern != null)
+            return SelectedFundingPattern.PatternId;
+        return null;
     }
 
-    /// <summary>Simulate paying via invoice → success.
-    /// Vue ref: handlePayment() → paymentStatus "received" → success.</summary>
-    public ReactiveCommand<Unit, Unit> PayViaInvoiceCommand { get; }
+    /// <summary>Raised when the invest flow completes and the user clicks the success button.
+    /// The view subscribes to navigate to the Funded section.</summary>
+    public event Action? InvestCompleted;
 
-    public void PayViaInvoice() => PayViaInvoiceCommand.Execute().Subscribe();
-
-    private async Task PayViaInvoiceAsync()
+    private void OnInvestSuccess()
     {
-        // Use the first available wallet for address generation and monitoring
-        var wallet = Wallets.FirstOrDefault();
-        if (wallet == null)
-        {
-            ErrorMessage = "No wallet available for invoice monitoring.";
-            return;
-        }
-
-        ErrorMessage = null;
-        IsProcessing = true;
-
-        // Refresh wallet UTXOs from the indexer before building the transaction.
-        PaymentStatusText = "Refreshing wallet...";
-        _logger.LogInformation("Refreshing wallet UTXOs before building invoice investment draft...");
-        await _walletContext.RefreshAllBalancesAsync();
-
-        _invoiceMonitorCts?.Cancel();
-        _invoiceMonitorCts = new CancellationTokenSource();
-
-        try
-        {
-            var walletId = wallet.Id;
-            var amountSats = ((decimal)ParseAmount()).ToUnitSatoshi();
-
-            // Get a receive address to monitor
-            PaymentStatusText = "Generating invoice address...";
-            var addressResult = await _walletAppService.GetNextReceiveAddress(walletId);
-            if (addressResult.IsFailure)
-            {
-                ErrorMessage = addressResult.Error;
-                IsProcessing = false;
-                return;
-            }
-
-            // Monitor the address for incoming funds
-            PaymentStatusText = "Waiting for payment...";
-            var monitorRequest = new MonitorOp.MonitorAddressForFundsRequest(
-                walletId,
-                addressResult.Value.Value,
-                new Angor.Sdk.Common.Amount(amountSats),
-                TimeSpan.FromMinutes(30));
-
-            var monitorResult = await _investmentAppService.MonitorAddressForFunds(
-                monitorRequest, _invoiceMonitorCts.Token);
-
-            if (monitorResult.IsFailure)
-            {
-                ErrorMessage = monitorResult.Error;
-                IsProcessing = false;
-                return;
-            }
-
-            PaymentStatusText = "Payment received!";
-            PaymentReceived = true;
-
-            // Now proceed with the investment flow (same as PayWithWallet)
-            var projectId = new ProjectId(Project.ProjectId);
-
-            PaymentStatusText = "Building investment transaction...";
-            var buildRequest = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
-                walletId,
-                projectId,
-                new Amount(amountSats),
-                new DomainFeerate(SelectedFeeRate),
-                FundingAddress: addressResult.Value.Value);
-
-            var buildResult = await _investmentAppService.BuildInvestmentDraft(buildRequest);
-            if (buildResult.IsFailure)
-            {
-                ErrorMessage = buildResult.Error;
-                IsProcessing = false;
-                return;
-            }
-
-            var draft = buildResult.Value.InvestmentDraft;
-
-            // Investment-type projects always require founder approval (no threshold check).
-            // Fund-type projects require approval only when the amount exceeds the penalty threshold.
-            var isAboveThreshold = Project.ProjectType == "Invest";
-            if (Project.ProjectType == "Fund")
-            {
-                PaymentStatusText = "Checking investment threshold...";
-
-                var thresholdRequest = new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(
-                    projectId,
-                    new Amount(amountSats));
-
-                var thresholdResult = await _investmentAppService.IsInvestmentAbovePenaltyThreshold(thresholdRequest);
-                if (thresholdResult.IsFailure)
-                {
-                    ErrorMessage = thresholdResult.Error;
-                    IsProcessing = false;
-                    return;
-                }
-
-                isAboveThreshold = thresholdResult.Value.IsAboveThreshold;
-            }
-
-            if (isAboveThreshold)
-            {
-                IsAutoApproved = false;
-                PaymentStatusText = "Requesting founder approval...";
-                var submitRequest = new RequestInvestmentSignatures.RequestFounderSignaturesRequest(
-                    walletId,
-                    projectId,
-                    draft);
-
-                var submitResult = await _investmentAppService.SubmitInvestment(submitRequest);
-                if (submitResult.IsFailure)
-                {
-                    ErrorMessage = submitResult.Error;
-                    IsProcessing = false;
-                    return;
-                }
-            }
-            else
-            {
-                IsAutoApproved = true;
-                PaymentStatusText = "Publishing transaction...";
-                var publishRequest = new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(
-                    walletId.Value,
-                    projectId,
-                    draft);
-
-                var publishResult = await _investmentAppService.SubmitTransactionFromDraft(publishRequest);
-                if (publishResult.IsFailure)
-                {
-                    ErrorMessage = publishResult.Error;
-                    IsProcessing = false;
-                    return;
-                }
-            }
-
-            _ = _walletContext.RefreshBalanceAsync(walletId);
-            CurrentScreen = InvestScreen.Success;
-        }
-        catch (OperationCanceledException)
-        {
-            ErrorMessage = "Invoice monitoring cancelled.";
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"An error occurred: {ex.Message}";
-        }
-        finally
-        {
-            IsProcessing = false;
-        }
-    }
-
-    /// <summary>Close modal overlays, return to invest form.</summary>
-    public void CloseModal()
-    {
-        _invoiceMonitorCts?.Cancel();
-        CurrentScreen = InvestScreen.InvestForm;
-        SelectedWallet = null;
-        foreach (var w in Wallets) w.IsSelected = false;
-        IsProcessing = false;
-        PaymentStatusText = "Awaiting payment...";
-        PaymentReceived = false;
-        ErrorMessage = null;
+        AddToPortfolio();
+        InvestCompleted?.Invoke();
     }
 
     /// <summary>

@@ -8,7 +8,6 @@ using App.UI.Shared;
 using App.UI.Shared.Services;
 using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
-using System.Net.Http;
 
 namespace App.UI.Sections.Funds;
 
@@ -34,7 +33,7 @@ public partial class FundsViewModel : ReactiveObject
     private readonly Func<BitcoinNetwork> _getNetwork;
     private readonly ICurrencyService _currencyService;
     private readonly ILogger<FundsViewModel> _logger;
-    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IFaucetService _faucetService;
 
     /// <summary>True when wallets exist and populated state should show.</summary>
     [Reactive] private bool hasWallets;
@@ -74,7 +73,7 @@ public partial class FundsViewModel : ReactiveObject
         Func<BitcoinNetwork> getNetwork,
         ICurrencyService currencyService,
         ILogger<FundsViewModel> logger,
-        IHttpClientFactory httpClientFactory)
+        IFaucetService faucetService)
     {
         _walletAppService = walletAppService;
         _balanceService = balanceService;
@@ -82,7 +81,7 @@ public partial class FundsViewModel : ReactiveObject
         _getNetwork = getNetwork;
         _currencyService = currencyService;
         _logger = logger;
-        _httpClientFactory = httpClientFactory;
+        _faucetService = faucetService;
 
         // Subscribe to wallet context updates to rebuild display state
         _walletContext.WalletsUpdated
@@ -169,12 +168,14 @@ public partial class FundsViewModel : ReactiveObject
         _logger.LogInformation("Creating new wallet '{WalletName}' (generating random seed words)", walletName);
         var seedWords = _walletAppService.GenerateRandomSeedwords();
 
-        var result = await _walletAppService.CreateWallet(
+        // Offload to background thread — CreateWallet performs key derivation (CPU)
+        // and blockchain gap-limit scanning (network I/O) that would block the UI thread.
+        var result = await Task.Run(() => _walletAppService.CreateWallet(
             walletName,
             seedWords,
             CSharpFunctionalExtensions.Maybe<string>.None,
             encryptionKey,
-            _getNetwork());
+            _getNetwork()));
 
         if (result.IsSuccess)
         {
@@ -193,12 +194,16 @@ public partial class FundsViewModel : ReactiveObject
     public async Task<bool> ImportWalletAsync(string walletName, string seedWords, string encryptionKey)
     {
         _logger.LogInformation("Importing wallet '{WalletName}' from seed words", walletName);
-        var result = await _walletAppService.CreateWallet(
+
+        // Offload to background thread — for imported wallets with history, the gap-limit
+        // address scan in RefreshAccountBalanceInfoAsync can take 10-30+ seconds of network I/O,
+        // which would trigger an ANR on Android if run on the UI thread.
+        var result = await Task.Run(() => _walletAppService.CreateWallet(
             walletName,
             seedWords,
             CSharpFunctionalExtensions.Maybe<string>.None,
             encryptionKey,
-            _getNetwork());
+            _getNetwork()));
 
         if (result.IsSuccess)
         {
@@ -329,16 +334,11 @@ public partial class FundsViewModel : ReactiveObject
                 return (false, "Cannot get receive address");
             }
 
-            // Call faucet API directly
-            _logger.LogInformation("Calling faucet API for address {Address}", address);
-            var httpClient = _httpClientFactory.CreateClient();
-            var response = await httpClient.GetAsync($"https://faucettmp.angor.io/api/faucet/send/{address}/2");
-
-            if (!response.IsSuccessStatusCode)
+            // Call faucet via the configured IFaucetService (production or local docker).
+            var faucetResult = await _faucetService.RequestCoinsAsync(address, amountBtc: 2m);
+            if (faucetResult.IsFailure)
             {
-                string body = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning("Faucet HTTP request failed: {StatusCode} {Reason} {Body}", response.StatusCode, response.ReasonPhrase, body);
-                return (false, $"Faucet request failed: {response.ReasonPhrase} - {body}");
+                return (false, faucetResult.Error);
             }
 
             _logger.LogInformation("Faucet request succeeded for wallet {WalletId}, refreshing balance", walletId);

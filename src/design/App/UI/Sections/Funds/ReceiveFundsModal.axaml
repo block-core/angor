@@ -14,8 +14,7 @@
     -->
 
     <Panel>
-        <Border HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="420" MaxWidth="448"
+        <Border Classes="ModalCard"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"
@@ -116,8 +115,8 @@
                                        FontSize="14"
                                        Foreground="{DynamicResource TextMuted}" />
                             </Button>
-                             <TextBlock Name="AddressText"
-                                        AutomationProperties.AutomationId="ReceiveAddressText"
+                            <TextBlock Name="AddressText"
+                                       AutomationProperties.AutomationId="ReceiveAddressText"
                                        Text="Loading..."
                                        FontSize="13"
                                        FontFamily="Cascadia Mono, Consolas, monospace"
@@ -128,8 +127,7 @@
                     </Border>
 
                     <!-- Done button (green gradient, full width) -->
-                     <Button Name="BtnDone" HorizontalAlignment="Stretch"
-                            AutomationProperties.AutomationId="BtnReceiveDone"
+                    <Button Name="BtnDone" Classes="MobileAction" AutomationProperties.AutomationId="BtnReceiveDone" HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Center"
                             Padding="14,12" CornerRadius="8"
                             Foreground="White"

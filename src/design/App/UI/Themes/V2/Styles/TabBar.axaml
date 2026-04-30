@@ -1,0 +1,126 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:i="https://github.com/projektanker/icons.avalonia">
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         MATERIAL DESIGN 3 — BOTTOM NAVIGATION BAR
+         MD3 spec: 80dp height, 24dp icons, 12sp labels (Medium weight),
+         rounded pill active indicator (64x32dp, 16dp corner radius) behind
+         active icon. 4dp gap between icon panel and label.
+         Colors: active = brand green, inactive = gray-600 (light) / #FAFAFA (dark)
+         Vue ref: App.vue lines 6526-6584 — uses simple color toggle, no pill.
+         We enhance with MD3 pill for better touch UX.
+         ═══════════════════════════════════════════════════════════════════ -->
+
+    <!-- TabBarItem: individual tab button in the bottom tab bar
+         MD3: transparent background, foreground-only color changes,
+         content vertically centered in 80dp height.
+         No padding on the button itself — layout handled by inner StackPanel. -->
+    <Style Selector="Button.TabBarItem">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="MinWidth" Value="60" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="{DynamicResource TabBarInactiveText}" />
+    </Style>
+    <Style Selector="Button.TabBarItem i|Icon">
+        <Setter Property="Foreground" Value="{DynamicResource TabBarInactiveText}" />
+    </Style>
+    <!-- Custom SVG Path icons (stroke-based Heroicons) inherit tab color -->
+    <Style Selector="Button.TabBarItem Path.TabIconStroke">
+        <Setter Property="Stroke" Value="{DynamicResource TabBarInactiveText}" />
+    </Style>
+    <Style Selector="Button.TabBarItem Path.TabIconFill">
+        <Setter Property="Fill" Value="{DynamicResource TabBarInactiveText}" />
+    </Style>
+    <!-- Remove the default Button template hover/pressed backgrounds -->
+    <Style Selector="Button.TabBarItem /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.TabBarItem:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Button.TabBarItem:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <!-- Active tab: green foreground (Rule #9: NO BrushTransition, CSS class toggle) -->
+    <Style Selector="Button.TabBarItem.TabBarItemActive">
+        <Setter Property="Foreground" Value="{DynamicResource TabBarActiveText}" />
+    </Style>
+    <!-- i:Icon doesn't inherit TextElement.Foreground from Button template —
+         explicitly set it for active tabs so both icon and label are green -->
+    <Style Selector="Button.TabBarItem.TabBarItemActive i|Icon">
+        <Setter Property="Foreground" Value="{DynamicResource TabBarActiveText}" />
+    </Style>
+    <Style Selector="Button.TabBarItem.TabBarItemActive Path.TabIconStroke">
+        <Setter Property="Stroke" Value="{DynamicResource TabBarActiveText}" />
+    </Style>
+    <Style Selector="Button.TabBarItem.TabBarItemActive Path.TabIconFill">
+        <Setter Property="Fill" Value="{DynamicResource TabBarActiveText}" />
+    </Style>
+
+    <!-- TabBarLabel: 12sp (12px), font-weight 500 (Medium)
+         Vue: text-xs font-medium = 12px, 500 weight -->
+    <Style Selector="TextBlock.TabBarLabel">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="Medium" />
+    </Style>
+
+    <!-- ── MD3 Active Indicator Pill ──
+         64x32dp rounded pill behind the active icon.
+         Inactive: transparent. Active: brand green at 12% opacity.
+         Rule #9: NO BrushTransition — instant state change via CSS class toggle. -->
+    <Style Selector="Border.TabBarPill">
+        <Setter Property="Background" Value="Transparent" />
+    </Style>
+    <Style Selector="Border.TabBarPill.TabBarPillActive">
+        <Setter Property="Background" Value="{DynamicResource TabBarPillActiveBg}" />
+    </Style>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         FLOATING SUB-TAB BUTTON STYLES
+         Vue: flex-1 py-3.5 text-sm font-semibold transition-all
+         Active: bg-[#4B7C5A] text-white
+         Inactive: bg-white text-[#4A5568] hover:bg-gray-50 (light)
+                   bg-[#2A2A2A] text-[#FAFAFA] (dark)
+         ═══════════════════════════════════════════════════════════════════ -->
+
+    <Style Selector="Button.SubTab">
+        <Setter Property="Background" Value="{DynamicResource SubTabInactiveBg}" />
+        <Setter Property="Foreground" Value="{DynamicResource SubTabInactiveText}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0,14" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.SubTab /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource SubTabInactiveBg}" />
+    </Style>
+    <Style Selector="Button.SubTab:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource SubTabInactiveHoverBg}" />
+    </Style>
+
+    <!-- Active sub-tab: green bg, white text (Rule #9: NO BrushTransition, CSS class toggle) -->
+    <Style Selector="Button.SubTab.SubTabActive">
+        <Setter Property="Background" Value="{DynamicResource SubTabActiveBg}" />
+        <Setter Property="Foreground" Value="{DynamicResource SubTabActiveText}" />
+    </Style>
+    <Style Selector="Button.SubTab.SubTabActive /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource SubTabActiveBg}" />
+    </Style>
+    <Style Selector="Button.SubTab.SubTabActive:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource SubTabActiveBg}" />
+    </Style>
+
+</Styles>

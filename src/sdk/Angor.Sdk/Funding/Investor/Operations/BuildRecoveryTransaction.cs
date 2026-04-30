@@ -123,6 +123,8 @@ public static class BuildRecoveryTransaction
 
             var signatureInfo = new SignatureInfo();
             var tcs = new TaskCompletionSource<Result<SignatureInfo?>>();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            cts.Token.Register(() => { if (!tcs.Task.IsCompleted) tcs.TrySetResult(Result.Success<SignatureInfo?>(null)); });
 
             var projectPubKey = project.NostrPubKey;
 
@@ -138,7 +140,7 @@ public static class BuildRecoveryTransaction
                         investorTransactionActions.CheckInvestorRecoverySignatures(project.ToProjectInfo(),
                             investment, signatureInfo);
 
-                    tcs.SetResult(validSignatures
+                    tcs.TrySetResult(validSignatures
                         ? Result.Success<SignatureInfo?>(signatureInfo)
                         : Result.Failure<SignatureInfo?>("Invalid signatures"));
                 },

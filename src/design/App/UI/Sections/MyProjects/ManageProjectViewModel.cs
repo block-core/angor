@@ -57,6 +57,10 @@ public class ManageStageViewModel
     public int SpentTransactionCount { get; set; }
     /// <summary>Number of unspent transactions (for "Funds Available" badge)</summary>
     public int UnspentTransactionCount { get; set; }
+    /// <summary>Number of immediately claimable transactions (Unspent status)</summary>
+    public int ClaimableTransactionCount { get; set; }
+    /// <summary>Total number of transactions for this stage</summary>
+    public int TotalTransactionCount { get; set; }
 
     /// <summary>Available (unspent) UTXO transactions for this stage.</summary>
     public ObservableCollection<UtxoTransactionViewModel> AvailableTransactions { get; set; } = new();
@@ -96,6 +100,11 @@ public class ManageStageViewModel
     /// <summary>True when the "Available in X Days" disabled button should show.
     /// Vue logic: stage.available && !stage.canClaim && !hasAllTransactionsSpent</summary>
     public bool ShowAvailableInDays => Available && !CanClaim && !IsFullySpent;
+
+    /// <summary>Display text for claimable UTXO count, e.g. "2 of 5 UTXOs claimable"</summary>
+    public string ClaimableInfoText => TotalTransactionCount > 0
+        ? $"{ClaimableTransactionCount} of {TotalTransactionCount} UTXOs claimable"
+        : "";
 }
 
 /// <summary>
@@ -172,6 +181,7 @@ public partial class ManageProjectViewModel : ReactiveObject
     [Reactive] public partial bool IsReleasingFunds { get; set; }
     [Reactive] public partial string ClaimedAmount { get; set; }
     [Reactive] public partial string ReleasedAmount { get; set; }
+    [Reactive] public partial bool IsRefreshing { get; set; }
 
     public ManageStageViewModel? SelectedStage =>
         SelectedStageIndex >= 0 && SelectedStageIndex < Stages.Count
@@ -202,10 +212,57 @@ public partial class ManageProjectViewModel : ReactiveObject
         NostrNsec = "";
         NostrHex = "";
 
-        // Load claimable transactions and project keys from SDK
-        _ = LoadClaimableTransactionsAsync();
-        _ = LoadProjectKeysAsync();
-        _ = LoadProjectStatisticsAsync();
+        // Initial SDK loading is started by MyProjectsView after the manage panel
+        // is visible. Starting it here makes navigation compete with network/LiteDB
+        // work before Android has a chance to paint the detail screen.
+    }
+
+    public void StartInitialLoad()
+    {
+        if (IsRefreshing) return;
+
+        IsRefreshing = true;
+        _ = InitialLoadAsync();
+    }
+
+    /// <summary>
+    /// Performs the initial data load and clears the refreshing state when done.
+    /// </summary>
+    private async Task InitialLoadAsync()
+    {
+        try
+        {
+            await Task.WhenAll(
+                LoadClaimableTransactionsAsync(),
+                LoadProjectKeysAsync(),
+                LoadProjectStatisticsAsync());
+        }
+        finally
+        {
+            IsRefreshing = false;
+        }
+    }
+
+    /// <summary>
+    /// Refresh all data from the SDK (claimable transactions + project statistics).
+    /// Called by the Refresh button in the nav bar.
+    /// </summary>
+    public async Task RefreshAsync()
+    {
+        if (IsRefreshing) return;
+
+        IsRefreshing = true;
+        _logger.LogInformation("Refreshing manage project data for {ProjectId}...", Project.ProjectIdentifier);
+        try
+        {
+            await Task.WhenAll(
+                LoadClaimableTransactionsAsync(),
+                LoadProjectStatisticsAsync());
+        }
+        finally
+        {
+            IsRefreshing = false;
+        }
     }
 
     /// <summary>
@@ -259,6 +316,21 @@ public partial class ManageProjectViewModel : ReactiveObject
             TransactionSpent = stats.SpentTransactions;
             TransactionAvailable = stats.AvailableTransactions;
 
+            // Populate next stage countdown from SDK statistics
+            if (stats.NextStage != null && stats.NextStage.ReleaseDate > DateTime.UtcNow)
+            {
+                var timeUntil = stats.NextStage.ReleaseDate - DateTime.UtcNow;
+                CountdownDays = (int)timeUntil.TotalDays;
+                CountdownHours = timeUntil.Hours;
+                CountdownMins = timeUntil.Minutes;
+            }
+            else
+            {
+                CountdownDays = 0;
+                CountdownHours = 0;
+                CountdownMins = 0;
+            }
+
             this.RaisePropertyChanged(nameof(TotalInvestment));
             this.RaisePropertyChanged(nameof(AvailableBalance));
             this.RaisePropertyChanged(nameof(Withdrawable));
@@ -266,6 +338,9 @@ public partial class ManageProjectViewModel : ReactiveObject
             this.RaisePropertyChanged(nameof(TransactionTotal));
             this.RaisePropertyChanged(nameof(TransactionSpent));
             this.RaisePropertyChanged(nameof(TransactionAvailable));
+            this.RaisePropertyChanged(nameof(CountdownDays));
+            this.RaisePropertyChanged(nameof(CountdownHours));
+            this.RaisePropertyChanged(nameof(CountdownMins));
         }
         catch (Exception ex)
         {
@@ -307,22 +382,36 @@ public partial class ManageProjectViewModel : ReactiveObject
                 totalAmount += stageAmount;
 
                 var claimable = stageTransactions.Where(t => t.ClaimStatus == Angor.Sdk.Funding.Founder.Dtos.ClaimStatus.Unspent).ToList();
+                var locked = stageTransactions.Where(t => t.ClaimStatus == Angor.Sdk.Funding.Founder.Dtos.ClaimStatus.Locked).ToList();
                 var spent = stageTransactions.Where(t => t.ClaimStatus == Angor.Sdk.Funding.Founder.Dtos.ClaimStatus.SpentByFounder).ToList();
 
+                // AmountLeft includes both claimable (Unspent) and locked transactions
+                var unspentAmount = claimable.Sum(t => t.Amount.Sats.ToUnitBtc()) + locked.Sum(t => t.Amount.Sats.ToUnitBtc());
                 availableAmount += (double)claimable.Sum(t => t.Amount.Sats.ToUnitBtc());
                 availableCount += claimable.Count;
                 spentCount += spent.Count;
 
+                // Calculate days until available from DynamicReleaseDate for locked stages
+                int? daysUntilAvailable = null;
+                var releaseDate = stageTransactions.FirstOrDefault()?.DynamicReleaseDate;
+                if (locked.Count > 0 && releaseDate.HasValue && releaseDate.Value > DateTime.UtcNow)
+                {
+                    daysUntilAvailable = (int)Math.Ceiling((releaseDate.Value - DateTime.UtcNow).TotalDays);
+                }
+
                 var stage = new ManageStageViewModel
                 {
                     Number = group.Key,
-                    AmountLeft = claimable.Sum(t => t.Amount.Sats.ToUnitBtc()).ToString("F8", CultureInfo.InvariantCulture),
+                    AmountLeft = unspentAmount.ToString("F8", CultureInfo.InvariantCulture),
                     UtxoCount = stageTransactions.Count,
-                    CompletionDate = stageTransactions.FirstOrDefault()?.DynamicReleaseDate?.ToString("dd MMMM yyyy") ?? "",
-                    Available = claimable.Count > 0,
+                    CompletionDate = releaseDate?.ToString("dd MMMM yyyy") ?? "",
+                    Available = claimable.Count > 0 || locked.Count > 0,
                     CanClaim = claimable.Count > 0,
+                    DaysUntilAvailable = daysUntilAvailable,
                     SpentTransactionCount = spent.Count,
-                    UnspentTransactionCount = claimable.Count,
+                    UnspentTransactionCount = claimable.Count + locked.Count,
+                    ClaimableTransactionCount = claimable.Count,
+                    TotalTransactionCount = stageTransactions.Count,
                 };
 
                 foreach (var tx in claimable)
@@ -400,7 +489,7 @@ public partial class ManageProjectViewModel : ReactiveObject
             {
                 _logger.LogError("SpendStageFunds failed for project {ProjectId}: {Error}", Project.ProjectIdentifier,
                     spendResult.Error);
-                ToastRequested?.Invoke("Failed to claim stage funds. Please try again.");
+                ToastRequested?.Invoke($"Failed to claim stage funds: {spendResult.Error}");
                 return false;
             }
 
@@ -416,12 +505,12 @@ public partial class ManageProjectViewModel : ReactiveObject
             _logger.LogError("SubmitTransactionFromDraft failed while claiming stage funds for project {ProjectId}: {Error}",
                 Project.ProjectIdentifier,
                 publishResult.Error);
-            ToastRequested?.Invoke("Failed to claim stage funds. Please try again.");
+            ToastRequested?.Invoke($"Failed to claim stage funds: {publishResult.Error}");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "ClaimStageFundsAsync threw exception for project {ProjectId}", Project.ProjectIdentifier);
-            ToastRequested?.Invoke("Failed to claim stage funds. Please try again.");
+            ToastRequested?.Invoke($"Failed to claim stage funds: {ex.Message}");
         }
 
         return false;
@@ -449,7 +538,7 @@ public partial class ManageProjectViewModel : ReactiveObject
                 _logger.LogError("GetReleasableTransactions failed for project {ProjectId}: {Error}",
                     Project.ProjectIdentifier,
                     releasableResult.Error);
-                ToastRequested?.Invoke("Failed to release funds to investors. Please try again.");
+                ToastRequested?.Invoke($"Failed to release funds to investors: {releasableResult.Error}");
                 return false;
             }
 
@@ -478,13 +567,13 @@ public partial class ManageProjectViewModel : ReactiveObject
 
             _logger.LogError("ReleaseFunds failed for project {ProjectId}: {Error}", Project.ProjectIdentifier,
                 releaseResult.Error);
-            ToastRequested?.Invoke("Failed to release funds to investors. Please try again.");
+            ToastRequested?.Invoke($"Failed to release funds to investors: {releaseResult.Error}");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "ReleaseFundsToInvestorsAsync threw exception for project {ProjectId}",
                 Project.ProjectIdentifier);
-            ToastRequested?.Invoke("Failed to release funds to investors. Please try again.");
+            ToastRequested?.Invoke($"Failed to release funds to investors: {ex.Message}");
         }
 
         return false;

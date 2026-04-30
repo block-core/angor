@@ -26,8 +26,8 @@
 
     </UserControl.Styles>
 
-    <controls:ScrollableView MaxContentWidth="766">
-        <StackPanel VerticalAlignment="Center" Spacing="{StaticResource Gap-XL}">
+    <ScrollViewer>
+        <StackPanel MaxWidth="766" VerticalAlignment="Center" Spacing="{StaticResource Gap-XL}">
             <TextBlock Classes="Subtitle">Tell us about your project and what you're building.</TextBlock>
             <EnhancedButton Content="Debug Prefill Data"
                             Command="{Binding PrefillDebugData}"
@@ -102,5 +102,5 @@
                 </StackPanel>
             </HeaderedContainer>
         </StackPanel>
-    </controls:ScrollableView>
+    </ScrollViewer>
 </UserControl>

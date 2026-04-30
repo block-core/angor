@@ -71,9 +71,8 @@
         <!-- MODAL CARD — max-w-4xl = 896px                          -->
         <!-- Vue: rounded-2xl shadow-2xl bg-[#111]/bg-white          -->
         <!-- ════════════════════════════════════════════════════════ -->
-        <Border HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="640" MaxWidth="896"
-                MaxHeight="680"
+        <Border Classes="ModalCard Wide"
+                MaxWidth="896"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"
@@ -127,16 +126,24 @@
                             </StackPanel>
                         </DockPanel>
 
-                        <!-- Balance row: label + big amount on left, Send/Receive buttons on right -->
-                        <!-- Vue: mt-4 flex items-center justify-between -->
-                        <DockPanel>
-                            <!-- Right: Send + Receive buttons -->
-                            <StackPanel DockPanel.Dock="Right"
-                                        Orientation="Horizontal"
+                        <!-- Balance row: label + big amount on top, Send/Receive buttons below.
+                             Stacked vertically so the balance amount never gets squeezed on narrow
+                             screens, and the buttons can take the full width side-by-side. -->
+                        <StackPanel Spacing="12">
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Balance" FontSize="14"
+                                           Foreground="{DynamicResource TextMuted}" />
+                                <TextBlock Name="HeaderBalance" Text="2.5431 BTC"
+                                           FontSize="26" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}"
+                                           TextWrapping="NoWrap"
+                                           TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal"
                                         Spacing="12"
-                                        VerticalAlignment="Center">
-                                <!-- Send button: green filled, px-4 py-2 rounded-lg font-semibold -->
+                                        HorizontalAlignment="Left">
                                 <Button Name="BtnHeaderSend"
+                                        Classes="MobileAction"
                                         Padding="16,8" CornerRadius="8"
                                         Foreground="White"
                                         FontWeight="SemiBold" FontSize="14"
@@ -156,8 +163,8 @@
                                                    VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
-                                <!-- Receive button: outlined green (btn-secondary-green) -->
                                 <Button Name="BtnHeaderReceive"
+                                        Classes="MobileAction"
                                         Padding="16,8" CornerRadius="8"
                                         Background="Transparent"
                                         BorderBrush="{DynamicResource PrimaryGreenBrush}"
@@ -173,17 +180,7 @@
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
-                            <!-- Left: Balance label + amount -->
-                            <StackPanel Spacing="2" VerticalAlignment="Center">
-                                <!-- Vue: text-sm text-gray-400/text-gray-600 -->
-                                <TextBlock Text="Balance" FontSize="14"
-                                           Foreground="{DynamicResource TextMuted}" />
-                                <!-- Vue: text-2xl font-bold -->
-                                <TextBlock Name="HeaderBalance" Text="2.5431 BTC"
-                                           FontSize="26" FontWeight="Bold"
-                                           Foreground="{DynamicResource TextStrong}" />
-                            </StackPanel>
-                        </DockPanel>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 

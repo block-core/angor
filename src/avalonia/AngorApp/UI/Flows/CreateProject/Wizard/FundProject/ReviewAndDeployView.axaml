@@ -28,8 +28,8 @@
 
     </UserControl.Resources>
 
-    <controls:ScrollableView MaxContentWidth="766">
-        <StackPanel Classes="Gap-XL">
+    <ScrollViewer>
+        <StackPanel MaxWidth="766" Classes="Gap-XL">
             <HeaderedContainer Classes="Card Accent Icon-M Icon-Bg-Green Icon-Square Icon-Fill-White">
                 <HeaderedContainer.Header>
                     <EdgePanel StartContent="{Icon fa-user}" Content="Project Profile" />
@@ -80,5 +80,5 @@
                 </StackPanel>
             </HeaderedContainer>
         </StackPanel>
-    </controls:ScrollableView>
+    </ScrollViewer>
 </UserControl>

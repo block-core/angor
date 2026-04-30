@@ -103,7 +103,7 @@ public class GetClaimableTransactionsTests
         transactions[0].StageNumber.Should().Be(1);
         transactions[0].Amount.Should().Be(new Amount(50_000));
         transactions[0].InvestorAddress.Should().Be("investor-pub-1");
-        transactions[0].DynamicReleaseDate.Should().BeNull();
+        transactions[0].DynamicReleaseDate.Should().Be(stageData.StageDate);
     }
 
     [Fact]
@@ -410,7 +410,7 @@ public class GetClaimableTransactionsTests
     }
 
     [Fact]
-    public async Task Handle_WhenNonDynamicStage_DynamicReleaseDateIsNull()
+    public async Task Handle_WhenNonDynamicStage_SetsStageReleaseDate()
     {
         // Arrange
         var walletId = new WalletId("wallet-1");
@@ -442,7 +442,7 @@ public class GetClaimableTransactionsTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Transactions.First().DynamicReleaseDate.Should().BeNull();
+        result.Value.Transactions.First().DynamicReleaseDate.Should().Be(stageData.StageDate);
     }
 
     [Fact]

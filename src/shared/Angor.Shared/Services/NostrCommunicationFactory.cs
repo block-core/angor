@@ -19,6 +19,8 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
     private ConcurrentDictionary<string, ConcurrentHashSet<string>> _eoseCalledOnSubscriptionClients;
     private ConcurrentDictionary<string, ConcurrentHashSet<string>> _okCalledOnSubscriptionClients;
 
+    public event Action<string>? RelayDisconnected;
+
     public NostrCommunicationFactory(ILogger<NostrWebsocketClient> clientLogger, ILogger<NostrCommunicationFactory> logger)
     {
         _clientLogger = clientLogger;
@@ -172,12 +174,12 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
 
     public bool EoseEventReceivedOnAllRelays(string subscription)
     {
-        if (!_eoseCalledOnSubscriptionClients.ContainsKey(subscription))
+        if (!_eoseCalledOnSubscriptionClients.TryGetValue(subscription, out var clients))
             return true; //If not monitoring than no need to block
 
         _logger.LogDebug($"Checking for all Eose on monitored subscription {subscription}");
 
-        var response = _eoseCalledOnSubscriptionClients[subscription].IsEmpty;
+        var response = clients.IsEmpty;
         
         _logger.LogDebug($"Eose on monitored subscription {subscription} received from all clients - {response}");
         
@@ -198,12 +200,12 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
     
     public bool OkEventReceivedOnAllRelays(string eventId)
     {
-        if (!_okCalledOnSubscriptionClients.ContainsKey(eventId))
+        if (!_okCalledOnSubscriptionClients.TryGetValue(eventId, out var clients))
             return true; //If not monitoring than no need to block
 
         _logger.LogDebug($"Checking for all Ok on monitored subscription {eventId}");
         
-        bool response = _okCalledOnSubscriptionClients[eventId].IsEmpty;
+        bool response = clients.IsEmpty;
         
         _logger.LogDebug($"Eose on monitored subscription {eventId} received from all clients - {response}");
 
@@ -245,6 +247,37 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
                 _logger.LogDebug(
                     "Relay {relayName} disconnected, type: {Type}, reason: {CloseStatusDescription}", 
                     relayName, e.Type, e.CloseStatusDescription);
+
+            // Remove the disconnected relay from all pending EOSE tracking sets
+            // so that remaining healthy relays can satisfy the "all relays responded" check.
+            foreach (var kvp in _eoseCalledOnSubscriptionClients)
+            {
+                if (kvp.Value.TryRemove(relayName))
+                {
+                    _logger.LogWarning(
+                        "Removed disconnected relay {RelayName} from EOSE tracking for subscription {Subscription}",
+                        relayName, kvp.Key);
+                }
+            }
+
+            foreach (var kvp in _okCalledOnSubscriptionClients)
+            {
+                if (kvp.Value.TryRemove(relayName))
+                {
+                    _logger.LogWarning(
+                        "Removed disconnected relay {RelayName} from OK tracking for event {EventId}",
+                        relayName, kvp.Key);
+                }
+            }
+
+            try
+            {
+                RelayDisconnected?.Invoke(relayName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in RelayDisconnected handler for relay {RelayName}", relayName);
+            }
         }));
 
         if (_logger.IsEnabled(LogLevel.Information))

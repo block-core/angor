@@ -18,8 +18,15 @@ public interface IWalletAppService
     Task<Result<IEnumerable<FeeEstimation>>> GetFeeEstimates();
     Task<Result<WalletId>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network);
     Task<Result<WalletId>> CreateWallet(string name, string encryptionKey, BitcoinNetwork network);
+    /// <summary>Create a wallet without a user-provided password. Uses secure storage for the encryption key (placeholder: "DEFAULT").
+    /// Callers must supply the current network since the SDK wallet layer doesn't own network configuration.</summary>
+    Task<Result<WalletId>> CreateWalletWithoutPassword(BitcoinNetwork network);
     public string GenerateRandomSeedwords();
     Task<Result> GetTestCoins(WalletId walletId);
     Task<Result> DeleteWallet(WalletId walletId);
     Task<Result> RebuildAllWalletBalancesAsync();
+
+    /// <summary>Get the compressed public key hex for a receive address owned by this wallet.
+    /// Used as the claim key for Boltz Lightning swaps.</summary>
+    Task<Result<string>> GetPublicKeyForAddress(WalletId walletId, string address);
 }

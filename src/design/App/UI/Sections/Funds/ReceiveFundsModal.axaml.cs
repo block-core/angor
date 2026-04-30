@@ -3,6 +3,8 @@ using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using App.UI.Shared.Helpers;
 using App.UI.Shell;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace App.UI.Sections.Funds;
 
@@ -15,9 +17,12 @@ namespace App.UI.Sections.Funds;
 /// </summary>
 public partial class ReceiveFundsModal : UserControl, IBackdropCloseable
 {
+    private readonly ILogger<ReceiveFundsModal> _logger;
+
     public ReceiveFundsModal()
     {
         InitializeComponent();
+        _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<ReceiveFundsModal>();
         AddHandler(Button.ClickEvent, OnButtonClick);
     }
 
@@ -44,10 +49,18 @@ public partial class ReceiveFundsModal : UserControl, IBackdropCloseable
 
     private async Task LoadReceiveAddressAsync(FundsViewModel fundsVm, string walletId)
     {
-        var address = await fundsVm.GetReceiveAddressAsync(walletId);
-        if (!string.IsNullOrEmpty(address))
+        try
         {
-            AddressText.Text = address;
+            var address = await fundsVm.GetReceiveAddressAsync(walletId);
+            if (!string.IsNullOrEmpty(address))
+            {
+                AddressText.Text = address;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "LoadReceiveAddressAsync failed");
+            AddressText.Text = "Failed to load address";
         }
     }
 

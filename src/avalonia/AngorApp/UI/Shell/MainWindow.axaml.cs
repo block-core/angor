@@ -1,5 +1,7 @@
 using Avalonia.Platform;
 using Avalonia.Styling;
+using AVVI94.Breakpoints.Avalonia.Collections;
+using BP = AVVI94.Breakpoints.Avalonia.Controls.Breakpoints;
 
 namespace AngorApp.UI.Shell;
 
@@ -9,10 +11,16 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         SetWindowIconForCurrentTheme();
-        // React to theme changes to keep the window icon in sync (Windows/Linux)
+
         Application.Current!
             .GetObservable(ThemeVariantScope.ActualThemeVariantProperty)
             .Subscribe(_ => SetWindowIconForCurrentTheme());
+
+        BreakpointList breakpoints = [("XS", 1), ("S", 768)];
+        BP.SetValues(this, breakpoints);
+
+        this.GetObservable(BP.CurrentBreakpointProperty)
+            .Subscribe(bp => Classes.Set("Compact", bp != "S"));
     }
 
     private void SetWindowIconForCurrentTheme()

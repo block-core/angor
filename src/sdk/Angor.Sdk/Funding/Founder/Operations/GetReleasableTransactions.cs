@@ -51,9 +51,10 @@ public static class GetReleasableTransactions
 
         public Task<IEnumerable<SignatureReleaseItem>> FetchSignatureRequestsAsync(string projectNostrPubKey)
         {
-            var tcs = new TaskCompletionSource<IEnumerable<SignatureReleaseItem>>();
-
             var collectedItems = new List<SignatureReleaseItem>();
+            var tcs = new TaskCompletionSource<IEnumerable<SignatureReleaseItem>>();
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            cts.Token.Register(() => { tcs.TrySetResult(collectedItems); cts.Dispose(); });
 
             try
             {
@@ -84,7 +85,7 @@ public static class GetReleasableTransactions
                         });
                     },
                     // On end of messages
-                    () => { tcs.SetResult(collectedItems); });
+                    () => { tcs.TrySetResult(collectedItems); });
             }
             catch (Exception ex)
             {
@@ -130,6 +131,8 @@ public static class GetReleasableTransactions
         protected Task FetchFounderReleaseSignaturesAsync(string nostrPubKey, List<SignatureReleaseItem> signaturesReleaseItems)
         {
             var tcs = new TaskCompletionSource();
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            cts.Token.Register(() => { tcs.TrySetResult(); cts.Dispose(); });
 
             signService.LookupSignedReleaseSigs(nostrPubKey,
                 (item) =>
@@ -148,7 +151,7 @@ public static class GetReleasableTransactions
                     signatureRequest.ReleaseSignaturesTime = item.EventCreatedAt;
                 }, () =>
                 {
-                    tcs.SetResult();
+                    tcs.TrySetResult();
                 });
             
             return tcs.Task;
@@ -157,6 +160,8 @@ public static class GetReleasableTransactions
         private Task FetchFounderApprovalsSignaturesAsync(string nostrPubKey, List<SignatureReleaseItem> signaturesReleaseItems)
         {
             var tcs = new TaskCompletionSource();
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            cts.Token.Register(() => { tcs.TrySetResult(); cts.Dispose(); });
 
             signService.LookupInvestmentRequestApprovals(nostrPubKey,
                 (investorNostrPubKey, timeEventCreated, reqEventId) =>
@@ -181,7 +186,7 @@ public static class GetReleasableTransactions
                 },
                 () =>
                 {
-                    tcs.SetResult();
+                    tcs.TrySetResult();
                 });
             
             return tcs.Task;

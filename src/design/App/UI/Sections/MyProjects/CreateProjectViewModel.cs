@@ -29,6 +29,12 @@ public class ProjectStageViewModel
     public string ReleaseDate { get; set; } = "";
     public string AmountBtc { get; set; } = "0.00000000";
 
+    /// <summary>
+    /// The actual typed release date used for deployment.
+    /// This is the source of truth — <see cref="ReleaseDate"/> is only for display.
+    /// </summary>
+    public DateOnly ReleaseDateValue { get; set; }
+
     /// <summary>Label for this stage row — "Stage", "Monthly Payout", "Weekly Payout", "Payment", etc.</summary>
     public string StageLabel { get; set; } = "Stage";
 
@@ -38,6 +44,7 @@ public class ProjectStageViewModel
     /// Fund/Sub: "33% paid on 28th April 2026"
     /// </summary>
     public string DisplayText { get; set; } = "";
+    public double PercentageValue { get; set; }
 }
 
 /// <summary>
@@ -131,11 +138,25 @@ public partial class CreateProjectViewModel : ReactiveObject
     /// </summary>
     public Action? OnProjectDeployed { get; set; }
 
+    /// <summary>
+    /// Called when the user clicks "Complete Profile" on the deploy success screen.
+    /// The parent wires this to navigate to the edit profile page.
+    /// </summary>
+    public Action? OnCompleteProfileRequested { get; set; }
+
     /// <summary>The deploy flow overlay ViewModel.</summary>
     public DeployFlowViewModel DeployFlow { get; }
 
     private readonly ICurrencyService _currencyService;
     private readonly INetworkConfiguration _networkConfiguration;
+
+    /// <summary>
+    /// True when debug mode is enabled AND on testnet.
+    /// Controls visibility of the "Debug Prefill Data" button in Step 2.
+    /// </summary>
+    public bool IsDebugMode =>
+        _networkConfiguration.GetDebugMode() &&
+        _networkConfiguration.GetNetwork().Name != "Main";
 
     public string CurrencySymbol => _currencyService.Symbol;
 
@@ -153,9 +174,9 @@ public partial class CreateProjectViewModel : ReactiveObject
         DeployFlow = deployFlow;
         _currencyService = currencyService;
         _networkConfiguration = networkConfiguration;
-        // Default start date to today
+        // Default start date to today (UTC)
         StartDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
-        InvestStartDate = DateTime.Now;
+        InvestStartDate = DateTime.UtcNow;
 
         // Generate sample stages when a payout pattern is selected (legacy)
         this.WhenAnyValue(x => x.SelectedPayoutPattern)
@@ -271,6 +292,25 @@ public partial class CreateProjectViewModel : ReactiveObject
     public bool IsSubscription => ProjectType == "subscription";
     public bool IsTypeSelected => !string.IsNullOrEmpty(ProjectType);
 
+    // ── Review summary helpers (Step 6) ──
+    /// <summary>Formatted installment options for review, e.g. "3, 6, 9 installments".</summary>
+    public string InstallmentOptionsText =>
+        SelectedInstallmentCounts.Count > 0
+            ? string.Join(", ", SelectedInstallmentCounts.OrderBy(x => x)) + " installments"
+            : "";
+
+    public bool HasInstallmentOptions => SelectedInstallmentCounts.Count > 0;
+
+    /// <summary>Formatted payout day for review, e.g. "Day 15" or "Wednesday".</summary>
+    public string PayoutDayText =>
+        PayoutFrequency == "Monthly" && MonthlyPayoutDate.HasValue
+            ? $"Day {MonthlyPayoutDate.Value}"
+            : PayoutFrequency == "Weekly" && !string.IsNullOrEmpty(WeeklyPayoutDay)
+                ? WeeklyPayoutDay
+                : "";
+
+    public bool HasPayoutDay => !string.IsNullOrEmpty(PayoutDayText);
+
     // ── Validation error visibility helpers (for XAML binding) ──
     public bool HasFormError => !string.IsNullOrEmpty(FormError);
     public bool HasNameError => !string.IsNullOrEmpty(NameError);
@@ -368,9 +408,7 @@ public partial class CreateProjectViewModel : ReactiveObject
     /// </summary>
     private ProjectValidator CreateValidator()
     {
-        var isDebug = _networkConfiguration.GetDebugMode() &&
-                      _networkConfiguration.GetNetwork().Name != "Main";
-        return new ProjectValidator(isDebug);
+        return new ProjectValidator(IsDebugMode);
     }
 
     public void GoNext()
@@ -563,8 +601,18 @@ public partial class CreateProjectViewModel : ReactiveObject
     /// </summary>
     public void Deploy()
     {
-        // Build the CreateProjectDto from wizard fields
-        var dto = BuildCreateProjectDto();
+        CreateProjectDto dto;
+        try
+        {
+            // Build the CreateProjectDto from wizard fields
+            dto = BuildCreateProjectDto();
+        }
+        catch (InvalidOperationException ex)
+        {
+            FormError = ex.Message;
+            return;
+        }
+
         DeployFlow.ProjectData = dto;
 
         DeployFlow.OnDeployCompleted = () =>
@@ -574,6 +622,10 @@ public partial class CreateProjectViewModel : ReactiveObject
             // Matches Vue goToMyProjects(): add project to list + close wizard + navigate to list
             OnProjectDeployed?.Invoke();
         };
+        DeployFlow.OnCompleteProfileRequested = () =>
+        {
+            OnCompleteProfileRequested?.Invoke();
+        };
         DeployFlow.Show(ProjectName ?? "My Project");
     }
 
@@ -582,38 +634,46 @@ public partial class CreateProjectViewModel : ReactiveObject
     /// </summary>
     private CreateProjectDto BuildCreateProjectDto()
     {
-        // Parse target amount to satoshis
-        var targetSats = long.TryParse(TargetAmount, out var tSats) ? tSats
-            : double.TryParse(TargetAmount, System.Globalization.NumberStyles.Float,
-                System.Globalization.CultureInfo.InvariantCulture, out var tBtc)
-                ? ((decimal)tBtc).ToUnitSatoshi()
-                : 0L;
+        // Parse target amount as BTC and convert to satoshis.
+        // The UI always accepts BTC values (e.g. "1" = 1 BTC = 100_000_000 sats).
+        if (!decimal.TryParse(TargetAmount, System.Globalization.NumberStyles.Number,
+                System.Globalization.CultureInfo.InvariantCulture, out var tBtc) || tBtc <= 0)
+            throw new InvalidOperationException(
+                $"Invalid target amount '{TargetAmount}'. Cannot deploy project without a valid target amount.");
+        var targetSats = tBtc.ToUnitSatoshi();
 
         // Map UI project type to SDK ProjectType
         var sdkProjectType = ProjectType switch
         {
             "fund" => SdkProjectType.Fund,
             "subscription" => SdkProjectType.Subscribe,
-            _ => SdkProjectType.Invest
+            "invest" or "investment" => SdkProjectType.Invest,
+            _ => throw new InvalidOperationException(
+                $"Unknown project type '{ProjectType}'. Cannot deploy project with an unrecognized type.")
         };
 
         // Parse dates
-        var startDt = DateTime.TryParse(StartDate, out var sd) ? sd : DateTime.UtcNow;
+        if (!DateTime.TryParse(StartDate, out var startDt))
+            throw new InvalidOperationException(
+                $"Invalid start date '{StartDate}'. Cannot deploy project without a valid start date.");
         DateTime? endDt = DateTime.TryParse(EndDate, out var ed) ? ed : null;
 
         // Build stages from the wizard's generated Stages collection
         var stageDtos = Stages.Select((s, i) =>
         {
             var pctStr = s.Percentage.Replace("%", "");
-            var pct = decimal.TryParse(pctStr, System.Globalization.NumberStyles.Float,
-                System.Globalization.CultureInfo.InvariantCulture, out var p) ? p : 0m;
+            if (!decimal.TryParse(pctStr, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var pct) || pct <= 0)
+                throw new InvalidOperationException(
+                    $"Stage {s.StageNumber} has invalid percentage '{s.Percentage}'. " +
+                    $"Cannot deploy project with missing or zero stage allocation.");
 
-            // Parse the release date from the display text
-            var stageDate = DateTime.TryParse(s.ReleaseDate, out var rd)
-                ? DateOnly.FromDateTime(rd)
-                : DateOnly.FromDateTime(startDt.AddMonths(i + 1));
+            if (s.ReleaseDateValue == default)
+                throw new InvalidOperationException(
+                    $"Stage {s.StageNumber} has no valid release date. " +
+                    $"Cannot deploy project with missing stage dates.");
 
-            return new CreateProjectStageDto(stageDate, pct);
+            return new CreateProjectStageDto(s.ReleaseDateValue, pct);
         }).ToList();
 
         // Build dynamic patterns for Fund/Subscribe types
@@ -648,7 +708,9 @@ public partial class CreateProjectViewModel : ReactiveObject
 
             payoutDayValue = IsPayoutMonthly && MonthlyPayoutDate.HasValue
                 ? MonthlyPayoutDate.Value
-                : int.TryParse(PayoutDay, out var pd) ? pd : 1;
+                : int.TryParse(PayoutDay, out var pd) ? pd
+                : throw new InvalidOperationException(
+                    $"Invalid payout day '{PayoutDay}'. Cannot deploy project without a valid payout day.");
         }
 
         // For subscription, parse the subscription price as sats
@@ -671,7 +733,10 @@ public partial class CreateProjectViewModel : ReactiveObject
 
         return new CreateProjectDto
         {
-            ProjectName = ProjectName ?? "Untitled Project",
+            ProjectName = !string.IsNullOrWhiteSpace(ProjectName)
+                ? ProjectName
+                : throw new InvalidOperationException(
+                    "Project name is required. Cannot deploy project without a name."),
             Description = ProjectAbout ?? "",
             AvatarUri = ProfileUrl ?? "",
             BannerUri = BannerUrl ?? "",
@@ -751,6 +816,7 @@ public partial class CreateProjectViewModel : ReactiveObject
                 StageNumber = i + 1,
                 Percentage = $"{pct}%",
                 ReleaseDate = FormatReleaseDateOrdinal(releaseDate),
+                ReleaseDateValue = DateOnly.FromDateTime(releaseDate),
                 AmountBtc = btcAmount.ToString("F4"),
                 StageLabel = "Stage",
                 DisplayText = $"{pct}% ({btcAmount:F4} {_currencyService.Symbol}) released on {FormatReleaseDateOrdinal(releaseDate)}"
@@ -812,6 +878,7 @@ public partial class CreateProjectViewModel : ReactiveObject
                 StageNumber = i + 1,
                 Percentage = $"{pct}%",
                 ReleaseDate = FormatReleaseDateOrdinal(releaseDate),
+                ReleaseDateValue = DateOnly.FromDateTime(releaseDate),
                 AmountBtc = (targetBtc * pct / 100).ToString("F4"),
                 StageLabel = label,
                 DisplayText = $"{pct}% paid on {FormatReleaseDateOrdinal(releaseDate)}"
@@ -872,6 +939,40 @@ public partial class CreateProjectViewModel : ReactiveObject
     }
 
     /// <summary>Toggle between simple and advanced editor (Investment).</summary>
+    public bool IsNotAdvancedEditor => !IsAdvancedEditor;
+    public string AdvancedEditorButtonText => IsAdvancedEditor ? "Simple Editor" : "Advanced Editor";
+
+    /// <summary>Add a new stage to the advanced editor with default values.</summary>
+    public void AddStage()
+    {
+        var nextNum = Stages.Count + 1;
+        var stage = new ProjectStageViewModel
+        {
+            StageNumber = nextNum,
+            Percentage = "0%",
+            PercentageValue = 0,
+            ReleaseDate = "",
+            ReleaseDateValue = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(nextNum)),
+            StageLabel = IsInvestment ? "Stage" : "Payout",
+            DisplayText = ""
+        };
+        stage.ReleaseDate = stage.ReleaseDateValue.ToString("dd MMMM yyyy");
+        Stages.Add(stage);
+        this.RaisePropertyChanged(nameof(HasStages));
+        this.RaisePropertyChanged(nameof(ScheduleSummary));
+    }
+
+    /// <summary>Remove a stage from the advanced editor.</summary>
+    public void RemoveStage(ProjectStageViewModel stage)
+    {
+        Stages.Remove(stage);
+        // Renumber remaining stages
+        for (int i = 0; i < Stages.Count; i++)
+            Stages[i].StageNumber = i + 1;
+        this.RaisePropertyChanged(nameof(HasStages));
+        this.RaisePropertyChanged(nameof(ScheduleSummary));
+    }
+
     public void ToggleAdvancedEditor()
     {
         IsAdvancedEditor = !IsAdvancedEditor;
@@ -988,6 +1089,7 @@ public partial class CreateProjectViewModel : ReactiveObject
                 StageNumber = i + 1,
                 Percentage = $"{pct}%",
                 ReleaseDate = FormatReleaseDateOrdinal(releaseDate),
+                ReleaseDateValue = DateOnly.FromDateTime(releaseDate),
                 AmountBtc = (targetBtc * pct / 100).ToString("F4"),
                 StageLabel = label,
                 DisplayText = $"{pct}% paid on {FormatReleaseDateOrdinal(releaseDate)}"
@@ -1038,7 +1140,7 @@ public partial class CreateProjectViewModel : ReactiveObject
         PenaltyDays = 90;
         ApprovalThreshold = "0.001";
         SubscriptionPrice = "";
-        InvestStartDate = DateTime.Now;
+        InvestStartDate = DateTime.UtcNow;
         InvestEndDate = null;
 
         // Step 5: Stages/Payouts
@@ -1070,6 +1172,153 @@ public partial class CreateProjectViewModel : ReactiveObject
 
         // Notify all step visibility properties
         RaiseAllStepProperties();
+
+        // Re-evaluate debug mode (may have changed in settings since last open)
+        this.RaisePropertyChanged(nameof(IsDebugMode));
+    }    /// <summary>
+    /// Prepopulate all wizard fields with debug/test data so the user can
+    /// click Next through every step and deploy quickly on testnet.
+    /// Values mirror the Avalonia app's PopulateInvestDebugDefaults / PopulateFundDebugDefaults.
+    /// </summary>
+    public void PrepopulateDebugData()
+    {
+        if (!IsDebugMode) return;
+
+        var id = Guid.NewGuid().ToString()[..8];
+
+        // If no project type is selected yet, default to investment
+        if (string.IsNullOrEmpty(ProjectType))
+        {
+            SelectProjectType("investment");
+        }
+
+        if (ProjectType == "fund")
+        {
+            PrepopulateFundDefaults(id);
+        }
+        else if (ProjectType == "subscription")
+        {
+            PrepopulateSubscriptionDefaults(id);
+        }
+        else
+        {
+            PrepopulateInvestmentDefaults(id);
+        }
+
+        // Step 3: Images — random placeholder images (same approach as Avalonia app's DebugData)
+        var seed = Guid.NewGuid().ToString("N")[..8];
+        BannerUrl = $"https://picsum.photos/seed/{seed}/820/312";
+        ProfileUrl = $"https://picsum.photos/seed/{seed}/170/170";
+
+        ClearErrors();
+        this.RaisePropertyChanged(nameof(CanGoNext));
+    }
+
+    private void PrepopulateInvestmentDefaults(string id)
+    {
+        // Step 2: Profile
+        ProjectName = $"Debug Project {id}";
+        ProjectAbout = $"Auto-populated debug project {id} for testing on testnet. Created at {DateTime.UtcNow:HH:mm:ss} UTC.";
+        ProjectWebsite = "https://angor.io";
+
+        // Step 4: Funding config
+        TargetAmount = "0.01";
+        PenaltyDays = 0;
+        InvestStartDate = DateTime.UtcNow.Date;
+        InvestEndDate = DateTime.UtcNow.Date;
+
+        // Step 5: Stages — 3 stages: stage 1 today, stage 2 +30 days, stage 3 +60 days
+        Stages.Clear();
+        var today = DateTime.UtcNow.Date;
+        var stage2Date = today.AddDays(30);
+        var stage3Date = today.AddDays(60);
+        var targetBtc = 0.01;
+
+        Stages.Add(new ProjectStageViewModel
+        {
+            StageNumber = 1,
+            Percentage = "10%",
+            ReleaseDate = FormatReleaseDateOrdinal(today),
+            ReleaseDateValue = DateOnly.FromDateTime(today),
+            AmountBtc = (targetBtc * 0.10).ToString("F4"),
+            StageLabel = "Stage",
+            DisplayText = $"10% ({targetBtc * 0.10:F4} {_currencyService.Symbol}) released on {FormatReleaseDateOrdinal(today)}"
+        });
+        Stages.Add(new ProjectStageViewModel
+        {
+            StageNumber = 2,
+            Percentage = "30%",
+            ReleaseDate = FormatReleaseDateOrdinal(stage2Date),
+            ReleaseDateValue = DateOnly.FromDateTime(stage2Date),
+            AmountBtc = (targetBtc * 0.30).ToString("F4"),
+            StageLabel = "Stage",
+            DisplayText = $"30% ({targetBtc * 0.30:F4} {_currencyService.Symbol}) released on {FormatReleaseDateOrdinal(stage2Date)}"
+        });
+        Stages.Add(new ProjectStageViewModel
+        {
+            StageNumber = 3,
+            Percentage = "60%",
+            ReleaseDate = FormatReleaseDateOrdinal(stage3Date),
+            ReleaseDateValue = DateOnly.FromDateTime(stage3Date),
+            AmountBtc = (targetBtc * 0.60).ToString("F4"),
+            StageLabel = "Stage",
+            DisplayText = $"60% ({targetBtc * 0.60:F4} {_currencyService.Symbol}) released on {FormatReleaseDateOrdinal(stage3Date)}"
+        });
+
+        ShowGenerateForm = false;
+        this.RaisePropertyChanged(nameof(HasStages));
+        this.RaisePropertyChanged(nameof(ScheduleSummary));
+    }
+
+    private void PrepopulateFundDefaults(string id)
+    {
+        // Step 2: Profile
+        ProjectName = $"Debug Fund {id}";
+        ProjectAbout = $"Auto-populated debug fund {id} for testing on testnet. Created at {DateTime.UtcNow:HH:mm:ss} UTC.";
+        ProjectWebsite = "https://angor.io";
+
+        // Step 4: Funding config
+        TargetAmount = "0.5";
+        ApprovalThreshold = "0.01";
+        PenaltyDays = 0;
+
+        // Step 5: Payouts — Monthly, day = today (UTC), installments 3 and 6
+        // Use UtcNow.Day to stay consistent with StartDate which is also UTC-based.
+        PayoutFrequency = "Monthly";
+        MonthlyPayoutDate = DateTime.UtcNow.Day;
+        SelectedInstallmentCounts.Clear();
+        SelectedInstallmentCounts.Add(3);
+        SelectedInstallmentCounts.Add(6);
+        this.RaisePropertyChanged(nameof(IsPayoutMonthly));
+        this.RaisePropertyChanged(nameof(IsPayoutWeekly));
+        this.RaisePropertyChanged(nameof(CanGeneratePayouts));
+
+        // Generate payout stages
+        GeneratePayoutSchedule();
+    }
+
+    private void PrepopulateSubscriptionDefaults(string id)
+    {
+        // Step 2: Profile
+        ProjectName = $"Debug Subscription {id}";
+        ProjectAbout = $"Auto-populated debug subscription {id} for testing on testnet. Created at {DateTime.UtcNow:HH:mm:ss} UTC.";
+        ProjectWebsite = "https://angor.io";
+
+        // Step 4: Subscription price
+        SubscriptionPrice = "0.0001";
+
+        // Step 5: Payouts — Monthly, day = today (UTC), installments 3 and 6
+        PayoutFrequency = "Monthly";
+        MonthlyPayoutDate = DateTime.UtcNow.Day;
+        SelectedInstallmentCounts.Clear();
+        SelectedInstallmentCounts.Add(3);
+        SelectedInstallmentCounts.Add(6);
+        this.RaisePropertyChanged(nameof(IsPayoutMonthly));
+        this.RaisePropertyChanged(nameof(IsPayoutWeekly));
+        this.RaisePropertyChanged(nameof(CanGeneratePayouts));
+
+        // Generate payout stages
+        GeneratePayoutSchedule();
     }
 
     private void ClearErrors()

@@ -12,6 +12,7 @@ using Angor.Sdk.Wallet.Domain;
 using Angor.Sdk.Wallet.Infrastructure.Impl;
 using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using Angor.Shared;
+using Angor.Shared.Integration.Lightning;
 using Angor.Shared.Services;
 using App.Composition.Adapters;
 using App.UI.Sections.FindProjects;
@@ -20,6 +21,7 @@ using App.UI.Sections.Funds;
 using App.UI.Sections.Home;
 using App.UI.Sections.MyProjects;
 using App.UI.Sections.MyProjects.Deploy;
+using App.UI.Sections.MyProjects.EditProfile;
 using App.UI.Sections.Portfolio;
 using App.UI.Sections.Settings;
 using App.UI.Shared;
@@ -52,7 +54,11 @@ public static class CompositionRoot
             _ => BitcoinNetwork.Testnet
         };
 
-        // Logging — Microsoft.Extensions.Logging with console output
+        // Logging — Microsoft.Extensions.Logging with console + file output
+        var logFilePath = System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Angor", "logs", "angor-.log");
+
         services.AddLogging(builder =>
         {
             builder.ClearProviders();
@@ -61,6 +67,18 @@ public static class CompositionRoot
             {
                 builder.AddConsole();
             }
+
+            // Add Serilog as a provider for file logging
+            var fileLogger = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .WriteTo.File(
+                    logFilePath,
+                    rollingInterval: Serilog.RollingInterval.Day,
+                    retainedFileCountLimit: 15,
+                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
+                .CreateLogger();
+
+            builder.AddSerilog(fileLogger, dispose: true);
 
             // Suppress noisy per-request HTTP diagnostics (Sending/Received for every call)
             builder.AddFilter("System.Net.Http.HttpClient", LogLevel.Warning);
@@ -102,6 +120,25 @@ public static class CompositionRoot
         // Currency symbol service — reads ticker from INetworkConfiguration
         services.AddSingleton<ICurrencyService, CurrencyService>();
 
+        // INetworkStorage override for integration tests that need to point at a local
+        // docker stack (see src/design/App.Test.Integration/docker). When ANGOR_INDEXER_URL
+        // or ANGOR_RELAY_URLS is set, the decorator returns the env-var values from
+        // GetSettings() but never persists them, so the underlying database stays clean.
+        if (EnvOverrideNetworkStorage.IsActive())
+        {
+            services.AddSingleton<INetworkStorage>(sp =>
+                new EnvOverrideNetworkStorage(new NetworkStorage(sp.GetRequiredService<IStore>())));
+        }
+
+        // Faucet service — integration tests replace this registration to point
+        // at the local docker faucet (see src/design/App.Test.Integration/docker).
+        // Env-var override:
+        //   ANGOR_FAUCET_BASE_URL   e.g. http://localhost:48500
+        //   ANGOR_FAUCET_SEND_PATH  e.g. api/send/{0}/{1}   (defaults to the bitcoin-custom-signet path)
+        services.AddHttpClient();
+        services.AddSingleton(ResolveFaucetOptions());
+        services.AddSingleton<IFaucetService, HttpFaucetService>();
+
         // ── Shared singletons (replaces SharedViewModels static class) ──
         services.AddSingleton<SignatureStore>();
         services.AddSingleton<PrototypeSettings>();
@@ -125,9 +162,11 @@ public static class CompositionRoot
                 project,
                 sp.GetRequiredService<IWalletAppService>(),
                 sp.GetRequiredService<IInvestmentAppService>(),
+                sp.GetRequiredService<IBoltzSwapService>(),
                 sp.GetRequiredService<PortfolioViewModel>(),
                 sp.GetRequiredService<ICurrencyService>(),
                 sp.GetRequiredService<IWalletContext>(),
+                sp.GetRequiredService<Func<BitcoinNetwork>>(),
                 sp.GetRequiredService<ILoggerFactory>().CreateLogger<InvestPageViewModel>()));
 
         services.AddSingleton<Func<MyProjectItemViewModel, ManageProjectViewModel>>(sp =>
@@ -138,6 +177,12 @@ public static class CompositionRoot
                 sp.GetRequiredService<IProjectService>(),
                 sp.GetRequiredService<ICurrencyService>(),
                 sp.GetRequiredService<ILoggerFactory>().CreateLogger<ManageProjectViewModel>()));
+
+        services.AddSingleton<Func<MyProjectItemViewModel, EditProfileViewModel>>(sp =>
+            project => new EditProfileViewModel(
+                project,
+                sp.GetRequiredService<IProjectAppService>(),
+                sp.GetRequiredService<ILoggerFactory>().CreateLogger<EditProfileViewModel>()));
 
         // ── Section Views (transient — each receives its VM via constructor injection) ──
         services.AddTransient<HomeView>();
@@ -166,6 +211,51 @@ public static class CompositionRoot
         // Initialize network settings
         provider.GetRequiredService<INetworkService>().AddSettingsIfNotExist();
 
+        // Sync persisted debug mode into INetworkConfiguration so it's available immediately
+        // (SettingsViewModel also does this in its constructor, but it's transient and only
+        // created when the user navigates to Settings)
+        var prototypeSettings = provider.GetRequiredService<PrototypeSettings>();
+        var networkConfig = provider.GetRequiredService<INetworkConfiguration>();
+        networkConfig.SetDebugMode(prototypeSettings.IsDebugMode);
+
+        // Load persisted Find Projects cache on a background thread so the first
+        // Find Projects tap seeds from disk instantly. Cheap and non-contending.
+        // The full Latest() fetch runs when the user actually opens Find Projects.
+        _ = Task.Run(async () =>
+        {
+            Microsoft.Extensions.Logging.ILogger? prewarmLogger = null;
+            try
+            {
+                prewarmLogger = provider.GetRequiredService<ILoggerFactory>().CreateLogger("Prewarm");
+
+                await FindProjectsViewModel.LoadCachedDtosFromDiskAsync(
+                    provider.GetRequiredService<IStore>(), prewarmLogger);
+            }
+            catch (Exception ex)
+            {
+                prewarmLogger?.LogWarning(ex, "Disk cache load failed");
+            }
+        });
+
         return provider;
+    }
+
+    private static FaucetOptions ResolveFaucetOptions()
+    {
+        var baseUrl = Environment.GetEnvironmentVariable("ANGOR_FAUCET_BASE_URL");
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            return FaucetOptions.AngorPublic;
+        }
+
+        var sendPath = Environment.GetEnvironmentVariable("ANGOR_FAUCET_SEND_PATH");
+        if (string.IsNullOrWhiteSpace(sendPath))
+        {
+            // The bitcoin-custom-signet faucet-api and production faucet share
+            // the same route surface, so the default matches FaucetOptions.AngorPublic.
+            sendPath = FaucetOptions.AngorPublic.SendPathTemplate;
+        }
+
+        return new FaucetOptions(baseUrl, sendPath);
     }
 }

@@ -37,6 +37,16 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
     /// <summary>Generated seed words stored for wallet creation after backup confirmation.</summary>
     private string? _generatedSeedWords;
 
+    /// <summary>
+    /// Optional callback invoked whenever the modal is dismissed — success, cancel, or backdrop click.
+    /// The bool indicates whether a wallet was successfully created/imported.
+    /// Set by the caller (e.g. InvestModalsView) to re-show the invest flow after import.
+    /// </summary>
+    public Action<bool>? OnDismissed { get; set; }
+
+    /// <summary>Tracks whether a wallet was successfully created during this modal's lifetime.</summary>
+    private bool _walletCreated;
+
     private ShellViewModel? ShellVm =>
         this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
 
@@ -45,10 +55,10 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
     /// </summary>
     public void OnBackdropCloseRequested()
     {
-        // No special cleanup needed — let the shell close the modal.
+        OnDismissed?.Invoke(_walletCreated);
     }
 
-    private void OnButtonClick(object? sender, RoutedEventArgs e)
+    private async void OnButtonClick(object? sender, RoutedEventArgs e)
     {
         if (e.Source is not Button btn) return;
 
@@ -59,6 +69,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
             // ── Step 1: Choice ──
             case "CloseChoice":
                 ShellVm?.HideModal();
+                OnDismissed?.Invoke(_walletCreated);
                 break;
 
             case "BtnImport":
@@ -77,10 +88,11 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
             case "CloseImport":
             case "BtnCancelImport":
                 ShellVm?.HideModal();
+                OnDismissed?.Invoke(_walletCreated);
                 break;
 
             case "BtnSubmitImport":
-                SubmitImport();
+                await SubmitImport();
                 break;
 
             // ── Step 2b: Backup ──
@@ -92,8 +104,21 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
                 if (_seedDownloaded)
                 {
                     _logger.LogInformation("Seed downloaded confirmed, creating wallet via SDK");
-                    // Create wallet via SDK
-                    _ = CreateWalletViaSdkAsync(Vm?.DefaultWalletName ?? "My Wallet");
+                    // Show spinner and disable button during wallet creation
+                    SetContinueProcessing(true);
+                    try
+                    {
+                        await CreateWalletViaSdkAsync(Vm?.DefaultWalletName ?? "My Wallet");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Unhandled exception during wallet creation");
+                        ShellVm?.ShowToast($"Wallet creation failed: {ex.Message}");
+                    }
+                    finally
+                    {
+                        SetContinueProcessing(false);
+                    }
                 }
                 else
                 {
@@ -103,20 +128,23 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
 
             case "BtnCancelBackup":
                 ShellVm?.HideModal();
+                OnDismissed?.Invoke(_walletCreated);
                 break;
 
             // ── Step 3: Success ──
             case "BtnDone":
                 _logger.LogInformation("Wallet creation flow completed, closing modal");
                 ShellVm?.HideModal();
+                OnDismissed?.Invoke(_walletCreated);
                 break;
         }
     }
 
     /// <summary>
     /// Show a specific step, hiding all others.
+    /// Can be called externally to skip the choice step (e.g. pre-select "import" from the invest flow).
     /// </summary>
-    private void ShowStep(string step)
+    public void ShowStep(string step)
     {
         _logger.LogDebug("Showing step: {Step}", step);
         ChoicePanel.IsVisible = step == "choice";
@@ -126,10 +154,25 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
     }
 
     /// <summary>
+    /// Show/hide spinner on the Continue button and disable/enable it during wallet creation.
+    /// </summary>
+    private void SetContinueProcessing(bool isProcessing)
+    {
+        var btn = this.FindControl<Button>("BtnContinueBackup");
+        if (btn != null) btn.IsEnabled = !isProcessing;
+
+        var spinner = this.FindControl<StackPanel>("ContinueBtnSpinner");
+        if (spinner != null) spinner.IsVisible = isProcessing;
+
+        var text = this.FindControl<TextBlock>("ContinueBtnContent");
+        if (text != null) text.Text = isProcessing ? "Creating Wallet..." : "Continue";
+    }
+
+    /// <summary>
     /// Validate seed phrase and import wallet with user-provided seed words.
     /// Vue: submitSeedImport() — validates 12 or 24 words.
     /// </summary>
-    private void SubmitImport()
+    private async Task SubmitImport()
     {
         var input = SeedPhraseInput.Text?.Trim() ?? "";
         var words = input.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
@@ -148,7 +191,15 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         SeedSuccess.IsVisible = true;
 
         // Import wallet with the user's seed words
-        _ = ImportWalletViaSdkAsync(Vm?.DefaultWalletName ?? "My Wallet", string.Join(" ", words));
+        try
+        {
+            await ImportWalletViaSdkAsync(Vm?.DefaultWalletName ?? "My Wallet", string.Join(" ", words));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unhandled exception during wallet import");
+            ShellVm?.ShowToast($"Wallet import failed: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -162,6 +213,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         var success = await Vm.ImportWalletAsync(walletName, seedWords, "default-key");
         if (success)
         {
+            _walletCreated = true;
             _logger.LogInformation("Wallet '{WalletName}' imported successfully", walletName);
             ShowStep("success");
         }
@@ -203,6 +255,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         var success = await Vm.ImportWalletAsync(walletName, _generatedSeedWords, "default-key");
         if (success)
         {
+            _walletCreated = true;
             _logger.LogInformation("Wallet '{WalletName}' created successfully (generate flow)", walletName);
             ShowStep("success");
         }
@@ -221,41 +274,49 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
     /// </summary>
     private async void DownloadSeed()
     {
-        if (string.IsNullOrEmpty(_generatedSeedWords)) return;
-
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel?.StorageProvider != null)
+        try
         {
-            _logger.LogInformation("Opening file save dialog for seed backup...");
-            var file = await topLevel.StorageProvider.SaveFilePickerAsync(
-                new Avalonia.Platform.Storage.FilePickerSaveOptions
-                {
-                    Title = "Save Seed Phrase",
-                    SuggestedFileName = "seed-backup.txt",
-                    DefaultExtension = "txt"
-                });
+            if (string.IsNullOrEmpty(_generatedSeedWords)) return;
 
-            if (file != null)
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel?.StorageProvider != null)
             {
-                _logger.LogInformation("Saving seed phrase to file: {FileName}", file.Name);
-                await using var stream = await file.OpenWriteAsync();
-                await using var writer = new System.IO.StreamWriter(stream);
-                await writer.WriteAsync(_generatedSeedWords);
+                _logger.LogInformation("Opening file save dialog for seed backup...");
+                var file = await topLevel.StorageProvider.SaveFilePickerAsync(
+                    new Avalonia.Platform.Storage.FilePickerSaveOptions
+                    {
+                        Title = "Save Seed Phrase",
+                        SuggestedFileName = "seed-backup.txt",
+                        DefaultExtension = "txt"
+                    });
+
+                if (file != null)
+                {
+                    _logger.LogInformation("Saving seed phrase to file: {FileName}", file.Name);
+                    await using var stream = await file.OpenWriteAsync();
+                    await using var writer = new System.IO.StreamWriter(stream);
+                    await writer.WriteAsync(_generatedSeedWords);
+                }
+                else
+                {
+                    _logger.LogInformation("File save dialog cancelled or unavailable (headless mode)");
+                }
             }
             else
             {
-                _logger.LogInformation("File save dialog cancelled or unavailable (headless mode)");
+                _logger.LogInformation("No StorageProvider available — skipping file save dialog");
             }
-        }
-        else
-        {
-            _logger.LogInformation("No StorageProvider available — skipping file save dialog");
-        }
 
-        _seedDownloaded = true;
-        BtnContinueBackup.IsEnabled = true;
-        BtnContinueBackup.BorderBrush = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#4B7C5A"));
-        BtnContinueBackup.Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#4B7C5A"));
-        _logger.LogInformation("Seed download acknowledged — Continue button enabled");
+            _seedDownloaded = true;
+            BtnContinueBackup.IsEnabled = true;
+            BtnContinueBackup.BorderBrush = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#4B7C5A"));
+            BtnContinueBackup.Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#4B7C5A"));
+            _logger.LogInformation("Seed download acknowledged — Continue button enabled");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unhandled exception during seed download");
+            ShellVm?.ShowToast($"Failed to save seed file: {ex.Message}");
+        }
     }
 }

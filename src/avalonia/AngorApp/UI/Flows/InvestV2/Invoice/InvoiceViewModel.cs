@@ -37,18 +37,20 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
     private string? generatedAddress;
     private byte? patternId;
     private bool usesPenaltyThreshold;
+    private int stageCount;
 
     [Reactive] private IEnumerable<IInvoiceType> invoiceTypes = [new InvoiceTypeSample { Name = "Loading...", Address = "" }];
     [Reactive] private IInvoiceType? selectedInvoiceType;
     [Reactive] private bool isLoadingInvoice;
 
     public InvoiceViewModel(
-        IWallet wallet, 
-        IInvestmentAppService investmentAppService, 
-        UIServices uiServices, 
+        IWallet wallet,
+        IInvestmentAppService investmentAppService,
+        UIServices uiServices,
         IAmountUI amount,
         ProjectId projectId,
         IShellViewModel shell,
+        int stageCount,
         byte? patternId = null,
         bool usesPenaltyThreshold = false)
     {
@@ -58,6 +60,7 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
         this.uiServices = uiServices;
         this.projectId = projectId;
         this.shell = shell;
+        this.stageCount = stageCount;
         this.patternId = patternId;
         this.usesPenaltyThreshold = usesPenaltyThreshold;
         
@@ -226,14 +229,16 @@ public partial class InvoiceViewModel : ReactiveObject, IInvoiceViewModel, IVali
             // Create Lightning swap to get invoice
             // TODO: Lightning invoices expire (~10 min). Consider showing expiry countdown in UI
             // or auto-regenerating the invoice when it expires.
+            // TODO: Migrate to CreateLightningSwap (generic, address-based claim key) — see PaymentFlowViewModel
             var lightningRequest = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
                 wallet.Id,
                 projectId,
                 new Amount(Amount.Sats),
                 generatedAddress,
+                stageCount,
                 DefaultFeeRateSatsPerVbyte);
 
-            var lightningResult = await investmentAppService.CreateLightningSwap(lightningRequest);
+            var lightningResult = await investmentAppService.CreateLightningSwapForInvestment(lightningRequest);
 
             cancellationToken.ThrowIfCancellationRequested();
 

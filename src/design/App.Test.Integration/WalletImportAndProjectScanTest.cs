@@ -5,14 +5,11 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
 using Angor.Sdk.Common;
-using Angor.Sdk.Funding.Projects;
 using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
-using App.UI.Sections.FindProjects;
 using App.UI.Sections.Funds;
 using App.UI.Sections.MyProjects;
 using App.UI.Sections.MyProjects.Deploy;
-using App.UI.Sections.Settings;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -52,11 +49,6 @@ public class WalletImportAndProjectScanTest
     private const string CreatorProfile = TestName + "-Creator";
     private const string ImporterProfile = TestName + "-Importer";
 
-    private static readonly TimeSpan FaucetBalanceTimeout = TimeSpan.FromMinutes(5);
-    private static readonly TimeSpan TransactionTimeout = TimeSpan.FromMinutes(2);
-    private static readonly TimeSpan UiTimeout = TimeSpan.FromSeconds(15);
-    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(5);
-    private static readonly TimeSpan IndexerLagTimeout = TimeSpan.FromMinutes(5);
 
     /// <summary>
     /// Carries state between profile windows: seed words, wallet ID, project details.
@@ -132,9 +124,7 @@ public class WalletImportAndProjectScanTest
         string runId)
     {
         // ── Step 1: Create wallet and capture seed words ──
-        window.NavigateToSection("Funds");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funds");
 
         Log(profileName, "Creating wallet via Generate flow and capturing seed words...");
         var seedWords = await CreateWalletAndCaptureSeed(window, profileName);
@@ -145,7 +135,7 @@ public class WalletImportAndProjectScanTest
         walletCardBtn.Should().NotBeNull("WalletCard should appear after wallet creation");
 
         // ── Step 2: Get the wallet ID ──
-        var fundsVm = GetFundsViewModel(window);
+        var fundsVm = window.GetFundsViewModel();
         fundsVm.Should().NotBeNull();
 
         var walletId = fundsVm!.SeedGroups.FirstOrDefault()?.Wallets?.FirstOrDefault()?.Id.Value;
@@ -159,11 +149,9 @@ public class WalletImportAndProjectScanTest
         SetPasswordProvider(profileName);
 
         // ── Step 4: Create and deploy a project ──
-        window.NavigateToSection("My Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("My Projects");
 
-        var myProjectsVm = GetMyProjectsViewModel(window);
+        var myProjectsVm = window.GetMyProjectsViewModel();
         myProjectsVm.Should().NotBeNull();
 
         await OpenCreateWizard(window, myProjectsVm!, profileName);
@@ -234,7 +222,7 @@ public class WalletImportAndProjectScanTest
         Dispatcher.UIThread.RunJobs();
         deployVm.PayWithWallet();
 
-        var deployDeadline = DateTime.UtcNow + TransactionTimeout;
+        var deployDeadline = DateTime.UtcNow + TestHelpers.TransactionTimeout;
         while (DateTime.UtcNow < deployDeadline)
         {
             Dispatcher.UIThread.RunJobs();
@@ -243,7 +231,7 @@ public class WalletImportAndProjectScanTest
                 break;
             }
 
-            await Task.Delay(PollInterval);
+            await Task.Delay(TestHelpers.PollInterval);
         }
 
         deployVm.CurrentScreen.Should().Be(DeployScreen.Success,
@@ -278,9 +266,7 @@ public class WalletImportAndProjectScanTest
         CreatorState creatorState)
     {
         // ── Step 1: Import wallet from seed words ──
-        window.NavigateToSection("Funds");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("Funds");
 
         Log(profileName, "Importing wallet from creator's seed words...");
         await ImportWalletViaSeedWords(window, profileName, creatorState.SeedWords);
@@ -289,7 +275,7 @@ public class WalletImportAndProjectScanTest
         walletCardBtn.Should().NotBeNull("WalletCard should appear after wallet import");
 
         // ── Step 2: Verify wallet ID is identical ──
-        var fundsVm = GetFundsViewModel(window);
+        var fundsVm = window.GetFundsViewModel();
         fundsVm.Should().NotBeNull();
 
         var importedWalletId = fundsVm!.SeedGroups.FirstOrDefault()?.Wallets?.FirstOrDefault()?.Id.Value;
@@ -302,7 +288,7 @@ public class WalletImportAndProjectScanTest
 
         // ── Step 3: Wait for balance to appear (on-chain UTXO discovery) ──
         Log(profileName, "Waiting for balance to appear from on-chain UTXO discovery...");
-        var balanceDeadline = DateTime.UtcNow + FaucetBalanceTimeout;
+        var balanceDeadline = DateTime.UtcNow + TestHelpers.FaucetBalanceTimeout;
         while (DateTime.UtcNow < balanceDeadline)
         {
             Dispatcher.UIThread.RunJobs();
@@ -313,8 +299,8 @@ public class WalletImportAndProjectScanTest
                 break;
             }
 
-            await ClickWalletCardButton(window, "WalletCardBtnRefresh");
-            await Task.Delay(PollInterval);
+            await window.ClickWalletCardButton( "WalletCardBtnRefresh");
+            await Task.Delay(TestHelpers.PollInterval);
             Dispatcher.UIThread.RunJobs();
         }
 
@@ -322,11 +308,9 @@ public class WalletImportAndProjectScanTest
             "Imported wallet should discover on-chain UTXOs and show non-zero balance");
 
         // ── Step 4: Navigate to My Projects — should be empty before scan ──
-        window.NavigateToSection("My Projects");
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+        await window.NavigateToSectionAndVerify("My Projects");
 
-        var myProjectsVm = GetMyProjectsViewModel(window);
+        var myProjectsVm = window.GetMyProjectsViewModel();
         myProjectsVm.Should().NotBeNull();
 
         // Load founder projects from local DB — should be empty since this is a fresh profile
@@ -341,7 +325,7 @@ public class WalletImportAndProjectScanTest
 
         // Wait for the scan results to populate — the indexer may take time
         MyProjectItemViewModel? scannedProject = null;
-        var scanDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        var scanDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
         while (DateTime.UtcNow < scanDeadline)
         {
             await myProjectsVm.ScanForProjectsAsync();
@@ -357,7 +341,7 @@ public class WalletImportAndProjectScanTest
             }
 
             Log(profileName, $"Project not found in scan yet ({myProjectsVm.Projects.Count} project(s)). Retrying...");
-            await Task.Delay(PollInterval);
+            await Task.Delay(TestHelpers.PollInterval);
         }
 
         // ── Step 6: Verify the scanned project matches ──
@@ -382,7 +366,7 @@ public class WalletImportAndProjectScanTest
     /// </summary>
     private async Task<string> CreateWalletAndCaptureSeed(Window window, string profileName)
     {
-        var addWalletBtn = FindAddWalletButton(window);
+        var addWalletBtn = window.FindAddWalletButton();
         addWalletBtn.Should().NotBeNull("Should find the Add Wallet button");
 
         addWalletBtn!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, addWalletBtn));
@@ -391,12 +375,12 @@ public class WalletImportAndProjectScanTest
         Dispatcher.UIThread.RunJobs();
 
         // Click Generate New
-        await window.ClickButton("BtnGenerate", UiTimeout);
+        await window.ClickButton("BtnGenerate", TestHelpers.UiTimeout);
         await Task.Delay(200);
         Dispatcher.UIThread.RunJobs();
 
         // BackupPanel should now be visible with the seed phrase
-        var backupPanel = await window.WaitForControl<StackPanel>("BackupPanel", UiTimeout);
+        var backupPanel = await window.WaitForControl<StackPanel>("BackupPanel", TestHelpers.UiTimeout);
         backupPanel.Should().NotBeNull("Backup panel should be visible after clicking Generate New");
 
         // Capture seed words from the SeedPhraseDisplay TextBlock
@@ -410,17 +394,17 @@ public class WalletImportAndProjectScanTest
         Log(profileName, $"Captured seed phrase ({seedWords.Split(' ').Length} words)");
 
         // Click Download Seed (skipped in headless but enables Continue)
-        await window.ClickButton("BtnDownloadSeed", UiTimeout);
+        await window.ClickButton("BtnDownloadSeed", TestHelpers.UiTimeout);
         await Task.Delay(300);
         Dispatcher.UIThread.RunJobs();
 
         // Click Continue to create wallet
-        await window.ClickButton("BtnContinueBackup", UiTimeout);
+        await window.ClickButton("BtnContinueBackup", TestHelpers.UiTimeout);
 
         var successPanel = await window.WaitForControl<StackPanel>("CreateWalletSuccessPanel", TimeSpan.FromSeconds(30));
         successPanel.Should().NotBeNull("Success panel should appear after wallet generation");
 
-        await window.ClickButton("BtnCreateWalletDone", UiTimeout);
+        await window.ClickButton("BtnCreateWalletDone", TestHelpers.UiTimeout);
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
@@ -434,7 +418,7 @@ public class WalletImportAndProjectScanTest
     /// </summary>
     private async Task ImportWalletViaSeedWords(Window window, string profileName, string seedWords)
     {
-        var addWalletBtn = FindAddWalletButton(window);
+        var addWalletBtn = window.FindAddWalletButton();
         addWalletBtn.Should().NotBeNull("Should find the Add Wallet button for import");
 
         addWalletBtn!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, addWalletBtn));
@@ -443,12 +427,12 @@ public class WalletImportAndProjectScanTest
         Dispatcher.UIThread.RunJobs();
 
         // Click Import
-        await window.ClickButton("BtnImport", UiTimeout);
+        await window.ClickButton("BtnImport", TestHelpers.UiTimeout);
         await Task.Delay(200);
         Dispatcher.UIThread.RunJobs();
 
         // ImportPanel should now be visible
-        var importPanel = await window.WaitForControl<StackPanel>("ImportPanel", UiTimeout);
+        var importPanel = await window.WaitForControl<StackPanel>("ImportPanel", TestHelpers.UiTimeout);
         importPanel.Should().NotBeNull("Import panel should be visible after clicking Import");
 
         // Enter seed words into the SeedPhraseInput TextBox
@@ -461,7 +445,7 @@ public class WalletImportAndProjectScanTest
         Log(profileName, $"Entered {seedWords.Split(' ').Length} seed words into import field");
 
         // Click Submit Import
-        await window.ClickButton("BtnSubmitImport", UiTimeout);
+        await window.ClickButton("BtnSubmitImport", TestHelpers.UiTimeout);
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
@@ -470,7 +454,7 @@ public class WalletImportAndProjectScanTest
         successPanel.Should().NotBeNull("Success panel should appear after wallet import");
         Log(profileName, "Import succeeded — SuccessPanel visible");
 
-        await window.ClickButton("BtnCreateWalletDone", UiTimeout);
+        await window.ClickButton("BtnCreateWalletDone", TestHelpers.UiTimeout);
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
@@ -526,129 +510,25 @@ public class WalletImportAndProjectScanTest
 
     private async Task WipeExistingData(Window window, string profileName)
     {
-        window.NavigateToSettings();
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(500);
-
-        var settingsView = window.GetVisualDescendants().OfType<SettingsView>().FirstOrDefault();
-        if (settingsView?.DataContext is SettingsViewModel settingsVm)
-        {
-            settingsVm.ConfirmWipeData();
-            Dispatcher.UIThread.RunJobs();
-            await Task.Delay(500);
-            Dispatcher.UIThread.RunJobs();
-            Log(profileName, "Profile data wiped.");
-        }
+        await window.WipeExistingData();
+        Log(profileName, "Profile data wiped.");
     }
 
     private async Task FundWalletViaFaucet(Window window, string profileName)
     {
-        var fundsVm = GetFundsViewModel(window);
-        fundsVm.Should().NotBeNull();
-
-        var walletId = fundsVm!.SeedGroups.FirstOrDefault()?.Wallets?.FirstOrDefault()?.Id.Value;
-        walletId.Should().NotBeNullOrEmpty();
-
-        var deadline = DateTime.UtcNow + FaucetBalanceTimeout;
-        var faucetRetryInterval = TimeSpan.FromSeconds(30);
-        var lastFaucetAttempt = DateTime.MinValue;
-        var faucetAttempts = 0;
-
-        while (DateTime.UtcNow < deadline)
-        {
-            Dispatcher.UIThread.RunJobs();
-
-            if (fundsVm.TotalBalance != "0.0000")
-            {
-                Log(profileName, $"Non-zero balance detected: {fundsVm.TotalBalance}");
-                return;
-            }
-
-            if (DateTime.UtcNow - lastFaucetAttempt >= faucetRetryInterval)
-            {
-                faucetAttempts++;
-                lastFaucetAttempt = DateTime.UtcNow;
-                Log(profileName, $"Faucet attempt #{faucetAttempts}...");
-
-                (bool success, string? error) = await fundsVm.GetTestCoinsAsync(walletId!);
-                Dispatcher.UIThread.RunJobs();
-                Log(profileName, success ? "Faucet request accepted." : $"Faucet request failed: {error}");
-            }
-
-            await ClickWalletCardButton(window, "WalletCardBtnRefresh");
-            await Task.Delay(PollInterval);
-            Dispatcher.UIThread.RunJobs();
-        }
-
-        throw new InvalidOperationException("Wallet balance did not become non-zero in time.");
+        await window.FundWalletViaFaucet();
+        Log(profileName, $"Wallet funded. Balance: {window.GetFundsViewModel()?.TotalBalance}");
     }
 
     private async Task OpenCreateWizard(Window window, MyProjectsViewModel myProjectsVm, string profileName)
     {
-        myProjectsVm.CreateProjectVm.ResetWizard();
-        myProjectsVm.LaunchCreateWizard();
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-
-        myProjectsVm.ShowCreateWizard.Should().BeTrue();
-        myProjectsVm.CreateProjectVm.OnProjectDeployed = () =>
-        {
-            myProjectsVm.OnProjectDeployed(myProjectsVm.CreateProjectVm);
-            myProjectsVm.CloseCreateWizard();
-        };
-
+        await window.OpenCreateWizard(myProjectsVm);
         Log(profileName, "Create wizard opened.");
     }
 
     // ═══════════════════════════════════════════════════════════════════
     // Utility methods
     // ═══════════════════════════════════════════════════════════════════
-
-    private static Button? FindAddWalletButton(Window window)
-    {
-        var buttons = window.GetVisualDescendants().OfType<Button>().Where(b => b.IsVisible);
-        foreach (var btn in buttons)
-        {
-            if (btn.Content is string text && text.Contains("Add Wallet", StringComparison.Ordinal))
-            {
-                return btn;
-            }
-
-            if (btn.Content is StackPanel panel)
-            {
-                foreach (var child in panel.Children.OfType<TextBlock>())
-                {
-                    if (child.Text == "Add Wallet")
-                    {
-                        return btn;
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private async Task ClickWalletCardButton(Window window, string automationId)
-    {
-        var button = await window.WaitForControl<Button>(automationId, UiTimeout);
-        button.Should().NotBeNull();
-        button!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, button));
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(200);
-        Dispatcher.UIThread.RunJobs();
-    }
-
-    private static FundsViewModel? GetFundsViewModel(Window window)
-    {
-        return window.GetVisualDescendants().OfType<FundsView>().FirstOrDefault()?.DataContext as FundsViewModel;
-    }
-
-    private static MyProjectsViewModel? GetMyProjectsViewModel(Window window)
-    {
-        return window.GetVisualDescendants().OfType<MyProjectsView>().FirstOrDefault()?.DataContext as MyProjectsViewModel;
-    }
 
     private static void Log(string? profileName, string message)
     {

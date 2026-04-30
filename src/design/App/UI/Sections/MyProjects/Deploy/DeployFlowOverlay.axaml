@@ -45,8 +45,8 @@
         <!-- rounded-2xl shadow-2xl max-w-md -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsWalletSelector}"
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="448" MaxWidth="480"
+                Classes="ModalCard"
+                AutomationProperties.AutomationId="DeployWalletSelectorPanel"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"
@@ -251,8 +251,8 @@
         <!-- rounded-2xl shadow-2xl max-w-md, p-6                       -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsPayFee}"
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="448" MaxWidth="480"
+                Classes="ModalCard"
+                AutomationProperties.AutomationId="DeployPayFeePanel"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"
@@ -414,8 +414,8 @@
         <!-- rounded-2xl shadow-2xl max-w-md p-8                        -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsSuccess}"
-                HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="448" MaxWidth="480"
+                Classes="ModalCard"
+                AutomationProperties.AutomationId="DeploySuccessPanel"
                 CornerRadius="16"
                 Background="{DynamicResource DeploySuccessBg}"
                 BoxShadow="0 8 32 0 #40000000"
@@ -443,6 +443,7 @@
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
                             Spacing="8" Margin="0,0,0,12">
                     <TextBlock Text="{Binding ProjectName}"
+                               AutomationProperties.AutomationId="DeploySuccessProjectName"
                                FontSize="28" FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}" />
                     <TextBlock Text="Deployed!"

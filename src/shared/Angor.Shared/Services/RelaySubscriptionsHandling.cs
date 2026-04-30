@@ -44,6 +44,59 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         
         _okHandlingDiscoverySubscription = discoveryClient.Streams.OkStream.Subscribe(HandleOkMessages);
         _eoseHandlingDiscoverySubscription = discoveryClient.Streams.EoseStream.Subscribe(HandleEoseMessages);
+
+        _communicationFactory.RelayDisconnected += OnRelayDisconnected;
+    }
+
+    private void OnRelayDisconnected(string relayName)
+    {
+        // After a relay disconnects and is removed from EOSE/OK tracking sets,
+        // re-evaluate all pending actions — some may now be satisfied.
+        foreach (var subscription in userEoseActions.Keys.ToList())
+        {
+            if (_communicationFactory.EoseEventReceivedOnAllRelays(subscription))
+            {
+                if (userEoseActions.Remove(subscription, out var action))
+                {
+                    _logger.LogWarning(
+                        "Relay {RelayName} disconnect unblocked EOSE action for subscription {Subscription}",
+                        relayName, subscription);
+                    try
+                    {
+                        action.Invoke();
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogError(e, "Failed to invoke EOSE action after relay disconnect");
+                    }
+                }
+
+                _communicationFactory.ClearEoseReceivedOnSubscriptionMonitoring(subscription);
+            }
+        }
+
+        foreach (var eventId in OkVerificationActions.Keys.ToList())
+        {
+            if (_communicationFactory.OkEventReceivedOnAllRelays(eventId))
+            {
+                if (OkVerificationActions.Remove(eventId, out var action))
+                {
+                    _logger.LogWarning(
+                        "Relay {RelayName} disconnect unblocked OK action for event {EventId}",
+                        relayName, eventId);
+                    try
+                    {
+                        action.Invoke(new NostrOkResponse { Accepted = true, EventId = eventId });
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogError(e, "Failed to invoke OK action after relay disconnect");
+                    }
+                }
+
+                _communicationFactory.ClearOkReceivedOnSubscriptionMonitoring(eventId);
+            }
+        }
     }
 
     // public void Init(INetworkService networkService)
@@ -124,15 +177,14 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
 
     public void CloseSubscription(string subscriptionKey)
     {
-        if (!relaySubscriptions.ContainsKey(subscriptionKey))
+        if (!relaySubscriptions.TryRemove(subscriptionKey, out var subscription))
             return;
         
         _communicationFactory
             .GetOrCreateClient(_networkService)
             .Send(new NostrCloseRequest(subscriptionKey));
        
-        relaySubscriptions[subscriptionKey].Dispose();
-        relaySubscriptions.Remove(subscriptionKey, out _);
+        subscription.Dispose();
         relaySubscriptionsKeepActive.Remove(subscriptionKey, out _);
 
         _logger.LogDebug($"subscription disposed - {subscriptionKey}");
@@ -163,6 +215,7 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
 
     public void Dispose()
     {
+        _communicationFactory.RelayDisconnected -= OnRelayDisconnected;
         relaySubscriptions.Values.ToList().ForEach(_ => _.Dispose());
         _okHandlingSubscription.Dispose();
         _eoseHandlingSubscription.Dispose();

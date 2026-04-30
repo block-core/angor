@@ -23,8 +23,7 @@
         <!-- MODAL CARD                                               -->
         <!-- Vue: rounded-2xl shadow-2xl max-w-md (448px) p-0        -->
         <!-- ════════════════════════════════════════════════════════ -->
-        <Border HorizontalAlignment="Center" VerticalAlignment="Center"
-                MinWidth="420" MaxWidth="448"
+        <Border Classes="ModalCard"
                 CornerRadius="16"
                 Background="{DynamicResource DeployModalBackground}"
                 BorderBrush="{DynamicResource DeployModalBorder}"
@@ -168,6 +167,7 @@
                         <!-- Action buttons: Cancel + Send -->
                         <Grid ColumnDefinitions="*,8,*" Margin="0,4,0,0">
                             <Button Name="BtnCancel" Grid.Column="0"
+                                    Classes="MobileAction"
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Center"
                                     Padding="14,12" CornerRadius="8"
@@ -179,6 +179,7 @@
                                     Cursor="Hand"
                                     Content="Cancel" />
                             <Button Name="BtnSend" Grid.Column="2"
+                                    Classes="MobileAction"
                                     AutomationProperties.AutomationId="BtnSendConfirm"
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Center"
@@ -293,7 +294,7 @@
                     </Border>
 
                     <!-- Done button -->
-                    <Button Name="BtnDone" HorizontalAlignment="Stretch"
+                    <Button Name="BtnDone" Classes="MobileAction" HorizontalAlignment="Stretch"
                             AutomationProperties.AutomationId="BtnSendDone"
                             HorizontalContentAlignment="Center"
                             Padding="14,12" CornerRadius="8"

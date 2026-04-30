@@ -18,6 +18,12 @@
     -->
 
     <UserControl.Styles>
+        <!-- Mobile: hover shadows/transitions never fire on touch and are expensive on Skia. -->
+        <Style Selector="mp|ManageProjectView.Mobile Border.FloatingBtn">
+            <Setter Property="Transitions" Value="{x:Null}" />
+            <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />
+        </Style>
+
         <!-- Floating nav button hover: lift + enhanced shadow (matches ProjectDetailView) -->
         <Style Selector="Border.FloatingBtn:pointerover">
             <Setter Property="RenderTransform" Value="translate(0px, -1px)" />
@@ -44,7 +50,8 @@
             justify-content: space-between.
             Standardized pattern: DockPanel with Margin="24,24,24,0".
         -->
-        <DockPanel VerticalAlignment="Top"
+        <DockPanel x:Name="ManageNavBar"
+                   VerticalAlignment="Top"
                    ZIndex="100"
                    Margin="24,24,24,0"
                    IsHitTestVisible="True">
@@ -52,6 +59,43 @@
             <!-- RIGHT: Private Keys, Refresh, Share (docked first so it hugs the right edge) -->
             <!-- Vue: .nav-right-buttons — gap 12 -->
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="12">
+                <!-- Release Funds to Investors button -->
+                <!-- Vue: .release-funds-button-floating — green gradient, h44, hidden after release -->
+                <Border Name="ReleaseFundsNavBorder"
+                        Classes="FloatingBtn"
+                        Background="{DynamicResource FloatingBtnBg}"
+                        BorderBrush="{DynamicResource FloatingBtnBorder}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        BoxShadow="{DynamicResource FloatingBtnShadow}"
+                        Padding="16,0,16,0"
+                        Height="44"
+                        VerticalAlignment="Center"
+                        Cursor="Hand"
+                        IsVisible="{Binding !FundsReleasedToInvestors}"
+                        RenderTransform="translate(0px, 0px)">
+                    <Border.Transitions>
+                        <Transitions>
+                            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" />
+                            <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
+                        </Transitions>
+                    </Border.Transitions>
+                    <Button Name="ReleaseFundsNavButton"
+                            Classes="NavBtn"
+                            AutomationProperties.AutomationId="ReleaseFundsNavButton"
+                            VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Cursor="Hand">
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <i:Icon Value="fa-solid fa-hand-holding-dollar"
+                                   FontSize="16"
+                                   Foreground="#4B7C5A" />
+                            <TextBlock Text="Release Funds"
+                                       FontSize="14" FontWeight="Medium"
+                                       Foreground="#4B7C5A"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </Border>
+
                 <!-- View Private Keys button -->
                 <!-- Vue: .private-keys-button-floating — color #ea580c, h44 -->
                 <Border Classes="FloatingBtn"
@@ -102,8 +146,34 @@
                             <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
                         </Transitions>
                     </Border.Transitions>
-                    <Button Classes="NavBtn" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Cursor="Hand">
-                        <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="14" Foreground="{DynamicResource TextStrong}" />
+                    <Button Name="RefreshButton" Classes="NavBtn" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Cursor="Hand"
+                            AutomationProperties.AutomationId="ManageProjectRefreshButton"
+                            IsEnabled="{Binding !IsRefreshing}">
+                        <Panel>
+                            <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="14" Foreground="{DynamicResource TextStrong}"
+                                    IsVisible="{Binding !IsRefreshing}" />
+                            <i:Icon Value="fa-solid fa-spinner" FontSize="14" Foreground="{DynamicResource TextStrong}"
+                                    IsVisible="{Binding IsRefreshing}"
+                                    RenderTransformOrigin="50%,50%">
+                                <i:Icon.RenderTransform>
+                                    <RotateTransform />
+                                </i:Icon.RenderTransform>
+                                <i:Icon.Styles>
+                                    <Style Selector="i|Icon[IsVisible=True]">
+                                        <Style.Animations>
+                                            <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                <KeyFrame Cue="0%">
+                                                    <Setter Property="RotateTransform.Angle" Value="0" />
+                                                </KeyFrame>
+                                                <KeyFrame Cue="100%">
+                                                    <Setter Property="RotateTransform.Angle" Value="360" />
+                                                </KeyFrame>
+                                            </Animation>
+                                        </Style.Animations>
+                                    </Style>
+                                </i:Icon.Styles>
+                            </i:Icon>
+                        </Panel>
                     </Button>
                 </Border>
 
@@ -206,10 +276,69 @@
         -->
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <Panel>
-                <StackPanel Spacing="24"
+                <StackPanel x:Name="ManageContentStack"
+                            Spacing="24"
                             Margin="24,0,24,24">
                     <!-- Spacer for floating nav: 24 (nav top margin) + 44 (nav h) + 24 (gap below) = 92 -->
-                    <Panel Height="92" />
+                    <Panel x:Name="ManageNavSpacer" Height="92" />
+
+                    <!-- ═══ MOBILE INLINE NAV (compact only) ═══
+                         Vue: .sticky-nav-bar-mobile — flex flex-col gap-2 w-full.
+                         Two stacked outline buttons: Refresh + View Private Keys.
+                         Hidden on desktop; shown on compact in place of floating DockPanel.
+                         Visibility toggled from code-behind ApplyResponsiveLayout. -->
+                    <StackPanel x:Name="MobileNavBar"
+                                Orientation="Vertical"
+                                Spacing="8"
+                                IsVisible="False">
+                        <Border Background="{DynamicResource FloatingBtnBg}"
+                                BorderBrush="{DynamicResource FloatingBtnBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                 Height="52">
+                            <Button x:Name="MobileRefreshButton"
+                                    Classes="NavBtn"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    VerticalContentAlignment="Center"
+                                    Cursor="Hand"
+                                    IsEnabled="{Binding !IsRefreshing}">
+                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <i:Icon Value="fa-solid fa-arrows-rotate"
+                                            FontSize="14"
+                                            Foreground="{DynamicResource TextStrong}" />
+                                    <TextBlock Text="Refresh"
+                                               FontSize="14" FontWeight="Medium"
+                                               Foreground="{DynamicResource TextStrong}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </Border>
+                        <Border Background="{DynamicResource FloatingBtnBg}"
+                                BorderBrush="{DynamicResource FloatingBtnBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                 Height="52">
+                            <Button x:Name="MobileViewPrivateKeysButton"
+                                    Classes="NavBtn"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    VerticalContentAlignment="Center"
+                                    Cursor="Hand">
+                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                    <i:Icon Value="fa-solid fa-lock"
+                                            FontSize="14"
+                                            Foreground="{DynamicResource PrivateKeysBtnText}" />
+                                    <TextBlock Text="View Private Keys"
+                                               FontSize="14" FontWeight="Medium"
+                                               Foreground="{DynamicResource PrivateKeysBtnText}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </Border>
+                    </StackPanel>
 
                     <!-- Content sections (Project ID, Stats, Next Stage, Stages) -->
                     <mp:ManageProjectContentView Name="ContentView" />

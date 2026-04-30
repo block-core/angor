@@ -33,7 +33,27 @@ public partial class SettingsViewModel : ReactiveObject
     private readonly ShellViewModel _shellViewModel;
     private readonly ILogger<SettingsViewModel> _logger;
 
+    public string AppVersion { get; } = GetVersion();
+
     public event Action<string>? ToastRequested;
+
+    private static string GetVersion()
+    {
+        var assembly = typeof(SettingsViewModel).Assembly;
+        var informational = (System.Reflection.AssemblyInformationalVersionAttribute?)
+            System.Reflection.CustomAttributeExtensions.GetCustomAttribute(
+                assembly, typeof(System.Reflection.AssemblyInformationalVersionAttribute));
+        if (informational != null)
+        {
+            var ver = informational.InformationalVersion;
+            // Strip source commit hash suffix (e.g. "1.2.3+abc123")
+            var plusIndex = ver.IndexOf('+');
+            return plusIndex >= 0 ? ver[..plusIndex] : ver;
+        }
+
+        var version = assembly.GetName().Version;
+        return version != null ? version.ToString(3) : "0.0.0";
+    }
 
     [Reactive] private string networkType;
     [Reactive] private bool isNetworkModalOpen;
@@ -47,6 +67,10 @@ public partial class SettingsViewModel : ReactiveObject
     // Nostr Relays — table-based list with name+status
     public ObservableCollection<RelayItem> NostrRelays { get; } = new();
     [Reactive] private string newRelayUrl = "";
+
+    // Refresh state
+    [Reactive] private bool isRefreshingIndexer;
+    [Reactive] private bool isRefreshingRelay;
 
     // Currency Display
     [Reactive] private string currencyDisplay;
@@ -64,17 +88,6 @@ public partial class SettingsViewModel : ReactiveObject
     [Reactive] private bool isTestnet;
 
     private readonly PrototypeSettings _prototypeSettings;
-
-    // Prototype settings toggle — delegates to injected PrototypeSettings
-    public bool ShowPopulatedApp
-    {
-        get => _prototypeSettings.ShowPopulatedApp;
-        set
-        {
-            _prototypeSettings.ShowPopulatedApp = value;
-            this.RaisePropertyChanged();
-        }
-    }
 
     /// <summary>
     /// Debug mode toggle — only effective on testnet networks.
@@ -321,6 +334,8 @@ public partial class SettingsViewModel : ReactiveObject
     /// </summary>
     public async Task RefreshIndexerStatusAsync()
     {
+        if (IsRefreshingIndexer) return;
+        IsRefreshingIndexer = true;
         try
         {
             await _networkService.CheckServices(true);
@@ -331,6 +346,10 @@ public partial class SettingsViewModel : ReactiveObject
             _logger.LogError(ex, "Failed to refresh indexer status");
             ToastRequested?.Invoke("Failed to refresh indexer status.");
         }
+        finally
+        {
+            IsRefreshingIndexer = false;
+        }
     }
 
     /// <summary>
@@ -338,6 +357,8 @@ public partial class SettingsViewModel : ReactiveObject
     /// </summary>
     public async Task RefreshRelayStatusAsync()
     {
+        if (IsRefreshingRelay) return;
+        IsRefreshingRelay = true;
         try
         {
             await _networkService.CheckServices(true);
@@ -348,6 +369,10 @@ public partial class SettingsViewModel : ReactiveObject
             _logger.LogError(ex, "Failed to refresh relay status");
             ToastRequested?.Invoke("Failed to refresh relay status.");
         }
+        finally
+        {
+            IsRefreshingRelay = false;
+        }
     }
 
     // Wipe data
@@ -356,33 +381,41 @@ public partial class SettingsViewModel : ReactiveObject
 
     public async void ConfirmWipeData()
     {
-        _logger.LogInformation("Wipe data requested — clearing settings and deleting all wallets");
-        IsWipeDataModalOpen = false;
-
-        // Delete all document collections (projects, investments, sync data, etc.)
-        var deleteDataResult = await _databaseManagementService.DeleteAllDataAsync();
-        if (deleteDataResult.IsFailure)
+        try
         {
-            _logger.LogError("Failed to delete application data during wipe: {Error}", deleteDataResult.Error);
-            ToastRequested?.Invoke("Wipe data failed. Please try again.");
-            return;
+            _logger.LogInformation("Wipe data requested — clearing settings and deleting all wallets");
+            IsWipeDataModalOpen = false;
+
+            // Delete all document collections (projects, investments, sync data, etc.)
+            var deleteDataResult = await _databaseManagementService.DeleteAllDataAsync();
+            if (deleteDataResult.IsFailure)
+            {
+                _logger.LogError("Failed to delete application data during wipe: {Error}", deleteDataResult.Error);
+                ToastRequested?.Invoke("Wipe data failed. Please try again.");
+                return;
+            }
+
+            // Clear settings
+            _networkStorage.SetSettings(new SettingsInfo());
+            _networkService.AddSettingsIfNotExist();
+            LoadSettingsFromSdk();
+            _logger.LogInformation("Network settings cleared and defaults re-initialized");
+
+            _signatureStore.Clear();
+            _portfolioViewModel.ResetAfterDataWipe();
+
+            // Delete all wallets and clear wallet context state
+            await _walletContext.DeleteAllAsync();
+
+            _shellViewModel.ResetAfterDataWipe();
+            _logger.LogInformation("Wipe data completed — live shell state reset");
+            ToastRequested?.Invoke("All local data was wiped successfully.");
         }
-
-        // Clear settings
-        _networkStorage.SetSettings(new SettingsInfo());
-        _networkService.AddSettingsIfNotExist();
-        LoadSettingsFromSdk();
-        _logger.LogInformation("Network settings cleared and defaults re-initialized");
-
-        _signatureStore.Clear();
-        _portfolioViewModel.ResetAfterDataWipe();
-
-        // Delete all wallets and clear wallet context state
-        await _walletContext.DeleteAllAsync();
-
-        _shellViewModel.ResetAfterDataWipe();
-        _logger.LogInformation("Wipe data completed — live shell state reset");
-        ToastRequested?.Invoke("All local data was wiped successfully.");
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ConfirmWipeData failed");
+            ToastRequested?.Invoke($"Wipe data failed: {ex.Message}");
+        }
     }
 }
 

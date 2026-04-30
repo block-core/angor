@@ -131,6 +131,7 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
     {
         if (Vm == null || Vm.IsProcessing) return;
 
+        Vm.ErrorMessage = null;
         var feeRate = await AskForFeeRateAsync();
         if (feeRate == null) return; // user cancelled
 
@@ -143,13 +144,14 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
             var shellVm = GetShellVm();
             shellVm?.ShowModal(this);
 
-            var success = Vm.RecoveryActionKey switch
+            var (success, error) = Vm.RecoveryActionKey switch
             {
                 "recovery" => await portfolioVm.RecoverFundsAsync(Vm, feeRate.Value),
+                "belowThreshold" => await portfolioVm.ClaimEndOfProjectAsync(Vm, feeRate.Value),
                 "unfundedRelease" => await portfolioVm.ReleaseFundsAsync(Vm, feeRate.Value),
                 "endOfProject" => await portfolioVm.ClaimEndOfProjectAsync(Vm, feeRate.Value),
                 "penaltyRelease" => await portfolioVm.PenaltyReleaseFundsAsync(Vm, feeRate.Value),
-                _ => false
+                _ => (false, (string?)"Unknown recovery action.")
             };
             Vm.IsProcessing = false;
 
@@ -157,6 +159,10 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
             {
                 Vm.ShowRecoveryModal = false;
                 Vm.ShowSuccessModal = true;
+            }
+            else
+            {
+                Vm.ErrorMessage = error ?? "Recovery transaction failed. Please try again later.";
             }
         }
         else
@@ -169,6 +175,7 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
     {
         if (Vm == null || Vm.IsProcessing) return;
 
+        Vm.ErrorMessage = null;
         var feeRate = await AskForFeeRateAsync();
         if (feeRate == null) return; // user cancelled
 
@@ -181,13 +188,17 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
             var shellVm = GetShellVm();
             shellVm?.ShowModal(this);
 
-            var success = await portfolioVm.ClaimEndOfProjectAsync(Vm, feeRate.Value);
+            var (claimSuccess, claimError) = await portfolioVm.ClaimEndOfProjectAsync(Vm, feeRate.Value);
             Vm.IsProcessing = false;
 
-            if (success)
+            if (claimSuccess)
             {
                 Vm.ShowClaimModal = false;
                 Vm.ShowSuccessModal = true;
+            }
+            else
+            {
+                Vm.ErrorMessage = claimError ?? "Claim transaction failed. Please try again later.";
             }
         }
         else
@@ -200,6 +211,7 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
     {
         if (Vm == null || Vm.IsProcessing) return;
 
+        Vm.ErrorMessage = null;
         var feeRate = await AskForFeeRateAsync();
         if (feeRate == null) return; // user cancelled
 
@@ -213,17 +225,21 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
             shellVm?.ShowModal(this);
 
             // Route based on action key: could be unfundedRelease or penaltyRelease
-            var success = Vm.RecoveryActionKey switch
+            var (releaseSuccess, releaseError) = Vm.RecoveryActionKey switch
             {
                 "penaltyRelease" => await portfolioVm.PenaltyReleaseFundsAsync(Vm, feeRate.Value),
                 _ => await portfolioVm.ReleaseFundsAsync(Vm, feeRate.Value)
             };
             Vm.IsProcessing = false;
 
-            if (success)
+            if (releaseSuccess)
             {
                 Vm.ShowReleaseModal = false;
                 Vm.ShowSuccessModal = true;
+            }
+            else
+            {
+                Vm.ErrorMessage = releaseError ?? "Release transaction failed. Please try again later.";
             }
         }
         else
@@ -239,6 +255,7 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
         if (Vm != null)
         {
             Vm.IsProcessing = false;
+            Vm.ErrorMessage = null;
             Vm.ShowRecoveryModal = false;
             Vm.ShowClaimModal = false;
             Vm.ShowReleaseModal = false;

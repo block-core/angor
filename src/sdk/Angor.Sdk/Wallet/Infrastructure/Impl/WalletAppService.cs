@@ -229,15 +229,25 @@ public class WalletAppService(
     {
         if (string.IsNullOrEmpty(name))
             name = network + " Wallet";
-        
+
         var mnemonic = new Mnemonic(Wordlist.English, WordCount.Twelve);
-        
+
         var seedWords = mnemonic.ToString();
         var passphrase = Maybe<string>.None;
-        
+
         //No need to refresh the wallet as we create it from scratch here
         return walletFactory.CreateWallet(name, seedWords, passphrase, encryptionKey, network)
             .Map(_ => _.Id);
+    }
+
+    /// <summary>
+    /// Create a wallet without a user-provided password.
+    /// Uses a default encryption key; will be replaced by secure storage in a future iteration.
+    /// </summary>
+    public Task<Result<WalletId>> CreateWalletWithoutPassword(BitcoinNetwork network)
+    {
+        // TODO: replace "DEFAULT" with ISecureKeyProvider.GetOrCreateKey() when secure storage is available
+        return CreateWallet(network + " Wallet", "default-key", network);
     }
     
     public async Task<Result> DeleteWallet(WalletId walletId)
@@ -459,6 +469,35 @@ public class WalletAppService(
         catch (Exception ex)
         {
             return Task.FromResult(Result.Failure<(long Fee, long VirtualSize)>($"Error calculating transaction fee: {ex.Message}"));
+        }
+    }
+
+    public async Task<Result<string>> GetPublicKeyForAddress(WalletId walletId, string address)
+    {
+        try
+        {
+            var sensitiveDataResult = await sensitiveWalletDataProvider.RequestSensitiveData(walletId);
+            if (sensitiveDataResult.IsFailure)
+                return Result.Failure<string>(sensitiveDataResult.Error);
+
+            var accountBalanceInfo = await accountBalanceService.GetAccountBalanceInfoAsync(walletId);
+            if (accountBalanceInfo.IsFailure)
+                return Result.Failure<string>(accountBalanceInfo.Error);
+
+            var addressInfo = accountBalanceInfo.Value.AccountInfo.AllAddresses()
+                .FirstOrDefault(a => a.Address == address);
+
+            if (addressInfo == null)
+                return Result.Failure<string>($"Address {address} not found in wallet");
+
+            var walletWords = sensitiveDataResult.Value.ToWalletWords();
+            var compressedPubKey = walletOperations.DerivePublicKey(walletWords, addressInfo.HdPath);
+
+            return Result.Success(compressedPubKey);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<string>($"Error getting public key: {ex.Message}");
         }
     }
 }

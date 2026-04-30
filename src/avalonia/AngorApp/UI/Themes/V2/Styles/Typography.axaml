@@ -188,4 +188,52 @@
         <Setter Property="FontWeight" Value="Bold" />
     </Style>
 
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         RESPONSIVE TYPOGRAPHY - Mobile (<768px)
+         When MainWindow gets the "Compact" class (via Breakpoints.Avalonia),
+         each size class shifts down one level.
+         ═══════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Atomic sizes: each shifts down one level -->
+    <Style Selector="Window.Compact :is(Control).Size-XXL">
+        <Setter Property="TextElement.FontSize" Value="25" />
+    </Style>
+    <Style Selector="Window.Compact :is(Control).Size-XL">
+        <Setter Property="TextElement.FontSize" Value="18" />
+    </Style>
+    <Style Selector="Window.Compact :is(Control).Size-L">
+        <Setter Property="TextElement.FontSize" Value="16" />
+    </Style>
+    <Style Selector="Window.Compact :is(Control).Size-M">
+        <Setter Property="TextElement.FontSize" Value="14" />
+    </Style>
+    <Style Selector="Window.Compact :is(Control).Size-S">
+        <Setter Property="TextElement.FontSize" Value="12" />
+    </Style>
+    <Style Selector="Window.Compact :is(Control).Size-XS">
+        <Setter Property="TextElement.FontSize" Value="11" />
+    </Style>
+
+    <!-- Semantic presets -->
+    <Style Selector="Window.Compact TextBlock.Title">
+        <Setter Property="FontSize" Value="18" />
+    </Style>
+    <Style Selector="Window.Compact TextBlock.Subtitle">
+        <Setter Property="FontSize" Value="16" />
+    </Style>
+    <Style Selector="Window.Compact TextBlock.Header">
+        <Setter Property="FontSize" Value="16" />
+    </Style>
+    <Style Selector="Window.Compact TextBlock.Regular">
+        <Setter Property="FontSize" Value="14" />
+    </Style>
+
+    <!-- Legacy -->
+    <Style Selector="Window.Compact TextBlock.Big">
+        <Setter Property="FontSize" Value="16" />
+    </Style>
+    <Style Selector="Window.Compact TextBlock.Tiny">
+        <Setter Property="FontSize" Value="11" />
+    </Style>
+
 </Styles>
