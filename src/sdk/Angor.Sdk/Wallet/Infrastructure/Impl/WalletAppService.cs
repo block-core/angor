@@ -392,4 +392,33 @@ public class WalletAppService(
             return Task.FromResult(Result.Failure<(long Fee, long VirtualSize)>($"Error calculating transaction fee: {ex.Message}"));
         }
     }
+
+    public async Task<Result<string>> GetPublicKeyForAddress(WalletId walletId, string address)
+    {
+        try
+        {
+            var sensitiveDataResult = await sensitiveWalletDataProvider.RequestSensitiveData(walletId);
+            if (sensitiveDataResult.IsFailure)
+                return Result.Failure<string>(sensitiveDataResult.Error);
+
+            var accountBalanceInfo = await accountBalanceService.GetAccountBalanceInfoAsync(walletId);
+            if (accountBalanceInfo.IsFailure)
+                return Result.Failure<string>(accountBalanceInfo.Error);
+
+            var addressInfo = accountBalanceInfo.Value.AccountInfo.AllAddresses()
+                .FirstOrDefault(a => a.Address == address);
+
+            if (addressInfo == null)
+                return Result.Failure<string>($"Address {address} not found in wallet");
+
+            var walletWords = sensitiveDataResult.Value.ToWalletWords();
+            var compressedPubKey = walletOperations.DerivePublicKey(walletWords, addressInfo.HdPath);
+
+            return Result.Success(compressedPubKey);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<string>($"Error getting public key: {ex.Message}");
+        }
+    }
 }

@@ -434,6 +434,12 @@ public class WalletOperations : IWalletOperations
     }
 
 
+    public string DerivePublicKey(WalletWords walletWords, string hdPath)
+        => _hdOperations.DerivePublicKey(walletWords.Words, walletWords.Passphrase, hdPath);
+
+    public string DerivePrivateKey(WalletWords walletWords, string hdPath)
+        => _hdOperations.DerivePrivateKey(walletWords.Words, walletWords.Passphrase, hdPath);
+
     public AccountInfo BuildAccountInfoForWalletWords(WalletWords walletWords)
     {
         ExtKey.UseBCForHMACSHA512 = true;

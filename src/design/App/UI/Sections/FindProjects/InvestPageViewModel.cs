@@ -9,7 +9,9 @@ using Angor.Sdk.Wallet.Application;
 using Angor.Sdk.Wallet.Domain;
 using App.UI.Sections.Portfolio;
 using Angor.Shared.Models;
+using Angor.Shared.Integration.Lightning;
 using App.UI.Shared;
+using App.UI.Shared.PaymentFlow;
 using ProjectType = App.UI.Shared.ProjectType;
 using App.UI.Shared.Services;
 using Microsoft.Extensions.Logging;
@@ -108,15 +110,17 @@ public partial class InvestPageViewModel : ReactiveObject
 {
     private readonly IWalletAppService _walletAppService;
     private readonly IInvestmentAppService _investmentAppService;
+    private readonly IBoltzSwapService _boltzSwapService;
     private readonly PortfolioViewModel _portfolioVm;
     private readonly ICurrencyService _currencyService;
     private readonly IWalletContext _walletContext;
     private readonly Func<BitcoinNetwork> _getNetwork;
     private readonly ILogger<InvestPageViewModel> _logger;
-    private CancellationTokenSource? _invoiceMonitorCts;
-
     // ── Project Reference ──
     public ProjectItemViewModel Project { get; }
+
+    /// <summary>The reusable payment flow VM. Created when the user advances past the invest form.</summary>
+    [Reactive] private PaymentFlowViewModel? paymentFlow;
 
     // ── Type helpers ──
     public bool IsSubscription => Project.ProjectType == "Subscription";
@@ -126,35 +130,6 @@ public partial class InvestPageViewModel : ReactiveObject
     [Reactive] private string investmentAmount = "";
     [Reactive] private double? selectedQuickAmount;
     [Reactive] private InvestScreen currentScreen = InvestScreen.InvestForm;
-    [Reactive] private WalletInfo? selectedWallet;
-    [Reactive] private bool isProcessing;
-    [Reactive] private string paymentStatusText = "Awaiting payment...";
-    [Reactive] private bool paymentReceived;
-
-    // ── Invoice-screen tab state ──
-    /// <summary>Currently selected payment-network tab in the Invoice screen. Defaults to OnChain.</summary>
-    [Reactive] private NetworkTab selectedNetworkTab = NetworkTab.OnChain;
-
-    /// <summary>The on-chain receive address being monitored. Populated when on-chain tab activates.</summary>
-    [Reactive] private string? onChainAddress;
-
-    /// <summary>The BOLT11 Lightning invoice from a Boltz submarine swap. Populated when Lightning tab activates.</summary>
-    [Reactive] private string? lightningInvoice;
-
-    /// <summary>Boltz swap id for the active Lightning invoice (used by MonitorLightningSwap).</summary>
-    [Reactive] private string? lightningSwapId;
-
-    /// <summary>True while CreateLightningSwap is in flight — used to show a spinner over the QR placeholder.</summary>
-    [Reactive] private bool isGeneratingLightningInvoice;
-
-    /// <summary>
-    /// Error message displayed to the user on the wallet selector modal.
-    /// Cleared when processing starts; set when an SDK call fails.
-    /// </summary>
-    [Reactive] private string? errorMessage;
-
-    /// <summary>Fee rate in sat/vB, set by FeeSelectionPopup before payment.</summary>
-    [Reactive] private long selectedFeeRate = 20;
 
     /// <summary>Whether the investment was auto-approved (published directly, below penalty threshold).
     /// False means it requires founder approval. Used to determine success screen text.</summary>
@@ -169,37 +144,6 @@ public partial class InvestPageViewModel : ReactiveObject
     // ── Derived visibility ──
     public bool IsInvestForm => CurrentScreen == InvestScreen.InvestForm;
     public bool IsWalletSelector => CurrentScreen == InvestScreen.WalletSelector;
-    public bool IsInvoice => CurrentScreen == InvestScreen.Invoice;
-    public bool IsSuccess => CurrentScreen == InvestScreen.Success;
-    public bool HasSelectedWallet => SelectedWallet != null;
-    public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
-    public string PayButtonText => SelectedWallet != null
-        ? $"Pay with {SelectedWallet.Name}"
-        : "Choose Wallet";
-
-    // ── Tab visibility (drives the Selected-class style on each tab Border) ──
-    public bool IsOnChainTab => SelectedNetworkTab == NetworkTab.OnChain;
-    public bool IsLightningTab => SelectedNetworkTab == NetworkTab.Lightning;
-    public bool IsLiquidTab => SelectedNetworkTab == NetworkTab.Liquid;
-    public bool IsImportTab => SelectedNetworkTab == NetworkTab.Import;
-
-    /// <summary>Header above the address/invoice text — flips with the active tab.</summary>
-    public string InvoiceFieldLabel => SelectedNetworkTab switch
-    {
-        NetworkTab.Lightning => "Lightning Invoice",
-        NetworkTab.Liquid => "Liquid Address",
-        NetworkTab.Import => "Imported Invoice",
-        _ => "On-Chain Address"
-    };
-
-    /// <summary>FontAwesome glyph shown inside the QR placeholder while content loads or as a hint icon.</summary>
-    public string InvoiceTabIcon => SelectedNetworkTab switch
-    {
-        NetworkTab.Lightning => "fa-solid fa-bolt",
-        NetworkTab.Liquid => "fa-solid fa-droplet",
-        NetworkTab.Import => "fa-solid fa-file-import",
-        _ => "fa-brands fa-bitcoin"
-    };
 
     // ── Quick Amounts (investment type only) ──
     // Vue ref: quickAmounts grid — 4 items, label is currency symbol
@@ -294,44 +238,14 @@ public partial class InvestPageViewModel : ReactiveObject
     // Vue ref: row label prefix
     public string StageRowPrefix => IsSubscription ? "Payment" : "Stage";
 
-    // ── Success message ──
-    public string SuccessTitle => ProjectTypeTerminology.SuccessTitle(TypeEnum, IsAutoApproved);
-    public string SuccessDescription => ProjectTypeTerminology.SuccessDescription(TypeEnum, IsAutoApproved, FormattedAmount, _currencyService.Symbol, Project.ProjectName);
-    public string SuccessButtonText => ProjectTypeTerminology.SuccessButtonText(TypeEnum);
-
     // ── Wallets loaded from IWalletContext ──
     public ReadOnlyObservableCollection<WalletInfo> Wallets => _walletContext.Wallets;
-
-    /// <summary>
-    /// Text shown in the address/invoice field. Tracks the active tab:
-    /// on-chain → receive address, lightning → BOLT11 invoice, others → coming-soon placeholder.
-    /// While the address/invoice is still being fetched the field falls back to the live PaymentStatusText
-    /// so the user sees real progress ("Refreshing wallet...", "Creating Lightning invoice...") rather
-    /// than a single static "Generating..." string.
-    /// </summary>
-    public string InvoiceString => SelectedNetworkTab switch
-    {
-        NetworkTab.OnChain => OnChainAddress ?? PaymentStatusText,
-        NetworkTab.Lightning => LightningInvoice ?? PaymentStatusText,
-        _ => Constants.InvoiceString
-    };
-
-    /// <summary>
-    /// The raw address or invoice for QR code generation — null when not yet available.
-    /// Unlike InvoiceString, this does NOT fall back to PaymentStatusText so we don't
-    /// accidentally generate a QR code from "Generating invoice address...".
-    /// </summary>
-    public string? QrCodeContent => SelectedNetworkTab switch
-    {
-        NetworkTab.OnChain => OnChainAddress,
-        NetworkTab.Lightning => LightningInvoice,
-        _ => null
-    };
 
     public InvestPageViewModel(
         ProjectItemViewModel project,
         IWalletAppService walletAppService,
         IInvestmentAppService investmentAppService,
+        IBoltzSwapService boltzSwapService,
         PortfolioViewModel portfolioVm,
         ICurrencyService currencyService,
         IWalletContext walletContext,
@@ -341,6 +255,7 @@ public partial class InvestPageViewModel : ReactiveObject
         Project = project;
         _walletAppService = walletAppService;
         _investmentAppService = investmentAppService;
+        _boltzSwapService = boltzSwapService;
         _portfolioVm = portfolioVm;
         _currencyService = currencyService;
         _walletContext = walletContext;
@@ -357,84 +272,12 @@ public partial class InvestPageViewModel : ReactiveObject
         QuickAmounts.Add(new QuickAmountOption { Amount = 0.1, AmountText = "0.1", Label = symbol });
         QuickAmounts.Add(new QuickAmountOption { Amount = 0.5, AmountText = "0.5", Label = symbol });
 
-        // Initialize ReactiveCommands for async payment operations
-        PayWithWalletCommand = ReactiveCommand.CreateFromTask(PayWithWalletAsync);
-        PayWithWalletCommand.ThrownExceptions.Subscribe(ex =>
-        {
-            _logger.LogError(ex, "Unhandled exception in PayWithWalletCommand");
-            PaymentStatusText = $"Error: {ex.Message}";
-        });
-        GenerateReceiveAddressCommand = ReactiveCommand.CreateFromTask(GenerateReceiveAddressAsync);
-        GenerateReceiveAddressCommand.ThrownExceptions.Subscribe(ex =>
-        {
-            _logger.LogError(ex, "Unhandled exception in GenerateReceiveAddressCommand");
-            PaymentStatusText = $"Error: {ex.Message}";
-        });
-        PayToOnChainAddressCommand = ReactiveCommand.CreateFromTask(PayToOnChainAddressAsync);
-        PayToOnChainAddressCommand.ThrownExceptions.Subscribe(ex =>
-        {
-            _logger.LogError(ex, "Unhandled exception in PayToOnChainAddressCommand");
-            PaymentStatusText = $"Error: {ex.Message}";
-        });
-        PayViaLightningCommand = ReactiveCommand.CreateFromTask(PayViaLightningAsync);
-        PayViaLightningCommand.ThrownExceptions.Subscribe(ex =>
-        {
-            _logger.LogError(ex, "Unhandled exception in PayViaLightningCommand");
-            PaymentStatusText = $"Error: {ex.Message}";
-        });
-
         // Raise derived property notifications when screen changes
         this.WhenAnyValue(x => x.CurrentScreen)
             .Subscribe(_ =>
             {
                 this.RaisePropertyChanged(nameof(IsInvestForm));
                 this.RaisePropertyChanged(nameof(IsWalletSelector));
-                this.RaisePropertyChanged(nameof(IsInvoice));
-                this.RaisePropertyChanged(nameof(IsSuccess));
-            });
-
-        this.WhenAnyValue(x => x.SelectedWallet)
-            .Subscribe(_ =>
-            {
-                this.RaisePropertyChanged(nameof(HasSelectedWallet));
-                this.RaisePropertyChanged(nameof(PayButtonText));
-            });
-
-        this.WhenAnyValue(x => x.ErrorMessage)
-            .Subscribe(_ => this.RaisePropertyChanged(nameof(HasError)));
-
-        // Tab switch → re-emit derived visibility, label, icon, and the invoice text binding.
-        this.WhenAnyValue(x => x.SelectedNetworkTab)
-            .Subscribe(_ =>
-            {
-                this.RaisePropertyChanged(nameof(IsOnChainTab));
-                this.RaisePropertyChanged(nameof(IsLightningTab));
-                this.RaisePropertyChanged(nameof(IsLiquidTab));
-                this.RaisePropertyChanged(nameof(IsImportTab));
-                this.RaisePropertyChanged(nameof(InvoiceFieldLabel));
-                this.RaisePropertyChanged(nameof(InvoiceTabIcon));
-                this.RaisePropertyChanged(nameof(InvoiceString));
-                this.RaisePropertyChanged(nameof(QrCodeContent));
-            });
-
-        // Address/invoice payload changes → refresh the bound text and QR code.
-        this.WhenAnyValue(x => x.OnChainAddress, x => x.LightningInvoice, x => x.IsGeneratingLightningInvoice)
-            .Subscribe(_ =>
-            {
-                this.RaisePropertyChanged(nameof(InvoiceString));
-                this.RaisePropertyChanged(nameof(QrCodeContent));
-            });
-
-        // Live progress text feeds the placeholder shown before the address/invoice is ready.
-        this.WhenAnyValue(x => x.PaymentStatusText)
-            .Subscribe(_ => this.RaisePropertyChanged(nameof(InvoiceString)));
-
-        // Update success messages when auto-approval status is determined
-        this.WhenAnyValue(x => x.IsAutoApproved)
-            .Subscribe(_ =>
-            {
-                this.RaisePropertyChanged(nameof(SuccessTitle));
-                this.RaisePropertyChanged(nameof(SuccessDescription));
             });
 
         // Recompute totals + stages when amount changes
@@ -446,7 +289,6 @@ public partial class InvestPageViewModel : ReactiveObject
                 this.RaisePropertyChanged(nameof(AngorFeeAmount));
                 this.RaisePropertyChanged(nameof(CanSubmit));
                 this.RaisePropertyChanged(nameof(SubmitOpacity));
-                this.RaisePropertyChanged(nameof(SuccessDescription));
                 this.RaisePropertyChanged(nameof(StagesSummary));
                 this.RaisePropertyChanged(nameof(TransactionAmountValue));
                 this.RaisePropertyChanged(nameof(IsAbovePenaltyThreshold));
@@ -661,26 +503,7 @@ public partial class InvestPageViewModel : ReactiveObject
         return target.AddDays(diff);
     }
 
-    /// <summary>
-    /// Auto-create a wallet if none exists. Used by the 1-click invest flow so the user
-    /// doesn't need to visit the Funds section before investing.
-    /// </summary>
-    private async Task<Result> EnsureWalletExistsAsync()
-    {
-        _logger.LogInformation("No wallet found — auto-creating for 1-click invest flow");
-        PaymentStatusText = "Creating wallet...";
 
-        var result = await _walletAppService.CreateWalletWithoutPassword(_getNetwork());
-        if (result.IsFailure)
-        {
-            _logger.LogError("Auto-create wallet failed: {Error}", result.Error);
-            return Result.Failure(result.Error);
-        }
-
-        await _walletContext.ReloadAsync();
-        _logger.LogInformation("Wallet auto-created: {WalletId}", result.Value.Value);
-        return Result.Success();
-    }
 
     private double ParseAmount()
     {
@@ -835,7 +658,7 @@ public partial class InvestPageViewModel : ReactiveObject
         InvestmentAmount = amount.ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
 
-    /// <summary>Submit the invest form → show wallet selector.
+    /// <summary>Submit the invest form → create payment flow and show wallet selector.
     /// Vue ref: proceedToPayment() checks balances, opens wallet modal.</summary>
     public void Submit()
     {
@@ -845,657 +668,148 @@ public partial class InvestPageViewModel : ReactiveObject
             return;
         }
         _logger.LogInformation("Invest form submitted — amount: {Amount}, advancing to WalletSelector", InvestmentAmount);
+
+        var amountSats = ((decimal)ParseAmount()).ToUnitSatoshi();
+        PaymentFlow = CreatePaymentFlow(amountSats);
         CurrentScreen = InvestScreen.WalletSelector;
     }
 
-    /// <summary>Select a wallet from the list.</summary>
-    public void SelectWallet(WalletInfo wallet)
+    /// <summary>Creates a PaymentFlowViewModel configured for the current investment.</summary>
+    private PaymentFlowViewModel CreatePaymentFlow(long amountSats)
     {
-        _logger.LogInformation("Wallet selected for investment: '{WalletName}' (ID: {WalletId}, Balance: {Balance})",
-            wallet.Name, wallet.Id.Value, wallet.Balance);
-        foreach (var w in Wallets) w.IsSelected = false;
-        wallet.IsSelected = true;
-        SelectedWallet = wallet;
+        var projectType = Project.ProjectType;
+        var typeEnum = ProjectTypeExtensions.FromDisplayString(projectType);
+        var actionVerb = ProjectTypeTerminology.ActionVerb(typeEnum);
+        var successTitle = ProjectTypeTerminology.SuccessTitle(typeEnum, true);
+
+        var config = new PaymentFlowConfig
+        {
+            AmountSats = amountSats,
+            StageCount = Stages.Count,
+            FeeRateSatsPerVbyte = 20,
+            Title = $"Pay to {actionVerb}",
+            SuccessTitle = successTitle,
+            SuccessDescription = $"Your {actionVerb.ToLowerInvariant()} of {FormattedAmount} {_currencyService.Symbol} has been submitted.",
+            SuccessButtonText = $"View My {ProjectTypeTerminology.InvestorNounTotal(ProjectTypeExtensions.FromDisplayString(projectType))}",
+            OnSuccessButtonClicked = OnInvestSuccess,
+            OnPaymentReceived = async (walletId, fundingAddress, amount) =>
+                await InvestAfterPaymentAsync(walletId, fundingAddress, amount),
+            OnPayWithWallet = async (walletId, amount, feeRate) =>
+                await InvestWithWalletAsync(walletId, amount, feeRate),
+        };
+
+        return new PaymentFlowViewModel(
+            _walletAppService,
+            _investmentAppService,
+            _boltzSwapService,
+            _walletContext,
+            _currencyService,
+            _getNetwork,
+            _logger,
+            config);
     }
 
-    /// <summary>Pay with selected wallet → build draft → check threshold → submit/publish → success.</summary>
-    public ReactiveCommand<Unit, Unit> PayWithWalletCommand { get; }
-
-    public void PayWithWallet() => PayWithWalletCommand.Execute().Subscribe(
-        onNext: _ => { },
-        onError: ex => _logger.LogError(ex, "PayWithWallet subscription error"));
-
-    private async Task PayWithWalletAsync()
-    {
-        if (SelectedWallet == null)
-        {
-            ErrorMessage = "No wallet selected.";
-            _logger.LogWarning("PayWithWallet called with no wallet selected");
-            return;
-        }
-
-        ErrorMessage = null;
-        IsProcessing = true;
-
-        // Refresh wallet UTXOs from the indexer before building the transaction.
-        // This ensures we don't pick UTXOs already consumed by a prior transaction
-        // (e.g. a project deploy) that haven't been synced to local LiteDB yet.
-        PaymentStatusText = "Refreshing wallet...";
-        _logger.LogInformation("Refreshing wallet UTXOs before building investment draft...");
-        await _walletContext.RefreshAllBalancesAsync();
-
-        // Balance check: ensure wallet has enough funds for the investment
-        var amountBtc = ParseAmount();
-        var requiredSats = ((decimal)amountBtc).ToUnitSatoshi();
-        if (SelectedWallet.AvailableSats < requiredSats)
-        {
-            var walletBtc = SelectedWallet.AvailableSats.ToUnitBtc();
-            ErrorMessage = $"Insufficient balance. Wallet has {walletBtc:F8} {_currencyService.Symbol}, but {amountBtc:F8} {_currencyService.Symbol} is required.";
-            _logger.LogWarning("Insufficient balance: wallet {WalletId} has {BalanceSats} sats, need {RequiredSats} sats",
-                SelectedWallet.Id.Value, SelectedWallet.AvailableSats, requiredSats);
-            IsProcessing = false;
-            return;
-        }
-
-        PaymentStatusText = "Building investment transaction...";
-        _logger.LogInformation("PayWithWallet starting — wallet: {WalletId}, project: {ProjectId}, amount: {Amount} BTC",
-            SelectedWallet.Id.Value, Project.ProjectId, InvestmentAmount);
-
-        // Yield to let the UI render the spinner before blocking on SDK calls
-        await Task.Yield();
-
-        try
-        {
-            var walletId = SelectedWallet.Id;
-            var projectId = new ProjectId(Project.ProjectId);
-            var amountSats = ((decimal)ParseAmount()).ToUnitSatoshi();
-
-            // Determine pattern index for Fund/Subscription projects
-            byte? patternIndex = null;
-            if (IsSubscription)
-            {
-                patternIndex = SelectedSubscriptionPattern == "pattern2" ? (byte)1 : (byte)0;
-            }
-            else if (IsFund && SelectedFundingPattern != null)
-            {
-                patternIndex = SelectedFundingPattern.PatternId;
-            }
-
-            // Build investment draft
-            var buildRequest = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
-                walletId,
-                projectId,
-                new Amount(amountSats),
-                new DomainFeerate(SelectedFeeRate),
-                patternIndex);
-
-            _logger.LogInformation("Building investment draft: wallet={WalletId}, project={ProjectId}, amount={AmountSats} sats, feeRate={FeeRate}, patternIndex={PatternIndex}",
-                walletId.Value, projectId.Value, amountSats, SelectedFeeRate, patternIndex);
-            var buildResult = await _investmentAppService.BuildInvestmentDraft(buildRequest);
-            if (buildResult.IsFailure)
-            {
-                _logger.LogError("BuildInvestmentDraft failed: {Error}", buildResult.Error);
-                ErrorMessage = buildResult.Error;
-                IsProcessing = false;
-                return;
-            }
-
-            var draft = buildResult.Value.InvestmentDraft;
-            _logger.LogInformation("Investment draft built successfully");
-
-            // Investment-type projects always require founder approval (no threshold check).
-            // Fund-type projects require approval only when the amount exceeds the penalty threshold.
-            var isAboveThreshold = Project.ProjectType == "Invest";
-            if (Project.ProjectType == "Fund")
-            {
-                PaymentStatusText = "Checking investment threshold...";
-
-                var thresholdRequest = new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(
-                    projectId,
-                    new Amount(amountSats));
-
-                var thresholdResult = await _investmentAppService.IsInvestmentAbovePenaltyThreshold(thresholdRequest);
-                if (thresholdResult.IsFailure)
-                {
-                    _logger.LogError("CheckPenaltyThreshold failed: {Error}", thresholdResult.Error);
-                    ErrorMessage = thresholdResult.Error;
-                    IsProcessing = false;
-                    return;
-                }
-
-                isAboveThreshold = thresholdResult.Value.IsAboveThreshold;
-            }
-
-            if (isAboveThreshold)
-            {
-                // Above threshold or investment-type: request founder signatures
-                IsAutoApproved = false;
-                _logger.LogInformation("Investment requires founder approval — requesting founder signatures");
-                PaymentStatusText = "Requesting founder approval...";
-                var submitRequest = new RequestInvestmentSignatures.RequestFounderSignaturesRequest(
-                    walletId,
-                    projectId,
-                    draft);
-
-                var submitResult = await _investmentAppService.SubmitInvestment(submitRequest);
-                if (submitResult.IsFailure)
-                {
-                    _logger.LogError("SubmitInvestment (founder signatures) failed: {Error}", submitResult.Error);
-                    ErrorMessage = submitResult.Error;
-                    IsProcessing = false;
-                    return;
-                }
-                _logger.LogInformation("Investment submitted for founder approval");
-            }
-            else
-            {
-                // Below threshold: publish directly
-                IsAutoApproved = true;
-                _logger.LogInformation("Investment is below penalty threshold — publishing directly");
-                PaymentStatusText = "Publishing transaction...";
-                var publishRequest = new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(
-                    walletId.Value,
-                    projectId,
-                    draft);
-
-                var publishResult = await _investmentAppService.SubmitTransactionFromDraft(publishRequest);
-                if (publishResult.IsFailure)
-                {
-                    _logger.LogError("SubmitTransactionFromDraft failed: {Error}", publishResult.Error);
-                    ErrorMessage = publishResult.Error;
-                    IsProcessing = false;
-                    return;
-                }
-                _logger.LogInformation("Investment transaction published successfully");
-            }
-
-            _logger.LogInformation("Investment flow completed — advancing to Success screen");
-            _ = _walletContext.RefreshBalanceAsync(walletId).ContinueWith(t =>
-            {
-                if (t.IsFaulted) _logger.LogWarning(t.Exception, "Background RefreshBalanceAsync failed for wallet {WalletId}", walletId.Value);
-            }, TaskContinuationOptions.OnlyOnFaulted);
-            CurrentScreen = InvestScreen.Success;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "PayWithWalletAsync failed");
-            PaymentStatusText = $"Error: {ex.Message}";
-        }
-        finally
-        {
-            IsProcessing = false;
-        }
-    }
-
-    /// <summary>Switch to invoice payment screen. Generates the receive address once
-    /// (wallet creation + refresh + address generation), then starts on-chain monitoring.
-    /// Both on-chain and Lightning tabs reuse this address.
-    /// Vue ref: "Or pay an invoice instead" button.</summary>
-    public void ShowInvoice()
-    {
-        CurrentScreen = InvestScreen.Invoice;
-        SelectedNetworkTab = NetworkTab.OnChain;
-        LightningInvoice = null;
-        LightningSwapId = null;
-        OnChainAddress = null;
-        ErrorMessage = null;
-        IsProcessing = true;
-        PaymentStatusText = "Generating invoice address...";
-        GenerateReceiveAddressCommand.Execute().Subscribe();
-    }
-
-    /// <summary>Generates the receive address (creating a wallet if needed), then starts on-chain monitoring.</summary>
-    public ReactiveCommand<Unit, Unit> GenerateReceiveAddressCommand { get; }
-
-    private async Task GenerateReceiveAddressAsync()
-    {
-        var wallet = Wallets.FirstOrDefault();
-        if (wallet == null)
-        {
-            var createResult = await EnsureWalletExistsAsync();
-            if (createResult.IsFailure)
-            {
-                ErrorMessage = createResult.Error;
-                IsProcessing = false;
-                return;
-            }
-            wallet = Wallets.FirstOrDefault();
-            if (wallet == null)
-            {
-                ErrorMessage = "Wallet was created but not found after reload.";
-                IsProcessing = false;
-                return;
-            }
-        }
-        if (wallet.Id is null || string.IsNullOrEmpty(wallet.Id.Value))
-        {
-            ErrorMessage = "Wallet has no ID — wallet store may be in an inconsistent state.";
-            IsProcessing = false;
-            return;
-        }
-        if (string.IsNullOrEmpty(Project?.ProjectId))
-        {
-            ErrorMessage = "Project has no ID.";
-            IsProcessing = false;
-            return;
-        }
-
-        PaymentStatusText = "Refreshing wallet...";
-        _logger.LogInformation("Refreshing wallet UTXOs...");
-        try
-        {
-            await _walletContext.RefreshAllBalancesAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "RefreshAllBalancesAsync failed");
-            ErrorMessage = $"Refresh wallet failed: {ex.Message}";
-            IsProcessing = false;
-            return;
-        }
-
-        PaymentStatusText = "Generating invoice address...";
-        Result<Address> addressResult;
-        try
-        {
-            addressResult = await _walletAppService.GetNextReceiveAddress(wallet.Id);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "GetNextReceiveAddress threw for wallet {WalletId}", wallet.Id.Value);
-            ErrorMessage = $"GetNextReceiveAddress threw: {ex.GetType().Name}: {ex.Message}";
-            IsProcessing = false;
-            return;
-        }
-        if (addressResult.IsFailure)
-        {
-            _logger.LogError("GetNextReceiveAddress failed: {Error}", addressResult.Error);
-            ErrorMessage = $"GetNextReceiveAddress failed: {addressResult.Error}";
-            IsProcessing = false;
-            return;
-        }
-
-        OnChainAddress = addressResult.Value.Value;
-        _logger.LogInformation("Receive address generated: {Address}", OnChainAddress);
-
-        // Start on-chain monitoring (default tab)
-        PayToOnChainAddress();
-    }
-
-    /// <summary>Go back to wallet selector from invoice.</summary>
-    public void BackToWalletSelector()
-    {
-        CurrentScreen = InvestScreen.WalletSelector;
-    }
-
-    /// <summary>
-    /// Switch the active payment-network tab inside the Invoice modal.
-    /// Cancels any running monitoring loop before kicking off the new tab's flow.
-    /// Lightning click triggers Boltz swap creation + monitoring + claim → publish.
-    /// On-chain click re-enters the address-monitoring loop.
-    /// Liquid/Import are visual stubs for now.
-    /// </summary>
-    public void SelectNetworkTab(NetworkTab tab)
-    {
-        if (SelectedNetworkTab == tab) return;
-
-        // Cancel whatever monitoring/swap loop is running before switching paths.
-        _invoiceMonitorCts?.Cancel();
-        _invoiceMonitorCts = null;
-        ErrorMessage = null;
-        IsProcessing = false;
-        PaymentReceived = false;
-        PaymentStatusText = "Awaiting payment...";
-
-        SelectedNetworkTab = tab;
-        _logger.LogInformation("Invoice tab switched to {Tab}", tab);
-
-        switch (tab)
-        {
-            case NetworkTab.OnChain:
-                LightningInvoice = null;
-                LightningSwapId = null;
-                IsProcessing = true;
-                PayToOnChainAddress();
-                break;
-            case NetworkTab.Lightning:
-                LightningInvoice = null;
-                LightningSwapId = null;
-                IsProcessing = true;
-                IsGeneratingLightningInvoice = true;
-                PaymentStatusText = "Creating Lightning invoice...";
-                PayViaLightningCommand.Execute().Subscribe();
-                break;
-            case NetworkTab.Liquid:
-            case NetworkTab.Import:
-                break;
-        }
-    }
-
-    /// <summary>Generate an on-chain receive address, monitor it for incoming funds,
-    /// and on detection run the build → threshold → publish pipeline.
-    /// Vue ref: handlePayment() → paymentStatus "received" → success.</summary>
-    public ReactiveCommand<Unit, Unit> PayToOnChainAddressCommand { get; }
-
-    public void PayToOnChainAddress() => PayToOnChainAddressCommand.Execute().Subscribe(
-        onNext: _ => { },
-        onError: ex => _logger.LogError(ex, "PayToOnChainAddress subscription error"));
-
-    private async Task PayToOnChainAddressAsync()
-    {
-        var wallet = Wallets.FirstOrDefault();
-        if (wallet?.Id is null || string.IsNullOrEmpty(wallet.Id.Value) ||
-            string.IsNullOrEmpty(OnChainAddress))
-        {
-            ErrorMessage = "Wallet or receive address not ready.";
-            return;
-        }
-
-        ErrorMessage = null;
-        IsProcessing = true;
-
-        _invoiceMonitorCts?.Cancel();
-        var cts = new CancellationTokenSource();
-        _invoiceMonitorCts = cts;
-
-        try
-        {
-            var walletId = wallet.Id;
-            var amountSats = ((decimal)ParseAmount()).ToUnitSatoshi();
-
-            PaymentStatusText = "Waiting for payment...";
-            var monitorRequest = new MonitorOp.MonitorAddressForFundsRequest(
-                walletId,
-                OnChainAddress,
-                new Angor.Sdk.Common.Amount(amountSats),
-                TimeSpan.FromMinutes(30));
-
-            var monitorResult = await _investmentAppService.MonitorAddressForFunds(
-                monitorRequest, cts.Token);
-
-            if (monitorResult.IsFailure)
-            {
-                if (cts.IsCancellationRequested)
-                {
-                    _logger.LogInformation("On-chain monitoring returned failure after cancellation — suppressing error");
-                    return;
-                }
-                ErrorMessage = monitorResult.Error;
-                IsProcessing = false;
-                return;
-            }
-
-            PaymentStatusText = "Payment received!";
-            PaymentReceived = true;
-
-            await CompleteInvestmentAfterFundingAsync(walletId, OnChainAddress, amountSats);
-        }
-        catch (OperationCanceledException)
-        {
-            _logger.LogInformation("On-chain monitoring was cancelled");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "PayToOnChainAddressAsync failed");
-            ErrorMessage = $"An error occurred: {ex.Message}";
-        }
-        finally
-        {
-            IsProcessing = false;
-        }
-    }
-
-    /// <summary>
-    /// Lightning ("1-click invest") path. Creates a Boltz submarine swap so the user can pay a BOLT11 invoice
-    /// from any Lightning wallet — Boltz then locks on-chain funds at a HTLC address that we claim with our
-    /// preimage. Once the claim transaction lands, the funds appear at our normal receive address and we run
-    /// the same build → threshold → publish tail used by the on-chain path.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> PayViaLightningCommand { get; }
-
-    public void PayViaLightning() => PayViaLightningCommand.Execute().Subscribe();
-
-    private async Task PayViaLightningAsync()
-    {
-        var wallet = Wallets.FirstOrDefault();
-        if (wallet?.Id is null || string.IsNullOrEmpty(wallet.Id.Value) ||
-            string.IsNullOrEmpty(OnChainAddress) || string.IsNullOrEmpty(Project?.ProjectId))
-        {
-            ErrorMessage = "Wallet or receive address not ready.";
-            IsGeneratingLightningInvoice = false;
-            return;
-        }
-
-        ErrorMessage = null;
-        IsProcessing = true;
-        IsGeneratingLightningInvoice = true;
-
-        _invoiceMonitorCts?.Cancel();
-        var cts = new CancellationTokenSource();
-        _invoiceMonitorCts = cts;
-
-        try
-        {
-            var walletId = wallet.Id;
-            var receivingAddress = OnChainAddress;
-            var projectId = new ProjectId(Project.ProjectId);
-            var amountSats = ((decimal)ParseAmount()).ToUnitSatoshi();
-
-            PaymentStatusText = "Creating Lightning invoice...";
-            _logger.LogInformation("Creating Boltz Lightning swap: wallet={WalletId}, project={ProjectId}, amount={AmountSats} sats",
-                walletId.Value, projectId.Value, amountSats);
-            var swapRequest = new CreateLightningSwapForInvestment.CreateLightningSwapRequest(
-                walletId,
-                projectId,
-                new Amount(amountSats),
-                receivingAddress,
-                StageCount: Stages.Count,
-                EstimatedFeeRateSatsPerVbyte: (int)SelectedFeeRate);
-
-            Result<CreateLightningSwapForInvestment.CreateLightningSwapResponse> swapResult;
-            try
-            {
-                swapResult = await _investmentAppService.CreateLightningSwap(swapRequest);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "CreateLightningSwap threw");
-                ErrorMessage = $"CreateLightningSwap threw: {ex.Message}";
-                IsProcessing = false;
-                IsGeneratingLightningInvoice = false;
-                return;
-            }
-            if (swapResult.IsFailure)
-            {
-                _logger.LogError("CreateLightningSwap failed: {Error}", swapResult.Error);
-                ErrorMessage = $"CreateLightningSwap failed: {swapResult.Error}";
-                IsProcessing = false;
-                IsGeneratingLightningInvoice = false;
-                return;
-            }
-
-            var swap = swapResult.Value.Swap;
-            LightningInvoice = swap.Invoice;
-            LightningSwapId = swap.Id;
-            IsGeneratingLightningInvoice = false;
-            _logger.LogInformation("Boltz swap created. SwapId={SwapId}", swap.Id);
-
-            PaymentStatusText = "Waiting for Lightning payment...";
-            var monitorSwapRequest = new MonitorLightningSwap.MonitorLightningSwapRequest(
-                walletId,
-                swap.Id,
-                TimeSpan.FromMinutes(30));
-
-            var monitorSwapResult = await _investmentAppService.MonitorLightningSwap(monitorSwapRequest);
-            if (monitorSwapResult.IsFailure)
-            {
-                _logger.LogError("MonitorLightningSwap failed: {Error}", monitorSwapResult.Error);
-                ErrorMessage = monitorSwapResult.Error;
-                IsProcessing = false;
-                return;
-            }
-
-            PaymentStatusText = "Confirming on-chain claim...";
-            var monitorAddressRequest = new MonitorOp.MonitorAddressForFundsRequest(
-                walletId,
-                receivingAddress,
-                new Angor.Sdk.Common.Amount(amountSats),
-                TimeSpan.FromMinutes(30));
-
-            var monitorAddressResult = await _investmentAppService.MonitorAddressForFunds(
-                monitorAddressRequest, cts.Token);
-            if (monitorAddressResult.IsFailure)
-            {
-                if (cts.IsCancellationRequested)
-                {
-                    _logger.LogInformation("Lightning on-chain monitoring returned failure after cancellation — suppressing error");
-                    return;
-                }
-                ErrorMessage = monitorAddressResult.Error;
-                IsProcessing = false;
-                return;
-            }
-
-            PaymentStatusText = "Payment received!";
-            PaymentReceived = true;
-
-            await CompleteInvestmentAfterFundingAsync(walletId, receivingAddress, amountSats);
-        }
-        catch (OperationCanceledException)
-        {
-            // Tab switch or modal close — not a user-facing error.
-            _logger.LogInformation("Lightning swap monitoring was cancelled");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "PayViaLightningAsync failed");
-            ErrorMessage = $"An error occurred: {ex.Message}";
-        }
-        finally
-        {
-            IsProcessing = false;
-            IsGeneratingLightningInvoice = false;
-        }
-    }
-
-    /// <summary>
-    /// Shared tail of both invoice paths (on-chain + Lightning): given a wallet that has just received funds
-    /// at <paramref name="fundingAddress"/>, build the investment draft, decide whether founder approval is
-    /// required, then either request signatures or publish directly. Caller owns ErrorMessage/IsProcessing.
-    /// </summary>
-    private async Task CompleteInvestmentAfterFundingAsync(WalletId walletId, string fundingAddress, long amountSats)
+    /// <summary>Callback for PaymentFlowViewModel: build + publish investment after external payment.</summary>
+    private async Task<Result> InvestAfterPaymentAsync(WalletId walletId, string fundingAddress, long amountSats)
     {
         var projectId = new ProjectId(Project.ProjectId);
+        byte? patternIndex = GetPatternIndex();
 
-        // Fund/Subscription projects require a pattern index (same logic as PayWithWalletAsync).
-        byte? patternIndex = null;
-        if (IsSubscription)
-        {
-            patternIndex = SelectedSubscriptionPattern == "pattern2" ? (byte)1 : (byte)0;
-        }
-        else if (IsFund && SelectedFundingPattern != null)
-        {
-            patternIndex = SelectedFundingPattern.PatternId;
-        }
-
-        PaymentStatusText = "Building investment transaction...";
         var buildRequest = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
-            walletId,
-            projectId,
-            new Amount(amountSats),
-            new DomainFeerate(SelectedFeeRate),
+            walletId, projectId, new Amount(amountSats),
+            new DomainFeerate(PaymentFlow?.SelectedFeeRate ?? 20),
             PatternId: patternIndex,
             FundingAddress: fundingAddress);
 
         var buildResult = await _investmentAppService.BuildInvestmentDraft(buildRequest);
         if (buildResult.IsFailure)
-        {
-            ErrorMessage = buildResult.Error;
-            return;
-        }
+            return Result.Failure(buildResult.Error);
 
-        var draft = buildResult.Value.InvestmentDraft;
+        return await PublishOrRequestApprovalAsync(walletId, projectId, amountSats, buildResult.Value.InvestmentDraft);
+    }
 
-        // Investment-type projects always require founder approval (no threshold check).
-        // Fund-type projects require approval only when the amount exceeds the penalty threshold.
+    /// <summary>Callback for PaymentFlowViewModel: build + publish investment from wallet UTXOs.</summary>
+    private async Task<Result> InvestWithWalletAsync(WalletId walletId, long amountSats, long feeRate)
+    {
+        await _walletContext.RefreshAllBalancesAsync();
+
+        var projectId = new ProjectId(Project.ProjectId);
+        byte? patternIndex = GetPatternIndex();
+
+        var buildRequest = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
+            walletId, projectId, new Amount(amountSats),
+            new DomainFeerate(feeRate),
+            patternIndex);
+
+        var buildResult = await _investmentAppService.BuildInvestmentDraft(buildRequest);
+        if (buildResult.IsFailure)
+            return Result.Failure(buildResult.Error);
+
+        return await PublishOrRequestApprovalAsync(walletId, projectId, amountSats, buildResult.Value.InvestmentDraft);
+    }
+
+    /// <summary>Shared logic: threshold check → request signatures or publish directly.</summary>
+    private async Task<Result> PublishOrRequestApprovalAsync(
+        WalletId walletId, ProjectId projectId, long amountSats,
+        Angor.Sdk.Funding.Shared.TransactionDrafts.InvestmentDraft draft)
+    {
         var isAboveThreshold = Project.ProjectType == "Invest";
         if (Project.ProjectType == "Fund")
         {
-            PaymentStatusText = "Checking investment threshold...";
-            var thresholdRequest = new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(
-                projectId,
-                new Amount(amountSats));
-
-            var thresholdResult = await _investmentAppService.IsInvestmentAbovePenaltyThreshold(thresholdRequest);
+            var thresholdResult = await _investmentAppService.IsInvestmentAbovePenaltyThreshold(
+                new CheckPenaltyThreshold.CheckPenaltyThresholdRequest(projectId, new Amount(amountSats)));
             if (thresholdResult.IsFailure)
-            {
-                ErrorMessage = thresholdResult.Error;
-                return;
-            }
+                return Result.Failure(thresholdResult.Error);
             isAboveThreshold = thresholdResult.Value.IsAboveThreshold;
         }
 
         if (isAboveThreshold)
         {
             IsAutoApproved = false;
-            PaymentStatusText = "Requesting founder approval...";
-            var submitRequest = new RequestInvestmentSignatures.RequestFounderSignaturesRequest(
-                walletId,
-                projectId,
-                draft);
-
-            var submitResult = await _investmentAppService.SubmitInvestment(submitRequest);
+            var submitResult = await _investmentAppService.SubmitInvestment(
+                new RequestInvestmentSignatures.RequestFounderSignaturesRequest(walletId, projectId, draft));
             if (submitResult.IsFailure)
-            {
-                ErrorMessage = submitResult.Error;
-                return;
-            }
+                return Result.Failure(submitResult.Error);
         }
         else
         {
             IsAutoApproved = true;
-            PaymentStatusText = "Publishing transaction...";
-            var publishRequest = new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(
-                walletId.Value,
-                projectId,
-                draft);
-
-            var publishResult = await _investmentAppService.SubmitTransactionFromDraft(publishRequest);
+            var publishResult = await _investmentAppService.SubmitTransactionFromDraft(
+                new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(
+                    walletId.Value, projectId, draft));
             if (publishResult.IsFailure)
-            {
-                ErrorMessage = publishResult.Error;
-                return;
-            }
+                return Result.Failure(publishResult.Error);
         }
 
-        _ = _walletContext.RefreshBalanceAsync(walletId);
-        CurrentScreen = InvestScreen.Success;
+        // Update the success screen text now that we know if it was auto-approved
+        var typeEnum = ProjectTypeExtensions.FromDisplayString(Project.ProjectType);
+        if (PaymentFlow != null)
+        {
+            PaymentFlow.SuccessTitle = ProjectTypeTerminology.SuccessTitle(typeEnum, IsAutoApproved);
+            PaymentFlow.SuccessDescription = ProjectTypeTerminology.SuccessDescription(
+                typeEnum, IsAutoApproved, FormattedAmount, _currencyService.Symbol, Project.ProjectName);
+        }
+
+        return Result.Success();
     }
 
-    /// <summary>Cancel the active invoice/address monitoring loop (if any).
-    /// Used by tests to let the on-chain path settle before switching tabs.</summary>
-    public void CancelInvoiceMonitor()
+    private byte? GetPatternIndex()
     {
-        _invoiceMonitorCts?.Cancel();
-        _invoiceMonitorCts = null;
+        if (IsSubscription)
+            return SelectedSubscriptionPattern == "pattern2" ? (byte)1 : (byte)0;
+        if (IsFund && SelectedFundingPattern != null)
+            return SelectedFundingPattern.PatternId;
+        return null;
     }
 
-    /// <summary>Close modal overlays, return to invest form.</summary>
-    public void CloseModal()
+    /// <summary>Raised when the invest flow completes and the user clicks the success button.
+    /// The view subscribes to navigate to the Funded section.</summary>
+    public event Action? InvestCompleted;
+
+    private void OnInvestSuccess()
     {
-        _invoiceMonitorCts?.Cancel();
-        CurrentScreen = InvestScreen.InvestForm;
-        SelectedWallet = null;
-        foreach (var w in Wallets) w.IsSelected = false;
-        IsProcessing = false;
-        PaymentStatusText = "Awaiting payment...";
-        PaymentReceived = false;
-        ErrorMessage = null;
-        SelectedNetworkTab = NetworkTab.OnChain;
-        OnChainAddress = null;
-        LightningInvoice = null;
-        LightningSwapId = null;
-        IsGeneratingLightningInvoice = false;
+        AddToPortfolio();
+        InvestCompleted?.Invoke();
     }
 
     /// <summary>
