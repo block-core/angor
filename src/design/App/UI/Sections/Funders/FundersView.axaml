@@ -74,7 +74,7 @@
                                  IconData="{StaticResource NavIconUsers}" />
             <!-- Refresh button — visible even when no funders -->
             <Button Name="EmptyRefreshButton"
-                    AutomationProperties.AutomationId="FundersEmptyRefreshButton"
+                    AutomationProperties.AutomationId="FundersRefreshButton"
                     Classes="Outlined FundersAction MobileAction IconOnly"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
