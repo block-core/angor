@@ -47,6 +47,25 @@
         <Style Selector="Button#InvestorShareBtn:pressed /template/ ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource MobileShareBtnBg}" />
         </Style>
+
+        <!-- Mobile-only standard action button height. Desktop keeps each page's existing sizing. -->
+        <Style Selector="shell|ShellView.Compact Button.MobileAction">
+            <Setter Property="Height" Value="52" />
+            <Setter Property="MinHeight" Value="52" />
+            <Setter Property="MaxHeight" Value="52" />
+            <Setter Property="Padding" Value="16,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="shell|ShellView.Compact Button.MobileAction.IconOnly">
+            <Setter Property="Width" Value="52" />
+            <Setter Property="MinWidth" Value="52" />
+            <Setter Property="MaxWidth" Value="52" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+        <Style Selector="shell|ShellView.Compact Button.MobileAction > Border">
+            <Setter Property="MinHeight" Value="52" />
+            <Setter Property="Padding" Value="16,0" />
+        </Style>
     </UserControl.Styles>
 
     <!-- Outer Panel allows modal overlay to stack above entire shell -->
@@ -288,6 +307,7 @@
                          Use inline brushes until the root cause is resolved. The Secondary.Light
                          preset exists in Buttons.axaml for future use on desktop-only buttons. -->
                     <Button Name="InvestorBackBtn" Grid.Column="0"
+                            Classes="MobileAction"
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Center"
                             VerticalContentAlignment="Center"
@@ -304,6 +324,7 @@
 
                     <!-- Invest CTA — Vue: flex-1 bg-gradient green, rounded-2xl, 52px height, Bitcoin icon + text -->
                     <Button Name="InvestorCtaBtn" Grid.Column="1"
+                            Classes="MobileAction"
                             HorizontalAlignment="Stretch"
                             Height="52"
                             CornerRadius="16"
@@ -322,6 +343,7 @@
 
                     <!-- Share button — Vue: 52x52, rounded-2xl, theme-aware (light=white, dark=#1a1a1a) -->
                     <Button Name="InvestorShareBtn" Grid.Column="2"
+                            Classes="MobileAction IconOnly"
                             Width="52" MinWidth="52" Height="52"
                             CornerRadius="16"
                             Background="{DynamicResource MobileShareBtnBg}"
@@ -347,6 +369,7 @@
                     ZIndex="40"
                     CornerRadius="16">
                 <Button Name="InvestmentDetailBackBtn"
+                        Classes="MobileAction"
                         HorizontalAlignment="Stretch"
                         Height="52"
                         CornerRadius="16"
@@ -364,7 +387,7 @@
                 </Button>
             </Border>
 
-            <!-- Manage funds back button: "Back to My Projects"
+            <!-- Founder detail back button: "Back to My Projects"
                  Vue (line 6247): v-if="showManageFunds && selectedManageFundsProject && currentPage === 'my-projects' && !isCreatingProject"
                  Full-width green button, rounded-2xl, 52px height -->
             <Border Name="ManageFundsBackBar" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
@@ -375,6 +398,7 @@
                     ZIndex="40"
                     CornerRadius="16">
                 <Button Name="ManageFundsBackBtn"
+                        Classes="MobileAction"
                         HorizontalAlignment="Stretch"
                         Height="52"
                         CornerRadius="16"

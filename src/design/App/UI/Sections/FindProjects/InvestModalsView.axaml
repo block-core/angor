@@ -133,7 +133,7 @@
                             </Grid>
                         </Border>
                         <!-- Primary: Pay with wallet -->
-                        <Button Name="PayWithWalletButton" HorizontalAlignment="Stretch"
+                        <Button Name="PayWithWalletButton" Classes="MobileAction" HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Center"
                                 CornerRadius="8" Padding="12,14"
                                 IsEnabled="{Binding HasSelectedWallet}"
@@ -179,6 +179,7 @@
                         </Button>
                         <!-- Secondary: Or pay an invoice instead -->
                         <Button Name="PayInvoiceInsteadButton"
+                                Classes="MobileAction"
                                 AutomationProperties.AutomationId="InvestPayInvoiceBtn"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Center"
@@ -491,6 +492,7 @@
 
                 <!-- Action button: green gradient -->
                 <Button Name="ViewInvestmentsButton"
+                        Classes="MobileAction"
                         AutomationProperties.AutomationId="InvestViewInvestmentsBtn"
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Center"

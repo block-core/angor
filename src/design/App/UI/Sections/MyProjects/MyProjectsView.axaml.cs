@@ -297,9 +297,15 @@ public partial class MyProjectsView : UserControl, ISectionView
                 if (shell?.DataContext is ShellViewModel shellVm)
                 {
                     if (editVm != null)
+                    {
                         shellVm.SectionTitleOverride = $"Edit Profile — {editVm.ProjectName}";
+                        shellVm.IsEditProfileOpen = true;
+                    }
                     else if (!vm.ShowCreateWizard && vm.SelectedManageProject == null)
+                    {
                         shellVm.SectionTitleOverride = null;
+                        shellVm.IsEditProfileOpen = false;
+                    }
                 }
             })
             .DisposeWith(_subscriptions!);

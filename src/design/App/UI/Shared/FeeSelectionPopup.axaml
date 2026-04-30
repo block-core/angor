@@ -76,7 +76,7 @@
                         Background="{DynamicResource RecoveryModalBg}">
                     <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
                         <!-- Cancel -->
-                        <Button Name="CancelButton" Classes="ModalBtn" Cursor="Hand">
+                        <Button Name="CancelButton" Classes="ModalBtn MobileAction" Cursor="Hand">
                             <Border CornerRadius="8" Padding="24,12"
                                     Background="{DynamicResource ModalCancelBg}">
                                 <TextBlock Text="Cancel" FontSize="14" FontWeight="SemiBold"
@@ -84,7 +84,7 @@
                             </Border>
                         </Button>
                         <!-- Confirm -->
-                        <Button Name="ConfirmButton" Classes="ModalBtn" Cursor="Hand"
+                        <Button Name="ConfirmButton" Classes="ModalBtn MobileAction" Cursor="Hand"
                                 AutomationProperties.AutomationId="FeeConfirmButton">
                             <Border CornerRadius="8" Padding="24,12"
                                     ClipToBounds="True"

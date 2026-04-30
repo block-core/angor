@@ -38,8 +38,8 @@
                                Text="Discover Projects"
                                FontSize="20" FontWeight="Bold"
                                VerticalAlignment="Center" />
-                    <Button Name="RefreshProjectsButton" Grid.Column="1"
-                            Classes="Primary"
+                     <Button Name="RefreshProjectsButton" Grid.Column="1"
+                             Classes="Primary MobileAction"
                             Padding="12,8"
                             VerticalAlignment="Center"
                             IsEnabled="{Binding !IsLoading}">
@@ -139,7 +139,7 @@
                 <!-- repeated taps can't stack concurrent layout passes.     -->
                 <!-- ═══════════════════════════════════════════════════════ -->
                 <Button Name="LoadMoreButton"
-                        Classes="Secondary"
+                        Classes="Secondary MobileAction"
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Center"
                         Padding="16,12"

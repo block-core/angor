@@ -236,12 +236,11 @@
                         <!-- ── Mobile action buttons (compact only, hidden on desktop) ── -->
                         <!-- Vue mobile (App.vue lines 492-533): full-width btn-primary Scan + Launch, 52px height -->
                         <StackPanel Name="MobileActionPanel" Spacing="12" IsVisible="False">
-                            <Button Name="MobileScanButton"
-                                    Classes="Primary Light"
+                             <Button Name="MobileScanButton"
+                                     Classes="Primary Light MobileAction"
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Center"
-                                    Height="52"
-                                    Padding="16,0"
+                                     Padding="16,0"
                                     Cursor="Hand"
                                     Foreground="{DynamicResource TextStrong}">
                                 <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
@@ -277,12 +276,11 @@
                                                Foreground="{DynamicResource TextStrong}" />
                                 </StackPanel>
                             </Button>
-                            <Button Name="MobileLaunchButton"
-                                    Classes="Primary Light"
+                             <Button Name="MobileLaunchButton"
+                                     Classes="Primary Light MobileAction"
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Center"
-                                    Height="52"
-                                    Padding="16,0"
+                                     Padding="16,0"
                                     Cursor="Hand"
                                     Foreground="{DynamicResource TextStrong}">
                                 <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">

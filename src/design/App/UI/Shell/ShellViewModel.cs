@@ -298,6 +298,7 @@ public partial class ShellViewModel : ReactiveObject
     [Reactive] private string projectDetailActionVerb = "Invest";
     [Reactive] private bool isInvestmentDetailOpen;
     [Reactive] private bool isManageFundsOpen;
+    [Reactive] private bool isEditProfileOpen;
     [Reactive] private bool isCreatingProject;
 
     /// <summary>
@@ -759,7 +760,10 @@ public partial class ShellViewModel : ReactiveObject
         if (_viewCache.TryGetValue("My Projects", out var v) &&
             v is MyProjectsView { DataContext: MyProjectsViewModel mpVm })
         {
-            mpVm.CloseManageProject();
+            if (IsEditProfileOpen)
+                mpVm.CloseEditProfile();
+            else
+                mpVm.CloseManageProject();
         }
         // Ensure the founder tab is set and sub-tabs re-appear
         MobileActiveTab = "founder";
@@ -832,6 +836,7 @@ public partial class ShellViewModel : ReactiveObject
         IsInvestPageOpen = false;
         IsInvestmentDetailOpen = false;
         IsManageFundsOpen = false;
+        IsEditProfileOpen = false;
         IsCreatingProject = false;
     }
 
