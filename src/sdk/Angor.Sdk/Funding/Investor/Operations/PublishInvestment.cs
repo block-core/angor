@@ -1,5 +1,4 @@
 using Angor.Sdk.Common;
-using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Investor.Domain;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Domain;
@@ -33,7 +32,7 @@ public static class PublishInvestment
         IDerivationOperations derivationOperations,
         ISeedwordsProvider seedwordsProvider,
         IProjectService projectService,
-        IWalletOperations walletOperations,
+        IIndexerService indexerService,
         IPortfolioService investmentService,
         IWalletAccountBalanceService walletAccountBalanceService,
         ILogger logger) : IRequestHandler<PublishInvestmentRequest, Result<PublishInvestmentResponse>>
@@ -276,23 +275,19 @@ public static class PublishInvestment
 
         private async Task<Result<string>> PublishSignedTransactionAsync(TransactionInfo signedTransaction)
         {
-            try
-            { 
-                var response = await walletOperations.PublishTransactionAsync(networkConfiguration.GetNetwork(),
-                    signedTransaction.Transaction);
-                
-                if (response.Success)
-                    return Result.Success(signedTransaction.Transaction.GetHash().ToString());
-                
-                logger.Error("Failed to publish investment transaction: {Message}", response.Message);
-                
-                return Result.Failure<string>($"Failed to publish the transaction to the blockchain: {response.Message}");
-            }
-            catch (Exception e)
+            var txId = signedTransaction.Transaction.GetHash().ToString();
+            var hex = signedTransaction.Transaction.ToHex(networkConfiguration.GetNetwork().Consensus.ConsensusFactory);
+
+            var errorMessage = await indexerService.PublishTransactionAsync(hex);
+
+            if (string.IsNullOrEmpty(errorMessage))
             {
-                logger.Error(e, "Error publishing signed transaction");
-                return Result.Failure<string>("An error occurred while publishing the transaction");
+                logger.Information("PublishInvestment: published transaction {TxId}", txId);
+                return Result.Success(txId);
             }
+
+            logger.Error("Failed to publish investment transaction {TxId}: {Message}", txId, errorMessage);
+            return Result.Failure<string>($"Failed to publish the transaction to the blockchain: {errorMessage}");
         }
     }
 }

@@ -316,7 +316,13 @@ public class WalletOperations : IWalletOperations
 
         var signedTransaction = builder.BuildTransaction(true);
 
-        return await PublishTransactionAsync(network, signedTransaction);
+        var hex = signedTransaction.ToHex(network.Consensus.ConsensusFactory);
+        var res = await _indexerService.PublishTransactionAsync(hex);
+
+        if (string.IsNullOrEmpty(res))
+            return new OperationResult<Transaction> { Success = true, Data = signedTransaction };
+
+        return new OperationResult<Transaction> { Success = false, Message = res };
     }
 
     public List<UtxoData> UpdateAccountUnconfirmedInfoWithSpentTransaction(AccountInfo accountInfo, Transaction transaction)
@@ -356,18 +362,6 @@ public class WalletOperations : IWalletOperations
         }
 
         return list;
-    }
-
-    public async Task<OperationResult<Transaction>> PublishTransactionAsync(Network network,Transaction signedTransaction)
-    {
-        var hex = signedTransaction.ToHex(network.Consensus.ConsensusFactory);
-
-        var res = await _indexerService.PublishTransactionAsync(hex);
-
-        if (string.IsNullOrEmpty(res))
-            return new OperationResult<Transaction> { Success = true, Data = signedTransaction };
-
-        return new OperationResult<Transaction> { Success = false, Message = res };
     }
 
     public List<UtxoDataWithPath> 
