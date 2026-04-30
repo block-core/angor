@@ -141,7 +141,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
     public async Task<string> PublishTransactionAsync(string trxHex)
     {
         const int maxAttempts = 3;
-        string? lastError = null;
+        string lastError = "Unknown broadcast error";
 
         for (int attempt = 1; attempt <= maxAttempts; attempt++)
         {
@@ -176,7 +176,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
             }
         }
 
-        return lastError!;
+        return lastError;
     }
 
     public async Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data, bool includeUnconfirmed = false)

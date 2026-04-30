@@ -99,7 +99,7 @@ namespace Angor.Shared.Services
         public async Task<string> PublishTransactionAsync(string trxHex)
         {
             const int maxAttempts = 3;
-            string? lastError = null;
+            string lastError = "Unknown broadcast error";
 
             var indexer = _networkService.GetPrimaryIndexer();
 
@@ -129,7 +129,7 @@ namespace Angor.Shared.Services
                 }
             }
 
-            return lastError!;
+            return lastError;
         }
 
         public async Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data, bool includeUnconfirmed = false)
