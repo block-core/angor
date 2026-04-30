@@ -127,7 +127,7 @@
                     </Border>
 
                     <!-- Done button (green gradient, full width) -->
-                    <Button Name="BtnDone" AutomationProperties.AutomationId="BtnReceiveDone" HorizontalAlignment="Stretch"
+                    <Button Name="BtnDone" Classes="MobileAction" AutomationProperties.AutomationId="BtnReceiveDone" HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Center"
                             Padding="14,12" CornerRadius="8"
                             Foreground="White"

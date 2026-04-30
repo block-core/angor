@@ -110,7 +110,8 @@
                                            TextWrapping="Wrap" />
                             </Grid>
                         </Border>
-                        <Button Name="PayWithWalletButton" HorizontalAlignment="Stretch"
+                        <!-- Primary: Pay with wallet -->
+                        <Button Name="PayWithWalletButton" Classes="MobileAction" HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Center"
                                 CornerRadius="8" Padding="12,14"
                                 IsEnabled="{Binding HasSelectedWallet}"
@@ -154,6 +155,7 @@
                             </Panel>
                         </Button>
                         <Button Name="PayInvoiceInsteadButton"
+                                Classes="MobileAction"
                                 AutomationProperties.AutomationId="InvestPayInvoiceBtn"
                                 HorizontalAlignment="Stretch"
                                 HorizontalContentAlignment="Center"
@@ -451,7 +453,9 @@
                            MaxWidth="380"
                            Margin="0,0,0,32" />
 
+                <!-- Action button: green gradient -->
                 <Button Name="SuccessActionButton"
+                        Classes="MobileAction"
                         AutomationProperties.AutomationId="InvestViewInvestmentsBtn"
                         HorizontalAlignment="Stretch"
                         HorizontalContentAlignment="Center"

@@ -120,42 +120,50 @@ public partial class MyProjectsViewModel : ReactiveObject
 
         try
         {
-            var wallets = _walletContext.Wallets;
+            var wallets = _walletContext.Wallets.ToList();
+            var loadedProjects = await Task.Run(async () =>
+            {
+                var projects = new List<MyProjectItemViewModel>();
+
+                foreach (var wallet in wallets)
+                {
+                    var projectsResult = await _projectAppService.GetFounderProjects(wallet.Id);
+                    if (projectsResult.IsFailure) continue;
+
+                    foreach (var dto in projectsResult.Value.Projects)
+                    {
+                        var targetBtc = (double)dto.TargetAmount.ToUnitBtc();
+                        var projectType = dto.ProjectType switch
+                        {
+                            Angor.Shared.Models.ProjectType.Fund => "fund",
+                            Angor.Shared.Models.ProjectType.Subscribe => "subscription",
+                            _ => "investment"
+                        };
+
+                        projects.Add(new MyProjectItemViewModel
+                        {
+                            Name = dto.Name ?? "Untitled Project",
+                            Description = dto.ShortDescription ?? "",
+                            ProjectType = projectType,
+                            TargetAmount = targetBtc.ToString("F5", CultureInfo.InvariantCulture),
+                            Status = DateTime.UtcNow < dto.FundingStartDate ? "Upcoming"
+                                : DateTime.UtcNow < dto.FundingEndDate ? "Open"
+                                : "Closed",
+                            StartDate = dto.FundingStartDate.ToString("yyyy-MM-dd"),
+                            BannerUrl = dto.Banner?.ToString(),
+                            LogoUrl = dto.Avatar?.ToString(),
+                            ProjectIdentifier = dto.Id?.Value ?? "",
+                            OwnerWalletId = wallet.Id.Value
+                        });
+                    }
+                }
+
+                return projects;
+            });
 
             Projects.Clear();
-
-            foreach (var wallet in wallets)
-            {
-                var projectsResult = await _projectAppService.GetFounderProjects(wallet.Id);
-                if (projectsResult.IsFailure) continue;
-
-                foreach (var dto in projectsResult.Value.Projects)
-                {
-                    var targetBtc = (double)dto.TargetAmount.ToUnitBtc();
-                    var projectType = dto.ProjectType switch
-                    {
-                        Angor.Shared.Models.ProjectType.Fund => "fund",
-                        Angor.Shared.Models.ProjectType.Subscribe => "subscription",
-                        _ => "investment"
-                    };
-
-                    Projects.Add(new MyProjectItemViewModel
-                    {
-                        Name = dto.Name ?? "Untitled Project",
-                        Description = dto.ShortDescription ?? "",
-                        ProjectType = projectType,
-                        TargetAmount = targetBtc.ToString("F5", CultureInfo.InvariantCulture),
-                        Status = DateTime.UtcNow < dto.FundingStartDate ? "Upcoming"
-                            : DateTime.UtcNow < dto.FundingEndDate ? "Open"
-                            : "Closed",
-                        StartDate = dto.FundingStartDate.ToString("yyyy-MM-dd"),
-                        BannerUrl = dto.Banner?.ToString(),
-                        LogoUrl = dto.Avatar?.ToString(),
-                        ProjectIdentifier = dto.Id?.Value ?? "",
-                        OwnerWalletId = wallet.Id.Value
-                    });
-                }
-            }
+            foreach (var project in loadedProjects)
+                Projects.Add(project);
 
             this.RaisePropertyChanged(nameof(HasProjects));
             this.RaisePropertyChanged(nameof(TotalRaised));
@@ -186,19 +194,21 @@ public partial class MyProjectsViewModel : ReactiveObject
 
         try
         {
-            var wallets = _walletContext.Wallets;
-
-            foreach (var wallet in wallets)
+            var wallets = _walletContext.Wallets.ToList();
+            await Task.Run(async () =>
             {
-                // ScanFounderProjects checks all 15 derived key slots,
-                // discovers new projects, and persists them locally.
-                var result = await _projectAppService.ScanFounderProjects(wallet.Id);
-                if (result.IsFailure)
+                foreach (var wallet in wallets)
                 {
-                    _logger.LogError("ScanFounderProjects failed for wallet {WalletId}: {Error}",
-                        wallet.Id.Value, result.Error);
+                    // ScanFounderProjects checks all 15 derived key slots,
+                    // discovers new projects, and persists them locally.
+                    var result = await _projectAppService.ScanFounderProjects(wallet.Id);
+                    if (result.IsFailure)
+                    {
+                        _logger.LogError("ScanFounderProjects failed for wallet {WalletId}: {Error}",
+                            wallet.Id.Value, result.Error);
+                    }
                 }
-            }
+            });
         }
         catch (Exception ex)
         {

@@ -90,7 +90,7 @@ public partial class InvestmentDetailView : UserControl
             {
                 Grid.SetColumn(_topLeftCard, 0);
                 Grid.SetRow(_topLeftCard, 0);
-                _topLeftCard.Margin = new Thickness(0);
+                _topLeftCard.Margin = new Thickness(0, 0, 0, 16);
             }
             if (_topRightCard != null)
             {

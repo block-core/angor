@@ -137,7 +137,7 @@
                  (e.g. My Projects sidebar + mobile action buttons). -->
             <SolidColorBrush x:Key="LightPrimaryButtonBackground" Color="#FFFFFF" />
             <SolidColorBrush x:Key="LightPrimaryButtonForeground" Color="{StaticResource TextStrong}" />
-            <SolidColorBrush x:Key="LightPrimaryButtonBorder" Color="{StaticResource Stroke}" />
+            <SolidColorBrush x:Key="LightPrimaryButtonBorder" Color="#33000000" />
 
             <SolidColorBrush x:Key="SecondaryButtonForeground" Color="{StaticResource TextStrong}" />
             <SolidColorBrush x:Key="SecondaryButtonBackground" Color="{DynamicResource SurfaceHover}" />

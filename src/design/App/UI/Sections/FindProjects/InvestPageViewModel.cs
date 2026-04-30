@@ -211,7 +211,7 @@ public partial class InvestPageViewModel : ReactiveObject
 
     public string ThresholdStatusText => IsAbovePenaltyThreshold ? "Requires Approval" : "No Approval Needed";
 
-    public double SubmitOpacity => CanSubmit ? 1.0 : 0.45;
+    public double SubmitOpacity => CanSubmit ? 1.0 : 0.35;
 
     // Vue ref: footer-summary stages/payments count
     private ProjectType TypeEnum => ProjectTypeExtensions.FromDisplayString(Project.ProjectType);

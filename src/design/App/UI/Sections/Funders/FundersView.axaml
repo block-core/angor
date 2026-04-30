@@ -14,6 +14,12 @@
 
     <!-- Vue: signature card hover — subtle shadow transition -->
     <UserControl.Styles>
+        <!-- Mobile: strip BoxShadow + transitions that waste GPU on touch devices -->
+        <Style Selector="funders|FundersView.Mobile Border.SignatureCard">
+            <Setter Property="Transitions" Value="{x:Null}" />
+            <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />
+        </Style>
+
         <Style Selector="Border.SignatureCard">
             <Setter Property="Opacity" Value="1" />
         </Style>
@@ -41,6 +47,18 @@
         <Style Selector="Border.FilterTab.FilterTabActive TextBlock.TabLabel">
             <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
         </Style>
+
+        <Style Selector="Button.FundersAction">
+            <Setter Property="Height" Value="44" />
+            <Setter Property="Padding" Value="16,0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.FundersAction.IconOnly">
+            <Setter Property="Width" Value="44" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+        </Style>
     </UserControl.Styles>
 
     <Panel AutomationProperties.AutomationId="FundersRootPanel">
@@ -56,9 +74,8 @@
                                  IconData="{StaticResource NavIconUsers}" />
             <!-- Refresh button — visible even when no funders -->
             <Button Name="EmptyRefreshButton"
-                    AutomationProperties.AutomationId="FundersEmptyRefreshButton"
-                    Classes="Outlined"
-                    Padding="10"
+                    AutomationProperties.AutomationId="FundersRefreshButton"
+                    Classes="Outlined FundersAction MobileAction IconOnly"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
                     Margin="24"
@@ -104,7 +121,7 @@
                     <StackPanel Orientation="Horizontal" Spacing="12" DockPanel.Dock="Left"
                                 VerticalAlignment="Center">
                         <!-- Vue: w-10 h-10 rounded-lg bg-black (dark) / bg-gray-100 (light) -->
-                        <Border Width="40" Height="40" CornerRadius="8"
+                        <Border Name="FundersTitleIcon" Width="40" Height="40" CornerRadius="8"
                                 Background="{DynamicResource SurfaceLow}">
                             <Viewbox Width="24" Height="24">
                                 <Path Data="{StaticResource NavIconUsers}"
@@ -116,7 +133,8 @@
                             </Viewbox>
                         </Border>
                         <!-- Vue: text-2xl font-bold -->
-                        <TextBlock Text="Funders Overview"
+                        <TextBlock Name="FundersTitleText"
+                                   Text="Funders"
                                    FontSize="24"
                                    FontWeight="Bold"
                                    Foreground="{DynamicResource TextStrong}"
@@ -129,8 +147,7 @@
                         <!-- Refresh button -->
                         <Button Name="RefreshButton"
                                 AutomationProperties.AutomationId="FundersRefreshButton"
-                                Classes="Outlined"
-                                Padding="10"
+                                Classes="Outlined FundersAction MobileAction IconOnly"
                                 VerticalAlignment="Center"
                                 IsEnabled="{Binding !IsRefreshing}">
                             <i:Icon Value="fa-solid fa-arrows-rotate"
@@ -154,8 +171,7 @@
                         </Button>
                         <!-- Approve All button -->
                         <Button Name="ApproveAllButton"
-                                Classes="Primary"
-                                Padding="20,10"
+                                Classes="Primary FundersAction MobileAction"
                                 VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Viewbox Width="16" Height="16" VerticalAlignment="Center">
@@ -166,7 +182,8 @@
                                       StrokeJoin="Round"
                                       Width="24" Height="24" Stretch="Uniform" />
                             </Viewbox>
-                            <TextBlock Text="Approve All"
+                            <TextBlock Name="ApproveAllText"
+                                       Text="Approve All"
                                        FontSize="14"
                                        FontWeight="SemiBold"
                                        Foreground="White"
@@ -187,14 +204,14 @@
                         Margin="0,0,0,24"
                         Padding="0,0,0,0">
                     <StackPanel Orientation="Horizontal" Spacing="8" Name="FilterTabsPanel">
-                        <!-- Awaiting Approval tab -->
+                        <!-- Waiting tab -->
                         <Border Name="TabWaiting"
                                 Classes="FilterTab FilterTabActive"
                                 Padding="16,8"
                                 BorderThickness="0,0,0,2"
                                 Margin="0,0,0,-1">
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <TextBlock Text="Awaiting Approval"
+                                <TextBlock Text="Waiting"
                                            Classes="TabLabel"
                                            FontSize="14"
                                            FontWeight="SemiBold" />
@@ -334,8 +351,7 @@
                                             <Button Name="ApproveButton"
                                                     Tag="{Binding Id}"
                                                     IsVisible="{Binding IsWaiting}"
-                                                    Height="44" Padding="16,0"
-                                                    CornerRadius="8"
+                                                    Classes="FundersAction MobileAction"
                                                     Background="{DynamicResource PrimaryGreenBrush}"
                                                     Foreground="White">
                                                 <StackPanel Orientation="Horizontal" Spacing="8">
@@ -358,8 +374,7 @@
                                             <!-- Approved status (approved only) -->
                                             <!-- Vue: bg-green-100 text-green-700 opacity-70 cursor-not-allowed -->
                                             <Border IsVisible="{Binding IsApproved}"
-                                                    Height="44" Padding="16,0"
-                                                    CornerRadius="8"
+                                                    Classes="FundersAction MobileAction"
                                                     Background="#1A4B7C5A"
                                                     VerticalAlignment="Center">
                                                 <StackPanel Orientation="Horizontal" Spacing="8"
@@ -385,8 +400,7 @@
                                             <Button Name="RejectButton"
                                                     Tag="{Binding Id}"
                                                     IsVisible="{Binding IsWaiting}"
-                                                    Height="44" Padding="16,0"
-                                                    CornerRadius="8"
+                                                    Classes="FundersAction MobileAction"
                                                     Background="#DC2626"
                                                     Foreground="White">
                                                 <StackPanel Orientation="Horizontal" Spacing="8">
@@ -409,8 +423,7 @@
                                             <!-- Rejected status (rejected only) -->
                                             <!-- Vue: bg-red-100 text-red-700 opacity-70 -->
                                             <Border IsVisible="{Binding IsRejected}"
-                                                    Height="44" Padding="16,0"
-                                                    CornerRadius="8"
+                                                     Classes="FundersAction MobileAction"
                                                     Background="#1ADC2626"
                                                     VerticalAlignment="Center">
                                                 <StackPanel Orientation="Horizontal" Spacing="8"
@@ -435,8 +448,7 @@
                                             <!-- Vue: btn-secondary-green h-[52px] px-4 rounded-lg -->
                                             <Button Name="ChatButton"
                                                     Tag="{Binding Id}"
-                                                    Height="44" Padding="16,0"
-                                                    CornerRadius="8"
+                                                     Classes="FundersAction MobileAction"
                                                     Background="Transparent"
                                                     BorderBrush="{DynamicResource PrimaryGreenBrush}"
                                                     BorderThickness="2">
@@ -458,9 +470,7 @@
                                             <!-- Vue: btn-secondary-green h-[52px] px-3 -->
                                             <Button Name="ExpandButton"
                                                     Tag="{Binding Id}"
-                                                    Height="44" Width="44"
-                                                    Padding="0"
-                                                    CornerRadius="8"
+                                                     Classes="FundersAction MobileAction IconOnly"
                                                     Background="Transparent"
                                                     BorderBrush="{DynamicResource PrimaryGreenBrush}"
                                                     BorderThickness="2"

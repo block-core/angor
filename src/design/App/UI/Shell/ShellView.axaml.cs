@@ -129,9 +129,11 @@ public partial class ShellView : UserControl
     private Border _investmentDetailBackBar = null!;
     private Border _manageFundsBackBar = null!;
     private TextBlock _investorCtaText = null!;
+    private Button _investorCtaBtn = null!;
 
     private IDisposable? _layoutSubscription;
     private IDisposable? _detailStateSubscription;
+    private IDisposable? _investCanSubmitSubscription;
     private SectionPanel? _sectionPanel;
 
     /// <summary>
@@ -183,6 +185,7 @@ public partial class ShellView : UserControl
         _investmentDetailBackBar = this.FindControl<Border>("InvestmentDetailBackBar")!;
         _manageFundsBackBar = this.FindControl<Border>("ManageFundsBackBar")!;
         _investorCtaText = this.FindControl<TextBlock>("InvestorCtaText")!;
+        _investorCtaBtn = this.FindControl<Button>("InvestorCtaBtn")!;
 
         // ── Subscribe to layout mode changes — toggle desktop/compact elements ──
         ApplyShellLayout(!LayoutModeService.Instance.IsCompact);
@@ -223,6 +226,7 @@ public partial class ShellView : UserControl
                 x => x.IsManageFundsOpen,
                 x => x.IsCreatingProject,
                 x => x.ProjectDetailActionVerb)
+            .CombineLatest(vm.WhenAnyValue(x => x.IsEditProfileOpen), (_, _) => Unit.Default)
             .CombineLatest(vm.WhenAnyValue(x => x.SelectedNavItem), (a, b) => Unit.Default)
             .Subscribe(_ => UpdateCompactOverlays(vm));
 
@@ -264,6 +268,8 @@ public partial class ShellView : UserControl
                             _currentModalChild = null;
                         }
                         _isClosing = false;
+
+                        ApplyMobileActionSizing(control, LayoutModeService.Instance.IsCompact);
 
                         // Start at closed state: invisible + slightly scaled down
                         control.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
@@ -450,6 +456,9 @@ public partial class ShellView : UserControl
     {
         if (_shellContent == null) return;
 
+        Classes.Set("Compact", !isDesktop);
+        ApplyMobileActionSizing(this, !isDesktop);
+
         // CRITICAL: Never replace ColumnDefinitions/RowDefinitions collections.
         // Only modify existing column/row widths. Replacing collections causes
         // Avalonia's layout engine to crash (SIGABRT) because child controls
@@ -523,6 +532,39 @@ public partial class ShellView : UserControl
         Grid.SetColumnSpan(_investmentDetailBackBar, subTabColSpan);
         Grid.SetColumnSpan(_manageFundsBackBar, subTabColSpan);
         Grid.SetColumnSpan(_bottomTabBar, isDesktop ? 2 : 1);
+    }
+
+    private static void ApplyMobileActionSizing(Control root, bool isCompact)
+    {
+        if (!isCompact)
+            return;
+
+        foreach (Button button in root.GetVisualDescendants().OfType<Button>())
+        {
+            if (!button.Classes.Contains("MobileAction"))
+                continue;
+
+            button.Height = 52;
+            button.MinHeight = 52;
+            button.MaxHeight = 52;
+            button.Padding = button.Classes.Contains("IconOnly")
+                ? new Thickness(0)
+                : new Thickness(16, 0);
+            button.VerticalContentAlignment = Avalonia.Layout.VerticalAlignment.Center;
+
+            if (button.Classes.Contains("IconOnly"))
+            {
+                button.Width = 52;
+                button.MinWidth = 52;
+                button.MaxWidth = 52;
+            }
+
+            foreach (Border border in button.GetVisualDescendants().OfType<Border>())
+            {
+                border.MinHeight = 52;
+                border.Padding = new Thickness(16, 0);
+            }
+        }
     }
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
@@ -740,7 +782,8 @@ public partial class ShellView : UserControl
             && tab == "founder"
             && isFounderSection
             && !vm.IsCreatingProject
-            && !vm.IsManageFundsOpen;
+            && !vm.IsManageFundsOpen
+            && !vm.IsEditProfileOpen;
 
         // ── Investor back bar (Back + Invest CTA + Share) ──
         // Vue (line 6203): v-if="(showProjectDetail || showInvestPage) && mobileActiveTab === 'investor'"
@@ -753,6 +796,32 @@ public partial class ShellView : UserControl
         if (_investorCtaText != null)
             _investorCtaText.Text = vm.ProjectDetailActionVerb;
 
+        // ── Invest CTA disabled state ──
+        // When on the invest page, bind IsEnabled to the invest VM's CanSubmit.
+        // When on project detail, always enabled (it navigates to invest page).
+        _investCanSubmitSubscription?.Dispose();
+        _investCanSubmitSubscription = null;
+        if (vm.IsInvestPageOpen)
+        {
+            var investVm = vm.CurrentInvestPageViewModel;
+            if (investVm != null)
+            {
+                _investorCtaBtn.IsEnabled = investVm.CanSubmit;
+                _investorCtaBtn.Opacity = investVm.CanSubmit ? 1.0 : 0.35;
+                _investCanSubmitSubscription = investVm.WhenAnyValue(x => x.CanSubmit)
+                    .Subscribe(canSubmit =>
+                    {
+                        _investorCtaBtn.IsEnabled = canSubmit;
+                        _investorCtaBtn.Opacity = canSubmit ? 1.0 : 0.35;
+                    });
+            }
+        }
+        else
+        {
+            _investorCtaBtn.IsEnabled = true;
+            _investorCtaBtn.Opacity = 1.0;
+        }
+
         // ── Investment detail back bar ──
         // Vue (line 6234): v-if="showInvestmentDetail && currentPage === 'investments'"
         _investmentDetailBackBar.IsVisible = isCompact
@@ -763,7 +832,7 @@ public partial class ShellView : UserControl
         // ── Manage funds back bar ──
         // Vue (line 6247): v-if="showManageFunds && selectedManageFundsProject && currentPage === 'my-projects' && !isCreatingProject"
         _manageFundsBackBar.IsVisible = isCompact
-            && vm.IsManageFundsOpen
+            && (vm.IsManageFundsOpen || vm.IsEditProfileOpen)
             && !vm.IsCreatingProject
             && tab == "founder"
             && isFounderSection;

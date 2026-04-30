@@ -29,6 +29,9 @@ public partial class ManageProjectView : UserControl
         InitializeComponent();
         _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<ManageProjectView>();
 
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
+            Classes.Add("Mobile");
+
         // Cache responsive controls
         _navBar = this.FindControl<DockPanel>("ManageNavBar");
         _navSpacer = this.FindControl<Panel>("ManageNavSpacer");

@@ -143,6 +143,7 @@
                                         Spacing="12"
                                         HorizontalAlignment="Left">
                                 <Button Name="BtnHeaderSend"
+                                        Classes="MobileAction"
                                         Padding="16,8" CornerRadius="8"
                                         Foreground="White"
                                         FontWeight="SemiBold" FontSize="14"
@@ -163,6 +164,7 @@
                                     </StackPanel>
                                 </Button>
                                 <Button Name="BtnHeaderReceive"
+                                        Classes="MobileAction"
                                         Padding="16,8" CornerRadius="8"
                                         Background="Transparent"
                                         BorderBrush="{DynamicResource PrimaryGreenBrush}"

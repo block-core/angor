@@ -34,6 +34,9 @@
         <Style Selector="Button.NetworkOption.NetworkOptionActive TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource NetworkOptionActiveText}" />
         </Style>
+        <Style Selector="Button.NetworkOption TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource NetworkOptionText}" />
+        </Style>
 
         <!-- Settings default-toggle checkbox: unchecked state -->
         <!-- Vue: 24x24, border 2px #e5e7eb / dark #404040, bg white / dark #2a2a2a, border-radius 4px -->
@@ -86,6 +89,7 @@
                             <DockPanel>
                                 <!-- Vue: green gradient action button -->
                                 <Button DockPanel.Dock="Right"
+                                        Classes="MobileAction"
                                         VerticalAlignment="Center"
                                         Padding="20,14"
                                         Background="{DynamicResource GreenGradient}"
@@ -179,6 +183,7 @@
                             <DockPanel>
                                 <!-- Vue: Refresh button in header-right -->
                                 <Button DockPanel.Dock="Right"
+                                        Classes="MobileAction"
                                         Padding="20,14"
                                         Background="{DynamicResource GreenGradient}"
                                         Foreground="White"
@@ -236,6 +241,7 @@
                                 <!-- Add input group -->
                                 <DockPanel>
                                     <Button DockPanel.Dock="Right"
+                                            Classes="MobileAction"
                                             Margin="12,0,0,0"
                                             Padding="20,14"
                                             Background="{DynamicResource PrimaryGreenBrush}"
@@ -355,6 +361,7 @@
                                 <!-- Add input group -->
                                 <DockPanel>
                                     <Button DockPanel.Dock="Right"
+                                            Classes="MobileAction"
                                             Margin="12,0,0,0"
                                             Padding="20,14"
                                             Background="{DynamicResource PrimaryGreenBrush}"
@@ -522,6 +529,7 @@
                                            TextWrapping="Wrap" />
                                 <!-- Vue: green gradient action button -->
                                 <Button HorizontalAlignment="Left"
+                                        Classes="MobileAction"
                                         Padding="20,14"
                                         Background="{DynamicResource GreenGradient}"
                                         Foreground="White"
@@ -625,6 +633,7 @@
                             <StackPanel Spacing="20">
                                 <!-- Vue: Wipe Data button (solid red) -->
                                 <Button HorizontalAlignment="Left"
+                                        Classes="MobileAction"
                                         AutomationProperties.AutomationId="BtnWipeData"
                                         Padding="20,14"
                                         Background="{DynamicResource DangerButtonBg}"
@@ -671,10 +680,13 @@
                 </Transitions>
             </Border.Transitions>
 
-            <Border Background="{DynamicResource CardSurface}"
+            <Border Name="NetworkModalCard"
+                    Background="{DynamicResource CardSurface}"
                     BorderBrush="{DynamicResource Stroke}"
                     BorderThickness="1"
                     CornerRadius="16"
+                    Margin="16"
+                    MinWidth="320"
                     MaxWidth="500"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
@@ -690,7 +702,8 @@
 
                 <StackPanel>
                     <!-- Modal header: Vue .modal-header -->
-                    <Border BorderBrush="{DynamicResource Stroke}"
+                    <Border Name="NetworkModalHeader"
+                            BorderBrush="{DynamicResource Stroke}"
                             BorderThickness="0,0,0,1"
                             Padding="24">
                         <DockPanel>
@@ -716,8 +729,8 @@
                     </Border>
 
                     <!-- Modal content -->
-                    <Border Padding="24">
-                        <StackPanel Spacing="20">
+                    <Border Name="NetworkModalBody" Padding="24">
+                        <StackPanel Name="NetworkModalBodyStack" Spacing="20">
                             <!-- Warning banner: Vue .network-warning-container -->
                             <Border Background="{DynamicResource NetworkWarningBg}"
                                     BorderBrush="{DynamicResource NetworkWarningBorder}"
@@ -739,7 +752,8 @@
                                         Click="OnSelectMainnet"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Stretch"
-                                        Padding="16,14"
+                                         Padding="16,14"
+                                         Foreground="{DynamicResource NetworkOptionText}"
                                         CornerRadius="8"
                                         Background="{DynamicResource NetworkOptionBg}"
                                         BorderBrush="{DynamicResource NetworkOptionBorder}"
@@ -761,7 +775,8 @@
                                         Click="OnSelectTestnet"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Stretch"
-                                        Padding="16,14"
+                                         Padding="16,14"
+                                         Foreground="{DynamicResource NetworkOptionText}"
                                         CornerRadius="8"
                                         Background="{DynamicResource NetworkOptionBg}"
                                         BorderBrush="{DynamicResource NetworkOptionBorder}"
@@ -783,7 +798,8 @@
                                         Click="OnSelectAngornet"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Stretch"
-                                        Padding="16,14"
+                                         Padding="16,14"
+                                         Foreground="{DynamicResource NetworkOptionText}"
                                         CornerRadius="8"
                                         Background="{DynamicResource NetworkOptionBg}"
                                         BorderBrush="{DynamicResource NetworkOptionBorder}"
@@ -805,7 +821,8 @@
                                         Click="OnSelectSignet"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Stretch"
-                                        Padding="16,14"
+                                         Padding="16,14"
+                                         Foreground="{DynamicResource NetworkOptionText}"
                                         CornerRadius="8"
                                         Background="{DynamicResource NetworkOptionBg}"
                                         BorderBrush="{DynamicResource NetworkOptionBorder}"
@@ -826,8 +843,10 @@
                             </StackPanel>
 
                             <!-- Confirmation checkbox: Vue .network-confirmation-checkbox -->
-                            <StackPanel Orientation="Horizontal" Spacing="12">
+                            <DockPanel Name="NetworkConfirmationRow">
                                 <CheckBox IsChecked="{Binding NetworkChangeConfirmed, Mode=TwoWay}"
+                                          DockPanel.Dock="Left"
+                                          Margin="0,0,12,0"
                                           VerticalAlignment="Top" />
                                 <TextBlock Text="By confirming, you agree to wiping all data from this device since you have a backup of your wallet words."
                                            FontSize="14"
@@ -835,16 +854,19 @@
                                            TextWrapping="Wrap"
                                            LineHeight="21"
                                            VerticalAlignment="Top" />
-                            </StackPanel>
+                            </DockPanel>
                         </StackPanel>
                     </Border>
 
                     <!-- Modal footer: Vue .modal-footer -->
-                    <Border BorderBrush="{DynamicResource Stroke}"
+                    <Border Name="NetworkModalFooter"
+                            BorderBrush="{DynamicResource Stroke}"
                             BorderThickness="0,1,0,0"
                             Padding="24,20">
-                        <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
-                            <Button Padding="20,10"
+                        <StackPanel Name="NetworkModalActions" Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+                            <Button Name="NetworkCancelButton"
+                                    Classes="MobileAction"
+                                    Padding="20,10"
                                     Background="{DynamicResource ModalCancelBg}"
                                     Foreground="{DynamicResource ModalCancelFg}"
                                     BorderThickness="0"
@@ -853,7 +875,9 @@
                                     FontSize="14"
                                     Click="OnCloseNetworkModal"
                                     Content="Cancel" />
-                            <Button Padding="20,10"
+                            <Button Name="NetworkConfirmButton"
+                                    Classes="MobileAction"
+                                    Padding="20,10"
                                     Background="{DynamicResource GreenGradient}"
                                     Foreground="White"
                                     BorderThickness="0"
@@ -924,7 +948,7 @@
                                        TextWrapping="Wrap"
                                        LineHeight="22" />
                             <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
-                                <Button Padding="20,10"
+                                <Button Classes="MobileAction" Padding="20,10"
                                         Background="{DynamicResource ModalCancelBg}"
                                         Foreground="{DynamicResource ModalCancelFg}"
                                         BorderThickness="0"
@@ -933,7 +957,7 @@
                                         FontSize="14"
                                         Click="OnCloseWipeDataModal"
                                         Content="Cancel" />
-                                <Button Padding="20,10"
+                                <Button Classes="MobileAction" Padding="20,10"
                                         AutomationProperties.AutomationId="BtnConfirmWipeData"
                                         Background="#EF4444"
                                         Foreground="White"

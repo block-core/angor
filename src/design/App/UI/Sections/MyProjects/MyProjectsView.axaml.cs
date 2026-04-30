@@ -14,10 +14,17 @@ using Microsoft.Extensions.Logging;
 
 namespace App.UI.Sections.MyProjects;
 
-public partial class MyProjectsView : UserControl
+public partial class MyProjectsView : UserControl, ISectionView
 {
     private CompositeDisposable? _subscriptions;
     private IDisposable? _layoutSubscription;
+    private bool _loadScheduled;
+    private CreateProjectView? _createWizardView;
+    private ManageProjectView? _manageProjectView;
+    private EditProfileView? _editProfileView;
+    private bool _isCreatingWizardView;
+    private bool _isCreatingManageView;
+    private bool _isCreatingEditProfileView;
 
     // Cached controls for responsive layout
     private Grid? _projectListGrid;
@@ -29,6 +36,7 @@ public partial class MyProjectsView : UserControl
     private TextBlock? _sidebarSubtitle;
     private Grid? _sidebarStats;
     private Button? _howFundingWorksBtn;
+    private Button? _scanProjectsButton;
     private StackPanel? _mobileActionPanel;
     private StackPanel? _sidebarCTAButtons;
 
@@ -39,11 +47,6 @@ public partial class MyProjectsView : UserControl
     {
         InitializeComponent();
         DataContext = vm;
-
-        // Set the create wizard's DataContext from the parent VM
-        // (CreateProjectView is XAML-embedded, so it can't use constructor injection)
-        if (CreateWizardView != null)
-            CreateWizardView.DataContext = vm.CreateProjectVm;
 
         _subscriptions = new CompositeDisposable();
 
@@ -80,6 +83,7 @@ public partial class MyProjectsView : UserControl
         _sidebarSubtitle = this.FindControl<TextBlock>("SidebarSubtitle");
         _sidebarStats = this.FindControl<Grid>("SidebarStats");
         _howFundingWorksBtn = this.FindControl<Button>("HowFundingWorksBtn");
+        _scanProjectsButton = this.FindControl<Button>("ScanProjectsButton");
         _mobileActionPanel = this.FindControl<StackPanel>("MobileActionPanel");
         _sidebarCTAButtons = this.FindControl<StackPanel>("SidebarCTAButtons");
 
@@ -118,6 +122,7 @@ public partial class MyProjectsView : UserControl
         if (_sidebarSubtitle != null) _sidebarSubtitle.IsVisible = !isCompact;
         if (_sidebarStats != null) _sidebarStats.IsVisible = !isCompact;
         if (_howFundingWorksBtn != null) _howFundingWorksBtn.IsVisible = !isCompact;
+        if (_scanProjectsButton != null) _scanProjectsButton.IsVisible = !isCompact;
         if (_mobileActionPanel != null) _mobileActionPanel.IsVisible = isCompact;
         if (_sidebarCTAButtons != null) _sidebarCTAButtons.IsVisible = !isCompact;
 
@@ -180,7 +185,7 @@ public partial class MyProjectsView : UserControl
     public void PreWarmManageView()
     {
         if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS()) return;
-        if (ManageProjectViewControl == null || ManageProjectPanel == null) return;
+        if (_manageProjectView == null || ManageProjectPanel == null) return;
 
         // The panel stays IsVisible=false, but we can still force a measure pass
         // on the hidden child to realize its template and resolve all DynamicResource
@@ -189,7 +194,7 @@ public partial class MyProjectsView : UserControl
         var sw = System.Diagnostics.Stopwatch.StartNew();
         try
         {
-            ManageProjectViewControl.Measure(Size.Infinity);
+            _manageProjectView.Measure(Size.Infinity);
         }
         catch
         {
@@ -228,6 +233,7 @@ public partial class MyProjectsView : UserControl
             .Subscribe(showWizard =>
             {
                 if (CreateWizardPanel != null) CreateWizardPanel.IsVisible = showWizard;
+                if (showWizard) EnsureCreateWizardView(vm, resetVisualState: false);
                 UpdateListVisibility(vm);
                 // Update shell title + mobile detail state
                 var shell = this.FindAncestorOfType<ShellView>();
@@ -255,17 +261,8 @@ public partial class MyProjectsView : UserControl
                 if (ManageProjectPanel != null)
                     ManageProjectPanel.IsVisible = manageVm != null;
 
-                if (ManageProjectViewControl != null && manageVm != null)
-                {
-                    ManageProjectViewControl.DataContext = manageVm;
-                    ManageProjectViewControl.SetBackAction(() => vm.CloseManageProject());
-                    ManageProjectViewControl.OnEditProjectRequested = () =>
-                    {
-                        // Close manage view and open edit profile for the same project
-                        vm.CloseManageProject();
-                        vm.OpenEditProfile(manageVm.Project);
-                    };
-                }
+                if (manageVm != null)
+                    EnsureManageProjectView(vm, manageVm);
 
                 UpdateListVisibility(vm);
 
@@ -287,16 +284,11 @@ public partial class MyProjectsView : UserControl
         vm.WhenAnyValue(x => x.SelectedEditProject)
             .Subscribe(editVm =>
             {
-                var editProfilePanel = this.FindControl<Panel>("EditProfilePanel");
-                if (editProfilePanel != null)
-                    editProfilePanel.IsVisible = editVm != null;
+                if (EditProfilePanel != null)
+                    EditProfilePanel.IsVisible = editVm != null;
 
-                var editProfileViewControl = this.FindControl<EditProfileView>("EditProfileViewControl");
-                if (editProfileViewControl != null && editVm != null)
-                {
-                    editProfileViewControl.DataContext = editVm;
-                    editProfileViewControl.SetBackAction(() => vm.CloseEditProfile());
-                }
+                if (editVm != null)
+                    EnsureEditProfileView(vm, editVm);
 
                 UpdateListVisibility(vm);
 
@@ -305,9 +297,15 @@ public partial class MyProjectsView : UserControl
                 if (shell?.DataContext is ShellViewModel shellVm)
                 {
                     if (editVm != null)
+                    {
                         shellVm.SectionTitleOverride = $"Edit Profile — {editVm.ProjectName}";
+                        shellVm.IsEditProfileOpen = true;
+                    }
                     else if (!vm.ShowCreateWizard && vm.SelectedManageProject == null)
+                    {
                         shellVm.SectionTitleOverride = null;
+                        shellVm.IsEditProfileOpen = false;
+                    }
                 }
             })
             .DisposeWith(_subscriptions!);
@@ -336,8 +334,43 @@ public partial class MyProjectsView : UserControl
             UpdateListVisibility(vm);
         }
 
-        // Load founder projects each time the view is navigated to
-        _ = vm.LoadFounderProjectsAsync();
+        // Desktop still uses ContentControl re-attach semantics. Mobile uses
+        // SectionPanel and calls OnBecameActive(), so loading here would run
+        // while the pre-warmed view is hidden and compete with tab switching.
+        if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())
+            ScheduleFounderProjectsLoad(force: true);
+    }
+
+    public void OnBecameActive()
+    {
+        var shell = this.FindAncestorOfType<ShellView>();
+        if (shell?.DataContext is ShellViewModel shellVm)
+            TryConsumePendingLaunchWizard(shellVm);
+
+        ScheduleFounderProjectsLoad();
+    }
+
+    public void OnBecameInactive() { }
+
+    private void ScheduleFounderProjectsLoad(bool force = false)
+    {
+        if (_loadScheduled) return;
+        if (DataContext is not MyProjectsViewModel vm) return;
+        if (!force && !vm.IsInitialLoad) return;
+
+        _loadScheduled = true;
+        Dispatcher.UIThread.Post(async () =>
+        {
+            try
+            {
+                if (force || vm.IsInitialLoad)
+                    await vm.LoadFounderProjectsAsync();
+            }
+            finally
+            {
+                _loadScheduled = false;
+            }
+        }, DispatcherPriority.Background);
     }
 
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
@@ -449,31 +482,149 @@ public partial class MyProjectsView : UserControl
 
     private void OpenCreateWizard(MyProjectsViewModel vm)
     {
-        // Reset wizard VM + visual state so it starts fresh every time
-        if (CreateWizardView?.DataContext is CreateProjectViewModel wizardVm)
-            wizardVm.ResetWizard();
-        if (CreateWizardView is CreateProjectView wizardView)
-            wizardView.ResetVisualState();
-
+        CreateProjectViewModel wvm = vm.CreateProjectVm;
+        wvm.ResetWizard();
+        WireWizardCallbacks(vm, wvm);
         vm.LaunchCreateWizard();
+        EnsureCreateWizardView(vm, resetVisualState: true);
+    }
 
-        // Wire the wizard's deploy callback
+    private void WireWizardCallbacks(MyProjectsViewModel vm, CreateProjectViewModel wvm)
+    {
         // Vue ref: goToMyProjects() creates project, adds to list, closes wizard, navigates to my-projects.
         // Both "Go to My Projects" button AND backdrop click on success modal trigger this.
-        if (CreateWizardView?.DataContext is CreateProjectViewModel wvm)
+        wvm.OnProjectDeployed = () =>
         {
-            wvm.OnProjectDeployed = () =>
-            {
-                vm.OnProjectDeployed(wvm);
-                vm.CloseCreateWizard(); // Close wizard -> shows my-projects list with new project at top
-            };
-            wvm.OnCompleteProfileRequested = () =>
-            {
-                // Open edit profile for the last added project (the one just deployed)
-                var lastProject = vm.Projects.LastOrDefault();
-                if (lastProject != null)
-                    vm.OpenEditProfile(lastProject);
-            };
+            vm.OnProjectDeployed(wvm);
+            vm.CloseCreateWizard(); // Close wizard -> shows my-projects list with new project at top
+        };
+        wvm.OnCompleteProfileRequested = () =>
+        {
+            // Open edit profile for the last added project (the one just deployed)
+            var lastProject = vm.Projects.LastOrDefault();
+            if (lastProject != null)
+                vm.OpenEditProfile(lastProject);
+        };
+    }
+
+    private void EnsureCreateWizardView(MyProjectsViewModel vm, bool resetVisualState)
+    {
+        if (CreateWizardPanel == null) return;
+
+        if (_createWizardView != null)
+        {
+            _createWizardView.DataContext = vm.CreateProjectVm;
+            if (resetVisualState)
+                _createWizardView.ResetVisualState();
+            return;
         }
+
+        if (_isCreatingWizardView) return;
+        _isCreatingWizardView = true;
+        ShowLoadingPlaceholder(CreateWizardPanel, "Loading project wizard...");
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            _createWizardView = new CreateProjectView { DataContext = vm.CreateProjectVm };
+            CreateWizardPanel.Children.Clear();
+            CreateWizardPanel.Children.Add(_createWizardView);
+            if (resetVisualState)
+                _createWizardView.ResetVisualState();
+            _isCreatingWizardView = false;
+        }, DispatcherPriority.Background);
+    }
+
+    private void EnsureManageProjectView(MyProjectsViewModel vm, ManageProjectViewModel manageVm)
+    {
+        if (ManageProjectPanel == null) return;
+
+        if (_manageProjectView != null)
+        {
+            ConfigureManageProjectView(vm, manageVm);
+            return;
+        }
+
+        if (_isCreatingManageView) return;
+        _isCreatingManageView = true;
+        ShowLoadingPlaceholder(ManageProjectPanel, "Loading project details...");
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            _manageProjectView = new ManageProjectView();
+            ManageProjectPanel.Children.Clear();
+            ManageProjectPanel.Children.Add(_manageProjectView);
+            _isCreatingManageView = false;
+
+            if (vm.SelectedManageProject == manageVm)
+                ConfigureManageProjectView(vm, manageVm);
+        }, DispatcherPriority.Background);
+    }
+
+    private void ConfigureManageProjectView(MyProjectsViewModel vm, ManageProjectViewModel manageVm)
+    {
+        if (_manageProjectView == null) return;
+
+        _manageProjectView.DataContext = manageVm;
+        _manageProjectView.SetBackAction(() => vm.CloseManageProject());
+        _manageProjectView.OnEditProjectRequested = () =>
+        {
+            // Close manage view and open edit profile for the same project
+            vm.CloseManageProject();
+            vm.OpenEditProfile(manageVm.Project);
+        };
+
+        Dispatcher.UIThread.Post(
+            manageVm.StartInitialLoad,
+            DispatcherPriority.Background);
+    }
+
+    private void EnsureEditProfileView(MyProjectsViewModel vm, EditProfileViewModel editVm)
+    {
+        if (EditProfilePanel == null) return;
+
+        if (_editProfileView != null)
+        {
+            ConfigureEditProfileView(vm, editVm);
+            return;
+        }
+
+        if (_isCreatingEditProfileView) return;
+        _isCreatingEditProfileView = true;
+        ShowLoadingPlaceholder(EditProfilePanel, "Loading profile editor...");
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            _editProfileView = new EditProfileView();
+            EditProfilePanel.Children.Clear();
+            EditProfilePanel.Children.Add(_editProfileView);
+            _isCreatingEditProfileView = false;
+
+            if (vm.SelectedEditProject == editVm)
+                ConfigureEditProfileView(vm, editVm);
+        }, DispatcherPriority.Background);
+    }
+
+    private void ConfigureEditProfileView(MyProjectsViewModel vm, EditProfileViewModel editVm)
+    {
+        if (_editProfileView == null) return;
+
+        _editProfileView.DataContext = editVm;
+        _editProfileView.SetBackAction(() => vm.CloseEditProfile());
+    }
+
+    private static void ShowLoadingPlaceholder(Panel panel, string text)
+    {
+        panel.Children.Clear();
+        panel.Children.Add(new Border
+        {
+            Padding = new Thickness(24),
+            Child = new TextBlock
+            {
+                Text = text,
+                FontSize = 16,
+                HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+            }
+        });
     }
 }

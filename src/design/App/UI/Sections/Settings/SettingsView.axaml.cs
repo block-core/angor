@@ -17,6 +17,13 @@ public partial class SettingsView : UserControl, ISectionView
     private SettingsViewModel? _subscribedVm;
     private IDisposable? _layoutSubscription;
     private ScrollableView? _scrollableView;
+    private Border? _networkModalCard;
+    private Border? _networkModalHeader;
+    private Border? _networkModalBody;
+    private Border? _networkModalFooter;
+    private StackPanel? _networkModalActions;
+    private Button? _networkCancelButton;
+    private Button? _networkConfirmButton;
 
     /// <summary>Design-time only.</summary>
     public SettingsView()
@@ -34,6 +41,7 @@ public partial class SettingsView : UserControl, ISectionView
         SubscribeToVmEvents();
 
         _scrollableView = this.GetLogicalDescendants().OfType<ScrollableView>().FirstOrDefault();
+        CacheModalControls();
 
         _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
             .Subscribe(isCompact =>
@@ -42,6 +50,8 @@ public partial class SettingsView : UserControl, ISectionView
                     _scrollableView.ContentPadding = isCompact
                         ? new Thickness(16, 16, 16, 96)
                         : new Thickness(24);
+
+                ApplyNetworkModalLayout(isCompact);
             });
 
         // Mobile perf: detach the settings cards below the fold AND both modals
@@ -127,6 +137,55 @@ public partial class SettingsView : UserControl, ISectionView
 
     public void OnBecameActive() { }
     public void OnBecameInactive() { }
+
+    private void CacheModalControls()
+    {
+        _networkModalCard = this.FindControl<Border>("NetworkModalCard");
+        _networkModalHeader = this.FindControl<Border>("NetworkModalHeader");
+        _networkModalBody = this.FindControl<Border>("NetworkModalBody");
+        _networkModalFooter = this.FindControl<Border>("NetworkModalFooter");
+        _networkModalActions = this.FindControl<StackPanel>("NetworkModalActions");
+        _networkCancelButton = this.FindControl<Button>("NetworkCancelButton");
+        _networkConfirmButton = this.FindControl<Button>("NetworkConfirmButton");
+    }
+
+    private void ApplyNetworkModalLayout(bool isCompact)
+    {
+        if (_networkModalCard != null)
+        {
+            _networkModalCard.HorizontalAlignment = isCompact
+                ? Avalonia.Layout.HorizontalAlignment.Stretch
+                : Avalonia.Layout.HorizontalAlignment.Center;
+            _networkModalCard.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
+            _networkModalCard.MaxWidth = isCompact ? double.PositiveInfinity : 500;
+        }
+
+        if (_networkModalHeader != null)
+            _networkModalHeader.Padding = isCompact ? new Thickness(20, 18) : new Thickness(24);
+        if (_networkModalBody != null)
+            _networkModalBody.Padding = isCompact ? new Thickness(20) : new Thickness(24);
+        if (_networkModalFooter != null)
+            _networkModalFooter.Padding = isCompact ? new Thickness(20, 16) : new Thickness(24, 20);
+
+        if (_networkModalActions != null)
+        {
+            _networkModalActions.Orientation = isCompact
+                ? Avalonia.Layout.Orientation.Vertical
+                : Avalonia.Layout.Orientation.Horizontal;
+            _networkModalActions.HorizontalAlignment = isCompact
+                ? Avalonia.Layout.HorizontalAlignment.Stretch
+                : Avalonia.Layout.HorizontalAlignment.Right;
+        }
+
+        if (_networkCancelButton != null)
+            _networkCancelButton.HorizontalAlignment = isCompact
+                ? Avalonia.Layout.HorizontalAlignment.Stretch
+                : Avalonia.Layout.HorizontalAlignment.Left;
+        if (_networkConfirmButton != null)
+            _networkConfirmButton.HorizontalAlignment = isCompact
+                ? Avalonia.Layout.HorizontalAlignment.Stretch
+                : Avalonia.Layout.HorizontalAlignment.Left;
+    }
 
     private SettingsViewModel? Vm => DataContext as SettingsViewModel;
 
