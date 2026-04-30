@@ -14,9 +14,10 @@ public class WalletAccountBalanceServiceTests
 {
     private readonly Mock<IWalletOperations> _walletOperations = new();
     private readonly Mock<IGenericDocumentCollection<WalletAccountBalanceInfo>> _collection = new();
+    private readonly Mock<ISecureKeyProvider> _secureKeyProvider = new();
 
     private WalletAccountBalanceService CreateSut() =>
-        new(_walletOperations.Object, _collection.Object,
+        new(_walletOperations.Object, _collection.Object, _secureKeyProvider.Object,
             NullLogger<WalletAccountBalanceService>.Instance);
 
     [Fact]
