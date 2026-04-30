@@ -470,12 +470,12 @@ public class WalletOperations : IWalletOperations
             _hdOperations.GetExtendedPublicKey(privateKey, extendedKey.ChainCode, accountHdPath);
 
         var rootExtPubKey = extendedKey.Neuter();
-        
-        var rootExtPubKeyHash = Convert.ToHexString(Hashes.SHA256(rootExtPubKey.ToBytes()));
+
+        var walletIdHash = Convert.ToHexString(Hashes.SHA256(accountExtPubKeyTostore.ToBytes()));
 
         return new AccountInfo()
         {
-            walletId = rootExtPubKeyHash,
+            walletId = walletIdHash,
             RootExtPubKey = rootExtPubKey.ToString(network),
             ExtPubKey = accountExtPubKeyTostore.ToString(network),
             Path = accountHdPath
