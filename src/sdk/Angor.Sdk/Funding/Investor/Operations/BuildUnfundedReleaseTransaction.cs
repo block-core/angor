@@ -141,6 +141,8 @@ public static class BuildUnfundedReleaseTransaction
             var privateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
             
             var tcs = new TaskCompletionSource<Result<SignatureInfo?>>();
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            cts.Token.Register(() => { tcs.TrySetResult(Result.Success<SignatureInfo?>(null)); cts.Dispose(); });
 
             var projectPubKey = project.NostrPubKey;
             

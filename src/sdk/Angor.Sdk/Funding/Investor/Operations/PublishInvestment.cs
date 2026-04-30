@@ -161,6 +161,8 @@ public static class PublishInvestment
 
             TransactionInfo investment = null;
             var tcs = new TaskCompletionSource<Result<bool>>();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            cts.Token.Register(() => tcs.TrySetResult(Result.Failure<bool>("Timed out waiting for Nostr response")));
 
 
             // TODO replace the old logic with better optimized one
@@ -223,6 +225,8 @@ public static class PublishInvestment
             
             var signatureInfo = new SignatureInfo();
             var tcs = new TaskCompletionSource<Result<bool>>();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            cts.Token.Register(() => { if (!tcs.Task.IsCompleted) tcs.TrySetResult(Result.Success(false)); });
 
             signService.LookupSignatureForInvestmentRequest(pubKey, projectPubKey, createdAt, eventId,
                 async content =>
