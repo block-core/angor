@@ -55,6 +55,7 @@ public class MempoolIndexerAngorApi : IAngorIndexerService
         var allTransactions = new List<MempoolSpaceIndexerApi.MempoolTransaction>();
         string? afterTxId = null;
         var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
+        var client = GetIndexerClient();
 
         while (allTransactions.Count < MaxAddressTransactions)
         {
@@ -64,7 +65,7 @@ public class MempoolIndexerAngorApi : IAngorIndexerService
                 url += $"?after_txid={afterTxId}";
             }
 
-            var response = await GetIndexerClient().GetAsync(url);
+            var response = await client.GetAsync(url);
             _networkService.CheckAndHandleError(response);
 
             if (response.StatusCode == HttpStatusCode.NotFound)
