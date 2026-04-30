@@ -212,8 +212,15 @@ public partial class ManageProjectViewModel : ReactiveObject
         NostrNsec = "";
         NostrHex = "";
 
-        // Load claimable transactions and project keys from SDK
-        // Set IsRefreshing so the spinner shows during initial load
+        // Initial SDK loading is started by MyProjectsView after the manage panel
+        // is visible. Starting it here makes navigation compete with network/LiteDB
+        // work before Android has a chance to paint the detail screen.
+    }
+
+    public void StartInitialLoad()
+    {
+        if (IsRefreshing) return;
+
         IsRefreshing = true;
         _ = InitialLoadAsync();
     }

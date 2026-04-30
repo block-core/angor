@@ -242,11 +242,39 @@
                                     HorizontalContentAlignment="Center"
                                     Height="52"
                                     Padding="16,0"
-                                    Cursor="Hand">
+                                    Cursor="Hand"
+                                    Foreground="{DynamicResource TextStrong}">
                                 <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                    <i:Icon Value="fa-solid fa-rotate" FontSize="14" />
+                                    <i:Icon Value="fa-solid fa-rotate"
+                                            FontSize="14"
+                                            IsVisible="{Binding !IsLoading}"
+                                            Foreground="{DynamicResource TextStrong}" />
+                                    <i:Icon Value="fa-solid fa-spinner"
+                                            FontSize="14"
+                                            IsVisible="{Binding IsLoading}"
+                                            Foreground="{DynamicResource TextStrong}"
+                                            RenderTransformOrigin="50%,50%">
+                                        <i:Icon.RenderTransform>
+                                            <RotateTransform />
+                                        </i:Icon.RenderTransform>
+                                        <i:Icon.Styles>
+                                            <Style Selector="i|Icon[IsVisible=True]">
+                                                <Style.Animations>
+                                                    <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                        <KeyFrame Cue="0%">
+                                                            <Setter Property="RotateTransform.Angle" Value="0" />
+                                                        </KeyFrame>
+                                                        <KeyFrame Cue="100%">
+                                                            <Setter Property="RotateTransform.Angle" Value="360" />
+                                                        </KeyFrame>
+                                                    </Animation>
+                                                </Style.Animations>
+                                            </Style>
+                                        </i:Icon.Styles>
+                                    </i:Icon>
                                     <TextBlock Text="Scan for your projects"
-                                               FontSize="14" FontWeight="SemiBold" />
+                                               FontSize="14" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextStrong}" />
                                 </StackPanel>
                             </Button>
                             <Button Name="MobileLaunchButton"
@@ -255,11 +283,14 @@
                                     HorizontalContentAlignment="Center"
                                     Height="52"
                                     Padding="16,0"
-                                    Cursor="Hand">
+                                    Cursor="Hand"
+                                    Foreground="{DynamicResource TextStrong}">
                                 <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                    <i:Icon Value="fa-solid fa-plus" FontSize="14" />
+                                    <i:Icon Value="fa-solid fa-plus" FontSize="14"
+                                            Foreground="{DynamicResource TextStrong}" />
                                     <TextBlock Text="Launch a Project"
-                                               FontSize="14" FontWeight="SemiBold" />
+                                               FontSize="14" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextStrong}" />
                                 </StackPanel>
                             </Button>
                         </StackPanel>
@@ -369,26 +400,20 @@
         </Panel>
 
         <!-- ═══ CREATE PROJECT WIZARD ═══ -->
-        <Panel Name="CreateWizardPanel" IsVisible="False">
-            <mp:CreateProjectView Name="CreateWizardView" DataContext="{x:Null}" />
-        </Panel>
+        <Panel Name="CreateWizardPanel" IsVisible="False" />
 
         <!-- ═══ MANAGE PROJECT DETAIL ═══ -->
         <!--
             Vue: Clicking "Manage Project" on a ProjectCard navigates to ManageFunds.vue.
             This panel is shown when SelectedManageProject is set, hiding list + wizard.
         -->
-        <Panel Name="ManageProjectPanel" IsVisible="False">
-            <mp:ManageProjectView Name="ManageProjectViewControl" DataContext="{x:Null}" />
-        </Panel>
+        <Panel Name="ManageProjectPanel" IsVisible="False" />
 
         <!-- ═══ EDIT PROFILE ═══ -->
         <!--
             Shown when the "Edit" button is clicked on a ProjectCard.
             Opens the edit profile page matching the angor-profile web app.
         -->
-        <Panel Name="EditProfilePanel" IsVisible="False">
-            <ep:EditProfileView Name="EditProfileViewControl" DataContext="{x:Null}" />
-        </Panel>
+        <Panel Name="EditProfilePanel" IsVisible="False" />
     </Panel>
 </UserControl>

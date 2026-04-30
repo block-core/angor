@@ -13,6 +13,16 @@
         <funds:FundsViewModel />
     </Design.DataContext>
 
+    <!--
+        Mobile: strip BoxShadow + transitions that waste GPU on touch devices.
+        The .Mobile class is added by code-behind on Android/iOS.
+    -->
+    <UserControl.Styles>
+        <Style Selector="funds|FundsView.Mobile Border#FundsSummaryCard">
+            <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />
+        </Style>
+    </UserControl.Styles>
+
     <Panel>
         <!-- ═══ EMPTY STATE (no wallets) ═══ -->
         <!--

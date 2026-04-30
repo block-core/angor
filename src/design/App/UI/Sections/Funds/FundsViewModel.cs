@@ -168,12 +168,14 @@ public partial class FundsViewModel : ReactiveObject
         _logger.LogInformation("Creating new wallet '{WalletName}' (generating random seed words)", walletName);
         var seedWords = _walletAppService.GenerateRandomSeedwords();
 
-        var result = await _walletAppService.CreateWallet(
+        // Offload to background thread — CreateWallet performs key derivation (CPU)
+        // and blockchain gap-limit scanning (network I/O) that would block the UI thread.
+        var result = await Task.Run(() => _walletAppService.CreateWallet(
             walletName,
             seedWords,
             CSharpFunctionalExtensions.Maybe<string>.None,
             encryptionKey,
-            _getNetwork());
+            _getNetwork()));
 
         if (result.IsSuccess)
         {
@@ -192,12 +194,16 @@ public partial class FundsViewModel : ReactiveObject
     public async Task<bool> ImportWalletAsync(string walletName, string seedWords, string encryptionKey)
     {
         _logger.LogInformation("Importing wallet '{WalletName}' from seed words", walletName);
-        var result = await _walletAppService.CreateWallet(
+
+        // Offload to background thread — for imported wallets with history, the gap-limit
+        // address scan in RefreshAccountBalanceInfoAsync can take 10-30+ seconds of network I/O,
+        // which would trigger an ANR on Android if run on the UI thread.
+        var result = await Task.Run(() => _walletAppService.CreateWallet(
             walletName,
             seedWords,
             CSharpFunctionalExtensions.Maybe<string>.None,
             encryptionKey,
-            _getNetwork());
+            _getNetwork()));
 
         if (result.IsSuccess)
         {

@@ -18,6 +18,12 @@
     -->
 
     <UserControl.Styles>
+        <!-- Mobile: hover shadows/transitions never fire on touch and are expensive on Skia. -->
+        <Style Selector="mp|ManageProjectView.Mobile Border.FloatingBtn">
+            <Setter Property="Transitions" Value="{x:Null}" />
+            <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />
+        </Style>
+
         <!-- Floating nav button hover: lift + enhanced shadow (matches ProjectDetailView) -->
         <Style Selector="Border.FloatingBtn:pointerover">
             <Setter Property="RenderTransform" Value="translate(0px, -1px)" />
