@@ -223,15 +223,17 @@ public static class CompositionRoot
         // The full Latest() fetch runs when the user actually opens Find Projects.
         _ = Task.Run(async () =>
         {
-            var prewarmLogger = provider.GetRequiredService<ILoggerFactory>().CreateLogger("Prewarm");
+            Microsoft.Extensions.Logging.ILogger? prewarmLogger = null;
             try
             {
+                prewarmLogger = provider.GetRequiredService<ILoggerFactory>().CreateLogger("Prewarm");
+
                 await FindProjectsViewModel.LoadCachedDtosFromDiskAsync(
                     provider.GetRequiredService<IStore>(), prewarmLogger);
             }
             catch (Exception ex)
             {
-                prewarmLogger.LogWarning(ex, "Disk cache load failed");
+                prewarmLogger?.LogWarning(ex, "Disk cache load failed");
             }
         });
 

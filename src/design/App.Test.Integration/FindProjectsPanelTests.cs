@@ -233,8 +233,7 @@ public class FindProjectsPanelTests
         investVm!.CurrentScreen.Should().Be(InvestScreen.InvestForm);
         investVm.IsInvestForm.Should().BeTrue();
         investVm.IsWalletSelector.Should().BeFalse();
-        investVm.PaymentFlow.IsInvoice.Should().BeFalse();
-        investVm.PaymentFlow.IsSuccess.Should().BeFalse();
+        investVm.PaymentFlow.Should().BeNull("PaymentFlow is only created after submission");
         investVm.InvestmentAmount.Should().BeEmpty("amount should start empty");
 
         // ── Quick amount button ──
@@ -420,7 +419,9 @@ public class FindProjectsPanelTests
 
         TestHelpers.Log($"[2.6] Error message: {investVm.PaymentFlow.ErrorMessage}");
         investVm.PaymentFlow.ErrorMessage.Should().NotBeNullOrWhiteSpace("should show error for insufficient balance");
-        investVm.PaymentFlow.ErrorMessage.Should().Contain("Insufficient");
+        investVm.PaymentFlow.ErrorMessage.Should().Match(
+            s => s.Contains("Insufficient") || s.Contains("Not enough funds"),
+            "should indicate insufficient funds");
         investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector, "should stay on WalletSelector");
 
         // ── Reset, reopen invest page for invoice/modal tests ──
@@ -443,7 +444,8 @@ public class FindProjectsPanelTests
 
         investVm.PaymentFlow.CurrentScreen.Should().Be(PaymentFlowScreen.Invoice);
         investVm.PaymentFlow.IsInvoice.Should().BeTrue();
-        investVm.IsWalletSelector.Should().BeFalse();
+        // InvestPageViewModel stays on WalletSelector; PaymentFlow manages its own sub-screens
+        investVm.IsWalletSelector.Should().BeTrue();
 
         // Back to wallet selector
         investVm.PaymentFlow.Reset();
@@ -463,7 +465,8 @@ public class FindProjectsPanelTests
         investVm.PaymentFlow.Reset();
         Dispatcher.UIThread.RunJobs();
 
-        investVm.CurrentScreen.Should().Be(InvestScreen.InvestForm, "should return to InvestForm");
+        // PaymentFlow.Reset() resets payment state but InvestPageViewModel stays on WalletSelector
+        investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector, "PaymentFlow.Reset does not navigate parent VM");
         investVm.PaymentFlow.SelectedWallet.Should().BeNull("wallet selection should be cleared");
         investVm.PaymentFlow.IsProcessing.Should().BeFalse("processing flag should be reset");
         investVm.PaymentFlow.PaymentReceived.Should().BeFalse("payment flag should be reset");

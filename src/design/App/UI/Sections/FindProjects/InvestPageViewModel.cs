@@ -781,6 +781,15 @@ public partial class InvestPageViewModel : ReactiveObject
                 return Result.Failure(publishResult.Error);
         }
 
+        // Update the success screen text now that we know if it was auto-approved
+        var typeEnum = ProjectTypeExtensions.FromDisplayString(Project.ProjectType);
+        if (PaymentFlow != null)
+        {
+            PaymentFlow.SuccessTitle = ProjectTypeTerminology.SuccessTitle(typeEnum, IsAutoApproved);
+            PaymentFlow.SuccessDescription = ProjectTypeTerminology.SuccessDescription(
+                typeEnum, IsAutoApproved, FormattedAmount, _currencyService.Symbol, Project.ProjectName);
+        }
+
         return Result.Success();
     }
 

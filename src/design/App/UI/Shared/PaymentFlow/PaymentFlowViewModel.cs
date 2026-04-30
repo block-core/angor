@@ -112,8 +112,8 @@ public partial class PaymentFlowViewModel : ReactiveObject
 
     // ── Config passthrough ──
     public string Title => _config.Title;
-    public string SuccessTitle => _config.SuccessTitle;
-    public string SuccessDescription => _config.SuccessDescription;
+    [Reactive] private string successTitle;
+    [Reactive] private string successDescription;
     public string SuccessButtonText => _config.SuccessButtonText;
     public string CurrencySymbol => _currencyService.Symbol;
     public string AmountDisplay => $"{_config.AmountSats / 100_000_000m:F8} {_currencyService.Symbol}";
@@ -146,6 +146,8 @@ public partial class PaymentFlowViewModel : ReactiveObject
         _logger = logger;
         _config = config;
         SelectedFeeRate = config.FeeRateSatsPerVbyte;
+        SuccessTitle = config.SuccessTitle;
+        SuccessDescription = config.SuccessDescription;
 
         // Fetch Boltz minimum for the Lightning tab label
         _ = Task.Run(async () =>

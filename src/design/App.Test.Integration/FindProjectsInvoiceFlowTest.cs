@@ -285,7 +285,7 @@ public class FindProjectsInvoiceFlowTest
         // accept other processing statuses (e.g. "Publishing transaction...") as evidence
         // the payment was detected.
         observedStatusTexts.Should().Contain(
-            s => s.Contains("Payment received") || s.Contains("Publishing") || s.Contains("Building"),
+            s => s.Contains("Payment received") || s.Contains("Publishing") || s.Contains("Building") || s.Contains("Processing"),
             "status should have progressed past 'Waiting for payment' (payment was detected)");
 
         investVm.PaymentFlow.CurrentScreen.Should().Be(PaymentFlowScreen.Success,

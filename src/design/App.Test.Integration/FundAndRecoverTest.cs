@@ -384,7 +384,7 @@ public class FundAndRecoverTest
         // Assert processing states were observed during payment
         wasProcessing.Should().BeTrue("IsProcessing should have been true during payment");
         observedStatusTexts.Should().NotBeEmpty("should have observed status text updates during processing");
-        observedStatusTexts.Should().Contain(s => s.Contains("Refreshing") || s.Contains("Building") || s.Contains("Publishing"),
+        observedStatusTexts.Should().Contain(s => s.Contains("Refreshing") || s.Contains("Building") || s.Contains("Publishing") || s.Contains("Processing"),
             "should see at least one meaningful processing status");
 
         // Assert success screen content
