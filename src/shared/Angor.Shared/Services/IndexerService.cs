@@ -98,17 +98,38 @@ namespace Angor.Shared.Services
 
         public async Task<string> PublishTransactionAsync(string trxHex)
         {
+            const int maxAttempts = 3;
+            string? lastError = null;
+
             var indexer = _networkService.GetPrimaryIndexer();
 
-            var response = await _httpClient.PostAsync($"{indexer.Url}/api/command/send", new StringContent(trxHex));
-            _networkService.CheckAndHandleError(response);
+            for (int attempt = 1; attempt <= maxAttempts; attempt++)
+            {
+                var response = await _httpClient.PostAsync($"{indexer.Url}/api/command/send", new StringContent(trxHex));
+                _networkService.CheckAndHandleError(response);
 
-            if (response.IsSuccessStatusCode)
-                return string.Empty;
+                if (response.IsSuccessStatusCode)
+                    return string.Empty;
 
-            var content = await response.Content.ReadAsStringAsync();
+                var content = await response.Content.ReadAsStringAsync();
+                var errorMessage = response.ReasonPhrase + content;
 
-            return response.ReasonPhrase + content;
+                if (errorMessage.Contains("already in block", StringComparison.OrdinalIgnoreCase) ||
+                    errorMessage.Contains("already known", StringComparison.OrdinalIgnoreCase) ||
+                    errorMessage.Contains("txn-already-in-mempool", StringComparison.OrdinalIgnoreCase))
+                {
+                    return string.Empty;
+                }
+
+                lastError = errorMessage;
+
+                if (attempt < maxAttempts)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(2 * attempt));
+                }
+            }
+
+            return lastError!;
         }
 
         public async Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data, bool includeUnconfirmed = false)
