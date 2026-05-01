@@ -448,6 +448,12 @@ public partial class ShellViewModel : ReactiveObject
                 _ = LoadTotalInvestedAsync(SelectedWallet);
             });
 
+        // Refresh invested balance after portfolio finishes loading (investment records
+        // may have been fetched from relay and saved to DB during the portfolio sync).
+        _portfolioVm.WhenAnyValue(x => x.IsLoading)
+            .Where(isLoading => !isLoading)
+            .Subscribe(__ => _ = LoadTotalInvestedAsync(SelectedWallet));
+
         // When toast message changes, notify HasToast
         this.WhenAnyValue(x => x.ToastMessage)
             .Subscribe(_ => this.RaisePropertyChanged(nameof(HasToast)));
