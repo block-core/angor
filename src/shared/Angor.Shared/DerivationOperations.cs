@@ -1,5 +1,6 @@
 using System.Text;
 using Angor.Shared.Models;
+using Angor.Shared.Networks;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.BIP32;
@@ -257,11 +258,32 @@ public class DerivationOperations : IDerivationOperations
     {
         ExtKey extendedKey = GetExtendedKey(walletWords);
 
-        var path = $"m/44'/1237'/1'/0/0";
+        var networkIndex = GetNetworkStorageIndex();
+        var path = $"m/44'/1237'/1'/{networkIndex}/0";
 
         ExtKey extKey = extendedKey.Derive(new KeyPath(path));
 
         return extKey.PrivateKey;
+    }
+
+    /// <summary>
+    /// Returns a network-specific index for the nostr storage derivation path.
+    /// Each network gets its own relay storage slot to prevent cross-network data contamination.
+    /// Mainnet uses index 0 for backward compatibility with existing relay data.
+    /// </summary>
+    private int GetNetworkStorageIndex()
+    {
+        var network = _networkConfiguration.GetNetwork();
+        return network switch
+        {
+            Angornet => 2,
+            BitcoinSignet => 3,
+            LiquidMain => 4,
+            BitcoinTest => 1,
+            BitcoinTest4 => 1,
+            BitcoinMain => 0,
+            _ => 0
+        };
     }
 
     public string DeriveNostrStoragePassword(WalletWords walletWords)
