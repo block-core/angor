@@ -1,5 +1,6 @@
 using Angor.Data.Documents.Interfaces;
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Founder.Domain;
 using Angor.Sdk.Funding.Investor.Domain;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Shared;
@@ -19,6 +20,7 @@ public class DatabaseManagementService(
     IGenericDocumentCollection<TransactionHexDocument> transactionHexDocuments,
     IGenericDocumentCollection<InvestmentRecordsDocument> investmentRecords,
     IGenericDocumentCollection<InvestmentHandshake> investmentHandshakes,
+    IGenericDocumentCollection<FounderProjectsDocument> founderProjects,
     ILogger<DatabaseManagementService> logger) : IDatabaseManagementService
 {
     public async Task<Result> DeleteAllDataAsync()
@@ -35,6 +37,7 @@ public class DatabaseManagementService(
             ("TransactionHexDocument", await transactionHexDocuments.DeleteAllAsync()),
             ("InvestmentRecordsDocument", await investmentRecords.DeleteAllAsync()),
             ("InvestmentHandshake", await investmentHandshakes.DeleteAllAsync()),
+            ("FounderProjectsDocument", await founderProjects.DeleteAllAsync()),
         };
 
         var failures = results.Where(r => r.Result.IsFailure).ToList();
