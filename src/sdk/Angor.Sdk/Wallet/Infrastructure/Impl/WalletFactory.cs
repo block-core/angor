@@ -21,25 +21,15 @@ public class WalletFactory(
     ISecureKeyProvider secureKeyProvider)
     : IWalletFactory
 {
-    public Task<Result<Domain.Wallet>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, BitcoinNetwork network)
-    {
-        var encryptionKey = secureKeyProvider.GenerateKey();
-        return CreateWalletCore(name, seedwords, passphrase, encryptionKey, network);
-    }
-
-    public Task<Result<Domain.Wallet>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network)
-    {
-        return CreateWalletCore(name, seedwords, passphrase, encryptionKey, network);
-    }
-
-    private async Task<Result<Domain.Wallet>> CreateWalletCore(string name, string seedwords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network)
+    public async Task<Result<Domain.Wallet>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, BitcoinNetwork network)
     {
         // Derive the wallet ID from the master public key (xpub) hash
         var walletWords = new WalletWords { Words = seedwords, Passphrase = passphrase.GetValueOrDefault() };
         var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
         var walletId = new WalletId(accountInfo.walletId);
 
-        // Persist the encryption key in secure storage
+        // Generate and persist a secure random key used for all wallet encryption
+        var encryptionKey = secureKeyProvider.GenerateKey();
         await secureKeyProvider.Save(walletId, encryptionKey);
 
         var descriptor = WalletDescriptorFactory.Create(seedwords, passphrase, network.ToNBitcoin());

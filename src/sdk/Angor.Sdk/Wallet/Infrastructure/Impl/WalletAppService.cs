@@ -225,21 +225,6 @@ public class WalletAppService(
         return Result.Success(wallet.Value.Id);
     }
 
-    public async Task<Result<WalletId>> CreateWallet(string name, string seedWords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network)
-    {
-        var wallet = await walletFactory.CreateWallet(name ?? SingleWalletName, seedWords, passphrase, encryptionKey, network);
-
-        if (wallet.IsFailure)
-            return Result.Failure<WalletId>(wallet.Error);
-
-        var accountInfoResult = await accountBalanceService.RefreshAccountBalanceInfoAsync(wallet.Value.Id);
-
-        if (accountInfoResult.IsFailure)
-            return Result.Failure<WalletId>(accountInfoResult.Error);
-
-        return Result.Success(wallet.Value.Id);
-    }
-
     public Task<Result<WalletId>> CreateWallet(string name, BitcoinNetwork network)
     {
         if (string.IsNullOrEmpty(name))
