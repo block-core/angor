@@ -221,7 +221,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         if (Vm == null) return;
 
         _logger.LogInformation("Importing wallet '{WalletName}' via SDK...", walletName);
-        var success = await Vm.ImportWalletAsync(walletName, seedWords, "default-key");
+        var success = await Vm.ImportWalletAsync(walletName, seedWords);
         if (success)
         {
             _walletCreated = true;
@@ -263,7 +263,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         if (Vm == null || string.IsNullOrEmpty(_generatedSeedWords)) return;
 
         _logger.LogInformation("Creating wallet '{WalletName}' via SDK (generate flow)...", walletName);
-        var success = await Vm.ImportWalletAsync(walletName, _generatedSeedWords, "default-key");
+        var success = await Vm.ImportWalletAsync(walletName, _generatedSeedWords);
         if (success)
         {
             _walletCreated = true;
