@@ -16,11 +16,8 @@ public interface IWalletAppService
     Task<Result<FeeAndSize>> EstimateFeeAndSize(WalletId walletId, Amount amount, Address address, DomainFeeRate feeRate);
     Task<Result<Address>> GetNextReceiveAddress(WalletId id);
     Task<Result<IEnumerable<FeeEstimation>>> GetFeeEstimates();
-    Task<Result<WalletId>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network);
-    Task<Result<WalletId>> CreateWallet(string name, string encryptionKey, BitcoinNetwork network);
-    /// <summary>Create a wallet without a user-provided password. Uses secure storage for the encryption key (placeholder: "DEFAULT").
-    /// Callers must supply the current network since the SDK wallet layer doesn't own network configuration.</summary>
-    Task<Result<WalletId>> CreateWalletWithoutPassword(BitcoinNetwork network);
+    Task<Result<WalletId>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, BitcoinNetwork network);
+    Task<Result<WalletId>> CreateWallet(string name, BitcoinNetwork network);
     public string GenerateRandomSeedwords();
     Task<Result> GetTestCoins(WalletId walletId);
     Task<Result> DeleteWallet(WalletId walletId);

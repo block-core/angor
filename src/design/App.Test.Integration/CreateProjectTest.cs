@@ -7,7 +7,6 @@ using Avalonia.VisualTree;
 using FluentAssertions;
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Projects;
-using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Shared.PaymentFlow;
@@ -138,7 +137,7 @@ public class CreateProjectTest
 
         // ── Regression guard: verify the wallet can be decrypted with the default key ──
         // This catches mismatches between the encryption key used during wallet creation
-        // and the key returned by SimplePasswordProvider for SDK operations (deploy, sign, etc.).
+        // and the key used during wallet creation.
         TestHelpers.Log("[STEP 2b] Verifying wallet encryption key roundtrip...");
         var walletAppService2 = global::App.App.Services.GetRequiredService<Angor.Sdk.Wallet.Application.IWalletAppService>();
         var metadatas2 = await walletAppService2.GetMetadatas();
@@ -150,7 +149,7 @@ public class CreateProjectTest
         var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(walletIdForKeyCheck.Value);
         sensitiveDataResult.IsSuccess.Should().BeTrue(
             $"wallet decryption with default key should succeed — got error: {(sensitiveDataResult.IsFailure ? sensitiveDataResult.Error : "none")}. " +
-            "If this fails, the encryption key used during wallet creation doesn't match SimplePasswordProvider.DefaultKey.");
+            "If this fails, the encryption key used during wallet creation doesn't match the default key.");
 
         // ──────────────────────────────────────────────────────────────
         // STEP 3: Wait for WalletCard, fund via faucet, wait for balance
@@ -323,11 +322,6 @@ public class CreateProjectTest
         // STEP 6: Deploy the project
         // ──────────────────────────────────────────────────────────────
         TestHelpers.Log("[STEP 6] Starting deploy flow...");
-
-        // Set the password provider key so the SDK can decrypt the wallet
-        var passwordProvider = global::App.App.Services.GetRequiredService<SimplePasswordProvider>();
-        passwordProvider.SetKey("default-key");
-        TestHelpers.Log("[STEP 6] Set SimplePasswordProvider key to 'default-key'.");
 
         // Click the Deploy button (triggers Deploy() which shows DeployFlowOverlay as shell modal)
         TestHelpers.Log("[STEP 6] Calling Deploy()...");

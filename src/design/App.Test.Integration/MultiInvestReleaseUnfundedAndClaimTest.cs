@@ -10,7 +10,6 @@ using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Utilities;
-using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
 using App.UI.Shared.PaymentFlow;
@@ -155,7 +154,6 @@ public class MultiInvestReleaseUnfundedAndClaimTest
                 initializedProfiles.Add(profileName);
             }
 
-            SetPasswordProvider(profileName);
             await action(window);
         }
         finally
@@ -174,13 +172,6 @@ public class MultiInvestReleaseUnfundedAndClaimTest
 
         profileContext.ProfileName.Should().Be(expectedProfile);
         Log(expectedProfile, $"Using profile directory: {profileDirectory}");
-    }
-
-    private static void SetPasswordProvider(string profileName)
-    {
-        var passwordProvider = global::App.App.Services.GetRequiredService<SimplePasswordProvider>();
-        passwordProvider.SetKey("default-key");
-        Log(profileName, "Set SimplePasswordProvider key to 'default-key'.");
     }
 
     private async Task CreateWalletAndFundAsync(Window window, string profileName)

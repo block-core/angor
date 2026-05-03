@@ -10,17 +10,18 @@ using CSharpFunctionalExtensions;
 namespace Angor.Sdk.Wallet.Infrastructure.Impl;
 
 public class WalletFactory(
-    IWalletStore walletStore, 
-    ISensitiveWalletDataProvider sensitiveWalletDataProvider, 
+    IWalletStore walletStore,
+    ISensitiveWalletDataProvider sensitiveWalletDataProvider,
     IWalletOperations walletOperations,
     IWalletAccountBalanceService accountBalanceService,
-    IDerivationOperations derivationOperations, 
+    IDerivationOperations derivationOperations,
     INetworkConfiguration networkConfiguration,
     IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection,
-    IWalletEncryption walletEncryption)
+    IWalletEncryption walletEncryption,
+    ISecureKeyProvider secureKeyProvider)
     : IWalletFactory
 {
-    public async Task<Result<Domain.Wallet>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network)
+    public async Task<Result<Domain.Wallet>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, BitcoinNetwork network)
     {
         // Derive the wallet ID from the master public key (xpub) hash
         var walletWords = new WalletWords { Words = seedwords, Passphrase = passphrase.GetValueOrDefault() };
@@ -32,18 +33,22 @@ public class WalletFactory(
         if (existingWallets.IsSuccess && existingWallets.Value.Any(w => w.Id == walletId.Value))
             return Result.Failure<Domain.Wallet>("A wallet with the same seed words already exists.");
 
+        // Generate and persist a secure random key used for all wallet encryption
+        var encryptionKey = secureKeyProvider.GenerateKey();
+        await secureKeyProvider.Save(walletId, encryptionKey);
+
         var descriptor = WalletDescriptorFactory.Create(seedwords, passphrase, network.ToNBitcoin());
         var wallet = new Domain.Wallet(walletId, descriptor);
-        
+
         sensitiveWalletDataProvider.SetSensitiveData(walletId, (seedwords, passphrase));
 
         var walletData = new WalletData
         {
             DescriptorJson = JsonSerializer.Serialize(descriptor.ToDto()),
             RequiresPassphrase = passphrase.HasValue,
-            SeedWords = seedwords//
+            SeedWords = seedwords
         };
-        
+
         var saveResult = await SaveEncryptedWalletToStoreAsync(name, encryptionKey, walletData, walletId);
 
         if (saveResult.IsFailure)

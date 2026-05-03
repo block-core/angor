@@ -6,7 +6,6 @@ using Avalonia.VisualTree;
 using FluentAssertions;
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Projects;
-using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
 using App.UI.Shared.PaymentFlow;
@@ -120,11 +119,6 @@ public class FundAndRecoverTest
 
         TestHelpers.Log("[STEP 3] Requesting testnet coins and waiting for balance...");
         await window.FundWalletViaFaucet();
-
-        // Set the password provider key so the SDK can decrypt the wallet for all subsequent operations
-        var passwordProvider = global::App.App.Services.GetRequiredService<SimplePasswordProvider>();
-        passwordProvider.SetKey("default-key");
-        TestHelpers.Log("[STEP 3] Set SimplePasswordProvider key to 'default-key'.");
 
         // ──────────────────────────────────────────────────────────────
         // STEP 4: Create + deploy fund project
