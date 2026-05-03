@@ -28,6 +28,11 @@ public class WalletFactory(
         var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
         var walletId = new WalletId(accountInfo.walletId);
 
+        // Check if a wallet with this ID already exists
+        var existingWallets = await walletStore.GetAll();
+        if (existingWallets.IsSuccess && existingWallets.Value.Any(w => w.Id == walletId.Value))
+            return Result.Failure<Domain.Wallet>("A wallet with the same seed words already exists.");
+
         // Generate and persist a secure random key used for all wallet encryption
         var encryptionKey = secureKeyProvider.GenerateKey();
         await secureKeyProvider.Save(walletId, encryptionKey);

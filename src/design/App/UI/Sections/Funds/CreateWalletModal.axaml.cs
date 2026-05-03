@@ -190,6 +190,11 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         SeedError.IsVisible = false;
         SeedSuccess.IsVisible = true;
 
+        // Show spinner and disable button during import
+        BtnSubmitImport.IsEnabled = false;
+        ImportBtnContent.IsVisible = false;
+        ImportBtnSpinner.IsVisible = true;
+
         // Import wallet with the user's seed words
         try
         {
@@ -199,6 +204,12 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         {
             _logger.LogError(ex, "Unhandled exception during wallet import");
             ShellVm?.ShowToast($"Wallet import failed: {ex.Message}");
+        }
+        finally
+        {
+            BtnSubmitImport.IsEnabled = true;
+            ImportBtnContent.IsVisible = true;
+            ImportBtnSpinner.IsVisible = false;
         }
     }
 
