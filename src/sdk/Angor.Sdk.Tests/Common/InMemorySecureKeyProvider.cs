@@ -3,7 +3,7 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using CSharpFunctionalExtensions;
 
-namespace Angor.Sdk.Wallet.Infrastructure.Impl;
+namespace Angor.Sdk.Tests.Common;
 
 public class InMemorySecureKeyProvider : ISecureKeyProvider
 {
