@@ -120,7 +120,7 @@ public static class CompositionRoot
             else if (OperatingSystem.IsLinux())
                 services.AddSingleton<ISecureKeyProvider, LinuxSecureKeyProvider>();
             else
-                services.AddSingleton<ISecureKeyProvider, InMemorySecureKeyProvider>();
+                throw new PlatformNotSupportedException("No ISecureKeyProvider implementation available for this platform.");
         }
 
         // Register SDK services
