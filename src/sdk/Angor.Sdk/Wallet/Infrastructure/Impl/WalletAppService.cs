@@ -28,6 +28,7 @@ public class WalletAppService(
     IGenericDocumentCollection<FounderProjectsDocument> founderProjects,
     IGenericDocumentCollection<InvestmentRecordsDocument> investmentRecords,
     IGenericDocumentCollection<InvestmentHandshake> investmentHandshakes,
+    ISecureKeyProvider secureKeyProvider,
     ILogger<WalletAppService> logger)
     : IWalletAppService
 {
@@ -267,6 +268,7 @@ public class WalletAppService(
         }
 
         sensitiveWalletDataProvider.RemoveSensitiveData(walletId);
+        await secureKeyProvider.Remove(walletId);
 
         var cleanup = await DeleteRelatedDocumentsAsync(walletId);
         if (cleanup.IsFailure)
