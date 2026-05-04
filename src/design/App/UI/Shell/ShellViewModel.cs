@@ -319,6 +319,50 @@ public partial class ShellViewModel : ReactiveObject
     /// </summary>
     public string? WizardOriginNavLabel { get; set; }
 
+    public void SyncDetailStateFromCachedViews()
+    {
+        if (_viewCache.TryGetValue("Find Projects", out var findProjectsView)
+            && findProjectsView is FindProjectsView { DataContext: FindProjectsViewModel findProjectsVm })
+        {
+            IsInvestPageOpen = findProjectsVm.InvestPageViewModel != null;
+            IsProjectDetailOpen = findProjectsVm.SelectedProject != null && !IsInvestPageOpen;
+            if (findProjectsVm.SelectedProject != null)
+            {
+                ProjectDetailActionVerb = ProjectTypeTerminology.ActionVerb(
+                    ProjectTypeExtensions.FromDisplayString(findProjectsVm.SelectedProject.ProjectType));
+            }
+        }
+        else
+        {
+            IsInvestPageOpen = false;
+            IsProjectDetailOpen = false;
+        }
+
+        if (_viewCache.TryGetValue("Funded", out var fundedView)
+            && fundedView is PortfolioView { DataContext: PortfolioViewModel portfolioVm })
+        {
+            IsInvestmentDetailOpen = portfolioVm.SelectedInvestment != null;
+        }
+        else
+        {
+            IsInvestmentDetailOpen = false;
+        }
+
+        if (_viewCache.TryGetValue("My Projects", out var myProjectsView)
+            && myProjectsView is MyProjectsView { DataContext: MyProjectsViewModel myProjectsVm })
+        {
+            IsCreatingProject = myProjectsVm.ShowCreateWizard;
+            IsManageFundsOpen = myProjectsVm.SelectedManageProject != null;
+            IsEditProfileOpen = myProjectsVm.SelectedEditProject != null;
+        }
+        else
+        {
+            IsCreatingProject = false;
+            IsManageFundsOpen = false;
+            IsEditProfileOpen = false;
+        }
+    }
+
     /// <summary>
     /// Shell-level modal overlay state. Any section can push a modal view here
     /// to have it rendered above the entire app (sidebar + content).
@@ -990,6 +1034,12 @@ public partial class ShellViewModel : ReactiveObject
             && myProjectsView is MyProjectsView { DataContext: MyProjectsViewModel myProjectsVm })
         {
             myProjectsVm.ResetAfterNetworkSwitch();
+        }
+
+        if (_viewCache.TryGetValue("Find Projects", out object? findProjectsView)
+            && findProjectsView is FindProjectsView { DataContext: FindProjectsViewModel findProjectsVm })
+        {
+            findProjectsVm.ResetAfterNetworkSwitch();
         }
 
         if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())

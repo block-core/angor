@@ -904,7 +904,7 @@
                                     FontWeight="SemiBold"
                                     FontSize="14"
                                     Click="OnConfirmNetworkSwitch"
-                                    IsEnabled="{Binding !IsSwitchingNetwork}">
+                                    IsEnabled="{Binding CanConfirmNetworkSwitch}">
                                 <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
                                     <i:Icon Value="fa-solid fa-spinner"
                                             FontSize="14"

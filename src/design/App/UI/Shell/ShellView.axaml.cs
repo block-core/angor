@@ -346,7 +346,7 @@ public partial class ShellView : UserControl
         //   Desktop: fixed top-right, auto-width, compact padding (existing behavior).
         //   Mobile:  full-width banner under status bar, 16px side margin, 52px min height,
         //            centered content. Matches Android Material toast standard.
-        var toastContent = this.FindControl<StackPanel>("ToastContent");
+        var toastContent = this.FindControl<DockPanel>("ToastContent");
         LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
             .Subscribe(isCompact =>
             {
@@ -360,7 +360,7 @@ public partial class ShellView : UserControl
                     toastBorder.MinHeight = 52;
                     toastBorder.CornerRadius = new Avalonia.CornerRadius(12);
                     if (toastContent != null)
-                        toastContent.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center;
+                        toastContent.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
                 }
                 else
                 {
@@ -756,6 +756,8 @@ public partial class ShellView : UserControl
     /// </summary>
     private void UpdateCompactOverlays(ShellViewModel vm)
     {
+        vm.SyncDetailStateFromCachedViews();
+
         var isCompact = LayoutModeService.Instance.IsCompact;
         var tab = vm.MobileActiveTab;
         var navLabel = vm.SelectedNavItem?.Label;

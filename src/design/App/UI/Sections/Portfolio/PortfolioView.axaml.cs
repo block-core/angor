@@ -248,4 +248,11 @@ public partial class PortfolioView : UserControl, ISectionView
         var vm = DataContext as PortfolioViewModel;
         shellVm?.ShowModal(new PenaltiesModal(vm!));
     }
+
+    private void OnFindProjectsEmptyStateClick(object? sender, RoutedEventArgs e)
+    {
+        var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
+        shellVm?.HandleInvestorSubTabChange("find-projects");
+        e.Handled = true;
+    }
 }

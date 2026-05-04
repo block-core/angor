@@ -106,7 +106,7 @@
                     <Border HorizontalAlignment="Center"
                             Classes="ButtonShadow"
                             IsVisible="{TemplateBinding HasButton}">
-                        <Button Classes="Primary MobileAction">
+                        <Button Name="CtaButton" Classes="Primary MobileAction">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <!-- Optional button icon — Vue: w-4 h-4 (16px), stroke 1.5 -->
                                 <!-- Path-based icon (legacy, for ButtonIconData) -->

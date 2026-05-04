@@ -562,26 +562,28 @@
                 IsHitTestVisible="False"
                 IsVisible="False"
                 Opacity="0"
-                HorizontalAlignment="Right"
+                HorizontalAlignment="Stretch"
                 VerticalAlignment="Top"
-                Margin="0,24,56,0"
+                Margin="24,24,24,0"
                 Background="{StaticResource ToastBackground}"
                 BoxShadow="{StaticResource ToastShadow}"
                 CornerRadius="8"
                 Padding="16,8">
-            <StackPanel Name="ToastContent" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
-                        HorizontalAlignment="Left">
+            <DockPanel Name="ToastContent" LastChildFill="True" VerticalAlignment="Center">
                 <!-- Checkmark icon — fa-solid fa-check, white -->
                 <i:Icon Value="fa-solid fa-check"
                         FontSize="14"
                         Foreground="White"
+                        DockPanel.Dock="Left"
+                        Margin="0,0,8,0"
                         VerticalAlignment="Center" />
                 <TextBlock Name="ToastText"
                            Text="{Binding ToastMessage}"
                            FontSize="14" FontWeight="Medium"
                            Foreground="White"
+                           TextWrapping="Wrap"
                            VerticalAlignment="Center" />
-            </StackPanel>
+            </DockPanel>
         </Border>
     </Panel>
 </UserControl>

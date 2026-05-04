@@ -61,6 +61,12 @@ public partial class SettingsViewModel : ReactiveObject
     [Reactive] private bool networkChangeConfirmed;
     [Reactive] private bool isSwitchingNetwork;
 
+    public bool CanConfirmNetworkSwitch =>
+        !IsSwitchingNetwork
+        && NetworkChangeConfirmed
+        && !string.IsNullOrEmpty(SelectedNetworkToSwitch)
+        && SelectedNetworkToSwitch != NetworkType;
+
     // Indexer — table-based list with status
     public ObservableCollection<IndexerItem> IndexerLinks { get; } = new();
     [Reactive] private string newIndexerUrl = "";
@@ -159,6 +165,13 @@ public partial class SettingsViewModel : ReactiveObject
 
         // Load settings from SDK storage
         LoadSettingsFromSdk();
+
+        this.WhenAnyValue(
+                x => x.IsSwitchingNetwork,
+                x => x.NetworkChangeConfirmed,
+                x => x.SelectedNetworkToSwitch,
+                x => x.NetworkType)
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(CanConfirmNetworkSwitch)));
     }
 
     /// <summary>
@@ -232,10 +245,9 @@ public partial class SettingsViewModel : ReactiveObject
     public async Task ConfirmNetworkSwitchAsync()
     {
         if (IsSwitchingNetwork) return;
-        if (!NetworkChangeConfirmed || string.IsNullOrEmpty(SelectedNetworkToSwitch)) return;
-        if (SelectedNetworkToSwitch == NetworkType) return;
+        if (!CanConfirmNetworkSwitch) return;
 
-        var newNetwork = SelectedNetworkToSwitch;
+        var newNetwork = SelectedNetworkToSwitch!;
 
         IsSwitchingNetwork = true;
         try
