@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Angor.Data.Documents.Interfaces;
 using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using Angor.Shared;
@@ -137,13 +138,20 @@ public class WalletAccountBalanceService(IWalletOperations walletOperations,
             return;
         }
 
-        var key = maybeKey.Value;
+        try
+        {
+            var key = maybeKey.Value;
 
-        if (!string.IsNullOrEmpty(accountInfo.ExtPubKey))
-            accountInfo.ExtPubKey = FieldEncryption.Encrypt(accountInfo.ExtPubKey, key);
+            if (!string.IsNullOrEmpty(accountInfo.ExtPubKey))
+                accountInfo.ExtPubKey = FieldEncryption.Encrypt(accountInfo.ExtPubKey, key);
 
-        if (!string.IsNullOrEmpty(accountInfo.RootExtPubKey))
-            accountInfo.RootExtPubKey = FieldEncryption.Encrypt(accountInfo.RootExtPubKey, key);
+            if (!string.IsNullOrEmpty(accountInfo.RootExtPubKey))
+                accountInfo.RootExtPubKey = FieldEncryption.Encrypt(accountInfo.RootExtPubKey, key);
+        }
+        catch (FormatException ex)
+        {
+            logger.LogWarning(ex, "Invalid encryption key for wallet {WalletId}, storing ExtPubKeys unencrypted", walletId);
+        }
     }
 
     private async Task DecryptExtPubKeys(WalletId walletId, AccountInfo accountInfo)
@@ -155,12 +163,19 @@ public class WalletAccountBalanceService(IWalletOperations walletOperations,
             return;
         }
 
-        var key = maybeKey.Value;
+        try
+        {
+            var key = maybeKey.Value;
 
-        if (!string.IsNullOrEmpty(accountInfo.ExtPubKey))
-            accountInfo.ExtPubKey = FieldEncryption.Decrypt(accountInfo.ExtPubKey, key);
+            if (!string.IsNullOrEmpty(accountInfo.ExtPubKey))
+                accountInfo.ExtPubKey = FieldEncryption.Decrypt(accountInfo.ExtPubKey, key);
 
-        if (!string.IsNullOrEmpty(accountInfo.RootExtPubKey))
-            accountInfo.RootExtPubKey = FieldEncryption.Decrypt(accountInfo.RootExtPubKey, key);
+            if (!string.IsNullOrEmpty(accountInfo.RootExtPubKey))
+                accountInfo.RootExtPubKey = FieldEncryption.Decrypt(accountInfo.RootExtPubKey, key);
+        }
+        catch (Exception ex) when (ex is FormatException or CryptographicException)
+        {
+            logger.LogWarning(ex, "Failed to decrypt ExtPubKeys for wallet {WalletId}, assuming unencrypted", walletId);
+        }
     }
 }
