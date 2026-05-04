@@ -41,6 +41,9 @@ public partial class InvestPageView : UserControl
     {
         InitializeComponent();
 
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
+            Classes.Add("Mobile");
+
         // Cache controls once
         _navBar = this.FindControl<DockPanel>("NavBar");
         _footerBar = this.FindControl<Border>("FooterBar");

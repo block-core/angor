@@ -57,6 +57,14 @@
             <Setter Property="Background" Value="{DynamicResource PillOrangeBg}" />
             <Setter Property="BorderBrush" Value="{DynamicResource BitcoinOrange}" />
         </Style>
+        <Style Selector="Border.WarmMobileCard">
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource StatsDetailCardBorder}" />
+        </Style>
+        <Style Selector="fp|InvestPageView.Mobile Border.WarmMobileCard">
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BitcoinOrange}" />
+        </Style>
         <!-- Quick amount button default state (via style, not inline) -->
         <Style Selector="Border.QuickAmountBtn">
             <Setter Property="Background" Value="{DynamicResource StatsDetailInnerBackground}" />
@@ -408,10 +416,9 @@
                     <!-- ── INVESTMENT AMOUNT (shown for invest/fund) ── -->
                     <!-- Vue: linear-gradient(to bottom right, #fff7ed, #fef3c7), border #fed7aa -->
                     <Border Name="AmountCard" Grid.Column="0"
+                            Classes="WarmMobileCard"
                             CornerRadius="16" Padding="24"
-                            BorderThickness="1"
                             Background="{DynamicResource StatsDetailCardBackground}"
-                            BorderBrush="{DynamicResource StatsDetailCardBorder}"
                             IsVisible="{Binding IsNotSubscription}">
                         <StackPanel Spacing="20">
                             <!-- Header: Bitcoin icon + title -->
@@ -494,10 +501,9 @@
                     </Border>
 
                     <!-- ── FUNDING PATTERN SELECTOR (shown for fund type with patterns) ── -->
-                    <Border CornerRadius="16" Padding="24"
-                            BorderThickness="1"
+                    <Border Classes="WarmMobileCard"
+                            CornerRadius="16" Padding="24"
                             Background="{DynamicResource StatsDetailCardBackground}"
-                            BorderBrush="{DynamicResource StatsDetailCardBorder}"
                             IsVisible="{Binding ShowFundingPatternSelector}">
                         <StackPanel Spacing="20">
                             <!-- Header -->
@@ -574,10 +580,9 @@
                     <!-- Vue: .subscription-card { background: linear-gradient(to bottom right, #fff7ed, #fef3c7) } -->
                     <!-- Same warm gradient as investment card but with subscription-specific content -->
                     <Border Name="SubscriptionCard" Grid.Column="0"
+                            Classes="WarmMobileCard"
                             CornerRadius="16" Padding="24"
-                            BorderThickness="1"
                             Background="{DynamicResource StatsDetailCardBackground}"
-                            BorderBrush="{DynamicResource StatsDetailCardBorder}"
                             IsVisible="{Binding IsSubscription}">
                         <StackPanel Spacing="20">
                             <!-- Header: Recurring arrows icon + "Subscription Plan" -->
