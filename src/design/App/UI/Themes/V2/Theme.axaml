@@ -98,14 +98,6 @@
                 <Setter Property="Background" Value="{DynamicResource Surface}" />
                 <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
                 <Setter Property="Padding" Value="14 12" />
-                <Style Selector="^ /template/ Border#PART_BorderElement">
-                    <Setter Property="Transitions">
-                        <Transitions>
-                            <BrushTransition Property="BorderBrush" Duration="0:0:0.2" />
-                            <BrushTransition Property="Background" Duration="0:0:0.2" />
-                        </Transitions>
-                    </Setter>
-                </Style>
             </ControlTheme>
 
         </ResourceDictionary>

@@ -153,6 +153,7 @@ public partial class ShellView : UserControl
         var vm = App.Services.GetRequiredService<ShellViewModel>();
         DataContext = vm;
         ShellService.Register(vm);
+        ShellService.RegisterThemeChangePreparation(PrepareForThemeChange);
 
         // ── Resolve layout controls ──
         _shellContent = this.FindControl<Grid>("ShellContent")!;
@@ -439,6 +440,22 @@ public partial class ShellView : UserControl
             // Activate Home immediately
             _sectionPanel.ActivateSection("Home");
         }
+    }
+
+    private void PrepareForThemeChange(bool isChanging)
+    {
+        if (_sectionPanel == null || (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS()))
+            return;
+
+        if (isChanging)
+        {
+            _sectionPanel.DetachInactiveSections();
+            return;
+        }
+
+        Avalonia.Threading.Dispatcher.UIThread.Post(
+            _sectionPanel.RestoreDetachedSections,
+            Avalonia.Threading.DispatcherPriority.ApplicationIdle);
     }
 
     // ═══════════════════════════════════════════════════════════════

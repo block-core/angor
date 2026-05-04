@@ -164,6 +164,7 @@ public partial class PrototypeSettings : ReactiveObject
 {
     private readonly IStore _store;
     private const string SettingsKey = "prototype_settings.json";
+    private CancellationTokenSource? saveSettingsCts;
 
     /// <summary>
     /// When true, sections show hardcoded sample data (populated state).
@@ -212,24 +213,6 @@ public partial class PrototypeSettings : ReactiveObject
                 : Avalonia.Styling.ThemeVariant.Light;
         }
 
-        // Persist on changes
-        this.WhenAnyValue(x => x.IsDebugMode, x => x.IsDarkTheme, x => x.SelectedWalletId)
-            .Skip(1)
-            .Subscribe(async _ =>
-            {
-                var saveResult = await _store.Save(SettingsKey, new PrototypeSettingsData
-                {
-                    IsDebugMode = IsDebugMode,
-                    IsDarkTheme = IsDarkTheme,
-                    SelectedWalletId = SelectedWalletId,
-                });
-                if (saveResult.IsFailure)
-                {
-                    var logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(PrototypeSettings));
-                    logger.LogWarning("Failed to save settings: {Error}", saveResult.Error);
-                }
-            });
-
         // Apply theme whenever IsDarkTheme changes
         this.WhenAnyValue(x => x.IsDarkTheme)
             .Skip(1)
@@ -237,11 +220,50 @@ public partial class PrototypeSettings : ReactiveObject
             {
                 if (Application.Current != null)
                 {
-                    Application.Current.RequestedThemeVariant = dark
-                        ? Avalonia.Styling.ThemeVariant.Dark
-                        : Avalonia.Styling.ThemeVariant.Light;
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        ShellService.PrepareForThemeChange(true);
+                        Application.Current.RequestedThemeVariant = dark
+                            ? Avalonia.Styling.ThemeVariant.Dark
+                            : Avalonia.Styling.ThemeVariant.Light;
+                        ShellService.PrepareForThemeChange(false);
+                    }, Avalonia.Threading.DispatcherPriority.Render);
                 }
             });
+
+        // Persist after visible state changes so disk I/O never competes with the theme flip.
+        this.WhenAnyValue(x => x.IsDebugMode, x => x.IsDarkTheme, x => x.SelectedWalletId)
+            .Skip(1)
+            .Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
+            .Subscribe(_ => ScheduleSaveSettings());
+    }
+
+    private void ScheduleSaveSettings()
+    {
+        saveSettingsCts?.Cancel();
+        saveSettingsCts?.Dispose();
+        saveSettingsCts = new CancellationTokenSource();
+
+        bool currentDebugMode = IsDebugMode;
+        bool currentDarkTheme = IsDarkTheme;
+        string? currentWalletId = SelectedWalletId;
+        CancellationToken token = saveSettingsCts.Token;
+
+        Task.Run(async () =>
+        {
+            Result saveResult = await _store.Save(SettingsKey, new PrototypeSettingsData
+            {
+                IsDebugMode = currentDebugMode,
+                IsDarkTheme = currentDarkTheme,
+                SelectedWalletId = currentWalletId,
+            });
+
+            if (!token.IsCancellationRequested && saveResult.IsFailure)
+            {
+                var logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(PrototypeSettings));
+                logger.LogWarning("Failed to save settings: {Error}", saveResult.Error);
+            }
+        }, token);
     }
 
     private class PrototypeSettingsData
