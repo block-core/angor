@@ -53,6 +53,10 @@
             <Setter Property="Background" Value="{DynamicResource SubPlanBtnSelectedBg}" />
             <Setter Property="BorderBrush" Value="{DynamicResource SubPlanBtnSelectedBorder}" />
         </Style>
+        <Style Selector="Border.FundPatternBtn.SubPlanSelected">
+            <Setter Property="Background" Value="{DynamicResource PillOrangeBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BitcoinOrange}" />
+        </Style>
         <!-- Quick amount button default state (via style, not inline) -->
         <Style Selector="Border.QuickAmountBtn">
             <Setter Property="Background" Value="{DynamicResource StatsDetailInnerBackground}" />
@@ -524,7 +528,7 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="fp:FundingPatternOption">
                                         <Border Name="FundPatternBorder"
-                                                Classes="SubPlanBtn"
+                                                Classes="SubPlanBtn FundPatternBtn"
                                                 CornerRadius="12" Padding="16"
                                                 Cursor="Hand"
                                                 BorderThickness="2">
@@ -536,9 +540,10 @@
                                                                    FontSize="16" FontWeight="Bold"
                                                                    Foreground="{DynamicResource SubPlanLabel}" />
                                                         <Border CornerRadius="10" Padding="8,2"
-                                                                Background="{DynamicResource AccentBrush}">
-                                                            <TextBlock FontSize="12" FontWeight="SemiBold"
-                                                                       Foreground="White">
+                                                                 Background="{DynamicResource PillOrangeBg}">
+                                                            <TextBlock Classes="FundPatternStageCount"
+                                                                       FontSize="12" FontWeight="SemiBold"
+                                                                       Foreground="{DynamicResource PillOrangeText}">
                                                                 <TextBlock.Text>
                                                                     <MultiBinding StringFormat="{}{0} stages">
                                                                         <Binding Path="StageCount" />
