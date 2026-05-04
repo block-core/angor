@@ -471,11 +471,11 @@ public class WalletOperations : IWalletOperations
 
         var rootExtPubKey = extendedKey.Neuter();
 
-        var walletIdHash = Convert.ToHexString(Hashes.SHA256(accountExtPubKeyTostore.ToBytes()));
+        var rootExtPubKeyHash = Convert.ToHexString(Hashes.SHA256(rootExtPubKey.ToBytes()));
 
         return new AccountInfo()
         {
-            walletId = walletIdHash,
+            walletId = rootExtPubKeyHash,
             RootExtPubKey = rootExtPubKey.ToString(network),
             ExtPubKey = accountExtPubKeyTostore.ToString(network),
             Path = accountHdPath
