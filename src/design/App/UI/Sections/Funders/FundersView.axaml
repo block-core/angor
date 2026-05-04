@@ -75,14 +75,14 @@
             <!-- Refresh button — visible even when no funders -->
             <Button Name="EmptyRefreshButton"
                     AutomationProperties.AutomationId="FundersRefreshButton"
-                    Classes="Outlined FundersAction MobileAction IconOnly"
+                    Classes="Primary Light FundersAction MobileAction IconOnly"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
                     Margin="24"
                     IsEnabled="{Binding !IsRefreshing}">
                 <i:Icon Value="fa-solid fa-arrows-rotate"
                         FontSize="16"
-                        Foreground="{DynamicResource TextStrong}">
+                        Foreground="{DynamicResource LightPrimaryButtonForeground}">
                     <i:Icon.Styles>
                         <Style Selector="i|Icon.Spinning">
                             <Style.Animations>
@@ -147,12 +147,12 @@
                         <!-- Refresh button -->
                         <Button Name="RefreshButton"
                                 AutomationProperties.AutomationId="FundersRefreshButton"
-                                Classes="Outlined FundersAction MobileAction IconOnly"
+                                Classes="Primary Light FundersAction MobileAction IconOnly"
                                 VerticalAlignment="Center"
                                 IsEnabled="{Binding !IsRefreshing}">
                             <i:Icon Value="fa-solid fa-arrows-rotate"
                                     FontSize="16"
-                                    Foreground="{DynamicResource TextStrong}">
+                                    Foreground="{DynamicResource LightPrimaryButtonForeground}">
                                 <i:Icon.Styles>
                                     <Style Selector="i|Icon.Spinning">
                                         <Style.Animations>

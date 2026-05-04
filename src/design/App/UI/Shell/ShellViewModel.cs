@@ -937,6 +937,16 @@ public partial class ShellViewModel : ReactiveObject
     /// <summary>Clear the view cache so sections are recreated with fresh data on next navigation.</summary>
     public void ClearViewCache() => _viewCache.Clear();
 
+    public void ClearViewCacheExcept(params string[] keysToKeep)
+    {
+        HashSet<string> keep = keysToKeep.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (string key in _viewCache.Keys.ToList())
+        {
+            if (!keep.Contains(key))
+                _viewCache.Remove(key);
+        }
+    }
+
     /// <summary>
     /// Ensure a view exists in the cache for the given key. Creates it via the
     /// view factory if missing. Used by SectionPanel on mobile for on-demand
@@ -965,6 +975,31 @@ public partial class ShellViewModel : ReactiveObject
     /// this to incrementally add views to the SectionPanel on mobile.
     /// </summary>
     public event Action<string, object>? ViewPreWarmed;
+
+    public void ResetAfterNetworkSwitch()
+    {
+        const string settingsKey = "Settings";
+
+        _signatureStore.Clear();
+        _portfolioVm.ResetAfterDataWipe();
+        InvestedBalanceDisplay = "0.0000 " + _currencyService.Symbol;
+        ModalContent = null;
+        IsModalOpen = false;
+
+        if (_viewCache.TryGetValue("My Projects", out object? myProjectsView)
+            && myProjectsView is MyProjectsView { DataContext: MyProjectsViewModel myProjectsVm })
+        {
+            myProjectsVm.ResetAfterNetworkSwitch();
+        }
+
+        if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())
+            ClearViewCacheExcept(settingsKey);
+
+        this.RaisePropertyChanged(nameof(SelectedWallet));
+        this.RaisePropertyChanged(nameof(AvailableBalanceDisplay));
+        this.RaisePropertyChanged(nameof(SelectedWalletName));
+        this.RaisePropertyChanged(nameof(SwitcherWallets));
+    }
 
     /// <summary>
     /// Resolves the current section key from SelectedNavItem / IsSettingsOpen.

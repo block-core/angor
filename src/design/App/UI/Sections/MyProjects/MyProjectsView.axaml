@@ -27,7 +27,7 @@
                                  HasButton="True" />
             <!-- Scan button — visible even when no projects -->
             <Button Name="EmptyScanButton"
-                    Classes="Primary"
+                    Classes="Primary Light MobileAction"
                     Padding="12,8"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Top"
@@ -37,12 +37,12 @@
                     <i:Icon Value="fa-solid fa-arrows-rotate"
                             FontSize="14"
                             IsVisible="{Binding !IsLoading}"
-                            Foreground="{DynamicResource PrimaryButtonForeground}"
+                            Foreground="{DynamicResource LightPrimaryButtonForeground}"
                             VerticalAlignment="Center" />
                     <i:Icon Value="fa-solid fa-spinner"
                             FontSize="14"
                             IsVisible="{Binding IsLoading}"
-                            Foreground="{DynamicResource PrimaryButtonForeground}"
+                            Foreground="{DynamicResource LightPrimaryButtonForeground}"
                             VerticalAlignment="Center"
                             RenderTransformOrigin="50%,50%">
                         <i:Icon.RenderTransform>
@@ -65,7 +65,8 @@
                     </i:Icon>
                     <TextBlock Text="Scan for Projects"
                                VerticalAlignment="Center"
-                               FontSize="13" FontWeight="SemiBold" />
+                               FontSize="13" FontWeight="SemiBold"
+                               Foreground="{DynamicResource LightPrimaryButtonForeground}" />
                 </StackPanel>
             </Button>
         </Panel>
@@ -300,7 +301,7 @@
                                        VerticalAlignment="Center" />
                             <!-- Scan for projects — queries indexer for all 15 derived key slots -->
                             <Button Name="ScanProjectsButton" Grid.Column="1"
-                                    Classes="Primary"
+                                    Classes="Primary Light MobileAction"
                                     Padding="12,8"
                                     VerticalAlignment="Center"
                                     IsEnabled="{Binding !IsLoading}">
@@ -308,12 +309,12 @@
                                     <i:Icon Value="fa-solid fa-arrows-rotate"
                                             FontSize="14"
                                             IsVisible="{Binding !IsLoading}"
-                                            Foreground="{DynamicResource PrimaryButtonForeground}"
+                                            Foreground="{DynamicResource LightPrimaryButtonForeground}"
                                             VerticalAlignment="Center" />
                                     <i:Icon Value="fa-solid fa-spinner"
                                             FontSize="14"
                                             IsVisible="{Binding IsLoading}"
-                                            Foreground="{DynamicResource PrimaryButtonForeground}"
+                                            Foreground="{DynamicResource LightPrimaryButtonForeground}"
                                             VerticalAlignment="Center"
                                             RenderTransformOrigin="50%,50%">
                                         <i:Icon.RenderTransform>
@@ -336,7 +337,8 @@
                                     </i:Icon>
                                     <TextBlock Text="Scan for Projects"
                                                VerticalAlignment="Center"
-                                               FontSize="13" FontWeight="SemiBold" />
+                                               FontSize="13" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource LightPrimaryButtonForeground}" />
                                 </StackPanel>
                             </Button>
                         </Grid>
