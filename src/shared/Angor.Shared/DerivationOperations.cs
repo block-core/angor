@@ -268,21 +268,17 @@ public class DerivationOperations : IDerivationOperations
 
     /// <summary>
     /// Returns a network-specific index for the nostr storage derivation path.
-    /// Each network gets its own relay storage slot to prevent cross-network data contamination.
     /// Mainnet uses index 0 for backward compatibility with existing relay data.
+    /// All other networks (testnet, signet, angornet, etc.) use index 1 to isolate
+    /// them from mainnet and prevent cross-network data contamination.
     /// </summary>
     private int GetNetworkStorageIndex()
     {
         var network = _networkConfiguration.GetNetwork();
         return network switch
         {
-            Angornet => 2,
-            BitcoinSignet => 3,
-            LiquidMain => 4,
-            BitcoinTest => 1,
-            BitcoinTest4 => 1,
             BitcoinMain => 0,
-            _ => 0
+            _ => 1
         };
     }
 
