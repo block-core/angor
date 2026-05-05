@@ -163,7 +163,7 @@ public partial class FundsViewModel : ReactiveObject
     /// Create a new wallet using the SDK.
     /// Generates random seed words, creates wallet with encryption key.
     /// </summary>
-    public async Task<(bool Success, string? SeedWords)> CreateWalletAsync(string walletName, string encryptionKey)
+    public async Task<(bool Success, string? SeedWords)> CreateWalletAsync(string walletName)
     {
         _logger.LogInformation("Creating new wallet '{WalletName}' (generating random seed words)", walletName);
         var seedWords = _walletAppService.GenerateRandomSeedwords();
@@ -174,7 +174,6 @@ public partial class FundsViewModel : ReactiveObject
             walletName,
             seedWords,
             CSharpFunctionalExtensions.Maybe<string>.None,
-            encryptionKey,
             _getNetwork()));
 
         if (result.IsSuccess)
@@ -191,7 +190,7 @@ public partial class FundsViewModel : ReactiveObject
     /// <summary>
     /// Import an existing wallet from user-provided seed words.
     /// </summary>
-    public async Task<bool> ImportWalletAsync(string walletName, string seedWords, string encryptionKey)
+    public async Task<bool> ImportWalletAsync(string walletName, string seedWords)
     {
         _logger.LogInformation("Importing wallet '{WalletName}' from seed words", walletName);
 
@@ -202,7 +201,6 @@ public partial class FundsViewModel : ReactiveObject
             walletName,
             seedWords,
             CSharpFunctionalExtensions.Maybe<string>.None,
-            encryptionKey,
             _getNetwork()));
 
         if (result.IsSuccess)

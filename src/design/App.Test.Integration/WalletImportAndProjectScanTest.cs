@@ -5,7 +5,6 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
 using Angor.Sdk.Common;
-using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.Funds;
 using App.UI.Sections.MyProjects;
@@ -146,8 +145,6 @@ public class WalletImportAndProjectScanTest
         Log(profileName, "Funding wallet via faucet...");
         await FundWalletViaFaucet(window, profileName);
 
-        SetPasswordProvider(profileName);
-
         // ── Step 4: Create and deploy a project ──
         await window.NavigateToSectionAndVerify("My Projects");
 
@@ -283,8 +280,6 @@ public class WalletImportAndProjectScanTest
         importedWalletId.Should().Be(creatorState.WalletId,
             "Imported wallet should have the same deterministic wallet ID (derived from xpub hash)");
         Log(profileName, $"Wallet ID match confirmed: {importedWalletId}");
-
-        SetPasswordProvider(profileName);
 
         // ── Step 3: Wait for balance to appear (on-chain UTXO discovery) ──
         Log(profileName, "Waiting for balance to appear from on-chain UTXO discovery...");
@@ -484,7 +479,6 @@ public class WalletImportAndProjectScanTest
                 initializedProfiles.Add(profileName);
             }
 
-            SetPasswordProvider(profileName);
             await action(window);
         }
         finally
@@ -499,13 +493,6 @@ public class WalletImportAndProjectScanTest
     {
         var profileContext = global::App.App.Services.GetRequiredService<ProfileContext>();
         profileContext.ProfileName.Should().Be(expectedProfile);
-    }
-
-    private static void SetPasswordProvider(string profileName)
-    {
-        var passwordProvider = global::App.App.Services.GetRequiredService<SimplePasswordProvider>();
-        passwordProvider.SetKey("default-key");
-        Log(profileName, "Set SimplePasswordProvider key to 'default-key'.");
     }
 
     private async Task WipeExistingData(Window window, string profileName)

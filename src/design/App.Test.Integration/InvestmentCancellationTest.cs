@@ -7,7 +7,6 @@ using Avalonia.VisualTree;
 using FluentAssertions;
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Projects;
-using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
 using App.UI.Shared.PaymentFlow;
@@ -904,7 +903,6 @@ public class InvestmentCancellationTest
                 initializedProfiles.Add(profileName);
             }
 
-            SetPasswordProvider(profileName);
             await action(window);
         }
         finally
@@ -919,13 +917,6 @@ public class InvestmentCancellationTest
     {
         var profileContext = global::App.App.Services.GetRequiredService<ProfileContext>();
         profileContext.ProfileName.Should().Be(expectedProfile);
-    }
-
-    private static void SetPasswordProvider(string profileName)
-    {
-        var passwordProvider = global::App.App.Services.GetRequiredService<SimplePasswordProvider>();
-        passwordProvider.SetKey("default-key");
-        Log(profileName, "Set SimplePasswordProvider key to 'default-key'.");
     }
 
     private async Task CreateWalletAndFundAsync(Window window, string profileName)

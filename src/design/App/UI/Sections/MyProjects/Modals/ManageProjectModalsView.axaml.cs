@@ -233,8 +233,7 @@ public partial class ManageProjectModalsView : UserControl
 
             Vm.ClaimedAmount = selectedAmount.ToString("F8");
 
-            // Skip password modal — password is not used (SimplePasswordProvider returns "default-key").
-            // Go directly to fee selection and claim.
+            // Skip password modal — go directly to fee selection and claim.
             // NOTE: Keep claim modal visible during fee selection (#17) so user sees context.
             var feeRate = await AskForFeeRateAsync();
             if (feeRate == null) return; // User cancelled — claim modal stays visible
@@ -321,8 +320,7 @@ public partial class ManageProjectModalsView : UserControl
 
             Vm.ShowReleaseFundsModal = false;
 
-            // Skip password modal — password is not used (SimplePasswordProvider returns "default-key").
-            // Go directly to release.
+            // Skip password modal — go directly to release.
             var totalRelease = Vm.Stages
                 .SelectMany(s => s.AvailableTransactions)
                 .Sum(t => double.TryParse(t.Amount, out var v) ? v : 0);

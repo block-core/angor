@@ -37,8 +37,10 @@ public static class WalletContextServices
         services.AddSingleton<IWalletFactory, WalletFactory>();
         services.AddSingleton<IWalletOperations, WalletOperations>();
         services.AddSingleton<IPsbtOperations, PsbtOperations>();
-        services.AddSingleton<SensitiveWalletDataProvider>();
-        services.TryAddSingleton<ISensitiveWalletDataProvider>(provider => ActivatorUtilities.CreateInstance<FrictionlessSensitiveDataProvider>(provider, provider.GetRequiredService<SensitiveWalletDataProvider>()));
+        // ISecureKeyProvider must be registered by the platform (DPAPI, Android KeyStore, Linux, etc.)
+        // before calling Register(). No fallback is provided — missing registration will fail at resolve time.
+        services.TryAddSingleton<ISensitiveWalletDataProvider, SensitiveWalletDataProvider>();
+        services.TryAddSingleton<IPasswordProvider, SecureKeyPasswordProvider>();
         services.AddSingleton<IWalletStore, WalletStore>();
         services.AddSingleton<ITransactionHistory, TransactionHistory>();
         services.TryAddSingleton<IWalletAccountBalanceService, WalletAccountBalanceService>();
