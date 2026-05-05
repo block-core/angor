@@ -10,7 +10,6 @@ using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Utilities;
-using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
 using App.UI.Sections.Funders;
@@ -176,7 +175,6 @@ public class BigInvestTest
                 initializedProfiles.Add(profileName);
             }
 
-            SetPasswordProvider(profileName);
             await action(window);
         }
         finally
@@ -195,13 +193,6 @@ public class BigInvestTest
 
         profileContext.ProfileName.Should().Be(expectedProfile);
         Log(expectedProfile, $"Using profile directory: {profileDirectory}");
-    }
-
-    private static void SetPasswordProvider(string profileName)
-    {
-        var passwordProvider = global::App.App.Services.GetRequiredService<SimplePasswordProvider>();
-        passwordProvider.SetKey("default-key");
-        Log(profileName, "Set SimplePasswordProvider key to 'default-key'.");
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -423,7 +414,7 @@ public class BigInvestTest
         investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector);
 
         var investWallet = investVm.Wallets[0];
-        investVm.SelectWallet(investWallet);
+        investVm.PaymentFlow.SelectWallet(investWallet);
         Dispatcher.UIThread.RunJobs();
 
         Log(profileName, $"Investing {amountBtc} BTC with wallet {investWallet.Id.Value}...");
@@ -431,7 +422,7 @@ public class BigInvestTest
         const int maxPayAttempts = 3;
         for (var payAttempt = 1; payAttempt <= maxPayAttempts; payAttempt++)
         {
-            investVm.PayWithWallet();
+            investVm.PaymentFlow.PayWithWalletCommand.Execute().Subscribe();
 
             var investDeadline = DateTime.UtcNow + TransactionTimeout;
             while (DateTime.UtcNow < investDeadline)
@@ -442,7 +433,7 @@ public class BigInvestTest
                     break;
                 }
 
-                if (investVm.CurrentScreen == InvestScreen.WalletSelector && investVm.HasError)
+                if (investVm.CurrentScreen == InvestScreen.WalletSelector && investVm.PaymentFlow.ErrorMessage != null)
                 {
                     break;
                 }
@@ -455,9 +446,9 @@ public class BigInvestTest
                 break;
             }
 
-            if (payAttempt < maxPayAttempts && investVm.CurrentScreen == InvestScreen.WalletSelector && investVm.HasError)
+            if (payAttempt < maxPayAttempts && investVm.CurrentScreen == InvestScreen.WalletSelector && investVm.PaymentFlow.ErrorMessage != null)
             {
-                Log(profileName, $"PayWithWallet attempt #{payAttempt} failed: {investVm.ErrorMessage}. Retrying after delay...");
+                Log(profileName, $"PayWithWallet attempt #{payAttempt} failed: {investVm.PaymentFlow.ErrorMessage}. Retrying after delay...");
                 await Task.Delay(TimeSpan.FromSeconds(5));
                 Dispatcher.UIThread.RunJobs();
                 continue;
@@ -465,7 +456,7 @@ public class BigInvestTest
         }
 
         investVm.CurrentScreen.Should().Be(InvestScreen.Success,
-            $"Invest should reach success. Last status: {investVm.PaymentStatusText}, Error: {investVm.ErrorMessage}");
+            $"Invest should reach success. Last status: {investVm.PaymentFlow.PaymentStatusText}, Error: {investVm.PaymentFlow.ErrorMessage}");
         investVm.FormattedAmount.Should().Be(
             decimal.Parse(amountBtc, CultureInfo.InvariantCulture).ToString("F8", CultureInfo.InvariantCulture));
 
