@@ -10,7 +10,7 @@ using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Blockcore.NBitcoin.BIP39;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using Microsoft.Extensions.Logging;
 
 namespace Angor.Sdk.Wallet.Infrastructure.Impl;
@@ -35,10 +35,13 @@ public class WalletAppService(
     //public static readonly WalletId SingleWalletId = new("8E3C5250-4E26-4A13-8075-0A189AEAF793");
     private const string SingleWalletName = "<default>";
 
-    public Task<Result<IEnumerable<WalletMetadata>>> GetMetadatas()
+    public async Task<Result<IEnumerable<WalletMetadata>>> GetMetadatas()
     {
-        var result =  accountBalanceService.GetAllAccountBalancesAsync();
-        return result.Map(list => list.Select(info => new WalletMetadata(
+        var result = await accountBalanceService.GetAllAccountBalancesAsync();
+        if (result.IsFailure)
+            return Result.Failure<IEnumerable<WalletMetadata>>(result.Error);
+
+        return Result.Success(result.Value.Select(info => new WalletMetadata(
             SingleWalletName,
             new WalletId(info.AccountInfo.walletId)
         )));
@@ -62,9 +65,14 @@ public class WalletAppService(
         }
     }
     
-    public Task<Result<Balance>> GetBalance(WalletId walletId)
+    public async Task<Result<Balance>> GetBalance(WalletId walletId)
     {
-        return GetTransactions(walletId).Map(txns => txns.Sum(x => x.GetBalance().Sats)).Map(l => new Balance(l));
+        var txnsResult = await GetTransactions(walletId);
+        if (txnsResult.IsFailure)
+            return Result.Failure<Balance>(txnsResult.Error);
+
+        var sats = txnsResult.Value.Sum(x => x.GetBalance().Sats);
+        return Result.Success(new Balance(sats));
     }
 
     public Task<Result<AccountBalanceInfo>> GetAccountBalanceInfo(WalletId walletId)
@@ -168,7 +176,7 @@ public class WalletAppService(
 
             var (seed, passphrase) = sensitiveDataResult.Value;
             
-            var walletWords = new WalletWords { Words = seed, Passphrase = passphrase.GetValueOrDefault("") };
+            var walletWords = new WalletWords { Words = seed, Passphrase = passphrase ?? "" };
             var accountBalanceInfo = await accountBalanceService.RefreshAccountBalanceInfoAsync(walletId);
 
             if (accountBalanceInfo.IsFailure)
@@ -211,7 +219,7 @@ public class WalletAppService(
         }
     }
 
-    public async Task<Result<WalletId>> CreateWallet(string name, string seedWords, Maybe<string> passphrase, BitcoinNetwork network)
+    public async Task<Result<WalletId>> CreateWallet(string name, string seedWords, string? passphrase, BitcoinNetwork network)
     {
         var wallet = await walletFactory.CreateWallet(name ?? SingleWalletName, seedWords, passphrase, network);
 
@@ -226,7 +234,7 @@ public class WalletAppService(
         return Result.Success(wallet.Value.Id);
     }
 
-    public Task<Result<WalletId>> CreateWallet(string name, BitcoinNetwork network)
+    public async Task<Result<WalletId>> CreateWallet(string name, BitcoinNetwork network)
     {
         if (string.IsNullOrEmpty(name))
             name = network + " Wallet";
@@ -234,10 +242,13 @@ public class WalletAppService(
         var mnemonic = new Mnemonic(Wordlist.English, WordCount.Twelve);
 
         var seedWords = mnemonic.ToString();
-        var passphrase = Maybe<string>.None;
+        string? passphrase = null;
 
-        return walletFactory.CreateWallet(name, seedWords, passphrase, network)
-            .Map(_ => _.Id);
+        var result = await walletFactory.CreateWallet(name, seedWords, passphrase, network);
+        if (result.IsFailure)
+            return Result.Failure<WalletId>(result.Error);
+
+        return Result.Success(result.Value.Id);
     }
     
     public async Task<Result> DeleteWallet(WalletId walletId)
@@ -369,7 +380,7 @@ public class WalletAppService(
             var addressResult = await GetNextReceiveAddress(walletId);
             if (addressResult.IsFailure)
             {
-                return addressResult.ConvertFailure();
+                return Result.Failure(addressResult.Error);
             }
 
             var httpClient = httpClientFactory.CreateClient();

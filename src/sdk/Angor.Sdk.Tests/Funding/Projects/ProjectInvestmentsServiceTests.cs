@@ -10,7 +10,7 @@ using Angor.Shared.Services;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;

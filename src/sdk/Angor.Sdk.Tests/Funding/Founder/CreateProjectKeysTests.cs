@@ -3,7 +3,7 @@ using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Data.Documents.Interfaces;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;

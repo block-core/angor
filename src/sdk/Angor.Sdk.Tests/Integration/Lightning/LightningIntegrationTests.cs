@@ -14,7 +14,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.Services;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
@@ -117,7 +117,7 @@ public class BoltzSwapIntegrationTests : IDisposable
         _mockSeedwordsProvider = new Mock<ISeedwordsProvider>();
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData(It.IsAny<string>()))
-            .ReturnsAsync(Result.Success<(string, Maybe<string>)>((TestWalletWords, Maybe<string>.None)));
+            .ReturnsAsync(Result.Success<(string Words, string? Passphrase)>((TestWalletWords, null)));
 
         _mockProjectService = new Mock<IProjectService>();
         _mockWalletAccountBalanceService = new Mock<IWalletAccountBalanceService>();

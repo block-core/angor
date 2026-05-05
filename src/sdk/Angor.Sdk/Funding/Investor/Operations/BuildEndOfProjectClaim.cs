@@ -11,7 +11,7 @@ using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 using Angor.Sdk.Funding.Projects;
 

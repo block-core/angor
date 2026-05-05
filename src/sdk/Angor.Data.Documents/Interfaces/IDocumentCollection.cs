@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 using Angor.Data.Documents.Models;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 
 namespace Angor.Data.Documents.Interfaces;
 

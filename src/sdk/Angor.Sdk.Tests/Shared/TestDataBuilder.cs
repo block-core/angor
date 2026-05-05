@@ -5,6 +5,8 @@ using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using Stage = Angor.Shared.Models.Stage;
 
+using Angor.Primitives;
+
 namespace Angor.Sdk.Tests.Shared;
 
 /// <summary>

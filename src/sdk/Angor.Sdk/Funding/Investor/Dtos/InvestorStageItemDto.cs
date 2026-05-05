@@ -1,5 +1,7 @@
 using Angor.Shared.Models;
 
+using Angor.Primitives;
+
 namespace Angor.Sdk.Funding.Investor.Dtos;
 
 public class InvestorStageItemDto

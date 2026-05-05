@@ -13,7 +13,7 @@ using Angor.Shared.Integration.Lightning;
 using App.UI.Shared;
 using App.UI.Shared.PaymentFlow;
 using App.UI.Shared.Services;
-using CSharpFunctionalExtensions;
+
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 

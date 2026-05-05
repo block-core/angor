@@ -1,7 +1,7 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Domain;
 using Angor.Shared.Models;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 
 namespace Angor.Sdk.Wallet.Application;
 
@@ -16,7 +16,7 @@ public interface IWalletAppService
     Task<Result<FeeAndSize>> EstimateFeeAndSize(WalletId walletId, Amount amount, Address address, DomainFeeRate feeRate);
     Task<Result<Address>> GetNextReceiveAddress(WalletId id);
     Task<Result<IEnumerable<FeeEstimation>>> GetFeeEstimates();
-    Task<Result<WalletId>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, BitcoinNetwork network);
+    Task<Result<WalletId>> CreateWallet(string name, string seedwords, string? passphrase, BitcoinNetwork network);
     Task<Result<WalletId>> CreateWallet(string name, BitcoinNetwork network);
     public string GenerateRandomSeedwords();
     Task<Result> GetTestCoins(WalletId walletId);

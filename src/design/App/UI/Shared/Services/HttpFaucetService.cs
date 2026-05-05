@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using CSharpFunctionalExtensions;
+
 using Microsoft.Extensions.Logging;
 
 namespace App.UI.Shared.Services;

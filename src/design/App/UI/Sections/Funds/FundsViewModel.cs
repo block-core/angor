@@ -174,7 +174,7 @@ public partial class FundsViewModel : ReactiveObject
         var result = await Task.Run(() => _walletAppService.CreateWallet(
             walletName,
             seedWords,
-            CSharpFunctionalExtensions.Maybe<string>.None,
+            null,
             _getNetwork()));
 
         if (result.IsSuccess)
@@ -201,7 +201,7 @@ public partial class FundsViewModel : ReactiveObject
         var result = await Task.Run(() => _walletAppService.CreateWallet(
             walletName,
             seedWords,
-            CSharpFunctionalExtensions.Maybe<string>.None,
+            null,
             _getNetwork()));
 
         if (result.IsSuccess)

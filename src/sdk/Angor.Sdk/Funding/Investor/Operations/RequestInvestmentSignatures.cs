@@ -12,7 +12,7 @@ using Angor.Shared.Services;
 using Blockcore.Consensus.TransactionInfo;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 
 namespace Angor.Sdk.Funding.Investor.Operations;
@@ -53,7 +53,16 @@ public static class RequestInvestmentSignatures
 
             var (investorKey, _) = projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(strippedInvestmentTransaction.Outputs[1].ScriptPubKey);
 
-            var existingInvestment = await Result.Try(() => angorIndexerService.GetInvestmentAsync(request.ProjectId.Value, investorKey));
+            Result<ProjectInvestment?> existingInvestment;
+            try
+            {
+                var inv = await angorIndexerService.GetInvestmentAsync(request.ProjectId.Value, investorKey);
+                existingInvestment = Result.Success(inv);
+            }
+            catch (Exception ex)
+            {
+                existingInvestment = Result.Failure<ProjectInvestment?>(ex.Message);
+            }
 
             if (existingInvestment is { IsSuccess: true, Value: not null })
                 return Result.Failure<RequestFounderSignaturesResponse>("An investment with the same key already exists on the blockchain.");

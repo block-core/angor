@@ -15,7 +15,7 @@ using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.BIP32;
 using Blockcore.NBitcoin.DataEncoders;
 using Blockcore.Networks;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
@@ -285,7 +285,7 @@ public class CreateInvestmentFromSpecificAddressTests
 
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData(It.IsAny<string>()))
-            .ReturnsAsync(Result.Success((words.Words, Maybe<string>.None)));
+            .ReturnsAsync(Result.Success((words.Words, (string?)null)));
 
         var accountBalanceInfo = new AccountBalanceInfo();
         accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, accountInfo.AllAddresses().SelectMany(a => a.UtxoData).ToList());

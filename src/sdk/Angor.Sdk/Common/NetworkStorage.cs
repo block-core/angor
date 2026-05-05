@@ -1,6 +1,6 @@
 using Angor.Shared;
 using Angor.Shared.Models;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 
 namespace Angor.Sdk.Common;
 
@@ -10,20 +10,26 @@ public class NetworkStorage(IStore store) : INetworkStorage
 
     private SettingsData? _settingsData;
     
-    public SettingsInfo GetSettings() => Load()
-        .Map(data => new SettingsInfo
+    public SettingsInfo GetSettings()
+    {
+        var result = Load();
+        if (result.IsFailure)
+            return new SettingsInfo();
+
+        var data = result.Value;
+        return new SettingsInfo
         {
             Explorers = data.Explorers,
             Indexers = data.Indexers,
             Relays = data.Relays,
             ImageServers = data.ImageServers
-        })
-        .OnFailureCompensate(_ => new SettingsInfo())
-        .Value;
+        };
+    }
 
     public void SetSettings(SettingsInfo settingsInfo)
     {
-        var data = Load().OnFailureCompensate(_ => new SettingsData()).Value;
+        var loadResult = Load();
+        var data = loadResult.IsFailure ? new SettingsData() : loadResult.Value;
         data.Explorers = settingsInfo.Explorers;
         data.Indexers = settingsInfo.Indexers;
         data.Relays = settingsInfo.Relays;
@@ -33,15 +39,20 @@ public class NetworkStorage(IStore store) : INetworkStorage
 
     public void SetNetwork(string network)
     {
-        var data = Load().OnFailureCompensate(_ => new SettingsData()).Value;
+        var loadResult = Load();
+        var data = loadResult.IsFailure ? new SettingsData() : loadResult.Value;
         data.Network = network;
         store.Save(SettingsFile, data);
     }
 
-    public string GetNetwork() => Load()
-        .Map(d => d.Network)
-        .OnFailureCompensate(_ => "Angornet")
-        .Value;
+    public string GetNetwork()
+    {
+        var result = Load();
+        if (result.IsFailure)
+            return "Angornet";
+
+        return result.Value.Network;
+    }
 
     private Result<SettingsData> Load()
     {

@@ -5,9 +5,10 @@ using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared;
+using Angor.Shared.Models;
 using Angor.Shared.Services;
 using Angor.Shared.Utilities;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -57,14 +58,13 @@ public static class GetInvestments
                     var investmentRecord = investmentRecordsLookup.Value.ProjectIdentifiers
                         .First(x => x.ProjectIdentifier == project.Id.Value);
 
-                    var investmentTask = Result.Try(() => angorIndexerService.GetInvestmentAsync(project.Id.Value, investmentRecord.InvestorPubKey));
-                    var statsTask = Result.Try(() => 
-                        angorIndexerService.GetProjectStatsAsync(project.Id.Value));
+                    var investmentTask = TryGetInvestmentAsync(project.Id.Value, investmentRecord.InvestorPubKey);
+                    var statsTask = TryGetProjectStatsAsync(project.Id.Value);
 
                     await Task.WhenAll(investmentTask, statsTask);
 
                     var investment = investmentTask.Result.IsSuccess ? investmentTask.Result.Value : null;
-                    var stats = statsTask.Result.IsSuccess ? statsTask.Result.Value : (project.Id.Value, null);
+                    var stats = statsTask.Result.IsSuccess ? statsTask.Result.Value : (projectId: project.Id.Value, stats: (ProjectStats?)null);
 
                     if (investment?.TransactionId != null)
                         if (investment.TransactionId != investmentRecord.InvestmentTransactionHash)
@@ -84,13 +84,13 @@ public static class GetInvestments
                             ? investment.TotalAmount
                             : investmentRecord.InvestedAmountSats),
                         InvestmentId = investmentRecord.InvestmentTransactionHash,
-                        Raised = new Amount(stats.stats?.AmountInvested ?? 0),
-                        InRecovery = new Amount(stats.stats?.AmountInPenalties ?? 0),
+                        Raised = new Amount(stats.Item2?.AmountInvested ?? 0),
+                        InRecovery = new Amount(stats.Item2?.AmountInPenalties ?? 0),
                         RequestedOn = investmentRecord.RequestEventTime.HasValue
                             ? new DateTimeOffset(investmentRecord.RequestEventTime.Value)
                             : null,
                         ProjectType = project.ProjectType,
-                        TotalInvestors = (int)(stats.stats?.InvestorCount ?? 0)
+                        TotalInvestors = (int)(stats.Item2?.InvestorCount ?? 0)
                     };
 
                     if (investment != null && investment.TotalAmount > 0)
@@ -197,11 +197,41 @@ public static class GetInvestments
             });
             
             var results = await Task.WhenAll(investmentLookupTasks);
-            var combined = results.Combine();
-            
-            return combined.IsSuccess 
-               ? Result.Success(new GetInvestmentsResponse(combined.Value))
-                 : Result.Failure<GetInvestmentsResponse>(combined.Error);
+            var successItems = new List<InvestedProjectDto>();
+            foreach (var r in results)
+            {
+                if (r.IsFailure)
+                    return Result.Failure<GetInvestmentsResponse>(r.Error);
+                successItems.Add(r.Value);
+            }
+
+            return Result.Success(new GetInvestmentsResponse(successItems));
+        }
+
+        private async Task<Result<ProjectInvestment?>> TryGetInvestmentAsync(string projectId, string investorPubKey)
+        {
+            try
+            {
+                var value = await angorIndexerService.GetInvestmentAsync(projectId, investorPubKey);
+                return Result.Success(value);
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<ProjectInvestment?>(ex.Message);
+            }
+        }
+
+        private async Task<Result<(string, ProjectStats?)>> TryGetProjectStatsAsync(string projectId)
+        {
+            try
+            {
+                var value = await angorIndexerService.GetProjectStatsAsync(projectId);
+                return Result.Success(value);
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<(string, ProjectStats?)>(ex.Message);
+            }
         }
         
         private static InvestmentStatus DetermineInvestmentStatus(InvestmentHandshake Handshake)

@@ -1,5 +1,5 @@
 using Angor.Sdk.Common;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 
 namespace Angor.Sdk.Wallet.Infrastructure.Impl;
 
@@ -15,6 +15,9 @@ public class InMemoryStore : IStore
 
     public async Task<Result<T>> Load<T>(string key)
     {
-        return dict.TryFind(key).ToResult("Key not found").Map(o => (T)o);
+        if (dict.TryGetValue(key, out var value))
+            return Result.Success((T)value);
+
+        return Result.Failure<T>("Key not found");
     }
 }

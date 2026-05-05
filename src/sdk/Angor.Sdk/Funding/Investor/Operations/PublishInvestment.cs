@@ -10,7 +10,7 @@ using Angor.Shared.Protocol;
 using Angor.Shared.Services;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 using Serilog;
 using Stage = Angor.Shared.Models.Stage;

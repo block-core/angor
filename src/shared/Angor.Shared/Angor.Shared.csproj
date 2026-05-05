@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CSharpFunctionalExtensions" />
+    <ProjectReference Include="..\..\sdk\Angor.Primitives\Angor.Primitives.csproj" />
     <PackageReference Include="Blockcore.Core" />
     <PackageReference Include="Microsoft.Extensions.Http" VersionOverride="9.0.5" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" VersionOverride="9.0.5" />

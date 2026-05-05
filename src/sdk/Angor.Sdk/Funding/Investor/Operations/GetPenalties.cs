@@ -8,7 +8,7 @@ using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Services;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.NBitcoin;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 
 namespace Angor.Sdk.Funding.Investor.Operations;

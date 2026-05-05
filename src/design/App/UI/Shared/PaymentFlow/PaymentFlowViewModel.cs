@@ -9,7 +9,7 @@ using Angor.Shared.Integration.Lightning;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Wallet.Domain;
 using App.UI.Shared.Services;
-using CSharpFunctionalExtensions;
+
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using MonitorOp = Angor.Sdk.Funding.Investor.Operations.MonitorAddressForFunds;

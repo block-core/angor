@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
 using Angor.Data.Documents.Interfaces;
 using Angor.Data.Documents.Models;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using LiteDB;
 using Microsoft.Extensions.Logging;
 

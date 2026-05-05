@@ -3,7 +3,7 @@ using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Models;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 
 namespace Angor.Sdk.Funding.Projects.Operations;
@@ -24,7 +24,17 @@ public static class ProjectStatistics
             }
 
             var project = await projectService.GetAsync(request.ProjectId);
-            return Result.Try(() => CalculateTotalValues(stagesInformation.Value.ToList(), project.Value.ToProjectInfo()));
+            if (project.IsFailure)
+                return Result.Failure<ProjectStatisticsDto>(project.Error);
+
+            try
+            {
+                return Result.Success(CalculateTotalValues(stagesInformation.Value.ToList(), project.Value.ToProjectInfo()));
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<ProjectStatisticsDto>(ex.Message);
+            }
         }
 
         private static ProjectStatisticsDto CalculateTotalValues(List<StageData> stagesInformation, ProjectInfo projectInfo)

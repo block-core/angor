@@ -2,7 +2,7 @@
 using Angor.Sdk.Funding.Services;
 using Angor.Shared;
 using Angor.Shared.Integration.Lightning;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -143,7 +143,7 @@ public static class ClaimLightningSwap
                 return Result.Failure<string>($"Address {address} not found in wallet — cannot derive claim key");
 
             var (seed, passphrase) = sensitiveDataResult.Value;
-            var privateKeyHex = hdOperations.DerivePrivateKey(seed, passphrase.GetValueOrDefault(), addressInfo.HdPath);
+            var privateKeyHex = hdOperations.DerivePrivateKey(seed, passphrase ?? "", addressInfo.HdPath);
 
             return Result.Success(privateKeyHex);
         }

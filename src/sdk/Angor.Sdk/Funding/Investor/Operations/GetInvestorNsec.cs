@@ -3,7 +3,7 @@ using Angor.Sdk.Funding.Shared;
 using Angor.Shared;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 using Nostr.Client.Utils;
 

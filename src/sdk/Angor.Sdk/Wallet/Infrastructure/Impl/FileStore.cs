@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 using Angor.Sdk.Common;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 
 namespace Angor.Sdk.Wallet.Infrastructure.Impl;
 
@@ -34,16 +34,26 @@ public class FileStore : IStore
         }
     }
 
-    public Task<Result<T>> Load<T>(string key)
+    public async Task<Result<T>> Load<T>(string key)
     {
-        return Result.Try(() => Path.Combine(appDataPath, key))
-            .TapTry(CreateFile)
-            .MapTry(s => File.ReadAllTextAsync(s))
-            .Ensure(x => !string.IsNullOrWhiteSpace(x), $"Could not read file {key}")
-            .Bind(json => Result.Try(() => JsonSerializer.Deserialize<T>(json))
-                .Ensure(x => x != null, $"Could not deserialize {json} as {typeof(T)}")
-                .Map(x => x!)
-            );
+        try
+        {
+            var path = Path.Combine(appDataPath, key);
+            CreateFile(path);
+            var json = await File.ReadAllTextAsync(path);
+            if (string.IsNullOrWhiteSpace(json))
+                return Result.Failure<T>($"Could not read file {key}");
+
+            var deserialized = JsonSerializer.Deserialize<T>(json);
+            if (deserialized == null)
+                return Result.Failure<T>($"Could not deserialize {json} as {typeof(T)}");
+
+            return Result.Success(deserialized);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<T>(ex.Message);
+        }
     }
 
     private static void CreateFile(string path)

@@ -1,5 +1,7 @@
 using Angor.Sdk.Common;
 
+using Angor.Primitives;
+
 namespace Angor.Sdk.Funding.Shared.TransactionDrafts;
 
 public record InvestmentDraft(string InvestorKey) : TransactionDraft

@@ -3,7 +3,7 @@ using Angor.Data.Documents.Interfaces;
 using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using Microsoft.Extensions.Logging;
 
 namespace Angor.Sdk.Common;
@@ -33,10 +33,10 @@ public class WalletAccountBalanceService(IWalletOperations walletOperations,
             new WalletAccountBalanceInfo { WalletId = walletId.Value, AccountBalanceInfo = accountBalanceInfo });
 
         if (!upsertResult.IsFailure)
-            return Result.Success(accountBalanceInfo);
+            return Result.Success();
 
         logger.LogError("Failed to save account balance info for wallet {WalletId}: {Error}", walletId, upsertResult.Error);
-        return Result.Failure<AccountBalanceInfo>(upsertResult.Error);
+        return Result.Failure(upsertResult.Error);
     }
 
     public async Task<Result<AccountBalanceInfo>> RefreshAccountBalanceInfoAsync(WalletId walletId)
@@ -47,14 +47,15 @@ public class WalletAccountBalanceService(IWalletOperations walletOperations,
 
         var accountBalanceInfo = accountBalanceInfoResult.Value;
 
-        var updateResult = await Result.Try(async () =>
+        try
         {
             await walletOperations.UpdateDataForExistingAddressesAsync(accountBalanceInfo.AccountInfo);
             await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountBalanceInfo.AccountInfo);
-        });
-
-        if (updateResult.IsFailure)
-            return Result.Failure<AccountBalanceInfo>(updateResult.Error);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<AccountBalanceInfo>(ex.Message);
+        }
 
         // Clean up pending receive UTXOs that have been confirmed
         CleanupConfirmedPendingReceiveUtxos(accountBalanceInfo);
@@ -131,8 +132,8 @@ public class WalletAccountBalanceService(IWalletOperations walletOperations,
 
     private async Task EncryptExtPubKeys(WalletId walletId, AccountInfo accountInfo)
     {
-        var maybeKey = await secureKeyProvider.Get(walletId);
-        if (maybeKey.HasNoValue)
+        var key = await secureKeyProvider.Get(walletId);
+        if (key == null)
         {
             logger.LogWarning("No encryption key found for wallet {WalletId}, storing ExtPubKeys unencrypted", walletId);
             return;
@@ -140,8 +141,6 @@ public class WalletAccountBalanceService(IWalletOperations walletOperations,
 
         try
         {
-            var key = maybeKey.Value;
-
             if (!string.IsNullOrEmpty(accountInfo.ExtPubKey))
                 accountInfo.ExtPubKey = FieldEncryption.Encrypt(accountInfo.ExtPubKey, key);
 
@@ -156,8 +155,8 @@ public class WalletAccountBalanceService(IWalletOperations walletOperations,
 
     private async Task DecryptExtPubKeys(WalletId walletId, AccountInfo accountInfo)
     {
-        var maybeKey = await secureKeyProvider.Get(walletId);
-        if (maybeKey.HasNoValue)
+        var key = await secureKeyProvider.Get(walletId);
+        if (key == null)
         {
             logger.LogWarning("No encryption key found for wallet {WalletId}, assuming ExtPubKeys are unencrypted", walletId);
             return;
@@ -165,8 +164,6 @@ public class WalletAccountBalanceService(IWalletOperations walletOperations,
 
         try
         {
-            var key = maybeKey.Value;
-
             if (!string.IsNullOrEmpty(accountInfo.ExtPubKey))
                 accountInfo.ExtPubKey = FieldEncryption.Decrypt(accountInfo.ExtPubKey, key);
 

@@ -8,7 +8,7 @@ using Angor.Shared.Models;
 using Angor.Shared.Services;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Messages.Metadata;

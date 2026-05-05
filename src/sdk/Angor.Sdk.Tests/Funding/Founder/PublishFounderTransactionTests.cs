@@ -5,6 +5,8 @@ using Angor.Shared.Services;
 using FluentAssertions;
 using Moq;
 
+using Angor.Primitives;
+
 namespace Angor.Sdk.Tests.Funding.Founder;
 
 public class PublishFounderTransactionTests

@@ -10,7 +10,7 @@ using Angor.Sdk.Tests.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;

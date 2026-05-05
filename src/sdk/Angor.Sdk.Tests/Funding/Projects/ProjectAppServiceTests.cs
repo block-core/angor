@@ -4,7 +4,7 @@ using Angor.Sdk.Funding.Projects.Operations;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Tests.Shared;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using FluentAssertions;
 using Moq;
 using Xunit;
@@ -204,7 +204,7 @@ public class ProjectAppServiceTests : IClassFixture<TestNetworkFixture>
         
         _mockProjectService
             .Setup(x => x.TryGetAsync(It.Is<ProjectId>(p => p.Value == projectId)))
-            .ReturnsAsync(Result.Success(Maybe<Project>.From(project)));
+            .ReturnsAsync(Result.Success<Project?>(project));
         
         var handler = new TryGetProject.TryGetProjectHandler(_mockProjectService.Object);
         var request = new TryGetProject.TryGetProjectRequest(new ProjectId(projectId));
@@ -214,8 +214,8 @@ public class ProjectAppServiceTests : IClassFixture<TestNetworkFixture>
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Project.HasValue.Should().BeTrue();
-        result.Value.Project.Value.Name.Should().Be("Existing Project");
+        result.Value.Project.Should().NotBeNull();
+        result.Value.Project!.Name.Should().Be("Existing Project");
     }
 
     [Fact]
@@ -226,7 +226,7 @@ public class ProjectAppServiceTests : IClassFixture<TestNetworkFixture>
         
         _mockProjectService
             .Setup(x => x.TryGetAsync(It.Is<ProjectId>(p => p.Value == projectId)))
-            .ReturnsAsync(Result.Success(Maybe<Project>.None));
+            .ReturnsAsync(Result.Success<Project?>((Project?)null));
         
         var handler = new TryGetProject.TryGetProjectHandler(_mockProjectService.Object);
         var request = new TryGetProject.TryGetProjectRequest(new ProjectId(projectId));
@@ -236,7 +236,7 @@ public class ProjectAppServiceTests : IClassFixture<TestNetworkFixture>
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Project.HasNoValue.Should().BeTrue();
+        result.Value.Project.Should().BeNull();
     }
 
     [Fact]
@@ -247,7 +247,7 @@ public class ProjectAppServiceTests : IClassFixture<TestNetworkFixture>
         
         _mockProjectService
             .Setup(x => x.TryGetAsync(It.IsAny<ProjectId>()))
-            .ReturnsAsync(Result.Failure<Maybe<Project>>("Database connection failed"));
+            .ReturnsAsync(Result.Failure<Project?>("Database connection failed"));
         
         var handler = new TryGetProject.TryGetProjectHandler(_mockProjectService.Object);
         var request = new TryGetProject.TryGetProjectRequest(new ProjectId(projectId));
@@ -268,7 +268,7 @@ public class ProjectAppServiceTests : IClassFixture<TestNetworkFixture>
         
         _mockProjectService
             .Setup(x => x.TryGetAsync(It.IsAny<ProjectId>()))
-            .ReturnsAsync(Result.Success(Maybe<Project>.None));
+            .ReturnsAsync(Result.Success<Project?>((Project?)null));
         
         var handler = new TryGetProject.TryGetProjectHandler(_mockProjectService.Object);
         var request = new TryGetProject.TryGetProjectRequest(new ProjectId(projectId));

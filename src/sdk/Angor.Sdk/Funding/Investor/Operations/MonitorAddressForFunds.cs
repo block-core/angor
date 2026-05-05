@@ -2,7 +2,7 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Domain;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 using Microsoft.Extensions.Logging;
 

@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Threading;
 using Angor.Sdk.Common;
-using CSharpFunctionalExtensions;
+
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;

@@ -1,7 +1,7 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Domain;
 using Angor.Shared.Models;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 
 namespace Angor.Sdk.Wallet.Infrastructure.History;
 

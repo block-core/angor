@@ -7,7 +7,7 @@ using Angor.Sdk.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Services;
 using Blockcore.NBitcoin;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using FluentAssertions;
 using Moq;
 using Stage = Angor.Sdk.Funding.Projects.Domain.Stage;
@@ -163,7 +163,7 @@ public class CheckForReleaseSignaturesTests
 
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData("wallet-1"))
-            .ReturnsAsync(Result.Failure<(string Words, Maybe<string> Passphrase)>("Wallet locked"));
+            .ReturnsAsync(Result.Failure<(string Words, string? Passphrase)>("Wallet locked"));
 
         // Act
         var result = await _sut.Handle(request, CancellationToken.None);

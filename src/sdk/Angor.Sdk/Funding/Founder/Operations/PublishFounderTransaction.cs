@@ -1,6 +1,6 @@
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Services;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 
 namespace Angor.Sdk.Funding.Founder.Operations;

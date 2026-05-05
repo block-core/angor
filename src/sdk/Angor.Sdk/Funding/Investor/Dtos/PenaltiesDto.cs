@@ -1,3 +1,5 @@
+using Angor.Primitives;
+
 namespace Angor.Sdk.Funding.Investor.Dtos;
 
 public record PenaltiesDto()

@@ -7,7 +7,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using Blockcore.NBitcoin;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using FluentAssertions;
 using Moq;
 using Nostr.Client.Responses;
@@ -76,7 +76,7 @@ public class NotifyFounderOfCancellationTests
 
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData(walletId.Value))
-            .ReturnsAsync(Result.Failure<(string Words, Maybe<string> Passphrase)>("Wallet locked"));
+            .ReturnsAsync(Result.Failure<(string Words, string? Passphrase)>("Wallet locked"));
 
         // Act
         var result = await _sut.Handle(request, CancellationToken.None);
@@ -170,7 +170,7 @@ public class NotifyFounderOfCancellationTests
             .ReturnsAsync(Result.Success(project));
 
         var sensitiveData = (Words: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
-            Passphrase: Maybe<string>.None);
+            Passphrase: (string?)null);
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData(walletId.Value))
             .ReturnsAsync(Result.Success(sensitiveData));
@@ -235,7 +235,7 @@ public class NotifyFounderOfCancellationTests
             .ReturnsAsync(Result.Success(project));
 
         var sensitiveData = (Words: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
-            Passphrase: Maybe<string>.None);
+            Passphrase: (string?)null);
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData(It.IsAny<string>()))
             .ReturnsAsync(Result.Success(sensitiveData));

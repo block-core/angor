@@ -1,17 +1,17 @@
 using Angor.Sdk.Wallet.Domain;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using NBitcoin;
 
 namespace Angor.Sdk.Wallet.Infrastructure.Impl;
 
 public abstract class WalletDescriptorFactory
 {
-    public static WalletDescriptor Create(string seedPhrase, Maybe<string> passphrase, Network network)
+    public static WalletDescriptor Create(string seedPhrase, string? passphrase, Network network)
     {
         if (string.IsNullOrWhiteSpace(seedPhrase))
             throw new DomainException("Invalid seed phrase");
 
-        var masterKey = new Mnemonic(seedPhrase).DeriveExtKey(passphrase.GetValueOrDefault());
+        var masterKey = new Mnemonic(seedPhrase).DeriveExtKey(passphrase);
         
         var coinType = (uint)network.Consensus.CoinType;
 

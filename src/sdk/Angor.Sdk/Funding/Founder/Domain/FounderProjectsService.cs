@@ -1,5 +1,5 @@
 using Angor.Data.Documents.Interfaces;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 
 namespace Angor.Sdk.Funding.Founder.Domain;
 

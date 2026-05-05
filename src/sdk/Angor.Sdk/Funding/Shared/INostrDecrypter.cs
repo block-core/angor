@@ -1,6 +1,6 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Projects.Domain;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 
 namespace Angor.Sdk.Funding.Shared;
 

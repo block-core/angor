@@ -1,5 +1,5 @@
 using Angor.Sdk.Funding.Founder.Operations;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 
 namespace Angor.Sdk.Funding.Founder;
 

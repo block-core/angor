@@ -8,7 +8,7 @@ using Angor.Shared.Protocol;
 using Angor.Shared.Services;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 using Investment = Angor.Sdk.Funding.Founder.Domain.Investment;
 
@@ -43,26 +43,32 @@ public static class ApproveInvestment
                 investorNostrPubKey = request.InvestmentRequest.InvestorNostrPubKey,
             };
             
-            var approvalResult = await from walletWords in seedwordsProvider.GetSensitiveData(request.WalletId.Value)
-                from project in projectService.GetAsync(request.ProjectId)
-                select PerformSignatureApproval(signatureItem, walletWords.ToWalletWords(), project.ToProjectInfo());
-            
+            var walletWordsResult = await seedwordsProvider.GetSensitiveData(request.WalletId.Value);
+            if (walletWordsResult.IsFailure)
+                return Result.Failure<ApproveInvestmentResponse>(walletWordsResult.Error);
+
+            var projectResult = await projectService.GetAsync(request.ProjectId);
+            if (projectResult.IsFailure)
+                return Result.Failure<ApproveInvestmentResponse>(projectResult.Error);
+
+            var approvalResult = await PerformSignatureApproval(signatureItem, walletWordsResult.Value.ToWalletWords(), projectResult.Value.ToProjectInfo());
+
             if (approvalResult.IsFailure)
                 return Result.Failure<ApproveInvestmentResponse>(approvalResult.Error);
-    
+
             return Result.Success(new ApproveInvestmentResponse());
         }
 
-        private Task<Result> PerformSignatureApproval(SignatureItem signature, WalletWords words, ProjectInfo projectInfo)
+        private async Task<Result> PerformSignatureApproval(SignatureItem signature, WalletWords words, ProjectInfo projectInfo)
         {
             var investmentTransactionHex = signature.SignRecoveryRequest.InvestmentTransactionHex;
             var signatureInvestorNostrPubKey = signature.investorNostrPubKey;
             var signatureEventId = signature.EventId;
             
-            return Result.Try(async () =>
+            try
             {
                 var key = derivationOperations.DeriveFounderRecoveryPrivateKey(words, projectInfo.FounderKey);
-                
+
                 var signatureInfo = CreateRecoverySignatures(investmentTransactionHex, projectInfo, Encoders.Hex.EncodeData(key.ToBytes()));
 
                 var sigJson = serializer.Serialize(signatureInfo);
@@ -70,11 +76,16 @@ public static class ApproveInvestment
                 var nostrPrivateKey = await derivationOperations.DeriveProjectNostrPrivateKeyAsync(words, projectInfo.FounderKey);
                 var nostrPrivateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
 
-                
+
                 var encryptedContent = await encryption.EncryptNostrContentAsync(nostrPrivateKeyHex, signatureInvestorNostrPubKey, sigJson);
-                
+
                 signService.SendSignaturesToInvestor(encryptedContent, nostrPrivateKeyHex, signatureInvestorNostrPubKey, signatureEventId);
-            });
+                return Result.Success();
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure(ex.Message);
+            }
         }
 
         private SignatureInfo CreateRecoverySignatures(string transactionHex, ProjectInfo info, string founderSigningPrivateKey)

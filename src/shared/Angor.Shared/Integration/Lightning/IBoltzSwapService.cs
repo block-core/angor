@@ -1,5 +1,5 @@
 using Angor.Shared.Integration.Lightning.Models;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 
 namespace Angor.Shared.Integration.Lightning;
 

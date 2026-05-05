@@ -6,6 +6,8 @@ using Blockcore.NBitcoin.BIP32;
 using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
 
+using Angor.Primitives;
+
 namespace Angor.Sdk.Tests.Funding.TestDoubles;
 
 /// <summary>

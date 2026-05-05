@@ -4,7 +4,7 @@ using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects.Operations;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Models;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 using static Angor.Sdk.Funding.Founder.Operations.CreateProjectInfo;
 using static Angor.Sdk.Funding.Founder.Operations.CreateProjectProfile;

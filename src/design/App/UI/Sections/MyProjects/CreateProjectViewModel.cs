@@ -781,7 +781,7 @@ public partial class CreateProjectViewModel : ReactiveObject
             Sats = sats,
             StartDate = startDt,
             EndDate = endDt,
-            TargetAmount = new Angor.Sdk.Common.Amount(targetSats),
+            TargetAmount = new Amount(targetSats),
             PenaltyDays = PenaltyDays,
             PenaltyThreshold = penaltyThreshold,
             Stages = stageDtos,

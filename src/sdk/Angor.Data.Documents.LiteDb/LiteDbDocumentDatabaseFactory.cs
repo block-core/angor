@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Angor.Sdk.Common;
+using Angor.Primitives;
 using Angor.Data.Documents.Interfaces;
 using Microsoft.Extensions.Logging;
 

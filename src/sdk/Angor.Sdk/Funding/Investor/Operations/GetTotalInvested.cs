@@ -1,7 +1,7 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Investor.Domain;
 using Angor.Data.Documents.Interfaces;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 
 namespace Angor.Sdk.Funding.Investor.Operations;

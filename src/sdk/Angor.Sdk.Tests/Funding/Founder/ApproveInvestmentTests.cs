@@ -8,7 +8,7 @@ using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
 using Blockcore.NBitcoin;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using FluentAssertions;
 using Moq;
 using Stage = Angor.Sdk.Funding.Projects.Domain.Stage;
@@ -62,7 +62,7 @@ public class ApproveInvestmentTests
 
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData("wallet-1"))
-            .ReturnsAsync(Result.Failure<(string Words, Maybe<string> Passphrase)>("Wallet locked"));
+            .ReturnsAsync(Result.Failure<(string Words, string? Passphrase)>("Wallet locked"));
 
         _mockProjectService
             .Setup(x => x.GetAsync(It.IsAny<ProjectId>()))
@@ -240,7 +240,7 @@ public class ApproveInvestmentTests
     private void SetupSeedwords()
     {
         var sensitiveData = (Words: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
-            Passphrase: Maybe<string>.None);
+            Passphrase: (string?)null);
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData("wallet-1"))
             .ReturnsAsync(Result.Success(sensitiveData));

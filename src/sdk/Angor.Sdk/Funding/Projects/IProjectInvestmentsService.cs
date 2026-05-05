@@ -1,7 +1,7 @@
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Shared.Models;
 using Blockcore.Consensus.TransactionInfo;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 
 namespace Angor.Sdk.Funding.Projects;
 

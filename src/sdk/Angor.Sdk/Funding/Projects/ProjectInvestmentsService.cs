@@ -7,7 +7,7 @@ using Angor.Shared.Protocol;
 using Angor.Shared.Services;
 using Angor.Shared.Utilities;
 using Blockcore.Consensus.TransactionInfo;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using Microsoft.Extensions.Logging;
 
 namespace Angor.Sdk.Funding.Projects;
@@ -74,13 +74,13 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
 
             var results = await Task.WhenAll(tasks);
 
-            var combinedResult = results.Combine();
+            foreach (var r in results)
+            {
+                if (r.IsFailure)
+                    return Result.Failure<IEnumerable<StageData>>("Failed to process investment transactions: " + r.Error);
+            }
 
-            if (combinedResult.IsFailure)
-                return Result.Failure<IEnumerable<StageData>>("Failed to process investment transactions: " +
-                                                              combinedResult.Error);
-
-            stage.Items = combinedResult.Value.ToList();
+            stage.Items = results.Select(r => r.Value).ToList();
 
             foreach (var item in stage.Items)
             {

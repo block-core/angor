@@ -2,7 +2,7 @@ using System.Text.Json;
 using Angor.Shared;
 using Angor.Shared.Integration.Lightning.Models;
 using Angor.Shared.Services;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using Microsoft.Extensions.Logging;
 
 namespace Angor.Shared.Integration.Lightning;

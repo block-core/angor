@@ -7,7 +7,7 @@ using Angor.Shared.Models;
 using Angor.Shared.Services;
 using Angor.Shared.Utilities;
 using Blockcore.Consensus.TransactionInfo;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 using Investment = Angor.Sdk.Funding.Founder.Domain.Investment;
 
@@ -158,9 +158,17 @@ public static class GetProjectInvestments
                 investmentStatus);
         }
 
-        private Task<Result<List<ProjectInvestment>>> LookupCurrentInvestments(GetProjectInvestmentsRequest request)
+        private async Task<Result<List<ProjectInvestment>>> LookupCurrentInvestments(GetProjectInvestmentsRequest request)
         {
-            return Result.Try(() => angorIndexerService.GetInvestmentsAsync(request.ProjectId.Value));
+            try
+            {
+                var investments = await angorIndexerService.GetInvestmentsAsync(request.ProjectId.Value);
+                return Result.Success(investments);
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<List<ProjectInvestment>>(ex.Message);
+            }
         }
     }
 }

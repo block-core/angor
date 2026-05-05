@@ -5,7 +5,7 @@ using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Projects.Operations;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Models;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using static Angor.Sdk.Funding.Founder.Operations.CreateProjectInfo;
 using static Angor.Sdk.Funding.Founder.Operations.CreateProjectProfile;
 using static Angor.Sdk.Funding.Founder.Operations.CreateProjectConstants.CreateProject;

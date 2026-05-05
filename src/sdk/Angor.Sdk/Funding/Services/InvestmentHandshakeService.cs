@@ -4,7 +4,7 @@ using Angor.Sdk.Funding.Shared;
 using Angor.Data.Documents.Interfaces;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using Serilog;
 
 namespace Angor.Sdk.Funding.Services;
@@ -45,7 +45,10 @@ public class InvestmentHandshakeService(
         // the wrapper Id may be wrong. InvestmentHandshake.Id is always set correctly.
         var res = await collection.FindAsync(c => c.Id == id);
 
-        return res.Map(items => items.FirstOrDefault());
+        if (res.IsFailure)
+            return Result.Failure<InvestmentHandshake?>(res.Error);
+
+        return Result.Success(res.Value.FirstOrDefault());
     }
     
 

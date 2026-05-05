@@ -1,7 +1,7 @@
 using System.Security.Cryptography;
 using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Infrastructure.Interfaces;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 
 namespace Angor.Sdk.Tests.Common;
 
@@ -9,11 +9,11 @@ public class InMemorySecureKeyProvider : ISecureKeyProvider
 {
     private readonly Dictionary<string, string> _keys = new();
 
-    public Task<Maybe<string>> Get(WalletId walletId)
+    public Task<string?> Get(WalletId walletId)
     {
         return Task.FromResult(_keys.TryGetValue(walletId.Value, out var key)
-            ? Maybe<string>.From(key)
-            : Maybe<string>.None);
+            ? key
+            : (string?)null);
     }
 
     public Task Save(WalletId walletId, string key)
