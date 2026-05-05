@@ -26,7 +26,12 @@ public class WalletFactory(
         var walletWords = new WalletWords { Words = seedwords, Passphrase = passphrase.GetValueOrDefault() };
         var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
         var walletId = new WalletId(accountInfo.walletId);
-        
+
+        // Check if a wallet with this ID already exists
+        var existingWallets = await walletStore.GetAll();
+        if (existingWallets.IsSuccess && existingWallets.Value.Any(w => w.Id == walletId.Value))
+            return Result.Failure<Domain.Wallet>("A wallet with the same seed words already exists.");
+
         var descriptor = WalletDescriptorFactory.Create(seedwords, passphrase, network.ToNBitcoin());
         var wallet = new Domain.Wallet(walletId, descriptor);
         

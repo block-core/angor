@@ -773,6 +773,8 @@
                                 </Button>
                                 <Button x:Name="BtnTestnet" Classes="NetworkOption"
                                         Click="OnSelectTestnet"
+                                        IsEnabled="False"
+                                        Opacity="0.4"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Stretch"
                                          Padding="16,14"
@@ -819,6 +821,8 @@
                                 </Button>
                                 <Button x:Name="BtnSignet" Classes="NetworkOption"
                                         Click="OnSelectSignet"
+                                        IsEnabled="False"
+                                        Opacity="0.4"
                                         HorizontalAlignment="Stretch"
                                         HorizontalContentAlignment="Stretch"
                                          Padding="16,14"
@@ -838,6 +842,21 @@
                                               x:Name="CheckSignet"
                                               IsVisible="False" />
                                         <TextBlock Text="Signet" FontSize="14" FontWeight="Medium" />
+                                    </DockPanel>
+                                </Button>
+                                <Button x:Name="BtnLiquid" Classes="NetworkOption"
+                                        IsEnabled="False"
+                                        Opacity="0.4"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Stretch"
+                                         Padding="16,14"
+                                         Foreground="{DynamicResource NetworkOptionText}"
+                                        CornerRadius="8"
+                                        Background="{DynamicResource NetworkOptionBg}"
+                                        BorderBrush="{DynamicResource NetworkOptionBorder}"
+                                        BorderThickness="2">
+                                    <DockPanel>
+                                        <TextBlock Text="Liquid" FontSize="14" FontWeight="Medium" />
                                     </DockPanel>
                                 </Button>
                             </StackPanel>
@@ -885,7 +904,19 @@
                                     FontWeight="SemiBold"
                                     FontSize="14"
                                     Click="OnConfirmNetworkSwitch"
-                                    Content="Remove wallet and switch network" />
+                                    IsEnabled="{Binding !IsSwitchingNetwork}">
+                                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                    <i:Icon Value="fa-solid fa-spinner"
+                                            FontSize="14"
+                                            Foreground="White"
+                                            IsVisible="{Binding IsSwitchingNetwork}"
+                                            Classes="spin" />
+                                    <TextBlock Text="Switching..."
+                                               IsVisible="{Binding IsSwitchingNetwork}" />
+                                    <TextBlock Text="Remove wallet and switch network"
+                                               IsVisible="{Binding !IsSwitchingNetwork}" />
+                                </StackPanel>
+                            </Button>
                         </StackPanel>
                     </Border>
                 </StackPanel>

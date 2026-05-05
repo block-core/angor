@@ -125,7 +125,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
     private HttpClient GetIndexerClient()
     {
         var indexer = _networkService.GetPrimaryIndexer();
-        var key = string.IsNullOrEmpty(indexer.Name) ? indexer.Name : indexer.Url;
+        var key = string.IsNullOrEmpty(indexer.Name) ? indexer.Url : indexer.Name;
         if (_clients.TryGetValue(key, out var indexerClient))
             return indexerClient;
 
