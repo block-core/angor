@@ -74,9 +74,9 @@ public partial class SettingsView : UserControl, ISectionView
 
             if (panel != null)
             {
-                // First card visible (Network only) for instant paint on mobile.
-                // Theme card deferred below the fold with the rest.
-                const int visibleAboveFold = 1;
+                // Keep the first three cards (Network, Theme, Indexer) interactive immediately.
+                // Deferring Indexer makes the first tap on its TextBox feel delayed on mobile.
+                const int visibleAboveFold = 3;
 
                 for (var i = panel.Children.Count - 1; i >= visibleAboveFold; i--)
                 {

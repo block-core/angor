@@ -265,22 +265,16 @@ public partial class FindProjectsViewModel : ReactiveObject
         }
     }
 
-    /// <summary>
-    /// Clear the in-memory and disk project cache. Called on network switch
-    /// to prevent stale projects from the previous network being displayed.
-    /// </summary>
-    internal static async Task ClearCacheAsync(IStore store, ILogger logger)
+    public void ResetAfterNetworkSwitch()
     {
+        CloseInvestPage();
+        CloseProjectDetail();
         CachedDtos = null;
-        try
-        {
-            await store.Save(CacheStoreKey, new List<ProjectDto>());
-            logger.LogInformation("[FindProjects] cache cleared for network switch");
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "[FindProjects] failed to clear disk cache");
-        }
+        Projects.Clear();
+        pendingItems.Clear();
+        HasMoreItems = false;
+        IsInitialLoad = true;
+        _ = Task.Run(LoadProjectsFromSdkAsync);
     }
 
     /// <summary>

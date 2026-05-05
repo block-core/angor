@@ -1,5 +1,7 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 
 namespace App.UI.Shared.Controls;
@@ -12,6 +14,8 @@ namespace App.UI.Shared.Controls;
 /// </summary>
 public class EmptyState : TemplatedControl
 {
+    private Button? ctaButton;
+
     static EmptyState()
     {
         ButtonIconValueProperty.Changed.AddClassHandler<EmptyState>((x, _) =>
@@ -166,4 +170,20 @@ public class EmptyState : TemplatedControl
         get => GetValue(DescriptionFontSizeProperty);
         set => SetValue(DescriptionFontSizeProperty, value);
     }
+
+    public event EventHandler<RoutedEventArgs>? ButtonClick;
+
+    protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+    {
+        base.OnApplyTemplate(e);
+
+        if (ctaButton != null)
+            ctaButton.Click -= OnButtonClick;
+
+        ctaButton = e.NameScope.Find<Button>("CtaButton");
+        if (ctaButton != null)
+            ctaButton.Click += OnButtonClick;
+    }
+
+    private void OnButtonClick(object? sender, RoutedEventArgs e) => ButtonClick?.Invoke(this, e);
 }
