@@ -397,13 +397,16 @@ public class WalletAppService(
         }
     }
 
-    public async Task<Result> RebuildAllWalletBalancesAsync()
+    public async Task<Result> RebuildAllWalletBalancesAsync(WalletId? targetWalletId = null)
     {
         var walletsResult = await walletStore.GetAll();
         if (walletsResult.IsFailure)
             return Result.Failure(walletsResult.Error);
 
         var wallets = walletsResult.Value.ToList();
+        if (targetWalletId != null)
+            wallets = wallets.Where(w => w.Id == targetWalletId.Value).ToList();
+
         if (wallets.Count == 0)
             return Result.Success();
 
