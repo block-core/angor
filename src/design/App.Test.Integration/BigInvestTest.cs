@@ -18,6 +18,7 @@ using App.UI.Sections.MyProjects;
 using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Sections.Portfolio;
 using App.UI.Sections.Settings;
+using App.UI.Shared.PaymentFlow;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using System.Globalization;
@@ -428,7 +429,7 @@ public class BigInvestTest
             while (DateTime.UtcNow < investDeadline)
             {
                 Dispatcher.UIThread.RunJobs();
-                if (investVm.CurrentScreen == InvestScreen.Success)
+                if (investVm.PaymentFlow.CurrentScreen == PaymentFlowScreen.Success)
                 {
                     break;
                 }
@@ -441,7 +442,7 @@ public class BigInvestTest
                 await Task.Delay(PollInterval);
             }
 
-            if (investVm.CurrentScreen == InvestScreen.Success)
+            if (investVm.PaymentFlow.CurrentScreen == PaymentFlowScreen.Success)
             {
                 break;
             }
@@ -455,7 +456,7 @@ public class BigInvestTest
             }
         }
 
-        investVm.CurrentScreen.Should().Be(InvestScreen.Success,
+        investVm.PaymentFlow.CurrentScreen.Should().Be(PaymentFlowScreen.Success,
             $"Invest should reach success. Last status: {investVm.PaymentFlow.PaymentStatusText}, Error: {investVm.PaymentFlow.ErrorMessage}");
         investVm.FormattedAmount.Should().Be(
             decimal.Parse(amountBtc, CultureInfo.InvariantCulture).ToString("F8", CultureInfo.InvariantCulture));
