@@ -6,6 +6,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.Services;
+using App.UI.Sections.FindProjects;
 using App.UI.Sections.Portfolio;
 using App.UI.Shell;
 using App.UI.Shared;
@@ -32,6 +33,7 @@ public partial class SettingsViewModel : ReactiveObject
     private readonly SignatureStore _signatureStore;
     private readonly ShellViewModel _shellViewModel;
     private readonly ILogger<SettingsViewModel> _logger;
+    private readonly IStore _store;
 
     public string AppVersion { get; } = GetVersion();
 
@@ -59,6 +61,7 @@ public partial class SettingsViewModel : ReactiveObject
     [Reactive] private bool isNetworkModalOpen;
     [Reactive] private string? selectedNetworkToSwitch;
     [Reactive] private bool networkChangeConfirmed;
+    [Reactive] private bool isSwitchingNetwork;
 
     // Indexer — table-based list with status
     public ObservableCollection<IndexerItem> IndexerLinks { get; } = new();
@@ -126,6 +129,7 @@ public partial class SettingsViewModel : ReactiveObject
         PortfolioViewModel portfolioViewModel,
         SignatureStore signatureStore,
         ShellViewModel shellViewModel,
+        IStore store,
         ILogger<SettingsViewModel> logger)
     {
         _networkService = networkService;
@@ -139,6 +143,7 @@ public partial class SettingsViewModel : ReactiveObject
         _portfolioViewModel = portfolioViewModel;
         _signatureStore = signatureStore;
         _shellViewModel = shellViewModel;
+        _store = store;
         _logger = logger;
 
         // Initialize currency display from the network configuration
@@ -233,6 +238,7 @@ public partial class SettingsViewModel : ReactiveObject
         if (!NetworkChangeConfirmed || string.IsNullOrEmpty(SelectedNetworkToSwitch)) return;
         if (SelectedNetworkToSwitch == NetworkType) return;
 
+        IsSwitchingNetwork = true;
         var newNetwork = SelectedNetworkToSwitch;
 
         // Delete all document collections (projects, investments, sync data, etc.)
@@ -241,6 +247,7 @@ public partial class SettingsViewModel : ReactiveObject
         if (deleteDataResult.IsFailure)
         {
             _logger.LogError("Failed to clear existing data before network switch: {Error}", deleteDataResult.Error);
+            IsSwitchingNetwork = false;
             ToastRequested?.Invoke("Failed to switch network. Please try again.");
             return;
         }
@@ -250,6 +257,12 @@ public partial class SettingsViewModel : ReactiveObject
 
         // Clear settings for the new network
         _networkStorage.SetSettings(new SettingsInfo());
+
+        // Clear the Find Projects cache (in-memory + disk) to prevent stale projects
+        await FindProjectsViewModel.ClearCacheAsync(_store, _logger);
+
+        // Reset shell state (invested balance, view cache, portfolio, signature store, etc.)
+        _shellViewModel.ResetAfterDataWipe();
 
         // Switch the runtime network object so Bitcoin operations use the correct parameters
         _networkConfig.SetNetwork(newNetwork switch
@@ -263,7 +276,6 @@ public partial class SettingsViewModel : ReactiveObject
         _networkService.AddSettingsIfNotExist();
 
         NetworkType = newNetwork;
-        IsNetworkModalOpen = false;
 
         // Update testnet state (debug mode only available on testnet)
         IsTestnet = newNetwork != "Mainnet";
@@ -277,15 +289,27 @@ public partial class SettingsViewModel : ReactiveObject
         // Reload settings from SDK for the new network
         LoadSettingsFromSdk();
 
-        // Rebuild wallet balance data for the new network
-        var rebuildResult = await _walletAppService.RebuildAllWalletBalancesAsync();
+        // Rebuild wallet balance data for the new network (selected wallet only)
+        var selectedWalletId = _walletContext.SelectedWallet?.Id;
+        var rebuildResult = await _walletAppService.RebuildAllWalletBalancesAsync(selectedWalletId);
         if (rebuildResult.IsFailure)
         {
             _logger.LogError("Failed to rebuild wallet balances after network switch: {Error}", rebuildResult.Error);
+            IsSwitchingNetwork = false;
+            IsNetworkModalOpen = false;
             ToastRequested?.Invoke("Network switched, but wallet data failed to refresh.");
             return;
         }
 
+        // Reload wallet context to update UI and trigger downstream syncs
+        // (portfolio investments, founder projects, etc. via WalletsUpdated)
+        await _walletContext.ReloadAsync();
+
+        // Refresh balances from the new network's indexer (address scanning)
+        await _walletContext.RefreshAllBalancesAsync();
+
+        IsSwitchingNetwork = false;
+        IsNetworkModalOpen = false;
         ToastRequested?.Invoke("Network updated successfully.");
     }
 
