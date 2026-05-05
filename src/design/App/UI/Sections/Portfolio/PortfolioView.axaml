@@ -38,13 +38,14 @@
         <!-- "Find Projects" button with search icon                 -->
         <!-- ═══════════════════════════════════════════════════════ -->
         <controls:EmptyState Title="FUNDED"
-                             Description="You haven't funded any projects yet. Browse the latest to find one."
-                             DescriptionFontSize="20"
-                             HasButton="True"
-                             ButtonText="Find Projects"
-                             ButtonIconValue="fa-solid fa-magnifying-glass"
-                             IsVisible="False"
-                             Name="EmptyStatePanel" />
+                              Description="You haven't funded any projects yet. Browse the latest to find one."
+                              DescriptionFontSize="20"
+                              HasButton="True"
+                              ButtonText="Find Projects"
+                              ButtonIconValue="fa-solid fa-magnifying-glass"
+                              ButtonClick="OnFindProjectsEmptyStateClick"
+                              IsVisible="False"
+                              Name="EmptyStatePanel" />
 
         <!-- ═══════════════════════════════════════════════════════ -->
         <!-- INVESTMENT DETAIL: lazy-mounted by code-behind on first  -->

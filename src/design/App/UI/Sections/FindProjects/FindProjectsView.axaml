@@ -38,8 +38,8 @@
                                Text="Discover Projects"
                                FontSize="20" FontWeight="Bold"
                                VerticalAlignment="Center" />
-                     <Button Name="RefreshProjectsButton" Grid.Column="1"
-                             Classes="Primary MobileAction"
+                    <Button Name="RefreshProjectsButton" Grid.Column="1"
+                            Classes="Primary Light MobileAction"
                             Padding="12,8"
                             VerticalAlignment="Center"
                             IsEnabled="{Binding !IsLoading}">
@@ -48,13 +48,13 @@
                             <i:Icon Value="fa-solid fa-arrows-rotate"
                                     FontSize="14"
                                     IsVisible="{Binding !IsLoading}"
-                                    Foreground="{DynamicResource PrimaryButtonForeground}"
+                                    Foreground="{DynamicResource LightPrimaryButtonForeground}"
                                     VerticalAlignment="Center" />
                             <!-- Loading state: spinning icon -->
                             <i:Icon Value="fa-solid fa-spinner"
                                     FontSize="14"
                                     IsVisible="{Binding IsLoading}"
-                                    Foreground="{DynamicResource PrimaryButtonForeground}"
+                                    Foreground="{DynamicResource LightPrimaryButtonForeground}"
                                     VerticalAlignment="Center"
                                     RenderTransformOrigin="50%,50%">
                                 <i:Icon.RenderTransform>
@@ -76,8 +76,9 @@
                                 </i:Icon.Styles>
                             </i:Icon>
                             <TextBlock Text="Refresh"
-                                       VerticalAlignment="Center"
-                                       FontSize="13" FontWeight="SemiBold" />
+                                        VerticalAlignment="Center"
+                                        FontSize="13" FontWeight="SemiBold"
+                                        Foreground="{DynamicResource LightPrimaryButtonForeground}" />
                         </StackPanel>
                     </Button>
                 </Grid>

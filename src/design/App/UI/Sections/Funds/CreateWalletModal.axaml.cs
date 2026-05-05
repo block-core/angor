@@ -47,6 +47,9 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
     /// <summary>Tracks whether a wallet was successfully created during this modal's lifetime.</summary>
     private bool _walletCreated;
 
+    /// <summary>Prevents duplicate imports while SDK wallet scanning is in progress.</summary>
+    private bool _isImporting;
+
     private ShellViewModel? ShellVm =>
         this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
 
@@ -164,8 +167,30 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         var spinner = this.FindControl<StackPanel>("ContinueBtnSpinner");
         if (spinner != null) spinner.IsVisible = isProcessing;
 
-        var text = this.FindControl<TextBlock>("ContinueBtnContent");
-        if (text != null) text.Text = isProcessing ? "Creating Wallet..." : "Continue";
+        var text = this.FindControl<TextBlock>("ContinueText");
+        if (text != null) text.IsVisible = !isProcessing;
+    }
+
+    /// <summary>
+    /// Show/hide spinner on the Import Wallet button while SDK wallet scanning runs.
+    /// </summary>
+    private void SetImportProcessing(bool isProcessing)
+    {
+        _isImporting = isProcessing;
+
+        var submitButton = this.FindControl<Button>("BtnSubmitImport");
+        if (submitButton != null) submitButton.IsEnabled = !isProcessing;
+
+        var cancelButton = this.FindControl<Button>("BtnCancelImport");
+        if (cancelButton != null) cancelButton.IsEnabled = !isProcessing;
+
+        SeedPhraseInput.IsEnabled = !isProcessing;
+
+        var content = this.FindControl<StackPanel>("ImportBtnContent");
+        if (content != null) content.IsVisible = !isProcessing;
+
+        var spinner = this.FindControl<StackPanel>("ImportBtnSpinner");
+        if (spinner != null) spinner.IsVisible = isProcessing;
     }
 
     /// <summary>
@@ -174,6 +199,8 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
     /// </summary>
     private async Task SubmitImport()
     {
+        if (_isImporting) return;
+
         var input = SeedPhraseInput.Text?.Trim() ?? "";
         var words = input.Split(' ', System.StringSplitOptions.RemoveEmptyEntries);
 
@@ -196,6 +223,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         ImportBtnSpinner.IsVisible = true;
 
         // Import wallet with the user's seed words
+        SetImportProcessing(true);
         try
         {
             await ImportWalletViaSdkAsync(Vm?.DefaultWalletName ?? "My Wallet", string.Join(" ", words));
@@ -207,9 +235,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         }
         finally
         {
-            BtnSubmitImport.IsEnabled = true;
-            ImportBtnContent.IsVisible = true;
-            ImportBtnSpinner.IsVisible = false;
+            SetImportProcessing(false);
         }
     }
 

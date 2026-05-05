@@ -251,8 +251,17 @@ public partial class MyProjectsViewModel : ReactiveObject
     public void ClearProjects()
     {
         Projects.Clear();
+        IsInitialLoad = true;
         this.RaisePropertyChanged(nameof(HasProjects));
         this.RaisePropertyChanged(nameof(TotalRaised));
+    }
+
+    public void ResetAfterNetworkSwitch()
+    {
+        CloseManageProject();
+        CloseCreateWizard();
+        SelectedEditProject = null;
+        ClearProjects();
     }
 
     public void OpenManageProject(MyProjectItemViewModel project)
