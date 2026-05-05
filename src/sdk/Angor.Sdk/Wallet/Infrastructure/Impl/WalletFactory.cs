@@ -27,15 +27,15 @@ public class WalletFactory(
         var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
         var walletId = new WalletId(accountInfo.walletId);
 
-        // Check if a wallet with this ID already exists
-        var existingWallets = await walletStore.GetAll();
-        if (existingWallets.IsSuccess && existingWallets.Value.Any(w => w.Id == walletId.Value))
-            return Result.Failure<Domain.Wallet>("A wallet with the same seed words already exists.");
-
         var descriptor = WalletDescriptorFactory.Create(seedwords, passphrase, network.ToNBitcoin());
         var wallet = new Domain.Wallet(walletId, descriptor);
         
         sensitiveWalletDataProvider.SetSensitiveData(walletId, (seedwords, passphrase));
+
+        // If account balance info already exists in the database, the wallet is already active
+        var existingBalance = await accountBalanceService.GetAccountBalanceInfoAsync(walletId);
+        if (existingBalance.IsSuccess)
+            return Result.Success(wallet);
 
         var walletData = new WalletData
         {
@@ -64,11 +64,15 @@ public class WalletFactory(
     private async Task<Result> SaveEncryptedWalletToStoreAsync(string name, string encryptionKey, WalletData walletData,
         WalletId walletId)
     {
+        var existing = await walletStore.GetAll();
+        if (existing.IsSuccess && existing.Value.Any(w => w.Id == walletId.Value))
+            return Result.Success();
+
         var encryptedWallet = await walletEncryption
             .Encrypt(walletData, encryptionKey, name, walletId.Value);
 
         return await walletStore.GetAll()
-            .Map(existing => existing.Append(encryptedWallet))
+            .Map(wallets => wallets.Append(encryptedWallet))
             .Bind(wallets => walletStore.SaveAll(wallets));
     }
 
