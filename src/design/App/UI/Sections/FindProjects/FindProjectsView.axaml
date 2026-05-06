@@ -32,13 +32,80 @@
         <!-- ═══════════════════════════════════════════════════════ -->
         <controls:ScrollableView Name="ProjectListPanel" ContentPadding="24,24,24,24">
             <StackPanel Spacing="16">
-                <!-- Header with refresh button -->
-                <Grid ColumnDefinitions="*,Auto">
+                <!-- Header with search bar and refresh button -->
+                <Grid ColumnDefinitions="Auto,*,Auto">
                     <TextBlock Grid.Column="0"
                                Text="Discover Projects"
                                FontSize="20" FontWeight="Bold"
                                VerticalAlignment="Center" />
-                    <Button Name="RefreshProjectsButton" Grid.Column="1"
+                    <!-- Search bar -->
+                    <Border Grid.Column="1"
+                            Background="{DynamicResource CardBackground}"
+                            CornerRadius="8"
+                            Padding="4"
+                            Margin="16,0"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1"
+                            VerticalAlignment="Center">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBox Grid.Column="0"
+                                     Name="SearchTextBox"
+                                     Text="{Binding SearchText, Mode=TwoWay}"
+                                     Watermark="Search by Project ID..."
+                                     BorderThickness="0"
+                                     Background="Transparent"
+                                     VerticalAlignment="Center"
+                                     Padding="8,6" />
+                            <Button Grid.Column="1"
+                                    Name="SearchButton"
+                                    Classes="Primary Light MobileAction"
+                                    Padding="10,6"
+                                    Margin="4,0,0,0"
+                                    VerticalAlignment="Center"
+                                    IsEnabled="{Binding !IsSearching}">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <i:Icon Value="fa-solid fa-magnifying-glass"
+                                            FontSize="13"
+                                            IsVisible="{Binding !IsSearching}"
+                                            Foreground="{DynamicResource LightPrimaryButtonForeground}"
+                                            VerticalAlignment="Center" />
+                                    <i:Icon Value="fa-solid fa-spinner"
+                                            FontSize="13"
+                                            IsVisible="{Binding IsSearching}"
+                                            Foreground="{DynamicResource LightPrimaryButtonForeground}"
+                                            VerticalAlignment="Center"
+                                            RenderTransformOrigin="50%,50%">
+                                        <i:Icon.RenderTransform>
+                                            <RotateTransform />
+                                        </i:Icon.RenderTransform>
+                                        <i:Icon.Styles>
+                                            <Style Selector="i|Icon">
+                                                <Style.Animations>
+                                                    <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                        <KeyFrame Cue="0%">
+                                                            <Setter Property="RotateTransform.Angle" Value="0" />
+                                                        </KeyFrame>
+                                                        <KeyFrame Cue="100%">
+                                                            <Setter Property="RotateTransform.Angle" Value="360" />
+                                                        </KeyFrame>
+                                                    </Animation>
+                                                </Style.Animations>
+                                            </Style>
+                                        </i:Icon.Styles>
+                                    </i:Icon>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+                    <!-- Search error message -->
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding SearchError}"
+                               IsVisible="{Binding SearchError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                               Foreground="Red"
+                               FontSize="12"
+                               Margin="16,4,0,0"
+                               VerticalAlignment="Bottom" />
+                    <Button Name="RefreshProjectsButton" Grid.Column="2"
                             Classes="Primary Light MobileAction"
                             Padding="12,8"
                             VerticalAlignment="Center"

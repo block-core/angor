@@ -674,6 +674,12 @@ public partial class InvestPageViewModel : ReactiveObject
         CurrentScreen = InvestScreen.WalletSelector;
     }
 
+    public void CancelPaymentFlow()
+    {
+        PaymentFlow = null;
+        CurrentScreen = InvestScreen.InvestForm;
+    }
+
     /// <summary>Creates a PaymentFlowViewModel configured for the current investment.</summary>
     private PaymentFlowViewModel CreatePaymentFlow(long amountSats)
     {
@@ -692,6 +698,7 @@ public partial class InvestPageViewModel : ReactiveObject
             SuccessDescription = $"Your {actionVerb.ToLowerInvariant()} of {FormattedAmount} {_currencyService.Symbol} has been submitted.",
             SuccessButtonText = $"View My {ProjectTypeTerminology.InvestorNounTotal(ProjectTypeExtensions.FromDisplayString(projectType))}",
             OnSuccessButtonClicked = OnInvestSuccess,
+            OnDismissed = CancelPaymentFlow,
             OnPaymentReceived = async (walletId, fundingAddress, amount) =>
                 await InvestAfterPaymentAsync(walletId, fundingAddress, amount),
             OnPayWithWallet = async (walletId, amount, feeRate) =>

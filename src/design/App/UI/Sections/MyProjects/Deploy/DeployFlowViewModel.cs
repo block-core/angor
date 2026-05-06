@@ -148,8 +148,7 @@ public partial class DeployFlowViewModel : ReactiveObject
         ProjectName = projectName;
         this.RaisePropertyChanged(nameof(ProjectName));
         CurrentScreen = DeployScreen.WalletSelector;
-        SelectedWallet = null;
-        foreach (var w in Wallets) w.IsSelected = false;
+        SelectWallet(_walletContext.SelectedWallet ?? Wallets.FirstOrDefault());
         IsDeploying = false;
         DeployStatusText = "Waiting for payment...";
         DeployErrorMessage = null;
@@ -176,6 +175,7 @@ public partial class DeployFlowViewModel : ReactiveObject
                 SuccessDescription = "Your project has been successfully deployed to the blockchain.",
                 SuccessButtonText = "Go to My Projects",
                 OnSuccessButtonClicked = GoToMyProjects,
+                OnDismissed = Close,
                 OnPaymentReceived = DeployAfterPaymentAsync,
                 OnPayWithWallet = DeployWithWalletAsync,
             });
@@ -248,9 +248,15 @@ public partial class DeployFlowViewModel : ReactiveObject
     }
 
     /// <summary>Select a wallet from the list.</summary>
-    public void SelectWallet(WalletInfo wallet)
+    public void SelectWallet(WalletInfo? wallet)
     {
         foreach (var w in Wallets) w.IsSelected = false;
+        if (wallet == null)
+        {
+            SelectedWallet = null;
+            return;
+        }
+
         wallet.IsSelected = true;
         SelectedWallet = wallet;
     }

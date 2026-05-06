@@ -331,8 +331,8 @@
                     <!-- Skeleton placeholder grid — visible until first data arrives -->
                     <ItemsControl IsVisible="{Binding IsInitialLoad}">
                         <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <controls:ResponsiveGrid MinItemWidth="320" ColumnSpacing="16" RowSpacing="16" />
+                                                    <ItemsPanelTemplate>
+                                <controls:ResponsiveGrid MinItemWidth="320" MaxColumns="2" ColumnSpacing="16" RowSpacing="16" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <controls:SkeletonInvestmentCard />
@@ -345,8 +345,8 @@
                     <ItemsControl ItemsSource="{Binding Investments}"
                                   IsVisible="{Binding !IsInitialLoad}">
                         <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <controls:ResponsiveGrid MinItemWidth="320" ColumnSpacing="16" RowSpacing="16" />
+                                                    <ItemsPanelTemplate>
+                                <controls:ResponsiveGrid MinItemWidth="320" MaxColumns="2" ColumnSpacing="16" RowSpacing="16" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
@@ -393,7 +393,7 @@
 
                                             <!-- Type + Status pills — using shared Pill style classes -->
                                             <!-- Vue: .investment-pills gap:8px -->
-                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <WrapPanel>
                                                 <!-- Type pill: Investment (blue), Funding (amber), Subscription (pink) -->
                                                 <ContentControl Classes="Pill Blue"
                                                                 Content="{Binding TypeLabel}"
@@ -422,13 +422,14 @@
                                                 <ContentControl Classes="Pill Blue"
                                                                 Content="{Binding StatusText}"
                                                                 IsVisible="{Binding IsStatusRecovered}" />
-                                            </StackPanel>
+                                            </WrapPanel>
 
                                             <!-- Project name — Vue: .investment-title font-size:16px font-weight:700 -->
                                             <TextBlock Text="{Binding ProjectName}"
-                                                       FontSize="16"
-                                                       FontWeight="Bold"
-                                                       Foreground="{DynamicResource TextStrong}" />
+                                                        FontSize="16"
+                                                        FontWeight="Bold"
+                                                        Foreground="{DynamicResource TextStrong}"
+                                                        TextWrapping="Wrap" />
 
                                             <!-- Funding info — Vue: .investment-stats flex justify-between -->
                                             <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto"
@@ -443,7 +444,8 @@
                                                            FontSize="14"
                                                            FontWeight="Bold"
                                                            Foreground="{DynamicResource TextStrong}"
-                                                           HorizontalAlignment="Right" />
+                                                           HorizontalAlignment="Right"
+                                                           TextTrimming="CharacterEllipsis" />
 
                                                 <TextBlock Grid.Row="1" Grid.Column="0"
                                                            Text="Date:"
@@ -453,7 +455,8 @@
                                                            Text="{Binding FundingDate}"
                                                            FontSize="13"
                                                            Foreground="{DynamicResource TextMuted}"
-                                                           HorizontalAlignment="Right" />
+                                                           HorizontalAlignment="Right"
+                                                           TextTrimming="CharacterEllipsis" />
                                             </Grid>
 
                                             <!-- Payment Progress (subscription/fund type with payment plan) -->

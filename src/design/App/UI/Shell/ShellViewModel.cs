@@ -832,7 +832,9 @@ public partial class ShellViewModel : ReactiveObject
         if (_viewCache.TryGetValue("My Projects", out var v) &&
             v is MyProjectsView { DataContext: MyProjectsViewModel mpVm })
         {
-            if (IsEditProfileOpen)
+            if (IsCreatingProject)
+                mpVm.CloseCreateWizard();
+            else if (IsEditProfileOpen)
                 mpVm.CloseEditProfile();
             else
                 mpVm.CloseManageProject();
@@ -840,6 +842,42 @@ public partial class ShellViewModel : ReactiveObject
         // Ensure the founder tab is set and sub-tabs re-appear
         MobileActiveTab = "founder";
         MobileFounderSubTab = "my-projects";
+    }
+
+    /// <summary>
+    /// Handles platform back requests (Android physical/system back) by routing to
+    /// the same in-app back actions used by the mobile floating back bars.
+    /// Returns false when the app is already at a root screen so Android may exit.
+    /// </summary>
+    public bool TryHandlePlatformBack()
+    {
+        SyncDetailStateFromCachedViews();
+
+        if (IsModalOpen)
+        {
+            HideModal();
+            return true;
+        }
+
+        if (IsInvestPageOpen || IsProjectDetailOpen)
+        {
+            BackFromInvestorDetail();
+            return true;
+        }
+
+        if (IsInvestmentDetailOpen)
+        {
+            BackFromInvestmentDetail();
+            return true;
+        }
+
+        if (IsCreatingProject || IsManageFundsOpen || IsEditProfileOpen)
+        {
+            CloseManageFundsFromShell();
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
