@@ -535,123 +535,11 @@ public class CreateProjectTest
             "Penalty duration should be ~0 days (debug mode value)");
         TestHelpers.Log($"[STEP 8] Penalty duration: {projectDto.PenaltyDuration.TotalDays} days");
 
-        // Cleanup: close window
-        window.Close();
-        TestHelpers.Log("========== FullCreateInvestmentProjectFlow PASSED ==========");
-    }
-
-    /// <summary>
-    /// After creating a project, verifies that the Find Projects search bar can
-    /// locate the project by its on-chain ProjectIdentifier. This exercises the
-    /// full search flow: indexer lookup → nostr event fetch → project detail display.
-    /// </summary>
-    [AvaloniaFact]
-    public async Task SearchProjectById_AfterCreate_FindsProject()
-    {
-        using var profileScope = TestProfileScope.For(nameof(CreateProjectTest) + "_Search");
-        TestHelpers.Log("========== STARTING SearchProjectById_AfterCreate_FindsProject ==========");
-
-        var runId = Guid.NewGuid().ToString("N")[..12];
-        var projectName = $"Search Test {runId}";
-        var projectAbout = $"Search integration test {runId}.";
-
-        TestHelpers.Log($"[SETUP] Run ID: {runId}, Project name: {projectName}");
-
-        // ── Boot app, wipe, create wallet, fund, create project ──
-        var window = TestHelpers.CreateShellWindow();
-        var shellVm = window.GetShellViewModel();
-
-        await window.WipeExistingData();
-        await window.EnableDebugMode();
-
-        await window.NavigateToSectionAndVerify("Funds");
-        await window.CreateWalletViaGenerate();
-        await window.FundWalletViaFaucet();
-
-        await window.NavigateToSectionAndVerify("My Projects");
-        var myProjectsVm = window.GetMyProjectsViewModel();
-        await window.OpenCreateWizard(myProjectsVm!);
-
-        var wizardVm = myProjectsVm!.CreateProjectVm;
-        wizardVm.DismissWelcome();
-        Dispatcher.UIThread.RunJobs();
-
-        wizardVm.SelectProjectType("investment");
-        wizardVm.GoNext();
-        Dispatcher.UIThread.RunJobs();
-
-        wizardVm.ProjectName = projectName;
-        wizardVm.ProjectAbout = projectAbout;
-        wizardVm.GoNext();
-        Dispatcher.UIThread.RunJobs();
-
-        wizardVm.GoNext(); // skip images
-        Dispatcher.UIThread.RunJobs();
-
-        wizardVm.TargetAmount = "0.0001";
-        wizardVm.InvestEndDate = DateTime.Now.Date;
-        wizardVm.PenaltyDays = 0;
-        wizardVm.GoNext();
-        Dispatcher.UIThread.RunJobs();
-
-        wizardVm.DismissStep5Welcome();
-        Dispatcher.UIThread.RunJobs();
-        wizardVm.DurationValue = "3";
-        wizardVm.DurationUnit = "Months";
-        wizardVm.ReleaseFrequency = "Monthly";
-        wizardVm.GenerateInvestmentStages();
-        wizardVm.GoNext();
-        Dispatcher.UIThread.RunJobs();
-
-        // Deploy
-        wizardVm.Deploy();
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(1000);
-        Dispatcher.UIThread.RunJobs();
-
-        var deployVm = wizardVm.DeployFlow;
-        var pf = deployVm.PaymentFlow;
-
-        var walletLoadDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
-        while (DateTime.UtcNow < walletLoadDeadline && pf!.Wallets.Count == 0)
-        {
-            await Task.Delay(500);
-            Dispatcher.UIThread.RunJobs();
-        }
-
-        pf!.SelectWallet(pf.Wallets[0]);
-        Dispatcher.UIThread.RunJobs();
-        pf.PayWithWalletCommand.Execute().Subscribe();
-
-        var deployDeadline = DateTime.UtcNow + DeployTimeout;
-        while (DateTime.UtcNow < deployDeadline)
-        {
-            Dispatcher.UIThread.RunJobs();
-            if (pf.CurrentScreen == PaymentFlowScreen.Success) break;
-            if (pf.ErrorMessage != null) break;
-            await Task.Delay(TestHelpers.PollInterval);
-        }
-        pf.CurrentScreen.Should().Be(PaymentFlowScreen.Success,
-            $"Deploy should succeed. Error: {pf.ErrorMessage ?? "none"}");
-
-        deployVm.GoToMyProjects();
-        Dispatcher.UIThread.RunJobs();
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
-        if (shellVm.IsModalOpen) shellVm.HideModal();
-        Dispatcher.UIThread.RunJobs();
-
-        // Get the project identifier
-        var deployedProject = myProjectsVm.Projects.FirstOrDefault(p => p.Description.Contains(runId));
-        deployedProject.Should().NotBeNull("Deployed project should appear in My Projects");
-        var projectIdentifier = deployedProject!.ProjectIdentifier;
-        projectIdentifier.Should().NotBeNullOrEmpty("Deployed project should have a ProjectIdentifier");
-        TestHelpers.Log($"[SEARCH] Project deployed with identifier: {projectIdentifier}");
-
         // ──────────────────────────────────────────────────────────────
-        // SEARCH: Navigate to Find Projects and search by project ID
+        // STEP 9: Navigate to Find Projects and search by project ID
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[SEARCH] Navigating to Find Projects...");
+        TestHelpers.Log("[STEP 9] Navigating to Find Projects to search by project ID...");
+        var projectIdentifier = sdkProject.ProjectIdentifier;
         window.NavigateToSection("Find Projects");
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
@@ -659,30 +547,28 @@ public class CreateProjectTest
         var findProjectsVm = window.GetFindProjectsViewModel();
         findProjectsVm.Should().NotBeNull("FindProjectsViewModel should be available");
 
-        // Execute search
-        TestHelpers.Log($"[SEARCH] Searching for project ID: {projectIdentifier}");
+        TestHelpers.Log($"[STEP 9] Searching for project ID: {projectIdentifier}");
         findProjectsVm!.SearchText = projectIdentifier;
         Dispatcher.UIThread.RunJobs();
 
         await findProjectsVm.SearchByProjectIdAsync();
         Dispatcher.UIThread.RunJobs();
 
-        // Verify search succeeded
         findProjectsVm.SearchError.Should().BeNullOrEmpty(
             $"Search should not produce an error. Got: {findProjectsVm.SearchError}");
         findProjectsVm.IsSearching.Should().BeFalse("Search should have completed");
         findProjectsVm.SearchText.Should().BeEmpty("Search text should be cleared after success");
 
-        // Verify project detail opened with correct project
         findProjectsVm.SelectedProject.Should().NotBeNull("Search should open the project detail");
         findProjectsVm.SelectedProject!.ProjectId.Should().Be(projectIdentifier,
             "Opened project should match the searched project ID");
         findProjectsVm.SelectedProject.ProjectName.Should().Be(projectName,
             "Opened project should have the correct name");
 
-        TestHelpers.Log($"[SEARCH] Found: '{findProjectsVm.SelectedProject.ProjectName}' (ID: {findProjectsVm.SelectedProject.ProjectId})");
+        TestHelpers.Log($"[STEP 9] Found: '{findProjectsVm.SelectedProject.ProjectName}' (ID: {findProjectsVm.SelectedProject.ProjectId})");
 
+        // Cleanup: close window
         window.Close();
-        TestHelpers.Log("========== SearchProjectById_AfterCreate_FindsProject PASSED ==========");
+        TestHelpers.Log("========== FullCreateInvestmentProjectFlow PASSED ==========");
     }
 }
