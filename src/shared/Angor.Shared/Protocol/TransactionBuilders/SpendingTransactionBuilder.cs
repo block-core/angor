@@ -1,9 +1,9 @@
 using Angor.Shared.Models;
 using Angor.Shared.Protocol.Scripts;
-using Blockcore.NBitcoin.DataEncoders;
+using NBitcoin.DataEncoders;
 using NBitcoin;
-using Script = Blockcore.Consensus.ScriptInfo.Script;
-using uint256 = Blockcore.NBitcoin.uint256;
+using Script = Script;
+using uint256 = uint256;
 
 namespace Angor.Shared.Protocol.TransactionBuilders;
 

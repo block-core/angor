@@ -1,12 +1,12 @@
 using System.Text;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.BIP32;
-using Blockcore.NBitcoin.Crypto;
-using Blockcore.NBitcoin.DataEncoders;
-using Blockcore.Networks;
+using NBitcoin;
+using NBitcoin;
+using NBitcoin;
+using NBitcoin.Crypto;
+using NBitcoin.DataEncoders;
+using Angor.Primitives.Network;
 using Microsoft.Extensions.Logging;
 
 namespace Angor.Shared;

@@ -5,8 +5,8 @@ using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
 using System.Text.Json;
 using Angor.Shared.Models;
-using Blockcore.Consensus.TransactionInfo;
-using Blockcore.NBitcoin.DataEncoders;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
 
 namespace Angor.Shared.Services;

@@ -6,7 +6,7 @@ using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
 using Angor.Shared.Utilities;
-using Blockcore.Consensus.TransactionInfo;
+using NBitcoin;
 using Angor.Primitives;
 using Microsoft.Extensions.Logging;
 

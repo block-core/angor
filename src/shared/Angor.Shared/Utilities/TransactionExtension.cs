@@ -1,9 +1,9 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Angor.Shared.Models;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.Consensus.TransactionInfo;
-using Blockcore.Networks;
+using NBitcoin;
+using NBitcoin;
+using Angor.Primitives.Network;
 
 namespace Angor.Shared.Utilities;
 

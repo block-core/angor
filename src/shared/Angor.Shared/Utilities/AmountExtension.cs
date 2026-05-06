@@ -1,6 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Blockcore.NBitcoin;
+using NBitcoin;
 
 namespace Angor.Shared.Utilities;
 

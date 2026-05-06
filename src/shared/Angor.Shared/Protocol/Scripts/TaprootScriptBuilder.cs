@@ -1,16 +1,16 @@
 using System.Linq.Expressions;
 using System.Text;
 using Angor.Shared.Models;
-using Blockcore.NBitcoin;
+using NBitcoin;
 using NBitcoin;
 using NBitcoin.Crypto;
-using Script = Blockcore.Consensus.ScriptInfo.Script;
+using Script = Script;
 
 namespace Angor.Shared.Protocol.Scripts;
 
 public class TaprootScriptBuilder : ITaprootScriptBuilder
 {
-    public Script CreateStage(Blockcore.Networks.Network network, ProjectScripts scripts)
+    public Script CreateStage(Network network, ProjectScripts scripts)
     {
         var treeInfo = BuildTaprootSpendInfo(scripts);
 
@@ -30,7 +30,7 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
         return new Script(controlBlock.ToBytes());
     }
 
-    public (Script controlBlock, Script execute, Script[] secrets) CreateControlSeederSecrets(ProjectScripts scripts, int threshold, Blockcore.NBitcoin.Key[] secrets)
+    public (Script controlBlock, Script execute, Script[] secrets) CreateControlSeederSecrets(ProjectScripts scripts, int threshold, Key[] secrets)
     {
         var treeInfo = BuildTaprootSpendInfo(scripts);
 
@@ -38,7 +38,7 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
 
         // find the spending script for the current secret hash combination
 
-        var hashesOfSecrets = secrets.Select(secret => (Blockcore.NBitcoin.Crypto.Hashes.Hash256(secret.ToBytes()), new Script(secret.ToBytes()))).ToList();
+        var hashesOfSecrets = secrets.Select(secret => (Hashes.Hash256(secret.ToBytes()), new Script(secret.ToBytes()))).ToList();
 
         Script execute = null;
         List<Script> secretHashes = new List<Script>();
@@ -53,7 +53,7 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
             {
                 if (op.PushData != null && op.PushData.Length == 32)
                 {
-                    var comp = new Blockcore.NBitcoin.uint256(op.PushData);
+                    var comp = new uint256(op.PushData);
 
                     foreach (var hash in hashesOfSecrets)
                     {

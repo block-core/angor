@@ -2,8 +2,8 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Services;
 using Angor.Shared;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.DataEncoders;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 using Angor.Primitives;
 
 namespace Angor.Sdk.Funding.Shared;

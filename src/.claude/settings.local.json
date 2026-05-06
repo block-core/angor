@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build:*)",
+      "Bash(xargs grep:*)",
+      "WebFetch(domain:thunderhub.thedude.cloud)",
+      "Bash(dotnet test:*)",
+      "Read(//c/Users/David.THEDRAGON/angor-mobile/**)",
+      "Bash(gh pr:*)",
+      "Bash(gh run:*)",
+      "Bash(/c/work/android-sdk/platform-tools/adb.exe logcat:*)",
+      "Bash(/c/work/android-sdk/platform-tools/adb.exe uninstall:*)",
+      "Bash(export ANDROID_SDK_ROOT=/c/work/android-sdk)",
+      "Bash(export JAVA_HOME=/c/work/jdk)",
+      "Bash(/c/work/android-sdk/platform-tools/adb.exe shell:*)",
+      "Bash(/c/work/android-sdk/platform-tools/adb.exe emu:*)",
+      "Bash(ANDROID_SDK_ROOT=/c/work/android-sdk /c/work/android-sdk/emulator/emulator.exe -avd Pixel_9 -no-snapshot -no-audio -dns-server 8.8.8.8)",
+      "WebSearch",
+      "Read(//c/Users/David.THEDRAGON/nostr.claude/**)",
+      "Bash(docker compose:*)"
+    ]
+  }
+}

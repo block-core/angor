@@ -9,7 +9,7 @@ using Angor.Sdk.Wallet.Infrastructure.History;
 using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
-using Blockcore.NBitcoin.BIP39;
+using NBitcoin;
 using Angor.Primitives;
 using Microsoft.Extensions.Logging;
 

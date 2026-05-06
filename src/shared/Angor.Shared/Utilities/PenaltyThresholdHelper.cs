@@ -1,5 +1,5 @@
 using Angor.Shared.Models;
-using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
+using Transaction = Transaction;
 
 namespace Angor.Shared.Utilities;
 

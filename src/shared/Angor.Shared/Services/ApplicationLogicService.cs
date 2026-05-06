@@ -1,6 +1,6 @@
 using System;
 using Angor.Shared.Models;
-using Blockcore.Networks;
+using Angor.Primitives.Network;
 
 namespace Angor.Shared.Services
 {

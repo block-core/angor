@@ -1,4 +1,4 @@
-﻿using Blockcore.Networks;
+﻿using Angor.Primitives.Network;
 
 namespace Angor.Shared.Networks
 {

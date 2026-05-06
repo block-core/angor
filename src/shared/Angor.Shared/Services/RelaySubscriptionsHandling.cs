@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using System.ComponentModel;
-using Blockcore.EventBus;
+
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Requests;
 using Nostr.Client.Responses;

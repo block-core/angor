@@ -1,8 +1,8 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.DataEncoders;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 using Angor.Primitives;
 using MediatR;
 using Nostr.Client.Utils;

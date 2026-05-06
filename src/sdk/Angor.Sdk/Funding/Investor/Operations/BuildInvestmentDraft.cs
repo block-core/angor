@@ -9,7 +9,7 @@ using Angor.Sdk.Wallet.Domain;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
-using Blockcore.Consensus.TransactionInfo;
+using NBitcoin;
 using Angor.Primitives;
 using MediatR;
 using Microsoft.Extensions.Logging;

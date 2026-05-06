@@ -1,12 +1,12 @@
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using Angor.Shared.Utilities;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.Consensus.TransactionInfo;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.BIP32;
-using Blockcore.NBitcoin.BIP39;
-using Blockcore.Networks;
+using NBitcoin;
+using NBitcoin;
+using NBitcoin;
+using NBitcoin;
+using NBitcoin;
+using Angor.Primitives.Network;
 using Microsoft.Extensions.Logging;
 using NBitcoin.Crypto;
 
@@ -443,7 +443,7 @@ public class WalletOperations : IWalletOperations
     public AccountInfo BuildAccountInfoForWalletWords(WalletWords walletWords)
     {
         ExtKey.UseBCForHMACSHA512 = true;
-        Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+        Hashes.UseBCForHMACSHA512 = true;
 
         Network network = _networkConfiguration.GetNetwork();
         var coinType = network.Consensus.CoinType;
@@ -485,7 +485,7 @@ public class WalletOperations : IWalletOperations
     public async Task UpdateDataForExistingAddressesAsync(AccountInfo accountInfo)
     {
         ExtKey.UseBCForHMACSHA512 = true;
-        Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+        Hashes.UseBCForHMACSHA512 = true;
 
         var addressTasks=  accountInfo.AddressesInfo.Select(UpdateAddressInfoUtxoData);
         
@@ -543,7 +543,7 @@ public class WalletOperations : IWalletOperations
     public async Task UpdateAccountInfoWithNewAddressesAsync(AccountInfo accountInfo)
     {
         ExtKey.UseBCForHMACSHA512 = true;
-        Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+        Hashes.UseBCForHMACSHA512 = true;
 
         Network network = _networkConfiguration.GetNetwork();
         

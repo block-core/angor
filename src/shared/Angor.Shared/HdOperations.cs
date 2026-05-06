@@ -1,8 +1,8 @@
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.BIP32;
-using Blockcore.NBitcoin.BIP39;
-using Blockcore.Networks;
-using Blockcore.Utilities;
+using NBitcoin;
+using NBitcoin;
+using NBitcoin;
+using Angor.Primitives.Network;
+using Angor.Primitives;
 
 namespace Angor.Shared;
 
@@ -283,7 +283,7 @@ public class HdOperations : IHdOperations
         public string DerivePublicKey(string mnemonic, string? passphrase, string hdPath)
         {
             ExtKey.UseBCForHMACSHA512 = true;
-            Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+            Hashes.UseBCForHMACSHA512 = true;
 
             var extendedKey = GetExtendedKey(mnemonic, passphrase);
             var derivedKey = extendedKey.Derive(new KeyPath(hdPath));
@@ -293,10 +293,10 @@ public class HdOperations : IHdOperations
         public string DerivePrivateKey(string mnemonic, string? passphrase, string hdPath)
         {
             ExtKey.UseBCForHMACSHA512 = true;
-            Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+            Hashes.UseBCForHMACSHA512 = true;
 
             var extendedKey = GetExtendedKey(mnemonic, passphrase);
             var derivedKey = extendedKey.Derive(new KeyPath(hdPath));
-            return Blockcore.NBitcoin.DataEncoders.Encoders.Hex.EncodeData(derivedKey.PrivateKey.ToBytes());
+            return Encoders.Hex.EncodeData(derivedKey.PrivateKey.ToBytes());
         }
     }

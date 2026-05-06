@@ -9,13 +9,13 @@ using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
 using Angor.Shared.Utilities;
-using Blockcore.Consensus.TransactionInfo;
-using Blockcore.NBitcoin;
+using NBitcoin;
+using NBitcoin;
 using Angor.Primitives;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Angor.Sdk.Funding.Projects;
-using Script = Blockcore.Consensus.ScriptInfo.Script;
+using Script = Script;
 
 namespace Angor.Sdk.Funding.Investor.Operations;
 

@@ -1,5 +1,5 @@
 using Angor.Shared.Models;
-using Blockcore.NBitcoin.DataEncoders;
+using NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
 
 namespace Angor.Shared.Services;
@@ -123,7 +123,7 @@ public class MempoolIndexerMappers
         try
         {
             var scriptBytes = Encoders.Hex.DecodeData(scriptPubKeyHex);
-            var script = new Blockcore.Consensus.ScriptInfo.Script(scriptBytes);
+            var script = new Script(scriptBytes);
 
             if (!script.IsUnspendable)
                 return null;
@@ -164,7 +164,7 @@ public class MempoolIndexerMappers
         try
         {
             var scriptBytes = Encoders.Hex.DecodeData(scriptPubKeyHex);
-            var script = new Blockcore.Consensus.ScriptInfo.Script(scriptBytes);
+            var script = new Script(scriptBytes);
 
             if (!script.IsUnspendable)
                 return null;

@@ -6,8 +6,8 @@ using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Services;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.NBitcoin;
+using NBitcoin;
+using NBitcoin;
 using Angor.Primitives;
 using MediatR;
 

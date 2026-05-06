@@ -6,7 +6,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
 using Angor.Shared.Utilities;
-using Blockcore.Consensus.TransactionInfo;
+using NBitcoin;
 using Angor.Primitives;
 using MediatR;
 using Investment = Angor.Sdk.Funding.Founder.Domain.Investment;

@@ -1,7 +1,7 @@
 using Angor.Shared.Models;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.DataEncoders;
+using NBitcoin;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 
 namespace Angor.Shared.Protocol.Scripts;
 

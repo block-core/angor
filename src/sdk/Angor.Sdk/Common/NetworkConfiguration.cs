@@ -1,7 +1,7 @@
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
-using Blockcore.Networks;
+using Angor.Primitives.Network;
 
 namespace Angor.Sdk.Common;
 

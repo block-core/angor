@@ -1,10 +1,10 @@
 using Angor.Shared.Models;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Utilities;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.Consensus.TransactionInfo;
-using Blockcore.NBitcoin;
-using TxIn = Blockcore.Consensus.TransactionInfo.TxIn;
+using NBitcoin;
+using NBitcoin;
+using NBitcoin;
+using TxIn = TxIn;
 
 namespace Angor.Shared.Protocol.TransactionBuilders;
 
