@@ -1003,14 +1003,15 @@ public static class TestHelpers
     public static Xunit.Abstractions.ITestOutputHelper? Output;
 
     /// <summary>
-    /// Write a timestamped log message to the console AND to the xUnit
+    /// Write a timestamped log message to the console, trace, and xUnit
     /// test output (if <see cref="Output"/> has been set for this test).
     /// </summary>
     public static void Log(string message)
     {
         var line = $"[{DateTime.UtcNow:HH:mm:ss.fff}] {message}";
         Console.WriteLine(line);
-        Output?.WriteLine(line);
+        System.Diagnostics.Trace.WriteLine(line);
+        try { Output?.WriteLine(line); } catch { /* Output may be disposed after test ends */ }
     }
 
     /// <summary>
