@@ -99,7 +99,7 @@ public class ProjectItemViewModel : INotifyPropertyChanged
     /// Penalty threshold in satoshis from the project's on-chain data.
     /// For Fund-type projects, investments below this amount are auto-approved.
     /// For Invest-type projects, all investments require founder approval regardless.
-    /// Null means no threshold was set (treat as 0 ÔåÆ auto-approve all for Fund type).
+    /// Null means no threshold was set (treat as 0 -- auto-approve all for Fund type).
     /// </summary>
     public long? PenaltyThresholdSats { get; set; }
 
@@ -217,7 +217,7 @@ public class ProjectItemViewModel : INotifyPropertyChanged
 }
 
 /// <summary>
-/// FindProjects ViewModel ÔÇö connected to SDK for project discovery.
+/// FindProjects ViewModel -- connected to SDK for project discovery.
 /// Falls back to sample data if SDK call fails.
 /// </summary>
 public partial class FindProjectsViewModel : ReactiveObject
@@ -652,7 +652,7 @@ public partial class FindProjectsViewModel : ReactiveObject
     /// Number of cards revealed per page. Mobile uses a small batch (4) paired
     /// with an explicit "Load More" button so users control reveal pacing and
     /// we never stutter-inflate a long list during a scroll flick. Desktop
-    /// keeps the larger batch ÔÇö the viewport has room and no auto-scroll
+    /// keeps the larger batch -- the viewport has room and no auto-scroll
     /// trigger runs there either.
     /// </summary>
     public static int PageSize =>
