@@ -1,5 +1,5 @@
 using Angor.Shared.Models;
-using Transaction = Transaction;
+using Transaction = NBitcoin.Transaction;
 
 namespace Angor.Shared.Utilities;
 

@@ -41,7 +41,7 @@ public class WalletOperations : IWalletOperations
     public TransactionInfo AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo, long feeRate)
     {
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
 
         var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
         var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
@@ -138,7 +138,7 @@ public class WalletOperations : IWalletOperations
     public TransactionInfo AddInputsFromAddressAndSignTransaction(string fundingAddress, string changeAddress,
         Transaction transaction, WalletWords walletWords, AccountInfo accountInfo, long feeRate)
     {
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
 
         // Find UTXOs only for the specified funding address
         var addressInfo = accountInfo.AllAddresses()
@@ -226,7 +226,7 @@ public class WalletOperations : IWalletOperations
     public TransactionInfo AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo, long feeRate)
     {
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
 
         // Clone transaction for modification
         var clonedTransaction = network.CreateTransaction(transaction.ToHex());
@@ -292,7 +292,7 @@ public class WalletOperations : IWalletOperations
         SendAmountToAddress(WalletWords walletWords,
             SendInfo sendInfo) //TODO change the passing of wallet words as parameter after refactoring is complete
     {
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
 
         if (sendInfo.SendAmount > sendInfo.SendUtxos.Values.Sum(s => s.UtxoData.value))
         {
@@ -327,7 +327,7 @@ public class WalletOperations : IWalletOperations
 
     public List<UtxoData> UpdateAccountUnconfirmedInfoWithSpentTransaction(AccountInfo accountInfo, Transaction transaction)
     {
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
         
         var inputs = transaction.Inputs.Select(_ => _.PrevOut.ToString()).ToList();
 
@@ -445,7 +445,7 @@ public class WalletOperations : IWalletOperations
         ExtKey.UseBCForHMACSHA512 = true;
         Hashes.UseBCForHMACSHA512 = true;
 
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
         var coinType = network.Consensus.CoinType;
 
         ExtKey extendedKey;
@@ -545,7 +545,7 @@ public class WalletOperations : IWalletOperations
         ExtKey.UseBCForHMACSHA512 = true;
         Hashes.UseBCForHMACSHA512 = true;
 
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
         
         var (index, items) = await FetchAddressesDataForPubKeyAsync(accountInfo.LastFetchIndex, accountInfo.ExtPubKey, network, false);
 
@@ -582,7 +582,7 @@ public class WalletOperations : IWalletOperations
         }
     }
 
-    private async Task<(int,List<AddressInfo>)> FetchAddressesDataForPubKeyAsync(int scanIndex, string ExtendedPubKey, Network network, bool isChange)
+    private async Task<(int,List<AddressInfo>)> FetchAddressesDataForPubKeyAsync(int scanIndex, string ExtendedPubKey, AngorNetwork network, bool isChange)
     {
         ExtPubKey accountExtPubKey = ExtPubKey.Parse(ExtendedPubKey, network);
         
@@ -647,7 +647,7 @@ public class WalletOperations : IWalletOperations
         return (scanIndex, addressesInfo);
     }
 
-    private AddressInfo GenerateAddressFromPubKey(int scanIndex, Network network, bool isChange, ExtPubKey accountExtPubKey)
+    private AddressInfo GenerateAddressFromPubKey(int scanIndex, AngorNetwork network, bool isChange, ExtPubKey accountExtPubKey)
     {
         var pubKey = _hdOperations.GeneratePublicKey(accountExtPubKey, scanIndex, isChange);
         var path = _hdOperations.CreateHdPath(Purpose, network.Consensus.CoinType, AccountIndex, isChange, scanIndex);

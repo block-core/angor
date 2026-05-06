@@ -4,11 +4,11 @@ using Angor.Shared.Protocol.TransactionBuilders;
 using NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Key = Key;
-using Transaction = Transaction;
+using Key = NBitcoin.Key;
+using Transaction = NBitcoin.Transaction;
 using WitScript = NBitcoin.WitScript;
-using Money = Money;
-using SigHash = SigHash;
+using Money = NBitcoin.Money;
+using SigHash = NBitcoin.SigHash;
 using Angor.Shared.Utilities;
 
 namespace Angor.Shared.Protocol;

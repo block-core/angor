@@ -64,7 +64,7 @@ public class HdOperations : IHdOperations
         /// <param name="chainCode">The chain code used in creating the extended private key.</param>
         /// <param name="hdPath">The HD path of the account for which to get the extended private key.</param>
         /// <param name="network">The network for which to generate this extended private key.</param>
-        public static ISecret GetExtendedPrivateKey(Key privateKey, byte[] chainCode, string hdPath, Network network)
+        public static ISecret GetExtendedPrivateKey(Key privateKey, byte[] chainCode, string hdPath, AngorNetwork network)
         {
             Guard.NotNull(privateKey, nameof(privateKey));
             Guard.NotNull(chainCode, nameof(chainCode));
@@ -271,7 +271,7 @@ public class HdOperations : IHdOperations
         /// <param name="password">The password used to decrypt the encrypted seed.</param>
         /// <param name="network">The network this seed applies to.</param>
         /// <returns>The decrypted private key.</returns>
-        public static Key DecryptSeed(string encryptedSeed, string password, Network network)
+        public static Key DecryptSeed(string encryptedSeed, string password, AngorNetwork network)
         {
             Guard.NotEmpty(encryptedSeed, nameof(encryptedSeed));
             Guard.NotEmpty(password, nameof(password));

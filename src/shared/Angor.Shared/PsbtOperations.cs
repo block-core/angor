@@ -36,7 +36,7 @@ public class PsbtOperations : IPsbtOperations
             throw new ApplicationException("The Root ExtPubKey is missing");
         }
 
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
         var nbitcoinNetwork = NetworkMapper.Map(network);
 
         changeAddress ??= accountInfo.GetNextChangeReceiveAddress();
@@ -124,7 +124,7 @@ public class PsbtOperations : IPsbtOperations
             throw new ApplicationException("The Root ExtPubKey is missing");
         }
 
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
         var nbitcoinNetwork = NetworkMapper.Map(network);
 
         var changeAddress = accountInfo.GetNextChangeReceiveAddress();
@@ -204,7 +204,7 @@ public class PsbtOperations : IPsbtOperations
 
     public TransactionInfo SignPsbt(PsbtData psbtData, WalletWords walletWords)
     {
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
         var nbitcoinNetwork = NetworkMapper.Map(network);
 
         var psbt = NBitcoin.PSBT.Parse(psbtData.PsbtHex, nbitcoinNetwork);

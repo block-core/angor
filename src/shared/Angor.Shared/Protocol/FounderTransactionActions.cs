@@ -12,9 +12,9 @@ using IndexedTxOut = NBitcoin.IndexedTxOut;
 using Key = NBitcoin.Key;
 using Op = NBitcoin.Op;
 using OutPoint = NBitcoin.OutPoint;
-using Script = Script;
-using Transaction = Transaction;
-using uint256 = uint256;
+using Script = NBitcoin.Script;
+using Transaction = NBitcoin.Transaction;
+using uint256 = NBitcoin.uint256;
 using Utils = NBitcoin.Utils;
 using WitScript = NBitcoin.WitScript;
 

@@ -9,7 +9,7 @@ public class NetworkMapper
     /// </summary>
     /// <param name="network"></param>
     /// <returns></returns>
-    public static NBitcoin.Network Map(Network network)
+    public static NBitcoin.Network Map(AngorNetwork network)
     {
         // Special case for Liquid network
         if (network.Name == "Liquid")

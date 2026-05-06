@@ -5,10 +5,10 @@ using Angor.Shared.Utilities;
 using NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Op = Op;
-using Transaction = Transaction;
-using uint256 = uint256;
-using WitScript = WitScript;
+using Op = NBitcoin.Op;
+using Transaction = NBitcoin.Transaction;
+using uint256 = NBitcoin.uint256;
+using WitScript = NBitcoin.WitScript;
 
 namespace Angor.Shared.Protocol;
 

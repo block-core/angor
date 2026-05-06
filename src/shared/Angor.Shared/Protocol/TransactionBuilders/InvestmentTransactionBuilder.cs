@@ -4,7 +4,7 @@ using Angor.Shared.Utilities;
 using NBitcoin;
 using NBitcoin;
 using NBitcoin;
-using TxIn = TxIn;
+using TxIn = NBitcoin.TxIn;
 
 namespace Angor.Shared.Protocol.TransactionBuilders;
 

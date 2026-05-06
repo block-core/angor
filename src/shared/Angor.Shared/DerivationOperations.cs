@@ -298,7 +298,7 @@ public class DerivationOperations : IDerivationOperations
 
     public string DeriveAngorKey(string angorRootKey, string founderKey)
     {
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
 
         var extKey = new BitcoinExtPubKey(angorRootKey, network).ExtPubKey;
 
@@ -328,7 +328,7 @@ public class DerivationOperations : IDerivationOperations
 
     public string ConvertAngorKeyToBitcoinAddress(string projectId)
     {
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
 
         // Decode the angor address to get the witness program
         var angorEncoder = new Bech32Encoder("angor");

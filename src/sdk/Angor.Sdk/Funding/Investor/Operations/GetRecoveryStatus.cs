@@ -15,7 +15,7 @@ using Angor.Primitives;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Angor.Sdk.Funding.Projects;
-using Script = Script;
+using Script = NBitcoin.Script;
 
 namespace Angor.Sdk.Funding.Investor.Operations;
 

@@ -1,16 +1,17 @@
 using System.Linq.Expressions;
 using System.Text;
+using Angor.Primitives.Network;
 using Angor.Shared.Models;
 using NBitcoin;
 using NBitcoin;
 using NBitcoin.Crypto;
-using Script = Script;
+using Script = NBitcoin.Script;
 
 namespace Angor.Shared.Protocol.Scripts;
 
 public class TaprootScriptBuilder : ITaprootScriptBuilder
 {
-    public Script CreateStage(Network network, ProjectScripts scripts)
+    public Script CreateStage(AngorNetwork network, ProjectScripts scripts)
     {
         var treeInfo = BuildTaprootSpendInfo(scripts);
 
