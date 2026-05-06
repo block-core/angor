@@ -1106,10 +1106,24 @@ public partial class CreateProjectViewModel : ReactiveObject
     /// when the user navigates away and returns.
     /// False when the wizard is in its initial state or has already been deployed.
     /// </summary>
-    public bool HasInProgressData =>
-        !IsDeployed &&
-        (!ShowWelcome || !string.IsNullOrEmpty(ProjectType) || CurrentStep > 1 ||
-         !string.IsNullOrEmpty(ProjectName) || !string.IsNullOrEmpty(ProjectAbout));
+    public bool HasInProgressData
+    {
+        get
+        {
+            if (IsDeployed)
+                return false;
+
+            // The user has advanced beyond the welcome screen
+            bool hasAdvancedBeyondWelcome = !ShowWelcome || CurrentStep > 1;
+
+            // The user has entered at least some data
+            bool hasUserInputData = !string.IsNullOrEmpty(ProjectType)
+                || !string.IsNullOrEmpty(ProjectName)
+                || !string.IsNullOrEmpty(ProjectAbout);
+
+            return hasAdvancedBeyondWelcome || hasUserInputData;
+        }
+    }
 
     /// <summary>
     /// Reset all wizard state to initial values so the wizard can be re-opened fresh.
