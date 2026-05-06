@@ -230,7 +230,7 @@ namespace Angor.Shared.Services
 
             var content = _serializer.Serialize(project);
 
-            var signed = GetNip3030NostrEvent(content)
+            var signed = GetNip3030NostrEvent(content, project.ProjectIdentifier)
                 .Sign(key);
 
             _subscriptionsHandling.TryAddOKAction(signed.Id, action);
@@ -462,7 +462,7 @@ namespace Angor.Shared.Services
             return Task.FromResult(signed.Id);
         }
 
-        private static NostrEvent GetNip3030NostrEvent(string content)
+        private static NostrEvent GetNip3030NostrEvent(string content, string? projectIdentifier = null)
         {
             // https://github.com/block-core/nips/blob/peer-to-peer-decentralized-funding/3030.md
 
@@ -471,7 +471,10 @@ namespace Angor.Shared.Services
                 //Kind = NostrKind.ApplicationSpecificData,
                 Kind = Nip3030NostrKind,
                 CreatedAt = DateTime.UtcNow,
-                Content = content
+                Content = content,
+                Tags = string.IsNullOrEmpty(projectIdentifier)
+                    ? new NostrEventTags()
+                    : new NostrEventTags(new NostrEventTag("d", projectIdentifier))
             };
             return ev;
         }

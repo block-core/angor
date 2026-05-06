@@ -299,6 +299,84 @@ public partial class FindProjectsViewModel : ReactiveObject
     [Reactive] private InvestPageViewModel? investPageViewModel;
     [Reactive] private bool isLoading;
     [Reactive] private bool isInitialLoad = true;
+    [Reactive] private string? searchText;
+    [Reactive] private bool isSearching;
+    [Reactive] private string? searchError;
+
+    /// <summary>
+    /// Search for a project by its on-chain project ID.
+    /// Looks up the project on the blockchain, gets the nostr event ID from the
+    /// OP_RETURN, fetches the nostr event, and opens the project detail.
+    /// </summary>
+    public async Task SearchByProjectIdAsync()
+    {
+        var projectId = SearchText?.Trim();
+        if (string.IsNullOrEmpty(projectId))
+            return;
+
+        SearchError = null;
+        IsSearching = true;
+        _logger.LogInformation("Searching for project by ID: {ProjectId}", projectId);
+
+        try
+        {
+            var result = await _projectAppService.TryGet(
+                new TryGetProject.TryGetProjectRequest(new ProjectId(projectId)));
+
+            if (result.IsFailure)
+            {
+                SearchError = $"Search failed: {result.Error}";
+                _logger.LogWarning("Search failed for {ProjectId}: {Error}", projectId, result.Error);
+                return;
+            }
+
+            var maybeProject = result.Value.Project;
+            if (maybeProject.HasNoValue)
+            {
+                SearchError = "Project not found on the blockchain.";
+                _logger.LogInformation("Project not found: {ProjectId}", projectId);
+                return;
+            }
+
+            var dto = maybeProject.Value;
+            var vm = ProjectItemViewModel.FromDto(dto);
+            vm.CurrencySymbol = _currencyService.Symbol;
+
+            // Load statistics for the found project
+            try
+            {
+                var statsResult = await _projectAppService.GetProjectStatistics(new ProjectId(projectId));
+                if (statsResult.IsSuccess)
+                {
+                    var stats = statsResult.Value;
+                    var raisedBtc = (double)stats.TotalInvested.ToUnitBtc();
+                    vm.Raised = raisedBtc.ToString("F5", System.Globalization.CultureInfo.InvariantCulture);
+                    vm.InvestorCount = stats.TotalInvestors ?? 0;
+                    if (double.TryParse(vm.Target, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var target) && target > 0)
+                        vm.Progress = Math.Min(raisedBtc / target * 100, 100);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Failed to load stats for searched project {ProjectId}", projectId);
+            }
+
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                SearchText = "";
+                OpenProjectDetail(vm);
+            });
+        }
+        catch (Exception ex)
+        {
+            SearchError = "An error occurred while searching.";
+            _logger.LogError(ex, "Exception searching for project {ProjectId}", projectId);
+        }
+        finally
+        {
+            IsSearching = false;
+        }
+    }
 
     public void OpenProjectDetail(ProjectItemViewModel project)
     {
