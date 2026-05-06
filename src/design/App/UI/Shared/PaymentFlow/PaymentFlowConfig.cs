@@ -34,6 +34,9 @@ public record PaymentFlowConfig
     /// <summary>Called when the user clicks the success button. Navigate to the appropriate page.</summary>
     public required Action OnSuccessButtonClicked { get; init; }
 
+    /// <summary>Called when the flow is dismissed before success.</summary>
+    public Action? OnDismissed { get; init; }
+
     /// <summary>
     /// Called after funds are received at the funding address (on-chain or Lightning claim).
     /// The consumer builds and publishes its specific transaction here

@@ -38,8 +38,10 @@ public partial class FundersView : UserControl, ISectionView
         sw.Restart();
         DataContext = vm;
 
-        // Strip hover transitions + BoxShadow on mobile — they never fire and waste GPU
-        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
+        // Strip hover transitions + BoxShadow on mobile — they never fire and waste GPU.
+        // Compact desktop previews should use the same layout as phones.
+        bool isDeviceMobile = OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
+        if (isDeviceMobile)
             Classes.Add("Mobile");
 
         AddHandler(Button.ClickEvent, OnButtonClick, RoutingStrategies.Bubble);
@@ -66,6 +68,8 @@ public partial class FundersView : UserControl, ISectionView
         _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
             .Subscribe(isCompact =>
             {
+                Classes.Set("Mobile", isCompact || isDeviceMobile);
+
                 if (_fundersScrollable != null)
                     _fundersScrollable.ContentPadding = isCompact
                         ? new Thickness(16, 16, 16, 96)
@@ -204,22 +208,29 @@ public partial class FundersView : UserControl, ISectionView
                 e.Handled = true;
                 break;
 
-            case "ApproveButton" when btn.Tag is int approveId:
+            case "ApproveButton":
+            case "MobileApproveButton":
+                if (btn.Tag is not int approveId) break;
                 vm.ApproveSignature(approveId);
                 e.Handled = true;
                 break;
 
-            case "RejectButton" when btn.Tag is int rejectId:
+            case "RejectButton":
+            case "MobileRejectButton":
+                if (btn.Tag is not int rejectId) break;
                 vm.RejectSignature(rejectId);
                 e.Handled = true;
                 break;
 
             case "ChatButton":
+            case "MobileChatButton":
                 // Chat action — placeholder for now
                 e.Handled = true;
                 break;
 
-            case "ExpandButton" when btn.Tag is int expandId:
+            case "ExpandButton":
+            case "MobileExpandButton":
+                if (btn.Tag is not int expandId) break;
                 vm.ToggleExpanded(expandId);
                 ToggleExpandedPanel(expandId, vm.IsExpanded(expandId));
                 e.Handled = true;
@@ -250,7 +261,10 @@ public partial class FundersView : UserControl, ISectionView
             }
 
             // Rotate the expand button chevron
-            if (container is Button { Name: "ExpandButton" } expandBtn && expandBtn.Tag is int btnId && btnId == id)
+            if (container is Button expandBtn
+                && (expandBtn.Name == "ExpandButton" || expandBtn.Name == "MobileExpandButton")
+                && expandBtn.Tag is int btnId
+                && btnId == id)
             {
                 expandBtn.RenderTransform = isExpanded
                     ? new RotateTransform(180)

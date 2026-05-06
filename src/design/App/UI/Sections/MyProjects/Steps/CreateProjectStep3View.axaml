@@ -34,7 +34,7 @@
                                    Foreground="White" />
                     </Border>
                     <!-- Upload Banner button (centered) -->
-                    <Button Name="UploadBannerButton" Background="Transparent"
+                    <Button Name="UploadBannerButton" Classes="NoPressShift" Background="Transparent"
                             BorderThickness="0" Padding="0" Cursor="Hand"
                             HorizontalAlignment="Center" VerticalAlignment="Center">
                         <Border Background="{DynamicResource Surface}" CornerRadius="8"

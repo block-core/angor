@@ -1165,6 +1165,7 @@ public partial class CreateProjectViewModel : ReactiveObject
         // Step 6: Deploy
         IsDeploying = false;
         IsDeployed = false;
+        DeployFlow.Close();
         this.RaisePropertyChanged(nameof(DeployButtonText));
 
         // Clear callback

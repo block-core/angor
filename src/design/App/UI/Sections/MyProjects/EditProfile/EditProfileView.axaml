@@ -232,60 +232,84 @@
             </StackPanel>
         </DockPanel>
 
+        <!-- Compact sticky header: save + tabs stay available while form content scrolls. -->
+        <StackPanel Name="MobileStickyEditHeader"
+                    VerticalAlignment="Top"
+                    ZIndex="100"
+                    Margin="16,16,16,0"
+                    Spacing="16"
+                    IsVisible="False">
+            <Border Background="{DynamicResource FloatingBtnBg}"
+                    BorderBrush="{DynamicResource FloatingBtnBorder}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Height="52">
+                <Button Name="MobileSaveButton"
+                        Classes="NavBtn"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
+                        Cursor="Hand"
+                        IsEnabled="{Binding !IsSaving}">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Panel>
+                            <i:Icon Value="fa-solid fa-floppy-disk" FontSize="14"
+                                    Foreground="{DynamicResource PrimaryGreenBrush}"
+                                    IsVisible="{Binding !IsSaving}" />
+                            <i:Icon Value="fa-solid fa-spinner" FontSize="14"
+                                    Foreground="{DynamicResource PrimaryGreenBrush}"
+                                    IsVisible="{Binding IsSaving}"
+                                    RenderTransformOrigin="50%,50%">
+                                <i:Icon.RenderTransform><RotateTransform /></i:Icon.RenderTransform>
+                                <i:Icon.Styles>
+                                    <Style Selector="i|Icon[IsVisible=True]">
+                                        <Style.Animations>
+                                            <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                <KeyFrame Cue="0%"><Setter Property="RotateTransform.Angle" Value="0" /></KeyFrame>
+                                                <KeyFrame Cue="100%"><Setter Property="RotateTransform.Angle" Value="360" /></KeyFrame>
+                                            </Animation>
+                                        </Style.Animations>
+                                    </Style>
+                                </i:Icon.Styles>
+                            </i:Icon>
+                        </Panel>
+                        <TextBlock Name="MobileSaveButtonText"
+                                   Text="Save Profile"
+                                   FontSize="14"
+                                   FontWeight="Medium"
+                                   Foreground="{DynamicResource PrimaryGreenBrush}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </Border>
+
+            <Border Name="MobileEditTabsBorder"
+                    Background="{DynamicResource SurfaceLow}"
+                    BorderBrush="{DynamicResource Stroke}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="6">
+                <ScrollViewer HorizontalScrollBarVisibility="Hidden"
+                              VerticalScrollBarVisibility="Disabled">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Button Name="MobileTabProfile" Classes="TabBtn" Content="Profile" />
+                        <Button Name="MobileTabProject" Classes="TabBtn" Content="Project" />
+                        <Button Name="MobileTabFaq" Classes="TabBtn" Content="FAQ" />
+                        <Button Name="MobileTabMembers" Classes="TabBtn" Content="Members" />
+                        <Button Name="MobileTabMedia" Classes="TabBtn" Content="Media" />
+                        <Button Name="MobileTabRelays" Classes="TabBtn" Content="Relays" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </StackPanel>
+
         <!-- ═══ SCROLLABLE CONTENT ═══ -->
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel Name="EditContentStack" Spacing="24" Margin="24,0,24,24">
 
                 <!-- Spacer for nav bar: 24 + 44 + 24 = 92px -->
                 <Panel Name="EditNavSpacer" Height="92" />
-
-                <!-- Mobile inline action: shell provides Back to My Projects below. -->
-                <StackPanel Name="MobileEditActions" Spacing="8" IsVisible="False">
-                    <Border Background="{DynamicResource FloatingBtnBg}"
-                            BorderBrush="{DynamicResource FloatingBtnBorder}"
-                            BorderThickness="1"
-                            CornerRadius="12"
-                            Height="52">
-                        <Button Name="MobileSaveButton"
-                                Classes="NavBtn"
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Stretch"
-                                HorizontalContentAlignment="Center"
-                                VerticalContentAlignment="Center"
-                                Cursor="Hand"
-                                IsEnabled="{Binding !IsSaving}">
-                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                <Panel>
-                                    <i:Icon Value="fa-solid fa-floppy-disk" FontSize="14"
-                                            Foreground="{DynamicResource PrimaryGreenBrush}"
-                                            IsVisible="{Binding !IsSaving}" />
-                                    <i:Icon Value="fa-solid fa-spinner" FontSize="14"
-                                            Foreground="{DynamicResource PrimaryGreenBrush}"
-                                            IsVisible="{Binding IsSaving}"
-                                            RenderTransformOrigin="50%,50%">
-                                        <i:Icon.RenderTransform><RotateTransform /></i:Icon.RenderTransform>
-                                        <i:Icon.Styles>
-                                            <Style Selector="i|Icon[IsVisible=True]">
-                                                <Style.Animations>
-                                                    <Animation Duration="0:0:1" IterationCount="INFINITE">
-                                                        <KeyFrame Cue="0%"><Setter Property="RotateTransform.Angle" Value="0" /></KeyFrame>
-                                                        <KeyFrame Cue="100%"><Setter Property="RotateTransform.Angle" Value="360" /></KeyFrame>
-                                                    </Animation>
-                                                </Style.Animations>
-                                            </Style>
-                                        </i:Icon.Styles>
-                                    </i:Icon>
-                                </Panel>
-                                <TextBlock Name="MobileSaveButtonText"
-                                           Text="Save Profile"
-                                           FontSize="14"
-                                           FontWeight="Medium"
-                                           Foreground="{DynamicResource PrimaryGreenBrush}"
-                                           VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                    </Border>
-                </StackPanel>
 
                 <!-- ── Loading indicator ── -->
                 <Border Background="{DynamicResource Surface}"
@@ -324,7 +348,7 @@
                         BorderThickness="1"
                         CornerRadius="12"
                         Padding="6">
-                    <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                    <ScrollViewer HorizontalScrollBarVisibility="Hidden"
                                   VerticalScrollBarVisibility="Disabled">
                         <StackPanel Name="EditTabsPanel" Orientation="Horizontal" Spacing="4">
                             <Button Name="TabProfile" Classes="TabBtn" Content="Profile" />
