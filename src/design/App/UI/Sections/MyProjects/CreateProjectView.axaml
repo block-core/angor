@@ -170,7 +170,7 @@
                 <StackPanel Name="StepperPanel" Spacing="0" Margin="24,0"
                             VerticalAlignment="Center">
                     <!-- Step 1 -->
-                    <Button Name="StepBtn1" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                    <Button Name="StepBtn1" Classes="NoPressShift" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <Border Name="StepCircle1" Classes="StepCircle StepCurrent"
@@ -190,7 +190,7 @@
                             HorizontalAlignment="Left" />
 
                     <!-- Step 2 -->
-                    <Button Name="StepBtn2" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                    <Button Name="StepBtn2" Classes="NoPressShift" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <Border Name="StepCircle2" Classes="StepCircle"
@@ -210,7 +210,7 @@
                             HorizontalAlignment="Left" />
 
                     <!-- Step 3 -->
-                    <Button Name="StepBtn3" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                    <Button Name="StepBtn3" Classes="NoPressShift" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <Border Name="StepCircle3" Classes="StepCircle"
@@ -230,7 +230,7 @@
                             HorizontalAlignment="Left" />
 
                     <!-- Step 4 -->
-                    <Button Name="StepBtn4" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                    <Button Name="StepBtn4" Classes="NoPressShift" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <Border Name="StepCircle4" Classes="StepCircle"
@@ -250,7 +250,7 @@
                             HorizontalAlignment="Left" />
 
                     <!-- Step 5 -->
-                    <Button Name="StepBtn5" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                    <Button Name="StepBtn5" Classes="NoPressShift" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <Border Name="StepCircle5" Classes="StepCircle"
@@ -270,7 +270,7 @@
                             HorizontalAlignment="Left" />
 
                     <!-- Step 6 -->
-                    <Button Name="StepBtn6" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                    <Button Name="StepBtn6" Classes="NoPressShift" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <Border Name="StepCircle6" Classes="StepCircle"

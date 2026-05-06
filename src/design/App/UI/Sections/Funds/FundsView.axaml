@@ -265,6 +265,7 @@
                                                             WalletId="{Binding Id.Value}"
                                                             PendingBalance="{Binding PendingBalance}"
                                                             ReservedBalance="{Binding ReservedBalance}"
+                                                            ShowDivider="{Binding $parent[ItemsControl].((funds:SeedGroupViewModel)DataContext).ShowWalletDividers}"
                                                             ShowFaucet="{Binding $parent[UserControl].((funds:FundsViewModel)DataContext).IsTestnet}" />
                                                     </DataTemplate>
                                                 </ItemsControl.ItemTemplate>

@@ -50,9 +50,10 @@ public class NetworkSwitchClearsDataTest
 
         // Verify wallet exists
         shellVm.SelectedWallet.Should().NotBeNull("a wallet should exist after creation");
-        var walletCountBefore = shellVm.SwitcherWallets.Count;
-        walletCountBefore.Should().BeGreaterThan(0, "at least one wallet should be in the switcher");
-        TestHelpers.Log($"[STEP 2] Wallet created. Switcher count: {walletCountBefore}");
+        var createdWalletId = shellVm.SelectedWallet!.Id;
+        shellVm.SwitcherWallets.Should().Contain(w => w.Id == createdWalletId,
+            "the created wallet should be in the switcher");
+        TestHelpers.Log($"[STEP 2] Wallet created. ID: {createdWalletId.Value}");
 
         // ──────────────────────────────────────────────────────────────
         // STEP 3: Seed test documents into all 8 collections
@@ -190,8 +191,8 @@ public class NetworkSwitchClearsDataTest
         // STEP 6: Verify wallet was preserved (not deleted)
         // ──────────────────────────────────────────────────────────────
         TestHelpers.Log("[STEP 6] Verifying wallet was preserved...");
-        shellVm.SwitcherWallets.Count.Should().Be(walletCountBefore,
-            "network switch should preserve wallets — count should match pre-switch");
+        shellVm.SwitcherWallets.Should().Contain(w => w.Id == createdWalletId,
+            "network switch should preserve the created wallet");
         shellVm.SelectedWallet.Should().NotBeNull(
             "network switch should preserve the selected wallet");
         TestHelpers.Log("[STEP 6] Wallet preserved after network switch.");

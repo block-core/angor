@@ -61,8 +61,7 @@ public partial class PortfolioView : UserControl, ISectionView
         _investmentDetailPanel = this.FindControl<Panel>("InvestmentDetailPanel");
 
         // ── Responsive layout: 380px sidebar + content (desktop) → stacked (compact) ──
-        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
-            .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
+        SubscribeToLayoutMode();
 
         // Mobile perf: sidebar is hidden via IsVisible=false on compact,
         // so no need to detach children. Strip hover transitions via .Mobile class.
@@ -108,6 +107,13 @@ public partial class PortfolioView : UserControl, ISectionView
             Grid.SetRow(_content, 0);
             _content.ContentPadding = new Avalonia.Thickness(0, 0, 16, 0);
         }
+    }
+
+    private void SubscribeToLayoutMode()
+    {
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
+            .Subscribe(ApplyResponsiveLayout);
     }
 
     private void SubscribeToVisibility()
@@ -194,6 +200,7 @@ public partial class PortfolioView : UserControl, ISectionView
         // Re-subscribe when the cached view is re-added to the tree
         // (the subscription was disposed in OnDetachedFromLogicalTree).
         SubscribeToVisibility();
+        SubscribeToLayoutMode();
 
         // Auto-refresh investments when navigating back to portfolio
         // (e.g. after investing, stages need to be reloaded from SDK)

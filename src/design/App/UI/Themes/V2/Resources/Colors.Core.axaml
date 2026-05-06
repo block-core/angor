@@ -92,6 +92,7 @@
             <SolidColorBrush x:Key="SubTabInactiveBg" Color="#FFFFFF" />
             <SolidColorBrush x:Key="SubTabInactiveText" Color="#4A5568" />
             <SolidColorBrush x:Key="SubTabInactiveHoverBg" Color="#F9FAFB" />
+            <SolidColorBrush x:Key="FundersFilterRailBg" Color="#FFFFFF" />
 
             <!-- ── Mobile Share Button Colors (light) ──
                  Vue: Share btn bg-white text-gray-900 (light), bg-[#1a1a1a] text-white border-[#333] (dark)
@@ -278,6 +279,7 @@
             <SolidColorBrush x:Key="SubTabInactiveBg" Color="#2A2A2A" />
             <SolidColorBrush x:Key="SubTabInactiveText" Color="#FAFAFA" />
             <SolidColorBrush x:Key="SubTabInactiveHoverBg" Color="#2A2A2A" />
+            <SolidColorBrush x:Key="FundersFilterRailBg" Color="#050505" />
 
             <!-- ── Mobile Share Button Colors (dark) ──
                  Vue: bg-[#1a1a1a] text-white hover:bg-[#2a2a2a] border border-[#333] -->
