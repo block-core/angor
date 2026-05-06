@@ -993,36 +993,36 @@ public static class TestHelpers
     // ═══════════════════════════════════════════════════════════════════
 
     /// <summary>
-    /// Per-test output helper. Set this at the start of each test method
-    /// (or in the test constructor) so that all Log() calls — including
-    /// those from helpers like CreateWalletViaGenerate — appear in the
-    /// IDE test runner output.
-    /// Note: not [ThreadStatic] because AvaloniaFact tests run on the
-    /// Avalonia dispatcher thread, different from the xUnit constructor thread.
+    /// Per-test output helper. Set in the test constructor so all Log() calls
+    /// — including those from shared helpers — appear in the IDE test runner.
     /// </summary>
     public static Xunit.Abstractions.ITestOutputHelper? Output;
 
+    private static readonly string LogFilePath = Path.Combine(
+        Path.GetTempPath(), "angor-integration-tests.log");
+
     /// <summary>
-    /// Write a timestamped log message to the console, trace, and xUnit
-    /// test output (if <see cref="Output"/> has been set for this test).
+    /// Write a timestamped log message to:
+    /// 1. Console (captured by some test runners)
+    /// 2. xUnit ITestOutputHelper (IDE "Output" tab)
+    /// 3. File at %TEMP%/angor-integration-tests.log (always works)
     /// </summary>
     public static void Log(string message)
     {
         var line = $"[{DateTime.UtcNow:HH:mm:ss.fff}] {message}";
         Console.WriteLine(line);
-        System.Diagnostics.Trace.WriteLine(line);
-        try { Output?.WriteLine(line); } catch { /* Output may be disposed after test ends */ }
+        try { Output?.WriteLine(line); } catch { }
+        try { File.AppendAllText(LogFilePath, line + Environment.NewLine); } catch { }
     }
 
     /// <summary>
     /// Write a timestamped log message to both the console and the xUnit test output.
-    /// Use this overload from tests that inject <see cref="Xunit.Abstractions.ITestOutputHelper"/>
-    /// so log lines appear in real-time in Rider's test runner.
     /// </summary>
     public static void Log(Xunit.Abstractions.ITestOutputHelper output, string message)
     {
         var line = $"[{DateTime.UtcNow:HH:mm:ss.fff}] {message}";
         Console.WriteLine(line);
         output.WriteLine(line);
+        try { File.AppendAllText(LogFilePath, line + Environment.NewLine); } catch { }
     }
 }
