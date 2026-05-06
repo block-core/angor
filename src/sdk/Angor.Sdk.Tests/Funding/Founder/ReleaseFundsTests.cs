@@ -8,7 +8,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
+using NBitcoin;
 using Angor.Primitives;
 using FluentAssertions;
 using Moq;
@@ -163,7 +163,7 @@ public class ReleaseFundsTests
         _mockInvestorTransactionActions
             .Setup(x => x.CheckInvestorUnfundedReleaseSignatures(
                 It.IsAny<ProjectInfo>(),
-                It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>(),
+                It.IsAny<Transaction>(),
                 It.IsAny<SignatureInfo>(),
                 It.IsAny<string>()))
             .Returns(false);
@@ -171,13 +171,13 @@ public class ReleaseFundsTests
         _mockFounderTransactionActions
             .Setup(x => x.SignInvestorRecoveryTransactions(
                 It.IsAny<ProjectInfo>(), It.IsAny<string>(),
-                It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>(), It.IsAny<string>()))
+                It.IsAny<Transaction>(), It.IsAny<string>()))
             .Returns(new SignatureInfo());
 
         _mockInvestorTransactionActions
             .Setup(x => x.BuildUnfundedReleaseInvestorFundsTransaction(
                 It.IsAny<ProjectInfo>(),
-                It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>(),
+                It.IsAny<Transaction>(),
                 It.IsAny<string>()))
             .Returns(network.CreateTransaction());
 

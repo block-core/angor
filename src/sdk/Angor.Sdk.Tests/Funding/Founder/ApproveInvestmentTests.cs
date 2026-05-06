@@ -7,7 +7,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
+using NBitcoin;
 using Angor.Primitives;
 using FluentAssertions;
 using Moq;
@@ -119,16 +119,16 @@ public class ApproveInvestmentTests
             .Returns(network);
 
         _mockInvestorTransactionActions
-            .Setup(x => x.BuildRecoverInvestorFundsTransaction(It.IsAny<ProjectInfo>(), It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>()))
+            .Setup(x => x.BuildRecoverInvestorFundsTransaction(It.IsAny<ProjectInfo>(), It.IsAny<Transaction>()))
             .Returns(tx);
 
         _mockFounderTransactionActions
-            .Setup(x => x.SignInvestorRecoveryTransactions(It.IsAny<ProjectInfo>(), It.IsAny<string>(), It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>(), It.IsAny<string>()))
+            .Setup(x => x.SignInvestorRecoveryTransactions(It.IsAny<ProjectInfo>(), It.IsAny<string>(), It.IsAny<Transaction>(), It.IsAny<string>()))
             .Returns(new SignatureInfo());
 
         // CheckInvestorRecoverySignatures returns false -> throws InvalidOperationException
         _mockInvestorTransactionActions
-            .Setup(x => x.CheckInvestorRecoverySignatures(It.IsAny<ProjectInfo>(), It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>(), It.IsAny<SignatureInfo>()))
+            .Setup(x => x.CheckInvestorRecoverySignatures(It.IsAny<ProjectInfo>(), It.IsAny<Transaction>(), It.IsAny<SignatureInfo>()))
             .Returns(false);
 
         // Act
@@ -165,15 +165,15 @@ public class ApproveInvestmentTests
             .Returns(network);
 
         _mockInvestorTransactionActions
-            .Setup(x => x.BuildRecoverInvestorFundsTransaction(It.IsAny<ProjectInfo>(), It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>()))
+            .Setup(x => x.BuildRecoverInvestorFundsTransaction(It.IsAny<ProjectInfo>(), It.IsAny<Transaction>()))
             .Returns(tx);
 
         _mockFounderTransactionActions
-            .Setup(x => x.SignInvestorRecoveryTransactions(It.IsAny<ProjectInfo>(), It.IsAny<string>(), It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>(), It.IsAny<string>()))
+            .Setup(x => x.SignInvestorRecoveryTransactions(It.IsAny<ProjectInfo>(), It.IsAny<string>(), It.IsAny<Transaction>(), It.IsAny<string>()))
             .Returns(new SignatureInfo());
 
         _mockInvestorTransactionActions
-            .Setup(x => x.CheckInvestorRecoverySignatures(It.IsAny<ProjectInfo>(), It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>(), It.IsAny<SignatureInfo>()))
+            .Setup(x => x.CheckInvestorRecoverySignatures(It.IsAny<ProjectInfo>(), It.IsAny<Transaction>(), It.IsAny<SignatureInfo>()))
             .Returns(true);
 
         _mockSerializer
@@ -268,15 +268,15 @@ public class ApproveInvestmentTests
             .Returns(network);
 
         _mockInvestorTransactionActions
-            .Setup(x => x.BuildRecoverInvestorFundsTransaction(It.IsAny<ProjectInfo>(), It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>()))
+            .Setup(x => x.BuildRecoverInvestorFundsTransaction(It.IsAny<ProjectInfo>(), It.IsAny<Transaction>()))
             .Returns(tx);
 
         _mockFounderTransactionActions
-            .Setup(x => x.SignInvestorRecoveryTransactions(It.IsAny<ProjectInfo>(), It.IsAny<string>(), It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>(), It.IsAny<string>()))
+            .Setup(x => x.SignInvestorRecoveryTransactions(It.IsAny<ProjectInfo>(), It.IsAny<string>(), It.IsAny<Transaction>(), It.IsAny<string>()))
             .Returns(new SignatureInfo());
 
         _mockInvestorTransactionActions
-            .Setup(x => x.CheckInvestorRecoverySignatures(It.IsAny<ProjectInfo>(), It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>(), It.IsAny<SignatureInfo>()))
+            .Setup(x => x.CheckInvestorRecoverySignatures(It.IsAny<ProjectInfo>(), It.IsAny<Transaction>(), It.IsAny<SignatureInfo>()))
             .Returns(true);
     }
 

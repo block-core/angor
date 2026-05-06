@@ -1,6 +1,5 @@
 using NBitcoin;
-using NBitcoin;
-using NBitcoin;
+using NBitcoin.DataEncoders;
 using Angor.Primitives.Network;
 using Angor.Primitives;
 
@@ -34,7 +33,7 @@ public class HdOperations : IHdOperations
         {
             Guard.NotEmpty(accountExtPubKey, nameof(accountExtPubKey));
 
-            return GeneratePublicKey(ExtPubKey.Parse(accountExtPubKey), index, isChange);
+            return GeneratePublicKey(ExtPubKey.Parse(accountExtPubKey, Network.Main), index, isChange);
         }
 
         /// <summary>
@@ -282,9 +281,6 @@ public class HdOperations : IHdOperations
 
         public string DerivePublicKey(string mnemonic, string? passphrase, string hdPath)
         {
-            ExtKey.UseBCForHMACSHA512 = true;
-            Hashes.UseBCForHMACSHA512 = true;
-
             var extendedKey = GetExtendedKey(mnemonic, passphrase);
             var derivedKey = extendedKey.Derive(new KeyPath(hdPath));
             return derivedKey.PrivateKey.PubKey.ToHex();
@@ -292,9 +288,6 @@ public class HdOperations : IHdOperations
 
         public string DerivePrivateKey(string mnemonic, string? passphrase, string hdPath)
         {
-            ExtKey.UseBCForHMACSHA512 = true;
-            Hashes.UseBCForHMACSHA512 = true;
-
             var extendedKey = GetExtendedKey(mnemonic, passphrase);
             var derivedKey = extendedKey.Derive(new KeyPath(hdPath));
             return Encoders.Hex.EncodeData(derivedKey.PrivateKey.ToBytes());

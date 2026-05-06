@@ -3,7 +3,7 @@ using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
-using Blockcore.NBitcoin;
+using NBitcoin;
 using Angor.Primitives;
 using FluentAssertions;
 using Moq;

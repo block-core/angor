@@ -39,7 +39,7 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
 
         // find the spending script for the current secret hash combination
 
-        var hashesOfSecrets = secrets.Select(secret => (Hashes.Hash256(secret.ToBytes()), new Script(secret.ToBytes()))).ToList();
+        var hashesOfSecrets = secrets.Select(secret => (Hashes.DoubleSHA256(secret.ToBytes()), new Script(secret.ToBytes()))).ToList();
 
         Script execute = null;
         List<Script> secretHashes = new List<Script>();

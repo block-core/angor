@@ -114,7 +114,7 @@ public class FundingParameters
         if (!opReturnScript.IsUnspendable)
             throw new ArgumentException("Script is not an OP_RETURN script", nameof(opReturnScript));
 
-        var ops = opReturnScript.ToOps();
+        var ops = opReturnScript.ToOps().ToList();
         var investorKey = new PubKey(ops[1].PushData).ToHex();
 
         uint256? secretHash = null;

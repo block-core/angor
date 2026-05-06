@@ -106,7 +106,7 @@ public class PsbtOperations : IPsbtOperations
             var rootedKeyPath = new NBitcoin.RootedKeyPath(accountExtPubKey, keyPath);
 
             var pubKey = _hdOperations.GeneratePublicKey(ExtPubKey.Parse(accountInfo.ExtPubKey, network), (int)keyPath.Indexes[4], keyPath.Indexes[3] == 1);
-            var path = _hdOperations.CreateHdPath(Purpose, network.Consensus.CoinType, AccountIndex, keyPath.Indexes[3] == 1, (int)keyPath.Indexes[4]);
+            var path = _hdOperations.CreateHdPath(Purpose, (int)network.Consensus.CoinType, AccountIndex, keyPath.Indexes[3] == 1, (int)keyPath.Indexes[4]);
 
             if (path != utxoInfo.HdPath)
                 throw new InvalidOperationException($"Path does not match {path} {utxoInfo.HdPath}");
@@ -191,7 +191,7 @@ public class PsbtOperations : IPsbtOperations
             var rootedKeyPath = new NBitcoin.RootedKeyPath(accountExtPubKey, keyPath);
 
             var pubKey = _hdOperations.GeneratePublicKey(ExtPubKey.Parse(accountInfo.ExtPubKey, network), (int)keyPath.Indexes[4], keyPath.Indexes[3] == 1);
-            var path = _hdOperations.CreateHdPath(Purpose, network.Consensus.CoinType, AccountIndex, keyPath.Indexes[3] == 1, (int)keyPath.Indexes[4]);
+            var path = _hdOperations.CreateHdPath(Purpose, (int)network.Consensus.CoinType, AccountIndex, keyPath.Indexes[3] == 1, (int)keyPath.Indexes[4]);
 
             if (path != utxoInfo.HdPath)
                 throw new InvalidOperationException($"Path does not match {path} {utxoInfo.HdPath}");
@@ -211,9 +211,7 @@ public class PsbtOperations : IPsbtOperations
 
         ExtKey extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
 
-        var nbitcoinExtendedKey = NBitcoin.ExtKey.CreateFromBytes(extendedKey.ToBytes(network.Consensus.ConsensusFactory));
-
-        psbt.SignAll(NBitcoin.ScriptPubKeyType.Segwit, nbitcoinExtendedKey);
+        psbt.SignAll(NBitcoin.ScriptPubKeyType.Segwit, extendedKey);
 
         if (!psbt.TryFinalize(out IList<NBitcoin.PSBTError>? errors))
         {

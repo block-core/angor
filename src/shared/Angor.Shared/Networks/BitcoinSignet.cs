@@ -11,10 +11,11 @@ public class BitcoinSignet : AngorNetwork
         Name = "Signet";
         AdditionalNames = new List<string> { "bitcoin-signet", "btc-signet" };
         NetworkType = NetworkType.Testnet;
+        CoinTicker = "TBTC";
         NBitcoinNetwork = Network.TestNet;
-        Consensus = new Consensus { CoinType = 1 };
+        Consensus = new Angor.Primitives.Network.Consensus { CoinType = 1 };
 
-        var encoder = new Bech32Encoder("tb");
+        var encoder = new Bech32Encoder(System.Text.Encoding.ASCII.GetBytes("tb"));
         Bech32Encoders = new Bech32Encoder[2];
         Bech32Encoders[0] = encoder;
         Bech32Encoders[1] = encoder;

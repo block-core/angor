@@ -1,3 +1,4 @@
+using Angor.Primitives.Network;
 using System.Linq.Expressions;
 using Angor.Data.Documents.Interfaces;
 using Angor.Sdk.Common;
@@ -30,7 +31,7 @@ namespace Angor.Sdk.Tests.Integration.Lightning;
 public class BoltzSwapIntegrationTests : IDisposable
 {
     private readonly ITestOutputHelper _output;
-    private readonly Blockcore.Networks.Network _network;
+    private readonly AngorNetwork _network;
     private readonly NetworkConfiguration _networkConfiguration;
     private readonly WalletOperations _walletOperations;
     private readonly DerivationOperations _derivationOperations;

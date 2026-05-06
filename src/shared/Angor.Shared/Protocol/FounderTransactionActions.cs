@@ -263,13 +263,13 @@ public class FounderTransactionActions : IFounderTransactionActions
     public Transaction CreateNewProjectTransaction(string founderKey, Script angorKey, long angorFeeSatoshis, short keyType, string nostrEventId)
     {
         var projectStartTransaction = _networkConfiguration.GetNetwork()
-            .Consensus.ConsensusFactory.CreateTransaction();
+            .CreateTransaction();
 
         // create the output and script of the project id
         var investorInfoOutput = new TxOut(
             new Money(angorFeeSatoshis), angorKey);
 
-        projectStartTransaction.AddOutput(investorInfoOutput);
+        projectStartTransaction.Outputs.Add(investorInfoOutput);
 
         // todo: here we should add the hash of the project data as opreturn
 
@@ -277,7 +277,7 @@ public class FounderTransactionActions : IFounderTransactionActions
         var angorFeeOutputScript = _projectScriptsBuilder.BuildFounderInfoScript(founderKey, keyType, nostrEventId);
         var founderOPReturnOutput = new TxOut(
                 new Money(0), angorFeeOutputScript);
-        projectStartTransaction.AddOutput(founderOPReturnOutput);
+        projectStartTransaction.Outputs.Add(founderOPReturnOutput);
 
         return projectStartTransaction;
     }

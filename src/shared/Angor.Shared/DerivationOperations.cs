@@ -94,7 +94,7 @@ public class DerivationOperations : IDerivationOperations
 
         var derivedSecret = extendedKey.Derive(new KeyPath(path));
 
-        var hash = Hashes.Hash256(derivedSecret.ToBytes()).ToString();
+        var hash = Hashes.DoubleSHA256(derivedSecret.ToBytes()).ToString();
 
         return hash;
     }
@@ -230,12 +230,9 @@ public class DerivationOperations : IDerivationOperations
 
     public uint DeriveUniqueProjectIdentifier(string founderKey)
     {
-        ExtKey.UseBCForHMACSHA512 = true;
-        Hashes.UseBCForHMACSHA512 = true;
-
         var key = new PubKey(founderKey);
 
-        var hashOfid = Hashes.Hash256(key.ToBytes());
+        var hashOfid = Hashes.DoubleSHA256(key.ToBytes());
 
         var upi = (uint)(hashOfid.GetLow64() & int.MaxValue);
         
@@ -288,10 +285,10 @@ public class DerivationOperations : IDerivationOperations
 
          var privateKeyBytes = key.ToBytes();
 
-        var hashedKey = Hashes.Hash256(new Span<byte>(privateKeyBytes));
+        var hashedKey = Hashes.DoubleSHA256(privateKeyBytes);
 
         // the hex of the hash of the private key is the password
-        var hex = Encoders.Hex.EncodeData(hashedKey.ToArray()).Replace("-", "").ToLower();
+        var hex = Encoders.Hex.EncodeData(hashedKey.ToBytes()).Replace("-", "").ToLower();
 
         return hex;
     }
@@ -306,7 +303,7 @@ public class DerivationOperations : IDerivationOperations
 
         var angorKey = extKey.Derive(upi).PubKey;
         
-        var encoder = new Bech32Encoder("angor");
+        var encoder = new Bech32Encoder(Encoding.ASCII.GetBytes("angor"));
 
         var address = encoder.Encode(0, angorKey.WitHash.ToBytes());
 
@@ -317,7 +314,7 @@ public class DerivationOperations : IDerivationOperations
 
     public Script AngorKeyToScript(string angorKey)
     {
-        var encoder = new Bech32Encoder("angor");
+        var encoder = new Bech32Encoder(Encoding.ASCII.GetBytes("angor"));
 
         var data = encoder.Decode(angorKey, out byte ver);
 
@@ -331,7 +328,7 @@ public class DerivationOperations : IDerivationOperations
         AngorNetwork network = _networkConfiguration.GetNetwork();
 
         // Decode the angor address to get the witness program
-        var angorEncoder = new Bech32Encoder("angor");
+        var angorEncoder = new Bech32Encoder(Encoding.ASCII.GetBytes("angor"));
         var data = angorEncoder.Decode(projectId, out byte witnessVersion);
 
         // Re-encode using the network's Bech32 encoder

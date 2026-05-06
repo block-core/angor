@@ -36,7 +36,7 @@ public static class TransactionExtension
     /// </summary>
     public static QueryTransaction ToQueryTransaction(this Transaction transaction, AngorNetwork network)
     {
-        var virtualSize = (int)transaction.GetVirtualSize(4);
+        var virtualSize = (int)transaction.GetVirtualSize();
         return new QueryTransaction
         {
             TransactionId = transaction.GetHash().ToString(),

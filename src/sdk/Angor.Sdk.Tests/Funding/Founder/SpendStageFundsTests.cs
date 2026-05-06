@@ -1,3 +1,4 @@
+using Angor.Primitives.Network;
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder.Dtos;
 using Angor.Sdk.Funding.Founder.Operations;
@@ -9,7 +10,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
+using NBitcoin;
 using Angor.Primitives;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
@@ -230,7 +231,7 @@ public class SpendStageFundsTests
                 It.IsAny<ProjectInfo>(),
                 It.IsAny<IEnumerable<string>>(),
                 It.IsAny<int>(),
-                It.IsAny<Blockcore.Consensus.ScriptInfo.Script>(),
+                It.IsAny<Script>(),
                 It.IsAny<string>(),
                 It.IsAny<FeeEstimation>()))
             .Returns(new Angor.Shared.Models.TransactionInfo
@@ -262,7 +263,7 @@ public class SpendStageFundsTests
             toSpend);
     }
 
-    private Blockcore.Networks.Network SetupNetwork()
+    private AngorNetwork SetupNetwork()
     {
         var network = Angor.Shared.Networks.Networks.Bitcoin.Testnet();
         _mockNetworkConfiguration

@@ -1,9 +1,9 @@
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.BIP32;
-using Blockcore.Networks;
+using NBitcoin;
+using NBitcoin;
+using Angor.Primitives.Network;
 using Microsoft.Extensions.Logging;
 
 using Angor.Primitives;
@@ -25,7 +25,7 @@ public class AngornetMinerFaucet
 {
     private readonly IWalletOperations _walletOperations;
     private readonly IIndexerService _indexerService;
-    private readonly Network _network;
+    private readonly AngorNetwork _network;
     private readonly ILogger _logger;
 
     private const string MinerWalletWords = "pretty exhibit model gossip skull picnic humor nasty knee fly source gift"; 
@@ -35,7 +35,7 @@ public class AngornetMinerFaucet
     public AngornetMinerFaucet(
         IWalletOperations walletOperations,
         IIndexerService indexerService,
-        Network network,
+        AngorNetwork network,
         ILogger logger)
     {
         _walletOperations = walletOperations;
@@ -110,7 +110,7 @@ public class AngornetMinerFaucet
         
         // Add output to destination address
         var destinationAddress = BitcoinAddress.Create(toAddress, _network);
-        transaction.AddOutput(Money.Satoshis(amountSats), destinationAddress.ScriptPubKey);
+        transaction.Outputs.Add(new TxOut(Money.Satoshis(amountSats), destinationAddress.ScriptPubKey));
 
         // Get change address (use next address from miner wallet)
         var changeAddress = minerAccountInfo.AddressesInfo.First().Address;
@@ -133,7 +133,7 @@ public class AngornetMinerFaucet
             signedTransaction.TransactionFee);
 
         // Publish transaction
-        var hex = signedTransaction.Transaction.ToHex(_network.Consensus.ConsensusFactory);
+        var hex = signedTransaction.Transaction.ToHex();
         var publishError = await _indexerService.PublishTransactionAsync(hex);
 
         if (!string.IsNullOrEmpty(publishError))
@@ -236,9 +236,9 @@ public class AngornetMinerFaucet
     {
         var hdOperations = new HdOperations();
         var pubKey = hdOperations.GeneratePublicKey(accountExtPubKey, index, isChange);
-        var coinType = _network.Consensus.CoinType;
+        var coinType = (int)_network.Consensus.CoinType;
         var path = hdOperations.CreateHdPath(84, coinType, 0, isChange, index); // Purpose=84 (BIP84), AccountIndex=0
-        var address = pubKey.GetSegwitAddress(_network).ToString();
+        var address = pubKey.GetAddress(ScriptPubKeyType.Segwit, _network).ToString();
 
         return new AddressInfo { Address = address, HdPath = path };
     }

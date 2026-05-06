@@ -12,9 +12,9 @@ using Angor.Shared.Protocol;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Protocol.TransactionBuilders;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.DataEncoders;
-using Blockcore.Networks;
+using NBitcoin;
+using NBitcoin.DataEncoders;
+using Angor.Primitives.Network;
 using Angor.Primitives;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -38,7 +38,7 @@ namespace Angor.Sdk.Tests.Funding.Investor.Operations;
 [Trait("Network", "Angornet")]
 public class CreateInvestmentFromSpecificAddressIntegrationTests : IDisposable
 {
-    private readonly Network _network;
+    private readonly AngorNetwork _network;
     private readonly NetworkConfiguration _networkConfiguration;
     private readonly WalletOperations _walletOperations;
     private readonly DerivationOperations _derivationOperations;

@@ -2,8 +2,8 @@ using Angor.Shared;
 using Angor.Shared.Protocol;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Protocol.TransactionBuilders;
-using Blockcore.NBitcoin.BIP32;
-using Blockcore.Networks;
+using NBitcoin;
+using Angor.Primitives.Network;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Angor.Sdk.Tests.Shared;
@@ -15,7 +15,7 @@ namespace Angor.Sdk.Tests.Shared;
 public class TestNetworkFixture
 {
     public INetworkConfiguration NetworkConfiguration { get; }
-    public Network Network { get; }
+    public AngorNetwork Network { get; }
     public IDerivationOperations DerivationOperations { get; }
     public IInvestorTransactionActions InvestorTransactionActions { get; }
     public IFounderTransactionActions FounderTransactionActions { get; }

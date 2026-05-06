@@ -13,6 +13,7 @@ public class AngorNetwork
     public string Name { get; set; } = "";
     public List<string> AdditionalNames { get; set; } = new();
     public NetworkType NetworkType { get; set; }
+    public string CoinTicker { get; set; } = "";
     public Consensus Consensus { get; set; } = new();
     public Bech32Encoder?[] Bech32Encoders { get; set; } = new Bech32Encoder[2];
 
@@ -28,4 +29,6 @@ public class AngorNetwork
     {
         return Transaction.Parse(hex, NBitcoinNetwork);
     }
+
+    public static implicit operator NBitcoin.Network(AngorNetwork angorNetwork) => angorNetwork.NBitcoinNetwork;
 }

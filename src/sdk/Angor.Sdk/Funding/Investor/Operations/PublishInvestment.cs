@@ -276,7 +276,7 @@ public static class PublishInvestment
         private async Task<Result<string>> PublishSignedTransactionAsync(TransactionInfo signedTransaction)
         {
             var txId = signedTransaction.Transaction.GetHash().ToString();
-            var hex = signedTransaction.Transaction.ToHex(networkConfiguration.GetNetwork().Consensus.ConsensusFactory);
+            var hex = signedTransaction.Transaction.ToHex();
 
             var errorMessage = await indexerService.PublishTransactionAsync(hex);
 

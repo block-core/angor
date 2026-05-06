@@ -8,7 +8,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
+using NBitcoin;
 using Angor.Primitives;
 using FluentAssertions;
 using Moq;

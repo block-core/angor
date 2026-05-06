@@ -118,7 +118,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             if (output.TxOut.ScriptPubKey == spendingScript.WitHash.ScriptPubKey)
             {
                 // this is a penalty output
-                var txIn = new TxIn(output.ToOutPoint()) { Sequence = new Sequence(TimeSpan.FromDays(projectInfo.PenaltyDays)) };
+                var txIn = new TxIn(new OutPoint(output.Transaction.GetHash(), output.N)) { Sequence = new Sequence(TimeSpan.FromDays(projectInfo.PenaltyDays)) };
                 transaction.Inputs.Add(txIn);
 
                 // Set a fake WitScript (placeholder) for fee estimation
@@ -131,7 +131,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         }
 
         // reduce the network fee form the first output
-        var virtualSize = transaction.GetVirtualSize(4);
+        var virtualSize = transaction.GetVirtualSize();
         var fee = new FeeRate(Money.Satoshis(feeEstimation.FeeRate)).GetFee(virtualSize);
         transaction.Outputs[0].Value -= new Money(fee);
 
@@ -140,10 +140,11 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
         foreach (var intput in transaction.Inputs)
         {
-            var spendingOutput = recoveryTransaction.Outputs.AsIndexedOutputs().First(f => f.ToOutPoint() == intput.PrevOut);
+            var spendingOutput = recoveryTransaction.Outputs.AsIndexedOutputs().First(f => new OutPoint(f.Transaction.GetHash(), f.N) == intput.PrevOut);
 
-            var hash = transaction.GetSignatureHash(network, new ScriptCoin(intput.PrevOut, spendingOutput.TxOut, spendingScript));
-            var sig = key.Sign(hash, SigHash.All);
+            var inputIndex = transaction.Inputs.IndexOf(intput);
+            var hash = transaction.GetSignatureHash(spendingScript, inputIndex, SigHash.All, spendingOutput.TxOut, HashVersion.WitnessV0);
+            var sig = new TransactionSignature(key.Sign(hash), SigHash.All);
 
             // Replace the fake WitScript with the real one
             intput.WitScript = new WitScript(

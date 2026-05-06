@@ -1,4 +1,5 @@
 using Angor.Shared.Models;
+using NBitcoin;
 using NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
 

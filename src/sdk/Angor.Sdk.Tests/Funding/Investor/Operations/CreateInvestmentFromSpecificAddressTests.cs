@@ -11,10 +11,10 @@ using Angor.Shared.Protocol;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Protocol.TransactionBuilders;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.BIP32;
-using Blockcore.NBitcoin.DataEncoders;
-using Blockcore.Networks;
+using NBitcoin;
+using NBitcoin;
+using NBitcoin.DataEncoders;
+using Angor.Primitives.Network;
 using Angor.Primitives;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -38,7 +38,7 @@ public class CreateInvestmentFromSpecificAddressTests
     private readonly IDerivationOperations _derivationOperations;
     private readonly INetworkConfiguration _networkConfiguration;
     private readonly BuildInvestmentDraft.BuildInvestmentDraftHandler _sut;
-    private readonly Network _network;
+    private readonly AngorNetwork _network;
 
     public CreateInvestmentFromSpecificAddressTests()
     {
@@ -319,8 +319,8 @@ public class CreateInvestmentFromSpecificAddressTests
         var extPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, _network);
         var hdOperations = new HdOperations();
         var pubKey = hdOperations.GeneratePublicKey(extPubKey, 0, false);
-        var address = pubKey.GetSegwitAddress(_network).ToString();
-        var path = hdOperations.CreateHdPath(84, _network.Consensus.CoinType, 0, false, 0);
+        var address = pubKey.GetAddress(ScriptPubKeyType.Segwit, _network).ToString();
+        var path = hdOperations.CreateHdPath(84, (int)_network.Consensus.CoinType, 0, false, 0);
         
         var addressInfo = new AddressInfo { Address = address, HdPath = path };
         accountInfo.AddressesInfo.Add(addressInfo);
