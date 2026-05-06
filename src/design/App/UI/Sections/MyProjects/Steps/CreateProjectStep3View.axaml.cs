@@ -1,95 +1,297 @@
+using System.IO;
+using System.Reactive.Linq;
+using App.UI.Shared.Helpers;
+using App.UI.Shared.Services;
+using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using ReactiveUI;
 
 namespace App.UI.Sections.MyProjects.Steps;
 
 public partial class CreateProjectStep3View : UserControl
 {
     private readonly ILogger<CreateProjectStep3View> _logger;
+    private readonly BlossomUploadService _blossomService;
+
+    // Stored bytes from Browse for upload
+    private byte[]? _bannerFileBytes;
+    private string _bannerContentType = "image/jpeg";
+    private byte[]? _profileFileBytes;
+    private string _profileContentType = "image/jpeg";
+
+    private IDisposable? _bannerUrlSub;
+    private IDisposable? _profileUrlSub;
+
+    // Cached control references
+    private TextBlock? _bannerFileNameText;
+    private TextBlock? _bannerStatusText;
+    private TextBlock? _profileFileNameText;
+    private TextBlock? _profileStatusText;
+    private TextBox? _bannerBlossomServerTextBox;
+    private TextBox? _profileBlossomServerTextBox;
+    private Button? _bannerUploadBtn;
+    private Button? _profileUploadBtn;
+    private Avalonia.Controls.Shapes.Path? _bannerUploadIcon;
+    private Avalonia.Controls.Shapes.Path? _profileUploadIcon;
 
     public CreateProjectStep3View()
     {
         InitializeComponent();
         _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<CreateProjectStep3View>();
+        _blossomService = App.Services.GetRequiredService<BlossomUploadService>();
     }
 
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
 
-        // Wire avatar border click (it's a Border, not a Button, so Button.ClickEvent won't fire)
-        var avatarBorder = this.FindControl<Border>("UploadAvatarButton");
-        if (avatarBorder != null)
-            avatarBorder.PointerPressed += (_, _) => _ = PickImageAsync(false);
+        _bannerFileNameText = this.FindControl<TextBlock>("BannerFileNameText");
+        _bannerStatusText = this.FindControl<TextBlock>("BannerStatusText");
+        _profileFileNameText = this.FindControl<TextBlock>("ProfileFileNameText");
+        _profileStatusText = this.FindControl<TextBlock>("ProfileStatusText");
+        _bannerBlossomServerTextBox = this.FindControl<TextBox>("BannerBlossomServerTextBox");
+        _profileBlossomServerTextBox = this.FindControl<TextBox>("ProfileBlossomServerTextBox");
+        _bannerUploadBtn = this.FindControl<Button>("BannerUploadBtn");
+        _profileUploadBtn = this.FindControl<Button>("ProfileUploadBtn");
 
-        // Wire banner button click
-        var bannerButton = this.FindControl<Button>("UploadBannerButton");
-        if (bannerButton != null)
-            bannerButton.Click += (_, _) => _ = PickImageAsync(true);
+        // Wire browse buttons
+        var bannerBrowseBtn = this.FindControl<Button>("BannerBrowseBtn");
+        if (bannerBrowseBtn != null)
+            bannerBrowseBtn.Click += (_, _) => _ = BrowseFileAsync(true);
+
+        var profileBrowseBtn = this.FindControl<Button>("ProfileBrowseBtn");
+        if (profileBrowseBtn != null)
+            profileBrowseBtn.Click += (_, _) => _ = BrowseFileAsync(false);
+
+        // Wire upload buttons
+        if (_bannerUploadBtn != null)
+            _bannerUploadBtn.Click += (_, _) => _ = UploadToBlossomAsync(true);
+        if (_profileUploadBtn != null)
+            _profileUploadBtn.Click += (_, _) => _ = UploadToBlossomAsync(false);
+
+        // Watch ViewModel URL changes to update the preview
+        if (DataContext is CreateProjectViewModel vm)
+        {
+            _bannerUrlSub = vm.WhenAnyValue(x => x.BannerUrl)
+                .Throttle(TimeSpan.FromMilliseconds(400))
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(url => UpdatePreviewFromUrl(url, true));
+
+            _profileUrlSub = vm.WhenAnyValue(x => x.ProfileUrl)
+                .Throttle(TimeSpan.FromMilliseconds(400))
+                .ObserveOn(RxApp.MainThreadScheduler)
+                .Subscribe(url => UpdatePreviewFromUrl(url, false));
+
+            // Show current preview if URLs are already set (e.g. debug prefill)
+            if (!string.IsNullOrWhiteSpace(vm.BannerUrl))
+                UpdatePreviewFromUrl(vm.BannerUrl, true);
+            if (!string.IsNullOrWhiteSpace(vm.ProfileUrl))
+                UpdatePreviewFromUrl(vm.ProfileUrl, false);
+        }
     }
 
-    #region Image Picker
-
-    /// <summary>
-    /// Open a file picker dialog to select an image for banner or avatar.
-    /// </summary>
-    private async Task PickImageAsync(bool isBanner)
+    protected override void OnUnloaded(RoutedEventArgs e)
     {
-        var topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel == null) return;
+        _bannerUrlSub?.Dispose();
+        _profileUrlSub?.Dispose();
+        base.OnUnloaded(e);
+    }
 
-        var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+    #region Preview
+
+    private void UpdatePreviewFromUrl(string? url, bool isBanner)
+    {
+        ImageCacheService.LoadBitmapAsync(url, bmp =>
         {
-            Title = isBanner ? "Select Banner Image" : "Select Profile Image",
-            AllowMultiple = false,
-            FileTypeFilter = new[]
-            {
-                new FilePickerFileType("Images") { Patterns = new[] { "*.png", "*.jpg", "*.jpeg", "*.webp", "*.bmp" } }
-            }
-        });
-
-        if (files.Count == 0) return;
-
-        var file = files[0];
-        try
-        {
-            await using var stream = await file.OpenReadAsync();
-            // Decode bitmap off the UI thread to avoid blocking during large image loads
-            var bitmap = await Task.Run(() => Bitmap.DecodeToWidth(stream, 800));
-
             if (isBanner)
             {
-                var bannerImage = this.FindControl<Image>("BannerPreviewImage");
-                if (bannerImage != null)
+                var img = this.FindControl<Image>("BannerPreviewImage");
+                if (img != null)
                 {
-                    bannerImage.Source = bitmap;
-                    bannerImage.IsVisible = true;
+                    img.Source = bmp;
+                    img.IsVisible = bmp != null;
                 }
             }
             else
             {
-                var avatarImage = this.FindControl<Image>("AvatarPreviewImage");
-                var avatarIcon = this.FindControl<Control>("AvatarUploadIcon");
-                if (avatarImage != null)
+                var img = this.FindControl<Image>("AvatarPreviewImage");
+                if (img != null)
                 {
-                    avatarImage.Source = bitmap;
-                    avatarImage.IsVisible = true;
+                    img.Source = bmp;
+                    img.IsVisible = bmp != null;
                 }
-                if (avatarIcon != null)
+            }
+        });
+    }
+
+    #endregion
+
+    #region File Browse
+
+    private async Task BrowseFileAsync(bool isBanner)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null) return;
+
+        try
+        {
+            var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = isBanner ? "Select Banner Image" : "Select Profile Image",
+                AllowMultiple = false,
+                FileTypeFilter = new[]
                 {
-                    avatarIcon.IsVisible = false;
+                    new FilePickerFileType("Images")
+                    {
+                        Patterns = new[] { "*.png", "*.jpg", "*.jpeg", "*.webp", "*.gif" },
+                        MimeTypes = new[] { "image/png", "image/jpeg", "image/webp", "image/gif" }
+                    }
                 }
+            });
+
+            if (files.Count == 0) return;
+
+            var file = files[0];
+            await using var stream = await file.OpenReadAsync();
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+
+            var bytes = ms.ToArray();
+            var ext = Path.GetExtension(file.Name).ToLowerInvariant();
+            var contentType = ext switch
+            {
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                ".webp" => "image/webp",
+                _ => "image/jpeg"
+            };
+
+            if (isBanner)
+            {
+                _bannerFileBytes = bytes;
+                _bannerContentType = contentType;
+                if (_bannerFileNameText != null)
+                    _bannerFileNameText.Text = $"{file.Name} ({bytes.Length / 1024} KB)";
+                SetStatus(true, $"Ready to upload: {file.Name}", isError: false);
+            }
+            else
+            {
+                _profileFileBytes = bytes;
+                _profileContentType = contentType;
+                if (_profileFileNameText != null)
+                    _profileFileNameText.Text = $"{file.Name} ({bytes.Length / 1024} KB)";
+                SetStatus(false, $"Ready to upload: {file.Name}", isError: false);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to load image");
+            _logger.LogWarning(ex, "File browse failed");
         }
+    }
+
+    #endregion
+
+    #region Blossom Upload
+
+    private async Task UploadToBlossomAsync(bool isBanner)
+    {
+        var fileBytes = isBanner ? _bannerFileBytes : _profileFileBytes;
+        var contentType = isBanner ? _bannerContentType : _profileContentType;
+        var serverUrl = isBanner
+            ? _bannerBlossomServerTextBox?.Text?.Trim()
+            : _profileBlossomServerTextBox?.Text?.Trim();
+
+        if (fileBytes == null || fileBytes.Length == 0)
+        {
+            SetStatus(isBanner, "Please browse and select a file first.", isError: true);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(serverUrl) || !Uri.TryCreate(serverUrl, UriKind.Absolute, out _))
+        {
+            SetStatus(isBanner, "Please enter a valid Blossom server URL.", isError: true);
+            return;
+        }
+
+        SetUploadInProgress(isBanner, true);
+        SetStatus(isBanner, $"Uploading to {serverUrl}…", isError: false);
+
+        try
+        {
+            var result = await _blossomService.UploadAsync(serverUrl, fileBytes, contentType);
+
+            if (result.IsFailure)
+            {
+                SetStatus(isBanner, $"Upload failed: {result.Error}", isError: true);
+                return;
+            }
+
+            // Set URL on ViewModel — the reactive subscription will update the preview
+            if (DataContext is CreateProjectViewModel vm)
+            {
+                if (isBanner)
+                    vm.BannerUrl = result.Value;
+                else
+                    vm.ProfileUrl = result.Value;
+            }
+
+            SetStatus(isBanner, "Upload successful!", isError: false);
+
+            // Clear stored bytes after a successful upload
+            if (isBanner)
+            {
+                _bannerFileBytes = null;
+                if (_bannerFileNameText != null) _bannerFileNameText.Text = "No file selected";
+            }
+            else
+            {
+                _profileFileBytes = null;
+                if (_profileFileNameText != null) _profileFileNameText.Text = "No file selected";
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "UploadToBlossomAsync failed");
+            SetStatus(isBanner, $"Upload error: {ex.Message}", isError: true);
+        }
+        finally
+        {
+            SetUploadInProgress(isBanner, false);
+        }
+    }
+
+    private void SetStatus(bool isBanner, string message, bool isError)
+    {
+        var statusText = isBanner ? _bannerStatusText : _profileStatusText;
+        if (statusText == null) return;
+        statusText.Text = message;
+        statusText.IsVisible = !string.IsNullOrEmpty(message);
+        if (Application.Current?.Resources.TryGetResource(
+            isError ? "ErrorFieldText" : "TextMuted",
+            Avalonia.Styling.ThemeVariant.Default,
+            out var brush) == true && brush is Avalonia.Media.IBrush b)
+        {
+            statusText.Foreground = b;
+        }
+    }
+
+    private void SetUploadInProgress(bool isBanner, bool inProgress)
+    {
+        var uploadBtn = isBanner ? _bannerUploadBtn : _profileUploadBtn;
+        if (uploadBtn != null) uploadBtn.IsEnabled = !inProgress;
+
+        var iconName = isBanner ? "BannerUploadIcon" : "ProfileUploadIcon";
+        var spinnerName = isBanner ? "BannerUploadSpinner" : "ProfileUploadSpinner";
+
+        var icon = this.FindControl<Projektanker.Icons.Avalonia.Icon>(iconName);
+        var spinner = this.FindControl<Projektanker.Icons.Avalonia.Icon>(spinnerName);
+
+        if (icon != null) icon.IsVisible = !inProgress;
+        if (spinner != null) spinner.IsVisible = inProgress;
     }
 
     #endregion
@@ -99,19 +301,18 @@ public partial class CreateProjectStep3View : UserControl
     /// </summary>
     public void ResetVisualState()
     {
-        var bannerImage = this.FindControl<Image>("BannerPreviewImage");
-        if (bannerImage != null)
-        {
-            bannerImage.Source = null;
-            bannerImage.IsVisible = false;
-        }
-        var avatarImage = this.FindControl<Image>("AvatarPreviewImage");
-        if (avatarImage != null)
-        {
-            avatarImage.Source = null;
-            avatarImage.IsVisible = false;
-        }
-        var avatarIcon = this.FindControl<Control>("AvatarUploadIcon");
-        if (avatarIcon != null) avatarIcon.IsVisible = true;
+        _bannerFileBytes = null;
+        _profileFileBytes = null;
+
+        if (_bannerFileNameText != null) _bannerFileNameText.Text = "No file selected";
+        if (_profileFileNameText != null) _profileFileNameText.Text = "No file selected";
+        if (_bannerStatusText != null) _bannerStatusText.IsVisible = false;
+        if (_profileStatusText != null) _profileStatusText.IsVisible = false;
+
+        var bannerImg = this.FindControl<Image>("BannerPreviewImage");
+        if (bannerImg != null) { bannerImg.Source = null; bannerImg.IsVisible = false; }
+
+        var avatarImg = this.FindControl<Image>("AvatarPreviewImage");
+        if (avatarImg != null) { avatarImg.Source = null; avatarImg.IsVisible = false; }
     }
 }

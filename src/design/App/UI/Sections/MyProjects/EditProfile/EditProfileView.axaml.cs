@@ -1,11 +1,14 @@
 using System;
+using System.IO;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
+using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 using App.UI.Shared;
 using App.UI.Shell;
+using App.UI.Shared.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -20,9 +23,26 @@ public partial class EditProfileView : UserControl
 {
     private EditProfileViewModel? Vm => DataContext as EditProfileViewModel;
     private readonly ILogger<EditProfileView> _logger;
+    private readonly BlossomUploadService _blossomService;
 
     private IDisposable? _layoutSubscription;
     private IDisposable? _tabSubscription;
+
+    // Blossom upload state
+    private byte[]? _picFileBytes;
+    private string _picContentType = "image/jpeg";
+    private byte[]? _bannerFileBytes;
+    private string _bannerContentType = "image/jpeg";
+
+    // Cached blossom upload controls
+    private TextBox? _picBlossomServerBox;
+    private TextBlock? _picFileNameText;
+    private TextBlock? _picStatusText;
+    private Button? _picUploadBtn;
+    private TextBox? _bannerBlossomServerBox;
+    private TextBlock? _bannerFileNameText;
+    private TextBlock? _bannerStatusText;
+    private Button? _bannerUploadBtn;
 
     // Tab content panels
     private StackPanel? _profileTabContent;
@@ -67,6 +87,7 @@ public partial class EditProfileView : UserControl
     {
         InitializeComponent();
         _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<EditProfileView>();
+        _blossomService = App.Services.GetRequiredService<BlossomUploadService>();
 
         if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
             Classes.Add("Mobile");
@@ -141,6 +162,30 @@ public partial class EditProfileView : UserControl
 
         _addRelayButton = this.FindControl<Button>("AddRelayButton");
         if (_addRelayButton != null) _addRelayButton.Click += (_, _) => Vm?.AddRelay();
+
+        // Wire Blossom upload controls for profile picture
+        _picBlossomServerBox = this.FindControl<TextBox>("PicBlossomServerBox");
+        _picFileNameText = this.FindControl<TextBlock>("PicFileNameText");
+        _picStatusText = this.FindControl<TextBlock>("PicStatusText");
+        _picUploadBtn = this.FindControl<Button>("PicUploadBtn");
+
+        var picBrowseBtn = this.FindControl<Button>("PicBrowseBtn");
+        if (picBrowseBtn != null)
+            picBrowseBtn.Click += (_, _) => _ = BrowseFileAsync(false);
+        if (_picUploadBtn != null)
+            _picUploadBtn.Click += (_, _) => _ = UploadToBlossomAsync(false);
+
+        // Wire Blossom upload controls for banner
+        _bannerBlossomServerBox = this.FindControl<TextBox>("BannerBlossomServerBox");
+        _bannerFileNameText = this.FindControl<TextBlock>("BannerFileNameText");
+        _bannerStatusText = this.FindControl<TextBlock>("BannerStatusText");
+        _bannerUploadBtn = this.FindControl<Button>("BannerUploadBtn");
+
+        var bannerBrowseBtn = this.FindControl<Button>("BannerBrowseBtn");
+        if (bannerBrowseBtn != null)
+            bannerBrowseBtn.Click += (_, _) => _ = BrowseFileAsync(true);
+        if (_bannerUploadBtn != null)
+            _bannerUploadBtn.Click += (_, _) => _ = UploadToBlossomAsync(true);
 
         // Wire remove buttons in item templates via bubbling
         AddHandler(Button.ClickEvent, OnItemButtonClick, RoutingStrategies.Bubble);
@@ -407,6 +452,167 @@ public partial class EditProfileView : UserControl
     // Track the back button handler to prevent accumulation
     private Button? _backBtn;
     private EventHandler<RoutedEventArgs>? _backClickHandler;
+
+    #region Blossom Upload
+
+    private async Task BrowseFileAsync(bool isBanner)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null) return;
+
+        try
+        {
+            var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = isBanner ? "Select Banner Image" : "Select Profile Picture",
+                AllowMultiple = false,
+                FileTypeFilter = new[]
+                {
+                    new FilePickerFileType("Images")
+                    {
+                        Patterns = new[] { "*.png", "*.jpg", "*.jpeg", "*.webp", "*.gif" },
+                        MimeTypes = new[] { "image/png", "image/jpeg", "image/webp", "image/gif" }
+                    }
+                }
+            });
+
+            if (files.Count == 0) return;
+
+            var file = files[0];
+            await using var stream = await file.OpenReadAsync();
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+
+            var bytes = ms.ToArray();
+            var ext = System.IO.Path.GetExtension(file.Name).ToLowerInvariant();
+            var contentType = ext switch
+            {
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                ".webp" => "image/webp",
+                _ => "image/jpeg"
+            };
+
+            if (isBanner)
+            {
+                _bannerFileBytes = bytes;
+                _bannerContentType = contentType;
+                if (_bannerFileNameText != null)
+                    _bannerFileNameText.Text = $"{file.Name} ({bytes.Length / 1024} KB)";
+                SetBlossomStatus(true, $"Ready to upload: {file.Name}", isError: false);
+            }
+            else
+            {
+                _picFileBytes = bytes;
+                _picContentType = contentType;
+                if (_picFileNameText != null)
+                    _picFileNameText.Text = $"{file.Name} ({bytes.Length / 1024} KB)";
+                SetBlossomStatus(false, $"Ready to upload: {file.Name}", isError: false);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Browse file failed");
+        }
+    }
+
+    private async Task UploadToBlossomAsync(bool isBanner)
+    {
+        var fileBytes = isBanner ? _bannerFileBytes : _picFileBytes;
+        var contentType = isBanner ? _bannerContentType : _picContentType;
+        var serverUrl = isBanner
+            ? _bannerBlossomServerBox?.Text?.Trim()
+            : _picBlossomServerBox?.Text?.Trim();
+
+        if (fileBytes == null || fileBytes.Length == 0)
+        {
+            SetBlossomStatus(isBanner, "Please browse and select a file first.", isError: true);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(serverUrl) || !Uri.TryCreate(serverUrl, UriKind.Absolute, out _))
+        {
+            SetBlossomStatus(isBanner, "Please enter a valid Blossom server URL.", isError: true);
+            return;
+        }
+
+        SetBlossomUploadInProgress(isBanner, true);
+        SetBlossomStatus(isBanner, $"Uploading to {serverUrl}…", isError: false);
+
+        try
+        {
+            var result = await _blossomService.UploadAsync(serverUrl, fileBytes, contentType);
+
+            if (result.IsFailure)
+            {
+                SetBlossomStatus(isBanner, $"Upload failed: {result.Error}", isError: true);
+                return;
+            }
+
+            // Update ViewModel URL — the reactive subscription will reload the preview
+            if (Vm != null)
+            {
+                if (isBanner)
+                    Vm.ProfileBanner = result.Value;
+                else
+                    Vm.ProfilePicture = result.Value;
+            }
+
+            SetBlossomStatus(isBanner, "Upload successful!", isError: false);
+
+            if (isBanner)
+            {
+                _bannerFileBytes = null;
+                if (_bannerFileNameText != null) _bannerFileNameText.Text = "No file selected";
+            }
+            else
+            {
+                _picFileBytes = null;
+                if (_picFileNameText != null) _picFileNameText.Text = "No file selected";
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "UploadToBlossomAsync failed");
+            SetBlossomStatus(isBanner, $"Upload error: {ex.Message}", isError: true);
+        }
+        finally
+        {
+            SetBlossomUploadInProgress(isBanner, false);
+        }
+    }
+
+    private void SetBlossomStatus(bool isBanner, string message, bool isError)
+    {
+        var statusText = isBanner ? _bannerStatusText : _picStatusText;
+        if (statusText == null) return;
+        statusText.Text = message;
+        statusText.IsVisible = !string.IsNullOrEmpty(message);
+        if (Application.Current?.Resources.TryGetResource(
+            isError ? "ErrorFieldText" : "TextMuted",
+            Avalonia.Styling.ThemeVariant.Default,
+            out var brush) == true && brush is Avalonia.Media.IBrush b)
+        {
+            statusText.Foreground = b;
+        }
+    }
+
+    private void SetBlossomUploadInProgress(bool isBanner, bool inProgress)
+    {
+        var btn = isBanner ? _bannerUploadBtn : _picUploadBtn;
+        if (btn != null) btn.IsEnabled = !inProgress;
+
+        var iconName = isBanner ? "BannerUploadIcon" : "PicUploadIcon";
+        var spinnerName = isBanner ? "BannerUploadSpinner" : "PicUploadSpinner";
+
+        var icon = this.FindControl<Projektanker.Icons.Avalonia.Icon>(iconName);
+        var spinner = this.FindControl<Projektanker.Icons.Avalonia.Icon>(spinnerName);
+
+        if (icon != null) icon.IsVisible = !inProgress;
+        if (spinner != null) spinner.IsVisible = inProgress;
+    }
+
+    #endregion
 
     /// <summary>Wire the Back button to navigate back to the project list.</summary>
     public void SetBackAction(Action backAction)
