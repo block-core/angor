@@ -997,8 +997,9 @@ public static class TestHelpers
     /// (or in the test constructor) so that all Log() calls — including
     /// those from helpers like CreateWalletViaGenerate — appear in the
     /// IDE test runner output.
+    /// Note: not [ThreadStatic] because AvaloniaFact tests run on the
+    /// Avalonia dispatcher thread, different from the xUnit constructor thread.
     /// </summary>
-    [ThreadStatic]
     public static Xunit.Abstractions.ITestOutputHelper? Output;
 
     /// <summary>
