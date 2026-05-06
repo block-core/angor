@@ -24,6 +24,7 @@
 @inject IClientStorage storage;
 @inject ICacheStorage SessionStorage;
 @inject IWalletOperations _WalletOperations;
+@inject IIndexerService _indexerService;
 @inject IPsbtOperations _PsbtOperations
 @inject IApplicationLogicService applicationLogicService;
 @inject ISignService _SignService;
@@ -1373,11 +1374,11 @@ else
                 return;
             }
 
-            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction.Transaction);
+            var publishError = await _indexerService.PublishTransactionAsync(signedTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory));
 
-            if (!response.Success)
+            if (!string.IsNullOrEmpty(publishError))
             {
-                notificationComponent.ShowErrorMessage("Transaction failed", response.Message);
+                notificationComponent.ShowErrorMessage("Transaction failed", publishError);
                 return;
             }
 
