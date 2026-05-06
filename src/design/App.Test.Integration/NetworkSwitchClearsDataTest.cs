@@ -33,6 +33,15 @@ public class NetworkSwitchClearsDataTest
     [AvaloniaFact]
     public async Task NetworkSwitch_ClearsAllDocumentCollections_ButPreservesWallet()
     {
+        // Purge the entire profile directory to eliminate stale wallets from prior runs
+        var profileDir = System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Angor", "Profiles", nameof(NetworkSwitchClearsDataTest));
+        if (System.IO.Directory.Exists(profileDir))
+        {
+            System.IO.Directory.Delete(profileDir, recursive: true);
+        }
+
         using var profileScope = TestProfileScope.For(nameof(NetworkSwitchClearsDataTest));
         TestHelpers.Log("========== STARTING NetworkSwitch_ClearsAllDocumentCollections ==========");
 
