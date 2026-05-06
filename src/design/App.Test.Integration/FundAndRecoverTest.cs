@@ -16,6 +16,7 @@ using App.UI.Sections.Portfolio;
 using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
+using Xunit.Abstractions;
 
 namespace App.Test.Integration;
 
@@ -55,6 +56,14 @@ namespace App.Test.Integration;
 /// </summary>
 public class FundAndRecoverTest
 {
+    private readonly ITestOutputHelper _output;
+
+    public FundAndRecoverTest(ITestOutputHelper output)
+    {
+        _output = output;
+        TestHelpers.Output = output;
+    }
+
 
 
     [AvaloniaFact]

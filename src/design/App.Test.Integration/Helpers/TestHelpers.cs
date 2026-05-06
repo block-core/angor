@@ -993,12 +993,23 @@ public static class TestHelpers
     // ═══════════════════════════════════════════════════════════════════
 
     /// <summary>
-    /// Write a timestamped log message to the console.
-    /// Visible in test output when running with --logger "console;verbosity=detailed".
+    /// Per-test output helper. Set this at the start of each test method
+    /// (or in the test constructor) so that all Log() calls — including
+    /// those from helpers like CreateWalletViaGenerate — appear in the
+    /// IDE test runner output.
+    /// </summary>
+    [ThreadStatic]
+    public static Xunit.Abstractions.ITestOutputHelper? Output;
+
+    /// <summary>
+    /// Write a timestamped log message to the console AND to the xUnit
+    /// test output (if <see cref="Output"/> has been set for this test).
     /// </summary>
     public static void Log(string message)
     {
-        Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss.fff}] {message}");
+        var line = $"[{DateTime.UtcNow:HH:mm:ss.fff}] {message}";
+        Console.WriteLine(line);
+        Output?.WriteLine(line);
     }
 
     /// <summary>

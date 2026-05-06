@@ -24,11 +24,20 @@ using App.UI.Sections.Settings;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using System.Globalization;
+using Xunit.Abstractions;
 
 namespace App.Test.Integration;
 
 public class MultiInvestReleaseUnfundedAndClaimTest
 {
+    private readonly ITestOutputHelper _output;
+
+    public MultiInvestReleaseUnfundedAndClaimTest(ITestOutputHelper output)
+    {
+        _output = output;
+        TestHelpers.Output = output;
+    }
+
     private const string TestName = "MultiInvestReleaseUnfundedAndClaim";
     private const string FounderProfile = TestName + "-Founder";
     private const string Investor1Profile = TestName + "-Investor1";

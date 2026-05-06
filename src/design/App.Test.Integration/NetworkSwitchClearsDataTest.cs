@@ -14,6 +14,7 @@ using App.Test.Integration.Helpers;
 using App.UI.Sections.Settings;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
+using Xunit.Abstractions;
 
 namespace App.Test.Integration;
 
@@ -31,6 +32,14 @@ namespace App.Test.Integration;
 /// </summary>
 public class NetworkSwitchClearsDataTest
 {
+    private readonly ITestOutputHelper _output;
+
+    public NetworkSwitchClearsDataTest(ITestOutputHelper output)
+    {
+        _output = output;
+        TestHelpers.Output = output;
+    }
+
     [AvaloniaFact]
     public async Task NetworkSwitch_ClearsAllDocumentCollections_ButPreservesWallet()
     {

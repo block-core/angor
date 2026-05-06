@@ -17,11 +17,19 @@ using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Sections.Portfolio;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
+using Xunit.Abstractions;
 
 namespace App.Test.Integration;
 
 public class InvestAndRecoverTest
 {
+    private readonly ITestOutputHelper _output;
+
+    public InvestAndRecoverTest(ITestOutputHelper output)
+    {
+        _output = output;
+        TestHelpers.Output = output;
+    }
 
     [AvaloniaFact]
     public async Task FullInvestAndRecoverFlow()

@@ -6,6 +6,7 @@ using NetworkTab = App.UI.Shared.PaymentFlow.NetworkTab;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
+using Xunit.Abstractions;
 
 namespace App.Test.Integration;
 
@@ -24,6 +25,14 @@ namespace App.Test.Integration;
 /// </summary>
 public class OneClickInvestOnChainTest
 {
+    private readonly ITestOutputHelper _output;
+
+    public OneClickInvestOnChainTest(ITestOutputHelper output)
+    {
+        _output = output;
+        TestHelpers.Output = output;
+    }
+
     [AvaloniaFact]
     public async Task OnChainInvoiceFlow_FullStateMachine()
     {

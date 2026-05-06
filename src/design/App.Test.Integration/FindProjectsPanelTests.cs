@@ -11,6 +11,7 @@ using App.UI.Shared.PaymentFlow;
 using NetworkTab = App.UI.Shared.PaymentFlow.NetworkTab;
 using App.UI.Shared.Controls;
 using Microsoft.Extensions.DependencyInjection;
+using Xunit.Abstractions;
 
 namespace App.Test.Integration;
 
@@ -25,6 +26,14 @@ namespace App.Test.Integration;
 /// </summary>
 public class FindProjectsPanelTests
 {
+    private readonly ITestOutputHelper _output;
+
+    public FindProjectsPanelTests(ITestOutputHelper output)
+    {
+        _output = output;
+        TestHelpers.Output = output;
+    }
+
     /// <summary>
     /// Flow 1 (no wallet): Tests panel state transitions, project list loading,
     /// project card fields, statistics, detail view metadata, type terminology,

@@ -7,6 +7,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
+using Xunit.Abstractions;
 
 namespace App.Test.Integration;
 
@@ -31,6 +32,14 @@ namespace App.Test.Integration;
 /// </summary>
 public class InvestModalsViewFixesTest
 {
+    private readonly ITestOutputHelper _output;
+
+    public InvestModalsViewFixesTest(ITestOutputHelper output)
+    {
+        _output = output;
+        TestHelpers.Output = output;
+    }
+
     [AvaloniaFact]
     public async Task InvestModals_FixesAreWired()
     {

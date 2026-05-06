@@ -14,6 +14,7 @@ using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Shared.PaymentFlow;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
+using Xunit.Abstractions;
 
 namespace App.Test.Integration;
 
@@ -49,6 +50,14 @@ namespace App.Test.Integration;
 /// </summary>
 public class CreateProjectTest
 {
+    private readonly ITestOutputHelper _output;
+
+    public CreateProjectTest(ITestOutputHelper output)
+    {
+        _output = output;
+        TestHelpers.Output = output;
+    }
+
     /// <summary>
     /// Maximum time to wait for the deploy transaction to complete.
     /// </summary>

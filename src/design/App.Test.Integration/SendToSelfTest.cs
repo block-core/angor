@@ -11,6 +11,7 @@ using App.UI.Sections.Funds;
 using App.UI.Shared.Services;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
+using Xunit.Abstractions;
 
 namespace App.Test.Integration;
 
@@ -35,6 +36,14 @@ namespace App.Test.Integration;
 /// </summary>
 public class SendToSelfTest
 {
+    private readonly ITestOutputHelper _output;
+
+    public SendToSelfTest(ITestOutputHelper output)
+    {
+        _output = output;
+        TestHelpers.Output = output;
+    }
+
     /// <summary>
     /// Maximum time to wait for the faucet coins to appear in the wallet balance.
     /// The indexer may take a while to pick up the transaction.

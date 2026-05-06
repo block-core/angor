@@ -25,11 +25,20 @@ using App.UI.Shared.Controls;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using System.Globalization;
+using Xunit.Abstractions;
 
 namespace App.Test.Integration;
 
 public class MultiInvestClaimAndRecoverTest
 {
+    private readonly ITestOutputHelper _output;
+
+    public MultiInvestClaimAndRecoverTest(ITestOutputHelper output)
+    {
+        _output = output;
+        TestHelpers.Output = output;
+    }
+
     private const string TestName = "MultiInvestClaimAndRecover";
     private const string FounderProfile = TestName + "-Founder";
     private const string Investor1Profile = TestName + "-Investor1";
