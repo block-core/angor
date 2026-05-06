@@ -8,6 +8,7 @@ using FluentAssertions;
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Projects;
 using App.Test.Integration.Helpers;
+using App.UI.Sections.FindProjects;
 using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Shared.PaymentFlow;
 using App.UI.Shell;
@@ -534,9 +535,40 @@ public class CreateProjectTest
             "Penalty duration should be ~0 days (debug mode value)");
         TestHelpers.Log($"[STEP 8] Penalty duration: {projectDto.PenaltyDuration.TotalDays} days");
 
+        // ──────────────────────────────────────────────────────────────
+        // STEP 9: Navigate to Find Projects and search by project ID
+        // ──────────────────────────────────────────────────────────────
+        TestHelpers.Log("[STEP 9] Navigating to Find Projects to search by project ID...");
+        var projectIdentifier = sdkProject.ProjectIdentifier;
+        window.NavigateToSection("Find Projects");
+        await Task.Delay(500);
+        Dispatcher.UIThread.RunJobs();
+
+        var findProjectsVm = window.GetFindProjectsViewModel();
+        findProjectsVm.Should().NotBeNull("FindProjectsViewModel should be available");
+
+        TestHelpers.Log($"[STEP 9] Searching for project ID: {projectIdentifier}");
+        findProjectsVm!.SearchText = projectIdentifier;
+        Dispatcher.UIThread.RunJobs();
+
+        await findProjectsVm.SearchByProjectIdAsync();
+        Dispatcher.UIThread.RunJobs();
+
+        findProjectsVm.SearchError.Should().BeNullOrEmpty(
+            $"Search should not produce an error. Got: {findProjectsVm.SearchError}");
+        findProjectsVm.IsSearching.Should().BeFalse("Search should have completed");
+        findProjectsVm.SearchText.Should().BeEmpty("Search text should be cleared after success");
+
+        findProjectsVm.SelectedProject.Should().NotBeNull("Search should open the project detail");
+        findProjectsVm.SelectedProject!.ProjectId.Should().Be(projectIdentifier,
+            "Opened project should match the searched project ID");
+        findProjectsVm.SelectedProject.ProjectName.Should().Be(projectName,
+            "Opened project should have the correct name");
+
+        TestHelpers.Log($"[STEP 9] Found: '{findProjectsVm.SelectedProject.ProjectName}' (ID: {findProjectsVm.SelectedProject.ProjectId})");
+
         // Cleanup: close window
         window.Close();
         TestHelpers.Log("========== FullCreateInvestmentProjectFlow PASSED ==========");
     }
-
 }
