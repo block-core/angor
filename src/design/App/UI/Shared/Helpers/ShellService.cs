@@ -44,4 +44,10 @@ public static class ShellService
     /// </summary>
     public static void HideModal()
         => _vm?.HideModal();
+
+    /// <summary>
+    /// Route platform back requests through the shell navigation stack.
+    /// </summary>
+    public static bool TryHandlePlatformBack()
+        => _vm?.TryHandlePlatformBack() ?? false;
 }
