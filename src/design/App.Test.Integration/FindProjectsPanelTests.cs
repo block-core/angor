@@ -46,16 +46,16 @@ public class FindProjectsPanelTests
         using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
         var window = TestHelpers.CreateShellWindow();
 
-        TestHelpers.Log("═══ Flow 1: No-wallet panel states and project display ═══");
+        Log("═══ Flow 1: No-wallet panel states and project display ═══");
 
         // ── Navigate to Find Projects ──
-        TestHelpers.Log("[1.1] Navigating to Find Projects...");
+        Log("[1.1] Navigating to Find Projects...");
         window.NavigateToSection("Find Projects");
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
         // ── Initial panel state ──
-        TestHelpers.Log("[1.2] Checking initial panel state...");
+        Log("[1.2] Checking initial panel state...");
         var (listPanel, detailPanel, investPanel) = GetPanels(window);
 
         listPanel.Should().NotBeNull("ProjectListPanel should exist");
@@ -67,7 +67,7 @@ public class FindProjectsPanelTests
         investPanel!.IsVisible.Should().BeFalse("InvestPagePanel should be hidden in initial state");
 
         // ── Wait for projects to load from SDK ──
-        TestHelpers.Log("[1.3] Waiting for projects to load from SDK...");
+        Log("[1.3] Waiting for projects to load from SDK...");
         var vm = GetFindProjectsViewModel(window);
         vm.Should().NotBeNull("FindProjectsViewModel should be available");
         await WaitForProjects(vm!);
@@ -76,7 +76,7 @@ public class FindProjectsPanelTests
         TestHelpers.Log($"[1.3] {vm.Projects.Count} project(s) loaded");
 
         // ── ProjectCard controls rendered ──
-        TestHelpers.Log("[1.4] Verifying ProjectCard controls...");
+        Log("[1.4] Verifying ProjectCard controls...");
         // Wait for IsInitialLoad to flip to false (skeleton → real cards transition)
         var cardDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
         while (DateTime.UtcNow < cardDeadline && vm.IsInitialLoad)
@@ -106,7 +106,7 @@ public class FindProjectsPanelTests
         // ── Statistics ──
         // On a fresh local signet, newly created projects won't have investments yet.
         // Only assert statistics if at least one project actually has them.
-        TestHelpers.Log("[1.5] Checking project statistics...");
+        Log("[1.5] Checking project statistics...");
         var statsDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
         var statsLoaded = false;
         while (DateTime.UtcNow < statsDeadline)
@@ -134,11 +134,11 @@ public class FindProjectsPanelTests
         }
         else
         {
-            TestHelpers.Log("[1.5] No projects with statistics found (fresh chain). Skipping stats assertions.");
+            Log("[1.5] No projects with statistics found (fresh chain). Skipping stats assertions.");
         }
 
         // ── Open project detail → panel transition ──
-        TestHelpers.Log("[1.6] Opening project detail...");
+        Log("[1.6] Opening project detail...");
         vm.OpenProjectDetail(firstProject);
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(300);
@@ -150,7 +150,7 @@ public class FindProjectsPanelTests
         investPanel!.IsVisible.Should().BeFalse("InvestPagePanel should be hidden");
 
         // ── Detail view metadata ──
-        TestHelpers.Log("[1.6] Checking detail view metadata...");
+        Log("[1.6] Checking detail view metadata...");
         var detailView = window.GetVisualDescendants().OfType<ProjectDetailView>().FirstOrDefault();
         detailView.Should().NotBeNull("ProjectDetailView should be in the visual tree");
         detailView!.DataContext.Should().Be(firstProject, "DataContext should be the selected project");
@@ -173,7 +173,7 @@ public class FindProjectsPanelTests
         firstProject.FounderKey.Should().NotBeNull("FounderKey should be initialized");
 
         // ── Type terminology ──
-        TestHelpers.Log("[1.7] Checking type terminology...");
+        Log("[1.7] Checking type terminology...");
         if (firstProject.ProjectType == "Fund")
         {
             firstProject.ActionButtonText.Should().Contain("Fund");
@@ -188,7 +188,7 @@ public class FindProjectsPanelTests
         }
 
         // ── Invest button visibility for open projects ──
-        TestHelpers.Log("[1.8] Checking invest button visibility...");
+        Log("[1.8] Checking invest button visibility...");
         var openProject = vm.Projects.FirstOrDefault(p => p.IsOpen);
         if (openProject != null && openProject != firstProject)
         {
@@ -208,12 +208,12 @@ public class FindProjectsPanelTests
         }
 
         // ── HasInvested flag ──
-        TestHelpers.Log("[1.9] Checking HasInvested flag...");
+        Log("[1.9] Checking HasInvested flag...");
         firstProject.HasInvested.Should().BeFalse("fresh test profile should not have invested");
         firstProject.IsOpenAndNotInvested.Should().Be(firstProject.IsOpen);
 
         // ── Close detail → return to list ──
-        TestHelpers.Log("[1.10] Closing detail, returning to list...");
+        Log("[1.10] Closing detail, returning to list...");
         vm.CloseProjectDetail();
         Dispatcher.UIThread.RunJobs();
 
@@ -223,7 +223,7 @@ public class FindProjectsPanelTests
         investPanel!.IsVisible.Should().BeFalse();
 
         // ── Open invest page → panel transition ──
-        TestHelpers.Log("[1.11] Opening invest page...");
+        Log("[1.11] Opening invest page...");
         var openProj = vm.Projects.First(p => p.IsOpen);
         vm.OpenProjectDetail(openProj);
         Dispatcher.UIThread.RunJobs();
@@ -236,7 +236,7 @@ public class FindProjectsPanelTests
         investPanel!.IsVisible.Should().BeTrue("InvestPagePanel should be visible");
 
         // ── Invest form initial state ──
-        TestHelpers.Log("[1.12] Checking invest form initial state...");
+        Log("[1.12] Checking invest form initial state...");
         var investVm = vm.InvestPageViewModel;
         investVm.Should().NotBeNull("InvestPageViewModel should be created");
         investVm!.CurrentScreen.Should().Be(InvestScreen.InvestForm);
@@ -246,7 +246,7 @@ public class FindProjectsPanelTests
         investVm.InvestmentAmount.Should().BeEmpty("amount should start empty");
 
         // ── Quick amount button ──
-        TestHelpers.Log("[1.13] Testing quick amount button...");
+        Log("[1.13] Testing quick amount button...");
         investVm.SelectQuickAmount(0.01);
         Dispatcher.UIThread.RunJobs();
         investVm.InvestmentAmount.Should().Be("0.01");
@@ -259,7 +259,7 @@ public class FindProjectsPanelTests
         }
 
         // ── Manual amount ──
-        TestHelpers.Log("[1.14] Testing manual amount entry...");
+        Log("[1.14] Testing manual amount entry...");
         investVm.InvestmentAmount = "0.05";
         Dispatcher.UIThread.RunJobs();
         investVm.FormattedAmount.Should().Be("0.05000000");
@@ -272,7 +272,7 @@ public class FindProjectsPanelTests
         total.Should().BeGreaterThan(0.05, "total should include fees");
 
         // ── Submit validation: below minimum ──
-        TestHelpers.Log("[1.15] Testing submit validation...");
+        Log("[1.15] Testing submit validation...");
         investVm.InvestmentAmount = "0.0001";
         Dispatcher.UIThread.RunJobs();
         investVm.CanSubmit.Should().BeFalse("0.0001 is below minimum");
@@ -294,7 +294,7 @@ public class FindProjectsPanelTests
         Dispatcher.UIThread.RunJobs();
 
         // ── Reload projects ──
-        TestHelpers.Log("[1.16] Testing reload projects...");
+        Log("[1.16] Testing reload projects...");
         var initialCount = vm.Projects.Count;
         var loadTask = vm.LoadProjectsFromSdkAsync();
         Dispatcher.UIThread.RunJobs();
@@ -305,7 +305,7 @@ public class FindProjectsPanelTests
         vm.IsLoading.Should().BeFalse("loading flag should be cleared");
 
         // ── Navigate away and back ──
-        TestHelpers.Log("[1.17] Testing navigate away and back...");
+        Log("[1.17] Testing navigate away and back...");
         var firstName = vm.Projects[0].ProjectName;
         window.NavigateToSettings();
         Dispatcher.UIThread.RunJobs();
@@ -323,7 +323,7 @@ public class FindProjectsPanelTests
         vmAfter.InvestPageViewModel.Should().BeNull("invest page should be closed after navigation");
 
         window.Close();
-        TestHelpers.Log("═══ Flow 1 PASSED ═══");
+        Log("═══ Flow 1 PASSED ═══");
     }
 
     /// <summary>
@@ -336,15 +336,15 @@ public class FindProjectsPanelTests
         using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests) + "-Wallet");
         var window = TestHelpers.CreateShellWindow();
 
-        TestHelpers.Log("═══ Flow 2: With-wallet selector and invoice flow ═══");
+        Log("═══ Flow 2: With-wallet selector and invoice flow ═══");
 
         // ── Create wallet ──
-        TestHelpers.Log("[2.1] Creating wallet...");
+        Log("[2.1] Creating wallet...");
         await window.WipeExistingData();
         await window.CreateWalletViaGenerate();
 
         // ── Navigate to Find Projects and load ──
-        TestHelpers.Log("[2.2] Navigating to Find Projects...");
+        Log("[2.2] Navigating to Find Projects...");
         window.NavigateToSection("Find Projects");
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
@@ -362,7 +362,7 @@ public class FindProjectsPanelTests
         var investVm = vm.InvestPageViewModel!;
 
         // ── Submit to wallet selector ──
-        TestHelpers.Log("[2.3] Submitting to wallet selector...");
+        Log("[2.3] Submitting to wallet selector...");
         investVm.InvestmentAmount = "0.01";
         Dispatcher.UIThread.RunJobs();
         investVm.Submit();
@@ -372,14 +372,14 @@ public class FindProjectsPanelTests
         investVm.IsWalletSelector.Should().BeTrue();
 
         // ── Wallet display ──
-        TestHelpers.Log("[2.4] Checking wallet display...");
+        Log("[2.4] Checking wallet display...");
         investVm.Wallets.Should().NotBeEmpty("should have at least one wallet");
         var wallet = investVm.Wallets[0];
         wallet.Name.Should().NotBeNullOrWhiteSpace("wallet should have a name");
         wallet.Balance.Should().NotBeNull("wallet should have a balance string");
 
         // ── Wallet selection state ──
-        TestHelpers.Log("[2.5] Testing wallet selection...");
+        Log("[2.5] Testing wallet selection...");
         investVm.PaymentFlow.SelectWallet(wallet);
         Dispatcher.UIThread.RunJobs();
 
@@ -389,7 +389,7 @@ public class FindProjectsPanelTests
         investVm.PaymentFlow.PayButtonText.Should().Contain(wallet.Name);
 
         // ── Insufficient balance error ──
-        TestHelpers.Log("[2.6] Testing insufficient balance error...");
+        Log("[2.6] Testing insufficient balance error...");
         // Reset and try with large amount
         investVm.PaymentFlow.Reset();
         Dispatcher.UIThread.RunJobs();
@@ -444,7 +444,7 @@ public class FindProjectsPanelTests
         Dispatcher.UIThread.RunJobs();
 
         // ── Invoice screen toggle ──
-        TestHelpers.Log("[2.7] Testing invoice screen toggle...");
+        Log("[2.7] Testing invoice screen toggle...");
         investVm.PaymentFlow.ShowInvoice();
         Dispatcher.UIThread.RunJobs();
 
@@ -487,7 +487,7 @@ public class FindProjectsPanelTests
         investVm.PaymentFlow.Should().BeNull("CancelPaymentFlow nulls out PaymentFlow");
 
         window.Close();
-        TestHelpers.Log("═══ Flow 2 PASSED ═══");
+        Log("═══ Flow 2 PASSED ═══");
     }
 
     /// <summary>
@@ -499,7 +499,7 @@ public class FindProjectsPanelTests
         using var profileScope = TestProfileScope.For(nameof(FindProjectsPanelTests));
         var window = TestHelpers.CreateShellWindow();
 
-        TestHelpers.Log("═══ Flow 3: Negative tests ═══");
+        Log("═══ Flow 3: Negative tests ═══");
 
         window.NavigateToSection("Find Projects");
         await Task.Delay(500);
@@ -510,7 +510,7 @@ public class FindProjectsPanelTests
         await WaitForProjects(vm!);
 
         // ── Closed project: invest button hidden ──
-        TestHelpers.Log("[3.1] Checking closed project behavior...");
+        Log("[3.1] Checking closed project behavior...");
         var closedProject = vm!.Projects.FirstOrDefault(p => !p.IsOpen);
         if (closedProject != null)
         {
@@ -533,15 +533,15 @@ public class FindProjectsPanelTests
 
             vm.CloseProjectDetail();
             Dispatcher.UIThread.RunJobs();
-            TestHelpers.Log("[3.1] Closed project invest button hidden — verified");
+            Log("[3.1] Closed project invest button hidden — verified");
         }
         else
         {
-            TestHelpers.Log("[3.1] No closed projects found on testnet — skipping closed project test");
+            Log("[3.1] No closed projects found on testnet — skipping closed project test");
         }
 
         // ── Invalid input: empty amount ──
-        TestHelpers.Log("[3.2] Testing empty amount submission...");
+        Log("[3.2] Testing empty amount submission...");
         var openProject = vm.Projects.First(p => p.IsOpen);
         vm.OpenProjectDetail(openProject);
         Dispatcher.UIThread.RunJobs();
@@ -557,19 +557,19 @@ public class FindProjectsPanelTests
         investVm.CurrentScreen.Should().Be(InvestScreen.InvestForm, "should stay on form with empty amount");
 
         // ── Invalid input: negative amount ──
-        TestHelpers.Log("[3.3] Testing negative amount...");
+        Log("[3.3] Testing negative amount...");
         investVm.InvestmentAmount = "-0.01";
         Dispatcher.UIThread.RunJobs();
         investVm.CanSubmit.Should().BeFalse("negative amount should not be submittable");
 
         // ── Invalid input: non-numeric ──
-        TestHelpers.Log("[3.4] Testing non-numeric amount...");
+        Log("[3.4] Testing non-numeric amount...");
         investVm.InvestmentAmount = "abc";
         Dispatcher.UIThread.RunJobs();
         investVm.CanSubmit.Should().BeFalse("non-numeric amount should not be submittable");
 
         window.Close();
-        TestHelpers.Log("═══ Flow 3 PASSED ═══");
+        Log("═══ Flow 3 PASSED ═══");
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -611,4 +611,5 @@ public class FindProjectsPanelTests
         vm.Projects.Should().NotBeEmpty(
             "projects should load from SDK within timeout — ensure testnet indexer/relays are reachable");
     }
+    private void Log(string message) => TestHelpers.Log(_output, message);
 }

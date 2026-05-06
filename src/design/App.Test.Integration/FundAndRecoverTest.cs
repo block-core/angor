@@ -70,7 +70,7 @@ public class FundAndRecoverTest
     public async Task FullFundAndRecoverFlow()
     {
         using var profileScope = TestProfileScope.For(nameof(FundAndRecoverTest));
-        TestHelpers.Log("========== STARTING FullFundAndRecoverFlow ==========");
+        Log("========== STARTING FullFundAndRecoverFlow ==========");
 
         // Generate a unique run ID so we can precisely identify *our* project
         var runId = Guid.NewGuid().ToString("N")[..12];
@@ -96,57 +96,57 @@ public class FundAndRecoverTest
         // ──────────────────────────────────────────────────────────────
         // ARRANGE: Boot the full app with ShellView
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 0] Booting app with ShellView...");
+        Log("[STEP 0] Booting app with ShellView...");
         var window = TestHelpers.CreateShellWindow();
         var shellVm = window.GetShellViewModel();
-        TestHelpers.Log("[STEP 0] App booted. ShellView created, ShellViewModel ready.");
+        Log("[STEP 0] App booted. ShellView created, ShellViewModel ready.");
 
         // ──────────────────────────────────────────────────────────────
         // STEP 1: Wipe any existing data to start clean
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 1] Wiping existing data...");
+        Log("[STEP 1] Wiping existing data...");
         await window.WipeExistingData();
 
         // ──────────────────────────────────────────────────────────────
         // STEP 2: Navigate to Funds → create wallet via Generate path
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 2] Navigating to Funds section...");
+        Log("[STEP 2] Navigating to Funds section...");
         await window.NavigateToSectionAndVerify("Funds");
 
         var emptyState = await window.WaitForControl<Panel>("EmptyStatePanel", TestHelpers.UiTimeout);
         TestHelpers.Log($"[STEP 2] EmptyStatePanel found: {emptyState != null}");
         emptyState.Should().NotBeNull("Funds should show empty state after wipe");
 
-        TestHelpers.Log("[STEP 2] Creating wallet via Generate path...");
+        Log("[STEP 2] Creating wallet via Generate path...");
         await window.CreateWalletViaGenerate();
 
         // ──────────────────────────────────────────────────────────────
         // STEP 3: Wait for WalletCard, fund via faucet, wait for balance
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 3] Waiting for WalletCard to appear...");
+        Log("[STEP 3] Waiting for WalletCard to appear...");
         var walletCardBtn = await window.WaitForWalletCard(TimeSpan.FromSeconds(30));
         walletCardBtn.Should().NotBeNull("WalletCard should appear after wallet creation");
 
-        TestHelpers.Log("[STEP 3] Requesting testnet coins and waiting for balance...");
+        Log("[STEP 3] Requesting testnet coins and waiting for balance...");
         await window.FundWalletViaFaucet();
 
         // ──────────────────────────────────────────────────────────────
         // STEP 4: Create + deploy fund project
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 4] Navigating to My Projects section...");
+        Log("[STEP 4] Navigating to My Projects section...");
         await window.NavigateToSectionAndVerify("My Projects");
 
         var myProjectsVm = window.GetMyProjectsViewModel();
         myProjectsVm.Should().NotBeNull("MyProjectsViewModel should be available");
 
-        TestHelpers.Log("[STEP 4] Opening create wizard...");
+        Log("[STEP 4] Opening create wizard...");
         await window.OpenCreateWizard(myProjectsVm!);
 
         var wizardVm = myProjectsVm!.CreateProjectVm;
         wizardVm.Should().NotBeNull("CreateProjectViewModel should exist");
 
         // Step 1: Dismiss welcome, select "fund" type
-        TestHelpers.Log("[STEP 4.1] Selecting 'fund' project type...");
+        Log("[STEP 4.1] Selecting 'fund' project type...");
         wizardVm.DismissWelcome();
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(200);
@@ -156,7 +156,7 @@ public class FundAndRecoverTest
         Dispatcher.UIThread.RunJobs();
 
         // Step 2: Project profile
-        TestHelpers.Log("[STEP 4.2] Setting project name and about...");
+        Log("[STEP 4.2] Setting project name and about...");
         wizardVm.ProjectName = projectName;
         wizardVm.ProjectAbout = projectAbout;
         Dispatcher.UIThread.RunJobs();
@@ -164,7 +164,7 @@ public class FundAndRecoverTest
         Dispatcher.UIThread.RunJobs();
 
         // Step 3: Images
-        TestHelpers.Log("[STEP 4.3] Setting banner and profile images...");
+        Log("[STEP 4.3] Setting banner and profile images...");
         wizardVm.BannerUrl = bannerImageUrl;
         wizardVm.ProfileUrl = profileImageUrl;
         Dispatcher.UIThread.RunJobs();
@@ -172,7 +172,7 @@ public class FundAndRecoverTest
         Dispatcher.UIThread.RunJobs();
 
         // Step 4: Funding config
-        TestHelpers.Log("[STEP 4.4] Setting target amount and approval threshold...");
+        Log("[STEP 4.4] Setting target amount and approval threshold...");
         wizardVm.TargetAmount = targetAmountBtc;
         wizardVm.ApprovalThreshold = approvalThresholdBtc;
         Dispatcher.UIThread.RunJobs();
@@ -180,7 +180,7 @@ public class FundAndRecoverTest
         Dispatcher.UIThread.RunJobs();
 
         // Step 5: Payout schedule
-        TestHelpers.Log("[STEP 4.5] Setting payout schedule (3 weekly payouts)...");
+        Log("[STEP 4.5] Setting payout schedule (3 weekly payouts)...");
         wizardVm.ShowStep5Welcome.Should().BeTrue("Step 5 should start with welcome screen");
         wizardVm.DismissStep5Welcome();
         Dispatcher.UIThread.RunJobs();
@@ -196,7 +196,7 @@ public class FundAndRecoverTest
         Dispatcher.UIThread.RunJobs();
 
         // Step 6: Deploy
-        TestHelpers.Log("[STEP 4.6] Deploying project...");
+        Log("[STEP 4.6] Deploying project...");
         wizardVm.Deploy();
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(1000);
@@ -219,7 +219,7 @@ public class FundAndRecoverTest
         deployVm.SelectWallet(deployWallet);
         Dispatcher.UIThread.RunJobs();
 
-        TestHelpers.Log("[STEP 4.6] Paying with wallet (SDK deploy pipeline)...");
+        Log("[STEP 4.6] Paying with wallet (SDK deploy pipeline)...");
         deployVm.PayWithWallet();
 
         var deployDeadline = DateTime.UtcNow + TestHelpers.TransactionTimeout;
@@ -228,7 +228,7 @@ public class FundAndRecoverTest
             Dispatcher.UIThread.RunJobs();
             if (deployVm.CurrentScreen == DeployScreen.Success)
             {
-                TestHelpers.Log("[STEP 4.6] Deploy succeeded!");
+                Log("[STEP 4.6] Deploy succeeded!");
                 break;
             }
             if (!deployVm.IsDeploying && deployVm.CurrentScreen != DeployScreen.Success)
@@ -253,7 +253,7 @@ public class FundAndRecoverTest
         project.Should().NotBeNull($"Project with run ID '{runId}' should appear in My Projects");
         TestHelpers.Log($"[STEP 4.6] Project deployed: '{project!.Name}' (ID: {project.ProjectIdentifier})");
 
-        TestHelpers.Log("[STEP 4.7] Reloading founder projects from SDK to populate identifiers...");
+        Log("[STEP 4.7] Reloading founder projects from SDK to populate identifiers...");
         await myProjectsVm.LoadFounderProjectsAsync();
         Dispatcher.UIThread.RunJobs();
 
@@ -266,14 +266,14 @@ public class FundAndRecoverTest
         // ──────────────────────────────────────────────────────────────
         // STEP 5: Navigate to Find Projects → find our project
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 5] Navigating to Find Projects...");
+        Log("[STEP 5] Navigating to Find Projects...");
         await window.NavigateToSectionAndVerify("Find Projects");
 
         var findProjectsVm = window.GetFindProjectsViewModel();
         findProjectsVm.Should().NotBeNull("FindProjectsViewModel should be available");
 
         // Reload projects from SDK (indexer may need a moment to pick up the new project)
-        TestHelpers.Log("[STEP 5] Loading projects from SDK...");
+        Log("[STEP 5] Loading projects from SDK...");
         ProjectItemViewModel? foundProject = null;
         var findDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
         while (DateTime.UtcNow < findDeadline)
@@ -299,12 +299,12 @@ public class FundAndRecoverTest
         // ──────────────────────────────────────────────────────────────
         // STEP 6: Open invest page → invest above threshold
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 6] Opening project detail...");
+        Log("[STEP 6] Opening project detail...");
         findProjectsVm!.OpenProjectDetail(foundProject);
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(300);
 
-        TestHelpers.Log("[STEP 6] Opening invest page...");
+        Log("[STEP 6] Opening invest page...");
         findProjectsVm.OpenInvestPage();
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(500);
@@ -315,7 +315,7 @@ public class FundAndRecoverTest
         TestHelpers.Log($"[STEP 6] InvestPageViewModel created for project '{investVm!.Project.ProjectName}'");
 
         // Wait for wallets to load in the invest page
-        TestHelpers.Log("[STEP 6] Waiting for wallets to load in invest page...");
+        Log("[STEP 6] Waiting for wallets to load in invest page...");
         var investWalletDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
         while (DateTime.UtcNow < investWalletDeadline && investVm.Wallets.Count == 0)
         {
@@ -332,7 +332,7 @@ public class FundAndRecoverTest
         investVm.CanSubmit.Should().BeTrue($"Should be able to submit with amount {investmentAmountBtc}");
 
         // Submit → wallet selector
-        TestHelpers.Log("[STEP 6] Submitting invest form...");
+        Log("[STEP 6] Submitting invest form...");
         investVm.Submit();
         Dispatcher.UIThread.RunJobs();
         investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector, "Should advance to wallet selector after submit");
@@ -345,7 +345,7 @@ public class FundAndRecoverTest
         investVm.PaymentFlow.SelectedWallet.Should().NotBeNull("Should have a selected wallet");
 
         // Pay with wallet → SDK pipeline
-        TestHelpers.Log("[STEP 6] Paying with wallet (SDK invest pipeline)...");
+        Log("[STEP 6] Paying with wallet (SDK invest pipeline)...");
         investVm.PaymentFlow.PayWithWalletCommand.Execute().Subscribe();
 
         // Track processing states during payment (merged from FindProjectsPaymentFlowTest)
@@ -371,7 +371,7 @@ public class FundAndRecoverTest
 
             if (investVm.PaymentFlow.CurrentScreen == PaymentFlowScreen.Success)
             {
-                TestHelpers.Log("[STEP 6] Investment succeeded! Success screen visible.");
+                Log("[STEP 6] Investment succeeded! Success screen visible.");
                 break;
             }
             if (!investVm.PaymentFlow.IsProcessing && investVm.PaymentFlow.CurrentScreen != PaymentFlowScreen.Success)
@@ -403,7 +403,7 @@ public class FundAndRecoverTest
         // ──────────────────────────────────────────────────────────────
         // STEP 7: Add investment to portfolio + verify no duplicates
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 7] Adding investment to portfolio...");
+        Log("[STEP 7] Adding investment to portfolio...");
         // DIRECT DI RESOLVE: PortfolioViewModel is a singleton not reachable from the visual
         // tree while we're still on the Find Projects invest flow. Mirrors internal DI wiring.
         var portfolioVm = global::App.App.Services.GetRequiredService<PortfolioViewModel>();
@@ -433,12 +433,12 @@ public class FundAndRecoverTest
         var autoRefreshedInvestment = portfolioVm.Investments.Any(i =>
             i.ProjectIdentifier == foundProject.ProjectId || i.ProjectName == foundProject.ProjectName);
         autoRefreshedInvestment.Should().BeTrue("#8: Portfolio should auto-refresh and show investment after navigating back");
-        TestHelpers.Log("[STEP 7] ✓ #8 verified: Portfolio auto-refreshes on navigation.");
+        Log("[STEP 7] ✓ #8 verified: Portfolio auto-refreshes on navigation.");
 
         // ── Enhancement 1: Portfolio duplicate check ──
         // After AddToPortfolio the local collection has 1 optimistic entry.
         // Reload from SDK and verify only ONE entry for our project (no duplicates).
-        TestHelpers.Log("[STEP 7.1] Verifying no duplicate investments after SDK reload...");
+        Log("[STEP 7.1] Verifying no duplicate investments after SDK reload...");
         await portfolioVm.LoadInvestmentsFromSdkAsync();
         Dispatcher.UIThread.RunJobs();
 
@@ -469,7 +469,7 @@ public class FundAndRecoverTest
         // ──────────────────────────────────────────────────────────────
         // STEP 8: Founder approves pending investment request
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 8] Founder approving pending investment request...");
+        Log("[STEP 8] Founder approving pending investment request...");
         findProjectsVm.CloseInvestPage();
         findProjectsVm.CloseProjectDetail();
         Dispatcher.UIThread.RunJobs();
@@ -483,7 +483,7 @@ public class FundAndRecoverTest
         var refreshBtn = window.FindByAutomationId<Button>("FundersRefreshButton");
         refreshBtn.Should().NotBeNull("#3: Funders section should have a refresh button");
         refreshBtn!.IsEnabled.Should().BeTrue("#3: Refresh button should be enabled initially");
-        TestHelpers.Log("[STEP 8] ✓ #3 verified: Funders refresh button exists and is enabled.");
+        Log("[STEP 8] ✓ #3 verified: Funders refresh button exists and is enabled.");
 
         fundersVm!.SetFilter("waiting");
 
@@ -502,7 +502,7 @@ public class FundAndRecoverTest
                 break;
             }
 
-            TestHelpers.Log("[STEP 8] Pending founder request not visible yet. Retrying...");
+            Log("[STEP 8] Pending founder request not visible yet. Retrying...");
             await Task.Delay(TestHelpers.PollInterval);
         }
 
@@ -526,17 +526,17 @@ public class FundAndRecoverTest
                 break;
             }
 
-            TestHelpers.Log("[STEP 8] Waiting for approved founder signature to appear...");
+            Log("[STEP 8] Waiting for approved founder signature to appear...");
             await Task.Delay(TestHelpers.PollInterval);
         }
 
         founderApproved.Should().BeTrue("Investment request should move to approved after founder approval");
-        TestHelpers.Log("[STEP 8] Founder approval completed");
+        Log("[STEP 8] Founder approval completed");
 
         // ──────────────────────────────────────────────────────────────
         // STEP 9: Investor reloads signed investment and confirms it
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 9] Reloading funded investments and confirming signed investment...");
+        Log("[STEP 9] Reloading funded investments and confirming signed investment...");
         await window.NavigateToSectionAndVerify("Funded");
 
         InvestmentViewModel? signedInvestment = null;
@@ -582,12 +582,12 @@ public class FundAndRecoverTest
         signedInvestment.IsStep3.Should().BeTrue("IsStep3 should be true after confirmation");
         signedInvestment.IsStepAtLeast3.Should().BeTrue("IsStepAtLeast3 should be true after confirmation");
         signedInvestment.ProjectType.Should().Be("fund", "Fund-type project type should persist through confirmation");
-        TestHelpers.Log("[STEP 9] Investor confirmed signed investment successfully");
+        Log("[STEP 9] Investor confirmed signed investment successfully");
 
         // ──────────────────────────────────────────────────────────────
         // STEP 10: Founder spends stage 1
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 10] Founder spending stage 1...");
+        Log("[STEP 10] Founder spending stage 1...");
         findProjectsVm.CloseInvestPage();
         findProjectsVm.CloseProjectDetail();
         Dispatcher.UIThread.RunJobs();
@@ -607,7 +607,7 @@ public class FundAndRecoverTest
 
         // ── Enhancement 2: ManageProject stage/UTXO assertions before spending ──
         // Wait for claimable transactions to load, then verify stages look correct BEFORE the founder spends.
-        TestHelpers.Log("[STEP 10.0] Verifying ManageProject stages before founder spend...");
+        Log("[STEP 10.0] Verifying ManageProject stages before founder spend...");
         var preSpendDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;
         while (DateTime.UtcNow < preSpendDeadline)
         {
@@ -697,7 +697,7 @@ public class FundAndRecoverTest
                 var claimResult = await manageVm.ClaimStageFundsAsync(claimableStage.Number, selectedTransactions);
                 Dispatcher.UIThread.RunJobs();
                 claimResult.Should().BeTrue("Founder should be able to spend stage 1");
-                TestHelpers.Log("[STEP 10] Founder successfully spent stage 1");
+                Log("[STEP 10] Founder successfully spent stage 1");
                 break;
             }
 
@@ -728,7 +728,7 @@ public class FundAndRecoverTest
 
         // STEP 11: Navigate to Funded → find our investment
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 11] Navigating to Funded section...");
+        Log("[STEP 11] Navigating to Funded section...");
         await window.NavigateToSectionAndVerify("Funded");
 
         // Find our investment in the portfolio (it was added locally via AddToPortfolio)
@@ -743,17 +743,17 @@ public class FundAndRecoverTest
         var refreshInvestBtn = window.FindByAutomationId<Button>("RefreshInvestmentButton");
         if (refreshInvestBtn != null)
         {
-            TestHelpers.Log("[STEP 11] ✓ #5 verified: RefreshInvestmentButton exists in investment detail view.");
+            Log("[STEP 11] ✓ #5 verified: RefreshInvestmentButton exists in investment detail view.");
         }
         else
         {
             // The button may not be visible until the detail panel is opened.
             // At minimum, verify LoadRecoveryStatusAsync can be called (the refresh mechanism).
-            TestHelpers.Log("[STEP 11] #5: RefreshInvestmentButton not visible (detail panel may not be open). Will verify via LoadRecoveryStatusAsync.");
+            Log("[STEP 11] #5: RefreshInvestmentButton not visible (detail panel may not be open). Will verify via LoadRecoveryStatusAsync.");
         }
 
         // Also try to reload from SDK (indexer may lag)
-        TestHelpers.Log("[STEP 11] Reloading investments from SDK...");
+        Log("[STEP 11] Reloading investments from SDK...");
         await portfolioVm.LoadInvestmentsFromSdkAsync();
         Dispatcher.UIThread.RunJobs();
         TestHelpers.Log($"[STEP 11] After SDK reload: {portfolioVm.Investments.Count} investment(s)");
@@ -776,7 +776,7 @@ public class FundAndRecoverTest
         // ──────────────────────────────────────────────────────────────
         // STEP 12: Load recovery status and execute recovery
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 12] Loading recovery status...");
+        Log("[STEP 12] Loading recovery status...");
 
         // If the investment doesn't have a wallet ID yet (local-only add), set it from the wallet we used
         if (string.IsNullOrEmpty(targetInvestment.InvestmentWalletId))
@@ -793,7 +793,7 @@ public class FundAndRecoverTest
         // Give the indexer an initial grace period before the first poll.
         // Signet mempool propagation can be slow — the mempool.space indexer needs
         // time to receive and index the just-broadcast investment transaction.
-        TestHelpers.Log("[STEP 12] Waiting 30s initial grace period for indexer to pick up the investment tx...");
+        Log("[STEP 12] Waiting 30s initial grace period for indexer to pick up the investment tx...");
         await Task.Delay(TimeSpan.FromSeconds(30));
 
         // Wait for indexer to catch up with the investment transaction, then load recovery status
@@ -833,7 +833,7 @@ public class FundAndRecoverTest
         // ── Enhancement 3: Recovery stage display verification ──
         // After LoadRecoveryStatusAsync, the investment's Stages collection should be populated
         // with per-stage recovery data. Verify the stage count and statuses.
-        TestHelpers.Log("[STEP 12.1] Verifying recovery stage display...");
+        Log("[STEP 12.1] Verifying recovery stage display...");
         targetInvestment.Stages.Count.Should().Be(installmentCount,
             $"Recovery should show {installmentCount} stages matching the project's payout schedule");
 
@@ -897,7 +897,7 @@ public class FundAndRecoverTest
         // ──────────────────────────────────────────────────────────────
         // STEP 13: Verify recovery succeeded
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 13] Recovery flow completed through real UI button path");
+        Log("[STEP 13] Recovery flow completed through real UI button path");
         targetInvestment.ShowSuccessModal.Should().BeTrue(
             $"Recovery operation '{actionKey}' should succeed and show the success modal");
 
@@ -905,11 +905,11 @@ public class FundAndRecoverTest
         // Since recovery succeeded, there should be no error. But verify the tuple-based return is wired:
         // The recovery methods now return (bool Success, string? Error) instead of just bool.
         // If this compiled and ran successfully, the wiring is correct.
-        TestHelpers.Log("[STEP 13] ✓ #14 verified: Recovery methods use (bool, string?) tuple return (compilation confirms wiring).");
+        Log("[STEP 13] ✓ #14 verified: Recovery methods use (bool, string?) tuple return (compilation confirms wiring).");
 
         // ── #16 regression: Stage status should update after recovery ──
         // Poll until the indexer reflects the recovery tx (it may take a few seconds after broadcast)
-        TestHelpers.Log("[STEP 13.1] Polling recovery status until stages reflect recovery tx...");
+        Log("[STEP 13.1] Polling recovery status until stages reflect recovery tx...");
         var recoveredStages = new List<global::App.UI.Sections.Portfolio.InvestmentStageViewModel>();
         for (int poll16 = 1; poll16 <= 30; poll16++)
         {
@@ -947,7 +947,8 @@ public class FundAndRecoverTest
 
         // Cleanup: close window
         window.Close();
-        TestHelpers.Log("========== FullFundAndRecoverFlow PASSED ==========");
+        Log("========== FullFundAndRecoverFlow PASSED ==========");
     }
 
+    private void Log(string message) => TestHelpers.Log(_output, message);
 }

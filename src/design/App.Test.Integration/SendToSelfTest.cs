@@ -59,26 +59,26 @@ public class SendToSelfTest
     public async Task FullSendToSelfFlow()
     {
         using var profileScope = TestProfileScope.For(nameof(SendToSelfTest));
-        TestHelpers.Log("========== STARTING FullSendToSelfFlow ==========");
+        Log("========== STARTING FullSendToSelfFlow ==========");
 
         // ──────────────────────────────────────────────────────────────
         // ARRANGE: Boot the full app with ShellView
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 0] Booting app with ShellView...");
+        Log("[STEP 0] Booting app with ShellView...");
         var window = TestHelpers.CreateShellWindow();
         var shellVm = window.GetShellViewModel();
-        TestHelpers.Log("[STEP 0] App booted. ShellView created, ShellViewModel ready.");
+        Log("[STEP 0] App booted. ShellView created, ShellViewModel ready.");
 
         // ──────────────────────────────────────────────────────────────
         // STEP 1: Wipe any existing data to start clean
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 1] Wiping existing data...");
+        Log("[STEP 1] Wiping existing data...");
         await window.WipeExistingData();
 
         // ──────────────────────────────────────────────────────────────
         // STEP 2: Navigate to Funds — verify empty state
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 2] Navigating to Funds section...");
+        Log("[STEP 2] Navigating to Funds section...");
         await window.NavigateToSectionAndVerify("Funds");
 
         var emptyState = await window.WaitForControl<Panel>("EmptyStatePanel", TestHelpers.UiTimeout);
@@ -88,13 +88,13 @@ public class SendToSelfTest
         // ──────────────────────────────────────────────────────────────
         // STEP 3: Create wallet via Generate path
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 3] Creating wallet via Generate path...");
+        Log("[STEP 3] Creating wallet via Generate path...");
         await window.CreateWalletViaGenerate();
 
         // ──────────────────────────────────────────────────────────────
         // STEP 4: Wait for wallet card to appear in populated state
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 4] Waiting for WalletCard to appear...");
+        Log("[STEP 4] Waiting for WalletCard to appear...");
         var walletCardSendBtn = await window.WaitForWalletCard(TimeSpan.FromSeconds(30));
         TestHelpers.Log($"[STEP 4] WalletCard found: {walletCardSendBtn != null}");
         walletCardSendBtn.Should().NotBeNull("WalletCard should appear after wallet creation");
@@ -102,19 +102,19 @@ public class SendToSelfTest
         // ──────────────────────────────────────────────────────────────
         // STEP 5: Request testnet coins via Faucet
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 5] Requesting testnet coins via Faucet...");
+        Log("[STEP 5] Requesting testnet coins via Faucet...");
         await RequestFaucetCoins(window);
 
         // ──────────────────────────────────────────────────────────────
         // STEP 6: Wait for balance to become non-zero
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 6] Waiting for balance to become non-zero...");
+        Log("[STEP 6] Waiting for balance to become non-zero...");
         await WaitForNonZeroBalance(window);
 
         // ──────────────────────────────────────────────────────────────
         // STEP 7: Get receive address
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 7] Getting receive address...");
+        Log("[STEP 7] Getting receive address...");
         var receiveAddress = await GetReceiveAddress(window);
         TestHelpers.Log($"[STEP 7] Receive address: {receiveAddress}");
         receiveAddress.Should().NotBeNullOrWhiteSpace("should get a valid receive address");
@@ -137,7 +137,7 @@ public class SendToSelfTest
         // (confirmed + unconfirmed) which double-counted the pending amount
         // because PendingBalance was displayed alongside it.
         // ──────────────────────────────────────────────────────────────
-        TestHelpers.Log("[STEP 8b] Verifying WalletInfo pending balance is not double-counted...");
+        Log("[STEP 8b] Verifying WalletInfo pending balance is not double-counted...");
         {
             // Refresh so WalletInfo picks up the new unconfirmed transaction
             await window.ClickWalletCardButton("WalletCardBtnRefresh");
@@ -164,11 +164,11 @@ public class SendToSelfTest
             }
             else
             {
-                TestHelpers.Log("[STEP 8b] No unconfirmed balance detected (transaction may have already confirmed). Skipping pending-specific assertions.");
+                Log("[STEP 8b] No unconfirmed balance detected (transaction may have already confirmed). Skipping pending-specific assertions.");
             }
         }
 
-        TestHelpers.Log("[STEP 9] Polling balance until non-zero after send-to-self...");
+        Log("[STEP 9] Polling balance until non-zero after send-to-self...");
         var step9Deadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
         var step9Polls = 0;
         while (DateTime.UtcNow < step9Deadline)
@@ -195,7 +195,7 @@ public class SendToSelfTest
 
         // Cleanup: close window
         window.Close();
-        TestHelpers.Log("========== FullSendToSelfFlow PASSED ==========");
+        Log("========== FullSendToSelfFlow PASSED ==========");
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -207,13 +207,13 @@ public class SendToSelfTest
     /// </summary>
     private async Task RequestFaucetCoins(Window window)
     {
-        TestHelpers.Log("  [Faucet] Clicking WalletCardBtnFaucet...");
+        Log("  [Faucet] Clicking WalletCardBtnFaucet...");
         await window.ClickWalletCardButton("WalletCardBtnFaucet");
 
-        TestHelpers.Log("  [Faucet] Waiting 5s for faucet HTTP request to complete...");
+        Log("  [Faucet] Waiting 5s for faucet HTTP request to complete...");
         await Task.Delay(5000);
         Dispatcher.UIThread.RunJobs();
-        TestHelpers.Log("  [Faucet] Faucet request should be complete.");
+        Log("  [Faucet] Faucet request should be complete.");
     }
 
     /// <summary>
@@ -257,14 +257,14 @@ public class SendToSelfTest
     /// </summary>
     private async Task<string?> GetReceiveAddress(Window window)
     {
-        TestHelpers.Log("  [Receive] Clicking WalletCardBtnReceive...");
+        Log("  [Receive] Clicking WalletCardBtnReceive...");
         await window.ClickWalletCardButton("WalletCardBtnReceive");
 
         var addressTimeout = TimeSpan.FromSeconds(30);
         var deadline = DateTime.UtcNow + addressTimeout;
         string? addressText = null;
 
-        TestHelpers.Log("  [Receive] Waiting for address to load (polling ReceiveAddressText)...");
+        Log("  [Receive] Waiting for address to load (polling ReceiveAddressText)...");
         while (DateTime.UtcNow < deadline)
         {
             Dispatcher.UIThread.RunJobs();
@@ -285,7 +285,7 @@ public class SendToSelfTest
             "Receive address should load within {0}s (should change from 'Loading...' to a tb1... address)",
             addressTimeout.TotalSeconds);
 
-        TestHelpers.Log("  [Receive] Closing receive modal...");
+        Log("  [Receive] Closing receive modal...");
         await window.ClickButton("BtnReceiveDone", TestHelpers.UiTimeout);
         await Task.Delay(200);
         Dispatcher.UIThread.RunJobs();
@@ -299,31 +299,31 @@ public class SendToSelfTest
     /// </summary>
     private async Task<string?> SendToSelf(Window window, string address)
     {
-        TestHelpers.Log("  [Send] Clicking WalletCardBtnSend...");
+        Log("  [Send] Clicking WalletCardBtnSend...");
         await window.ClickWalletCardButton("WalletCardBtnSend");
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
         var sendForm = await window.WaitForControl<Panel>("SendFormPanel", TestHelpers.UiTimeout);
         sendForm.Should().NotBeNull("Send form should be visible after clicking Send");
-        TestHelpers.Log("  [Send] SendFormPanel visible.");
+        Log("  [Send] SendFormPanel visible.");
 
         TestHelpers.Log($"  [Send] Typing address: {address}");
         await window.TypeText("SendAddressInput", address, TestHelpers.UiTimeout);
 
-        TestHelpers.Log("  [Send] Typing amount: 0.00010000");
+        Log("  [Send] Typing amount: 0.00010000");
         await window.TypeText("SendAmountInput", "0.00010000", TestHelpers.UiTimeout);
 
-        TestHelpers.Log("  [Send] Clicking BtnSendConfirm...");
+        Log("  [Send] Clicking BtnSendConfirm...");
         await window.ClickButton("BtnSendConfirm", TestHelpers.UiTimeout);
 
         await Task.Delay(500);
         Dispatcher.UIThread.RunJobs();
 
-        TestHelpers.Log("  [Send] Confirming fee selection (Standard 20 sat/vB)...");
+        Log("  [Send] Confirming fee selection (Standard 20 sat/vB)...");
         await window.ClickButton("FeeConfirmButton", TimeSpan.FromSeconds(30));
 
-        TestHelpers.Log("  [Send] Waiting for SendSuccessPanel...");
+        Log("  [Send] Waiting for SendSuccessPanel...");
         var successPanel = await window.WaitForControl<Panel>("SendSuccessPanel", SendTransactionTimeout);
 
         if (successPanel == null)
@@ -339,16 +339,17 @@ public class SendToSelfTest
                 $"Send success panel should appear after transaction. Error shown: {errorText}");
         }
 
-        TestHelpers.Log("  [Send] SendSuccessPanel visible. Reading TxId...");
+        Log("  [Send] SendSuccessPanel visible. Reading TxId...");
 
         var txId = await window.GetText("SummaryTxid", TestHelpers.UiTimeout);
         TestHelpers.Log($"  [Send] TxId: {txId}");
 
-        TestHelpers.Log("  [Send] Clicking BtnSendDone...");
+        Log("  [Send] Clicking BtnSendDone...");
         await window.ClickButton("BtnSendDone", TestHelpers.UiTimeout);
         await Task.Delay(300);
         Dispatcher.UIThread.RunJobs();
 
         return txId;
     }
+    private void Log(string message) => TestHelpers.Log(_output, message);
 }
