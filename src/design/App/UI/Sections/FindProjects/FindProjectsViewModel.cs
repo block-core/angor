@@ -18,6 +18,7 @@ using Microsoft.Extensions.Logging;
 
 namespace App.UI.Sections.FindProjects;
 
+
 /// <summary>
 /// Project data model for the UI. When SDK data is available, mapped from ProjectDto.
 /// </summary>
