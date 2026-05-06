@@ -14,8 +14,8 @@ namespace App.UI.Shared.Services;
 /// </summary>
 public class BlossomUploadService
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly ILogger<BlossomUploadService> _logger;
+    private readonly IHttpClientFactory httpClientFactory;
+    private readonly ILogger<BlossomUploadService> logger;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -25,8 +25,8 @@ public class BlossomUploadService
 
     public BlossomUploadService(IHttpClientFactory httpClientFactory, ILogger<BlossomUploadService> logger)
     {
-        _httpClientFactory = httpClientFactory;
-        _logger = logger;
+        this.httpClientFactory = httpClientFactory;
+        this.logger = logger;
     }
 
     /// <summary>
@@ -48,13 +48,13 @@ public class BlossomUploadService
             var baseUrl = serverBaseUrl.TrimEnd('/');
             var uploadUrl = $"{baseUrl}/upload";
 
-            using var client = _httpClientFactory.CreateClient();
+            using var client = httpClientFactory.CreateClient();
             client.Timeout = TimeSpan.FromMinutes(5);
 
             using var content = new ByteArrayContent(fileBytes);
             content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
 
-            _logger.LogInformation("Uploading {Size} bytes to Blossom server {Url}", fileBytes.Length, uploadUrl);
+            logger.LogInformation("Uploading {Size} bytes to Blossom server {Url}", fileBytes.Length, uploadUrl);
 
             using var request = new HttpRequestMessage(HttpMethod.Put, uploadUrl) { Content = content };
             using var response = await client.SendAsync(request, cancellationToken);
@@ -66,18 +66,18 @@ public class BlossomUploadService
                 var reason = response.Headers.Contains("X-Reason")
                     ? response.Headers.GetValues("X-Reason").FirstOrDefault()
                     : responseBody;
-                _logger.LogWarning("Blossom upload failed {StatusCode}: {Reason}", response.StatusCode, reason);
+                logger.LogWarning("Blossom upload failed {StatusCode}: {Reason}", response.StatusCode, reason);
                 return Result.Failure<string>($"Upload failed ({(int)response.StatusCode}): {reason}");
             }
 
             var descriptor = JsonSerializer.Deserialize<BlobDescriptorResponse>(responseBody, JsonOptions);
             if (descriptor?.Url is null)
             {
-                _logger.LogWarning("Blossom upload returned invalid response: {Response}", responseBody);
+                logger.LogWarning("Blossom upload returned invalid response: {Response}", responseBody);
                 return Result.Failure<string>("Server returned an invalid response");
             }
 
-            _logger.LogInformation("Blossom upload successful: {Url}", descriptor.Url);
+            logger.LogInformation("Blossom upload successful: {Url}", descriptor.Url);
             return Result.Success(descriptor.Url);
         }
         catch (TaskCanceledException)
@@ -86,12 +86,12 @@ public class BlossomUploadService
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "Network error during Blossom upload");
+            logger.LogError(ex, "Network error during Blossom upload");
             return Result.Failure<string>($"Network error: {ex.Message}");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error during Blossom upload");
+            logger.LogError(ex, "Unexpected error during Blossom upload");
             return Result.Failure<string>($"Upload error: {ex.Message}");
         }
     }

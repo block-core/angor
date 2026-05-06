@@ -484,7 +484,7 @@ public partial class EditProfileView : UserControl
             await stream.CopyToAsync(ms);
 
             var bytes = ms.ToArray();
-            var ext = System.IO.Path.GetExtension(file.Name).ToLowerInvariant();
+            var ext = Path.GetExtension(file.Name).ToLowerInvariant();
             var contentType = ext switch
             {
                 ".png" => "image/png",
