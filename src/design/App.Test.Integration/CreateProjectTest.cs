@@ -14,7 +14,6 @@ using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Shared.PaymentFlow;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
-using Xunit.Abstractions;
 
 namespace App.Test.Integration;
 
@@ -50,14 +49,6 @@ namespace App.Test.Integration;
 /// </summary>
 public class CreateProjectTest
 {
-    private readonly ITestOutputHelper _output;
-
-    public CreateProjectTest(ITestOutputHelper output)
-    {
-        _output = output;
-        TestHelpers.Output = output;
-    }
-
     /// <summary>
     /// Maximum time to wait for the deploy transaction to complete.
     /// </summary>
@@ -67,7 +58,7 @@ public class CreateProjectTest
     public async Task FullCreateInvestmentProjectFlow()
     {
         using var profileScope = TestProfileScope.For(nameof(CreateProjectTest));
-        Log("========== STARTING FullCreateInvestmentProjectFlow ==========");
+        TestHelpers.Log("========== STARTING FullCreateInvestmentProjectFlow ==========");
 
         // Generate a unique run ID so we can precisely identify *our* project
         var runId = Guid.NewGuid().ToString("N")[..12];
@@ -98,18 +89,18 @@ public class CreateProjectTest
         // ──────────────────────────────────────────────────────────────
         // ARRANGE: Boot the full app with ShellView
         // ──────────────────────────────────────────────────────────────
-        Log("[STEP 0] Booting app with ShellView...");
+        TestHelpers.Log("[STEP 0] Booting app with ShellView...");
         var window = TestHelpers.CreateShellWindow();
         var shellVm = window.GetShellViewModel();
-        Log("[STEP 0] App booted. ShellView created, ShellViewModel ready.");
+        TestHelpers.Log("[STEP 0] App booted. ShellView created, ShellViewModel ready.");
 
         // ──────────────────────────────────────────────────────────────
         // STEP 1: Wipe any existing data to start clean
         // ──────────────────────────────────────────────────────────────
-        Log("[STEP 1] Wiping existing data...");
+        TestHelpers.Log("[STEP 1] Wiping existing data...");
         await window.WipeExistingData();
 
-        Log("[STEP 1] Verifying shell header and funded state reset immediately after wipe...");
+        TestHelpers.Log("[STEP 1] Verifying shell header and funded state reset immediately after wipe...");
         shellVm.SelectedWallet.Should().BeNull("wipe data should clear the selected header wallet");
         shellVm.SwitcherWallets.Should().BeEmpty("wipe data should clear wallet switcher entries");
         shellVm.AvailableBalanceDisplay.Should().Be("0.0000 TBTC", "wipe data should reset the header available balance");
@@ -131,25 +122,25 @@ public class CreateProjectTest
         // Debug mode only relaxes validation constraints when the network is also testnet (not mainnet).
         // Use SettingsViewModel so both PrototypeSettings (persisted) and INetworkConfiguration (in-memory) are updated.
         await window.EnableDebugMode();
-        Log("[STEP 1b] Debug mode ENABLED via SettingsViewModel (after wipe).");
+        TestHelpers.Log("[STEP 1b] Debug mode ENABLED via SettingsViewModel (after wipe).");
 
         // ──────────────────────────────────────────────────────────────
         // STEP 2: Navigate to Funds → create wallet via Generate path
         // ──────────────────────────────────────────────────────────────
-        Log("[STEP 2] Navigating to Funds section...");
+        TestHelpers.Log("[STEP 2] Navigating to Funds section...");
         await window.NavigateToSectionAndVerify("Funds");
 
         var emptyState = await window.WaitForControl<Panel>("EmptyStatePanel", TestHelpers.UiTimeout);
         TestHelpers.Log($"[STEP 2] EmptyStatePanel found: {emptyState != null}");
         emptyState.Should().NotBeNull("Funds should show empty state after wipe");
 
-        Log("[STEP 2] Creating wallet via Generate path...");
+        TestHelpers.Log("[STEP 2] Creating wallet via Generate path...");
         await window.CreateWalletViaGenerate();
 
         // ── Regression guard: verify the wallet can be decrypted with the default key ──
         // This catches mismatches between the encryption key used during wallet creation
         // and the key used during wallet creation.
-        Log("[STEP 2b] Verifying wallet encryption key roundtrip...");
+        TestHelpers.Log("[STEP 2b] Verifying wallet encryption key roundtrip...");
         var walletAppService2 = global::App.App.Services.GetRequiredService<Angor.Sdk.Wallet.Application.IWalletAppService>();
         var metadatas2 = await walletAppService2.GetMetadatas();
         metadatas2.IsSuccess.Should().BeTrue("should be able to list wallet metadatas after creation");
@@ -165,14 +156,14 @@ public class CreateProjectTest
         // ──────────────────────────────────────────────────────────────
         // STEP 3: Wait for WalletCard, fund via faucet, wait for balance
         // ──────────────────────────────────────────────────────────────
-        Log("[STEP 3] Waiting for WalletCard to appear...");
+        TestHelpers.Log("[STEP 3] Waiting for WalletCard to appear...");
         var walletCardBtn = await window.WaitForWalletCard(TimeSpan.FromSeconds(30));
         walletCardBtn.Should().NotBeNull("WalletCard should appear after wallet creation");
 
-        Log("[STEP 3] Requesting testnet coins and waiting for balance...");
+        TestHelpers.Log("[STEP 3] Requesting testnet coins and waiting for balance...");
         await window.FundWalletViaFaucet();
 
-        Log("[STEP 3] Verifying header wallet balance sync and that Funded remains empty...");
+        TestHelpers.Log("[STEP 3] Verifying header wallet balance sync and that Funded remains empty...");
         var fundsVm = window.GetFundsViewModel();
         fundsVm.Should().NotBeNull("FundsViewModel should still be available after funding");
 
@@ -197,7 +188,7 @@ public class CreateProjectTest
         // ──────────────────────────────────────────────────────────────
         // STEP 4: Navigate to My Projects → open create wizard
         // ──────────────────────────────────────────────────────────────
-        Log("[STEP 4] Navigating to My Projects section...");
+        TestHelpers.Log("[STEP 4] Navigating to My Projects section...");
         await window.NavigateToSectionAndVerify("My Projects");
 
         // My Projects should show empty state (no projects yet)
@@ -206,7 +197,7 @@ public class CreateProjectTest
         TestHelpers.Log($"[STEP 4] HasProjects: {myProjectsVm!.HasProjects}");
 
         // Open the create wizard via the ViewModel
-        Log("[STEP 4] Opening create wizard...");
+        TestHelpers.Log("[STEP 4] Opening create wizard...");
         await window.OpenCreateWizard(myProjectsVm);
 
         // ──────────────────────────────────────────────────────────────
@@ -217,18 +208,18 @@ public class CreateProjectTest
         wizardVm.Should().NotBeNull("CreateProjectViewModel should exist");
 
         // ── Step 1: Dismiss welcome, select "investment" type ──
-        Log("[STEP 5.1] Dismissing welcome screen...");
+        TestHelpers.Log("[STEP 5.1] Dismissing welcome screen...");
         wizardVm.ShowWelcome.Should().BeTrue("Wizard should start with welcome screen");
         wizardVm.DismissWelcome();
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(200);
 
-        Log("[STEP 5.1] Selecting 'investment' project type...");
+        TestHelpers.Log("[STEP 5.1] Selecting 'investment' project type...");
         wizardVm.SelectProjectType("investment");
         Dispatcher.UIThread.RunJobs();
         wizardVm.IsInvestment.Should().BeTrue();
 
-        Log("[STEP 5.1] Advancing to Step 2...");
+        TestHelpers.Log("[STEP 5.1] Advancing to Step 2...");
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
         wizardVm.CurrentStep.Should().Be(2, "Should advance to step 2 after selecting type");
@@ -236,12 +227,12 @@ public class CreateProjectTest
         step2Panel.Should().NotBeNull("Step 2 panel should be visible after advancing to step 2");
 
         // ── Step 2: Project profile — name and about ──
-        Log("[STEP 5.2] Filling project name and about...");
+        TestHelpers.Log("[STEP 5.2] Filling project name and about...");
         wizardVm.ProjectName = projectName;
         wizardVm.ProjectAbout = projectAbout;
         Dispatcher.UIThread.RunJobs();
 
-        Log("[STEP 5.2] Advancing to Step 3...");
+        TestHelpers.Log("[STEP 5.2] Advancing to Step 3...");
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
         wizardVm.CurrentStep.Should().Be(3, "Should advance to step 3 after filling profile");
@@ -249,7 +240,7 @@ public class CreateProjectTest
         step3Panel.Should().NotBeNull("Step 3 panel should be visible after advancing to step 3");
 
         // ── Step 3: Project images — set random picsum.photos URLs ──
-        Log("[STEP 5.3] Setting banner and profile image URLs...");
+        TestHelpers.Log("[STEP 5.3] Setting banner and profile image URLs...");
         wizardVm.BannerUrl = bannerImageUrl;
         wizardVm.ProfileUrl = profileImageUrl;
         Dispatcher.UIThread.RunJobs();
@@ -258,7 +249,7 @@ public class CreateProjectTest
         TestHelpers.Log($"[STEP 5.3] BannerUrl: {wizardVm.BannerUrl}");
         TestHelpers.Log($"[STEP 5.3] ProfileUrl: {wizardVm.ProfileUrl}");
 
-        Log("[STEP 5.3] Advancing to Step 4...");
+        TestHelpers.Log("[STEP 5.3] Advancing to Step 4...");
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
         wizardVm.CurrentStep.Should().Be(4, "Should advance to step 4 after setting images");
@@ -266,19 +257,19 @@ public class CreateProjectTest
         step4Panel.Should().NotBeNull("Step 4 panel should be visible after advancing to step 4");
 
         // ── Step 4: Funding configuration — target amount + end date + penalty ──
-        Log("[STEP 5.4] Setting target amount, end date, and penalty days...");
+        TestHelpers.Log("[STEP 5.4] Setting target amount, end date, and penalty days...");
         wizardVm.TargetAmount = targetAmountBtc;
         wizardVm.InvestEndDate = investEndDate;
         wizardVm.PenaltyDays = penaltyDays;
         Dispatcher.UIThread.RunJobs();
 
-        Log("[STEP 5.4] Advancing to Step 5...");
+        TestHelpers.Log("[STEP 5.4] Advancing to Step 5...");
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
         wizardVm.CurrentStep.Should().Be(5, "Should advance to step 5 after filling funding config");
 
         // ── Step 5: Stages — dismiss welcome, set duration + frequency, generate stages ──
-        Log("[STEP 5.5] Dismissing Step 5 welcome interstitial...");
+        TestHelpers.Log("[STEP 5.5] Dismissing Step 5 welcome interstitial...");
         wizardVm.ShowStep5Welcome.Should().BeTrue("Step 5 should start with welcome screen");
         wizardVm.DismissStep5Welcome();
         Dispatcher.UIThread.RunJobs();
@@ -288,13 +279,13 @@ public class CreateProjectTest
         var step5Panel = await window.WaitForControl<Visual>("CreateProjectStep5", TestHelpers.UiTimeout);
         step5Panel.Should().NotBeNull("Step 5 panel should be visible after dismissing welcome");
 
-        Log("[STEP 5.5] Setting duration to 6 months, frequency to Monthly...");
+        TestHelpers.Log("[STEP 5.5] Setting duration to 6 months, frequency to Monthly...");
         wizardVm.DurationValue = durationValue;
         wizardVm.DurationUnit = durationUnit;
         wizardVm.ReleaseFrequency = releaseFrequency;
         Dispatcher.UIThread.RunJobs();
 
-        Log("[STEP 5.5] Generating investment stages...");
+        TestHelpers.Log("[STEP 5.5] Generating investment stages...");
         wizardVm.GenerateInvestmentStages();
         Dispatcher.UIThread.RunJobs();
         wizardVm.Stages.Count.Should().Be(expectedStageCount, $"Should have generated exactly {expectedStageCount} stages");
@@ -322,7 +313,7 @@ public class CreateProjectTest
         }
         totalPercentage.Should().BeApproximately(100.0, 1.0, "Total stage percentages should sum to ~100%");
 
-        Log("[STEP 5.5] Advancing to Step 6 (Review & Deploy)...");
+        TestHelpers.Log("[STEP 5.5] Advancing to Step 6 (Review & Deploy)...");
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
         wizardVm.CurrentStep.Should().Be(6, "Should advance to step 6 after generating stages");
@@ -332,10 +323,10 @@ public class CreateProjectTest
         // ──────────────────────────────────────────────────────────────
         // STEP 6: Deploy the project
         // ──────────────────────────────────────────────────────────────
-        Log("[STEP 6] Starting deploy flow...");
+        TestHelpers.Log("[STEP 6] Starting deploy flow...");
 
         // Click the Deploy button (triggers Deploy() which shows DeployFlowOverlay as shell modal)
-        Log("[STEP 6] Calling Deploy()...");
+        TestHelpers.Log("[STEP 6] Calling Deploy()...");
         wizardVm.Deploy();
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(1000); // Allow LoadWalletsAsync to complete
@@ -347,7 +338,7 @@ public class CreateProjectTest
         pf.Should().NotBeNull("PaymentFlow should be created by DeployFlow.Show()");
 
         // Wait for wallets to load
-        Log("[STEP 6] Waiting for wallets to load...");
+        TestHelpers.Log("[STEP 6] Waiting for wallets to load...");
         var walletLoadDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
         while (DateTime.UtcNow < walletLoadDeadline && pf!.Wallets.Count == 0)
         {
@@ -365,7 +356,7 @@ public class CreateProjectTest
         pf.HasSelectedWallet.Should().BeTrue("Should have a selected wallet");
 
         // Click "Pay with Wallet" — this triggers the real SDK deploy pipeline
-        Log("[STEP 6] Paying with wallet (SDK deploy pipeline)...");
+        TestHelpers.Log("[STEP 6] Paying with wallet (SDK deploy pipeline)...");
         pf.PayWithWalletCommand.Execute().Subscribe();
 
         // Wait for deploy to complete (or fail) — poll for Success screen
@@ -376,7 +367,7 @@ public class CreateProjectTest
 
             if (pf.CurrentScreen == PaymentFlowScreen.Success)
             {
-                Log("[STEP 6] Deploy succeeded! Success screen visible.");
+                TestHelpers.Log("[STEP 6] Deploy succeeded! Success screen visible.");
                 break;
             }
 
@@ -397,7 +388,7 @@ public class CreateProjectTest
             "Deploy success screen should reference the project name");
 
         // Click "Go to My Projects" — closes modal, adds project to list
-        Log("[STEP 6] Clicking 'Go to My Projects'...");
+        TestHelpers.Log("[STEP 6] Clicking 'Go to My Projects'...");
         deployVm.GoToMyProjects();
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(500);
@@ -414,7 +405,7 @@ public class CreateProjectTest
         // ──────────────────────────────────────────────────────────────
         // STEP 7: Verify the project appears in My Projects list
         // ──────────────────────────────────────────────────────────────
-        Log("[STEP 7] Verifying project appears in My Projects list...");
+        TestHelpers.Log("[STEP 7] Verifying project appears in My Projects list...");
 
         // 7a. Wizard should be closed and local project list should be populated
         myProjectsVm.ShowCreateWizard.Should().BeFalse("Wizard should be closed after deploy");
@@ -439,7 +430,7 @@ public class CreateProjectTest
         // ──────────────────────────────────────────────────────────────
         // STEP 8: Reload from SDK and validate ProjectDto fields
         // ──────────────────────────────────────────────────────────────
-        Log("[STEP 8] Fetching project from SDK via GetFounderProjects...");
+        TestHelpers.Log("[STEP 8] Fetching project from SDK via GetFounderProjects...");
 
         // Reload founder projects from SDK (this fetches from Nostr/indexer)
         await myProjectsVm.LoadFounderProjectsAsync();
@@ -477,7 +468,7 @@ public class CreateProjectTest
         // DIRECT SDK CALL: No ViewModel exposes the raw ProjectDto with stage configuration.
         // We need it to validate that stages, target amount, and metadata persisted correctly
         // after the create-project wizard completed via the UI.
-        Log("[STEP 8] Fetching full ProjectDto from SDK for stage validation...");
+        TestHelpers.Log("[STEP 8] Fetching full ProjectDto from SDK for stage validation...");
         var projectAppService = global::App.App.Services.GetRequiredService<IProjectAppService>();
         var walletAppService = global::App.App.Services.GetRequiredService<Angor.Sdk.Wallet.Application.IWalletAppService>();
 
@@ -510,7 +501,7 @@ public class CreateProjectTest
         projectDto.Avatar!.ToString().Should().Contain("picsum.photos");
         projectDto.NostrNpubKeyHex.Should().NotBeNullOrEmpty("Should have a Nostr pub key");
         projectDto.Version.Should().BeGreaterThanOrEqualTo(2, "Should be version 2+");
-        Log("[STEP 8] ProjectDto core fields validated");
+        TestHelpers.Log("[STEP 8] ProjectDto core fields validated");
 
         // 8e. Validate stages from SDK
         projectDto.Stages.Should().NotBeNull("ProjectDto should have stages");
@@ -579,6 +570,6 @@ public class CreateProjectTest
 
         // Cleanup: close window
         window.Close();
-        Log("========== FullCreateInvestmentProjectFlow PASSED ==========");
+        TestHelpers.Log("========== FullCreateInvestmentProjectFlow PASSED ==========");
     }
 }

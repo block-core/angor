@@ -14,7 +14,6 @@ using App.Test.Integration.Helpers;
 using App.UI.Sections.Settings;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
-using Xunit.Abstractions;
 
 namespace App.Test.Integration;
 
@@ -32,19 +31,11 @@ namespace App.Test.Integration;
 /// </summary>
 public class NetworkSwitchClearsDataTest
 {
-    private readonly ITestOutputHelper _output;
-
-    public NetworkSwitchClearsDataTest(ITestOutputHelper output)
-    {
-        _output = output;
-        TestHelpers.Output = output;
-    }
-
     [AvaloniaFact]
     public async Task NetworkSwitch_ClearsAllDocumentCollections_ButPreservesWallet()
     {
         using var profileScope = TestProfileScope.For(nameof(NetworkSwitchClearsDataTest));
-        Log("========== STARTING NetworkSwitch_ClearsAllDocumentCollections ==========");
+        TestHelpers.Log("========== STARTING NetworkSwitch_ClearsAllDocumentCollections ==========");
 
         // ──────────────────────────────────────────────────────────────
         // ARRANGE: Boot app, wipe, create wallet
@@ -52,10 +43,10 @@ public class NetworkSwitchClearsDataTest
         var window = TestHelpers.CreateShellWindow();
         var shellVm = window.GetShellViewModel();
 
-        Log("[STEP 1] Wiping existing data...");
+        TestHelpers.Log("[STEP 1] Wiping existing data...");
         await window.WipeExistingData();
 
-        Log("[STEP 2] Creating wallet...");
+        TestHelpers.Log("[STEP 2] Creating wallet...");
         await window.CreateWalletViaGenerate();
 
         // Verify wallet exists
@@ -68,7 +59,7 @@ public class NetworkSwitchClearsDataTest
         // ──────────────────────────────────────────────────────────────
         // STEP 3: Seed test documents into all 8 collections
         // ──────────────────────────────────────────────────────────────
-        Log("[STEP 3] Seeding test documents into all collections...");
+        TestHelpers.Log("[STEP 3] Seeding test documents into all collections...");
         var services = global::App.App.Services!;
 
         var projectsCollection = services.GetRequiredService<IGenericDocumentCollection<Project>>();
@@ -132,7 +123,7 @@ public class NetworkSwitchClearsDataTest
         // ──────────────────────────────────────────────────────────────
         // STEP 4: Switch network (Angornet → Mainnet)
         // ──────────────────────────────────────────────────────────────
-        Log("[STEP 4] Switching network to Mainnet...");
+        TestHelpers.Log("[STEP 4] Switching network to Mainnet...");
         window.NavigateToSettings();
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(500);
@@ -159,12 +150,12 @@ public class NetworkSwitchClearsDataTest
         Dispatcher.UIThread.RunJobs();
 
         settingsVm.NetworkType.Should().Be(targetNetwork, "network should have switched");
-        Log("[STEP 4] Network switch completed.");
+        TestHelpers.Log("[STEP 4] Network switch completed.");
 
         // ──────────────────────────────────────────────────────────────
         // STEP 5: Verify all document collections are empty
         // ──────────────────────────────────────────────────────────────
-        Log("[STEP 5] Verifying all document collections are empty...");
+        TestHelpers.Log("[STEP 5] Verifying all document collections are empty...");
 
         // After network switch, DeleteAllDataAsync should clear all collections.
         // RebuildAllWalletBalancesAsync may re-insert DerivedProjectKeys and WalletAccountBalanceInfo
@@ -195,7 +186,7 @@ public class NetworkSwitchClearsDataTest
         var seededHandshake = await investmentHandshakesCollection.FindByIdAsync($"test-hs-{testId}");
         seededHandshake.Value.Should().BeNull("seeded InvestmentHandshake should be deleted after network switch");
 
-        Log("[STEP 5] All 8 document collections confirmed empty.");
+        TestHelpers.Log("[STEP 5] All 8 document collections confirmed empty.");
 
         // ──────────────────────────────────────────────────────────────
         // STEP 6: Verify wallet was preserved (not deleted)
@@ -205,12 +196,12 @@ public class NetworkSwitchClearsDataTest
             "network switch should preserve the created wallet");
         shellVm.SelectedWallet.Should().NotBeNull(
             "network switch should preserve the selected wallet");
-        Log("[STEP 6] Wallet preserved after network switch.");
+        TestHelpers.Log("[STEP 6] Wallet preserved after network switch.");
 
         // ──────────────────────────────────────────────────────────────
         // STEP 7: Switch back to Angornet (cleanup)
         // ──────────────────────────────────────────────────────────────
-        Log("[STEP 7] Switching back to original network...");
+        TestHelpers.Log("[STEP 7] Switching back to original network...");
         settingsVm.SelectedNetworkToSwitch = currentNetwork;
         settingsVm.NetworkChangeConfirmed = true;
         await settingsVm.ConfirmNetworkSwitchAsync();
@@ -218,9 +209,8 @@ public class NetworkSwitchClearsDataTest
         await Task.Delay(500);
 
         settingsVm.NetworkType.Should().Be(currentNetwork, "should be back on original network after switch-back");
-        Log("[STEP 7] Switched back to original network.");
+        TestHelpers.Log("[STEP 7] Switched back to original network.");
 
-        Log("========== NetworkSwitch_ClearsAllDocumentCollections PASSED ==========");
+        TestHelpers.Log("========== NetworkSwitch_ClearsAllDocumentCollections PASSED ==========");
     }
-    private void Log(string message) => TestHelpers.Log(_output, message);
 }

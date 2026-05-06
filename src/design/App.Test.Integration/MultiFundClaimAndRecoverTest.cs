@@ -26,20 +26,11 @@ using App.UI.Shared.Controls;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using System.Globalization;
-using Xunit.Abstractions;
 
 namespace App.Test.Integration;
 
 public class MultiFundClaimAndRecoverTest
 {
-    private readonly ITestOutputHelper _output;
-
-    public MultiFundClaimAndRecoverTest(ITestOutputHelper output)
-    {
-        _output = output;
-        TestHelpers.Output = output;
-    }
-
     private const string TestName = "MultiFundClaimAndRecover";
         private const string FounderProfile = TestName + "-Founder";
         private const string BelowThresholdInvestorProfile = TestName + "-Investor1";

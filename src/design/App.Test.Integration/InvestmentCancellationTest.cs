@@ -19,7 +19,6 @@ using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Sections.Portfolio;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
-using Xunit.Abstractions;
 
 namespace App.Test.Integration;
 
@@ -75,14 +74,6 @@ namespace App.Test.Integration;
 /// </summary>
 public class InvestmentCancellationTest
 {
-    private readonly ITestOutputHelper _output;
-
-    public InvestmentCancellationTest(ITestOutputHelper output)
-    {
-        _output = output;
-        TestHelpers.Output = output;
-    }
-
     private const string TestName = "InvestmentCancellation";
     private const string FounderProfile = TestName + "-Founder";
     private const string InvestorProfile = TestName + "-Investor";

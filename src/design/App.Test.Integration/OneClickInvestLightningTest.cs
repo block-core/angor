@@ -9,7 +9,6 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
-using Xunit.Abstractions;
 
 namespace App.Test.Integration;
 
@@ -29,14 +28,6 @@ namespace App.Test.Integration;
 /// </summary>
 public class OneClickInvestLightningTest
 {
-    private readonly ITestOutputHelper _output;
-
-    public OneClickInvestLightningTest(ITestOutputHelper output)
-    {
-        _output = output;
-        TestHelpers.Output = output;
-    }
-
     [AvaloniaFact]
     public async Task LightningInvoiceFlow_FullStateMachine()
     {

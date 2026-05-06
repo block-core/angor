@@ -12,7 +12,6 @@ using App.UI.Sections.MyProjects;
 using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
-using Xunit.Abstractions;
 
 namespace App.Test.Integration;
 
@@ -46,14 +45,6 @@ namespace App.Test.Integration;
 /// </summary>
 public class WalletImportAndProjectScanTest
 {
-    private readonly ITestOutputHelper _output;
-
-    public WalletImportAndProjectScanTest(ITestOutputHelper output)
-    {
-        _output = output;
-        TestHelpers.Output = output;
-    }
-
     private const string TestName = "WalletImportAndProjectScan";
     private const string CreatorProfile = TestName + "-Creator";
     private const string ImporterProfile = TestName + "-Importer";

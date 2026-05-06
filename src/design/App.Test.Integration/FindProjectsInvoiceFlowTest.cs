@@ -17,7 +17,6 @@ using App.UI.Shell;
 using Angor.Sdk.Wallet.Application;
 using App.UI.Shared.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Xunit.Abstractions;
 
 namespace App.Test.Integration;
 
@@ -40,14 +39,6 @@ namespace App.Test.Integration;
 /// </summary>
 public class FindProjectsInvoiceFlowTest
 {
-    private readonly ITestOutputHelper _output;
-
-    public FindProjectsInvoiceFlowTest(ITestOutputHelper output)
-    {
-        _output = output;
-        TestHelpers.Output = output;
-    }
-
     private static readonly TimeSpan FaucetBalanceTimeout = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan TransactionTimeout = TimeSpan.FromSeconds(120);
     private static readonly TimeSpan UiTimeout = TimeSpan.FromSeconds(15);

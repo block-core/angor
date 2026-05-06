@@ -37,7 +37,6 @@ public class OneClickInvestOnChainFundedTest
     public OneClickInvestOnChainFundedTest(ITestOutputHelper output)
     {
         _output = output;
-        TestHelpers.Output = output;
     }
 
     [AvaloniaFact]

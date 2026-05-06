@@ -37,7 +37,6 @@ public class OneClickInvestLightningFundedTest
     public OneClickInvestLightningFundedTest(ITestOutputHelper output)
     {
         _output = output;
-        TestHelpers.Output = output;
     }
 
     private const string LndPayBaseUrl = "https://thunderhub.thedude.cloud/lnd1-pay";

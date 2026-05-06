@@ -993,36 +993,23 @@ public static class TestHelpers
     // ═══════════════════════════════════════════════════════════════════
 
     /// <summary>
-    /// Per-test output helper. Set in the test constructor so all Log() calls
-    /// — including those from shared helpers — appear in the IDE test runner.
-    /// </summary>
-    public static Xunit.Abstractions.ITestOutputHelper? Output;
-
-    private static readonly string LogFilePath = Path.Combine(
-        Path.GetTempPath(), "angor-integration-tests.log");
-
-    /// <summary>
-    /// Write a timestamped log message to:
-    /// 1. Console (captured by some test runners)
-    /// 2. xUnit ITestOutputHelper (IDE "Output" tab)
-    /// 3. File at %TEMP%/angor-integration-tests.log (always works)
+    /// Write a timestamped log message to the console.
+    /// Visible in test output when running with --logger "console;verbosity=detailed".
     /// </summary>
     public static void Log(string message)
     {
-        var line = $"[{DateTime.UtcNow:HH:mm:ss.fff}] {message}";
-        Console.WriteLine(line);
-        try { Output?.WriteLine(line); } catch { }
-        try { File.AppendAllText(LogFilePath, line + Environment.NewLine); } catch { }
+        Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss.fff}] {message}");
     }
 
     /// <summary>
     /// Write a timestamped log message to both the console and the xUnit test output.
+    /// Use this overload from tests that inject <see cref="Xunit.Abstractions.ITestOutputHelper"/>
+    /// so log lines appear in real-time in Rider's test runner.
     /// </summary>
     public static void Log(Xunit.Abstractions.ITestOutputHelper output, string message)
     {
         var line = $"[{DateTime.UtcNow:HH:mm:ss.fff}] {message}";
         Console.WriteLine(line);
         output.WriteLine(line);
-        try { File.AppendAllText(LogFilePath, line + Environment.NewLine); } catch { }
     }
 }
