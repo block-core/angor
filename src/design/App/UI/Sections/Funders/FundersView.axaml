@@ -18,6 +18,29 @@
         <Style Selector="funders|FundersView.Mobile Border.SignatureCard">
             <Setter Property="Transitions" Value="{x:Null}" />
             <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />
+            <Setter Property="Padding" Value="16" />
+        </Style>
+
+        <Style Selector="funders|FundersView.Mobile DockPanel.FundersHeader">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+
+        <Style Selector="Border.FilterTabsOuter">
+            <Setter Property="Background" Value="{DynamicResource FundersFilterRailBg}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="Margin" Value="0,0,0,24" />
+        </Style>
+
+        <Style Selector="funders|FundersView.Mobile Border.FilterTabsOuter">
+            <Setter Property="Background" Value="{DynamicResource FundersFilterRailBg}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="4" />
+            <Setter Property="Margin" Value="0,0,0,16" />
         </Style>
 
         <Style Selector="Border.SignatureCard">
@@ -30,14 +53,28 @@
         <!-- Filter tab styles — CSS class toggling (no code-behind color logic) -->
         <Style Selector="Border.FilterTab">
             <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="funders|FundersView.Mobile Border.FilterTab">
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
         </Style>
         <Style Selector="Border.FilterTab:pointerover">
             <Setter Property="Opacity" Value="0.8" />
         </Style>
         <!-- Active tab: green bottom border -->
         <Style Selector="Border.FilterTab.FilterTabActive">
-            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
+            <Setter Property="Background" Value="{DynamicResource PrimaryGreenBrush}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+        <Style Selector="funders|FundersView.Mobile Border.FilterTab.FilterTabActive">
+            <Setter Property="Background" Value="{DynamicResource PrimaryGreenBrush}" />
+            <Setter Property="BorderBrush" Value="Transparent" />
         </Style>
         <!-- Inactive tab text: muted -->
         <Style Selector="Border.FilterTab TextBlock.TabLabel">
@@ -45,7 +82,46 @@
         </Style>
         <!-- Active tab text: strong -->
         <Style Selector="Border.FilterTab.FilterTabActive TextBlock.TabLabel">
-            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="funders|FundersView.Mobile Border.FilterTab.FilterTabActive TextBlock.TabLabel">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+
+        <Style Selector="StackPanel.MobileSignatureLayout">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="StackPanel.MobileSignatureActions">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="funders|FundersView.Mobile DockPanel.DesktopSignatureLayout">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="funders|FundersView.Mobile StackPanel.MobileSignatureLayout">
+            <Setter Property="IsVisible" Value="True" />
+        </Style>
+        <Style Selector="funders|FundersView.Mobile StackPanel.MobileSignatureActions">
+            <Setter Property="IsVisible" Value="True" />
+        </Style>
+
+        <Style Selector="funders|FundersView.Mobile Button.FundersAction">
+            <Setter Property="Height" Value="52" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="funders|FundersView.Mobile Border.FundersAction">
+            <Setter Property="Height" Value="52" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="funders|FundersView.Mobile Button.FundersAction.IconOnly">
+            <Setter Property="Width" Value="52" />
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+
+        <Style Selector="Border.SignatureStatusPill">
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="10,4" />
+            <Setter Property="VerticalAlignment" Value="Top" />
         </Style>
 
         <Style Selector="Button.FundersAction">
@@ -116,7 +192,7 @@
                 <!-- HEADER: Icon + Title + Approve All btn  -->
                 <!-- Vue: flex items-center justify-between mb-8 -->
                 <!-- ═══════════════════════════════════════ -->
-                <DockPanel Margin="0,0,0,24">
+                <DockPanel Classes="FundersHeader" Margin="0,0,0,24">
                     <!-- Left: Icon + Title -->
                     <StackPanel Orientation="Horizontal" Spacing="12" DockPanel.Dock="Left"
                                 VerticalAlignment="Center">
@@ -199,77 +275,38 @@
                 <!-- Active: text-white/text-[#4B7C5A] border-b-2 border-[#4B7C5A] -->
                 <!-- Inactive: text-gray-400/text-gray-500    -->
                 <!-- ═══════════════════════════════════════ -->
-                <Border BorderThickness="0,0,0,1"
-                        BorderBrush="{DynamicResource Stroke}"
-                        Margin="0,0,0,24"
-                        Padding="0,0,0,0">
-                    <StackPanel Orientation="Horizontal" Spacing="8" Name="FilterTabsPanel">
-                        <!-- Waiting tab -->
-                        <Border Name="TabWaiting"
-                                Classes="FilterTab FilterTabActive"
-                                Padding="16,8"
-                                BorderThickness="0,0,0,2"
-                                Margin="0,0,0,-1">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <TextBlock Text="Waiting"
-                                           Classes="TabLabel"
-                                           FontSize="14"
-                                           FontWeight="SemiBold" />
-                                <!-- Vue: bg-[#F7931A] text-white rounded-full px-2 py-0.5 text-xs -->
-                                <Border CornerRadius="10" Padding="8,2"
-                                        Background="#F7931A">
-                                    <TextBlock Text="{Binding WaitingCount}"
-                                               FontSize="12"
-                                               FontWeight="SemiBold"
-                                               Foreground="White" />
-                                </Border>
-                            </StackPanel>
-                        </Border>
+                <Grid>
+                    <Border Classes="FilterTabsOuter">
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="4" Name="FilterTabsPanel">
+                            <!-- Waiting tab -->
+                            <Border Name="TabWaiting"
+                                    Grid.Column="0"
+                                    Classes="FilterTab FilterTabActive"
+                                    Padding="16,8">
+                                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding WaitingCount, StringFormat='Waiting ({0})'}"
+                                                Classes="TabLabel"
+                                                FontSize="14"
+                                                FontWeight="SemiBold" />
+                                </Grid>
+                            </Border>
 
-                        <!-- Approved tab -->
-                        <Border Name="TabApproved"
-                                Classes="FilterTab"
-                                Padding="16,8"
-                                BorderThickness="0,0,0,2"
-                                Margin="0,0,0,-1">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <TextBlock Text="Approved"
-                                           Classes="TabLabel"
-                                           FontSize="14"
-                                           FontWeight="SemiBold" />
-                                <Border CornerRadius="10" Padding="8,2"
-                                        Background="#F7931A">
-                                    <TextBlock Text="{Binding ApprovedCount}"
-                                               FontSize="12"
-                                               FontWeight="SemiBold"
-                                               Foreground="White" />
-                                </Border>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Rejected tab (only shown when HasRejected) -->
-                        <Border Name="TabRejected"
-                                Classes="FilterTab"
-                                Padding="16,8"
-                                BorderThickness="0,0,0,2"
-                                Margin="0,0,0,-1"
-                                IsVisible="{Binding HasRejected}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <TextBlock Text="Rejected"
-                                           Classes="TabLabel"
-                                           FontSize="14"
-                                           FontWeight="SemiBold" />
-                                <Border CornerRadius="10" Padding="8,2"
-                                        Background="#F7931A">
-                                    <TextBlock Text="{Binding RejectedCount}"
-                                               FontSize="12"
-                                               FontWeight="SemiBold"
-                                               Foreground="White" />
-                                </Border>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </Border>
+                            <!-- Approved tab -->
+                            <Border Name="TabApproved"
+                                    Grid.Column="1"
+                                    Classes="FilterTab"
+                                    Padding="16,8">
+                                <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding ApprovedCount, StringFormat='Approved ({0})'}"
+                                                Classes="TabLabel"
+                                                FontSize="14"
+                                                FontWeight="SemiBold" />
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <Border Name="TabRejected" IsVisible="False" />
+                </Grid>
 
                 <!-- ═══════════════════════════════════════ -->
                 <!-- EMPTY FILTER STATE                      -->
@@ -339,7 +376,7 @@
 
                                     <!-- Row: Left info + Right action buttons -->
                                     <!-- Vue: flex items-center justify-between mb-4 -->
-                                    <DockPanel Margin="0,0,0,16">
+                                    <DockPanel Classes="DesktopSignatureLayout" Margin="0,0,0,16">
                                         <!-- Right: Action Buttons — Vue: flex items-center gap-2 -->
                                         <StackPanel DockPanel.Dock="Right"
                                                     Orientation="Horizontal" Spacing="8"
@@ -526,6 +563,67 @@
                                         </StackPanel>
                                     </DockPanel>
 
+                                    <StackPanel Classes="MobileSignatureLayout" Spacing="14" Margin="0,0,0,16">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4">
+                                                <TextBlock Text="{Binding Amount}"
+                                                           FontSize="18"
+                                                           FontWeight="Bold"
+                                                           Foreground="{DynamicResource TextStrong}" />
+                                                <TextBlock Text="{Binding Currency}"
+                                                           FontSize="18"
+                                                           FontWeight="Bold"
+                                                           Foreground="{DynamicResource TextStrong}" />
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="1">
+                                                <Border Classes="SignatureStatusPill"
+                                                        IsVisible="{Binding IsWaiting}"
+                                                        Background="#F7931A">
+                                                    <TextBlock Text="Waiting"
+                                                               FontSize="12"
+                                                               FontWeight="Bold"
+                                                               Foreground="White" />
+                                                </Border>
+                                                <Border Classes="SignatureStatusPill"
+                                                        IsVisible="{Binding IsApproved}"
+                                                        Background="#1A7C4B">
+                                                    <TextBlock Text="Approved"
+                                                               FontSize="12"
+                                                               FontWeight="Bold"
+                                                               Foreground="White" />
+                                                </Border>
+                                                <Border Classes="SignatureStatusPill"
+                                                        IsVisible="{Binding IsRejected}"
+                                                        Background="#DC2626">
+                                                    <TextBlock Text="Rejected"
+                                                               FontSize="12"
+                                                               FontWeight="Bold"
+                                                               Foreground="White" />
+                                                </Border>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <i:Icon Value="fa-solid fa-calendar"
+                                                    FontSize="14"
+                                                    Foreground="{DynamicResource TextMuted}"
+                                                    VerticalAlignment="Center" />
+                                            <TextBlock FontSize="14"
+                                                       Foreground="{DynamicResource TextMuted}"
+                                                       VerticalAlignment="Center">
+                                                <Run Text="{Binding Date, Mode=OneWay}" />
+                                                <Run Text=" " />
+                                                <Run Text="{Binding Time, Mode=OneWay}" />
+                                            </TextBlock>
+                                        </StackPanel>
+
+                                        <TextBlock Text="{Binding ProjectTitle}"
+                                                   FontSize="14"
+                                                   Foreground="{DynamicResource TextStrong}"
+                                                   TextWrapping="Wrap" />
+                                    </StackPanel>
+
                                     <!-- ═══════════════════════════════════════ -->
                                     <!-- EXPANDED DETAILS (npub)                 -->
                                     <!-- Vue: v-if="expandedSignatures[id]"      -->
@@ -575,6 +673,137 @@
                                             </Border>
                                         </StackPanel>
                                     </Border>
+
+                                     <StackPanel Classes="MobileSignatureActions" Spacing="10">
+                                         <Grid ColumnDefinitions="*,8,*">
+                                             <Button Name="MobileApproveButton"
+                                                     Grid.Column="0"
+                                                     Tag="{Binding Id}"
+                                                     IsVisible="{Binding IsWaiting}"
+                                                     Classes="FundersAction MobileAction"
+                                                     Background="{DynamicResource PrimaryGreenBrush}"
+                                                     Foreground="White">
+                                                 <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                                     <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                                         <Path Data="{StaticResource Checkmark}"
+                                                               Stroke="White"
+                                                               StrokeThickness="2"
+                                                               StrokeLineCap="Round"
+                                                               StrokeJoin="Round"
+                                                               Width="24" Height="24" Stretch="Uniform" />
+                                                     </Viewbox>
+                                                     <TextBlock Text="Approve"
+                                                                FontSize="14"
+                                                                FontWeight="SemiBold"
+                                                                Foreground="White"
+                                                                VerticalAlignment="Center" />
+                                                 </StackPanel>
+                                             </Button>
+
+                                             <Button Name="MobileRejectButton"
+                                                     Grid.Column="2"
+                                                     Tag="{Binding Id}"
+                                                     IsVisible="{Binding IsWaiting}"
+                                                     Classes="FundersAction MobileAction"
+                                                     Background="#DC2626"
+                                                     Foreground="White">
+                                                 <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                                     <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                                         <Path Data="{StaticResource XMark}"
+                                                               Stroke="White"
+                                                               StrokeThickness="2"
+                                                               StrokeLineCap="Round"
+                                                               StrokeJoin="Round"
+                                                               Width="24" Height="24" Stretch="Uniform" />
+                                                     </Viewbox>
+                                                     <TextBlock Text="Reject"
+                                                                FontSize="14"
+                                                                FontWeight="SemiBold"
+                                                                Foreground="White"
+                                                                VerticalAlignment="Center" />
+                                                 </StackPanel>
+                                             </Button>
+
+                                             <Border Grid.Column="0"
+                                                     Grid.ColumnSpan="3"
+                                                     IsVisible="{Binding IsApproved}"
+                                                     Classes="FundersAction MobileAction"
+                                                     Background="#D9FBE7">
+                                                 <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                     <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                                         <Path Data="{StaticResource Checkmark}"
+                                                               Stroke="{DynamicResource PrimaryGreenBrush}"
+                                                               StrokeThickness="2"
+                                                               StrokeLineCap="Round"
+                                                               StrokeJoin="Round"
+                                                               Width="24" Height="24" Stretch="Uniform" />
+                                                     </Viewbox>
+                                                     <TextBlock Text="Approved"
+                                                                FontSize="14"
+                                                                FontWeight="SemiBold"
+                                                                Foreground="{DynamicResource PrimaryGreenBrush}"
+                                                                VerticalAlignment="Center" />
+                                                 </StackPanel>
+                                             </Border>
+
+                                             <Border Grid.Column="0"
+                                                     Grid.ColumnSpan="3"
+                                                     IsVisible="{Binding IsRejected}"
+                                                     Classes="FundersAction MobileAction"
+                                                     Background="#FEE2E2">
+                                                 <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                     <Viewbox Width="16" Height="16" VerticalAlignment="Center">
+                                                         <Path Data="{StaticResource XMark}"
+                                                               Stroke="#DC2626"
+                                                               StrokeThickness="2"
+                                                               StrokeLineCap="Round"
+                                                               StrokeJoin="Round"
+                                                               Width="24" Height="24" Stretch="Uniform" />
+                                                     </Viewbox>
+                                                     <TextBlock Text="Rejected"
+                                                                FontSize="14"
+                                                                FontWeight="SemiBold"
+                                                                Foreground="#DC2626"
+                                                                VerticalAlignment="Center" />
+                                                 </StackPanel>
+                                             </Border>
+                                         </Grid>
+
+                                         <Grid ColumnDefinitions="*,10,52">
+                                             <Button Name="MobileChatButton"
+                                                     Grid.Column="0"
+                                                     Tag="{Binding Id}"
+                                                     Classes="FundersAction MobileAction"
+                                                     Background="Transparent"
+                                                     BorderBrush="{DynamicResource PrimaryGreenBrush}"
+                                                     BorderThickness="2">
+                                                 <i:Icon Value="fa-solid fa-comment"
+                                                         FontSize="16"
+                                                         Foreground="{DynamicResource PrimaryGreenBrush}"
+                                                         HorizontalAlignment="Center"
+                                                         VerticalAlignment="Center" />
+                                             </Button>
+
+                                             <Button Name="MobileExpandButton"
+                                                     Grid.Column="2"
+                                                     Tag="{Binding Id}"
+                                                     Classes="FundersAction MobileAction IconOnly"
+                                                     Background="Transparent"
+                                                     BorderBrush="{DynamicResource PrimaryGreenBrush}"
+                                                     BorderThickness="2"
+                                                     HorizontalContentAlignment="Center"
+                                                     VerticalContentAlignment="Center">
+                                                 <Viewbox Width="16" Height="16">
+                                                     <Path Data="{StaticResource ChevronDown}"
+                                                           Stroke="{DynamicResource PrimaryGreenBrush}"
+                                                           StrokeThickness="2"
+                                                           StrokeLineCap="Round"
+                                                           StrokeJoin="Round"
+                                                           Width="24" Height="24" Stretch="Uniform" />
+                                                 </Viewbox>
+                                             </Button>
+                                         </Grid>
+                                     </StackPanel>
                                 </StackPanel>
                             </Border>
                         </DataTemplate>

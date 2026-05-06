@@ -67,6 +67,7 @@
                     <!-- Edit Project button -->
                     <!-- Vue: .edit-project-button — pad 6 12, rounded 6, border #d1d5db, color #4B7C5A, font 13px -->
                     <Button Name="EditProjectButton"
+                            Classes="NoPressShift"
                             Background="Transparent"
                             BorderBrush="{DynamicResource StrokeSubtle}"
                             BorderThickness="1"
@@ -84,7 +85,8 @@
                     </Button>
 
                     <!-- See Live Project button -->
-                    <Button Background="Transparent"
+                    <Button Classes="NoPressShift"
+                            Background="Transparent"
                             BorderBrush="{DynamicResource StrokeSubtle}"
                             BorderThickness="1"
                             CornerRadius="6"
@@ -103,6 +105,7 @@
                     <!-- Copy button (icon only) -->
                     <!-- Vue: .copy-button — pad 8, rounded 6, color #6b7280 -->
                     <Button Name="CopyProjectIdBtn"
+                            Classes="NoPressShift"
                             Background="Transparent"
                             BorderThickness="0"
                             CornerRadius="6"

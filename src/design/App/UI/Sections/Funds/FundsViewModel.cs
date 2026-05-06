@@ -19,6 +19,7 @@ public class SeedGroupViewModel
     public string GroupName { get; set; } = "";
     public string GroupBalance { get; set; } = "0.00000000";
     public ReadOnlyObservableCollection<WalletInfo>? Wallets { get; set; }
+    public bool ShowWalletDividers => Wallets?.Count > 1;
 }
 
 /// <summary>

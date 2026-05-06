@@ -217,15 +217,23 @@ public partial class PaymentFlowViewModel : ReactiveObject
                 this.RaisePropertyChanged(nameof(InvoiceString));
                 this.RaisePropertyChanged(nameof(QrCodeContent));
             });
+
+        SelectWallet(_walletContext.SelectedWallet ?? Wallets.FirstOrDefault());
     }
 
     // ═══════════════════════════════════════════════════════════════════
     // Wallet Selection
     // ═══════════════════════════════════════════════════════════════════
 
-    public void SelectWallet(WalletInfo wallet)
+    public void SelectWallet(WalletInfo? wallet)
     {
         foreach (var w in Wallets) w.IsSelected = false;
+        if (wallet == null)
+        {
+            SelectedWallet = null;
+            return;
+        }
+
         wallet.IsSelected = true;
         SelectedWallet = wallet;
     }
@@ -657,5 +665,6 @@ public partial class PaymentFlowViewModel : ReactiveObject
         LightningInvoice = null;
         LightningSwapId = null;
         IsGeneratingLightningInvoice = false;
+        _config.OnDismissed?.Invoke();
     }
 }

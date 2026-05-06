@@ -36,7 +36,8 @@ public partial class EditProfileView : UserControl
     private DockPanel? _editNavBar;
     private StackPanel? _editContentStack;
     private Panel? _editNavSpacer;
-    private StackPanel? _mobileEditActions;
+    private StackPanel? _mobileStickyEditHeader;
+    private Border? _editTabsBorder;
     private Grid? _profileMainGrid;
     private Border? _profilePictureCard;
     private Border? _basicInfoCard;
@@ -62,6 +63,12 @@ public partial class EditProfileView : UserControl
     private Button? _tabMembers;
     private Button? _tabMedia;
     private Button? _tabRelays;
+    private Button? _mobileTabProfile;
+    private Button? _mobileTabProject;
+    private Button? _mobileTabFaq;
+    private Button? _mobileTabMembers;
+    private Button? _mobileTabMedia;
+    private Button? _mobileTabRelays;
 
     public EditProfileView()
     {
@@ -83,7 +90,8 @@ public partial class EditProfileView : UserControl
         _editNavBar = this.FindControl<DockPanel>("EditNavBar");
         _editContentStack = this.FindControl<StackPanel>("EditContentStack");
         _editNavSpacer = this.FindControl<Panel>("EditNavSpacer");
-        _mobileEditActions = this.FindControl<StackPanel>("MobileEditActions");
+        _mobileStickyEditHeader = this.FindControl<StackPanel>("MobileStickyEditHeader");
+        _editTabsBorder = this.FindControl<Border>("EditTabsBorder");
         _profileMainGrid = this.FindControl<Grid>("ProfileMainGrid");
         _profilePictureCard = this.FindControl<Border>("ProfilePictureCard");
         _basicInfoCard = this.FindControl<Border>("BasicInfoCard");
@@ -113,6 +121,12 @@ public partial class EditProfileView : UserControl
         _tabMembers = this.FindControl<Button>("TabMembers");
         _tabMedia = this.FindControl<Button>("TabMedia");
         _tabRelays = this.FindControl<Button>("TabRelays");
+        _mobileTabProfile = this.FindControl<Button>("MobileTabProfile");
+        _mobileTabProject = this.FindControl<Button>("MobileTabProject");
+        _mobileTabFaq = this.FindControl<Button>("MobileTabFaq");
+        _mobileTabMembers = this.FindControl<Button>("MobileTabMembers");
+        _mobileTabMedia = this.FindControl<Button>("MobileTabMedia");
+        _mobileTabRelays = this.FindControl<Button>("MobileTabRelays");
 
         // Wire tab button clicks
         WireTabButton(_tabProfile, "profile");
@@ -121,6 +135,12 @@ public partial class EditProfileView : UserControl
         WireTabButton(_tabMembers, "members");
         WireTabButton(_tabMedia, "media");
         WireTabButton(_tabRelays, "relays");
+        WireTabButton(_mobileTabProfile, "profile");
+        WireTabButton(_mobileTabProject, "project");
+        WireTabButton(_mobileTabFaq, "faq");
+        WireTabButton(_mobileTabMembers, "members");
+        WireTabButton(_mobileTabMedia, "media");
+        WireTabButton(_mobileTabRelays, "relays");
 
         // Wire action buttons
         var saveBtn = this.FindControl<Button>("SaveButton");
@@ -150,10 +170,12 @@ public partial class EditProfileView : UserControl
     {
         if (_editNavBar != null)
             _editNavBar.IsVisible = !isCompact;
-        if (_mobileEditActions != null)
-            _mobileEditActions.IsVisible = isCompact;
+        if (_mobileStickyEditHeader != null)
+            _mobileStickyEditHeader.IsVisible = isCompact;
+        if (_editTabsBorder != null)
+            _editTabsBorder.IsVisible = !isCompact;
         if (_editNavSpacer != null)
-            _editNavSpacer.Height = isCompact ? 16 : 92;
+            _editNavSpacer.Height = isCompact ? 156 : 92;
 
         if (_editContentStack != null)
         {
@@ -175,6 +197,7 @@ public partial class EditProfileView : UserControl
         {
             _profileMainGrid.ColumnDefinitions[0].Width = GridLength.Star;
             _profileMainGrid.ColumnDefinitions[1].Width = isCompact ? new GridLength(0) : GridLength.Star;
+            _profileMainGrid.ColumnSpacing = isCompact ? 0 : 20;
 
             if (_profilePictureCard != null)
             {
@@ -193,6 +216,7 @@ public partial class EditProfileView : UserControl
         {
             _basicInfoGrid.ColumnDefinitions[0].Width = GridLength.Star;
             _basicInfoGrid.ColumnDefinitions[1].Width = isCompact ? new GridLength(0) : GridLength.Star;
+            _basicInfoGrid.ColumnSpacing = isCompact ? 0 : 16;
 
             if (_usernameField != null)
             {
@@ -212,6 +236,7 @@ public partial class EditProfileView : UserControl
             _additionalInfoGrid.ColumnDefinitions[0].Width = GridLength.Star;
             _additionalInfoGrid.ColumnDefinitions[1].Width = isCompact ? new GridLength(0) : GridLength.Star;
             _additionalInfoGrid.ColumnDefinitions[2].Width = isCompact ? new GridLength(0) : GridLength.Star;
+            _additionalInfoGrid.ColumnSpacing = isCompact ? 0 : 16;
 
             if (_nip05Field != null)
             {
@@ -306,6 +331,12 @@ public partial class EditProfileView : UserControl
         SetTabActive(_tabMembers, activeTab == "members");
         SetTabActive(_tabMedia, activeTab == "media");
         SetTabActive(_tabRelays, activeTab == "relays");
+        SetTabActive(_mobileTabProfile, activeTab == "profile");
+        SetTabActive(_mobileTabProject, activeTab == "project");
+        SetTabActive(_mobileTabFaq, activeTab == "faq");
+        SetTabActive(_mobileTabMembers, activeTab == "members");
+        SetTabActive(_mobileTabMedia, activeTab == "media");
+        SetTabActive(_mobileTabRelays, activeTab == "relays");
     }
 
     private static void SetTabActive(Button? btn, bool active)
