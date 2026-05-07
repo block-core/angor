@@ -73,7 +73,16 @@ public class MempoolIndexerAngorApi : IAngorIndexerService
                 return allTransactions;
             }
 
-            var page = await response.Content.ReadFromJsonAsync<List<MempoolSpaceIndexerApi.MempoolTransaction>>(jsonOptions);
+            List<MempoolSpaceIndexerApi.MempoolTransaction>? page;
+            try
+            {
+                page = await response.Content.ReadFromJsonAsync<List<MempoolSpaceIndexerApi.MempoolTransaction>>(jsonOptions);
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogWarning(ex, "Failed to deserialize transactions for address {Address}, treating as empty", projectAddress);
+                break;
+            }
 
             if (page == null || page.Count == 0)
             {
