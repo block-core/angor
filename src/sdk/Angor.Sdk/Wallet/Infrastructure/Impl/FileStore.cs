@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using Angor.Sdk.Common;
 using Angor.Primitives;
@@ -40,7 +41,7 @@ public class FileStore : IStore
         {
             var path = Path.Combine(appDataPath, key);
             CreateFile(path);
-            var json = await File.ReadAllTextAsync(path);
+            var json = await File.ReadAllTextAsync(path).ConfigureAwait(false);
             if (string.IsNullOrWhiteSpace(json))
                 return Result.Failure<T>($"Could not read file {key}");
 
