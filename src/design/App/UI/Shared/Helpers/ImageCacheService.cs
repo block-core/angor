@@ -78,14 +78,14 @@ public static class ImageCacheService
     {
         if (string.IsNullOrWhiteSpace(url))
         {
-            onLoaded(null);
+            Dispatcher.UIThread.Post(() => onLoaded(null));
             return;
         }
 
         // Fast path: already in memory
         if (MemoryCache.TryGetValue(url, out var cached))
         {
-            onLoaded(cached);
+            Dispatcher.UIThread.Post(() => onLoaded(cached));
             return;
         }
 

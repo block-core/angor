@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # android-perf.sh — Build APK, deploy to emulator, capture startup + tab-switch perf timings.
 # Usage:
-#   ./scripts/android-perf.sh          # full: build + deploy + capture
-#   ./scripts/android-perf.sh --skip-build   # deploy existing APK + capture
-#   ./scripts/android-perf.sh --capture-only # just capture (app already running)
+#   ./src/design/App.Android/scripts/android-perf.sh          # full: build + deploy + capture
+#   ./src/design/App.Android/scripts/android-perf.sh --skip-build   # deploy existing APK + capture
+#   ./src/design/App.Android/scripts/android-perf.sh --capture-only # just capture (app already running)
 #
 # Requires: adb, Android SDK emulator, .NET 9 android workload
 # Perf markers are grep'd from logcat tags: Prewarm, ShellPerf, FindProjectsPerf, ProjectsLoad
@@ -11,8 +11,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-ANDROID_CSPROJ="$REPO_ROOT/src/design/App.Android/App.Android.csproj"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
+ANDROID_CSPROJ="$SCRIPT_DIR/../App.Android.csproj"
 PACKAGE="io.angor.app"
 AVD="Pixel_9"
 EMULATOR="$HOME/Library/Android/sdk/emulator/emulator"
