@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App.Test.Integration", "des
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App.Android", "design\App.Android\App.Android.csproj", "{F9C55CB9-1D6A-48AD-B246-0E4C3F3FFF07}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App.iOS", "design\App.iOS\App.iOS.csproj", "{5EE5BA69-B721-4A1D-ACD2-167D3A1EEBAF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -127,6 +129,18 @@ Global
 		{F9C55CB9-1D6A-48AD-B246-0E4C3F3FFF07}.Release|x64.Build.0 = Release|Any CPU
 		{F9C55CB9-1D6A-48AD-B246-0E4C3F3FFF07}.Release|x86.ActiveCfg = Release|Any CPU
 		{F9C55CB9-1D6A-48AD-B246-0E4C3F3FFF07}.Release|x86.Build.0 = Release|Any CPU
+		{5EE5BA69-B721-4A1D-ACD2-167D3A1EEBAF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5EE5BA69-B721-4A1D-ACD2-167D3A1EEBAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5EE5BA69-B721-4A1D-ACD2-167D3A1EEBAF}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5EE5BA69-B721-4A1D-ACD2-167D3A1EEBAF}.Debug|x64.Build.0 = Debug|Any CPU
+		{5EE5BA69-B721-4A1D-ACD2-167D3A1EEBAF}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5EE5BA69-B721-4A1D-ACD2-167D3A1EEBAF}.Debug|x86.Build.0 = Debug|Any CPU
+		{5EE5BA69-B721-4A1D-ACD2-167D3A1EEBAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5EE5BA69-B721-4A1D-ACD2-167D3A1EEBAF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5EE5BA69-B721-4A1D-ACD2-167D3A1EEBAF}.Release|x64.ActiveCfg = Release|Any CPU
+		{5EE5BA69-B721-4A1D-ACD2-167D3A1EEBAF}.Release|x64.Build.0 = Release|Any CPU
+		{5EE5BA69-B721-4A1D-ACD2-167D3A1EEBAF}.Release|x86.ActiveCfg = Release|Any CPU
+		{5EE5BA69-B721-4A1D-ACD2-167D3A1EEBAF}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
