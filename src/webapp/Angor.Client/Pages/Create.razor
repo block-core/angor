@@ -18,6 +18,7 @@
 @inject ICacheStorage _cacheStorage;
 @inject NavigationManager NavigationManager
 @inject IWalletOperations _WalletOperations
+@inject IIndexerService _IndexerService
 @inject IPsbtOperations _PsbtOperations
 @inject IRelayService _RelayService
 @inject ILogger<Create> _Logger;
@@ -1602,11 +1603,11 @@
         {
             showCreateModal = false;
 
-            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction.Transaction);
+            var publishError = await _IndexerService.PublishTransactionAsync(signedTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory));
 
-            if (!response.Success)
+            if (!string.IsNullOrEmpty(publishError))
             {
-                notificationComponent.ShowErrorMessage("Transaction failed", response.Message);
+                notificationComponent.ShowErrorMessage("Transaction failed", publishError);
                 return;
             }
 

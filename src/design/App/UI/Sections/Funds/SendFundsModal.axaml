@@ -194,12 +194,22 @@
                                         <GradientStop Color="#3D6448" Offset="1" />
                                     </LinearGradientBrush>
                                 </Button.Background>
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <i:Icon Value="fa-solid fa-paper-plane"
-                                           FontSize="14" Foreground="White"
-                                           VerticalAlignment="Center" />
-                                    <TextBlock Text="Send" VerticalAlignment="Center" />
-                                </StackPanel>
+                                <Panel>
+                                    <StackPanel Name="SendBtnContent" Orientation="Horizontal" Spacing="8"
+                                                HorizontalAlignment="Center">
+                                        <i:Icon Value="fa-solid fa-paper-plane"
+                                               FontSize="14" Foreground="White"
+                                               VerticalAlignment="Center" />
+                                        <TextBlock Text="Send" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <StackPanel Name="SendBtnSpinner" Orientation="Horizontal" Spacing="8"
+                                                HorizontalAlignment="Center" IsVisible="False">
+                                        <i:Icon Value="fa-solid fa-spinner" FontSize="14"
+                                                Foreground="White" VerticalAlignment="Center"
+                                                Classes="spin" />
+                                        <TextBlock Text="Sending..." VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Panel>
                             </Button>
                         </Grid>
                     </StackPanel>

@@ -146,13 +146,19 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         if (!double.TryParse(AmountInput.Text, System.Globalization.NumberStyles.Any,
                 System.Globalization.CultureInfo.InvariantCulture, out var amount)) return;
 
-        // Disable send button during operation
+        // Disable send button and show spinner during operation
         var sendBtn = this.FindControl<Button>("BtnSend");
+        var sendBtnContent = this.FindControl<StackPanel>("SendBtnContent");
+        var sendBtnSpinner = this.FindControl<StackPanel>("SendBtnSpinner");
         if (sendBtn != null) sendBtn.IsEnabled = false;
+        if (sendBtnContent != null) sendBtnContent.IsVisible = false;
+        if (sendBtnSpinner != null) sendBtnSpinner.IsVisible = true;
 
-        var (success, txId) = await fundsVm.SendAsync(_walletId, address, amount, feeRate);
+        var (success, txId, error) = await fundsVm.SendAsync(_walletId, address, amount, feeRate);
 
         if (sendBtn != null) sendBtn.IsEnabled = true;
+        if (sendBtnContent != null) sendBtnContent.IsVisible = true;
+        if (sendBtnSpinner != null) sendBtnSpinner.IsVisible = false;
 
         if (success && txId != null)
         {
@@ -164,7 +170,7 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         }
         else
         {
-            AmountError.Text = "Transaction failed. Please try again.";
+            AmountError.Text = error ?? "Transaction failed. Please try again.";
             AmountError.IsVisible = true;
         }
     }

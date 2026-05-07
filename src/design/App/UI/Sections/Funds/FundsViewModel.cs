@@ -219,7 +219,7 @@ public partial class FundsViewModel : ReactiveObject
     /// Send funds from a wallet to a destination address.
     /// Returns the transaction ID on success.
     /// </summary>
-    public async Task<(bool Success, string? TxId)> SendAsync(string walletId, string destinationAddress, double amountBtc, long feeRateSatsPerVByte)
+    public async Task<(bool Success, string? TxId, string? Error)> SendAsync(string walletId, string destinationAddress, double amountBtc, long feeRateSatsPerVByte)
     {
         try
         {
@@ -235,17 +235,17 @@ public partial class FundsViewModel : ReactiveObject
             {
                 // Refresh the sending wallet's balance from the indexer
                 await _walletContext.RefreshBalanceAsync(id);
-                return (true, result.Value.Value);
+                return (true, result.Value.Value, null);
             }
 
             _logger.LogError("SendAmount failed for wallet {WalletId} to address '{Address}' amount {Sats} sats feeRate {FeeRate}: {Error}", walletId, destinationAddress, sats, feeRateSatsPerVByte, result.Error);
+            return (false, null, result.Error);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "SendAsync threw an exception for wallet {WalletId}", walletId);
+            return (false, null, ex.Message);
         }
-
-        return (false, null);
     }
 
     /// <summary>
