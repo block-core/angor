@@ -1,11 +1,15 @@
 using System.IO;
 using System.Reactive.Linq;
+using Angor.Shared;
+using Angor.Shared.Models;
+using Angor.Sdk.Common;
 using App.UI.Shared.Helpers;
 using App.UI.Shared.Services;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Blockcore.NBitcoin;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -222,7 +226,16 @@ public partial class CreateProjectStep3View : UserControl
 
         try
         {
-            var result = await _blossomService.UploadAsync(serverUrl, fileBytes, contentType);
+            // Get the Nostr private key for BUD-02 auth from the selected wallet
+            var nostrKeyHex = await GetNostrPrivateKeyHexAsync();
+            if (nostrKeyHex == null)
+            {
+                SetStatus(isBanner, "No wallet selected or unable to access wallet keys.", isError: true);
+                SetUploadInProgress(isBanner, false);
+                return;
+            }
+
+            var result = await _blossomService.UploadAsync(serverUrl, fileBytes, contentType, nostrKeyHex);
 
             if (result.IsFailure)
             {
@@ -295,6 +308,48 @@ public partial class CreateProjectStep3View : UserControl
     }
 
     #endregion
+
+    /// <summary>
+    /// Gets the Nostr private key (hex) from the currently selected wallet for BUD-02 auth.
+    /// Uses the wallet-level storage key (no project/founder key required).
+    /// </summary>
+    private async Task<string?> GetNostrPrivateKeyHexAsync()
+    {
+        try
+        {
+            var walletContext = App.Services.GetRequiredService<IWalletContext>();
+            var selectedWallet = walletContext.SelectedWallet;
+            if (selectedWallet == null)
+            {
+                _logger.LogWarning("No wallet selected for Blossom auth");
+                return null;
+            }
+
+            var seedwordsProvider = App.Services.GetRequiredService<ISeedwordsProvider>();
+            var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(selectedWallet.Id.Value);
+            if (sensitiveDataResult.IsFailure)
+            {
+                _logger.LogWarning("Failed to get wallet sensitive data: {Error}", sensitiveDataResult.Error);
+                return null;
+            }
+
+            var (words, passphrase) = sensitiveDataResult.Value;
+            var walletWords = new WalletWords
+            {
+                Words = words,
+                Passphrase = passphrase.HasValue ? passphrase.Value : null
+            };
+
+            var derivation = App.Services.GetRequiredService<IDerivationOperations>();
+            var key = derivation.DeriveNostrStorageKey(walletWords);
+            return Convert.ToHexString(key.ToBytes()).ToLowerInvariant();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to derive Nostr key for Blossom auth");
+            return null;
+        }
+    }
 
     /// <summary>
     /// Reset image previews to default state (called by parent on wizard reset).
