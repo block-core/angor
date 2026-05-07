@@ -486,11 +486,11 @@
 
             Storage.UpdateInvestmentProject(InvestorProject);
 
-            var response = await _WalletOperations.PublishTransactionAsync(network, releaseTransaction.Transaction);
+            var publishError = await _IndexerService.PublishTransactionAsync(releaseTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory));
 
-            if (!response.Success)
+            if (!string.IsNullOrEmpty(publishError))
             {
-                notificationComponent.ShowErrorMessage("Transaction failed", response.Message);
+                notificationComponent.ShowErrorMessage("Transaction failed", publishError);
                 return;
             }
 
