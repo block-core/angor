@@ -105,10 +105,18 @@ public class WalletOperations : IWalletOperations
                 .AddKeys(coins.keys.ToArray())
                 .SetChange(BitcoinAddress.Create(changeAddress, network));
 
-            // Add existing transaction outputs (replaces ContinueToBuild)
+            // Add existing transaction outputs (replaces ContinueToBuild).
+            // OP_RETURN outputs are unspendable and carry zero value, but
+            // TransactionBuilder.Send() enforces dust-threshold checks on
+            // them anyway.  Exclude them from the builder and splice them
+            // back into the signed transaction afterward.
+            var opReturnOutputs = new List<TxOut>();
             foreach (var output in transaction.Outputs)
             {
-                builder.Send(output.ScriptPubKey, output.Value);
+                if (output.ScriptPubKey.IsUnspendable)
+                    opReturnOutputs.Add(output);
+                else
+                    builder.Send(output.ScriptPubKey, output.Value);
             }
 
             builder
@@ -116,6 +124,12 @@ public class WalletOperations : IWalletOperations
 
 
             var signTransaction = builder.BuildTransaction(true);
+
+            // Re-insert OP_RETURN outputs that were excluded from the builder.
+            foreach (var opReturn in opReturnOutputs)
+            {
+                signTransaction.Outputs.Add(opReturn);
+            }
 
             // find the coins used
             long totaInInputs = 0;
