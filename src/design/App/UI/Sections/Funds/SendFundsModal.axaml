@@ -194,12 +194,22 @@
                                         <GradientStop Color="#3D6448" Offset="1" />
                                     </LinearGradientBrush>
                                 </Button.Background>
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <i:Icon Value="fa-solid fa-paper-plane"
-                                           FontSize="14" Foreground="White"
-                                           VerticalAlignment="Center" />
-                                    <TextBlock Text="Send" VerticalAlignment="Center" />
-                                </StackPanel>
+                                <Panel>
+                                    <StackPanel Name="SendBtnContent" Orientation="Horizontal" Spacing="8"
+                                                HorizontalAlignment="Center">
+                                        <i:Icon Value="fa-solid fa-paper-plane"
+                                               FontSize="14" Foreground="White"
+                                               VerticalAlignment="Center" />
+                                        <TextBlock Text="Send" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <StackPanel Name="SendBtnSpinner" Orientation="Horizontal" Spacing="8"
+                                                HorizontalAlignment="Center" IsVisible="False">
+                                        <i:Icon Value="fa-solid fa-spinner" FontSize="14"
+                                                Foreground="White" VerticalAlignment="Center"
+                                                Classes="spin" />
+                                        <TextBlock Text="Sending..." VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Panel>
                             </Button>
                         </Grid>
                     </StackPanel>
@@ -264,16 +274,18 @@
                                         CornerRadius="6" Padding="10,8">
                                     <DockPanel>
                                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                                            <Button Name="BtnExploreTxid"
-                                                    Background="Transparent" BorderThickness="0"
+                                             <Button Name="BtnExploreTxid"
+                                                     Classes="NoPressShift"
+                                                     Background="Transparent" BorderThickness="0"
                                                     Padding="4" Cursor="Hand"
                                                     ToolTip.Tip="View in explorer">
                                                 <i:Icon Value="fa-solid fa-arrow-up-right-from-square"
                                                        FontSize="14"
                                                        Foreground="{DynamicResource TextMuted}" />
                                             </Button>
-                                            <Button Name="BtnCopyTxid"
-                                                    Background="Transparent" BorderThickness="0"
+                                             <Button Name="BtnCopyTxid"
+                                                     Classes="NoPressShift"
+                                                     Background="Transparent" BorderThickness="0"
                                                     Padding="4" Cursor="Hand"
                                                     ToolTip.Tip="Copy to clipboard">
                                                 <i:Icon Value="fa-regular fa-copy"

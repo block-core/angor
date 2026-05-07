@@ -180,6 +180,7 @@
                                             CornerRadius="8" Padding="16"
                                             Margin="0,0,0,8"
                                             BorderThickness="2"
+                                            Classes.WalletSelected="{Binding IsSelected}"
                                             Cursor="Hand">
                                         <Grid ColumnDefinitions="Auto,*,Auto">
                                             <Border Grid.Column="0" Width="40" Height="40"

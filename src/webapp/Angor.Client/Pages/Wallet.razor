@@ -22,6 +22,7 @@
 @inject IDerivationOperations _derivationOperations
 @inject NavMenuState NavMenuState
 @inject IEncryptionService _encryptionService
+@inject IIndexerService _indexerService
 @inject IClipboardService ClipboardService
 @inject IWalletUIService _walletUIService
 
@@ -1648,11 +1649,11 @@ else
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
 
-            var res = await _walletOperations.PublishTransactionAsync(network, _sendInfo.SignedTransaction.Transaction);
+            var publishError = await _indexerService.PublishTransactionAsync(_sendInfo.SignedTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory));
 
-            if (res.Success)
+            if (string.IsNullOrEmpty(publishError))
             {
-                var pendingInbound = _walletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, res.Data);
+                var pendingInbound = _walletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, _sendInfo.SignedTransaction.Transaction);
                 unconfirmedInfo.AddRange(pendingInbound);
                 accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, unconfirmedInfo);
                 storage.SetAccountInfo(network.Name, accountInfo);
@@ -1662,7 +1663,7 @@ else
             }
             else
             {
-                notificationComponent.ShowErrorMessage($"Sending failed! {res.Message}");
+                notificationComponent.ShowErrorMessage($"Sending failed! {publishError}");
             }
 
             _sendInfo = new SendInfo();

@@ -443,31 +443,38 @@ public class FindProjectsPanelTests
         // InvestPageViewModel stays on WalletSelector; PaymentFlow manages its own sub-screens
         investVm.IsWalletSelector.Should().BeTrue();
 
-        // Back to wallet selector
+        // PaymentFlow.Reset() invokes OnDismissed → CancelPaymentFlow, which sets
+        // CurrentScreen back to InvestForm and nulls out PaymentFlow.
+        // Verify that dismissal works correctly.
         investVm.PaymentFlow.Reset();
         Dispatcher.UIThread.RunJobs();
 
-        investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector);
-        investVm.IsWalletSelector.Should().BeTrue();
-        investVm.PaymentFlow.IsInvoice.Should().BeFalse();
+        investVm.CurrentScreen.Should().Be(InvestScreen.InvestForm,
+            "PaymentFlow.Reset invokes OnDismissed → CancelPaymentFlow, returning to InvestForm");
+        investVm.PaymentFlow.Should().BeNull("CancelPaymentFlow nulls out PaymentFlow");
+        investVm.IsInvestForm.Should().BeTrue();
 
         // ── Close modal reset ──
         TestHelpers.Log("[2.8] Testing close modal reset...");
+        // Re-submit to get back to wallet selector for the next test
+        investVm.InvestmentAmount = "0.01";
+        Dispatcher.UIThread.RunJobs();
+        investVm.Submit();
+        Dispatcher.UIThread.RunJobs();
+        investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector);
+
         wallet = investVm.Wallets[0];
-        investVm.PaymentFlow.SelectWallet(wallet);
+        investVm.PaymentFlow!.SelectWallet(wallet);
         Dispatcher.UIThread.RunJobs();
         investVm.PaymentFlow.SelectedWallet.Should().NotBeNull("precondition: wallet should be selected");
 
         investVm.PaymentFlow.Reset();
         Dispatcher.UIThread.RunJobs();
 
-        // PaymentFlow.Reset() resets payment state but InvestPageViewModel stays on WalletSelector
-        investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector, "PaymentFlow.Reset does not navigate parent VM");
-        investVm.PaymentFlow.SelectedWallet.Should().BeNull("wallet selection should be cleared");
-        investVm.PaymentFlow.IsProcessing.Should().BeFalse("processing flag should be reset");
-        investVm.PaymentFlow.PaymentReceived.Should().BeFalse("payment flag should be reset");
-        investVm.PaymentFlow.ErrorMessage.Should().BeNull("error message should be cleared");
-        investVm.PaymentFlow.PaymentStatusText.Should().Be("Awaiting payment...", "status text should reset");
+        // Reset triggers OnDismissed → CancelPaymentFlow → back to InvestForm, PaymentFlow = null
+        investVm.CurrentScreen.Should().Be(InvestScreen.InvestForm,
+            "PaymentFlow.Reset invokes OnDismissed → CancelPaymentFlow");
+        investVm.PaymentFlow.Should().BeNull("CancelPaymentFlow nulls out PaymentFlow");
 
         window.Close();
         TestHelpers.Log("═══ Flow 2 PASSED ═══");

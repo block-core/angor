@@ -823,13 +823,16 @@
                                     BorderThickness="1"
                                     CornerRadius="8" Padding="12,10"
                                     Cursor="Hand">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="8"
+                                            VerticalAlignment="Center">
                                     <i:Icon Value="fa-solid fa-arrow-up-right-from-square"
                                            FontSize="18"
-                                           Foreground="{DynamicResource TextMuted}" />
+                                           Foreground="{DynamicResource TextMuted}"
+                                           VerticalAlignment="Center" />
                                     <TextBlock Text="View the transaction"
                                                FontSize="14"
                                                Foreground="{DynamicResource Brand}"
+                                               VerticalAlignment="Center"
                                                TextDecorations="Underline" />
                                 </StackPanel>
                             </Border>
@@ -899,13 +902,18 @@
                                 CornerRadius="8"
                                 Padding="12,10"
                                 Cursor="Hand">
-                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                            <StackPanel Orientation="Horizontal"
+                                        Spacing="8"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
                                 <i:Icon Value="fa-solid fa-code"
-                                       FontSize="16"
-                                       Foreground="{DynamicResource TextStrong}" />
+                                        FontSize="16"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextStrong}" />
                                 <TextBlock Text="View Project Info JSON"
-                                           FontSize="14" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextStrong}" />
+                                            FontSize="14" FontWeight="SemiBold"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource TextStrong}" />
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -984,13 +992,18 @@
                                 CornerRadius="8"
                                 Padding="16,12"
                                 Cursor="Hand">
-                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                            <StackPanel Orientation="Horizontal"
+                                        Spacing="8"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center">
                                 <i:Icon Value="fa-solid fa-arrow-up-right-from-square"
-                                       FontSize="18"
-                                       Foreground="{DynamicResource TextStrong}" />
+                                        FontSize="18"
+                                        VerticalAlignment="Center"
+                                        Foreground="{DynamicResource TextStrong}" />
                                 <TextBlock Text="Open in Angor Projects"
-                                           FontSize="14" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextStrong}" />
+                                            FontSize="14" FontWeight="SemiBold"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource TextStrong}" />
                             </StackPanel>
                         </Border>
 
@@ -1002,26 +1015,30 @@
                                     BorderBrush="{DynamicResource Stroke}"
                                     BorderThickness="1"
                                     CornerRadius="8" Padding="12,10">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                     <i:Icon Value="fa-solid fa-bolt"
-                                           FontSize="16"
-                                           Foreground="{DynamicResource Brand}" />
+                                            FontSize="16"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource Brand}" />
                                     <TextBlock Text="wss://relay.angor.io"
-                                               FontSize="14"
-                                               Foreground="{DynamicResource Brand}" />
+                                                FontSize="14"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource Brand}" />
                                 </StackPanel>
                             </Border>
                             <Border Background="{DynamicResource SurfaceMedium}"
                                     BorderBrush="{DynamicResource Stroke}"
                                     BorderThickness="1"
                                     CornerRadius="8" Padding="12,10">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                     <i:Icon Value="fa-solid fa-bolt"
-                                           FontSize="16"
-                                           Foreground="{DynamicResource Brand}" />
+                                            FontSize="16"
+                                            VerticalAlignment="Center"
+                                            Foreground="{DynamicResource Brand}" />
                                     <TextBlock Text="wss://relay2.angor.io"
-                                               FontSize="14"
-                                               Foreground="{DynamicResource Brand}" />
+                                                FontSize="14"
+                                                VerticalAlignment="Center"
+                                                Foreground="{DynamicResource Brand}" />
                                 </StackPanel>
                             </Border>
                         </StackPanel>

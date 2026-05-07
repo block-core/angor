@@ -232,60 +232,84 @@
             </StackPanel>
         </DockPanel>
 
+        <!-- Compact sticky header: save + tabs stay available while form content scrolls. -->
+        <StackPanel Name="MobileStickyEditHeader"
+                    VerticalAlignment="Top"
+                    ZIndex="100"
+                    Margin="16,16,16,0"
+                    Spacing="16"
+                    IsVisible="False">
+            <Border Background="{DynamicResource FloatingBtnBg}"
+                    BorderBrush="{DynamicResource FloatingBtnBorder}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Height="52">
+                <Button Name="MobileSaveButton"
+                        Classes="NavBtn"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
+                        Cursor="Hand"
+                        IsEnabled="{Binding !IsSaving}">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Panel>
+                            <i:Icon Value="fa-solid fa-floppy-disk" FontSize="14"
+                                    Foreground="{DynamicResource PrimaryGreenBrush}"
+                                    IsVisible="{Binding !IsSaving}" />
+                            <i:Icon Value="fa-solid fa-spinner" FontSize="14"
+                                    Foreground="{DynamicResource PrimaryGreenBrush}"
+                                    IsVisible="{Binding IsSaving}"
+                                    RenderTransformOrigin="50%,50%">
+                                <i:Icon.RenderTransform><RotateTransform /></i:Icon.RenderTransform>
+                                <i:Icon.Styles>
+                                    <Style Selector="i|Icon[IsVisible=True]">
+                                        <Style.Animations>
+                                            <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                <KeyFrame Cue="0%"><Setter Property="RotateTransform.Angle" Value="0" /></KeyFrame>
+                                                <KeyFrame Cue="100%"><Setter Property="RotateTransform.Angle" Value="360" /></KeyFrame>
+                                            </Animation>
+                                        </Style.Animations>
+                                    </Style>
+                                </i:Icon.Styles>
+                            </i:Icon>
+                        </Panel>
+                        <TextBlock Name="MobileSaveButtonText"
+                                   Text="Save Profile"
+                                   FontSize="14"
+                                   FontWeight="Medium"
+                                   Foreground="{DynamicResource PrimaryGreenBrush}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </Border>
+
+            <Border Name="MobileEditTabsBorder"
+                    Background="{DynamicResource SurfaceLow}"
+                    BorderBrush="{DynamicResource Stroke}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="6">
+                <ScrollViewer HorizontalScrollBarVisibility="Hidden"
+                              VerticalScrollBarVisibility="Disabled">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Button Name="MobileTabProfile" Classes="TabBtn" Content="Profile" />
+                        <Button Name="MobileTabProject" Classes="TabBtn" Content="Project" />
+                        <Button Name="MobileTabFaq" Classes="TabBtn" Content="FAQ" />
+                        <Button Name="MobileTabMembers" Classes="TabBtn" Content="Members" />
+                        <Button Name="MobileTabMedia" Classes="TabBtn" Content="Media" />
+                        <Button Name="MobileTabRelays" Classes="TabBtn" Content="Relays" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </StackPanel>
+
         <!-- ═══ SCROLLABLE CONTENT ═══ -->
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel Name="EditContentStack" Spacing="24" Margin="24,0,24,24">
 
                 <!-- Spacer for nav bar: 24 + 44 + 24 = 92px -->
                 <Panel Name="EditNavSpacer" Height="92" />
-
-                <!-- Mobile inline action: shell provides Back to My Projects below. -->
-                <StackPanel Name="MobileEditActions" Spacing="8" IsVisible="False">
-                    <Border Background="{DynamicResource FloatingBtnBg}"
-                            BorderBrush="{DynamicResource FloatingBtnBorder}"
-                            BorderThickness="1"
-                            CornerRadius="12"
-                            Height="52">
-                        <Button Name="MobileSaveButton"
-                                Classes="NavBtn"
-                                HorizontalAlignment="Stretch"
-                                VerticalAlignment="Stretch"
-                                HorizontalContentAlignment="Center"
-                                VerticalContentAlignment="Center"
-                                Cursor="Hand"
-                                IsEnabled="{Binding !IsSaving}">
-                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                <Panel>
-                                    <i:Icon Value="fa-solid fa-floppy-disk" FontSize="14"
-                                            Foreground="{DynamicResource PrimaryGreenBrush}"
-                                            IsVisible="{Binding !IsSaving}" />
-                                    <i:Icon Value="fa-solid fa-spinner" FontSize="14"
-                                            Foreground="{DynamicResource PrimaryGreenBrush}"
-                                            IsVisible="{Binding IsSaving}"
-                                            RenderTransformOrigin="50%,50%">
-                                        <i:Icon.RenderTransform><RotateTransform /></i:Icon.RenderTransform>
-                                        <i:Icon.Styles>
-                                            <Style Selector="i|Icon[IsVisible=True]">
-                                                <Style.Animations>
-                                                    <Animation Duration="0:0:1" IterationCount="INFINITE">
-                                                        <KeyFrame Cue="0%"><Setter Property="RotateTransform.Angle" Value="0" /></KeyFrame>
-                                                        <KeyFrame Cue="100%"><Setter Property="RotateTransform.Angle" Value="360" /></KeyFrame>
-                                                    </Animation>
-                                                </Style.Animations>
-                                            </Style>
-                                        </i:Icon.Styles>
-                                    </i:Icon>
-                                </Panel>
-                                <TextBlock Name="MobileSaveButtonText"
-                                           Text="Save Profile"
-                                           FontSize="14"
-                                           FontWeight="Medium"
-                                           Foreground="{DynamicResource PrimaryGreenBrush}"
-                                           VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                    </Border>
-                </StackPanel>
 
                 <!-- ── Loading indicator ── -->
                 <Border Background="{DynamicResource Surface}"
@@ -324,7 +348,7 @@
                         BorderThickness="1"
                         CornerRadius="12"
                         Padding="6">
-                    <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                    <ScrollViewer HorizontalScrollBarVisibility="Hidden"
                                   VerticalScrollBarVisibility="Disabled">
                         <StackPanel Name="EditTabsPanel" Orientation="Horizontal" Spacing="4">
                             <Button Name="TabProfile" Classes="TabBtn" Content="Profile" />
@@ -374,6 +398,78 @@
                                 <TextBox Classes="EditField"
                                          Text="{Binding ProfilePicture}"
                                          Watermark="https://example.com/avatar.jpg" />
+                                <!-- Blossom upload for profile picture -->
+                                <Border Background="{DynamicResource SurfaceLow}"
+                                        BorderBrush="{DynamicResource Stroke}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Padding="12">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Upload to Blossom server"
+                                                   FontSize="12" FontWeight="Medium"
+                                                   Foreground="{DynamicResource TextMuted}" />
+                                        <TextBox Name="PicBlossomServerBox"
+                                                 Classes="EditField"
+                                                 Watermark="https://nostr.build"
+                                                 FontSize="13" />
+                                        <DockPanel>
+                                            <Button Name="PicUploadBtn"
+                                                    DockPanel.Dock="Right"
+                                                    Classes="Primary"
+                                                    Padding="10,7"
+                                                    Margin="6,0,0,0"
+                                                    FontSize="13"
+                                                    Cursor="Hand">
+                                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                                    <i:Icon Name="PicUploadIcon"
+                                                            Value="fa-solid fa-cloud-arrow-up"
+                                                            FontSize="11"
+                                                            Foreground="{DynamicResource PrimaryButtonForeground}"
+                                                            IsVisible="True" />
+                                                    <i:Icon Name="PicUploadSpinner"
+                                                            Value="fa-solid fa-spinner"
+                                                            FontSize="11"
+                                                            Foreground="{DynamicResource PrimaryButtonForeground}"
+                                                            IsVisible="False"
+                                                            RenderTransformOrigin="50%,50%">
+                                                        <i:Icon.RenderTransform><RotateTransform /></i:Icon.RenderTransform>
+                                                        <i:Icon.Styles>
+                                                            <Style Selector="i|Icon[IsVisible=True]">
+                                                                <Style.Animations>
+                                                                    <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                                        <KeyFrame Cue="0%"><Setter Property="RotateTransform.Angle" Value="0" /></KeyFrame>
+                                                                        <KeyFrame Cue="100%"><Setter Property="RotateTransform.Angle" Value="360" /></KeyFrame>
+                                                                    </Animation>
+                                                                </Style.Animations>
+                                                            </Style>
+                                                        </i:Icon.Styles>
+                                                    </i:Icon>
+                                                    <TextBlock Text="Upload"
+                                                               FontSize="13"
+                                                               Foreground="{DynamicResource PrimaryButtonForeground}"
+                                                               VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Button>
+                                            <Button Name="PicBrowseBtn"
+                                                    DockPanel.Dock="Right"
+                                                    Content="Browse…"
+                                                    Padding="10,7"
+                                                    FontSize="13"
+                                                    Cursor="Hand" />
+                                            <TextBlock Name="PicFileNameText"
+                                                       Text="No file selected"
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource TextMuted}"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </DockPanel>
+                                        <TextBlock Name="PicStatusText"
+                                                   IsVisible="False"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource TextMuted}"
+                                                   TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
                         </Border>
 
@@ -445,6 +541,78 @@
                             <TextBox Classes="EditField"
                                      Text="{Binding ProfileBanner}"
                                      Watermark="https://example.com/banner.jpg" />
+                            <!-- Blossom upload for banner -->
+                            <Border Background="{DynamicResource SurfaceLow}"
+                                    BorderBrush="{DynamicResource Stroke}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="12">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Upload to Blossom server"
+                                               FontSize="12" FontWeight="Medium"
+                                               Foreground="{DynamicResource TextMuted}" />
+                                    <TextBox Name="BannerBlossomServerBox"
+                                             Classes="EditField"
+                                             Watermark="https://nostr.build"
+                                             FontSize="13" />
+                                    <DockPanel>
+                                        <Button Name="BannerUploadBtn"
+                                                DockPanel.Dock="Right"
+                                                Classes="Primary"
+                                                Padding="10,7"
+                                                Margin="6,0,0,0"
+                                                FontSize="13"
+                                                Cursor="Hand">
+                                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                                <i:Icon Name="BannerUploadIcon"
+                                                        Value="fa-solid fa-cloud-arrow-up"
+                                                        FontSize="11"
+                                                        Foreground="{DynamicResource PrimaryButtonForeground}"
+                                                        IsVisible="True" />
+                                                <i:Icon Name="BannerUploadSpinner"
+                                                        Value="fa-solid fa-spinner"
+                                                        FontSize="11"
+                                                        Foreground="{DynamicResource PrimaryButtonForeground}"
+                                                        IsVisible="False"
+                                                        RenderTransformOrigin="50%,50%">
+                                                    <i:Icon.RenderTransform><RotateTransform /></i:Icon.RenderTransform>
+                                                    <i:Icon.Styles>
+                                                        <Style Selector="i|Icon[IsVisible=True]">
+                                                            <Style.Animations>
+                                                                <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                                    <KeyFrame Cue="0%"><Setter Property="RotateTransform.Angle" Value="0" /></KeyFrame>
+                                                                    <KeyFrame Cue="100%"><Setter Property="RotateTransform.Angle" Value="360" /></KeyFrame>
+                                                                </Animation>
+                                                            </Style.Animations>
+                                                        </Style>
+                                                    </i:Icon.Styles>
+                                                </i:Icon>
+                                                <TextBlock Text="Upload"
+                                                           FontSize="13"
+                                                           Foreground="{DynamicResource PrimaryButtonForeground}"
+                                                           VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Name="BannerBrowseBtn"
+                                                DockPanel.Dock="Right"
+                                                Content="Browse…"
+                                                Padding="10,7"
+                                                FontSize="13"
+                                                Cursor="Hand" />
+                                        <TextBlock Name="BannerFileNameText"
+                                                   Text="No file selected"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource TextMuted}"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </DockPanel>
+                                    <TextBlock Name="BannerStatusText"
+                                               IsVisible="False"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
                     </Border>
 

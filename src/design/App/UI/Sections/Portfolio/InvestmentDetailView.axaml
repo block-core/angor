@@ -107,8 +107,7 @@
                         Classes="BackBtn"
                         VerticalAlignment="Stretch"
                         HorizontalAlignment="Stretch"
-                        Cursor="Hand"
-                        IsEnabled="{Binding !IsProcessing}">
+                        Cursor="Hand">
                     <Panel>
                         <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
                                     IsVisible="{Binding !IsProcessing}">
@@ -144,7 +143,7 @@
                                     </Style>
                                 </i:Icon.Styles>
                             </i:Icon>
-                            <TextBlock Text="Refreshing..." FontSize="14" FontWeight="Medium"
+                            <TextBlock Text="Refresh" FontSize="14" FontWeight="Medium"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center" />
                         </StackPanel>
@@ -590,8 +589,7 @@
                                         Background="{DynamicResource WaitingBtnBg}"
                                         BorderBrush="{DynamicResource WaitingBtnBorder}"
                                         BorderThickness="1"
-                                        CornerRadius="8"
-                                        IsEnabled="{Binding !IsProcessing}">
+                                        CornerRadius="8">
                                     <Panel>
                                         <TextBlock Text="Refresh"
                                                    FontSize="14"
@@ -623,7 +621,7 @@
                                                     </Style>
                                                 </i:Icon.Styles>
                                             </i:Icon>
-                                            <TextBlock Text="Refreshing..." FontSize="14" FontWeight="SemiBold"
+                                            <TextBlock Text="Refresh" FontSize="14" FontWeight="SemiBold"
                                                        Foreground="{DynamicResource WaitingBtnFg}" />
                                         </StackPanel>
                                     </Panel>

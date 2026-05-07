@@ -60,6 +60,26 @@ public partial class FindProjectsView : UserControl, ISectionView
             };
         }
 
+        // Wire search button and Enter key on search TextBox
+        var searchBtn = this.FindControl<Button>("SearchButton");
+        var searchBox = this.FindControl<TextBox>("SearchTextBox");
+        if (searchBtn != null)
+        {
+            searchBtn.Click += async (_, _) =>
+            {
+                if (DataContext is FindProjectsViewModel fvm)
+                    await fvm.SearchByProjectIdAsync();
+            };
+        }
+        if (searchBox != null)
+        {
+            searchBox.KeyDown += async (_, args) =>
+            {
+                if (args.Key == Key.Enter && DataContext is FindProjectsViewModel fvm)
+                    await fvm.SearchByProjectIdAsync();
+            };
+        }
+
         // Wire "Load More" button — explicit reveal only, no scroll trigger.
         // The VM's IsLoadingMore flag disables the button across the batch
         // insert so repeated taps can't pile up concurrent layout passes.

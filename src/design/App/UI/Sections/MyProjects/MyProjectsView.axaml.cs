@@ -136,11 +136,12 @@ public partial class MyProjectsView : UserControl, ISectionView
             Grid.SetRow(_myProjectsSidebar, 0);
             _myProjectsSidebar.Margin = new Avalonia.Thickness(0, 0, 0, 16);
             _myProjectsSidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top;
-            // Strip card styling — just show the button
+            // Keep the same card inset as the funded projects sidebar; only strip
+            // desktop chrome so compact actions do not sit flush against the edge.
             _myProjectsSidebar.Background = null;
             _myProjectsSidebar.BorderThickness = new Avalonia.Thickness(0);
             _myProjectsSidebar.BoxShadow = new Avalonia.Media.BoxShadows(default);
-            _myProjectsSidebar.Padding = new Avalonia.Thickness(0);
+            _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.PaddingProperty);
 
             Grid.SetColumn(_myProjectsContent, 0);
             Grid.SetRow(_myProjectsContent, 1);

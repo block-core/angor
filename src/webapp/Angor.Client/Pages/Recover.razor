@@ -988,11 +988,11 @@
 
             Logger.LogInformation($"recover trx hex = {recoveryTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory)}");
 
-            var response = await _WalletOperations.PublishTransactionAsync(network, recoveryTransaction.Transaction);
+            var publishError = await _IndexerService.PublishTransactionAsync(recoveryTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory));
 
-            if (!response.Success)
+            if (!string.IsNullOrEmpty(publishError))
             {
-                notificationComponent.ShowErrorMessage("Transaction failed", response.Message);
+                notificationComponent.ShowErrorMessage("Transaction failed", publishError);
                 return;
             }
 
@@ -1136,11 +1136,11 @@
 
             Logger.LogInformation($"release trx hex = {releaseRecoveryTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory)}");
 
-            var response = await _WalletOperations.PublishTransactionAsync(network, releaseRecoveryTransaction.Transaction);
+            var publishError = await _IndexerService.PublishTransactionAsync(releaseRecoveryTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory));
 
-            if (!response.Success)
+            if (!string.IsNullOrEmpty(publishError))
             {
-                notificationComponent.ShowErrorMessage("Transaction failed", response.Message);
+                notificationComponent.ShowErrorMessage("Transaction failed", publishError);
                 return;
             }
 
@@ -1274,11 +1274,11 @@
 
             Logger.LogInformation($"end of project trx hex = {endOfProjectTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory)}");
 
-            var response = await _WalletOperations.PublishTransactionAsync(network, endOfProjectTransaction.Transaction);
+            var publishError = await _IndexerService.PublishTransactionAsync(endOfProjectTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory));
 
-            if (!response.Success)
+            if (!string.IsNullOrEmpty(publishError))
             {
-                notificationComponent.ShowErrorMessage("Transaction failed", response.Message);
+                notificationComponent.ShowErrorMessage("Transaction failed", publishError);
                 return;
             }
 

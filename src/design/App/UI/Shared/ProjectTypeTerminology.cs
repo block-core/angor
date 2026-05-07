@@ -22,7 +22,7 @@ public static class ProjectTypeTerminology
 
     public static string ActionButtonText(ProjectType type) => type switch
     {
-        ProjectType.Fund => "Fund This Project",
+        ProjectType.Fund => "Fund Project",
         ProjectType.Subscription => "Subscribe Now",
         _ => "Invest Now"
     };

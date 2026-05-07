@@ -978,11 +978,11 @@
         {
             showCreateModal = false;
 
-            var response = await _WalletOperations.PublishTransactionAsync(network, signedTransaction.Transaction);
+            var publishError = await _IndexerService.PublishTransactionAsync(signedTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory));
 
-            if (!response.Success)
+            if (!string.IsNullOrEmpty(publishError))
             {
-                notificationComponent.ShowErrorMessage("Transaction failed", response.Message);
+                notificationComponent.ShowErrorMessage("Transaction failed", publishError);
                 return;
             }
 

@@ -2,8 +2,10 @@ using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Angor.Sdk.Wallet.Infrastructure.Interfaces;
+using App.UI.Shared.Helpers;
 using Avalonia;
 using Avalonia.Android;
+using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace App.Android;
@@ -18,6 +20,7 @@ namespace App.Android;
 public class MainActivity : AvaloniaMainActivity<global::App.App>
 {
     private PerfTabReceiver? _perfReceiver;
+    private bool _handlingPlatformBack;
 
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
     {
@@ -46,6 +49,24 @@ public class MainActivity : AvaloniaMainActivity<global::App.App>
             UnregisterReceiver(_perfReceiver);
             _perfReceiver = null;
         }
+    }
+
+    public override void OnBackPressed()
+    {
+        if (_handlingPlatformBack)
+        {
+            base.OnBackPressed();
+            return;
+        }
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (ShellService.TryHandlePlatformBack()) return;
+
+            _handlingPlatformBack = true;
+            OnBackPressed();
+            _handlingPlatformBack = false;
+        });
     }
 }
 

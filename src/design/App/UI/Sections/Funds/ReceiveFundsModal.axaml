@@ -107,7 +107,7 @@
                             CornerRadius="8"
                             Padding="12,10">
                         <DockPanel>
-                            <Button Name="BtnCopyAddress" DockPanel.Dock="Right"
+                            <Button Name="BtnCopyAddress" Classes="NoPressShift" DockPanel.Dock="Right"
                                     Background="Transparent" BorderThickness="0"
                                     Padding="4" Cursor="Hand"
                                     VerticalAlignment="Center">

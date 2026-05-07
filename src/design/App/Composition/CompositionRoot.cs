@@ -149,6 +149,7 @@ public static class CompositionRoot
         services.AddHttpClient();
         services.AddSingleton(ResolveFaucetOptions());
         services.AddSingleton<IFaucetService, HttpFaucetService>();
+        services.AddSingleton<BlossomUploadService>();
 
         // ── Shared singletons (replaces SharedViewModels static class) ──
         services.AddSingleton<SignatureStore>();

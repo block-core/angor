@@ -19,6 +19,9 @@ public class ResponsiveGrid : Panel
     public static readonly StyledProperty<double> RowSpacingProperty =
         AvaloniaProperty.Register<ResponsiveGrid, double>(nameof(RowSpacing), 20);
 
+    public static readonly StyledProperty<int> MaxColumnsProperty =
+        AvaloniaProperty.Register<ResponsiveGrid, int>(nameof(MaxColumns), int.MaxValue);
+
     /// <summary>
     /// Minimum width of each item. The panel will fit as many columns as possible
     /// where each column is at least this wide.
@@ -41,6 +44,12 @@ public class ResponsiveGrid : Panel
         set => SetValue(RowSpacingProperty, value);
     }
 
+    public int MaxColumns
+    {
+        get => GetValue(MaxColumnsProperty);
+        set => SetValue(MaxColumnsProperty, value);
+    }
+
     private int GetColumnCount(double availableWidth)
     {
         if (availableWidth <= 0 || MinItemWidth <= 0)
@@ -48,7 +57,7 @@ public class ResponsiveGrid : Panel
 
         // How many columns of MinItemWidth fit? (accounting for gaps between them)
         var cols = (int)((availableWidth + ColumnSpacing) / (MinItemWidth + ColumnSpacing));
-        return Math.Max(1, cols);
+        return Math.Max(1, Math.Min(cols, MaxColumns));
     }
 
     protected override Size MeasureOverride(Size availableSize)

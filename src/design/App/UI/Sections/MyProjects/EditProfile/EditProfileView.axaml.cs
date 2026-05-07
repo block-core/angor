@@ -1,11 +1,18 @@
 using System;
+using System.IO;
+using Angor.Shared;
+using Angor.Shared.Models;
+using Angor.Sdk.Common;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
+using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 using App.UI.Shared;
 using App.UI.Shell;
+using App.UI.Shared.Services;
+using Blockcore.NBitcoin;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -20,9 +27,26 @@ public partial class EditProfileView : UserControl
 {
     private EditProfileViewModel? Vm => DataContext as EditProfileViewModel;
     private readonly ILogger<EditProfileView> _logger;
+    private readonly BlossomUploadService _blossomService;
 
     private IDisposable? _layoutSubscription;
     private IDisposable? _tabSubscription;
+
+    // Blossom upload state
+    private byte[]? _picFileBytes;
+    private string _picContentType = "image/jpeg";
+    private byte[]? _bannerFileBytes;
+    private string _bannerContentType = "image/jpeg";
+
+    // Cached blossom upload controls
+    private TextBox? _picBlossomServerBox;
+    private TextBlock? _picFileNameText;
+    private TextBlock? _picStatusText;
+    private Button? _picUploadBtn;
+    private TextBox? _bannerBlossomServerBox;
+    private TextBlock? _bannerFileNameText;
+    private TextBlock? _bannerStatusText;
+    private Button? _bannerUploadBtn;
 
     // Tab content panels
     private StackPanel? _profileTabContent;
@@ -36,7 +60,8 @@ public partial class EditProfileView : UserControl
     private DockPanel? _editNavBar;
     private StackPanel? _editContentStack;
     private Panel? _editNavSpacer;
-    private StackPanel? _mobileEditActions;
+    private StackPanel? _mobileStickyEditHeader;
+    private Border? _editTabsBorder;
     private Grid? _profileMainGrid;
     private Border? _profilePictureCard;
     private Border? _basicInfoCard;
@@ -62,11 +87,18 @@ public partial class EditProfileView : UserControl
     private Button? _tabMembers;
     private Button? _tabMedia;
     private Button? _tabRelays;
+    private Button? _mobileTabProfile;
+    private Button? _mobileTabProject;
+    private Button? _mobileTabFaq;
+    private Button? _mobileTabMembers;
+    private Button? _mobileTabMedia;
+    private Button? _mobileTabRelays;
 
     public EditProfileView()
     {
         InitializeComponent();
         _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<EditProfileView>();
+        _blossomService = App.Services.GetRequiredService<BlossomUploadService>();
 
         if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
             Classes.Add("Mobile");
@@ -83,7 +115,8 @@ public partial class EditProfileView : UserControl
         _editNavBar = this.FindControl<DockPanel>("EditNavBar");
         _editContentStack = this.FindControl<StackPanel>("EditContentStack");
         _editNavSpacer = this.FindControl<Panel>("EditNavSpacer");
-        _mobileEditActions = this.FindControl<StackPanel>("MobileEditActions");
+        _mobileStickyEditHeader = this.FindControl<StackPanel>("MobileStickyEditHeader");
+        _editTabsBorder = this.FindControl<Border>("EditTabsBorder");
         _profileMainGrid = this.FindControl<Grid>("ProfileMainGrid");
         _profilePictureCard = this.FindControl<Border>("ProfilePictureCard");
         _basicInfoCard = this.FindControl<Border>("BasicInfoCard");
@@ -113,6 +146,12 @@ public partial class EditProfileView : UserControl
         _tabMembers = this.FindControl<Button>("TabMembers");
         _tabMedia = this.FindControl<Button>("TabMedia");
         _tabRelays = this.FindControl<Button>("TabRelays");
+        _mobileTabProfile = this.FindControl<Button>("MobileTabProfile");
+        _mobileTabProject = this.FindControl<Button>("MobileTabProject");
+        _mobileTabFaq = this.FindControl<Button>("MobileTabFaq");
+        _mobileTabMembers = this.FindControl<Button>("MobileTabMembers");
+        _mobileTabMedia = this.FindControl<Button>("MobileTabMedia");
+        _mobileTabRelays = this.FindControl<Button>("MobileTabRelays");
 
         // Wire tab button clicks
         WireTabButton(_tabProfile, "profile");
@@ -121,6 +160,12 @@ public partial class EditProfileView : UserControl
         WireTabButton(_tabMembers, "members");
         WireTabButton(_tabMedia, "media");
         WireTabButton(_tabRelays, "relays");
+        WireTabButton(_mobileTabProfile, "profile");
+        WireTabButton(_mobileTabProject, "project");
+        WireTabButton(_mobileTabFaq, "faq");
+        WireTabButton(_mobileTabMembers, "members");
+        WireTabButton(_mobileTabMedia, "media");
+        WireTabButton(_mobileTabRelays, "relays");
 
         // Wire action buttons
         var saveBtn = this.FindControl<Button>("SaveButton");
@@ -142,6 +187,30 @@ public partial class EditProfileView : UserControl
         _addRelayButton = this.FindControl<Button>("AddRelayButton");
         if (_addRelayButton != null) _addRelayButton.Click += (_, _) => Vm?.AddRelay();
 
+        // Wire Blossom upload controls for profile picture
+        _picBlossomServerBox = this.FindControl<TextBox>("PicBlossomServerBox");
+        _picFileNameText = this.FindControl<TextBlock>("PicFileNameText");
+        _picStatusText = this.FindControl<TextBlock>("PicStatusText");
+        _picUploadBtn = this.FindControl<Button>("PicUploadBtn");
+
+        var picBrowseBtn = this.FindControl<Button>("PicBrowseBtn");
+        if (picBrowseBtn != null)
+            picBrowseBtn.Click += (_, _) => _ = BrowseFileAsync(false);
+        if (_picUploadBtn != null)
+            _picUploadBtn.Click += (_, _) => _ = UploadToBlossomAsync(false);
+
+        // Wire Blossom upload controls for banner
+        _bannerBlossomServerBox = this.FindControl<TextBox>("BannerBlossomServerBox");
+        _bannerFileNameText = this.FindControl<TextBlock>("BannerFileNameText");
+        _bannerStatusText = this.FindControl<TextBlock>("BannerStatusText");
+        _bannerUploadBtn = this.FindControl<Button>("BannerUploadBtn");
+
+        var bannerBrowseBtn = this.FindControl<Button>("BannerBrowseBtn");
+        if (bannerBrowseBtn != null)
+            bannerBrowseBtn.Click += (_, _) => _ = BrowseFileAsync(true);
+        if (_bannerUploadBtn != null)
+            _bannerUploadBtn.Click += (_, _) => _ = UploadToBlossomAsync(true);
+
         // Wire remove buttons in item templates via bubbling
         AddHandler(Button.ClickEvent, OnItemButtonClick, RoutingStrategies.Bubble);
     }
@@ -150,10 +219,12 @@ public partial class EditProfileView : UserControl
     {
         if (_editNavBar != null)
             _editNavBar.IsVisible = !isCompact;
-        if (_mobileEditActions != null)
-            _mobileEditActions.IsVisible = isCompact;
+        if (_mobileStickyEditHeader != null)
+            _mobileStickyEditHeader.IsVisible = isCompact;
+        if (_editTabsBorder != null)
+            _editTabsBorder.IsVisible = !isCompact;
         if (_editNavSpacer != null)
-            _editNavSpacer.Height = isCompact ? 16 : 92;
+            _editNavSpacer.Height = isCompact ? 156 : 92;
 
         if (_editContentStack != null)
         {
@@ -175,6 +246,7 @@ public partial class EditProfileView : UserControl
         {
             _profileMainGrid.ColumnDefinitions[0].Width = GridLength.Star;
             _profileMainGrid.ColumnDefinitions[1].Width = isCompact ? new GridLength(0) : GridLength.Star;
+            _profileMainGrid.ColumnSpacing = isCompact ? 0 : 20;
 
             if (_profilePictureCard != null)
             {
@@ -193,6 +265,7 @@ public partial class EditProfileView : UserControl
         {
             _basicInfoGrid.ColumnDefinitions[0].Width = GridLength.Star;
             _basicInfoGrid.ColumnDefinitions[1].Width = isCompact ? new GridLength(0) : GridLength.Star;
+            _basicInfoGrid.ColumnSpacing = isCompact ? 0 : 16;
 
             if (_usernameField != null)
             {
@@ -212,6 +285,7 @@ public partial class EditProfileView : UserControl
             _additionalInfoGrid.ColumnDefinitions[0].Width = GridLength.Star;
             _additionalInfoGrid.ColumnDefinitions[1].Width = isCompact ? new GridLength(0) : GridLength.Star;
             _additionalInfoGrid.ColumnDefinitions[2].Width = isCompact ? new GridLength(0) : GridLength.Star;
+            _additionalInfoGrid.ColumnSpacing = isCompact ? 0 : 16;
 
             if (_nip05Field != null)
             {
@@ -306,6 +380,12 @@ public partial class EditProfileView : UserControl
         SetTabActive(_tabMembers, activeTab == "members");
         SetTabActive(_tabMedia, activeTab == "media");
         SetTabActive(_tabRelays, activeTab == "relays");
+        SetTabActive(_mobileTabProfile, activeTab == "profile");
+        SetTabActive(_mobileTabProject, activeTab == "project");
+        SetTabActive(_mobileTabFaq, activeTab == "faq");
+        SetTabActive(_mobileTabMembers, activeTab == "members");
+        SetTabActive(_mobileTabMedia, activeTab == "media");
+        SetTabActive(_mobileTabRelays, activeTab == "relays");
     }
 
     private static void SetTabActive(Button? btn, bool active)
@@ -407,6 +487,216 @@ public partial class EditProfileView : UserControl
     // Track the back button handler to prevent accumulation
     private Button? _backBtn;
     private EventHandler<RoutedEventArgs>? _backClickHandler;
+
+    #region Blossom Upload
+
+    private async Task BrowseFileAsync(bool isBanner)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null) return;
+
+        try
+        {
+            var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = isBanner ? "Select Banner Image" : "Select Profile Picture",
+                AllowMultiple = false,
+                FileTypeFilter = new[]
+                {
+                    new FilePickerFileType("Images")
+                    {
+                        Patterns = new[] { "*.png", "*.jpg", "*.jpeg", "*.webp", "*.gif" },
+                        MimeTypes = new[] { "image/png", "image/jpeg", "image/webp", "image/gif" }
+                    }
+                }
+            });
+
+            if (files.Count == 0) return;
+
+            var file = files[0];
+            await using var stream = await file.OpenReadAsync();
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+
+            var bytes = ms.ToArray();
+            var ext = Path.GetExtension(file.Name).ToLowerInvariant();
+            var contentType = ext switch
+            {
+                ".png" => "image/png",
+                ".gif" => "image/gif",
+                ".webp" => "image/webp",
+                _ => "image/jpeg"
+            };
+
+            if (isBanner)
+            {
+                _bannerFileBytes = bytes;
+                _bannerContentType = contentType;
+                if (_bannerFileNameText != null)
+                    _bannerFileNameText.Text = $"{file.Name} ({bytes.Length / 1024} KB)";
+                SetBlossomStatus(true, $"Ready to upload: {file.Name}", isError: false);
+            }
+            else
+            {
+                _picFileBytes = bytes;
+                _picContentType = contentType;
+                if (_picFileNameText != null)
+                    _picFileNameText.Text = $"{file.Name} ({bytes.Length / 1024} KB)";
+                SetBlossomStatus(false, $"Ready to upload: {file.Name}", isError: false);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Browse file failed");
+        }
+    }
+
+    private async Task UploadToBlossomAsync(bool isBanner)
+    {
+        var fileBytes = isBanner ? _bannerFileBytes : _picFileBytes;
+        var contentType = isBanner ? _bannerContentType : _picContentType;
+        var serverUrl = isBanner
+            ? _bannerBlossomServerBox?.Text?.Trim()
+            : _picBlossomServerBox?.Text?.Trim();
+
+        if (fileBytes == null || fileBytes.Length == 0)
+        {
+            SetBlossomStatus(isBanner, "Please browse and select a file first.", isError: true);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(serverUrl) || !Uri.TryCreate(serverUrl, UriKind.Absolute, out _))
+        {
+            SetBlossomStatus(isBanner, "Please enter a valid Blossom server URL.", isError: true);
+            return;
+        }
+
+        SetBlossomUploadInProgress(isBanner, true);
+        SetBlossomStatus(isBanner, $"Uploading to {serverUrl}…", isError: false);
+
+        try
+        {
+            var nostrKeyHex = await GetNostrPrivateKeyHexAsync();
+            if (nostrKeyHex == null)
+            {
+                SetBlossomStatus(isBanner, "No wallet selected or unable to access wallet keys.", isError: true);
+                SetBlossomUploadInProgress(isBanner, false);
+                return;
+            }
+
+            var result = await _blossomService.UploadAsync(serverUrl, fileBytes, contentType, nostrKeyHex);
+
+            if (result.IsFailure)
+            {
+                SetBlossomStatus(isBanner, $"Upload failed: {result.Error}", isError: true);
+                return;
+            }
+
+            // Update ViewModel URL — the reactive subscription will reload the preview
+            if (Vm != null)
+            {
+                if (isBanner)
+                    Vm.ProfileBanner = result.Value;
+                else
+                    Vm.ProfilePicture = result.Value;
+            }
+
+            SetBlossomStatus(isBanner, "Upload successful!", isError: false);
+
+            if (isBanner)
+            {
+                _bannerFileBytes = null;
+                if (_bannerFileNameText != null) _bannerFileNameText.Text = "No file selected";
+            }
+            else
+            {
+                _picFileBytes = null;
+                if (_picFileNameText != null) _picFileNameText.Text = "No file selected";
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "UploadToBlossomAsync failed");
+            SetBlossomStatus(isBanner, $"Upload error: {ex.Message}", isError: true);
+        }
+        finally
+        {
+            SetBlossomUploadInProgress(isBanner, false);
+        }
+    }
+
+    private void SetBlossomStatus(bool isBanner, string message, bool isError)
+    {
+        var statusText = isBanner ? _bannerStatusText : _picStatusText;
+        if (statusText == null) return;
+        statusText.Text = message;
+        statusText.IsVisible = !string.IsNullOrEmpty(message);
+        if (Application.Current?.Resources.TryGetResource(
+            isError ? "ErrorFieldText" : "TextMuted",
+            Avalonia.Styling.ThemeVariant.Default,
+            out var brush) == true && brush is Avalonia.Media.IBrush b)
+        {
+            statusText.Foreground = b;
+        }
+    }
+
+    private void SetBlossomUploadInProgress(bool isBanner, bool inProgress)
+    {
+        var btn = isBanner ? _bannerUploadBtn : _picUploadBtn;
+        if (btn != null) btn.IsEnabled = !inProgress;
+
+        var iconName = isBanner ? "BannerUploadIcon" : "PicUploadIcon";
+        var spinnerName = isBanner ? "BannerUploadSpinner" : "PicUploadSpinner";
+
+        var icon = this.FindControl<Projektanker.Icons.Avalonia.Icon>(iconName);
+        var spinner = this.FindControl<Projektanker.Icons.Avalonia.Icon>(spinnerName);
+
+        if (icon != null) icon.IsVisible = !inProgress;
+        if (spinner != null) spinner.IsVisible = inProgress;
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Gets the Nostr private key (hex) from the currently selected wallet for BUD-02 auth.
+    /// </summary>
+    private async Task<string?> GetNostrPrivateKeyHexAsync()
+    {
+        try
+        {
+            var walletContext = App.Services.GetRequiredService<IWalletContext>();
+            var selectedWallet = walletContext.SelectedWallet;
+            if (selectedWallet == null)
+            {
+                _logger.LogWarning("No wallet selected for Blossom auth");
+                return null;
+            }
+
+            var seedwordsProvider = App.Services.GetRequiredService<ISeedwordsProvider>();
+            var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(selectedWallet.Id.Value);
+            if (sensitiveDataResult.IsFailure)
+            {
+                _logger.LogWarning("Failed to get wallet sensitive data: {Error}", sensitiveDataResult.Error);
+                return null;
+            }
+
+            var (words, passphrase) = sensitiveDataResult.Value;
+            var walletWords = new WalletWords
+            {
+                Words = words,
+                Passphrase = passphrase.HasValue ? passphrase.Value : null
+            };
+
+            var derivation = App.Services.GetRequiredService<IDerivationOperations>();
+            var key = derivation.DeriveNostrStorageKey(walletWords);
+            return Convert.ToHexString(key.ToBytes()).ToLowerInvariant();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to derive Nostr key for Blossom auth");
+            return null;
+        }
+    }
 
     /// <summary>Wire the Back button to navigate back to the project list.</summary>
     public void SetBackAction(Action backAction)
