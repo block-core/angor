@@ -583,12 +583,6 @@ public partial class MyProjectsView : UserControl, ISectionView
     {
         if (EditProfilePanel == null) return;
 
-        if (_editProfileView != null)
-        {
-            ConfigureEditProfileView(vm, editVm);
-            return;
-        }
-
         if (_isCreatingEditProfileView) return;
         _isCreatingEditProfileView = true;
         ShowLoadingPlaceholder(EditProfilePanel, "Loading profile editor...");
