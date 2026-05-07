@@ -482,7 +482,9 @@ public partial class MyProjectsView : UserControl, ISectionView
     private void OpenCreateWizard(MyProjectsViewModel vm)
     {
         CreateProjectViewModel wvm = vm.CreateProjectVm;
-        wvm.ResetWizard();
+        // Only reset when there is no in-progress data: fresh start or after a successful deploy.
+        if (!wvm.HasInProgressData)
+            wvm.ResetWizard();
         WireWizardCallbacks(vm, wvm);
         vm.LaunchCreateWizard();
         EnsureCreateWizardView(vm, resetVisualState: true);
@@ -580,12 +582,6 @@ public partial class MyProjectsView : UserControl, ISectionView
     private void EnsureEditProfileView(MyProjectsViewModel vm, EditProfileViewModel editVm)
     {
         if (EditProfilePanel == null) return;
-
-        if (_editProfileView != null)
-        {
-            ConfigureEditProfileView(vm, editVm);
-            return;
-        }
 
         if (_isCreatingEditProfileView) return;
         _isCreatingEditProfileView = true;

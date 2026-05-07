@@ -1102,8 +1102,32 @@ public partial class CreateProjectViewModel : ReactiveObject
     }
 
     /// <summary>
+    /// Returns true if the wizard has unsaved in-progress data that should be preserved
+    /// when the user navigates away and returns.
+    /// False when the wizard is in its initial state or has already been deployed.
+    /// </summary>
+    public bool HasInProgressData
+    {
+        get
+        {
+            if (IsDeployed)
+                return false;
+
+            // The user has advanced beyond the welcome screen
+            bool hasAdvancedBeyondWelcome = !ShowWelcome || CurrentStep > 1;
+
+            // The user has entered at least some data
+            bool hasUserInputData = !string.IsNullOrEmpty(ProjectType)
+                || !string.IsNullOrEmpty(ProjectName)
+                || !string.IsNullOrEmpty(ProjectAbout);
+
+            return hasAdvancedBeyondWelcome || hasUserInputData;
+        }
+    }
+
+    /// <summary>
     /// Reset all wizard state to initial values so the wizard can be re-opened fresh.
-    /// Called by MyProjectsView.OpenCreateWizard() before wiring callbacks.
+    /// Called by MyProjectsView.OpenCreateWizard() when no in-progress data exists.
     /// </summary>
     public void ResetWizard()
     {
