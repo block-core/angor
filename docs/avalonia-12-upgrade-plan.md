@@ -41,16 +41,11 @@ Upgrading from Avalonia 11.3.12 to Avalonia 12.0 to unlock 3x Android performanc
 - `ReactiveUI.Avalonia` → 12.0.1
 - `ReactiveUI.SourceGenerators` → check for compatible version
 
-**Zafiro packages (all → 52.x for Avalonia 12):**
-- `Zafiro.Avalonia` → 52.0.3
-- `Zafiro.Avalonia.Generators` → 52.x (check latest)
-- `Zafiro.Avalonia.Dialogs` → 52.x
-- `Zafiro.Avalonia.Icons.Svg` → 52.x (if still used)
-
-**Icon package migration:**
-- Zafiro 52.x migrated from `Projektanker.Icons.Avalonia` to `Optris.Icons.Avalonia`
-- Either: (a) migrate to Optris alongside Zafiro, or (b) keep Projektanker separately if it gets a v12 release
-- Evaluate if `Projektanker.Icons.Avalonia` 9.6.2 (netstandard2.0, depends on Avalonia >= 11.2.8) works with Avalonia 12 as-is — it might since it's netstandard
+**Projektanker.Icons.Avalonia:**
+- Currently on 9.6.2 (netstandard2.0, depends on Avalonia >= 11.2.8)
+- Used directly in `src/design/` for FontAwesome icons throughout the UI
+- Evaluate if it works with Avalonia 12 as-is — likely compatible since it targets netstandard2.0
+- If incompatible, check for a v12-compatible release or consider alternative icon solutions
 
 **Other third-party packages:**
 - `Avalonia.Labs.Panels` → check for 12.x release
@@ -148,7 +143,7 @@ Upgrading from Avalonia 11.3.12 to Avalonia 12.0 to unlock 3x Android performanc
 
 | Risk | Severity | Mitigation |
 |------|----------|------------|
-| Projektanker.Icons.Avalonia no v12 release | Medium | May work as-is (netstandard2.0); or migrate to Optris with Zafiro |
+| Projektanker.Icons.Avalonia no v12 release | Medium | May work as-is (netstandard2.0); check for updated release if not |
 | Third-party packages without v12 support | Medium | Check each before starting; fork if needed |
 | SkiaSharp 3.0 breaking changes in SVG rendering | Low | `Svg.Controls.Skia.Avalonia` may need update |
 | xUnit v3 test migration effort | Low | Mostly mechanical changes |
