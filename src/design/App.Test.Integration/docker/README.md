@@ -5,7 +5,7 @@ Avalonia integration tests normally talk to on the public Angor signet, so
 you can run the suite without depending on:
 
 - `signet.angor.online` (indexer / mempool explorer)
-- `faucettmp.angor.io`  (faucet API)
+- `test.faucet.angor.io`  (faucet API)
 - `relay.angor.io` + `relay2.angor.io` (Nostr relays)
 
 The compose brings up a fully isolated signet — own chain, own mining, no

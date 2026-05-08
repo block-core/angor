@@ -8,7 +8,7 @@ Full end-to-end integration test that boots the real Avalonia app in headless mo
 
 - Internet connectivity (testnet indexer + faucet API + Nostr relays)
 - Profile isolation: uses `test-send-receive` profile (`~/.local/share/App/Profiles/test-send-receive/`)
-- Testnet faucet must be operational at `https://faucettmp.angor.io`
+- Testnet faucet must be operational at `https://test.faucet.angor.io`
 
 ## Why Fund (not Invest)?
 
