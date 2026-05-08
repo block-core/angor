@@ -320,6 +320,13 @@ public partial class SettingsViewModel : ReactiveObject
         try
         {
             var currentWalletId = _walletContext.SelectedWallet?.Id;
+            if (currentWalletId == null)
+            {
+                // No wallet is active — nothing to rebuild.
+                await _walletContext.ReloadAsync();
+                return;
+            }
+
             var rebuildResult = await _walletAppService.RebuildAllWalletBalancesAsync(currentWalletId);
             if (rebuildResult.IsFailure)
             {
