@@ -410,7 +410,8 @@
                                                    Foreground="{DynamicResource TextMuted}" />
                                         <TextBox Name="PicBlossomServerBox"
                                                  Classes="EditField"
-                                                 Watermark="https://nostr.build"
+                                                 Text="https://blossom.angor.io"
+                                                 Watermark="Blossom server URL"
                                                  FontSize="13" />
                                         <DockPanel>
                                             <Button Name="PicUploadBtn"
@@ -553,7 +554,8 @@
                                                Foreground="{DynamicResource TextMuted}" />
                                     <TextBox Name="BannerBlossomServerBox"
                                              Classes="EditField"
-                                             Watermark="https://nostr.build"
+                                             Text="https://blossom.angor.io"
+                                             Watermark="Blossom server URL"
                                              FontSize="13" />
                                     <DockPanel>
                                         <Button Name="BannerUploadBtn"

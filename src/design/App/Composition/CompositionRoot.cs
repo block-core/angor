@@ -165,6 +165,7 @@ public static class CompositionRoot
         services.AddTransient<MyProjectsViewModel>();
         services.AddTransient<FundersViewModel>();
         services.AddTransient<CreateProjectViewModel>();
+        services.AddSingleton<ProjectDraftStorage>();
         services.AddTransient<DeployFlowViewModel>();
         services.AddTransient<HomeViewModel>();
 
