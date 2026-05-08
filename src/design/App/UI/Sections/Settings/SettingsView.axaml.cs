@@ -303,6 +303,19 @@ public partial class SettingsView : UserControl, ISectionView
     private void OnWipeModalBackdropPressed(object? sender, PointerPressedEventArgs e) =>
         Vm?.CloseWipeDataModal();
 
+    // ── Export Logs ──
+    private async void OnExportLogsClick(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            await (Vm?.ExportLogsAsync() ?? Task.CompletedTask);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "OnExportLogsClick failed");
+        }
+    }
+
     // ── Modal Backdrop ──
     private void OnModalBackdropPressed(object? sender, PointerPressedEventArgs e) =>
         Vm?.CloseNetworkModal();

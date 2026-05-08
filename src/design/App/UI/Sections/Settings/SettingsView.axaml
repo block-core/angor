@@ -599,6 +599,68 @@
                     </StackPanel>
                 </Border>
 
+                <!-- ═══ 8. Export Logs (debug mode only) ═══ -->
+                <Border Background="{DynamicResource CardSurface}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        ClipToBounds="True"
+                        BoxShadow="{DynamicResource ItemShadow}"
+                        IsVisible="{Binding IsDebugMode}">
+                    <StackPanel>
+                        <Border BorderBrush="{DynamicResource Stroke}"
+                                BorderThickness="0,0,0,1"
+                                Padding="24,20">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <i:Icon Value="fa-solid fa-file-export"
+                                       FontSize="20"
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                <TextBlock Text="Export Logs"
+                                           FontSize="18"
+                                           FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                        <Border Padding="24">
+                            <StackPanel Spacing="20">
+                                <TextBlock Text="Send application logs to support for troubleshooting. Logs are encrypted and sent via Nostr DM."
+                                           FontSize="14"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           TextWrapping="Wrap" />
+                                <Button HorizontalAlignment="Left"
+                                        Classes="MobileAction"
+                                        Padding="20,14"
+                                        Background="{DynamicResource GreenGradient}"
+                                        Foreground="White"
+                                        BorderThickness="0"
+                                        CornerRadius="8"
+                                        FontWeight="SemiBold"
+                                        FontSize="14"
+                                        IsEnabled="{Binding CanExportLogs}"
+                                        Click="OnExportLogsClick">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <i:Icon Value="fa-solid fa-file-export"
+                                                FontSize="16"
+                                                Foreground="White"
+                                                IsVisible="{Binding !IsExportingLogs}" />
+                                        <i:Icon Value="fa-solid fa-spinner"
+                                                FontSize="16"
+                                                Foreground="White"
+                                                IsVisible="{Binding IsExportingLogs}" />
+                                        <TextBlock Text="Exporting..."
+                                                   IsVisible="{Binding IsExportingLogs}"
+                                                   VerticalAlignment="Center" />
+                                        <TextBlock Text="Export Logs"
+                                                   IsVisible="{Binding !IsExportingLogs}"
+                                                   VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
                 <!-- ═══ 10. Danger Zone ═══ -->
                 <!-- Vue: border 2px solid #fee2e2 (light) / #7f1d1d (dark), no normal CardSurface bg -->
                 <Border BorderBrush="{DynamicResource DangerZoneBorder}"
