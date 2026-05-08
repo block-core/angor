@@ -7,7 +7,7 @@ namespace Angor.Shared.Integration.Lightning.Models
     public class BoltzConfiguration
     {
         public const string MainnetUrl = "https://api.boltz.exchange";
-        public const string TestnetUrl = "https://boltz.thedude.cloud/";
+        public const string TestnetUrl = "https://test.boltz.angor.io/";
 
         /// <summary>
         /// The Boltz API base URL. Defaults to mainnet.
