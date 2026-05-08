@@ -84,7 +84,7 @@
                                 <!-- Real QR code image — visible once address is loaded -->
                                 <Image Name="QrCodeImage"
                                        Width="192" Height="192"
-                                       Stretch="UniformToFill"
+                                       Stretch="Uniform"
                                        IsVisible="False" />
                                 <!-- Placeholder icon shown while address is loading -->
                                 <StackPanel Name="QrCodePlaceholder"
