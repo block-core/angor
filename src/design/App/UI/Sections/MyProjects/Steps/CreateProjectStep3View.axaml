@@ -97,7 +97,8 @@
 
                     <!-- Blossom upload row -->
                     <TextBox Name="BannerBlossomServerTextBox"
-                             Watermark="Blossom server URL (e.g. https://nostr.build)"
+                             Text="https://blossom.angor.io"
+                             Watermark="Blossom server URL"
                              Padding="12,10" FontSize="14" CornerRadius="8" />
                     <DockPanel>
                         <Button Name="BannerUploadBtn"
@@ -193,7 +194,8 @@
 
                     <!-- Blossom upload row -->
                     <TextBox Name="ProfileBlossomServerTextBox"
-                             Watermark="Blossom server URL (e.g. https://nostr.build)"
+                             Text="https://blossom.angor.io"
+                             Watermark="Blossom server URL"
                              Padding="12,10" FontSize="14" CornerRadius="8" />
                     <DockPanel>
                         <Button Name="ProfileUploadBtn"
