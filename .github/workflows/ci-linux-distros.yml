@@ -1,0 +1,95 @@
+name: CI - Linux Distro Tests
+
+# Cross-distro test runner — currently manual-only.
+# TODO: wire up a self-hosted runner triggered by GitHub Actions for heavy
+# local execution instead of running on GitHub-hosted runners.
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_scope:
+        description: 'Test scope: unit, integration, or all'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - unit
+          - integration
+      distro:
+        description: 'Distro to test (blank = all)'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - ubuntu
+          - fedora
+          - debian
+
+env:
+  COMPOSE_DIR: src/design/App.Test.Integration/docker
+
+jobs:
+  distro-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Integration tests need the bitcoin-custom-signet sibling repo
+          # for building the signet node and faucet images.
+          submodules: false
+
+      - name: Clone bitcoin-custom-signet
+        run: |
+          git clone --depth 1 https://github.com/block-core/bitcoin-custom-signet.git ../bitcoin-custom-signet
+
+      - name: Start infrastructure stack
+        working-directory: ${{ env.COMPOSE_DIR }}
+        run: |
+          docker compose up -d
+          echo "Waiting for infra stack to become healthy..."
+          # Wait up to 3 minutes for the Bitcoin node health check
+          timeout 180 bash -c 'until docker inspect --format="{{.State.Health.Status}}" angor-test-btc-node 2>/dev/null | grep -q healthy; do sleep 5; done'
+          echo "Infrastructure stack is ready."
+
+      - name: Run distro tests
+        working-directory: ${{ env.COMPOSE_DIR }}
+        env:
+          TEST_SCOPE: ${{ inputs.test_scope || 'all' }}
+        run: |
+          DISTRO="${{ inputs.distro }}"
+          if [ -n "$DISTRO" ]; then
+            docker compose -f docker-compose.tests.yml up --build --abort-on-container-exit "$DISTRO"
+          else
+            docker compose -f docker-compose.tests.yml up --build --abort-on-container-exit
+          fi
+
+      - name: Collect test results
+        if: always()
+        working-directory: ${{ env.COMPOSE_DIR }}
+        run: |
+          echo "=== Container exit codes ==="
+          for svc in ubuntu fedora debian; do
+            code=$(docker inspect --format='{{.State.ExitCode}}' "angor-test-runner-${svc}" 2>/dev/null || echo "N/A")
+            echo "  ${svc}: ${code}"
+          done
+
+      - name: Dump logs on failure
+        if: failure()
+        working-directory: ${{ env.COMPOSE_DIR }}
+        run: |
+          echo "=== Test runner logs ==="
+          docker compose -f docker-compose.tests.yml logs --no-color
+          echo ""
+          echo "=== Infrastructure logs (last 50 lines each) ==="
+          docker compose logs --no-color --tail=50
+
+      - name: Tear down
+        if: always()
+        working-directory: ${{ env.COMPOSE_DIR }}
+        run: |
+          docker compose -f docker-compose.tests.yml down -v
+          docker compose down -v

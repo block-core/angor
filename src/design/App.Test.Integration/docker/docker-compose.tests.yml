@@ -1,0 +1,80 @@
+# Cross-distro test runners for Angor
+#
+# Prerequisites: the infra stack must be running on the `angor-test-net` network:
+#   cd src/design/App.Test.Integration/docker
+#   docker compose up -d
+#
+# Usage:
+#   # Run all distros (parallel):
+#   docker compose -f docker-compose.tests.yml up --build
+#
+#   # Run a single distro:
+#   docker compose -f docker-compose.tests.yml up --build ubuntu
+#
+#   # Unit tests only (skip integration):
+#   TEST_SCOPE=unit docker compose -f docker-compose.tests.yml up --build
+#
+#   # Integration tests only:
+#   TEST_SCOPE=integration docker compose -f docker-compose.tests.yml up --build fedora
+
+name: angor-distro-tests
+
+networks:
+  angor-test-net:
+    external: true
+
+x-test-runner: &test-runner-common
+  volumes:
+    # Mount the entire src/ tree read-only; NuGet cache is container-local
+    - ../../../../:/src:ro
+    # Writable NuGet cache per container
+    - nuget-cache:/root/.nuget
+  environment:
+    TEST_SCOPE: ${TEST_SCOPE:-all}
+    DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+    DOTNET_NOLOGO: "1"
+  networks:
+    - angor-test-net
+  # Don't restart on failure — we want the exit code
+  restart: "no"
+
+volumes:
+  nuget-cache:
+
+services:
+
+  ubuntu:
+    <<: *test-runner-common
+    container_name: angor-test-runner-ubuntu
+    build:
+      context: ./runners
+      dockerfile: Dockerfile.ubuntu
+    environment:
+      TEST_SCOPE: ${TEST_SCOPE:-all}
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+      DISTRO_NAME: ubuntu-24.04
+
+  fedora:
+    <<: *test-runner-common
+    container_name: angor-test-runner-fedora
+    build:
+      context: ./runners
+      dockerfile: Dockerfile.fedora
+    environment:
+      TEST_SCOPE: ${TEST_SCOPE:-all}
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+      DISTRO_NAME: fedora-41
+
+  debian:
+    <<: *test-runner-common
+    container_name: angor-test-runner-debian
+    build:
+      context: ./runners
+      dockerfile: Dockerfile.debian
+    environment:
+      TEST_SCOPE: ${TEST_SCOPE:-all}
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+      DISTRO_NAME: debian-12
