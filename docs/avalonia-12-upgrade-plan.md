@@ -1,6 +1,10 @@
 # Avalonia 12 Upgrade Plan — `src/design/`
 
-Upgrading from Avalonia 11.3.12 to Avalonia 12.0 to unlock 3x Android performance (42→120 FPS scrolling, 4x faster startup, 20x lower idle CPU).
+Upgrading from Avalonia 11.3.12 to Avalonia 12.0.2 to unlock 3x Android performance (42→120 FPS scrolling, 4x faster startup, 20x lower idle CPU).
+
+**Target version:** 12.0.2 (released April 28, 2026) — three patch releases in one month with ~208K combined downloads. Includes important Android-specific fixes (crash on surface destroyed, text selection, back button for API 33+). Production-ready.
+
+**Scope:** `src/design/` and its dependencies (`src/sdk/`, `src/shared/`). The `src/avalonia/` project is explicitly excluded — it has its own Zafiro dependencies and will be handled separately if needed.
 
 ---
 
@@ -25,16 +29,16 @@ Upgrading from Avalonia 11.3.12 to Avalonia 12.0 to unlock 3x Android performanc
 
 ## Phase 2: Update Package Versions in Directory.Packages.props
 
-**Avalonia core (bump `$(AvaloniaVersion)` property):**
-- `Avalonia` → 12.0.0+
-- `Avalonia.Themes.Fluent` → 12.0.0+
-- `Avalonia.Fonts.Inter` → 12.0.0+
-- `Avalonia.Desktop` → 12.0.0+
-- `Avalonia.iOS` → 12.0.0+
-- `Avalonia.Browser` → 12.0.0+
-- `Avalonia.Android` → 12.0.0+
-- `Avalonia.Headless` → 12.0.0+
-- `Avalonia.Headless.XUnit` → 12.0.0+ (note: now requires xUnit v3)
+**Avalonia core (bump `$(AvaloniaVersion)` property to 12.0.2):**
+- `Avalonia` → 12.0.2
+- `Avalonia.Themes.Fluent` → 12.0.2
+- `Avalonia.Fonts.Inter` → 12.0.2
+- `Avalonia.Desktop` → 12.0.2
+- `Avalonia.iOS` → 12.0.2
+- `Avalonia.Browser` → 12.0.2
+- `Avalonia.Android` → 12.0.2
+- `Avalonia.Headless` → 12.0.2
+- `Avalonia.Headless.XUnit` → 12.0.2 (note: now requires xUnit v3)
 
 **ReactiveUI ecosystem:**
 - `ReactiveUI` → 23.2.1 (required by ReactiveUI.Avalonia 12.0.1)
