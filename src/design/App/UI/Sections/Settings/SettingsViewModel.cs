@@ -19,7 +19,7 @@ namespace App.UI.Sections.Settings;
 /// Manages network selection, explorer/indexer/relay configuration,
 /// theme, currency display, and data wipe operations.
 /// </summary>
-public partial class SettingsViewModel : ReactiveObject
+public partial class SettingsViewModel : ReactiveObject, IDisposable
 {
     private readonly INetworkService _networkService;
     private readonly INetworkConfiguration _networkConfig;
@@ -32,6 +32,7 @@ public partial class SettingsViewModel : ReactiveObject
     private readonly SignatureStore _signatureStore;
     private readonly ShellViewModel _shellViewModel;
     private readonly ILogger<SettingsViewModel> _logger;
+    private readonly CompositeDisposable _disposables = new();
 
     public string AppVersion { get; } = GetVersion();
 
@@ -171,7 +172,8 @@ public partial class SettingsViewModel : ReactiveObject
                 x => x.NetworkChangeConfirmed,
                 x => x.SelectedNetworkToSwitch,
                 x => x.NetworkType)
-            .Subscribe(_ => this.RaisePropertyChanged(nameof(CanConfirmNetworkSwitch)));
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(CanConfirmNetworkSwitch)))
+            .DisposeWith(_disposables);
     }
 
     /// <summary>
@@ -464,6 +466,8 @@ public partial class SettingsViewModel : ReactiveObject
             ToastRequested?.Invoke($"Wipe data failed: {ex.Message}");
         }
     }
+
+    public void Dispose() => _disposables.Dispose();
 }
 
 // ── Table item models ──

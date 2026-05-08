@@ -358,14 +358,7 @@
                                         CornerRadius="16"
                                         ClipToBounds="False"
                                         BoxShadow="{DynamicResource ItemShadow}"
-                                        Name="InvestmentCardBorder"
-                                        RenderTransform="translate(0px, 0px)">
-                                    <Border.Transitions>
-                                        <Transitions>
-                                            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" />
-                                            <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.3" />
-                                        </Transitions>
-                                    </Border.Transitions>
+                                        Name="InvestmentCardBorder">
                                     <!-- Inner clip border for banner image overflow -->
                                     <Border CornerRadius="15" ClipToBounds="True">
                                     <StackPanel Spacing="0">

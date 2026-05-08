@@ -229,7 +229,8 @@ public partial class ShellView : UserControl
                 x => x.ProjectDetailActionVerb)
             .CombineLatest(vm.WhenAnyValue(x => x.IsEditProfileOpen), (_, _) => Unit.Default)
             .CombineLatest(vm.WhenAnyValue(x => x.SelectedNavItem), (a, b) => Unit.Default)
-            .Subscribe(_ => UpdateCompactOverlays(vm));
+            .Throttle(TimeSpan.FromMilliseconds(100))
+            .Subscribe(_ => Avalonia.Threading.Dispatcher.UIThread.Post(() => UpdateCompactOverlays(vm)));
 
         // ── React to MobileInvestorSubTab changes — update sub-tab active states ──
         vm.WhenAnyValue(x => x.MobileInvestorSubTab)

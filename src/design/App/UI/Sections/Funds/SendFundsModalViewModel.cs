@@ -8,7 +8,7 @@ namespace App.UI.Sections.Funds;
 /// Follows the [Reactive] validation pattern established by CreateProjectViewModel.
 /// Vue ref: Funds.vue send flow (form → success).
 /// </summary>
-public partial class SendFundsModalViewModel : ReactiveObject
+public partial class SendFundsModalViewModel : ReactiveObject, IDisposable
 {
     /// <summary>Stub txid for the success view — matches the truncated XAML text.</summary>
     private const string StubTxid = "a1b2c3d4e5f67890abcdef1234567890abcdef1234567890abcdef7890abcd";
@@ -35,6 +35,7 @@ public partial class SendFundsModalViewModel : ReactiveObject
 
     /// <summary>Raw balance string for validation math (no " BTC" suffix).</summary>
     private string _rawBalance = "0.00000000";
+    private readonly CompositeDisposable _disposables = new();
 
     // ── Computed error visibility ──
     public bool HasAddressError => !string.IsNullOrEmpty(AddressError);
@@ -48,14 +49,16 @@ public partial class SendFundsModalViewModel : ReactiveObject
             {
                 AddressError = "";
                 this.RaisePropertyChanged(nameof(HasAddressError));
-            });
+            })
+            .DisposeWith(_disposables);
 
         this.WhenAnyValue(x => x.AmountText)
             .Subscribe(_ =>
             {
                 AmountError = "";
                 this.RaisePropertyChanged(nameof(HasAmountError));
-            });
+            })
+            .DisposeWith(_disposables);
     }
 
     /// <summary>
@@ -155,4 +158,6 @@ public partial class SendFundsModalViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(HasAddressError));
         this.RaisePropertyChanged(nameof(HasAmountError));
     }
+
+    public void Dispose() => _disposables.Dispose();
 }

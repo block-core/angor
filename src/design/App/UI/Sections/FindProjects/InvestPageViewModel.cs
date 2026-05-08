@@ -106,7 +106,7 @@ public class FundingPatternOption : ReactiveObject
 /// Supports three project types: Invest, Fund, Subscription.
 /// Subscription type shows plan cards (3mo/6mo) instead of BTC amount input.
 /// </summary>
-public partial class InvestPageViewModel : ReactiveObject
+public partial class InvestPageViewModel : ReactiveObject, IDisposable
 {
     private readonly IWalletAppService _walletAppService;
     private readonly IInvestmentAppService _investmentAppService;
@@ -116,6 +116,7 @@ public partial class InvestPageViewModel : ReactiveObject
     private readonly IWalletContext _walletContext;
     private readonly Func<BitcoinNetwork> _getNetwork;
     private readonly ILogger<InvestPageViewModel> _logger;
+    private readonly CompositeDisposable _disposables = new();
     // ── Project Reference ──
     public ProjectItemViewModel Project { get; }
 
@@ -278,7 +279,8 @@ public partial class InvestPageViewModel : ReactiveObject
             {
                 this.RaisePropertyChanged(nameof(IsInvestForm));
                 this.RaisePropertyChanged(nameof(IsWalletSelector));
-            });
+            })
+            .DisposeWith(_disposables);
 
         // Recompute totals + stages when amount changes
         this.WhenAnyValue(x => x.InvestmentAmount)
@@ -294,7 +296,8 @@ public partial class InvestPageViewModel : ReactiveObject
                 this.RaisePropertyChanged(nameof(IsAbovePenaltyThreshold));
                 this.RaisePropertyChanged(nameof(ThresholdStatusText));
                 RecomputeStages();
-            });
+            })
+            .DisposeWith(_disposables);
 
         // Recompute when subscription pattern changes
         this.WhenAnyValue(x => x.SelectedSubscriptionPattern)
@@ -302,7 +305,8 @@ public partial class InvestPageViewModel : ReactiveObject
             {
                 this.RaisePropertyChanged(nameof(CanSubmit));
                 this.RaisePropertyChanged(nameof(SubmitOpacity));
-            });
+            })
+            .DisposeWith(_disposables);
 
         // Initialize subscription plans if subscription type.
         // No auto-select: CanSubmit stays false until the user picks a plan,
@@ -324,7 +328,8 @@ public partial class InvestPageViewModel : ReactiveObject
             {
                 this.RaisePropertyChanged(nameof(StagesSummary));
                 RecomputeStages();
-            });
+            })
+            .DisposeWith(_disposables);
 
         // Initialize stages from project
         RecomputeStages();
@@ -829,4 +834,6 @@ public partial class InvestPageViewModel : ReactiveObject
             Project.ProjectName, FormattedAmount);
         _portfolioVm.AddInvestmentFromProject(Project, FormattedAmount);
     }
+
+    public void Dispose() => _disposables.Dispose();
 }

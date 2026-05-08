@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
@@ -219,7 +220,7 @@ public class ProjectItemViewModel : INotifyPropertyChanged
 /// FindProjects ViewModel -- connected to SDK for project discovery.
 /// Falls back to sample data if SDK call fails.
 /// </summary>
-public partial class FindProjectsViewModel : ReactiveObject
+public partial class FindProjectsViewModel : ReactiveObject, IDisposable
 {
     /// <summary>
     /// Process-wide cache of the last successful Latest() DTOs.
@@ -291,6 +292,8 @@ public partial class FindProjectsViewModel : ReactiveObject
     private readonly PortfolioViewModel _portfolioViewModel;
     private readonly ICurrencyService _currencyService;
     private readonly ILogger<FindProjectsViewModel> _logger;
+    private readonly CompositeDisposable _disposables = new();
+
 
     /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
     public string CurrencySymbol => _currencyService.Symbol;
@@ -426,7 +429,12 @@ public partial class FindProjectsViewModel : ReactiveObject
 
         sw.Restart();
         // When the portfolio investments change, re-check HasInvested flags
-        _portfolioViewModel.Investments.CollectionChanged += (_, _) => UpdateHasInvestedFlags();
+        Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
+                h => _portfolioViewModel.Investments.CollectionChanged += h,
+                h => _portfolioViewModel.Investments.CollectionChanged -= h)
+            .Throttle(TimeSpan.FromMilliseconds(250))
+            .Subscribe(_ => Avalonia.Threading.Dispatcher.UIThread.Post(UpdateHasInvestedFlags))
+            .DisposeWith(_disposables);
         var subscribeMs = sw.ElapsedMilliseconds;
 
         sw.Restart();
@@ -740,5 +748,10 @@ public partial class FindProjectsViewModel : ReactiveObject
 
         _logger.LogInformation("[Paged] LoadMore revealed={Take} visible={Visible} pending={Pending}",
             take, Projects.Count, pendingItems.Count);
+    }
+
+    public void Dispose()
+    {
+        _disposables.Dispose();
     }
 }
