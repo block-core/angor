@@ -535,7 +535,7 @@ public partial class CreateProjectView : UserControl
         var myProjectsView = this.FindAncestorOfType<MyProjectsView>();
         if (myProjectsView?.DataContext is MyProjectsViewModel myVm)
         {
-            myVm.ShowCreateWizard = false;
+            myVm.CancelCreateWizard();
         }
     }
 }

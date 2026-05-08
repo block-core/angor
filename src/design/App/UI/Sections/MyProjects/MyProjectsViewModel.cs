@@ -246,7 +246,19 @@ public partial class MyProjectsViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(TotalRaised));
     }
 
-    public void CloseCreateWizard() => ShowCreateWizard = false;
+    public void CloseCreateWizard()
+    {
+        ShowCreateWizard = false;
+    }
+
+    /// <summary>
+    /// Cancel the wizard: reset all data, delete the draft, and close.
+    /// </summary>
+    public void CancelCreateWizard()
+    {
+        CreateProjectVm.ResetWizard();
+        ShowCreateWizard = false;
+    }
 
     public void ClearProjects()
     {
@@ -259,7 +271,7 @@ public partial class MyProjectsViewModel : ReactiveObject
     public void ResetAfterNetworkSwitch()
     {
         CloseManageProject();
-        CloseCreateWizard();
+        CancelCreateWizard();
         SelectedEditProject = null;
         ClearProjects();
     }

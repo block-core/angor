@@ -479,12 +479,16 @@ public partial class MyProjectsView : UserControl, ISectionView
         }
     }
 
-    private void OpenCreateWizard(MyProjectsViewModel vm)
+    private async void OpenCreateWizard(MyProjectsViewModel vm)
     {
         CreateProjectViewModel wvm = vm.CreateProjectVm;
         // Only reset when there is no in-progress data: fresh start or after a successful deploy.
         if (!wvm.HasInProgressData)
-            wvm.ResetWizard();
+        {
+            bool loaded = await wvm.LoadDraftAsync();
+            if (!loaded)
+                wvm.ResetWizard();
+        }
         WireWizardCallbacks(vm, wvm);
         vm.LaunchCreateWizard();
         EnsureCreateWizardView(vm, resetVisualState: true);
