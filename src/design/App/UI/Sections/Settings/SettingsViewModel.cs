@@ -319,7 +319,8 @@ public partial class SettingsViewModel : ReactiveObject
     {
         try
         {
-            var rebuildResult = await _walletAppService.RebuildAllWalletBalancesAsync();
+            var currentWalletId = _walletContext.SelectedWallet?.Id;
+            var rebuildResult = await _walletAppService.RebuildAllWalletBalancesAsync(currentWalletId);
             if (rebuildResult.IsFailure)
             {
                 _logger.LogError("Failed to rebuild wallet balances after network switch: {Error}", rebuildResult.Error);
