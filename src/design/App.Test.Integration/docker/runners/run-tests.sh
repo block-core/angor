@@ -13,7 +13,7 @@ set -euo pipefail
 
 DISTRO_NAME="${DISTRO_NAME:-unknown}"
 TEST_SCOPE="${TEST_SCOPE:-all}"
-SRC_DIR="/src"
+SRC_DIR="/src/src"
 
 echo "============================================"
 echo "  Test runner: ${DISTRO_NAME}"
@@ -51,7 +51,11 @@ fi
 
 # ── Restore once ──────────────────────────────────────────────────────
 echo "Restoring NuGet packages..."
-dotnet restore "${SRC_DIR}/Avalonia.sln" --verbosity quiet
+# Restore individual test projects (not the full solution, which includes
+# Android/iOS/WASM projects requiring workloads not installed in the runner).
+dotnet restore "${SRC_DIR}/sdk/Angor.Sdk.Tests/Angor.Sdk.Tests.csproj" --verbosity quiet
+dotnet restore "${SRC_DIR}/shared/Angor.Shared.Tests/Angor.Shared.Tests.csproj" --verbosity quiet
+dotnet restore "${SRC_DIR}/avalonia/AngorApp.Tests/AngorApp.Tests.csproj" --verbosity quiet
 dotnet restore "${SRC_DIR}/design/App.Test.Integration/App.Test.Integration.csproj" --verbosity quiet
 
 FAILED=0

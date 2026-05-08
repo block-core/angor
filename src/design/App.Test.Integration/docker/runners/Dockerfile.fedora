@@ -22,7 +22,7 @@ RUN dnf install -y --setopt=install_weak_deps=False \
     && dnf clean all
 
 COPY run-tests.sh /run-tests.sh
-RUN chmod +x /run-tests.sh
+RUN sed -i 's/\r$//' /run-tests.sh && chmod +x /run-tests.sh
 
 WORKDIR /src
 ENTRYPOINT ["/run-tests.sh"]

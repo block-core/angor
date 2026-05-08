@@ -36,7 +36,7 @@ RUN /usr/share/dotnet/dotnet-install.sh --channel 8.0 --runtime dotnet --install
     && rm -f /tmp/dotnet-install.sh
 
 COPY run-tests.sh /run-tests.sh
-RUN chmod +x /run-tests.sh
+RUN sed -i 's/\r$//' /run-tests.sh && chmod +x /run-tests.sh
 
 WORKDIR /src
 ENTRYPOINT ["/run-tests.sh"]

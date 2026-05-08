@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY run-tests.sh /run-tests.sh
-RUN chmod +x /run-tests.sh
+RUN sed -i 's/\r$//' /run-tests.sh && chmod +x /run-tests.sh
 
 WORKDIR /src
 ENTRYPOINT ["/run-tests.sh"]
