@@ -78,7 +78,7 @@ The blockchain indexer provides address lookups, transaction history, and fee es
 The faucet gives users testnet signet coins so they can try out Angor without needing real bitcoin. There are two faucet mechanisms:
 
 **Web Faucet API** — a hosted HTTP endpoint that the Angor app calls directly when a user requests test coins:
-- **Live endpoint**: `https://faucettmp.angor.io/api/faucet/send/{address}/{amount}`
+- **Live endpoint**: `https://test.faucet.angor.io/api/faucet/send/{address}/{amount}`
 - The Angor app calls this automatically from the wallet UI to fund new wallets
 - Sends signet BTC from a pre-funded wallet to the requested address
 
