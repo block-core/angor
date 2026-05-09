@@ -2,8 +2,8 @@
 # run-tests.sh — Shared entrypoint for cross-distro test runners.
 #
 # Runs unit tests (Sdk, Shared, AngorApp) and integration tests against
-# the local signet stack. The infra stack must already be running on the
-# shared Docker network (angor-test-net).
+# the public Angor signet (default) or a local signet stack when
+# ANGOR_INDEXER_URL / ANGOR_RELAY_URLS / ANGOR_FAUCET_BASE_URL are set.
 #
 # Environment variables (set by docker-compose.tests.yml):
 #   TEST_SCOPE  — "unit" | "integration" | "all" (default: all)
@@ -20,34 +20,10 @@ echo "  Test runner: ${DISTRO_NAME}"
 echo "  Scope:       ${TEST_SCOPE}"
 echo "  .NET:        $(dotnet --version)"
 echo "  OS:          $(cat /etc/os-release 2>/dev/null | grep PRETTY_NAME | cut -d= -f2 | tr -d '"')"
+echo "  Indexer:     ${ANGOR_INDEXER_URL:-<public angor signet>}"
+echo "  Relays:      ${ANGOR_RELAY_URLS:-<public angor signet>}"
+echo "  Faucet:      ${ANGOR_FAUCET_BASE_URL:-<public angor signet>}"
 echo "============================================"
-
-# ── Wait for infra stack ──────────────────────────────────────────────
-wait_for_service() {
-    local host="$1" port="$2" label="$3" timeout="${4:-120}"
-    echo -n "Waiting for ${label} (${host}:${port})..."
-    local elapsed=0
-    while ! (echo > /dev/tcp/"$host"/"$port") 2>/dev/null; do
-        sleep 2
-        elapsed=$((elapsed + 2))
-        if [ "$elapsed" -ge "$timeout" ]; then
-            echo " TIMEOUT after ${timeout}s"
-            return 1
-        fi
-        echo -n "."
-    done
-    echo " ready (${elapsed}s)"
-}
-
-if [ "$TEST_SCOPE" != "unit" ]; then
-    wait_for_service angor-test-btc-node    38332 "Bitcoin RPC"
-    wait_for_service angor-test-fulcrum     50001 "Fulcrum"
-    wait_for_service angor-test-faucet-api  5500  "Faucet API"
-    wait_for_service angor-test-relay-1     7777  "Relay 1"
-    wait_for_service angor-test-relay-2     7777  "Relay 2"
-    wait_for_service angor-test-mempool-api 8999  "Mempool API"
-    echo ""
-fi
 
 # ── Restore once ──────────────────────────────────────────────────────
 echo "Restoring NuGet packages..."

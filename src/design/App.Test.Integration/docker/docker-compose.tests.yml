@@ -19,22 +19,16 @@
 
 name: angor-distro-tests
 
-networks:
-  angor-test-net:
-    external: true
-
 x-test-runner: &test-runner-common
   volumes:
-    # Mount the entire src/ tree read-only; NuGet cache is container-local
+    # Mount the entire repo tree; NuGet cache is container-local
     - ../../../../:/src
     # Writable NuGet cache per container
     - nuget-cache:/root/.nuget
-  environment:
+  environment: &test-env
     TEST_SCOPE: ${TEST_SCOPE:-all}
     DOTNET_CLI_TELEMETRY_OPTOUT: "1"
     DOTNET_NOLOGO: "1"
-  networks:
-    - angor-test-net
   # Don't restart on failure — we want the exit code
   restart: "no"
 
@@ -50,9 +44,7 @@ services:
       context: ./runners
       dockerfile: Dockerfile.ubuntu
     environment:
-      TEST_SCOPE: ${TEST_SCOPE:-all}
-      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
-      DOTNET_NOLOGO: "1"
+      <<: *test-env
       DISTRO_NAME: ubuntu-24.04
 
   fedora:
@@ -62,9 +54,7 @@ services:
       context: ./runners
       dockerfile: Dockerfile.fedora
     environment:
-      TEST_SCOPE: ${TEST_SCOPE:-all}
-      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
-      DOTNET_NOLOGO: "1"
+      <<: *test-env
       DISTRO_NAME: fedora-41
 
   debian:
@@ -74,7 +64,5 @@ services:
       context: ./runners
       dockerfile: Dockerfile.debian
     environment:
-      TEST_SCOPE: ${TEST_SCOPE:-all}
-      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
-      DOTNET_NOLOGO: "1"
+      <<: *test-env
       DISTRO_NAME: debian-12
