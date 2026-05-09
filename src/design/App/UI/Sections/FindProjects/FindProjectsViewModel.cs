@@ -449,6 +449,7 @@ public partial class FindProjectsViewModel : ReactiveObject
             SeedPaged(mapped);
             UpdateHasInvestedFlags();
             seeded = mapped.Count;
+            IsInitialLoad = false;
         }
         var seedMs = sw.ElapsedMilliseconds;
 
