@@ -82,12 +82,12 @@ public partial class CreateProjectStep3View : UserControl
         {
             _bannerUrlSub = vm.WhenAnyValue(x => x.BannerUrl)
                 .Throttle(TimeSpan.FromMilliseconds(400))
-                .ObserveOn(RxApp.MainThreadScheduler)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Subscribe(url => UpdatePreviewFromUrl(url, true));
 
             _profileUrlSub = vm.WhenAnyValue(x => x.ProfileUrl)
                 .Throttle(TimeSpan.FromMilliseconds(400))
-                .ObserveOn(RxApp.MainThreadScheduler)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Subscribe(url => UpdatePreviewFromUrl(url, false));
 
             // Show current preview if URLs are already set (e.g. debug prefill)
