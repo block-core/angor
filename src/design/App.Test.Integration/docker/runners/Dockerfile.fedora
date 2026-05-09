@@ -1,0 +1,28 @@
+# Fedora 41 — .NET 9 test runner
+FROM fedora:41
+
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
+ENV DOTNET_NOLOGO=1
+
+# Install .NET 9 SDK + dependencies for headless Avalonia
+RUN dnf install -y --setopt=install_weak_deps=False \
+        dotnet-sdk-9.0 \
+        dotnet-runtime-8.0 \
+        libicu \
+        openssl-libs \
+        libX11 \
+        libX11-xcb \
+        libxcb \
+        libXrandr \
+        libXi \
+        mesa-libGL \
+        fontconfig \
+        freetype \
+        xorg-x11-server-Xvfb \
+    && dnf clean all
+
+COPY run-tests.sh /run-tests.sh
+RUN sed -i 's/\r$//' /run-tests.sh && chmod +x /run-tests.sh
+
+WORKDIR /src
+ENTRYPOINT ["/run-tests.sh"]

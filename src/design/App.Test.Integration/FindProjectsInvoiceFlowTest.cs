@@ -245,7 +245,7 @@ public class FindProjectsInvoiceFlowTest
         Log($"[STEP 6] Invoice address: {invoiceAddress}");
 
         using var http = new HttpClient();
-        var faucetResponse = await http.GetAsync($"https://faucettmp.angor.io/api/faucet/send/{invoiceAddress}/2");
+        var faucetResponse = await http.GetAsync($"https://test.faucet.angor.io/api/faucet/send/{invoiceAddress}/2");
         faucetResponse.IsSuccessStatusCode.Should().BeTrue(
             $"faucet should accept the payment request. Status: {faucetResponse.StatusCode}, Body: {await faucetResponse.Content.ReadAsStringAsync()}");
         Log("[STEP 6] Faucet accepted payment to invoice address.");

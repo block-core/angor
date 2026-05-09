@@ -253,6 +253,43 @@ Width tokens live in `UI/Themes/V2/Resources/Tokens.axaml` (`ModalMinWidth`, `Mo
 - **`gh-deploy-test.yml`**: Triggered by push to main; deploys to test.angor.io
 - **`pr-deploy.yml`**: Manual workflow; deploys a PR to debug.angor.io
 
+## Cross-Distro Docker Test Runners
+
+Integration tests can be run inside containerized Linux distros (Ubuntu, Fedora, Debian, Mint, Arch, openSUSE, Rocky, Manjaro) to catch distro-specific runtime issues.
+
+Infrastructure lives in `src/design/App.Test.Integration/docker/runners/`.
+
+### Running tests
+
+```bash
+# Build a distro image
+docker build -t angor-distro-tests-ubuntu -f src/design/App.Test.Integration/docker/runners/Dockerfile.ubuntu src/design/App.Test.Integration/docker/runners
+
+# Create a container
+docker run -d --name angor-ubuntu-runner --entrypoint sleep -v "$(pwd):/src" -e ANGOR_NETWORK=testnet -e DISPLAY=:99 angor-distro-tests-ubuntu infinity
+docker exec angor-ubuntu-runner bash -c 'Xvfb :99 -screen 0 1024x768x24 &'
+
+# Restore, build, run a single test
+docker exec angor-ubuntu-runner dotnet restore /src/src/design/App.Test.Integration/App.Test.Integration.csproj
+docker exec angor-ubuntu-runner dotnet build /src/src/design/App.Test.Integration/App.Test.Integration.csproj --no-restore
+docker exec angor-ubuntu-runner dotnet test /src/src/design/App.Test.Integration/App.Test.Integration.csproj --filter "FullyQualifiedName~App.Test.Integration.SmokeTest" --no-restore --no-build --logger "console;verbosity=normal"
+```
+
+### IMPORTANT: Always capture full failure logs
+
+When running tests, **always pipe full output to a log file** so failures can be investigated after the fact. Do NOT discard output with `Select-Object -Last N` or similar truncation. Example:
+
+```powershell
+docker exec angor-ubuntu-runner dotnet test ... 2>&1 | Out-File "C:\Users\dan\AppData\Local\Temp\opencode\test-ubuntu-FundAndRecoverTest.log" -Encoding utf8
+```
+
+Transient test failures must be investigated — they may indicate race conditions or thread-safety bugs in the app, not just signet/indexer lag. Always preserve the full assertion message and stack trace.
+
+### Tests to skip
+
+- **BigFundTest, BigInvestTest** — too long for distro validation
+- **OneClickInvestLightning*Test, OneClickInvestOnChain*Test** — require ThunderHub/LND infrastructure
+
 ## Common Pitfalls
 
 - **Thread affinity**: Pushing to `BehaviorSubject` from background threads will crash Avalonia. Use `RxApp.MainThreadScheduler.Schedule(() => subject.OnNext(value))`.
