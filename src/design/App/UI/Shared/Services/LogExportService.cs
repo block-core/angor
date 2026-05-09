@@ -10,6 +10,7 @@ using Angor.Shared.Services;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
+using Nostr.Client.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace App.UI.Shared.Services;
@@ -113,12 +114,10 @@ public class LogExportService : ILogExportService
         if (npub.Length == 64 && npub.All(c => "0123456789abcdef".Contains(c)))
             return npub;
 
-        // Convert bech32 npub to hex
+        // Convert bech32 npub to hex using Nostr.Client
         if (npub.StartsWith("npub1"))
         {
-            var encoder = new Bech32Encoder("npub");
-            var data = encoder.Decode(npub, out _);
-            return Encoders.Hex.EncodeData(data);
+            return NostrConverter.ToHex(npub, out _);
         }
 
         return null;
