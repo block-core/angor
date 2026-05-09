@@ -66,3 +66,53 @@ services:
     environment:
       <<: *test-env
       DISTRO_NAME: debian-12
+
+  mint:
+    <<: *test-runner-common
+    container_name: angor-test-runner-mint
+    build:
+      context: ./runners
+      dockerfile: Dockerfile.mint
+    environment:
+      <<: *test-env
+      DISTRO_NAME: mint-22
+
+  arch:
+    <<: *test-runner-common
+    container_name: angor-test-runner-arch
+    build:
+      context: ./runners
+      dockerfile: Dockerfile.arch
+    environment:
+      <<: *test-env
+      DISTRO_NAME: arch-rolling
+
+  opensuse:
+    <<: *test-runner-common
+    container_name: angor-test-runner-opensuse
+    build:
+      context: ./runners
+      dockerfile: Dockerfile.opensuse
+    environment:
+      <<: *test-env
+      DISTRO_NAME: opensuse-tumbleweed
+
+  rocky:
+    <<: *test-runner-common
+    container_name: angor-test-runner-rocky
+    build:
+      context: ./runners
+      dockerfile: Dockerfile.rocky
+    environment:
+      <<: *test-env
+      DISTRO_NAME: rocky-9
+
+  manjaro:
+    <<: *test-runner-common
+    container_name: angor-test-runner-manjaro
+    build:
+      context: ./runners
+      dockerfile: Dockerfile.manjaro
+    environment:
+      <<: *test-env
+      DISTRO_NAME: manjaro-rolling
