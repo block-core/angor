@@ -108,13 +108,15 @@ public class WalletOperations : IWalletOperations
             // Add existing transaction outputs (replaces ContinueToBuild).
             // OP_RETURN outputs are unspendable and carry zero value, but
             // TransactionBuilder.Send() enforces dust-threshold checks on
-            // them anyway.  Exclude them from the builder and splice them
-            // back into the signed transaction afterward.
-            var opReturnOutputs = new List<TxOut>();
-            foreach (var output in transaction.Outputs)
+            // them anyway.  Exclude them from the builder and re-insert them
+            // at their original positions in the signed transaction afterward
+            // so the protocol-expected output order is preserved.
+            var opReturnIndices = new List<(int Index, TxOut Output)>();
+            for (int i = 0; i < transaction.Outputs.Count; i++)
             {
+                var output = transaction.Outputs[i];
                 if (output.ScriptPubKey.IsUnspendable)
-                    opReturnOutputs.Add(output);
+                    opReturnIndices.Add((i, output));
                 else
                     builder.Send(output.ScriptPubKey, output.Value);
             }
@@ -125,10 +127,13 @@ public class WalletOperations : IWalletOperations
 
             var signTransaction = builder.BuildTransaction(true);
 
-            // Re-insert OP_RETURN outputs that were excluded from the builder.
-            foreach (var opReturn in opReturnOutputs)
+            // Re-insert OP_RETURN outputs at their original positions.
+            foreach (var (index, opReturn) in opReturnIndices)
             {
-                signTransaction.Outputs.Add(opReturn);
+                if (index < signTransaction.Outputs.Count)
+                    signTransaction.Outputs.Insert(index, opReturn);
+                else
+                    signTransaction.Outputs.Add(opReturn);
             }
 
             // find the coins used
@@ -203,6 +208,8 @@ public class WalletOperations : IWalletOperations
         foreach (var coin in coins.coins)
         {
             if (clonedTransaction.Inputs.Any(x => x.PrevOut == coin.Outpoint))
+                
+                
                 continue;
             var txin = new TxIn(coin.Outpoint, null);
             txin.WitScript = new WitScript(Op.GetPushOp(new byte[72]), Op.GetPushOp(new byte[33]));
