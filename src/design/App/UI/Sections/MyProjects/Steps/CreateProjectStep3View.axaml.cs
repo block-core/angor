@@ -300,8 +300,8 @@ public partial class CreateProjectStep3View : UserControl
         var iconName = isBanner ? "BannerUploadIcon" : "ProfileUploadIcon";
         var spinnerName = isBanner ? "BannerUploadSpinner" : "ProfileUploadSpinner";
 
-        var icon = this.FindControl<Projektanker.Icons.Avalonia.Icon>(iconName);
-        var spinner = this.FindControl<Projektanker.Icons.Avalonia.Icon>(spinnerName);
+        var icon = this.FindControl<Optris.Icons.Avalonia.Icon>(iconName);
+        var spinner = this.FindControl<Optris.Icons.Avalonia.Icon>(spinnerName);
 
         if (icon != null) icon.IsVisible = !inProgress;
         if (spinner != null) spinner.IsVisible = inProgress;

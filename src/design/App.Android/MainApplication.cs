@@ -3,6 +3,7 @@ using Android.Runtime;
 using Avalonia;
 using Avalonia.Android;
 using Microsoft.Extensions.DependencyInjection;
+using ReactiveUI.Avalonia;
 
 namespace App.Android;
 
@@ -22,6 +23,7 @@ public class MainApplication : AvaloniaAndroidApplication<global::App.App>
         };
 
         return base.CustomizeAppBuilder(builder)
-            .WithInterFont();
+            .WithInterFont()
+            .UseReactiveUI(b => b.WithAvalonia());
     }
 }

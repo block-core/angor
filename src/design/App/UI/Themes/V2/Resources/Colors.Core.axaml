@@ -152,12 +152,11 @@
             <SolidColorBrush x:Key="LightSecondaryButtonBorder" Color="{StaticResource Stroke}" />
 
             <!-- Decorative Brushes -->
-            <!-- Tiled logo background pattern (higher opacity on dark background, matching web: opacity .08) -->
-            <VisualBrush x:Key="TiledLogoBrush" Opacity="0.08" DestinationRect="0,0,80,86" Stretch="Uniform" TileMode="Tile">
-                <VisualBrush.Visual>
-                    <Svg Path="/Assets/logo.svg" />
-                </VisualBrush.Visual>
-            </VisualBrush>
+            <!-- Tiled logo background pattern (higher opacity on dark background, matching web: opacity .08).
+                 Pre-rendered to PNG (2x for HiDPI) — VisualBrush+Svg regressed in Av11.3.10/Av12 (#20515),
+                 so we use ImageBrush. Tile cell is 80x86 in target coords; PNG asset is 160x172. -->
+            <ImageBrush x:Key="TiledLogoBrush" Source="/Assets/logo-tile-80x86.png" Opacity="0.08"
+                        TileMode="Tile" SourceRect="0,0,160,172" DestinationRect="0,0,80,86" Stretch="Uniform" />
 
             <LinearGradientBrush x:Key="BitcoinWash" StartPoint="0%,0%" EndPoint="100%,100%">
                 <GradientStops>
@@ -310,12 +309,11 @@
                 </GradientStops>
             </LinearGradientBrush>
             
-            <!-- Tiled logo background pattern (higher opacity on dark background, matching web: opacity .08) -->
-            <VisualBrush x:Key="TiledLogoBrush" Opacity="0.08" DestinationRect="0,0,80,86" Stretch="Uniform" TileMode="Tile">
-                <VisualBrush.Visual>
-                    <Svg Path="/Assets/logo.svg" />
-                </VisualBrush.Visual>
-            </VisualBrush>
+            <!-- Tiled logo background pattern (higher opacity on dark background, matching web: opacity .08).
+                 Pre-rendered to PNG (2x for HiDPI) — VisualBrush+Svg regressed in Av11.3.10/Av12 (#20515),
+                 so we use ImageBrush. Tile cell is 80x86 in target coords; PNG asset is 160x172. -->
+            <ImageBrush x:Key="TiledLogoBrush" Source="/Assets/logo-tile-80x86.png" Opacity="0.08"
+                        TileMode="Tile" SourceRect="0,0,160,172" DestinationRect="0,0,80,86" Stretch="Uniform" />
 
             <!-- Shadows — matched to Vue CSS dark mode -->
             <!-- Vue dark nav: subtle glow -->
@@ -439,35 +437,12 @@
           repeating-linear-gradient(45deg, transparent 2px, rgba(255,255,255,.02) 4px)
           repeating-linear-gradient(-45deg, transparent 2px, rgba(0,0,0,.01) 4px)
         Applied as a full-span non-interactive overlay over the entire ShellView.
+
+        Pre-baked to a 4x4 logical / 16x16 px (4x for HiDPI) PNG instead of DrawingBrush
+        because Av12 DrawingBrush leaks memory when used as a full-screen overlay (#21049).
     -->
-    <DrawingBrush x:Key="AppTextureBrush" TileMode="Tile" DestinationRect="0,0,4,4" Stretch="None">
-        <DrawingBrush.Drawing>
-            <DrawingGroup>
-                <GeometryDrawing>
-                    <GeometryDrawing.Pen>
-                        <Pen Brush="#05FFFFFF" Thickness="1" />
-                    </GeometryDrawing.Pen>
-                    <GeometryDrawing.Geometry>
-                        <GeometryGroup>
-                            <LineGeometry StartPoint="0,2" EndPoint="2,0" />
-                            <LineGeometry StartPoint="2,4" EndPoint="4,2" />
-                        </GeometryGroup>
-                    </GeometryDrawing.Geometry>
-                </GeometryDrawing>
-                <GeometryDrawing>
-                    <GeometryDrawing.Pen>
-                        <Pen Brush="#03000000" Thickness="1" />
-                    </GeometryDrawing.Pen>
-                    <GeometryDrawing.Geometry>
-                        <GeometryGroup>
-                            <LineGeometry StartPoint="2,0" EndPoint="4,2" />
-                            <LineGeometry StartPoint="0,2" EndPoint="2,4" />
-                        </GeometryGroup>
-                    </GeometryDrawing.Geometry>
-                </GeometryDrawing>
-            </DrawingGroup>
-        </DrawingBrush.Drawing>
-    </DrawingBrush>
+    <ImageBrush x:Key="AppTextureBrush" Source="/Assets/app-texture-4x4.png"
+                TileMode="Tile" SourceRect="0,0,16,16" DestinationRect="0,0,4,4" Stretch="None" />
     
     <!-- CheckBox overrides -->
     <StaticResource x:Key="CheckBoxCheckBackgroundFillChecked" ResourceKey="Accent" />

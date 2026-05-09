@@ -161,3 +161,80 @@ Upgrading from Avalonia 11.3.12 to Avalonia 12.0.2 to unlock 3x Android performa
 - **Idle CPU**: 20x reduction (better battery life)
 - **Rendering**: up to 1,867% improvement in complex scenes
 - **Built-in navigation**: potential future simplification of shell/section navigation
+
+---
+
+## Phase 7: Post-Upgrade Runtime Issues (DISCOVERED DURING TESTING)
+
+After completing Phases 1-5, the app builds cleanly and launches but the desktop window renders nothing visible (transparent/black with no UI controls). Window chrome appears, title bar correct, but the entire ShellView's content area is empty.
+
+### 7a. Root cause RESOLVED — `Svg.Controls.Skia.Avalonia` 11.x incompatible with Av12
+
+**Symptom:** Entire `ShellView` rendered as transparent. No exceptions. No log warnings (Avalonia logs at `Warning` level over Visual/Layout/Control/Binding areas were clean).
+
+**Investigation:** Bisect-by-stripping. Replaced `MainWindow` content with `<Border Background="HotPink"/>` → rendered. Therefore bug is inside `ShellView`. Stripped `ShellView` to a Panel + Grid skeleton with HotPink/DeepPink/White borders, then added pieces back one row/column at a time. Sidebar fine. ModalOverlay/ToastOverlay (incl. `<i:Icon>`, ModalBackdrop, ToastBackground, ToastShadow) all fine. ContentControl with bound HomeView — fine. **Adding the desktop header back → transparent.** Stripped header to `<TextBlock>` only → still transparent. Replaced DockPanel with `<Border>+<TextBlock>` → still transparent. **Removed the `<Svg Path="/Assets/logo.svg"/>` → rendered correctly.**
+
+**Root cause:** `Svg.Controls.Skia.Avalonia` 11.3.6.2 references `Avalonia.Base 11.3.6.0` / `Avalonia.Controls 11.3.6.0`. In Av12, the package's internal `<Svg>` control template silently fails to apply, and the failure cascades up the visual tree, making the entire containing UserControl render zero pixels — with no exception or log warning.
+
+**Fix:** Bump `Svg.Controls.Skia.Avalonia` from `11.3.6.2` → `12.0.0.6` in `src/Directory.Packages.props`. Done.
+
+### 7b. ReactiveUI 23.x requires explicit initialization
+
+**Symptom:** App crashes on first `WhenAnyValue` call with:
+```
+System.InvalidOperationException: ReactiveUI has not been initialized.
+You must initialize ReactiveUI using the builder pattern.
+```
+
+**Root cause:** ReactiveUI 23.x removed implicit auto-init. Must be wired into the AppBuilder explicitly.
+
+**Fix:** Add `.UseReactiveUI(b => b.WithAvalonia())` to `Program.cs:BuildAvaloniaApp()`. Requires `using ReactiveUI.Avalonia;`. Done.
+
+### 7c. Pattern: silent transparent rendering = check third-party Av11 packages
+
+Two third-party packages caused the same class of bug during the upgrade:
+1. `Projektanker.Icons.Avalonia` 9.x — fixed by switching to `Optris.Icons.Avalonia` 12.0.6 (the same package republished under a new owner with Av12 support)
+2. `Svg.Controls.Skia.Avalonia` 11.3.6.2 — fixed by bumping to 12.0.0.6
+
+Both packages had Av11-only internal control templates that broke under Av12 with no exception, no log warning, and produced silent-transparent rendering of the entire enclosing visual tree. **Lesson for future Avalonia majors: when faced with silent transparent rendering and clean logs, audit all third-party control packages first** — pick out anything whose dll references `Avalonia.Base v<old>.0.0` and look for a major-version bump on NuGet.
+
+### 7d. Items investigated but NOT confirmed as causing the rendering bug
+
+These were examined during diagnosis. Some were tested and ruled out as the cause of the transparent-rendering bug — but the underlying Av12 issues are still real and should still be fixed for performance/correctness reasons unrelated to rendering.
+
+#### `VisualBrush` regression — [AvaloniaUI/Avalonia#20515](https://github.com/AvaloniaUI/Avalonia/issues/20515)
+
+`VisualBrush` with `TileMode="Tile"` + `DestinationRect` regressed in Avalonia 11.3.10 and is **still broken in 12.x** (open `bug` + `regression` label). Affects `TiledLogoBrush` in `Colors.Core.axaml:156` and `:314`.
+
+**Tested:** Neutralizing `TiledLogoBrush` (VisualBrush → SolidColorBrush) in isolation did NOT fix the transparency bug — so this is not the cause of Phase 7's primary symptom. But the brush still won't render its tiled pattern correctly under Av12. **TODO:** Replace with `ImageBrush` pointing at a pre-rendered PNG, or a `DrawingBrush` (subject to leak below).
+
+#### `DrawingBrush` memory leak — [#21049](https://github.com/AvaloniaUI/Avalonia/issues/21049)
+
+`AppTextureBrush` (`Colors.Core.axaml:443`) is a `DrawingBrush` used as a full-screen overlay. **Tested:** Neutralizing it (DrawingBrush → SolidColorBrush) did NOT fix the transparency bug. But it still leaks memory in Av12. **TODO:** Replace with a tiled `ImageBrush` pointing at a pre-baked 4x4 PNG.
+
+#### `IActivityApplicationLifetime` for Android
+
+`App.axaml.cs:69` only checks for `ISingleViewApplicationLifetime`. Av12 Android uses the new `IActivityApplicationLifetime` with a `MainViewFactory` property. Not related to the desktop rendering bug, but required for Android to launch correctly:
+
+```csharp
+else if (ApplicationLifetime is IActivityApplicationLifetime activity)
+    activity.MainViewFactory = () => new ShellView();
+```
+
+#### Compiled bindings now default
+
+Av12 sets `<AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>` as the new default. Every `{Binding}` without an `x:DataType` ancestor will silently fail to compile. **Tested:** This was NOT the cause of the transparent-rendering bug (the bound `ContentControl` to `CurrentSectionContent` worked fine in our stub). But it's still worth auditing `.axaml` files for `{Binding}` without `x:DataType` to catch any silently-broken bindings the user might encounter elsewhere.
+
+#### 932 `Color`-as-`Brush` usages
+
+Audit was a non-issue. Av12 docs don't list it as breaking. Stylistic only.
+
+### Remaining Phase 7 work
+
+1. ~~Bump `Svg.Controls.Skia.Avalonia` to 12.0.0.6~~ ✅ done
+2. ~~Wire `UseReactiveUI` in `Program.cs`~~ ✅ done
+3. ~~Add `IActivityApplicationLifetime` branch to `App.axaml.cs:69` for Android~~ ✅ done
+4. ~~Replace `TiledLogoBrush` (#20515 workaround) — pre-baked `ImageBrush` of `/Assets/logo-tile-80x86.png` (160x172 @ 2x for HiDPI)~~ ✅ done
+5. ~~Replace `AppTextureBrush` (#21049 leak) — pre-baked `ImageBrush` of `/Assets/app-texture-4x4.png` (16x16 @ 4x for HiDPI)~~ ✅ done
+6. Optional audit: `{Binding}` usages without `x:DataType`
+7. Install Android workload for .NET 10, deploy to device, measure FPS

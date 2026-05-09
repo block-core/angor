@@ -5,8 +5,8 @@ using Avalonia.Headless;
 using Avalonia.Markup.Xaml.Styling;
 using App.Composition;
 using App.Test.Integration.Helpers;
-using Projektanker.Icons.Avalonia;
-using Projektanker.Icons.Avalonia.FontAwesome;
+using Optris.Icons.Avalonia;
+using Optris.Icons.Avalonia.FontAwesome;
 
 [assembly: AvaloniaTestApplication(typeof(App.Test.Integration.TestAppBuilder))]
 
