@@ -9,6 +9,7 @@ using App.UI.Shared;
 using App.UI.Shell;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
+using ReactiveUI.Builder;
 
 namespace App;
 
@@ -56,6 +57,11 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        // ReactiveUI 23.x requires explicit builder initialization
+        RxAppBuilder.CreateReactiveUIBuilder()
+            .WithCoreServices()
+            .BuildApp();
+
         var lifetime = ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
         var profileName = ProfileNameResolver.GetProfileName(lifetime?.Args);
 
