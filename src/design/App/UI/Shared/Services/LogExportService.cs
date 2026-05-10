@@ -171,7 +171,7 @@ public class LogExportService : ILogExportService
         foreach (var server in servers)
         {
             var result = await _blossomUploadService.UploadAsync(
-                server.Url, encryptedBytes, "application/octet-stream", ct);
+                server.Url, encryptedBytes, "application/octet-stream", cancellationToken: ct);
 
             if (result.IsSuccess)
                 return result;
