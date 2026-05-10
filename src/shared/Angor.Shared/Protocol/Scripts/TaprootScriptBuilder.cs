@@ -14,7 +14,11 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
     {
         var treeInfo = BuildTaprootSpendInfo(scripts);
 
-        var address = treeInfo.OutputPubKey.GetAddress(NetworkMapper.Map(network));
+        // Bypass treeInfo.OutputPubKey which is computed by NBitcoin's buggy
+        // ComputeTapTweak on .NET 10 ARM64. Recompute the output key ourselves.
+        var outputKeyBytes = TaprootKeyHelper.GetTaprootOutputKeyBytes(treeInfo.InternalPubKey, treeInfo.MerkleRoot);
+        var taprootPubKey = new NBitcoin.TaprootPubKey(outputKeyBytes);
+        var address = taprootPubKey.GetAddress(NetworkMapper.Map(network));
         var scriptBytes = address.ScriptPubKey.ToBytes();
 
         return new Script(scriptBytes);
@@ -119,6 +123,11 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
 
     public static TaprootInternalPubKey CreateUnspendableInternalKey()
     {
+        // todo: double check this key is unspendable
+        // https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#constructing-and-spending-taproot-outputs
+        // this is a key that can not be spent, we will always spend a tapscript using scripts
+        //var taprootKey = TaprootInternalPubKey.Parse("0x50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0");
+
         // 1. Calculate the SHA256 of a known constant
         var sha256 = Hashes.SHA256(Encoding.UTF8.GetBytes("Angor Unspendable Taproot Key"));
 

@@ -39,17 +39,29 @@ public static class TaprootKeyHelper
 
         // 2. Build the internal key and ECXOnlyPubKey from x-only bytes
         var internalKey = new TaprootInternalPubKey(xBytes);
+
+        return GetTaprootOutputKeyBytes(internalKey, null);
+    }
+
+    /// <summary>
+    /// Returns the 32-byte x-only taproot output key for a given internal key and
+    /// optional merkle root. Equivalent to
+    /// <c>internalKey.GetTaprootFullPubKey(merkleRoot).OutputKey.ToBytes()</c>.
+    /// </summary>
+    public static byte[] GetTaprootOutputKeyBytes(TaprootInternalPubKey internalKey, uint256? merkleRoot)
+    {
+        var xBytes = internalKey.ToBytes();
+
         ECXOnlyPubKey.TryCreate(xBytes, out var xonly);
 
-        // 3. Compute the tap tweak: tagged_hash("TapTweak", internal_key)
-        //    ComputeTapTweak uses stackalloc internally and returns a new byte[]
-        var tweak = internalKey.ComputeTapTweak(null);
+        // Compute the tap tweak: tagged_hash("TapTweak", internal_key || merkle_root)
+        var tweak = internalKey.ComputeTapTweak(merkleRoot);
 
-        // 4. Add the tweak to the internal key: output_key = internal_key + tweak * G
+        // Add the tweak to the internal key: output_key = internal_key + tweak * G
         var tweakedPubKey = xonly!.AddTweak(tweak);
         var outputXonly = tweakedPubKey.ToXOnlyPubKey(out _);
 
-        // 5. Serialize the output key
+        // Serialize the output key
         var result = new byte[32];
         outputXonly.WriteToSpan(result);
         return result;
