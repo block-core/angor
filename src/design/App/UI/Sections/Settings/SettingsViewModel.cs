@@ -98,7 +98,7 @@ public partial class SettingsViewModel : ReactiveObject
     // Log export
     [Reactive] private bool isExportingLogs;
 
-    public bool CanExportLogs => IsDebugMode && _walletContext.SelectedWallet != null && !IsExportingLogs;
+    public bool CanExportLogs => _walletContext.SelectedWallet != null && !IsExportingLogs;
 
     private readonly PrototypeSettings _prototypeSettings;
 

@@ -125,8 +125,17 @@ public class LogExportService : ILogExportService
 
     private async Task<Result<byte[]>> CreateLogZipAsync(CancellationToken ct)
     {
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        if (string.IsNullOrWhiteSpace(localAppData))
+        {
+            localAppData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        }
+
+        if (string.IsNullOrWhiteSpace(localAppData))
+            return Result.Failure<byte[]>("Cannot determine application data directory");
+
         var logsDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            localAppData,
             "Angor", "logs");
 
         if (!Directory.Exists(logsDir))

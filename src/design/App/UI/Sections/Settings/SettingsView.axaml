@@ -599,14 +599,13 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ═══ 8. Export Logs (debug mode only) ═══ -->
+                <!-- ═══ 8. Export Logs ═══ -->
                 <Border Background="{DynamicResource CardSurface}"
                         BorderBrush="{DynamicResource Stroke}"
                         BorderThickness="1"
                         CornerRadius="16"
                         ClipToBounds="True"
-                        BoxShadow="{DynamicResource ItemShadow}"
-                        IsVisible="{Binding IsDebugMode}">
+                        BoxShadow="{DynamicResource ItemShadow}">
                     <StackPanel>
                         <Border BorderBrush="{DynamicResource Stroke}"
                                 BorderThickness="0,0,0,1"
