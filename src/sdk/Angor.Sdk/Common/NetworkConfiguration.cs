@@ -139,7 +139,8 @@ public class NetworkConfiguration : INetworkConfiguration
         new()
         {
             // Blossom-compatible servers (NIP-B7 / BUD-02)
-            new() { Name = "nostr.build", Url = "https://nostr.build", IsPrimary = true },
+            new() { Name = "Angor Blossom", Url = "https://blossom.angor.io", IsPrimary = true },
+            new() { Name = "nostr.build", Url = "https://nostr.build", IsPrimary = false },
             new() { Name = "blossom.primal.net", Url = "https://blossom.primal.net", IsPrimary = false },
             new() { Name = "nostria (Blossom)", Url = "https://mibo.eu.nostria.app", IsPrimary = false },
         };

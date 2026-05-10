@@ -12,6 +12,7 @@
   "description": "",
   "dependencies": {
     "@noble/hashes": "^2.2.0",
-    "nostr-tools": "^2.23.3"
+    "nostr-tools": "^2.23.3",
+    "websocket-polyfill": "^1.0.0"
   }
 }
