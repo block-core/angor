@@ -106,7 +106,7 @@ public class LogExportService : ILogExportService
         var attr = assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
             .FirstOrDefault(a => a.Key == "SupportNpub");
 
-        var npub = attr?.Value;
+        var npub = attr?.Value?.Trim();
         if (string.IsNullOrWhiteSpace(npub))
             return null;
 
@@ -167,6 +167,7 @@ public class LogExportService : ILogExportService
         if (servers.Count == 0)
             return Result.Failure<string>("No Blossom servers configured");
 
+        var errors = new List<string>();
         foreach (var server in servers)
         {
             var result = await _blossomUploadService.UploadAsync(
@@ -175,10 +176,12 @@ public class LogExportService : ILogExportService
             if (result.IsSuccess)
                 return result;
 
+            var error = $"{server.Url}: {result.Error}";
+            errors.Add(error);
             _logger.LogWarning("Blossom upload to {Server} failed: {Error}", server.Url, result.Error);
         }
 
-        return Result.Failure<string>("All Blossom servers failed");
+        return Result.Failure<string>($"All Blossom servers failed. {string.Join("; ", errors)}");
     }
 
     private string BuildDmContent(string blobUrl)
