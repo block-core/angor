@@ -1,5 +1,5 @@
 using Angor.Data.Documents.Interfaces;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 
 namespace App.UI.Sections.MyProjects;
 
@@ -18,7 +18,8 @@ public class ProjectDraftStorage
     public async Task<Result> SaveAsync(ProjectDraft draft)
     {
         draft.UpdatedAt = DateTime.UtcNow;
-        return await _collection.UpsertAsync(d => d.WalletId, draft);
+        var result = await _collection.UpsertAsync(d => d.WalletId, draft);
+        return result.IsSuccess ? Result.Success() : Result.Failure(result.Error);
     }
 
     public async Task<Result<ProjectDraft?>> LoadAsync(string walletId)
@@ -28,6 +29,7 @@ public class ProjectDraftStorage
 
     public async Task<Result> DeleteAsync(string walletId)
     {
-        return await _collection.DeleteAsync(walletId);
+        var result = await _collection.DeleteAsync(walletId);
+        return result.IsSuccess ? Result.Success() : Result.Failure(result.Error);
     }
 }

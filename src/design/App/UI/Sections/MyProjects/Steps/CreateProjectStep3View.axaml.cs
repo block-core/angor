@@ -9,7 +9,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
-using Blockcore.NBitcoin;
+using NBitcoin;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -337,7 +337,7 @@ public partial class CreateProjectStep3View : UserControl
             var walletWords = new WalletWords
             {
                 Words = words,
-                Passphrase = passphrase.HasValue ? passphrase.Value : null
+                Passphrase = passphrase
             };
 
             var derivation = App.Services.GetRequiredService<IDerivationOperations>();
