@@ -203,18 +203,20 @@ public partial class PrototypeSettings : ReactiveObject
                 var result = await _store.Load<PrototypeSettingsData>(SettingsKey);
                 return result;
             })
-            .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe(result =>
             {
-                if (result.IsSuccess)
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
-                    IsDebugMode = result.Value.IsDebugMode;
-                    SelectedWalletId = result.Value.SelectedWalletId;
+                    if (result.IsSuccess)
+                    {
+                        IsDebugMode = result.Value.IsDebugMode;
+                        SelectedWalletId = result.Value.SelectedWalletId;
 
-                    // Set IsDarkTheme last — its WhenAnyValue subscription
-                    // applies the theme, so we want the other fields settled first.
-                    IsDarkTheme = result.Value.IsDarkTheme;
-                }
+                        // Set IsDarkTheme last — its WhenAnyValue subscription
+                        // applies the theme, so we want the other fields settled first.
+                        IsDarkTheme = result.Value.IsDarkTheme;
+                    }
+                });
             });
 
         // Apply persisted theme immediately (defaults to light until async load completes)
