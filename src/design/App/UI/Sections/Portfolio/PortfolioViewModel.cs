@@ -542,7 +542,7 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
 
         try
         {
-            var wallets = _walletContext.Wallets;
+            var wallets = _walletContext.Wallets.ToList();
             if (wallets.Count == 0)
             {
                 _logger.LogInformation("No wallets found — clearing investments");
