@@ -2,7 +2,7 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Investor.Domain;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Data.Documents.Interfaces;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using FluentAssertions;
 using Moq;
 

@@ -2,7 +2,7 @@ using System.Text.Json;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Services;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 
 namespace Angor.Sdk.Funding.Projects.Operations;
@@ -28,12 +28,12 @@ public static class GetProjectInfoJson
             GetProjectInfoJsonRequest request, CancellationToken cancellationToken)
         {
             var projectResult = await projectService.GetAsync(request.ProjectId);
-            return projectResult.Map(project =>
-            {
-                var projectInfo = project.ToProjectInfo();
-                var json = JsonSerializer.Serialize(projectInfo, IndentedOptions);
-                return new GetProjectInfoJsonResponse(json);
-            });
+            if (projectResult.IsFailure)
+                return Result.Failure<GetProjectInfoJsonResponse>(projectResult.Error);
+
+            var projectInfo = projectResult.Value.ToProjectInfo();
+            var json = JsonSerializer.Serialize(projectInfo, IndentedOptions);
+            return Result.Success(new GetProjectInfoJsonResponse(json));
         }
     }
 }

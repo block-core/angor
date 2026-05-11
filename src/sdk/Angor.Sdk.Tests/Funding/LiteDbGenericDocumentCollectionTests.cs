@@ -2,7 +2,7 @@ using System.Linq.Expressions;
 using Angor.Data.Documents.Interfaces;
 using Angor.Data.Documents.LiteDb;
 using Angor.Data.Documents.Models;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using FluentAssertions;
 using Moq;
 

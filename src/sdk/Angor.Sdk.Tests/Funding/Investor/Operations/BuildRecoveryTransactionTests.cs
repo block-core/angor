@@ -1,3 +1,4 @@
+using Angor.Primitives.Network;
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Investor.Domain;
 using Angor.Sdk.Funding.Investor.Operations;
@@ -8,8 +9,8 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
-using CSharpFunctionalExtensions;
+using NBitcoin;
+using Angor.Primitives;
 using FluentAssertions;
 using Moq;
 using Stage = Angor.Sdk.Funding.Projects.Domain.Stage;
@@ -70,7 +71,7 @@ public class BuildRecoveryTransactionTests
 
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData("wallet-1"))
-            .ReturnsAsync(Result.Failure<(string Words, Maybe<string> Passphrase)>("Wallet locked"));
+            .ReturnsAsync(Result.Failure<(string Words, string? Passphrase)>("Wallet locked"));
 
         // Act
         var result = await _sut.Handle(request, CancellationToken.None);
@@ -254,14 +255,14 @@ public class BuildRecoveryTransactionTests
         _mockInvestorTransactionActions
             .Setup(x => x.CheckInvestorRecoverySignatures(
                 It.IsAny<ProjectInfo>(),
-                It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>(),
+                It.IsAny<Transaction>(),
                 It.IsAny<SignatureInfo>()))
             .Returns(true);
 
         _mockInvestorTransactionActions
             .Setup(x => x.AddSignaturesToRecoverSeederFundsTransaction(
                 It.IsAny<ProjectInfo>(),
-                It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>(),
+                It.IsAny<Transaction>(),
                 It.IsAny<SignatureInfo>(),
                 It.IsAny<string>()))
             .Returns(network.CreateTransaction());
@@ -289,7 +290,7 @@ public class BuildRecoveryTransactionTests
     private void SetupSeedwords()
     {
         var sensitiveData = (Words: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
-            Passphrase: Maybe<string>.None);
+            Passphrase: (string?)null);
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData("wallet-1"))
             .ReturnsAsync(Result.Success(sensitiveData));
@@ -355,7 +356,7 @@ public class BuildRecoveryTransactionTests
             .ReturnsAsync(Result.Success(records));
     }
 
-    private Blockcore.Networks.Network SetupNetwork()
+    private AngorNetwork SetupNetwork()
     {
         var network = Angor.Shared.Networks.Networks.Bitcoin.Testnet();
         _mockNetworkConfiguration

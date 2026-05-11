@@ -5,7 +5,7 @@ using Angor.Sdk.Wallet.Infrastructure.History;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using Serilog;
 
 namespace Angor.Sdk.Wallet.Infrastructure.Impl.History;
@@ -27,10 +27,17 @@ public class TransactionHistory(
         return Result.Success(accountBalanceInfo.Value.AccountInfo.AllAddresses().Select(a => a.Address));
     }
 
-    private Task<Result<List<QueryTransaction>>> LookupAddressTransactions(string address)
+    private async Task<Result<List<QueryTransaction>>> LookupAddressTransactions(string address)
     {
-        return Result.Try(() => indexerService.FetchAddressHistoryAsync(address)) //TODO handle paging with sending the last received transaction id
-            .Map(txns => txns ?? new List<QueryTransaction>());
+        try
+        {
+            var txns = await indexerService.FetchAddressHistoryAsync(address); //TODO handle paging with sending the last received transaction id
+            return Result.Success(txns ?? new List<QueryTransaction>());
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<List<QueryTransaction>>(ex.Message);
+        }
     }
 
     public async Task<Result<IEnumerable<BroadcastedTransaction>>> GetTransactions(WalletId walletId)
@@ -40,19 +47,27 @@ public class TransactionHistory(
         {
             return Result.Failure<IEnumerable<BroadcastedTransaction>>(result.Error);
         }
-        return await result
-            .Bind(addresses => addresses
-                .Select(s => LookupAddressTransactions(s))
-                .Combine())
-            .Map(transactions => transactions
-                .SelectMany(x => x))
-            .Bind(transactions =>
-            {
-                var addresses = result.Value.Select(x => new Address(x)).ToList();
-                return transactions
-                    .Select(tx => MapToBroadcastedTransaction(tx, addresses))
-                    .Combine();
-            });
+        var addressList = result.Value.ToList();
+        var allTransactions = new List<QueryTransaction>();
+        foreach (var address in addressList)
+        {
+            var txResult = await LookupAddressTransactions(address);
+            if (txResult.IsFailure)
+                return Result.Failure<IEnumerable<BroadcastedTransaction>>(txResult.Error);
+            allTransactions.AddRange(txResult.Value);
+        }
+
+        var walletAddresses = addressList.Select(x => new Address(x)).ToList();
+        var broadcastedTransactions = new List<BroadcastedTransaction>();
+        foreach (var tx in allTransactions)
+        {
+            var mapped = await MapToBroadcastedTransaction(tx, walletAddresses);
+            if (mapped.IsFailure)
+                return Result.Failure<IEnumerable<BroadcastedTransaction>>(mapped.Error);
+            broadcastedTransactions.Add(mapped.Value);
+        }
+
+        return Result.Success<IEnumerable<BroadcastedTransaction>>(broadcastedTransactions);
 
     }
 
@@ -62,19 +77,27 @@ public class TransactionHistory(
         var inputs = MapToTransactionInputs(tx.Inputs);
         var outputs = MapToTransactionOutputs(tx.Outputs);
 
-        return Task.FromResult(Result.Try(() => new BroadcastedTransaction(
-            Id: tx.TransactionId,
-            WalletInputs: inputs
-                .Where(i => walletAddresses.Contains(i.Address)),
-            WalletOutputs: outputs.Where(o => walletAddresses.Contains(o.Address)),
-            AllInputs: inputs,
-            AllOutputs: outputs,
-            Fee: tx.Fee,
-            IsConfirmed: tx.Confirmations > 0,
-            BlockHeight: tx.BlockIndex,
-            BlockTime: tx.Timestamp > 0 ? DateTimeOffset.FromUnixTimeSeconds(tx.Timestamp) : null,
-            RawJson: JsonSerializer.Serialize(tx)
-        )));
+        try
+        {
+            var broadcastedTx = new BroadcastedTransaction(
+                Id: tx.TransactionId,
+                WalletInputs: inputs
+                    .Where(i => walletAddresses.Contains(i.Address)),
+                WalletOutputs: outputs.Where(o => walletAddresses.Contains(o.Address)),
+                AllInputs: inputs,
+                AllOutputs: outputs,
+                Fee: tx.Fee,
+                IsConfirmed: tx.Confirmations > 0,
+                BlockHeight: tx.BlockIndex,
+                BlockTime: tx.Timestamp > 0 ? DateTimeOffset.FromUnixTimeSeconds(tx.Timestamp) : null,
+                RawJson: JsonSerializer.Serialize(tx)
+            );
+            return Task.FromResult(Result.Success(broadcastedTx));
+        }
+        catch (Exception ex)
+        {
+            return Task.FromResult(Result.Failure<BroadcastedTransaction>(ex.Message));
+        }
     }
 
     private static List<TransactionInput> MapToTransactionInputs(IEnumerable<QueryTransactionInput> inputs)

@@ -4,7 +4,7 @@ using Angor.Sdk.Funding.Services;
 using Angor.Shared.Integration.Lightning;
 using Angor.Shared.Integration.Lightning.Models;
 using Angor.Sdk.Wallet.Domain;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Moq;

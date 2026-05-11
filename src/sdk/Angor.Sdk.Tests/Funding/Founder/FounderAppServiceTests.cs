@@ -10,8 +10,8 @@ using Angor.Sdk.Tests.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
-using CSharpFunctionalExtensions;
+using NBitcoin;
+using Angor.Primitives;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -283,7 +283,7 @@ public class FounderAppServiceTests : IClassFixture<TestNetworkFixture>
 
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData(walletId.Value))
-            .ReturnsAsync(Result.Success((TestNetworkFixture.AlternateWalletWords, Maybe<string>.None)));
+            .ReturnsAsync(Result.Success((TestNetworkFixture.AlternateWalletWords, (string?)null)));
 
         _mockDerivationOperations
             .Setup(x => x.DeriveProjectNostrPrivateKeyAsync(It.IsAny<WalletWords>(), founderKeys.FounderKey))

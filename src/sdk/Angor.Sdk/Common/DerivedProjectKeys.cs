@@ -1,6 +1,8 @@
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 
+using Angor.Primitives;
+
 namespace Angor.Sdk.Common;
 
 public class DerivedProjectKeys

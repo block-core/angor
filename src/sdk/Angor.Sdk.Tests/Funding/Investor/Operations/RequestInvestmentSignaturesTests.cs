@@ -1,3 +1,4 @@
+using Angor.Primitives.Network;
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Investor.Domain;
 using Angor.Sdk.Funding.Investor.Operations;
@@ -9,8 +10,8 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
-using CSharpFunctionalExtensions;
+using NBitcoin;
+using Angor.Primitives;
 using FluentAssertions;
 using Moq;
 using Nostr.Client.Responses;
@@ -69,7 +70,7 @@ public class RequestInvestmentSignaturesTests
         SetupNetwork();
 
         _mockProjectScriptsBuilder
-            .Setup(x => x.GetInvestmentDataFromOpReturnScript(It.IsAny<Blockcore.Consensus.ScriptInfo.Script>()))
+            .Setup(x => x.GetInvestmentDataFromOpReturnScript(It.IsAny<Script>()))
             .Returns(("investor-key", (uint256?)null));
 
         _mockProjectService
@@ -93,7 +94,7 @@ public class RequestInvestmentSignaturesTests
         SetupProject();
 
         _mockProjectScriptsBuilder
-            .Setup(x => x.GetInvestmentDataFromOpReturnScript(It.IsAny<Blockcore.Consensus.ScriptInfo.Script>()))
+            .Setup(x => x.GetInvestmentDataFromOpReturnScript(It.IsAny<Script>()))
             .Returns(("investor-key", (uint256?)null));
 
         _mockAngorIndexerService
@@ -117,7 +118,7 @@ public class RequestInvestmentSignaturesTests
         SetupProject();
 
         _mockProjectScriptsBuilder
-            .Setup(x => x.GetInvestmentDataFromOpReturnScript(It.IsAny<Blockcore.Consensus.ScriptInfo.Script>()))
+            .Setup(x => x.GetInvestmentDataFromOpReturnScript(It.IsAny<Script>()))
             .Returns(("investor-key", (uint256?)null));
 
         _mockAngorIndexerService
@@ -126,7 +127,7 @@ public class RequestInvestmentSignaturesTests
 
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData("wallet-1"))
-            .ReturnsAsync(Result.Failure<(string Words, Maybe<string> Passphrase)>("Wallet locked"));
+            .ReturnsAsync(Result.Failure<(string Words, string? Passphrase)>("Wallet locked"));
 
         // Act
         var result = await _sut.Handle(request, CancellationToken.None);
@@ -147,7 +148,7 @@ public class RequestInvestmentSignaturesTests
         SetupDerivation();
 
         _mockProjectScriptsBuilder
-            .Setup(x => x.GetInvestmentDataFromOpReturnScript(It.IsAny<Blockcore.Consensus.ScriptInfo.Script>()))
+            .Setup(x => x.GetInvestmentDataFromOpReturnScript(It.IsAny<Script>()))
             .Returns(("investor-key", (uint256?)null));
 
         _mockAngorIndexerService
@@ -185,7 +186,7 @@ public class RequestInvestmentSignaturesTests
         SetupDerivation();
 
         _mockProjectScriptsBuilder
-            .Setup(x => x.GetInvestmentDataFromOpReturnScript(It.IsAny<Blockcore.Consensus.ScriptInfo.Script>()))
+            .Setup(x => x.GetInvestmentDataFromOpReturnScript(It.IsAny<Script>()))
             .Returns(("investor-key", (uint256?)null));
 
         _mockAngorIndexerService
@@ -241,8 +242,8 @@ public class RequestInvestmentSignaturesTests
         // The handler accesses Outputs[1].ScriptPubKey, so we need a transaction with at least 2 outputs
         var network = Angor.Shared.Networks.Networks.Bitcoin.Testnet();
         var tx = network.CreateTransaction();
-        tx.Outputs.Add(new Blockcore.Consensus.TransactionInfo.TxOut(Blockcore.NBitcoin.Money.Satoshis(1000), new Blockcore.Consensus.ScriptInfo.Script()));
-        tx.Outputs.Add(new Blockcore.Consensus.TransactionInfo.TxOut(Blockcore.NBitcoin.Money.Satoshis(500), new Blockcore.Consensus.ScriptInfo.Script()));
+        tx.Outputs.Add(new TxOut(Money.Satoshis(1000), new Script()));
+        tx.Outputs.Add(new TxOut(Money.Satoshis(500), new Script()));
         var validTxHex = tx.ToHex();
 
         return new RequestInvestmentSignatures.RequestFounderSignaturesRequest(
@@ -256,7 +257,7 @@ public class RequestInvestmentSignaturesTests
             });
     }
 
-    private Blockcore.Networks.Network SetupNetwork()
+    private AngorNetwork SetupNetwork()
     {
         var network = Angor.Shared.Networks.Networks.Bitcoin.Testnet();
         _mockNetworkConfiguration
@@ -289,7 +290,7 @@ public class RequestInvestmentSignaturesTests
     private void SetupSeedwords()
     {
         var sensitiveData = (Words: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
-            Passphrase: Maybe<string>.None);
+            Passphrase: (string?)null);
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData("wallet-1"))
             .ReturnsAsync(Result.Success(sensitiveData));

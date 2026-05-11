@@ -2,7 +2,7 @@ using System.Reactive.Linq;
 using System.Text.Json;
 using Angor.Sdk.Funding.Founder.Dtos;
 using Angor.Shared.Services;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Requests;

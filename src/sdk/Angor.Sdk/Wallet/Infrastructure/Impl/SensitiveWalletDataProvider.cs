@@ -1,29 +1,33 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Domain;
 using Angor.Sdk.Wallet.Infrastructure.Interfaces;
-using CSharpFunctionalExtensions;
-using CSharpFunctionalExtensions.ValueTasks;
+using Angor.Primitives;
+
 
 namespace Angor.Sdk.Wallet.Infrastructure.Impl;
 
 public class SensitiveWalletDataProvider(IWalletStore walletStore, IWalletSecurityContext walletSecurityContext,
     IWalletEncryption walletEncryption) : ISensitiveWalletDataProvider
 {
-    private readonly Dictionary<WalletId, (string, Maybe<string>)> cachedSensitiveData = new();
+    private readonly Dictionary<WalletId, (string, string?)> cachedSensitiveData = new();
 
-    public async Task<Result<(string seed, Maybe<string> passphrase)>> RequestSensitiveData(WalletId walletId)
+    public async Task<Result<(string seed, string? passphrase)>> RequestSensitiveData(WalletId walletId)
     {
-        var findResult = cachedSensitiveData.TryFind(walletId);
-        if (findResult.HasValue)
+        if (cachedSensitiveData.TryGetValue(walletId, out var cached))
         {
-            return findResult.Value;
+            return cached;
         }
 
-        var result = await RequestSensitiveDataCore(walletId).Tap(data => cachedSensitiveData[walletId] = data);
+        var result = await RequestSensitiveDataCore(walletId);
+        if (result.IsSuccess)
+        {
+            cachedSensitiveData[walletId] = result.Value;
+        }
+
         return result;
     }
 
-    public void SetSensitiveData(WalletId id, (string seed, Maybe<string> passphrase) data)
+    public void SetSensitiveData(WalletId id, (string seed, string? passphrase) data)
     {
         cachedSensitiveData[id] = data;
     }
@@ -35,45 +39,51 @@ public class SensitiveWalletDataProvider(IWalletStore walletStore, IWalletSecuri
 
     private async Task<Result<EncryptedWallet>> GetEncryptedWallet(WalletId id)
     {
-        return await walletStore.GetAll()
-            .Map(list => list.FirstOrDefault(x => x.Id == id.Value))
-            .EnsureNotNull("Wallet not found");
+        var allResult = await walletStore.GetAll();
+        if (allResult.IsFailure)
+            return Result.Failure<EncryptedWallet>(allResult.Error);
+
+        var wallet = allResult.Value.FirstOrDefault(x => x.Id == id.Value);
+        if (wallet == null)
+            return Result.Failure<EncryptedWallet>("Wallet not found");
+
+        return Result.Success(wallet);
     }
 
-    private async Task<Result<(string seed, Maybe<string> passphrase)>> RequestSensitiveDataCore(WalletId id)
+    private async Task<Result<(string seed, string? passphrase)>> RequestSensitiveDataCore(WalletId id)
     {
         // Get the encrypted wallet
         var encryptedWalletResult = await GetEncryptedWallet(id);
         if (encryptedWalletResult.IsFailure)
-            return Result.Failure<(string, Maybe<string>)>(encryptedWalletResult.Error);
+            return Result.Failure<(string, string?)>(encryptedWalletResult.Error);
 
         // Get the encryption key
         var encryptionKey = await walletSecurityContext.PasswordProvider.Get(id);
-        if (encryptionKey.HasNoValue)
-            return Result.Failure<(string, Maybe<string>)>("Encryption key not provided");
-        
+        if (encryptionKey == null)
+            return Result.Failure<(string, string?)>("Encryption key not provided");
+
 
         // Decrypt the wallet
-        var decryptedResult = await walletEncryption.Decrypt(encryptedWalletResult.Value, encryptionKey.Value);
+        var decryptedResult = await walletEncryption.Decrypt(encryptedWalletResult.Value, encryptionKey);
         if (decryptedResult.IsFailure)
         {
-            return Result.Failure<(string, Maybe<string>)>("Invalid encryption key");
+            return Result.Failure<(string, string?)>("Invalid encryption key");
         }
 
-        Maybe<string> passphrase = Maybe<string>.None;
+        string? passphrase = null;
         if (decryptedResult.Value.RequiresPassphrase)
         {
             var providedPassphrase = await walletSecurityContext.PassphraseProvider.Get(id);
-            if (providedPassphrase.HasNoValue)
+            if (providedPassphrase == null)
             {
-                return Result.Failure<(string, Maybe<string>)>("Passphrase not provided");
+                return Result.Failure<(string, string?)>("Passphrase not provided");
             }
 
-            passphrase = providedPassphrase.Value;
+            passphrase = providedPassphrase;
         }
 
-        (string seedWords, Maybe<string>) valueTuple = (decryptedResult.Value.SeedWords!, passphrase);
-        
+        (string seedWords, string?) valueTuple = (decryptedResult.Value.SeedWords!, passphrase);
+
         return Result.Success(valueTuple);
     }
 }

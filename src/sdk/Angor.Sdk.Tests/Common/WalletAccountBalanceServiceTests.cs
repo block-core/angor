@@ -2,7 +2,7 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Angor.Data.Documents.Interfaces;

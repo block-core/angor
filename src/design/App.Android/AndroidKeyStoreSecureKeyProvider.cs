@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Android.Security.Keystore;
 using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Infrastructure.Interfaces;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using Java.Security;
 using Javax.Crypto;
 using Javax.Crypto.Spec;
@@ -35,12 +35,12 @@ public class AndroidKeyStoreSecureKeyProvider : ISecureKeyProvider
         EnsureMasterKey();
     }
 
-    public Task<Maybe<string>> Get(WalletId walletId)
+    public Task<string?> Get(WalletId walletId)
     {
         var keys = LoadKeys();
         return Task.FromResult(keys.TryGetValue(walletId.Value, out var key)
-            ? Maybe<string>.From(key)
-            : Maybe<string>.None);
+            ? key
+            : (string?)null);
     }
 
     public Task Save(WalletId walletId, string key)

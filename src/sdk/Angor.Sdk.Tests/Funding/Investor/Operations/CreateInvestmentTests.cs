@@ -11,11 +11,11 @@ using Angor.Shared.Protocol;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Protocol.TransactionBuilders;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.BIP32;
-using Blockcore.NBitcoin.DataEncoders;
-using Blockcore.Networks;
-using CSharpFunctionalExtensions;
+using NBitcoin;
+using NBitcoin;
+using NBitcoin.DataEncoders;
+using Angor.Primitives.Network;
+using Angor.Primitives;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
@@ -38,7 +38,7 @@ public class CreateInvestmentTests
     private readonly IDerivationOperations _derivationOperations;
     private readonly INetworkConfiguration _networkConfiguration;
     private readonly BuildInvestmentDraft.BuildInvestmentDraftHandler _sut;
-    private readonly Network _network;
+    private readonly AngorNetwork _network;
 
     public CreateInvestmentTests()
     {
@@ -134,7 +134,7 @@ public class CreateInvestmentTests
 
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData(It.IsAny<string>()))
-            .ReturnsAsync(Result.Failure<(string Words, Maybe<string> Passphrase)>("Wallet not found"));
+            .ReturnsAsync(Result.Failure<(string Words, string? Passphrase)>("Wallet not found"));
 
         var request = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
             walletId,
@@ -165,7 +165,7 @@ public class CreateInvestmentTests
 
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData(It.IsAny<string>()))
-            .ReturnsAsync(Result.Success((words.Words, Maybe<string>.None)));
+            .ReturnsAsync(Result.Success((words.Words, (string?)null)));
 
         // Simulate an existing investment with a transaction hash (completed investment)
         var existingRecords = new InvestmentRecords
@@ -214,7 +214,7 @@ public class CreateInvestmentTests
 
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData(It.IsAny<string>()))
-            .ReturnsAsync(Result.Success((words.Words, Maybe<string>.None)));
+            .ReturnsAsync(Result.Success((words.Words, (string?)null)));
 
         // Record exists with a request event ID but no transaction hash yet
         var existingRecords = new InvestmentRecords
@@ -271,7 +271,7 @@ public class CreateInvestmentTests
 
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData(It.IsAny<string>()))
-            .ReturnsAsync(Result.Success((words.Words, Maybe<string>.None)));
+            .ReturnsAsync(Result.Success((words.Words, (string?)null)));
 
         _mockWalletBalanceService
             .Setup(x => x.GetAccountBalanceInfoAsync(It.IsAny<WalletId>()))
@@ -509,7 +509,7 @@ public class CreateInvestmentTests
 
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData(walletId.Value))
-            .ReturnsAsync(Result.Failure<(string Words, Maybe<string> Passphrase)>("Failed"));
+            .ReturnsAsync(Result.Failure<(string Words, string? Passphrase)>("Failed"));
 
         var request = new BuildInvestmentDraft.BuildInvestmentDraftRequest(
             walletId,
@@ -585,7 +585,7 @@ public class CreateInvestmentTests
 
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData(It.IsAny<string>()))
-            .ReturnsAsync(Result.Success((words.Words, Maybe<string>.None)));
+            .ReturnsAsync(Result.Success((words.Words, (string?)null)));
 
         var accountBalanceInfo = new AccountBalanceInfo();
         accountBalanceInfo.UpdateAccountBalanceInfo(accountInfo, accountInfo.AllAddresses().SelectMany(a => a.UtxoData).ToList());
@@ -603,8 +603,8 @@ public class CreateInvestmentTests
             var extPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, _network);
             var hdOperations = new HdOperations();
             var pubKey = hdOperations.GeneratePublicKey(extPubKey, 0, false);
-            var address = pubKey.GetSegwitAddress(_network).ToString();
-            var path = hdOperations.CreateHdPath(84, _network.Consensus.CoinType, 0, false, 0);
+            var address = pubKey.GetAddress(ScriptPubKeyType.Segwit, _network).ToString();
+            var path = hdOperations.CreateHdPath(84, (int)_network.Consensus.CoinType, 0, false, 0);
             
             accountInfo.AddressesInfo.Add(new AddressInfo { Address = address, HdPath = path });
         }

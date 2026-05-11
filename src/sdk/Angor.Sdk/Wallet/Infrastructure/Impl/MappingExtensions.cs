@@ -1,6 +1,6 @@
 using Angor.Sdk.Wallet.Domain;
 using Angor.Sdk.Wallet.Infrastructure.Dto;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 
 namespace Angor.Sdk.Wallet.Infrastructure.Impl;
 

@@ -3,9 +3,9 @@ using Angor.Sdk.Funding.Shared;
 using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.DataEncoders;
-using CSharpFunctionalExtensions;
+using NBitcoin;
+using NBitcoin.DataEncoders;
+using Angor.Primitives;
 
 namespace Angor.Sdk.Funding.Investor.Domain;
 

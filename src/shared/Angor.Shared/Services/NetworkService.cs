@@ -3,7 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
-using Blockcore.Networks;
+using Angor.Primitives.Network;
 using Microsoft.Extensions.Logging;
 
 namespace Angor.Shared.Services
@@ -46,7 +46,7 @@ namespace Angor.Shared.Services
                 // no network found ether this is a first
                 // time user visits the site or the network was wiped
 
-                Network network = null;
+                AngorNetwork network = null;
 
                 if (setNetwork != null)
                 {

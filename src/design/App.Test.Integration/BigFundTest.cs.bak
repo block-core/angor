@@ -5,11 +5,13 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Utilities;
+using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
 using App.UI.Sections.Funders;
@@ -18,7 +20,6 @@ using App.UI.Sections.MyProjects;
 using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Sections.Portfolio;
 using App.UI.Sections.Settings;
-using App.UI.Shared.PaymentFlow;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using System.Globalization;
@@ -26,28 +27,33 @@ using System.Globalization;
 namespace App.Test.Integration;
 
 /// <summary>
-/// Big multi-investor investment project test with 15 investors.
+/// Big multi-investor fund project test with 15 investors.
 /// 
 /// Setup:
-/// - 1 founder creates an investment-type project with 3 monthly stages
-///   (start date ~120 days ago so all stages are claimable).
-/// - All 15 investors invest above-threshold amounts requiring founder approval.
-/// - Investors use varying amounts (0.02-0.04 BTC).
+/// - 1 founder creates a fund project with threshold = 0.01 BTC, penalty days = 0,
+///   3 installment counts (3 and 6), weekly payout on today's day.
+/// - Investors 1-7 invest below threshold (0.001 BTC) — auto-approved.
+/// - Investors 8-15 invest above threshold (0.02 BTC) — require founder approval.
+/// - Investors pick different installment patterns:
+///   - Investors 1-5 and 8-12 select the 6-stage pattern.
+///   - Investors 6-7 and 13-15 select the 3-stage pattern.
 /// 
 /// Flow:
-/// 1. Founder creates the investment project.
-/// 2. All 15 investors invest (all require founder approval).
-/// 3. Founder approves all 15 pending requests in batch.
-/// 4. All 15 investors confirm their approved investments.
-/// 5. Founder claims stage 1 (should see UTXOs from all 15 investors).
-/// 6. Founder releases remaining stages back to investors.
-/// 7. All 15 investors claim their remaining (released) stages.
+/// 1. Founder creates the fund project.
+/// 2. Each investor is processed one-by-one:
+///    a. Investor invests.
+///    b. If above-threshold: founder approves, then investor confirms.
+/// 3. Founder claims stage 1 (should see UTXOs from all 15 investors).
+/// 4. Above-threshold investors recover with penalty, then release from penalty.
+/// 5. Below-threshold investors recover via end-of-project claim.
 /// </summary>
-public class BigInvestTest
+public class BigFundTest
 {
-    private const string TestName = "BigInvest";
+    private const string TestName = "BigFund";
     private const string FounderProfile = TestName + "-Founder";
     private const int TotalInvestors = 15;
+    private const int BelowThresholdCount = 7;   // Investors 1-7
+    private const int AboveThresholdCount = 8;    // Investors 8-15
 
     private static readonly TimeSpan FaucetBalanceTimeout = TimeSpan.FromMinutes(5);
     private static readonly TimeSpan TransactionTimeout = TimeSpan.FromMinutes(2);
@@ -57,100 +63,126 @@ public class BigInvestTest
 
     private sealed record ProjectHandle(string RunId, string ProjectName, string ProjectIdentifier, string FounderWalletId);
 
-    private sealed record InvestorConfig(string ProfileName, string AmountBtc);
+    private sealed record InvestorConfig(string ProfileName, string AmountBtc, bool ExpectFounderApproval, int TargetPatternStageCount);
 
     private static string InvestorProfile(int index) => $"{TestName}-Investor{index}";
 
     private static List<InvestorConfig> BuildInvestorConfigs()
     {
         var configs = new List<InvestorConfig>();
-        // Vary amounts across investors: 0.02, 0.025, 0.03, 0.035, 0.04, cycling
-        var amounts = new[] { "0.02", "0.025", "0.03", "0.035", "0.04" };
 
-        for (int i = 1; i <= TotalInvestors; i++)
+        // Below-threshold investors (1-7): auto-approved
+        for (int i = 1; i <= BelowThresholdCount; i++)
         {
-            var amount = amounts[(i - 1) % amounts.Length];
-            configs.Add(new InvestorConfig(InvestorProfile(i), amount));
+            // Investors 1-5 pick 6-stage pattern, 6-7 pick 3-stage pattern
+            var stageCount = i <= 5 ? 6 : 3;
+            configs.Add(new InvestorConfig(InvestorProfile(i), "0.001", false, stageCount));
+        }
+
+        // Above-threshold investors (8-15): require founder approval
+        for (int i = BelowThresholdCount + 1; i <= TotalInvestors; i++)
+        {
+            // Investors 8-12 pick 6-stage pattern, 13-15 pick 3-stage pattern
+            var stageCount = i <= 12 ? 6 : 3;
+            configs.Add(new InvestorConfig(InvestorProfile(i), "0.02", true, stageCount));
         }
 
         return configs;
     }
 
     [AvaloniaFact]
-    public async Task BigInvest()
+    public async Task BigFund()
     {
         var initializedProfiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var runId = Guid.NewGuid().ToString("N")[..12];
-        var projectName = $"Big Invest {runId}";
-        var projectAbout = $"{TestName} run {runId}. 15-investor investment project: founder claims stage 1, releases rest, investors claim.";
+        var projectName = $"Big Fund {runId}";
+        var projectAbout = $"{TestName} run {runId}. 15-investor fund project with mixed thresholds and installment patterns.";
         var bannerImageUrl = $"https://picsum.photos/seed/{Guid.NewGuid().ToString("N")[..8]}/320/200";
         var profileImageUrl = $"https://picsum.photos/seed/{Guid.NewGuid().ToString("N")[..8]}/100/100";
+        var thresholdAmountBtc = "0.01";
+        var payoutDay = DateTime.UtcNow.DayOfWeek.ToString();
         var investors = BuildInvestorConfigs();
 
-        Log(null, $"========== STARTING {nameof(BigInvest)} ==========");
+        Log(null, $"========== STARTING {nameof(BigFund)} ==========");
         Log(null, $"Run ID: {runId}");
         Log(null, $"Founder profile: {FounderProfile}");
-        Log(null, $"Total investors: {TotalInvestors}");
+        Log(null, $"Total investors: {TotalInvestors} ({BelowThresholdCount} below threshold, {AboveThresholdCount} above threshold)");
         foreach (var inv in investors)
         {
-            Log(null, $"  {inv.ProfileName}: amount={inv.AmountBtc} BTC");
+            Log(null, $"  {inv.ProfileName}: amount={inv.AmountBtc} BTC, approval={inv.ExpectFounderApproval}, pattern={inv.TargetPatternStageCount}-stage");
         }
 
-        // ── Step 1: Founder creates the investment project ──
+        // ── Step 1: Founder creates the fund project ──
         ProjectHandle? project = null;
 
         await WithProfileWindow(FounderProfile, initializedProfiles, async window =>
         {
             await CreateWalletAndFundAsync(window, FounderProfile);
-            project = await CreateInvestProjectAsync(
+            project = await CreateFundProjectAsync(
                 window, FounderProfile, projectName, projectAbout,
-                bannerImageUrl, profileImageUrl, runId);
+                bannerImageUrl, profileImageUrl, thresholdAmountBtc, payoutDay, runId);
         });
 
         project.Should().NotBeNull();
 
-        // ── Step 2: All 15 investors invest ──
-        foreach (var inv in investors)
+        // ── Step 2: Process each investor one-by-one (invest → approve → confirm) ──
+        var approvedSoFar = 0;
+        for (var i = 0; i < investors.Count; i++)
         {
+            var inv = investors[i];
+            Log(null, $"────── Investor {i + 1}/{investors.Count}: {inv.ProfileName} ({inv.AmountBtc} BTC, approval={inv.ExpectFounderApproval}, pattern={inv.TargetPatternStageCount}-stage) ──────");
+
+            // 2a. Investor invests
             await WithProfileWindow(inv.ProfileName, initializedProfiles, async window =>
             {
                 await CreateWalletAndFundAsync(window, inv.ProfileName);
-                await InvestInProjectAsync(window, inv.ProfileName, project!, inv.AmountBtc);
+                await InvestInProjectAsync(
+                    window, inv.ProfileName, project!, inv.AmountBtc,
+                    inv.ExpectFounderApproval, inv.TargetPatternStageCount);
             });
-        }
 
-        // ── Step 3: Founder approves all 15 pending requests ──
-        await WithProfileWindow(FounderProfile, initializedProfiles, async window =>
-        {
-            await ApprovePendingInvestmentsAsync(window, FounderProfile, project!, TotalInvestors);
-        });
-
-        // ── Step 4: All investors confirm their approved investments ──
-        foreach (var inv in investors)
-        {
-            await WithProfileWindow(inv.ProfileName, initializedProfiles, async window =>
+            // 2b. If above-threshold, founder approves this single investor then investor confirms
+            if (inv.ExpectFounderApproval)
             {
-                await ConfirmApprovedInvestmentAsync(window, inv.ProfileName, project!);
-            });
+                approvedSoFar++;
+
+                await WithProfileWindow(FounderProfile, initializedProfiles, async window =>
+                {
+                    await ApproveSinglePendingInvestmentAsync(window, FounderProfile, project!, approvedSoFar);
+                });
+
+                await WithProfileWindow(inv.ProfileName, initializedProfiles, async window =>
+                {
+                    await ConfirmApprovedInvestmentAsync(window, inv.ProfileName, project!);
+                });
+            }
         }
 
-        // ── Step 5: Founder claims stage 1 and releases remaining stages ──
+        // ── Step 3: Founder claims stage 1 (UTXOs from all 15 investors) ──
         await WithProfileWindow(FounderProfile, initializedProfiles, async window =>
         {
             await ClaimStageOneAsync(window, FounderProfile, project!, TotalInvestors);
-            await ReleaseRemainingStagesToInvestorsAsync(window, FounderProfile, project!);
         });
 
-        // ── Step 6: All investors claim their remaining (released) stages ──
-        foreach (var inv in investors)
+        // ── Step 4: Above-threshold investors recover with penalty then penalty release ──
+        foreach (var inv in investors.Where(i => i.ExpectFounderApproval))
         {
             await WithProfileWindow(inv.ProfileName, initializedProfiles, async window =>
             {
-                await ClaimRemainingStagesAsync(window, inv.ProfileName, project!);
+                await RecoverAboveThresholdInvestmentAsync(window, inv.ProfileName, project!);
             });
         }
 
-        Log(null, $"========== {nameof(BigInvest)} PASSED ==========");
+        // ── Step 5: Below-threshold investors recover via end-of-project claim ──
+        foreach (var inv in investors.Where(i => !i.ExpectFounderApproval))
+        {
+            await WithProfileWindow(inv.ProfileName, initializedProfiles, async window =>
+            {
+                await RecoverBelowThresholdInvestmentAsync(window, inv.ProfileName, project!);
+            });
+        }
+
+        Log(null, $"========== {nameof(BigFund)} PASSED ==========");
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -176,6 +208,7 @@ public class BigInvestTest
                 initializedProfiles.Add(profileName);
             }
 
+            SetPasswordProvider(profileName);
             await action(window);
         }
         finally
@@ -194,6 +227,13 @@ public class BigInvestTest
 
         profileContext.ProfileName.Should().Be(expectedProfile);
         Log(expectedProfile, $"Using profile directory: {profileDirectory}");
+    }
+
+    private static void SetPasswordProvider(string profileName)
+    {
+        var passwordProvider = global::App.App.Services.GetRequiredService<SimplePasswordProvider>();
+        passwordProvider.SetKey("default-key");
+        Log(profileName, "Set SimplePasswordProvider key to 'default-key'.");
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -225,16 +265,18 @@ public class BigInvestTest
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // Investment Project Creation
+    // Fund Project Creation
     // ═══════════════════════════════════════════════════════════════════
 
-    private async Task<ProjectHandle> CreateInvestProjectAsync(
+    private async Task<ProjectHandle> CreateFundProjectAsync(
         Window window,
         string profileName,
         string projectName,
         string projectAbout,
         string bannerImageUrl,
         string profileImageUrl,
+        string thresholdAmountBtc,
+        string payoutDay,
         string runId)
     {
         await window.NavigateToSectionAndVerify("My Projects");
@@ -247,11 +289,11 @@ public class BigInvestTest
         var wizardVm = myProjectsVm.CreateProjectVm;
         wizardVm.Should().NotBeNull();
 
-        Log(profileName, "Selecting investment project type...");
+        Log(profileName, "Selecting Fund project type...");
         wizardVm.DismissWelcome();
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(200);
-        wizardVm.SelectProjectType("investment");
+        wizardVm.SelectProjectType("fund");
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
@@ -271,32 +313,28 @@ public class BigInvestTest
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
-        Log(profileName, "Configuring target amount and investment end date...");
+        Log(profileName, "Configuring target amount, threshold, and zero penalty days...");
         wizardVm.TargetAmount = "1.0";
-        wizardVm.InvestEndDate = DateTime.UtcNow.AddMonths(3);
+        wizardVm.ApprovalThreshold = thresholdAmountBtc;
+        wizardVm.PenaltyDays = 0;
         wizardVm.TargetAmount.Should().Be("1.0");
-        wizardVm.InvestEndDate.Should().NotBeNull();
+        wizardVm.ApprovalThreshold.Should().Be(thresholdAmountBtc);
+        wizardVm.PenaltyDays.Should().Be(0);
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
-        Log(profileName, "Generating three monthly investment stages...");
+        Log(profileName, $"Configuring payout schedule for today ({payoutDay}) with 3 and 6 installments...");
         wizardVm.DismissStep5Welcome();
         Dispatcher.UIThread.RunJobs();
         await Task.Delay(200);
-        wizardVm.DurationValue = "3";
-        wizardVm.DurationUnit = "Months";
-        wizardVm.ReleaseFrequency = "Monthly";
-        // Set start date ~120 days in the past so all 3 monthly stages (baseDate+30/+60/+90)
-        // have release dates in the past, making them claimable (Unspent) instead of Locked.
-        wizardVm.StartDate = DateTime.UtcNow.AddDays(-120).ToString("yyyy-MM-dd");
-        wizardVm.GenerateInvestmentStages();
-        wizardVm.Stages.Count.Should().Be(3);
-        wizardVm.Stages.Select(s => s.StageNumber).Should().ContainInOrder(1, 2, 3);
-        var totalPercentage = wizardVm.Stages
-            .Select(s => s.Percentage.Replace("%", ""))
-            .Select(p => double.Parse(p, CultureInfo.InvariantCulture))
-            .Sum();
-        totalPercentage.Should().BeApproximately(100.0, 1.0);
+        wizardVm.PayoutFrequency = "Weekly";
+        wizardVm.ToggleInstallmentCount(3);
+        wizardVm.ToggleInstallmentCount(6);
+        wizardVm.WeeklyPayoutDay = payoutDay;
+        wizardVm.GeneratePayoutSchedule();
+        wizardVm.Stages.Count.Should().Be(6, "stages preview uses the max selected installment count");
+        wizardVm.Stages.Select(s => s.StageNumber).Should().ContainInOrder(1, 2, 3, 4, 5, 6);
+        wizardVm.SelectedInstallmentCounts.Should().HaveCount(2, "project should have two instalment patterns (3-month and 6-month)");
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
@@ -361,7 +399,7 @@ public class BigInvestTest
         project.OwnerWalletId.Should().NotBeNullOrEmpty();
         project.Name.Should().Be(projectName);
         project.Description.Should().Contain(runId);
-        project.ProjectType.Should().Be("investment");
+        project.ProjectType.Should().Be("fund");
 
         Log(profileName, $"Project deployed. ProjectId={project.ProjectIdentifier}, OwnerWalletId={project.OwnerWalletId}");
         return new ProjectHandle(runId, projectName, project.ProjectIdentifier!, project.OwnerWalletId!);
@@ -375,13 +413,11 @@ public class BigInvestTest
         Window window,
         string profileName,
         ProjectHandle project,
-        string amountBtc)
+        string amountBtc,
+        bool expectFounderApproval,
+        int targetPatternStageCount)
     {
         var foundProject = await FindProjectFromSdkAsync(window, profileName, project);
-
-        // Verify target amount was stored correctly as 1 BTC.
-        foundProject.Target.Should().Be("1.00000",
-            "TargetAmount '1.0' means 1 BTC = 100_000_000 sats; the SDK should store sats and display converts back to BTC");
 
         var findProjectsVm = GetFindProjectsViewModel(window);
         findProjectsVm.Should().NotBeNull();
@@ -406,16 +442,52 @@ public class BigInvestTest
         }
 
         investVm!.Wallets.Count.Should().BeGreaterThan(0);
+
+        // ── Select funding pattern via UI ──
+        Log(profileName, $"Selecting funding pattern with {targetPatternStageCount} stages via UI...");
+
+        investVm.FundingPatterns.Should().HaveCountGreaterThan(1,
+            "project should expose multiple funding patterns");
+
+        var investPageView = window.GetVisualDescendants()
+            .OfType<InvestPageView>()
+            .FirstOrDefault();
+        investPageView.Should().NotBeNull("InvestPageView should be in the visual tree");
+
+        var patternBorders = investPageView!.GetVisualDescendants()
+            .OfType<Border>()
+            .Where(b => b.Name == "FundPatternBorder")
+            .ToList();
+        patternBorders.Should().HaveCountGreaterThan(1,
+            "invest page should render multiple FundPatternBorder elements");
+
+        var targetBorder = patternBorders.FirstOrDefault(b =>
+            b.DataContext is FundingPatternOption opt && opt.StageCount == targetPatternStageCount);
+        targetBorder.Should().NotBeNull(
+            $"a FundPatternBorder with StageCount={targetPatternStageCount} should exist");
+
+        var targetOption = (FundingPatternOption)targetBorder!.DataContext!;
+        investVm.SelectFundingPattern(targetOption);
+        Dispatcher.UIThread.RunJobs();
+        await Task.Delay(300);
+        Dispatcher.UIThread.RunJobs();
+
+        investVm.SelectedFundingPattern.Should().NotBeNull();
+        investVm.SelectedFundingPattern!.StageCount.Should().Be(targetPatternStageCount,
+            $"selected funding pattern should have {targetPatternStageCount} stages after selection");
+        Log(profileName, $"Funding pattern with {targetPatternStageCount} stages selected. PatternId={investVm.SelectedFundingPattern.PatternId}");
+
         investVm.InvestmentAmount = amountBtc;
         investVm.CanSubmit.Should().BeTrue();
-        investVm.Stages.Count.Should().Be(3, "investment project should expose the generated fixed stages");
+        investVm.Stages.Count.Should().BeGreaterThanOrEqualTo(targetPatternStageCount,
+            $"fund project should expose at least {targetPatternStageCount} stage outputs for the selected pattern");
         investVm.Stages.Select(s => s.LabelText).Should().Contain(label => label.Contains("Stage 1"));
         investVm.Submit();
         Dispatcher.UIThread.RunJobs();
         investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector);
 
         var investWallet = investVm.Wallets[0];
-        investVm.PaymentFlow.SelectWallet(investWallet);
+        investVm.SelectWallet(investWallet);
         Dispatcher.UIThread.RunJobs();
 
         Log(profileName, $"Investing {amountBtc} BTC with wallet {investWallet.Id.Value}...");
@@ -423,18 +495,19 @@ public class BigInvestTest
         const int maxPayAttempts = 3;
         for (var payAttempt = 1; payAttempt <= maxPayAttempts; payAttempt++)
         {
-            investVm.PaymentFlow.PayWithWalletCommand.Execute().Subscribe();
+            investVm.PayWithWallet();
 
             var investDeadline = DateTime.UtcNow + TransactionTimeout;
             while (DateTime.UtcNow < investDeadline)
             {
                 Dispatcher.UIThread.RunJobs();
-                if (investVm.PaymentFlow.CurrentScreen == PaymentFlowScreen.Success)
+                if (investVm.CurrentScreen == InvestScreen.Success)
                 {
                     break;
                 }
 
-                if (investVm.CurrentScreen == InvestScreen.WalletSelector && investVm.PaymentFlow.ErrorMessage != null)
+                // Detect build/publish error while still on WalletSelector
+                if (investVm.CurrentScreen == InvestScreen.WalletSelector && investVm.HasError)
                 {
                     break;
                 }
@@ -442,24 +515,38 @@ public class BigInvestTest
                 await Task.Delay(PollInterval);
             }
 
-            if (investVm.PaymentFlow.CurrentScreen == PaymentFlowScreen.Success)
+            if (investVm.CurrentScreen == InvestScreen.Success)
             {
                 break;
             }
 
-            if (payAttempt < maxPayAttempts && investVm.CurrentScreen == InvestScreen.WalletSelector && investVm.PaymentFlow.ErrorMessage != null)
+            if (payAttempt < maxPayAttempts && investVm.CurrentScreen == InvestScreen.WalletSelector && investVm.HasError)
             {
-                Log(profileName, $"PayWithWallet attempt #{payAttempt} failed: {investVm.PaymentFlow.ErrorMessage}. Retrying after delay...");
+                Log(profileName, $"PayWithWallet attempt #{payAttempt} failed: {investVm.ErrorMessage}. Retrying after delay...");
                 await Task.Delay(TimeSpan.FromSeconds(5));
                 Dispatcher.UIThread.RunJobs();
                 continue;
             }
         }
 
-        investVm.PaymentFlow.CurrentScreen.Should().Be(PaymentFlowScreen.Success,
-            $"Invest should reach success. Last status: {investVm.PaymentFlow.PaymentStatusText}, Error: {investVm.PaymentFlow.ErrorMessage}");
-        investVm.FormattedAmount.Should().Be(
-            decimal.Parse(amountBtc, CultureInfo.InvariantCulture).ToString("F8", CultureInfo.InvariantCulture));
+        investVm.CurrentScreen.Should().Be(InvestScreen.Success,
+            $"Invest should reach success. Last status: {investVm.PaymentStatusText}, Error: {investVm.ErrorMessage}");
+        investVm.FormattedAmount.Should().Be(decimal.Parse(amountBtc, CultureInfo.InvariantCulture).ToString("F8", CultureInfo.InvariantCulture));
+
+        // Verify auto-approval status
+        Log(profileName, $"IsAutoApproved={investVm.IsAutoApproved}, SuccessTitle='{investVm.SuccessTitle}'");
+        if (expectFounderApproval)
+        {
+            investVm.IsAutoApproved.Should().BeFalse("above-threshold investment should NOT be auto-approved");
+            investVm.SuccessTitle.Should().Contain("Pending Approval",
+                "above-threshold investment should show 'Pending Approval' in SuccessTitle");
+        }
+        else
+        {
+            investVm.IsAutoApproved.Should().BeTrue("below-threshold investment should be auto-approved");
+            investVm.SuccessTitle.Should().Contain("Successful",
+                "below-threshold (auto-approved) investment should show 'Successful' in SuccessTitle");
+        }
 
         // DIRECT DI RESOLVE: PortfolioViewModel is a singleton not reachable from the visual
         // tree while we're still on the Find Projects invest flow.
@@ -469,21 +556,88 @@ public class BigInvestTest
 
         var addedInvestment = portfolioVm.Investments.FirstOrDefault(i => i.ProjectIdentifier == project.ProjectIdentifier);
         addedInvestment.Should().NotBeNull();
-        addedInvestment!.ProjectName.Should().Be(project.ProjectName);
+        addedInvestment.ProjectName.Should().Be(project.ProjectName);
         var actualInvested = decimal.Parse(addedInvestment.TotalInvested, CultureInfo.InvariantCulture);
         var expectedInvested = decimal.Parse(amountBtc, CultureInfo.InvariantCulture);
-        actualInvested.Should().BeGreaterThan(0, "TotalInvested should be non-zero");
+        actualInvested.Should().BeGreaterThan(0, "TotalInvested should be non-zero after AddToPortfolio");
         actualInvested.Should().BeLessThanOrEqualTo(expectedInvested, "TotalInvested should not exceed requested amount");
         (expectedInvested - actualInvested).Should().BeLessThan(0.001m, "TotalInvested should be within fee tolerance of requested amount");
-        addedInvestment.ProjectType.Should().Be("invest");
-        addedInvestment.Step.Should().Be(1, "above-threshold investments should wait for founder approval");
-        addedInvestment.ApprovalStatus.Should().Be("Pending");
-        addedInvestment.StatusText.Should().Be("Awaiting Approval");
-        Log(profileName, "Investment request submitted and pending founder approval.");
+        Log(profileName, $"Investment completed. Founder approval expected: {expectFounderApproval}");
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // Founder Approval (batch)
+    // Founder Approval (single investor at a time)
+    // ═══════════════════════════════════════════════════════════════════
+
+    private async Task ApproveSinglePendingInvestmentAsync(
+        Window window,
+        string profileName,
+        ProjectHandle project,
+        int expectedTotalAboveThresholdSoFar)
+    {
+        await window.NavigateToSectionAndVerify("Funders");
+
+        var fundersVm = GetFundersViewModel(window);
+        fundersVm.Should().NotBeNull();
+
+        var deadline = DateTime.UtcNow + IndexerLagTimeout;
+        SignatureRequestViewModel? pendingSignature = null;
+
+        while (DateTime.UtcNow < deadline)
+        {
+            await fundersVm!.LoadInvestmentRequestsAsync();
+            Dispatcher.UIThread.RunJobs();
+            fundersVm.SetFilter("waiting");
+            Dispatcher.UIThread.RunJobs();
+
+            var waitingForProject = fundersVm.FilteredSignatures
+                .Where(s => string.Equals(s.ProjectIdentifier, project.ProjectIdentifier, StringComparison.Ordinal))
+                .ToList();
+
+            Log(profileName,
+                $"Funders waiting count for project: {waitingForProject.Count} (expecting at least 1 unapproved)");
+
+            if (waitingForProject.Count > 0)
+            {
+                // Take the first waiting one (any order is fine — they're all unapproved)
+                pendingSignature = waitingForProject.First();
+                break;
+            }
+
+            await Task.Delay(PollInterval);
+        }
+
+        pendingSignature.Should().NotBeNull("there should be a pending signature request to approve");
+
+        Log(profileName,
+            $"Approving signature request id={pendingSignature!.Id} for project {project.ProjectIdentifier}");
+        await window.ClickApproveSignatureAsync(fundersVm!, pendingSignature, UiTimeout);
+
+        // Wait for approval to register
+        var approvalDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        while (DateTime.UtcNow < approvalDeadline)
+        {
+            await fundersVm!.LoadInvestmentRequestsAsync();
+            Dispatcher.UIThread.RunJobs();
+            fundersVm.SetFilter("approved");
+            Dispatcher.UIThread.RunJobs();
+
+            var approvedCount = fundersVm.FilteredSignatures.Count(s =>
+                string.Equals(s.ProjectIdentifier, project.ProjectIdentifier, StringComparison.Ordinal));
+            if (approvedCount >= expectedTotalAboveThresholdSoFar)
+            {
+                Log(profileName, $"Approved count now {approvedCount} (expected {expectedTotalAboveThresholdSoFar}).");
+                return;
+            }
+
+            await Task.Delay(PollInterval);
+        }
+
+        throw new InvalidOperationException("Founder approval did not complete in time.");
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Founder Approval (batch - kept for reference)
     // ═══════════════════════════════════════════════════════════════════
 
     private async Task ApprovePendingInvestmentsAsync(
@@ -525,7 +679,7 @@ public class BigInvestTest
 
         pendingSignatures.Should().NotBeNull();
         pendingSignatures!.Count.Should().Be(expectedPendingCount,
-            $"all {expectedPendingCount} investment requests should appear in Funders before approval");
+            $"all {expectedPendingCount} above-threshold investment requests should appear in Funders before approval");
 
         foreach (var pendingSignature in pendingSignatures)
         {
@@ -562,15 +716,11 @@ public class BigInvestTest
 
     private async Task ConfirmApprovedInvestmentAsync(Window window, string profileName, ProjectHandle project)
     {
-        var portfolioVm = await WaitForPortfolioInvestmentAsync(
-            window, profileName, project,
-            investment => investment.Step >= 2);
+        var portfolioVm = await WaitForPortfolioInvestmentAsync(window, profileName, project, investment => investment.Step >= 2);
         var investment = portfolioVm.Investments.First(i => i.ProjectIdentifier == project.ProjectIdentifier);
 
         Log(profileName, $"Confirming approved investment. Step={investment.Step}, Status={investment.StatusText}");
         investment.ApprovalStatus.Should().Be("Approved");
-        investment.Step.Should().Be(2, "approved investments should require explicit investor confirmation");
-
         await window.ClickInvestmentDetailActionAsync(portfolioVm, investment, "ConfirmInvestmentButton", UiTimeout);
 
         var activeDeadline = DateTime.UtcNow + IndexerLagTimeout;
@@ -622,7 +772,7 @@ public class BigInvestTest
             Dispatcher.UIThread.RunJobs();
 
             var stageSnapshot = string.Join(", ", manageVm.Stages.Select(s =>
-                $"#{s.Number}:available={s.Available},canClaim={s.CanClaim},availableTxs={s.AvailableTransactions.Count},spent={s.SpentTransactionCount}"));
+                $"#{s.Number}:available={s.Available},canClaim={s.CanClaim},availableTxs={s.AvailableTransactions.Count},spent={s.SpentTransactionCount},date='{s.CompletionDate}'"));
             Log(profileName, $"Stage snapshot: {stageSnapshot}");
 
             var stage1 = manageVm.Stages.FirstOrDefault(s => s.Number == 1 && s.AvailableTransactions.Count >= expectedUtxoCount);
@@ -658,69 +808,41 @@ public class BigInvestTest
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // Founder Releases Remaining Stages
+    // Recovery: Above Threshold (penalty -> penalty release)
     // ═══════════════════════════════════════════════════════════════════
 
-    private async Task ReleaseRemainingStagesToInvestorsAsync(Window window, string profileName, ProjectHandle project)
-    {
-        await window.NavigateToSectionAndVerify("My Projects");
-
-        var myProjectsVm = GetMyProjectsViewModel(window);
-        myProjectsVm.Should().NotBeNull();
-
-        await myProjectsVm!.LoadFounderProjectsAsync();
-        Dispatcher.UIThread.RunJobs();
-
-        var founderProject = myProjectsVm.Projects.FirstOrDefault(p =>
-            string.Equals(p.ProjectIdentifier, project.ProjectIdentifier, StringComparison.Ordinal));
-        founderProject.Should().NotBeNull();
-
-        var deadline = DateTime.UtcNow + IndexerLagTimeout;
-        while (DateTime.UtcNow < deadline)
-        {
-            await myProjectsVm.LoadFounderProjectsAsync();
-            myProjectsVm.OpenManageProject(founderProject!);
-            var manageVm = myProjectsVm.SelectedManageProject;
-            manageVm.Should().NotBeNull();
-
-            var releaseSucceeded = await window.ClickManageProjectReleaseFundsAsync(myProjectsVm, founderProject!, UiTimeout);
-            if (releaseSucceeded)
-            {
-                Log(profileName, "Founder released remaining stages to investors.");
-                return;
-            }
-
-            Log(profileName, "Remaining stage release not ready yet. Retrying...");
-            await Task.Delay(PollInterval);
-        }
-
-        throw new InvalidOperationException("Founder release signatures were not created in time.");
-    }
-
-    // ═══════════════════════════════════════════════════════════════════
-    // Investors Claim Remaining Stages
-    // ═══════════════════════════════════════════════════════════════════
-
-    private async Task ClaimRemainingStagesAsync(Window window, string profileName, ProjectHandle project)
+    private async Task RecoverAboveThresholdInvestmentAsync(Window window, string profileName, ProjectHandle project)
     {
         var portfolioVm = await WaitForPortfolioInvestmentAsync(window, profileName, project, investment => investment.Step == 3);
         var investment = portfolioVm.Investments.First(i => i.ProjectIdentifier == project.ProjectIdentifier);
         investment.InvestmentWalletId.Should().NotBeNullOrEmpty();
         investment.InvestmentTransactionId.Should().NotBeNullOrEmpty();
 
-        var releaseState = await WaitForRecoveryActionAsync(portfolioVm, investment, profileName, expectedActionKey: "unfundedRelease");
-        releaseState.ActionKey.Should().Be("unfundedRelease");
+        var recoveryState = await WaitForRecoveryActionAsync(portfolioVm, investment, profileName, expectedActionKey: "recovery");
+        recoveryState.ActionKey.Should().Be("recovery");
 
-        Log(profileName, "Claiming remaining stages without penalty...");
-        await EnsureWalletHasFeeFunds(window, profileName, investment.InvestmentWalletId, "before unfunded release");
-        var releaseResult = await ExecuteActionWithRetry(
+        Log(profileName, "Recovering above-threshold investment to penalty...");
+        await EnsureWalletHasFeeFunds(window, profileName, investment.InvestmentWalletId, "before recover-to-penalty");
+        var recoverToPenaltyResult = await ExecuteRecoveryActionWithRetry(
             profileName,
-            "unfunded-release",
-            () => portfolioVm.ReleaseFundsAsync(investment).ContinueWith(t => t.Result.Success),
-            () => LogUnfundedReleaseBuildDiagnostics(investment));
-        releaseResult.Should().BeTrue();
+            "recover-to-penalty",
+            () => portfolioVm.RecoverFundsAsync(investment).ContinueWith(t => t.Result.Success),
+            () => LogRecoveryBuildDiagnostics(investment, RecoveryAction.Recovery));
+        recoverToPenaltyResult.Should().BeTrue();
 
-        Log(profileName, "Verifying stage statuses after unfunded release...");
+        var postPenaltyState = await WaitForRecoveryActionAsync(portfolioVm, investment, profileName, expectedActionKey: "penaltyRelease");
+        postPenaltyState.ActionKey.Should().Be("penaltyRelease");
+
+        Log(profileName, "Recovering from penalty (penalty days = 0)...");
+        await EnsureWalletHasFeeFunds(window, profileName, investment.InvestmentWalletId, "before penalty release");
+        var penaltyReleaseResult = await ExecuteRecoveryActionWithRetry(
+            profileName,
+            "penalty-release",
+            () => portfolioVm.PenaltyReleaseFundsAsync(investment).ContinueWith(t => t.Result.Success),
+            () => LogRecoveryBuildDiagnostics(investment, RecoveryAction.PenaltyRelease));
+        penaltyReleaseResult.Should().BeTrue();
+
+        Log(profileName, "Verifying stage statuses after penalty release...");
         var statusDeadline = DateTime.UtcNow + IndexerLagTimeout;
         while (DateTime.UtcNow < statusDeadline)
         {
@@ -728,7 +850,7 @@ public class BigInvestTest
             Dispatcher.UIThread.RunJobs();
 
             var recoveredStages = investment.Stages
-                .Where(s => s.Status == "Spent by investor" || s.Status == "Recovered after penalty" || s.Status == "Project Unfunded, Spent back to investor")
+                .Where(s => s.Status == "Recovered after penalty" || s.Status == "Spent by investor")
                 .ToList();
 
             if (recoveredStages.Count > 0)
@@ -744,15 +866,39 @@ public class BigInvestTest
             await Task.Delay(PollInterval);
         }
 
-        investment.Stages.Any(s => s.Status == "Spent by investor" || s.Status == "Recovered after penalty" || s.Status == "Project Unfunded, Spent back to investor").Should().BeTrue(
-            "at least one stage should show a recovered status after release");
+        investment.Stages.Any(s => s.Status == "Recovered after penalty" || s.Status == "Spent by investor").Should().BeTrue(
+            "at least one stage should show 'Recovered after penalty' or 'Spent by investor' after penalty release");
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Recovery: Below Threshold (end-of-project claim)
+    // ═══════════════════════════════════════════════════════════════════
+
+    private async Task RecoverBelowThresholdInvestmentAsync(Window window, string profileName, ProjectHandle project)
+    {
+        var portfolioVm = await WaitForPortfolioInvestmentAsync(window, profileName, project, investment => investment.Step == 3);
+        var investment = portfolioVm.Investments.First(i => i.ProjectIdentifier == project.ProjectIdentifier);
+        investment.InvestmentWalletId.Should().NotBeNullOrEmpty();
+        investment.InvestmentTransactionId.Should().NotBeNullOrEmpty();
+
+        var recoveryState = await WaitForRecoveryActionAsync(portfolioVm, investment, profileName, expectedActionKey: "belowThreshold");
+        recoveryState.ActionKey.Should().Be("belowThreshold");
+
+        Log(profileName, "Recovering below-threshold investment without penalty...");
+        await EnsureWalletHasFeeFunds(window, profileName, investment.InvestmentWalletId, "before end-of-project claim");
+        var recoverResult = await ExecuteRecoveryActionWithRetry(
+            profileName,
+            "end-of-project-claim",
+            () => portfolioVm.ClaimEndOfProjectAsync(investment).ContinueWith(t => t.Result.Success),
+            () => LogRecoveryBuildDiagnostics(investment, RecoveryAction.EndOfProject));
+        recoverResult.Should().BeTrue();
     }
 
     // ═══════════════════════════════════════════════════════════════════
     // Retry & Diagnostics
     // ═══════════════════════════════════════════════════════════════════
 
-    private async Task<bool> ExecuteActionWithRetry(
+    private async Task<bool> ExecuteRecoveryActionWithRetry(
         string profileName,
         string actionLabel,
         Func<Task<bool>> execute,
@@ -764,11 +910,11 @@ public class BigInvestTest
         while (DateTime.UtcNow < deadline)
         {
             attempt++;
-            Log(profileName, $"Attempt #{attempt} for action '{actionLabel}'...");
+            Log(profileName, $"Attempt #{attempt} for recovery action '{actionLabel}'...");
             var result = await execute();
             if (result)
             {
-                Log(profileName, $"Action '{actionLabel}' succeeded on attempt #{attempt}.");
+                Log(profileName, $"Recovery action '{actionLabel}' succeeded on attempt #{attempt}.");
                 return true;
             }
 
@@ -779,21 +925,45 @@ public class BigInvestTest
         return false;
     }
 
-    /// DIAGNOSTIC SDK CALL: Logs the raw BuildUnfundedReleaseTransaction result to help
-    /// diagnose why the UI-level release retry may be failing. Not part of the test flow.
-    private static async Task LogUnfundedReleaseBuildDiagnostics(InvestmentViewModel investment)
+    /// DIAGNOSTIC SDK CALL: Logs the raw Build*Transaction result to help diagnose
+    /// why the UI-level recovery/release retry may be failing. Not part of the test flow.
+    private static async Task LogRecoveryBuildDiagnostics(InvestmentViewModel investment, RecoveryAction action)
     {
         var investmentAppService = global::App.App.Services.GetRequiredService<IInvestmentAppService>();
         var walletId = new WalletId(investment.InvestmentWalletId);
         var projectId = new ProjectId(investment.ProjectIdentifier);
         var feeRate = new DomainFeerate(20);
 
-        var buildResult = await investmentAppService.BuildUnfundedReleaseTransaction(
-            new BuildUnfundedReleaseTransaction.BuildUnfundedReleaseTransactionRequest(walletId, projectId, feeRate));
-
-        Log(investment.ProjectIdentifier, buildResult.IsSuccess
-            ? $"Diagnostic BuildUnfundedReleaseTransaction succeeded. TxId={buildResult.Value.TransactionDraft.TransactionId}"
-            : $"Diagnostic BuildUnfundedReleaseTransaction failed: {buildResult.Error}");
+        switch (action)
+        {
+            case RecoveryAction.Recovery:
+            {
+                var buildResult = await investmentAppService.BuildRecoveryTransaction(
+                    new BuildRecoveryTransaction.BuildRecoveryTransactionRequest(walletId, projectId, feeRate));
+                Log(investment.ProjectIdentifier, buildResult.IsSuccess
+                    ? $"Diagnostic BuildRecoveryTransaction succeeded. TxId={buildResult.Value.TransactionDraft.TransactionId}"
+                    : $"Diagnostic BuildRecoveryTransaction failed: {buildResult.Error}");
+                break;
+            }
+            case RecoveryAction.PenaltyRelease:
+            {
+                var buildResult = await investmentAppService.BuildPenaltyReleaseTransaction(
+                    new BuildPenaltyReleaseTransaction.BuildPenaltyReleaseTransactionRequest(walletId, projectId, feeRate));
+                Log(investment.ProjectIdentifier, buildResult.IsSuccess
+                    ? $"Diagnostic BuildPenaltyReleaseTransaction succeeded. TxId={buildResult.Value.TransactionDraft.TransactionId}"
+                    : $"Diagnostic BuildPenaltyReleaseTransaction failed: {buildResult.Error}");
+                break;
+            }
+            case RecoveryAction.EndOfProject:
+            {
+                var buildResult = await investmentAppService.BuildEndOfProjectClaim(
+                    new BuildEndOfProjectClaim.BuildEndOfProjectClaimRequest(walletId, projectId, feeRate));
+                Log(investment.ProjectIdentifier, buildResult.IsSuccess
+                    ? $"Diagnostic BuildEndOfProjectClaim succeeded. TxId={buildResult.Value.TransactionDraft.TransactionId}"
+                    : $"Diagnostic BuildEndOfProjectClaim failed: {buildResult.Error}");
+                break;
+            }
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -848,7 +1018,7 @@ public class BigInvestTest
 
             if (investment != null)
             {
-                Log(profileName, $"Portfolio investment found. Step={investment.Step}, Status={investment.StatusText}, WalletId={investment.InvestmentWalletId}, InvestmentTxId={investment.InvestmentTransactionId}");
+                Log(profileName, $"Portfolio investment found. Step={investment.Step}, Status={investment.StatusText}, Approval={investment.ApprovalStatus}, WalletId={investment.InvestmentWalletId}, InvestmentTxId={investment.InvestmentTransactionId}");
                 if (predicate(investment))
                 {
                     return portfolioVm;
@@ -1103,12 +1273,19 @@ public class BigInvestTest
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // Logging
+    // Logging & Enums
     // ═══════════════════════════════════════════════════════════════════
 
     private static void Log(string? profileName, string message)
     {
         var prefix = string.IsNullOrWhiteSpace(profileName) ? "GLOBAL" : profileName;
         Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss.fff}] [{prefix}] {message}");
+    }
+
+    private enum RecoveryAction
+    {
+        Recovery,
+        PenaltyRelease,
+        EndOfProject
     }
 }

@@ -1,8 +1,7 @@
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.BIP32;
-using Blockcore.NBitcoin.BIP39;
-using Blockcore.Networks;
-using Blockcore.Utilities;
+using NBitcoin;
+using NBitcoin.DataEncoders;
+using Angor.Primitives.Network;
+using Angor.Primitives;
 
 namespace Angor.Shared;
 
@@ -34,7 +33,7 @@ public class HdOperations : IHdOperations
         {
             Guard.NotEmpty(accountExtPubKey, nameof(accountExtPubKey));
 
-            return GeneratePublicKey(ExtPubKey.Parse(accountExtPubKey), index, isChange);
+            return GeneratePublicKey(ExtPubKey.Parse(accountExtPubKey, Network.Main), index, isChange);
         }
 
         /// <summary>
@@ -64,7 +63,7 @@ public class HdOperations : IHdOperations
         /// <param name="chainCode">The chain code used in creating the extended private key.</param>
         /// <param name="hdPath">The HD path of the account for which to get the extended private key.</param>
         /// <param name="network">The network for which to generate this extended private key.</param>
-        public static ISecret GetExtendedPrivateKey(Key privateKey, byte[] chainCode, string hdPath, Network network)
+        public static ISecret GetExtendedPrivateKey(Key privateKey, byte[] chainCode, string hdPath, AngorNetwork network)
         {
             Guard.NotNull(privateKey, nameof(privateKey));
             Guard.NotNull(chainCode, nameof(chainCode));
@@ -271,7 +270,7 @@ public class HdOperations : IHdOperations
         /// <param name="password">The password used to decrypt the encrypted seed.</param>
         /// <param name="network">The network this seed applies to.</param>
         /// <returns>The decrypted private key.</returns>
-        public static Key DecryptSeed(string encryptedSeed, string password, Network network)
+        public static Key DecryptSeed(string encryptedSeed, string password, AngorNetwork network)
         {
             Guard.NotEmpty(encryptedSeed, nameof(encryptedSeed));
             Guard.NotEmpty(password, nameof(password));
@@ -282,9 +281,6 @@ public class HdOperations : IHdOperations
 
         public string DerivePublicKey(string mnemonic, string? passphrase, string hdPath)
         {
-            ExtKey.UseBCForHMACSHA512 = true;
-            Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
-
             var extendedKey = GetExtendedKey(mnemonic, passphrase);
             var derivedKey = extendedKey.Derive(new KeyPath(hdPath));
             return derivedKey.PrivateKey.PubKey.ToHex();
@@ -292,11 +288,8 @@ public class HdOperations : IHdOperations
 
         public string DerivePrivateKey(string mnemonic, string? passphrase, string hdPath)
         {
-            ExtKey.UseBCForHMACSHA512 = true;
-            Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
-
             var extendedKey = GetExtendedKey(mnemonic, passphrase);
             var derivedKey = extendedKey.Derive(new KeyPath(hdPath));
-            return Blockcore.NBitcoin.DataEncoders.Encoders.Hex.EncodeData(derivedKey.PrivateKey.ToBytes());
+            return Encoders.Hex.EncodeData(derivedKey.PrivateKey.ToBytes());
         }
     }

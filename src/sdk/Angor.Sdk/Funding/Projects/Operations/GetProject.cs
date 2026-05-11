@@ -1,7 +1,7 @@
 using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 
 namespace Angor.Sdk.Funding.Projects.Operations;
@@ -18,7 +18,10 @@ public static class GetProject
         public async Task<Result<GetProjectResponse>> Handle(GetProjectRequest request, CancellationToken cancellationToken)
         {
             var project = await projectService.GetAsync(request.ProjectId);
-            return project.Map(p => new GetProjectResponse(p.ToDto()));
+            if (project.IsFailure)
+                return Result.Failure<GetProjectResponse>(project.Error);
+
+            return Result.Success(new GetProjectResponse(project.Value.ToDto()));
         }
     }
 }

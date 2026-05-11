@@ -1,6 +1,8 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Projects.Domain;
 
+using Angor.Primitives;
+
 namespace Angor.Sdk.Funding.Founder.Dtos;
 
 public record ClaimableTransactionDto

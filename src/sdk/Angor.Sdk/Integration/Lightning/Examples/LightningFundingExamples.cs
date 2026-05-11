@@ -6,6 +6,8 @@ using Angor.Shared.Integration.Lightning;
 using Angor.Shared.Integration.Lightning.Models;
 using Microsoft.Extensions.Logging;
 
+using Angor.Primitives;
+
 namespace Angor.Sdk.Integration.Lightning.Examples;
 
 /// <summary>

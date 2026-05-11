@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Angor.Shared.Integration.Lightning.Models;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using Microsoft.Extensions.Logging;
 
 namespace Angor.Shared.Integration.Lightning;

@@ -2,9 +2,9 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Services;
 using Angor.Shared;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.DataEncoders;
-using CSharpFunctionalExtensions;
+using NBitcoin;
+using NBitcoin.DataEncoders;
+using Angor.Primitives;
 
 namespace Angor.Sdk.Funding.Shared;
 
@@ -26,20 +26,23 @@ public class NostrDecrypter(IDerivationOperations derivationOperations, ISeedwor
                 projectResult.Value.FounderKey);
             
 
-        var decryptResult = Result.Try(() =>
+        try
         {
             var bytes = nostrPrivateKey.ToBytes();
             var hex = Encoders.Hex.EncodeData(bytes);
 
             var nostrPubKey = nostrPrivateKey.PubKey.ToHex()[2..];
-            
+
             var isSender = nostrPubKey.Equals(nostrMessage.SenderNostrPubKey, StringComparison.OrdinalIgnoreCase);
-            
+
             var otherPubKey = isSender ? projectResult.Value.NostrPubKey : nostrMessage.SenderNostrPubKey; //We assume all messages are between investor and project npub
 
-            return encryptionService.DecryptNostrContentAsync(hex, otherPubKey, nostrMessage.Content);
-        });
-
-        return await decryptResult;
+            var decrypted = await encryptionService.DecryptNostrContentAsync(hex, otherPubKey, nostrMessage.Content);
+            return Result.Success(decrypted);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<string>(ex.Message);
+        }
     }
 }

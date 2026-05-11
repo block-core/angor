@@ -1,4 +1,4 @@
-﻿using Blockcore.Networks;
+﻿using Angor.Primitives.Network;
 
 namespace Angor.Shared.Networks
 {
@@ -24,14 +24,14 @@ namespace Angor.Shared.Networks
     public class AngorNetworksSelector
     {
         public AngorNetworksSelector(
-            Func<Network> mainnet, 
-            Func<Network> testnet, 
-            Func<Network> regtest, 
-            Func<Network> testnet4, 
-            Func<Network> signet, 
-            Func<Network> angornet, 
-            Func<Network> mutinynet, 
-            Func<Network> liquidnet)
+            Func<AngorNetwork> mainnet,
+            Func<AngorNetwork> testnet,
+            Func<AngorNetwork> regtest,
+            Func<AngorNetwork> testnet4,
+            Func<AngorNetwork> signet,
+            Func<AngorNetwork> angornet,
+            Func<AngorNetwork> mutinynet,
+            Func<AngorNetwork> liquidnet)
         {
             this.Mainnet = mainnet;
             this.Testnet = testnet;
@@ -43,24 +43,24 @@ namespace Angor.Shared.Networks
             this.Testnet4 = testnet4;
         }
 
-        public Func<Network> Mainnet { get; }
+        public Func<AngorNetwork> Mainnet { get; }
 
-        public Func<Network> Testnet { get; }
+        public Func<AngorNetwork> Testnet { get; }
 
-        public Func<Network> Testnet4 { get; }
+        public Func<AngorNetwork> Testnet4 { get; }
 
-        public Func<Network> Regtest { get; }
+        public Func<AngorNetwork> Regtest { get; }
 
-        public Func<Network> AngorNet { get; }
+        public Func<AngorNetwork> AngorNet { get; }
 
-        public Func<Network> SigNet { get; }
+        public Func<AngorNetwork> SigNet { get; }
 
-        public Func<Network> MutinyNet { get; }
+        public Func<AngorNetwork> MutinyNet { get; }
 
-        public Func<Network> LiquidNet { get; }
+        public Func<AngorNetwork> LiquidNet { get; }
 
 
-        public static Network NetworkByName(string networkName)
+        public static AngorNetwork NetworkByName(string networkName)
         {
             return networkName switch
             {

@@ -1,9 +1,9 @@
 using Angor.Sdk.Common;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 
 namespace Angor.Sdk.Wallet.Infrastructure.Interfaces;
 
 public interface IPasswordProvider
 {
-    Task<Maybe<string>> Get(WalletId walletId);
+    Task<string?> Get(WalletId walletId);
 }

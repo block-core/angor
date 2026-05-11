@@ -1,14 +1,14 @@
 using Angor.Shared.Models;
-using Blockcore.Networks;
+using Angor.Primitives.Network;
 
 namespace Angor.Shared;
 
 public interface INetworkConfiguration
 {
-    Network GetNetwork();
+    AngorNetwork GetNetwork();
     bool GetDebugMode();
     void SetDebugMode(bool? debugMode);
-    void SetNetwork(Network network);
+    void SetNetwork(AngorNetwork network);
     String GetGenesisBlockHash();
     string GetNetworkNameFromGenesisBlockHash(string genesisBlockHash);
 

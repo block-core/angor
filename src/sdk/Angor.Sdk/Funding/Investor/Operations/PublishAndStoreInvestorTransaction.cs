@@ -3,14 +3,14 @@ using Angor.Sdk.Funding.Investor.Domain;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Funding.Shared.TransactionDrafts;
 using Angor.Shared.Services;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 
 namespace Angor.Sdk.Funding.Investor.Operations;
 
 public static class PublishAndStoreInvestorTransaction
 {
-    public record PublishAndStoreInvestorTransactionRequest(string? WalletId, Shared.ProjectId? ProjectId, Shared.TransactionDraft TransactionDraft) : IRequest<Result<PublishAndStoreInvestorTransactionResponse>>;
+    public record PublishAndStoreInvestorTransactionRequest(string? WalletId, ProjectId? ProjectId, Shared.TransactionDraft TransactionDraft) : IRequest<Result<PublishAndStoreInvestorTransactionResponse>>;
 
     public record PublishAndStoreInvestorTransactionResponse(string TransactionId);
 

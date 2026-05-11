@@ -8,8 +8,8 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
-using CSharpFunctionalExtensions;
+using NBitcoin;
+using Angor.Primitives;
 using FluentAssertions;
 using Moq;
 using Stage = Angor.Sdk.Funding.Projects.Domain.Stage;
@@ -85,7 +85,7 @@ public class ReleaseFundsTests
 
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData("wallet-1"))
-            .ReturnsAsync(Result.Failure<(string Words, Maybe<string> Passphrase)>("Wallet locked"));
+            .ReturnsAsync(Result.Failure<(string Words, string? Passphrase)>("Wallet locked"));
 
         // Act
         var result = await _sut.Handle(request, CancellationToken.None);
@@ -163,7 +163,7 @@ public class ReleaseFundsTests
         _mockInvestorTransactionActions
             .Setup(x => x.CheckInvestorUnfundedReleaseSignatures(
                 It.IsAny<ProjectInfo>(),
-                It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>(),
+                It.IsAny<Transaction>(),
                 It.IsAny<SignatureInfo>(),
                 It.IsAny<string>()))
             .Returns(false);
@@ -171,13 +171,13 @@ public class ReleaseFundsTests
         _mockFounderTransactionActions
             .Setup(x => x.SignInvestorRecoveryTransactions(
                 It.IsAny<ProjectInfo>(), It.IsAny<string>(),
-                It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>(), It.IsAny<string>()))
+                It.IsAny<Transaction>(), It.IsAny<string>()))
             .Returns(new SignatureInfo());
 
         _mockInvestorTransactionActions
             .Setup(x => x.BuildUnfundedReleaseInvestorFundsTransaction(
                 It.IsAny<ProjectInfo>(),
-                It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>(),
+                It.IsAny<Transaction>(),
                 It.IsAny<string>()))
             .Returns(network.CreateTransaction());
 
@@ -269,7 +269,7 @@ public class ReleaseFundsTests
     private void SetupSeedwords()
     {
         var sensitiveData = (Words: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
-            Passphrase: Maybe<string>.None);
+            Passphrase: (string?)null);
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData("wallet-1"))
             .ReturnsAsync(Result.Success(sensitiveData));

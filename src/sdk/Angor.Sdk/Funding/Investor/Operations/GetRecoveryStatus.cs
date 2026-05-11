@@ -9,13 +9,13 @@ using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
 using Angor.Shared.Utilities;
-using Blockcore.Consensus.TransactionInfo;
-using Blockcore.NBitcoin;
-using CSharpFunctionalExtensions;
+using NBitcoin;
+using NBitcoin;
+using Angor.Primitives;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Angor.Sdk.Funding.Projects;
-using Script = Blockcore.Consensus.ScriptInfo.Script;
+using Script = NBitcoin.Script;
 
 namespace Angor.Sdk.Funding.Investor.Operations;
 
@@ -90,7 +90,16 @@ public static class GetRecoveryStatus
 
         private async Task<Result<(QueryTransaction,IEnumerable<InvestorStageItemDto>)>> FindInvestments(Project project,string investorPubKey)
         {
-            var trxResult = await Result.Try(() => angorIndexerService.GetInvestmentAsync(project.Id.Value, investorPubKey));
+            Result<ProjectInvestment?> trxResult;
+            try
+            {
+                var inv = await angorIndexerService.GetInvestmentAsync(project.Id.Value, investorPubKey);
+                trxResult = Result.Success(inv);
+            }
+            catch (Exception ex)
+            {
+                trxResult = Result.Failure<ProjectInvestment?>(ex.Message);
+            }
 
             if (trxResult.IsFailure)
                 return Result.Failure<(QueryTransaction, IEnumerable<InvestorStageItemDto>)>(trxResult.Error);
@@ -121,21 +130,23 @@ public static class GetRecoveryStatus
                 return Result.Failure<(QueryTransaction, IEnumerable<InvestorStageItemDto>)>("No stage outputs found in investment transaction");
             }
 
-            var stagesData = Result.Try(() => taprootOutputs.Select((output, stageIndex) =>
+            try
             {
-                return new InvestorStageItemDto
+                var stagesData = taprootOutputs.Select((output, stageIndex) => new InvestorStageItemDto
                 {
                     StageIndex = stageIndex,
                     Amount = output.Balance, // Store balance in satoshis
                     IsSpent = false,
                     Status = "Unknown",
                     ScriptType = ProjectScriptTypeEnum.Unknown,
-                };
-            }));
+                });
 
-            return stagesData.IsFailure
-                ? Result.Failure<(QueryTransaction, IEnumerable<InvestorStageItemDto>)>(stagesData.Error)
-                : Result.Success<(QueryTransaction, IEnumerable<InvestorStageItemDto>)>((trxInfo, stagesData.Value));
+                return Result.Success<(QueryTransaction, IEnumerable<InvestorStageItemDto>)>((trxInfo, stagesData));
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<(QueryTransaction, IEnumerable<InvestorStageItemDto>)>(ex.Message);
+            }
         }
 
         private async Task<Result<InvestorProjectRecoveryDto>> CheckSpentFund(IList<InvestorStageItemDto> stageItems, QueryTransaction transactionInfo, Project project)

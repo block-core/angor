@@ -7,8 +7,8 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.Services;
-using Blockcore.Networks;
-using CSharpFunctionalExtensions;
+using Angor.Primitives.Network;
+using Angor.Primitives;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
@@ -31,7 +31,7 @@ namespace Angor.Sdk.Tests.Funding.Investor.Operations;
 [Trait("Network", "Angornet")]
 public class MonitorAddressForFundsIntegrationTests : IDisposable
 {
-    private readonly Network _network;
+    private readonly AngorNetwork _network;
     private readonly NetworkConfiguration _networkConfiguration;
     private readonly WalletOperations _walletOperations;
     private readonly DerivationOperations _derivationOperations;

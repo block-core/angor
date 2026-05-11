@@ -7,7 +7,7 @@ using Angor.Sdk.Tests.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using FluentAssertions;
 using Moq;
 using Stage = Angor.Sdk.Funding.Projects.Domain.Stage;

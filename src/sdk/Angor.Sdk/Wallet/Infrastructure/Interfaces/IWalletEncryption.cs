@@ -1,5 +1,5 @@
 using Angor.Sdk.Wallet.Infrastructure.Impl;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 
 namespace Angor.Sdk.Wallet.Infrastructure.Interfaces;
 

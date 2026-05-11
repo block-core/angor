@@ -1,7 +1,7 @@
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
-using Blockcore.Networks;
+using Angor.Primitives.Network;
 
 namespace Angor.Sdk.Common;
 
@@ -14,12 +14,12 @@ public class NetworkConfiguration : INetworkConfiguration
     public const int AngorInvestFeePercentage = 1;
     public const short NostrEventIdKeyType = 1;
 
-    Network currentNetwork;
+    AngorNetwork currentNetwork;
     bool? debugMode;
 
-    public void SetNetwork(Network network) => currentNetwork = network;
+    public void SetNetwork(AngorNetwork network) => currentNetwork = network;
 
-    public Network GetNetwork() => currentNetwork ?? throw new ApplicationException("Network not set");
+    public AngorNetwork GetNetwork() => currentNetwork ?? throw new ApplicationException("Network not set");
 
     public bool GetDebugMode() => debugMode ?? false;
 

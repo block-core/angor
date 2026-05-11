@@ -10,8 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CSharpFunctionalExtensions" />
-    <PackageReference Include="Blockcore.Core" />
     <PackageReference Include="Microsoft.Extensions.Http" VersionOverride="9.0.5" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" VersionOverride="9.0.5" />
     <PackageReference Include="NBitcoin" />
@@ -32,6 +30,10 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Angor.Shared.Tests" />
     <InternalsVisibleTo Include="Angor.Sdk.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\sdk\Angor.Primitives\Angor.Primitives.csproj" />
   </ItemGroup>
 
 </Project>

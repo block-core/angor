@@ -3,6 +3,8 @@ using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Shared.Models;
 
+using Angor.Primitives;
+
 namespace Angor.Sdk.Funding.Investor;
 
 public class InvestedProjectDto

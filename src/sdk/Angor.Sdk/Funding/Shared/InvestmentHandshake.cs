@@ -1,5 +1,7 @@
 using Angor.Data.Documents.Models;
 
+using Angor.Primitives;
+
 namespace Angor.Sdk.Funding.Shared;
 
 /// <summary>

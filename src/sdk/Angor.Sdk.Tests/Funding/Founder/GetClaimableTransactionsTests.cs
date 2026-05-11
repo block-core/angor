@@ -5,7 +5,7 @@ using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Models;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using FluentAssertions;
 using Moq;
 

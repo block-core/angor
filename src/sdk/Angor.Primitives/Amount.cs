@@ -1,4 +1,4 @@
-namespace Angor.Sdk.Common;
+namespace Angor.Primitives;
 
 public record Amount(long Sats)
 {
@@ -7,4 +7,3 @@ public record Amount(long Sats)
         return $"{Sats} sats";
     }
 }
-

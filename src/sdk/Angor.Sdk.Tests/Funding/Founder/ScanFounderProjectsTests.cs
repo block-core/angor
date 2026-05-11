@@ -6,7 +6,7 @@ using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
 using Angor.Data.Documents.Interfaces;
 using Angor.Shared.Models;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using FluentAssertions;
 using Moq;
 

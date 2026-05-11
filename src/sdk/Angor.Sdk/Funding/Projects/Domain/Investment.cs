@@ -2,6 +2,8 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Shared;
 
+using Angor.Primitives;
+
 namespace Angor.Sdk.Funding.Projects.Domain;
 
 public class Investment

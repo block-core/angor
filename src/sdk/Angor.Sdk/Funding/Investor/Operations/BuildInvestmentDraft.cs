@@ -9,8 +9,8 @@ using Angor.Sdk.Wallet.Domain;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
-using Blockcore.Consensus.TransactionInfo;
-using CSharpFunctionalExtensions;
+using NBitcoin;
+using Angor.Primitives;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -117,12 +117,15 @@ public static class BuildInvestmentDraft
                 }
 
                 // Create investment transaction using FundingParameters
-                var transactionResult = Result.Try(() => investorTransactionActions.CreateInvestmentTransaction(projectInfo, fundingParameters));
-
-                if (transactionResult.IsFailure)
+                Transaction transactionValue;
+                try
                 {
-                    logger.LogWarning("Failed to create investment transaction for project {ProjectId}: {Error}", transactionRequest.ProjectId, transactionResult.Error);
-                    return Result.Failure<BuildInvestmentDraftResponse>(transactionResult.Error);
+                    transactionValue = investorTransactionActions.CreateInvestmentTransaction(projectInfo, fundingParameters);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning("Failed to create investment transaction for project {ProjectId}: {Error}", transactionRequest.ProjectId, ex.Message);
+                    return Result.Failure<BuildInvestmentDraftResponse>(ex.Message);
                 }
 
                 // Sign the transaction - use specific address if provided, otherwise auto-select
@@ -137,7 +140,7 @@ public static class BuildInvestmentDraft
                         transactionRequest.WalletId,
                         transactionRequest.FundingAddress,
                         walletWords,
-                        transactionResult.Value,
+                        transactionValue,
                         transactionRequest.FeeRate.SatsPerKilobyte);
                 }
                 else
@@ -148,7 +151,7 @@ public static class BuildInvestmentDraft
                     signedTxResult = await SignTransaction(
                         transactionRequest.WalletId,
                         walletWords,
-                        transactionResult.Value,
+                        transactionValue,
                         transactionRequest.FeeRate.SatsPerKilobyte);
                 }
 
@@ -294,24 +297,32 @@ public static class BuildInvestmentDraft
 
             var accountInfo = accountBalanceResult.Value.AccountInfo;
 
-            var changeAddressResult = Result.Try(() => accountInfo.GetNextChangeReceiveAddress())
-               .Ensure(s => !string.IsNullOrEmpty(s), "Change address cannot be empty");
-
-            if (changeAddressResult.IsFailure)
+            string changeAddress;
+            try
             {
-                return Result.Failure<TransactionInfo>(changeAddressResult.Error);
+                changeAddress = accountInfo.GetNextChangeReceiveAddress();
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<TransactionInfo>(ex.Message);
             }
 
-            var changeAddress = changeAddressResult.Value!;
+            if (string.IsNullOrEmpty(changeAddress))
+                return Result.Failure<TransactionInfo>("Change address cannot be empty");
 
-            var signedTransactionResult = Result.Try(() => 
-                    walletOperations.AddInputsAndSignTransaction(changeAddress,
+            try
+            {
+                var signedTransaction = walletOperations.AddInputsAndSignTransaction(changeAddress,
                                                                  transaction,
                                                                  walletWords,
                                                                  accountInfo,
-                                                                 feerate));
-
-            return signedTransactionResult;
+                                                                 feerate);
+                return Result.Success(signedTransaction);
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<TransactionInfo>(ex.Message);
+            }
         }
 
         private async Task<Result<TransactionInfo>> SignTransactionFromAddress(
@@ -360,26 +371,34 @@ public static class BuildInvestmentDraft
             logger.LogInformation("Found {Count} available UTXO(s) totaling {TotalAmount} sats on address {FundingAddress}",
                 availableUtxos.Count, availableUtxos.Sum(u => u.value), fundingAddress);
 
-            var changeAddressResult = Result.Try(() => accountInfo.GetNextChangeReceiveAddress())
-                .Ensure(s => !string.IsNullOrEmpty(s), "Change address cannot be empty");
-
-            if (changeAddressResult.IsFailure)
+            string changeAddress;
+            try
             {
-                return Result.Failure<TransactionInfo>(changeAddressResult.Error);
+                changeAddress = accountInfo.GetNextChangeReceiveAddress();
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<TransactionInfo>(ex.Message);
             }
 
-            var changeAddress = changeAddressResult.Value!;
+            if (string.IsNullOrEmpty(changeAddress))
+                return Result.Failure<TransactionInfo>("Change address cannot be empty");
 
-            var signedTransactionResult = Result.Try(() =>
-                walletOperations.AddInputsFromAddressAndSignTransaction(
+            try
+            {
+                var signedTransaction = walletOperations.AddInputsFromAddressAndSignTransaction(
                     fundingAddress,
                     changeAddress,
                     transaction,
                     walletWords,
                     accountInfo,
-                    feerate));
-
-            return signedTransactionResult;
+                    feerate);
+                return Result.Success(signedTransaction);
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<TransactionInfo>(ex.Message);
+            }
         }
     }
 }

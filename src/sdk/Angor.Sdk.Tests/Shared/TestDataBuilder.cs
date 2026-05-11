@@ -1,9 +1,11 @@
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Models;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.DataEncoders;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 using Stage = Angor.Shared.Models.Stage;
+
+using Angor.Primitives;
 
 namespace Angor.Sdk.Tests.Shared;
 

@@ -5,7 +5,7 @@ using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 
 namespace Angor.Sdk.Wallet.Infrastructure.Impl;
 
@@ -21,10 +21,10 @@ public class WalletFactory(
     ISecureKeyProvider secureKeyProvider)
     : IWalletFactory
 {
-    public async Task<Result<Domain.Wallet>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, BitcoinNetwork network)
+    public async Task<Result<Domain.Wallet>> CreateWallet(string name, string seedwords, string? passphrase, BitcoinNetwork network)
     {
         // Derive the wallet ID from the master public key (xpub) hash
-        var walletWords = new WalletWords { Words = seedwords, Passphrase = passphrase.GetValueOrDefault() };
+        var walletWords = new WalletWords { Words = seedwords, Passphrase = passphrase ?? "" };
         var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
         var walletId = new WalletId(accountInfo.walletId);
 
@@ -44,7 +44,7 @@ public class WalletFactory(
         var walletData = new WalletData
         {
             DescriptorJson = JsonSerializer.Serialize(descriptor.ToDto()),
-            RequiresPassphrase = passphrase.HasValue,
+            RequiresPassphrase = passphrase != null,
             SeedWords = seedwords
         };
 
@@ -75,9 +75,12 @@ public class WalletFactory(
         var encryptedWallet = await walletEncryption
             .Encrypt(walletData, encryptionKey, name, walletId.Value);
 
-        return await walletStore.GetAll()
-            .Map(wallets => wallets.Append(encryptedWallet))
-            .Bind(wallets => walletStore.SaveAll(wallets));
+        var getAllResult = await walletStore.GetAll();
+        if (getAllResult.IsFailure)
+            return Result.Failure(getAllResult.Error);
+
+        var updatedWallets = getAllResult.Value.Append(encryptedWallet);
+        return await walletStore.SaveAll(updatedWallets);
     }
 
     private Task<Result> CreateAccountBalanceInfoAsync(AccountInfo accountInfo,WalletId walletId)
@@ -99,6 +102,9 @@ public class WalletFactory(
             Keys = founderKeys.Keys
         };
             
-        return await derivedProjectKeysCollection.UpsertAsync(x => x.WalletId, derivedKeys);
+        var upsertResult = await derivedProjectKeysCollection.UpsertAsync(x => x.WalletId, derivedKeys);
+        if (upsertResult.IsFailure)
+            return Result.Failure(upsertResult.Error);
+        return Result.Success();
     }
 }

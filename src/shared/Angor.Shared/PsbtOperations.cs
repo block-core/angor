@@ -1,10 +1,10 @@
 using Angor.Shared.Models;
 using Angor.Shared.Services;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.Consensus.TransactionInfo;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.BIP32;
-using Blockcore.Networks;
+using NBitcoin;
+using NBitcoin;
+using NBitcoin;
+using NBitcoin;
+using Angor.Primitives.Network;
 using Microsoft.Extensions.Logging;
 
 namespace Angor.Shared;
@@ -36,7 +36,7 @@ public class PsbtOperations : IPsbtOperations
             throw new ApplicationException("The Root ExtPubKey is missing");
         }
 
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
         var nbitcoinNetwork = NetworkMapper.Map(network);
 
         changeAddress ??= accountInfo.GetNextChangeReceiveAddress();
@@ -106,7 +106,7 @@ public class PsbtOperations : IPsbtOperations
             var rootedKeyPath = new NBitcoin.RootedKeyPath(accountExtPubKey, keyPath);
 
             var pubKey = _hdOperations.GeneratePublicKey(ExtPubKey.Parse(accountInfo.ExtPubKey, network), (int)keyPath.Indexes[4], keyPath.Indexes[3] == 1);
-            var path = _hdOperations.CreateHdPath(Purpose, network.Consensus.CoinType, AccountIndex, keyPath.Indexes[3] == 1, (int)keyPath.Indexes[4]);
+            var path = _hdOperations.CreateHdPath(Purpose, (int)network.Consensus.CoinType, AccountIndex, keyPath.Indexes[3] == 1, (int)keyPath.Indexes[4]);
 
             if (path != utxoInfo.HdPath)
                 throw new InvalidOperationException($"Path does not match {path} {utxoInfo.HdPath}");
@@ -124,7 +124,7 @@ public class PsbtOperations : IPsbtOperations
             throw new ApplicationException("The Root ExtPubKey is missing");
         }
 
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
         var nbitcoinNetwork = NetworkMapper.Map(network);
 
         var changeAddress = accountInfo.GetNextChangeReceiveAddress();
@@ -191,7 +191,7 @@ public class PsbtOperations : IPsbtOperations
             var rootedKeyPath = new NBitcoin.RootedKeyPath(accountExtPubKey, keyPath);
 
             var pubKey = _hdOperations.GeneratePublicKey(ExtPubKey.Parse(accountInfo.ExtPubKey, network), (int)keyPath.Indexes[4], keyPath.Indexes[3] == 1);
-            var path = _hdOperations.CreateHdPath(Purpose, network.Consensus.CoinType, AccountIndex, keyPath.Indexes[3] == 1, (int)keyPath.Indexes[4]);
+            var path = _hdOperations.CreateHdPath(Purpose, (int)network.Consensus.CoinType, AccountIndex, keyPath.Indexes[3] == 1, (int)keyPath.Indexes[4]);
 
             if (path != utxoInfo.HdPath)
                 throw new InvalidOperationException($"Path does not match {path} {utxoInfo.HdPath}");
@@ -204,16 +204,14 @@ public class PsbtOperations : IPsbtOperations
 
     public TransactionInfo SignPsbt(PsbtData psbtData, WalletWords walletWords)
     {
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
         var nbitcoinNetwork = NetworkMapper.Map(network);
 
         var psbt = NBitcoin.PSBT.Parse(psbtData.PsbtHex, nbitcoinNetwork);
 
         ExtKey extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
 
-        var nbitcoinExtendedKey = NBitcoin.ExtKey.CreateFromBytes(extendedKey.ToBytes(network.Consensus.ConsensusFactory));
-
-        psbt.SignAll(NBitcoin.ScriptPubKeyType.Segwit, nbitcoinExtendedKey);
+        psbt.SignAll(NBitcoin.ScriptPubKeyType.Segwit, extendedKey);
 
         if (!psbt.TryFinalize(out IList<NBitcoin.PSBTError>? errors))
         {

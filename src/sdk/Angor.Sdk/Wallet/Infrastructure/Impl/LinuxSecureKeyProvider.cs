@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Infrastructure.Interfaces;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 
 namespace Angor.Sdk.Wallet.Infrastructure.Impl;
 
@@ -22,12 +22,12 @@ public class LinuxSecureKeyProvider : ISecureKeyProvider
         EnsureRestrictedPermissions();
     }
 
-    public Task<Maybe<string>> Get(WalletId walletId)
+    public Task<string?> Get(WalletId walletId)
     {
         var keys = LoadKeys();
         return Task.FromResult(keys.TryGetValue(walletId.Value, out var key)
-            ? Maybe<string>.From(key)
-            : Maybe<string>.None);
+            ? key
+            : null);
     }
 
     public Task Save(WalletId walletId, string key)

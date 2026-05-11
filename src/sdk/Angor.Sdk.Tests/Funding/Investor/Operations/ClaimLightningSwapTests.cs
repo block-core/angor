@@ -6,7 +6,7 @@ using Angor.Shared;
 using Angor.Shared.Integration.Lightning;
 using Angor.Shared.Integration.Lightning.Models;
 using Angor.Shared.Models;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -95,7 +95,7 @@ public class ClaimLightningSwapTests
 
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData("wallet-1"))
-            .ReturnsAsync(Result.Failure<(string Words, Maybe<string> Passphrase)>("Wallet locked"));
+            .ReturnsAsync(Result.Failure<(string Words, string? Passphrase)>("Wallet locked"));
 
         // Act
         var result = await _sut.Handle(request, CancellationToken.None);
@@ -118,7 +118,7 @@ public class ClaimLightningSwapTests
             .ReturnsAsync(Result.Success(swapDoc));
 
         var sensitiveData = (Words: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
-            Passphrase: Maybe<string>.None);
+            Passphrase: (string?)null);
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData("wallet-1"))
             .ReturnsAsync(Result.Success(sensitiveData));
@@ -148,7 +148,7 @@ public class ClaimLightningSwapTests
             .ReturnsAsync(Result.Success(swapDoc));
 
         var sensitiveData = (Words: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
-            Passphrase: Maybe<string>.None);
+            Passphrase: (string?)null);
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData("wallet-1"))
             .ReturnsAsync(Result.Success(sensitiveData));
@@ -313,7 +313,7 @@ public class ClaimLightningSwapTests
     private void SetupSuccessfulKeyDerivation()
     {
         var sensitiveData = (Words: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
-            Passphrase: Maybe<string>.None);
+            Passphrase: (string?)null);
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData(It.IsAny<string>()))
             .ReturnsAsync(Result.Success(sensitiveData));

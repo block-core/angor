@@ -1,6 +1,6 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Infrastructure.Interfaces;
-using CSharpFunctionalExtensions;
+
 
 namespace App.Composition.Adapters;
 
@@ -10,8 +10,8 @@ namespace App.Composition.Adapters;
 /// </summary>
 public class SimplePassphraseProvider : IPassphraseProvider
 {
-    public Task<Maybe<string>> Get(WalletId walletId)
+    public Task<string?> Get(WalletId walletId)
     {
-        return Task.FromResult(Maybe<string>.None);
+        return Task.FromResult<string?>(null);
     }
 }

@@ -1,5 +1,5 @@
 using System.Reflection;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 using Microsoft.Extensions.Logging;
 

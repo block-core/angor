@@ -6,7 +6,7 @@ using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Integration.Lightning.Models;
 using Angor.Shared.Models;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using Microsoft.Extensions.Logging;
 
 namespace Angor.Sdk.Funding.Services;

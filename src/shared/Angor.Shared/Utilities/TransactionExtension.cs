@@ -1,9 +1,9 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Angor.Shared.Models;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.Consensus.TransactionInfo;
-using Blockcore.Networks;
+using NBitcoin;
+using NBitcoin;
+using Angor.Primitives.Network;
 
 namespace Angor.Shared.Utilities;
 
@@ -27,21 +27,16 @@ public static class TransactionExtension
             .Sum(output => output.TxOut.Value.Satoshi);
     }
 
-    public static long GetTotalInvestmentAmount(this NBitcoin.Transaction investmentTransaction)
-    {
-        return investmentTransaction.Outputs.AsIndexedOutputs()
-         .Where(output => output.TxOut.ScriptPubKey.IsScriptType(NBitcoin.ScriptType.Taproot))
-                .Sum(output => output.TxOut.Value.Satoshi);
-    }
+
 
     /// <summary>
     /// Converts a Blockcore Transaction to a QueryTransaction object for JSON serialization
     /// Note: InputAddress is not populated as Blockcore doesn't provide GetSignerAddress.
     /// Size and Weight values are approximations based on VirtualSize.
     /// </summary>
-    public static QueryTransaction ToQueryTransaction(this Transaction transaction, Network network)
+    public static QueryTransaction ToQueryTransaction(this Transaction transaction, AngorNetwork network)
     {
-        var virtualSize = (int)transaction.GetVirtualSize(4);
+        var virtualSize = (int)transaction.GetVirtualSize();
         return new QueryTransaction
         {
             TransactionId = transaction.GetHash().ToString(),

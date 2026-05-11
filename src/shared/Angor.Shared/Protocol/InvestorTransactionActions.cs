@@ -1,14 +1,14 @@
 using Angor.Shared.Models;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Protocol.TransactionBuilders;
-using Blockcore.NBitcoin.DataEncoders;
+using NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Key = Blockcore.NBitcoin.Key;
-using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
+using Key = NBitcoin.Key;
+using Transaction = NBitcoin.Transaction;
 using WitScript = NBitcoin.WitScript;
-using Money = Blockcore.NBitcoin.Money;
-using SigHash = Blockcore.Consensus.ScriptInfo.SigHash;
+using Money = NBitcoin.Money;
+using SigHash = NBitcoin.SigHash;
 using Angor.Shared.Utilities;
 
 namespace Angor.Shared.Protocol;
@@ -60,8 +60,8 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
         var scripts = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, fundingParameters, stageIndex);
 
-        var witScriptInfo = new Blockcore.Consensus.TransactionInfo.WitScript(Blockcore.Consensus.ScriptInfo.Script.FromHex(witScript));
-        var executeScript = new Blockcore.Consensus.ScriptInfo.Script(witScriptInfo[witScriptInfo.PushCount - 2]);
+        var witScriptInfo = new WitScript(Script.FromHex(witScript));
+        var executeScript = new Script(witScriptInfo[witScriptInfo.PushCount - 2]);
 
         var withex = executeScript.ToHex();
 
@@ -110,7 +110,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         transaction.Version = 2; // to trigger bip68 rules
 
         // add the output address
-        transaction.Outputs.Add(new Blockcore.Consensus.TransactionInfo.TxOut(Money.Zero, Blockcore.NBitcoin.BitcoinAddress.Create(investorReceiveAddress, network)));
+        transaction.Outputs.Add(new TxOut(Money.Zero, BitcoinAddress.Create(investorReceiveAddress, network)));
 
         // add all the outputs that are in a penalty
         foreach (var output in recoveryTransaction.Outputs.AsIndexedOutputs())
@@ -118,37 +118,38 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             if (output.TxOut.ScriptPubKey == spendingScript.WitHash.ScriptPubKey)
             {
                 // this is a penalty output
-                var txIn = new Blockcore.Consensus.TransactionInfo.TxIn(output.ToOutPoint()) { Sequence = new Blockcore.NBitcoin.Sequence(TimeSpan.FromDays(projectInfo.PenaltyDays)) };
+                var txIn = new TxIn(new OutPoint(output.Transaction.GetHash(), output.N)) { Sequence = new Sequence(TimeSpan.FromDays(projectInfo.PenaltyDays)) };
                 transaction.Inputs.Add(txIn);
 
                 // Set a fake WitScript (placeholder) for fee estimation
-                txIn.WitScript = new Blockcore.Consensus.TransactionInfo.WitScript(
-                    Blockcore.Consensus.ScriptInfo.Op.GetPushOp(new byte[64]),
-                    Blockcore.Consensus.ScriptInfo.Op.GetPushOp(new byte[spendingScript.ToBytes().Length]));
+                txIn.WitScript = new WitScript(
+                    Op.GetPushOp(new byte[64]),
+                    Op.GetPushOp(new byte[spendingScript.ToBytes().Length]));
 
                 transaction.Outputs[0].Value += output.TxOut.Value;
             }
         }
 
         // reduce the network fee form the first output
-        var virtualSize = transaction.GetVirtualSize(4);
-        var fee = new Blockcore.NBitcoin.FeeRate(Blockcore.NBitcoin.Money.Satoshis(feeEstimation.FeeRate)).GetFee(virtualSize);
-        transaction.Outputs[0].Value -= new Blockcore.NBitcoin.Money(fee);
+        var virtualSize = transaction.GetVirtualSize();
+        var fee = new FeeRate(Money.Satoshis(feeEstimation.FeeRate)).GetFee(virtualSize);
+        transaction.Outputs[0].Value -= new Money(fee);
 
         // sign the inputs (replace fake WitScript with real one)
         var key = new Key(Encoders.Hex.DecodeData(investorPrivateKey));
 
         foreach (var intput in transaction.Inputs)
         {
-            var spendingOutput = recoveryTransaction.Outputs.AsIndexedOutputs().First(f => f.ToOutPoint() == intput.PrevOut);
+            var spendingOutput = recoveryTransaction.Outputs.AsIndexedOutputs().First(f => new OutPoint(f.Transaction.GetHash(), f.N) == intput.PrevOut);
 
-            var hash = transaction.GetSignatureHash(network, new Blockcore.NBitcoin.ScriptCoin(intput.PrevOut, spendingOutput.TxOut, spendingScript));
-            var sig = key.Sign(hash, SigHash.All);
+            var inputIndex = transaction.Inputs.IndexOf(intput);
+            var hash = transaction.GetSignatureHash(spendingScript, inputIndex, SigHash.All, spendingOutput.TxOut, HashVersion.WitnessV0);
+            var sig = new TransactionSignature(key.Sign(hash), SigHash.All);
 
             // Replace the fake WitScript with the real one
-            intput.WitScript = new Blockcore.Consensus.TransactionInfo.WitScript(
-                Blockcore.Consensus.ScriptInfo.Op.GetPushOp(sig.ToBytes()),
-                Blockcore.Consensus.ScriptInfo.Op.GetPushOp(spendingScript.ToBytes()));
+            intput.WitScript = new WitScript(
+                Op.GetPushOp(sig.ToBytes()),
+                Op.GetPushOp(spendingScript.ToBytes()));
         }
 
         return new TransactionInfo { Transaction = transaction, TransactionFee = fee };
@@ -314,7 +315,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
             var investorSignature = key.SignTaprootKeySpend(hash, sigHash);
 
-            recoveryTransaction.Inputs[stageIndex].WitScript = new Blockcore.Consensus.TransactionInfo.WitScript(
+            recoveryTransaction.Inputs[stageIndex].WitScript = new WitScript(
                     new WitScript(
                         Op.GetPushOp(investorSignature.ToBytes()),
                         Op.GetPushOp(TaprootSignature.Parse(founderSignatures.Signatures.First(f => f.StageIndex == stageIndex).Signature).ToBytes()),

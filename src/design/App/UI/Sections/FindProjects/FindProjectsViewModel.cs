@@ -331,14 +331,14 @@ public partial class FindProjectsViewModel : ReactiveObject
             }
 
             var maybeProject = result.Value.Project;
-            if (maybeProject.HasNoValue)
+            if (maybeProject == null)
             {
                 SearchError = "Project not found on the blockchain.";
                 _logger.LogInformation("Project not found: {ProjectId}", projectId);
                 return;
             }
 
-            var dto = maybeProject.Value;
+            var dto = maybeProject;
             var vm = ProjectItemViewModel.FromDto(dto);
             vm.CurrencySymbol = _currencyService.Symbol;
 
@@ -468,19 +468,19 @@ public partial class FindProjectsViewModel : ReactiveObject
     /// Load latest projects from the SDK (Nostr relays).
     /// Falls back to empty list on failure.
     /// </summary>
-    public void ResetAfterNetworkSwitch()
-    {
-        CloseInvestPage();
-        CloseProjectDetail();
-        CachedDtos = null;
-        Projects.Clear();
-        pendingItems.Clear();
-        HasMoreItems = false;
-        IsInitialLoad = true;
-        _ = Task.Run(LoadProjectsFromSdkAsync);
-    }
-
-    public async Task LoadProjectsFromSdkAsync()
+    public void ResetAfterNetworkSwitch()
+    {
+        CloseInvestPage();
+        CloseProjectDetail();
+        CachedDtos = null;
+        Projects.Clear();
+        pendingItems.Clear();
+        HasMoreItems = false;
+        IsInitialLoad = true;
+        _ = Task.Run(LoadProjectsFromSdkAsync);
+    }
+
+    public async Task LoadProjectsFromSdkAsync()
     {
         var pl = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger("ProjectsLoad");
         var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -580,7 +580,7 @@ public partial class FindProjectsViewModel : ReactiveObject
         finally
         {
             cts.Cancel();
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { IsLoading = false; IsInitialLoad = false; });
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { IsLoading = false; IsInitialLoad = false; });
             pl.LogInformation("[ProjectsLoad] t={T}ms DONE", sw.ElapsedMilliseconds);
         }
     }

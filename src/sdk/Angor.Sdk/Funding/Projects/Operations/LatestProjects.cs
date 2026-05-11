@@ -1,7 +1,7 @@
 using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Services;
 using Angor.Shared;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using MediatR;
 
 namespace Angor.Sdk.Funding.Projects.Operations;
@@ -20,8 +20,11 @@ public static class LatestProjects
             var currentNetworkName = networkConfiguration.GetNetwork().Name;
 
             var projects = await projectService.LatestFromNostrAsync();
-            return projects.Map(sequence => new LatestProjectsResponse(
-                sequence
+            if (projects.IsFailure)
+                return Result.Failure<LatestProjectsResponse>(projects.Error);
+
+            return Result.Success(new LatestProjectsResponse(
+                projects.Value
                     .Where(p => IsMatchingNetwork(p.NetworkName, currentNetworkName))
                     .OrderByDescending(p => p.StartingDate)
                     .Select(project => project.ToDto())));

@@ -4,6 +4,8 @@ using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Shared.Models;
 using Stage = Angor.Shared.Models.Stage;
 
+using Angor.Primitives;
+
 namespace Angor.Sdk.Funding.Projects;
 
 public static class ProjectExtensions

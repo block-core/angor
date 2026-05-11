@@ -4,7 +4,7 @@ using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Funding.Shared.TransactionDrafts;
 using Angor.Shared.Services;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using FluentAssertions;
 using MediatR;
 using Moq;

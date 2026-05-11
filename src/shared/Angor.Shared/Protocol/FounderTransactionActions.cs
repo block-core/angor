@@ -1,8 +1,8 @@
 using Angor.Shared.Models;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Utilities;
-using Blockcore.NBitcoin.DataEncoders;
-using Blockcore.Networks;
+using NBitcoin.DataEncoders;
+using Angor.Primitives.Network;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using System.Diagnostics;
@@ -12,9 +12,9 @@ using IndexedTxOut = NBitcoin.IndexedTxOut;
 using Key = NBitcoin.Key;
 using Op = NBitcoin.Op;
 using OutPoint = NBitcoin.OutPoint;
-using Script = Blockcore.Consensus.ScriptInfo.Script;
-using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
-using uint256 = Blockcore.NBitcoin.uint256;
+using Script = NBitcoin.Script;
+using Transaction = NBitcoin.Transaction;
+using uint256 = NBitcoin.uint256;
 using Utils = NBitcoin.Utils;
 using WitScript = NBitcoin.WitScript;
 
@@ -263,21 +263,21 @@ public class FounderTransactionActions : IFounderTransactionActions
     public Transaction CreateNewProjectTransaction(string founderKey, Script angorKey, long angorFeeSatoshis, short keyType, string nostrEventId)
     {
         var projectStartTransaction = _networkConfiguration.GetNetwork()
-            .Consensus.ConsensusFactory.CreateTransaction();
+            .CreateTransaction();
 
         // create the output and script of the project id
-        var investorInfoOutput = new Blockcore.Consensus.TransactionInfo.TxOut(
-            new Blockcore.NBitcoin.Money(angorFeeSatoshis), angorKey);
+        var investorInfoOutput = new TxOut(
+            new Money(angorFeeSatoshis), angorKey);
 
-        projectStartTransaction.AddOutput(investorInfoOutput);
+        projectStartTransaction.Outputs.Add(investorInfoOutput);
 
         // todo: here we should add the hash of the project data as opreturn
 
         // create the output and script of the investor pubkey script opreturn
         var angorFeeOutputScript = _projectScriptsBuilder.BuildFounderInfoScript(founderKey, keyType, nostrEventId);
-        var founderOPReturnOutput = new Blockcore.Consensus.TransactionInfo.TxOut(
-                new Blockcore.NBitcoin.Money(0), angorFeeOutputScript);
-        projectStartTransaction.AddOutput(founderOPReturnOutput);
+        var founderOPReturnOutput = new TxOut(
+                new Money(0), angorFeeOutputScript);
+        projectStartTransaction.Outputs.Add(founderOPReturnOutput);
 
         return projectStartTransaction;
     }

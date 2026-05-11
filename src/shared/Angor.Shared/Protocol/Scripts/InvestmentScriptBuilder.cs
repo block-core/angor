@@ -1,7 +1,7 @@
 using Angor.Shared.Models;
 using Angor.Shared.Utilities;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.NBitcoin;
+using NBitcoin;
+using NBitcoin;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 

@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
 using Angor.Data.Documents.Interfaces;
 using Angor.Data.Documents.Models;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 
 namespace Angor.Data.Documents.LiteDb;
 
@@ -13,13 +13,15 @@ public class LiteDbGenericDocumentCollection<T>(IAngorDocumentDatabase database)
     public async Task<Result<T?>> FindByIdAsync(string id)
     {
         var result = await _documentCollection.FindByIdAsync(id);
-        return result.Map(doc => doc?.Data);
+        if (result.IsFailure) return Result.Failure<T?>(result.Error);
+        return Result.Success(result.Value?.Data);
     }
 
     public async Task<Result<IEnumerable<T>>> FindAllAsync()
     {
         var result = await _documentCollection.FindAllAsync();
-        return result.Map(docs => docs.Select(d => d.Data));
+        if (result.IsFailure) return Result.Failure<IEnumerable<T>>(result.Error);
+        return Result.Success(result.Value.Select(d => d.Data));
     }
 
     public async Task<Result<IEnumerable<T>>> FindAsync(Expression<Func<T, bool>> predicate)
@@ -31,13 +33,15 @@ public class LiteDbGenericDocumentCollection<T>(IAngorDocumentDatabase database)
         var documentPredicate = Expression.Lambda<Func<Document<T>, bool>>(body, parameter);
 
         var result = await _documentCollection.FindAsync(documentPredicate);
-        return result.Map(docs => docs.Select(d => d.Data));
+        if (result.IsFailure) return Result.Failure<IEnumerable<T>>(result.Error);
+        return Result.Success(result.Value.Select(d => d.Data));
     }
 
     public async Task<Result<IEnumerable<T>>> FindByIdsAsync(IEnumerable<string> ids)
     {
         var result = await _documentCollection.FindAsync(doc => ids.Contains(doc.Id));
-        return result.Map(docs => docs.Select(d => d.Data));
+        if (result.IsFailure) return Result.Failure<IEnumerable<T>>(result.Error);
+        return Result.Success(result.Value.Select(d => d.Data));
     }
 
     public async Task<Result<bool>> ExistsAsync(string id)

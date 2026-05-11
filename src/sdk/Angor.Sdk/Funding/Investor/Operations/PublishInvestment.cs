@@ -8,9 +8,9 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.DataEncoders;
-using CSharpFunctionalExtensions;
+using NBitcoin;
+using NBitcoin.DataEncoders;
+using Angor.Primitives;
 using MediatR;
 using Serilog;
 using Stage = Angor.Shared.Models.Stage;
@@ -276,7 +276,7 @@ public static class PublishInvestment
         private async Task<Result<string>> PublishSignedTransactionAsync(TransactionInfo signedTransaction)
         {
             var txId = signedTransaction.Transaction.GetHash().ToString();
-            var hex = signedTransaction.Transaction.ToHex(networkConfiguration.GetNetwork().Consensus.ConsensusFactory);
+            var hex = signedTransaction.Transaction.ToHex();
 
             var errorMessage = await indexerService.PublishTransactionAsync(hex);
 

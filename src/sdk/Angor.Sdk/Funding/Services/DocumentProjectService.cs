@@ -5,7 +5,7 @@ using Angor.Sdk.Funding.Shared;
 using Angor.Data.Documents.Interfaces;
 using Angor.Shared.Models;
 using Angor.Shared.Services;
-using CSharpFunctionalExtensions;
+using Angor.Primitives;
 using Microsoft.Extensions.Logging;
 using Stage = Angor.Sdk.Funding.Projects.Domain.Stage;
 
@@ -17,14 +17,25 @@ public class DocumentProjectService(
     IAngorIndexerService angorIndexerService,
     ILogger<DocumentProjectService> logger) : IProjectService
 {
-    public Task<Result<Project>> GetAsync(ProjectId id)
+    public async Task<Result<Project>> GetAsync(ProjectId id)
     {
-        return TryGetAsync(id).Bind(maybe => maybe.ToResult($"Project with id {id} not found"));
+        var result = await TryGetAsync(id);
+        if (result.IsFailure)
+            return Result.Failure<Project>(result.Error);
+
+        if (result.Value == null)
+            return Result.Failure<Project>($"Project with id {id} not found");
+
+        return Result.Success(result.Value);
     }
 
-    public Task<Result<Maybe<Project>>> TryGetAsync(ProjectId id)
+    public async Task<Result<Project?>> TryGetAsync(ProjectId id)
     {
-        return GetAllAsync(id).Map(x => x.TryFirst());
+        var result = await GetAllAsync(id);
+        if (result.IsFailure)
+            return Result.Failure<Project?>(result.Error);
+
+        return Result.Success(result.Value.FirstOrDefault());
     }
 
     public async Task<Result<IEnumerable<Project>>> GetAllAsync(params ProjectId[] ids)
@@ -54,7 +65,18 @@ public class DocumentProjectService(
 
             var tasks = stringIds
                    .Except(localLookup.Select(p => p.Id.Value)) //ids that are not in the local database
-                   .Select(id => Result.Try(() => angorIndexerService.GetProjectByIdAsync(id)));
+                   .Select(async id =>
+                   {
+                       try
+                       {
+                           var value = await angorIndexerService.GetProjectByIdAsync(id);
+                           return Result.Success(value);
+                       }
+                       catch (Exception ex)
+                       {
+                           return Result.Failure<ProjectIndexerData?>(ex.Message);
+                       }
+                   });
 
             var results = await Task.WhenAll(tasks).WaitAsync(TimeSpan.FromSeconds(10));
 
@@ -139,12 +161,17 @@ public class DocumentProjectService(
 
     public async Task<Result<IEnumerable<Project>>> LatestAsync()
     {
-        var top30 = await Result.Try(() => angorIndexerService.GetProjectsAsync(null, 30));
-
-        if (top30.IsFailure)
+        List<ProjectIndexerData> top30Value;
+        try
+        {
+            top30Value = await angorIndexerService.GetProjectsAsync(null, 30);
+        }
+        catch (Exception)
+        {
             return Result.Failure<IEnumerable<Project>>("Failed to retrieve top 30 projects");
+        }
 
-        var projectIds = top30.Value.Select(p => new ProjectId(p.ProjectIdentifier)).ToArray();
+        var projectIds = top30Value.Select(p => new ProjectId(p.ProjectIdentifier)).ToArray();
         return await GetAllAsync(projectIds);
     }
 
@@ -243,7 +270,7 @@ public class DocumentProjectService(
         return Result.Success(completedResults.AsEnumerable());
     }
 
-    private Task<Result<IEnumerable<ProjectMetadataWithNpub>>> ProjectMetadatas(IEnumerable<string> npubs)
+    private async Task<Result<IEnumerable<ProjectMetadataWithNpub>>> ProjectMetadatas(IEnumerable<string> npubs)
     {
         var projectMetadatas = Observable.Create<ProjectMetadataWithNpub>(observer =>
         {
@@ -255,7 +282,15 @@ public class DocumentProjectService(
             return Disposable.Empty;
         }).Timeout(TimeSpan.FromSeconds(30));
 
-        return Result.Try(async () => await projectMetadatas.ToList()).Map(list => list.AsEnumerable());
+        try
+        {
+            var list = await projectMetadatas.ToList();
+            return Result.Success(list.AsEnumerable());
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<IEnumerable<ProjectMetadataWithNpub>>(ex.Message);
+        }
     }
 
     private class ProjectMetadataWithNpub : ProjectMetadata

@@ -3,8 +3,8 @@ using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Models;
-using Blockcore.NBitcoin;
-using CSharpFunctionalExtensions;
+using NBitcoin;
+using Angor.Primitives;
 using FluentAssertions;
 using Moq;
 
@@ -34,7 +34,7 @@ public class GetInvestorNsecTests
 
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData(walletId.Value))
-            .ReturnsAsync(Result.Failure<(string Words, Maybe<string> Passphrase)>("Wallet locked"));
+            .ReturnsAsync(Result.Failure<(string Words, string? Passphrase)>("Wallet locked"));
 
         // Act
         var result = await _sut.Handle(request, CancellationToken.None);
@@ -56,7 +56,7 @@ public class GetInvestorNsecTests
         var request = new GetInvestorNsec.GetInvestorNsecRequest(walletId, founderKey);
 
         var sensitiveData = (Words: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
-            Passphrase: Maybe<string>.None);
+            Passphrase: (string?)null);
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData(walletId.Value))
             .ReturnsAsync(Result.Success(sensitiveData));
@@ -85,7 +85,7 @@ public class GetInvestorNsecTests
         var request = new GetInvestorNsec.GetInvestorNsecRequest(walletId, founderKey);
 
         var sensitiveData = (Words: "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
-            Passphrase: Maybe<string>.None);
+            Passphrase: (string?)null);
         _mockSeedwordsProvider
             .Setup(x => x.GetSensitiveData(walletId.Value))
             .ReturnsAsync(Result.Success(sensitiveData));

@@ -2,13 +2,13 @@ using Angor.Shared.Models;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Protocol.TransactionBuilders;
 using Angor.Shared.Utilities;
-using Blockcore.NBitcoin.DataEncoders;
+using NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Op = Blockcore.Consensus.ScriptInfo.Op;
-using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
-using uint256 = Blockcore.NBitcoin.uint256;
-using WitScript = Blockcore.Consensus.TransactionInfo.WitScript;
+using Op = NBitcoin.Op;
+using Transaction = NBitcoin.Transaction;
+using uint256 = NBitcoin.uint256;
+using WitScript = NBitcoin.WitScript;
 
 namespace Angor.Shared.Protocol;
 

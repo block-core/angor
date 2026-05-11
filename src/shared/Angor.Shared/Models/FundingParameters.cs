@@ -1,8 +1,8 @@
 using Angor.Shared.Models;
 using Angor.Shared.Utilities;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.Consensus.TransactionInfo;
-using Blockcore.NBitcoin;
+using NBitcoin;
+using NBitcoin;
+using NBitcoin;
 
 namespace Angor.Shared.Models;
 
@@ -13,7 +13,7 @@ public class FundingParameters
     public DateTime? InvestmentStartDate { get; set; }
     public byte PatternId { get; set; }
     public int? StageCountOverride { get; set; }
-    public Blockcore.NBitcoin.uint256? HashOfSecret { get; set; }
+    public uint256? HashOfSecret { get; set; }
     public DateTime? ExpiryDateOverride { get; set; }
 
     public FundingParameters() { }
@@ -33,7 +33,7 @@ public class FundingParameters
         ProjectInfo projectInfo,
         string investorKey,
         long totalInvestmentAmount,
-        Blockcore.NBitcoin.uint256? HashOfSecret = null)
+        uint256? HashOfSecret = null)
     {
         return new FundingParameters
         {
@@ -114,7 +114,7 @@ public class FundingParameters
         if (!opReturnScript.IsUnspendable)
             throw new ArgumentException("Script is not an OP_RETURN script", nameof(opReturnScript));
 
-        var ops = opReturnScript.ToOps();
+        var ops = opReturnScript.ToOps().ToList();
         var investorKey = new PubKey(ops[1].PushData).ToHex();
 
         uint256? secretHash = null;
