@@ -45,4 +45,13 @@
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
         <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)generated</CompilerGeneratedFilesOutputPath>
     </PropertyGroup>
+    <PropertyGroup>
+        <SupportNpub></SupportNpub>
+    </PropertyGroup>
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+            <_Parameter1>SupportNpub</_Parameter1>
+            <_Parameter2>$(SupportNpub)</_Parameter2>
+        </AssemblyAttribute>
+    </ItemGroup>
 </Project>

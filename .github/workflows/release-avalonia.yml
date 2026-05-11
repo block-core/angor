@@ -55,7 +55,7 @@ jobs:
         run: dotnet restore design/App.Desktop/App.Desktop.csproj
       
       - name: Build
-        run: dotnet build design/App.Desktop/App.Desktop.csproj --no-restore -c Release
+        run: dotnet build design/App.Desktop/App.Desktop.csproj --no-restore -c Release -p:SupportNpub=${{ vars.SUPPORT_NPUB }}
       
       - name: Test
         run: dotnet test sdk/Angor.Sdk.Tests/Angor.Sdk.Tests.csproj -c Release --verbosity normal
@@ -227,6 +227,7 @@ jobs:
             -p:ApplicationDisplayVersion=${{ needs.prepare.outputs.version }} \
             -p:ApplicationVersion=${{ github.run_number }} \
             -p:Version=${{ needs.prepare.outputs.version }} \
+            -p:SupportNpub=${{ vars.SUPPORT_NPUB }} \
             -p:AndroidKeyStore=true \
             -p:AndroidSigningKeyStore=${{ github.workspace }}/android.keystore \
             -p:AndroidSigningKeyAlias=${{ secrets.ANDROID_KEY_ALIAS }} \
@@ -243,6 +244,7 @@ jobs:
             -p:ApplicationDisplayVersion=${{ needs.prepare.outputs.version }} \
             -p:ApplicationVersion=${{ github.run_number }} \
             -p:Version=${{ needs.prepare.outputs.version }} \
+            -p:SupportNpub=${{ vars.SUPPORT_NPUB }} \
             -o ${{ github.workspace }}/artifacts/
       
       - name: Rename APK

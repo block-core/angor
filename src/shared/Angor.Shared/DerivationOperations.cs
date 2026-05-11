@@ -282,6 +282,20 @@ public class DerivationOperations : IDerivationOperations
         };
     }
 
+    public Key DeriveSupportDmKey(WalletWords walletWords)
+    {
+        ExtKey extendedKey = GetExtendedKey(walletWords);
+        var networkIndex = GetNetworkStorageIndex();
+        var path = $"m/44'/1237'/2'/{networkIndex}/0";
+        return extendedKey.Derive(new KeyPath(path)).PrivateKey;
+    }
+
+    public string DeriveSupportDmPubKeyHex(WalletWords walletWords)
+    {
+        var key = DeriveSupportDmKey(walletWords);
+        return key.PubKey.ToHex()[2..];
+    }
+
     public string DeriveNostrStoragePassword(WalletWords walletWords)
     {
         var key = DeriveNostrStorageKey(walletWords);
