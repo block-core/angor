@@ -1003,10 +1003,10 @@ public static class TestHelpers
 
     /// <summary>
     /// Write a timestamped log message to both the console and the xUnit test output.
-    /// Use this overload from tests that inject <see cref="Xunit.Abstractions.ITestOutputHelper"/>
+    /// Use this overload from tests that inject <see cref="Xunit.ITestOutputHelper"/>
     /// so log lines appear in real-time in Rider's test runner.
     /// </summary>
-    public static void Log(Xunit.Abstractions.ITestOutputHelper output, string message)
+    public static void Log(Xunit.ITestOutputHelper output, string message)
     {
         var line = $"[{DateTime.UtcNow:HH:mm:ss.fff}] {message}";
         Console.WriteLine(line);

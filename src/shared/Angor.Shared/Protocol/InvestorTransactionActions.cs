@@ -333,7 +333,8 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         var nBitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork);
         var nbitcoinInvestmentTransaction = NBitcoin.Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork);
 
-        var pubkey = new NBitcoin.PubKey(projectInfo.FounderRecoveryKey).GetTaprootFullPubKey();
+        var pubkey = new TaprootPubKey(
+            Angor.Shared.Protocol.Scripts.TaprootKeyHelper.GetTaprootOutputKeyBytes(projectInfo.FounderRecoveryKey));
         var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
 
         var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, investmentTransaction);

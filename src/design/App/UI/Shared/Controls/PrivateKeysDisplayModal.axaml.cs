@@ -3,7 +3,7 @@ using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using App.UI.Shared.Helpers;
 using App.UI.Shell;
-using Projektanker.Icons.Avalonia;
+using Optris.Icons.Avalonia;
 
 namespace App.UI.Shared.Controls;
 

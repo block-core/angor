@@ -140,6 +140,10 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
     public async Task<string> PublishTransactionAsync(string trxHex)
     {
+        var guardError = TransactionGuard.RejectAllZeroP2trOutputs(trxHex);
+        if (guardError != null)
+            return guardError;
+
         const int maxAttempts = 3;
         string lastError = "Unknown broadcast error";
 
