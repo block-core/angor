@@ -118,6 +118,12 @@ jobs:
       
       - name: Install DotNetPackaging Tool
         run: dotnet tool install -g DotnetPackaging.Tool
+
+      - name: Install appimagetool and dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y libfuse2 squashfs-tools
+          wget -q https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
+          chmod +x /usr/local/bin/appimagetool
       
       - name: Create Linux x64 .deb
         run: |
@@ -136,6 +142,14 @@ jobs:
             --arch x64 \
             --output artifacts/Angor-${{ needs.prepare.outputs.version }}-x86_64.AppImage \
             --application-name "${{ env.APP_NAME }}"
+
+      - name: Repackage x64 AppImage with static runtime (no libfuse2 dependency)
+        run: |
+          APPIMAGE=artifacts/Angor-${{ needs.prepare.outputs.version }}-x86_64.AppImage
+          chmod +x "$APPIMAGE"
+          "$APPIMAGE" --appimage-extract
+          ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 appimagetool -n squashfs-root "$APPIMAGE"
+          rm -rf squashfs-root
 
       
       - name: Create Linux x64 RPM
@@ -165,6 +179,15 @@ jobs:
             --arch arm64 \
             --output artifacts/Angor-${{ needs.prepare.outputs.version }}-aarch64.AppImage \
             --application-name "${{ env.APP_NAME }}"
+
+      - name: Repackage arm64 AppImage with static runtime (no libfuse2 dependency)
+        run: |
+          APPIMAGE=artifacts/Angor-${{ needs.prepare.outputs.version }}-aarch64.AppImage
+          # Can't execute arm64 binary on x86_64, so extract squashfs manually
+          OFFSET=$(LC_ALL=C grep -abom1 'hsqs' "$APPIMAGE" | head -1 | cut -d: -f1)
+          unsquashfs -offset "$OFFSET" "$APPIMAGE"
+          ARCH=aarch64 APPIMAGE_EXTRACT_AND_RUN=1 appimagetool -n squashfs-root "$APPIMAGE"
+          rm -rf squashfs-root
 
       
       - name: Create macOS x64 .dmg (cross-compile)
