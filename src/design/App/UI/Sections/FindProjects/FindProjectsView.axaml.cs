@@ -53,10 +53,10 @@ public partial class FindProjectsView : UserControl, ISectionView
         var refreshBtn = this.FindControl<Button>("RefreshProjectsButton");
         if (refreshBtn != null)
         {
-            refreshBtn.Click += async (_, _) =>
+            refreshBtn.Click += (_, _) =>
             {
                 if (DataContext is FindProjectsViewModel fvm)
-                    await fvm.LoadProjectsFromSdkAsync();
+                    _ = Task.Run(fvm.LoadProjectsFromSdkAsync);
             };
         }
 
