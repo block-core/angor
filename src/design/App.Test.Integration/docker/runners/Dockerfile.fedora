@@ -1,13 +1,11 @@
-# Fedora 41 — .NET 9 test runner
+# Fedora 41 — .NET 10 test runner
 FROM fedora:41
 
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 ENV DOTNET_NOLOGO=1
 
-# Install .NET 9 SDK + dependencies for headless Avalonia
+# Install .NET 10 SDK + .NET 8 runtime + dependencies for headless Avalonia
 RUN dnf install -y --setopt=install_weak_deps=False \
-        dotnet-sdk-9.0 \
-        dotnet-runtime-8.0 \
         libicu \
         openssl-libs \
         libX11 \
@@ -19,6 +17,13 @@ RUN dnf install -y --setopt=install_weak_deps=False \
         fontconfig \
         freetype \
         xorg-x11-server-Xvfb \
+        curl \
+    && curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh \
+    && chmod +x /tmp/dotnet-install.sh \
+    && /tmp/dotnet-install.sh --channel 10.0 --install-dir /usr/share/dotnet \
+    && /tmp/dotnet-install.sh --channel 8.0 --runtime dotnet --install-dir /usr/share/dotnet \
+    && ln -sf /usr/share/dotnet/dotnet /usr/bin/dotnet \
+    && rm /tmp/dotnet-install.sh \
     && dnf clean all
 
 COPY run-tests.sh /run-tests.sh

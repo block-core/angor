@@ -1,11 +1,11 @@
-# Linux Mint 22 (based on Ubuntu 24.04) — .NET 9 test runner
+# Linux Mint 22 (based on Ubuntu 24.04) — .NET 10 test runner
 FROM linuxmintd/mint22-amd64
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 ENV DOTNET_NOLOGO=1
 
-# Install .NET 9 SDK via install script + dependencies for headless Avalonia
+# Install .NET 10 SDK via install script + dependencies for headless Avalonia
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
         curl \
@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         xvfb \
     && curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh \
     && chmod +x /tmp/dotnet-install.sh \
-    && /tmp/dotnet-install.sh --channel 9.0 --install-dir /usr/share/dotnet \
+    && /tmp/dotnet-install.sh --channel 10.0 --install-dir /usr/share/dotnet \
     && /tmp/dotnet-install.sh --channel 8.0 --runtime dotnet --install-dir /usr/share/dotnet \
     && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
     && rm /tmp/dotnet-install.sh \
