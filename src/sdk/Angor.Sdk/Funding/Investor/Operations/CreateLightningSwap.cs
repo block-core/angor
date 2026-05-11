@@ -127,7 +127,8 @@ public static class CreateLightningSwap
                 var saveResult = await swapStorageService.SaveSwapAsync(
                     swap,
                     request.WalletId.Value,
-                    "payment-flow"); // Generic context, not project-specific
+                    "payment-flow", // Generic context, not project-specific
+                    request.Amount.Sats);
 
                 if (saveResult.IsFailure)
                 {

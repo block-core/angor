@@ -13,11 +13,11 @@ public class BoltzSwapStorageService(
     IGenericDocumentCollection<BoltzSwapDocument> collection,
     ILogger<BoltzSwapStorageService> logger) : IBoltzSwapStorageService
 {
-    public async Task<Result> SaveSwapAsync(BoltzSubmarineSwap swap, string walletId, string? projectId = null)
+    public async Task<Result> SaveSwapAsync(BoltzSubmarineSwap swap, string walletId, string? projectId = null, long requestedAmountSats = 0)
     {
         try
         {
-            var doc = BoltzSwapDocument.FromSwapModel(swap, walletId, projectId);
+            var doc = BoltzSwapDocument.FromSwapModel(swap, walletId, projectId, requestedAmountSats);
             
             var result = await collection.UpsertAsync(d => d.SwapId, doc);
             
@@ -105,26 +105,69 @@ public class BoltzSwapStorageService(
         try
         {
             // Get swaps that are confirmed but not yet claimed
-            var result = await collection.FindAsync(d => 
-                d.WalletId == walletId && 
+            var result = await collection.FindAsync(d =>
+                d.WalletId == walletId &&
                 d.ClaimTransactionId == null &&
-                (d.Status == "TransactionConfirmed" || 
+                (d.Status == "TransactionConfirmed" ||
                  d.Status == "TransactionMempool" ||
                  d.Status == "transaction.confirmed" ||
                  d.Status == "transaction.mempool"));
-            
+
             if (result.IsFailure)
             {
                 logger.LogError("Failed to get pending swaps for wallet {WalletId}: {Error}", walletId, result.Error);
                 return Result.Failure<IEnumerable<BoltzSwapDocument>>($"Failed to get pending swaps: {result.Error}");
             }
-            
+
             return Result.Success(result.Value);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error getting pending swaps for wallet {WalletId}", walletId);
             return Result.Failure<IEnumerable<BoltzSwapDocument>>($"Error getting pending swaps: {ex.Message}");
+        }
+    }
+
+    private static readonly HashSet<string> TerminalStatuses = new(StringComparer.OrdinalIgnoreCase)
+    {
+        nameof(SwapState.TransactionClaimed), "Claimed",
+        nameof(SwapState.TransactionRefunded),
+        nameof(SwapState.InvoiceFailedToPay),
+        nameof(SwapState.InvoiceExpired),
+        nameof(SwapState.SwapExpired),
+        "transaction.claimed",
+        "transaction.refunded",
+        "invoice.failedToPay",
+        "invoice.expired",
+        "swap.expired"
+    };
+
+    public async Task<Result<IEnumerable<BoltzSwapDocument>>> GetResumableSwapsAsync(string walletId)
+    {
+        try
+        {
+            // Get all swaps for the wallet that haven't been claimed
+            var result = await collection.FindAsync(d =>
+                d.WalletId == walletId &&
+                d.ClaimTransactionId == null);
+
+            if (result.IsFailure)
+            {
+                logger.LogError("Failed to get resumable swaps for wallet {WalletId}: {Error}", walletId, result.Error);
+                return Result.Failure<IEnumerable<BoltzSwapDocument>>($"Failed to get resumable swaps: {result.Error}");
+            }
+
+            // Filter out terminal statuses client-side (DB queries can't use HashSet)
+            var resumable = result.Value
+                .Where(d => !TerminalStatuses.Contains(d.Status))
+                .OrderByDescending(d => d.CreatedAt);
+
+            return Result.Success<IEnumerable<BoltzSwapDocument>>(resumable);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error getting resumable swaps for wallet {WalletId}", walletId);
+            return Result.Failure<IEnumerable<BoltzSwapDocument>>($"Error getting resumable swaps: {ex.Message}");
         }
     }
 

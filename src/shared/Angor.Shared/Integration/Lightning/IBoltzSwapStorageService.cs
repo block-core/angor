@@ -9,7 +9,7 @@ namespace Angor.Shared.Integration.Lightning;
 public interface IBoltzSwapStorageService
 {
     /// <summary>Save a new swap</summary>
-    Task<Result> SaveSwapAsync(BoltzSubmarineSwap swap, string walletId, string? projectId = null);
+    Task<Result> SaveSwapAsync(BoltzSubmarineSwap swap, string walletId, string? projectId = null, long requestedAmountSats = 0);
 
     /// <summary>
     /// Get a swap by its ID (without wallet validation - use GetSwapForWalletAsync for secure access)
@@ -27,6 +27,11 @@ public interface IBoltzSwapStorageService
 
     /// <summary>Get all pending swaps (not yet claimed) for a wallet</summary>
     Task<Result<IEnumerable<BoltzSwapDocument>>> GetPendingSwapsAsync(string walletId);
+
+    /// <summary>Get all resumable swaps for a wallet — swaps in any non-terminal state
+    /// (not claimed, not failed, not expired). Used to detect swaps that were interrupted
+    /// when the app closed and should be resumed on reopen.</summary>
+    Task<Result<IEnumerable<BoltzSwapDocument>>> GetResumableSwapsAsync(string walletId);
 
     /// <summary>Update the status of a swap, validating wallet ownership</summary>
     Task<Result> UpdateSwapStatusAsync(string swapId, string walletId, string status, string? lockupTxId = null, string? lockupTxHex = null);

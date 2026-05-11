@@ -23,8 +23,12 @@ namespace Angor.Shared.Integration.Lightning.Models
         /// <summary>The Boltz lockup address (where funds are held before claiming)</summary>
         public string LockupAddress { get; set; } = string.Empty;
 
-        /// <summary>Expected amount in satoshis</summary>
+        /// <summary>Expected amount in satoshis (on-chain amount including fees overhead)</summary>
         public long ExpectedAmount { get; set; }
+
+        /// <summary>Original investment/payment amount in satoshis requested by the user,
+        /// before Boltz fees and tx fee overhead. Used to match pending swaps to new payment flows.</summary>
+        public long RequestedAmountSats { get; set; }
 
         /// <summary>Invoice amount in satoshis</summary>
         public long InvoiceAmount { get; set; }
@@ -87,7 +91,7 @@ namespace Angor.Shared.Integration.Lightning.Models
         }
 
         /// <summary>Create from BoltzSubmarineSwap model</summary>
-        public static BoltzSwapDocument FromSwapModel(BoltzSubmarineSwap swap, string walletId, string? projectId = null)
+        public static BoltzSwapDocument FromSwapModel(BoltzSubmarineSwap swap, string walletId, string? projectId = null, long requestedAmountSats = 0)
         {
             return new BoltzSwapDocument
             {
@@ -98,6 +102,7 @@ namespace Angor.Shared.Integration.Lightning.Models
                 Address = swap.Address,
                 LockupAddress = swap.LockupAddress,
                 ExpectedAmount = swap.ExpectedAmount,
+                RequestedAmountSats = requestedAmountSats,
                 InvoiceAmount = swap.InvoiceAmount,
                 TimeoutBlockHeight = swap.TimeoutBlockHeight,
                 SwapTree = swap.SwapTree,

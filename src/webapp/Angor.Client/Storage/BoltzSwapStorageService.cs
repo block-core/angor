@@ -26,11 +26,11 @@ public class BoltzSwapStorageService : IBoltzSwapStorageService
         _logger = logger;
     }
 
-    public Task<Result> SaveSwapAsync(BoltzSubmarineSwap swap, string walletId, string? projectId = null)
+    public Task<Result> SaveSwapAsync(BoltzSubmarineSwap swap, string walletId, string? projectId = null, long requestedAmountSats = 0)
     {
         try
         {
-            var doc = BoltzSwapDocument.FromSwapModel(swap, walletId, projectId);
+            var doc = BoltzSwapDocument.FromSwapModel(swap, walletId, projectId, requestedAmountSats);
 
             _storage.SetItem(SwapKey(doc.SwapId), doc);
 
@@ -201,6 +201,37 @@ public class BoltzSwapStorageService : IBoltzSwapStorageService
         {
             _logger.LogError(ex, "Error marking swap as claimed {SwapId}", swapId);
             return Task.FromResult(Result.Failure($"Error marking swap as claimed: {ex.Message}"));
+        }
+    }
+
+    private static readonly HashSet<string> TerminalStatuses = new(StringComparer.OrdinalIgnoreCase)
+    {
+        nameof(SwapState.TransactionClaimed), "Claimed",
+        nameof(SwapState.TransactionRefunded),
+        nameof(SwapState.InvoiceFailedToPay),
+        nameof(SwapState.InvoiceExpired),
+        nameof(SwapState.SwapExpired),
+        "transaction.claimed",
+        "transaction.refunded",
+        "invoice.failedToPay",
+        "invoice.expired",
+        "swap.expired"
+    };
+
+    public Task<Result<IEnumerable<BoltzSwapDocument>>> GetResumableSwapsAsync(string walletId)
+    {
+        try
+        {
+            var docs = LoadSwapsForWallet(walletId)
+                .Where(d => d.ClaimTransactionId == null && !TerminalStatuses.Contains(d.Status))
+                .OrderByDescending(d => d.CreatedAt);
+
+            return Task.FromResult(Result.Success<IEnumerable<BoltzSwapDocument>>(docs));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting resumable swaps for wallet {WalletId}", walletId);
+            return Task.FromResult(Result.Failure<IEnumerable<BoltzSwapDocument>>($"Error getting resumable swaps: {ex.Message}"));
         }
     }
 
