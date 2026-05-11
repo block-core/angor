@@ -12,6 +12,10 @@ namespace Angor.Shared.Protocol.Scripts;
 ///
 /// This helper replicates the BIP341 tap tweak computation entirely from Angor's
 /// assembly so the JIT produces correct code.
+///
+/// TODO: Remove this workaround once NBitcoin is upgraded to 10.0.4+, which ships a
+/// net8.0 TFM build that avoids the Mono JIT bug and includes the ComputeTapTweak
+/// span-aliasing fix (MetacoSA/NBitcoin#1300). Track removal in GitHub issue #838.
 /// </summary>
 public static class TaprootKeyHelper
 {
