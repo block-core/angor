@@ -8,7 +8,6 @@ using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
 using FluentAssertions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace App.Test.Integration;
 
