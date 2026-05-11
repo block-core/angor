@@ -1,0 +1,118 @@
+# Cross-distro test runners for Angor
+#
+# Prerequisites: the infra stack must be running on the `angor-test-net` network:
+#   cd src/design/App.Test.Integration/docker
+#   docker compose up -d
+#
+# Usage:
+#   # Run all distros (parallel):
+#   docker compose -f docker-compose.tests.yml up --build
+#
+#   # Run a single distro:
+#   docker compose -f docker-compose.tests.yml up --build ubuntu
+#
+#   # Unit tests only (skip integration):
+#   TEST_SCOPE=unit docker compose -f docker-compose.tests.yml up --build
+#
+#   # Integration tests only:
+#   TEST_SCOPE=integration docker compose -f docker-compose.tests.yml up --build fedora
+
+name: angor-distro-tests
+
+x-test-runner: &test-runner-common
+  volumes:
+    # Mount the entire repo tree; NuGet cache is container-local
+    - ../../../../:/src
+    # Writable NuGet cache per container
+    - nuget-cache:/root/.nuget
+  environment: &test-env
+    TEST_SCOPE: ${TEST_SCOPE:-all}
+    DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+    DOTNET_NOLOGO: "1"
+  # Don't restart on failure — we want the exit code
+  restart: "no"
+
+volumes:
+  nuget-cache:
+
+services:
+
+  ubuntu:
+    <<: *test-runner-common
+    container_name: angor-test-runner-ubuntu
+    build:
+      context: ./runners
+      dockerfile: Dockerfile.ubuntu
+    environment:
+      <<: *test-env
+      DISTRO_NAME: ubuntu-24.04
+
+  fedora:
+    <<: *test-runner-common
+    container_name: angor-test-runner-fedora
+    build:
+      context: ./runners
+      dockerfile: Dockerfile.fedora
+    environment:
+      <<: *test-env
+      DISTRO_NAME: fedora-41
+
+  debian:
+    <<: *test-runner-common
+    container_name: angor-test-runner-debian
+    build:
+      context: ./runners
+      dockerfile: Dockerfile.debian
+    environment:
+      <<: *test-env
+      DISTRO_NAME: debian-12
+
+  mint:
+    <<: *test-runner-common
+    container_name: angor-test-runner-mint
+    build:
+      context: ./runners
+      dockerfile: Dockerfile.mint
+    environment:
+      <<: *test-env
+      DISTRO_NAME: mint-22
+
+  arch:
+    <<: *test-runner-common
+    container_name: angor-test-runner-arch
+    build:
+      context: ./runners
+      dockerfile: Dockerfile.arch
+    environment:
+      <<: *test-env
+      DISTRO_NAME: arch-rolling
+
+  opensuse:
+    <<: *test-runner-common
+    container_name: angor-test-runner-opensuse
+    build:
+      context: ./runners
+      dockerfile: Dockerfile.opensuse
+    environment:
+      <<: *test-env
+      DISTRO_NAME: opensuse-tumbleweed
+
+  rocky:
+    <<: *test-runner-common
+    container_name: angor-test-runner-rocky
+    build:
+      context: ./runners
+      dockerfile: Dockerfile.rocky
+    environment:
+      <<: *test-env
+      DISTRO_NAME: rocky-9
+
+  manjaro:
+    <<: *test-runner-common
+    container_name: angor-test-runner-manjaro
+    build:
+      context: ./runners
+      dockerfile: Dockerfile.manjaro
+    environment:
+      <<: *test-env
+      DISTRO_NAME: manjaro-rolling

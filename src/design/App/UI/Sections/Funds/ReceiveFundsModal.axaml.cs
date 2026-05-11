@@ -1,6 +1,8 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.VisualTree;
+using App.UI.Shared;
 using App.UI.Shared.Helpers;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
@@ -55,6 +57,13 @@ public partial class ReceiveFundsModal : UserControl, IBackdropCloseable
             if (!string.IsNullOrEmpty(address))
             {
                 AddressText.Text = address;
+                var qrCodeImage = QRCodeConverter.Instance.Convert(address, typeof(object), null, System.Globalization.CultureInfo.InvariantCulture);
+                if (qrCodeImage is IImage image)
+                {
+                    QrCodeImage.Source = image;
+                    QrCodeImage.IsVisible = true;
+                    QrCodePlaceholder.IsVisible = false;
+                }
             }
         }
         catch (Exception ex)

@@ -27,7 +27,7 @@ public class SeederScriptTreeBuilder : ISeederScriptTreeBuilder
 
             ops.AddRange(new[]
             {
-                Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
+                Op.GetPushOp(TaprootKeyHelper.GetTaprootOutputKeyBytes(investorKey)),
                 OpcodeType.OP_CHECKSIG,
             });
 

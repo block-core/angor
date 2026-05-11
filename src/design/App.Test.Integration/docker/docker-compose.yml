@@ -2,7 +2,7 @@
 #
 # Spins up a fully isolated Angor-style signet (node + miner + mempool explorer +
 # Nostr relays + faucet API) so integration tests can run without depending on
-# the public Angor signet (signet.angor.online / faucettmp.angor.io / relay*.angor.io).
+# the public Angor signet (signet.angor.online / test.faucet.angor.io / relay*.angor.io).
 #
 # Usage:
 #   cd src/design/App.Test.Integration/docker

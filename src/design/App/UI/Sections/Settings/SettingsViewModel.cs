@@ -28,6 +28,7 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
     private readonly IDatabaseManagementService _databaseManagementService;
     private readonly ICurrencyService _currencyService;
     private readonly IWalletContext _walletContext;
+    private readonly ILogExportService _logExportService;
     private readonly PortfolioViewModel _portfolioViewModel;
     private readonly SignatureStore _signatureStore;
     private readonly ShellViewModel _shellViewModel;
@@ -95,6 +96,11 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
     // Debug mode (testnet only)
     [Reactive] private bool isTestnet;
 
+    // Log export
+    [Reactive] private bool isExportingLogs;
+
+    public bool CanExportLogs => _walletContext.SelectedWallet != null && !IsExportingLogs;
+
     private readonly PrototypeSettings _prototypeSettings;
 
     /// <summary>
@@ -131,6 +137,7 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
         PrototypeSettings prototypeSettings,
         ICurrencyService currencyService,
         IWalletContext walletContext,
+        ILogExportService logExportService,
         PortfolioViewModel portfolioViewModel,
         SignatureStore signatureStore,
         ShellViewModel shellViewModel,
@@ -144,6 +151,7 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
         _prototypeSettings = prototypeSettings;
         _currencyService = currencyService;
         _walletContext = walletContext;
+        _logExportService = logExportService;
         _portfolioViewModel = portfolioViewModel;
         _signatureStore = signatureStore;
         _shellViewModel = shellViewModel;
@@ -173,6 +181,10 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
                 x => x.SelectedNetworkToSwitch,
                 x => x.NetworkType)
             .Subscribe(_ => this.RaisePropertyChanged(nameof(CanConfirmNetworkSwitch)))
+            .DisposeWith(_disposables);
+
+        this.WhenAnyValue(x => x.IsExportingLogs)
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(CanExportLogs)))
             .DisposeWith(_disposables);
     }
 
@@ -464,6 +476,33 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
         {
             _logger.LogError(ex, "ConfirmWipeData failed");
             ToastRequested?.Invoke($"Wipe data failed: {ex.Message}");
+        }
+    }
+
+    // Export logs
+    public async Task ExportLogsAsync()
+    {
+        if (IsExportingLogs) return;
+
+        var wallet = _walletContext.SelectedWallet;
+        if (wallet == null) return;
+
+        IsExportingLogs = true;
+        try
+        {
+            var result = await _logExportService.ExportAndSendAsync(wallet.Id.Value);
+            ToastRequested?.Invoke(result.IsSuccess
+                ? "Logs exported and sent to support."
+                : $"Log export failed: {result.Error}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "ExportLogsAsync failed");
+            ToastRequested?.Invoke($"Log export failed: {ex.Message}");
+        }
+        finally
+        {
+            IsExportingLogs = false;
         }
     }
 

@@ -7,9 +7,9 @@ on:
     branches: [main]
 
 env:
-  DOTNET_VERSION: '9.0.x'
-  SOLUTION_PATH: 'src/Avalonia.sln'
-  AVALONIA_DIR: 'src'
+  DOTNET_VERSION: '10.0.x'
+  SOLUTION_PATH: 'src/App.sln'
+  SRC_DIR: 'src'
 
 jobs:
   build-and-test:
@@ -31,19 +31,15 @@ jobs:
             nuget-${{ runner.os }}-
       
       - name: Restore dependencies
-        working-directory: ${{ env.AVALONIA_DIR }}
-        run: |
-          dotnet restore Avalonia.sln \
-            /p:ExcludeAndroid=true \
-            --ignore-failed-sources || \
-          dotnet restore avalonia/AngorApp.Desktop/AngorApp.Desktop.csproj
+        working-directory: ${{ env.SRC_DIR }}
+        run: dotnet restore design/App.Desktop/App.Desktop.csproj
       
       - name: Build
-        working-directory: ${{ env.AVALONIA_DIR }}
-        run: dotnet build avalonia/AngorApp.Desktop/AngorApp.Desktop.csproj --no-restore -c Release
+        working-directory: ${{ env.SRC_DIR }}
+        run: dotnet build design/App.Desktop/App.Desktop.csproj --no-restore -c Release
       
       - name: Test Angor.Sdk.Tests
-        working-directory: ${{ env.AVALONIA_DIR }}
+        working-directory: ${{ env.SRC_DIR }}
         run: dotnet test sdk/Angor.Sdk.Tests/Angor.Sdk.Tests.csproj -c Release --verbosity normal --collect:"XPlat Code Coverage"
       
       - name: Test Angor.Shared.Tests
@@ -77,9 +73,9 @@ jobs:
             nuget-${{ runner.os }}-
       
       - name: Publish Desktop (Linux x64)
-        working-directory: ${{ env.AVALONIA_DIR }}
+        working-directory: ${{ env.SRC_DIR }}
         run: |
-          dotnet publish avalonia/AngorApp.Desktop/AngorApp.Desktop.csproj \
+          dotnet publish design/App.Desktop/App.Desktop.csproj \
             -c Release \
             -r linux-x64 \
             --self-contained \
@@ -97,7 +93,6 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       
       - name: Install Android workload
-        working-directory: ${{ env.AVALONIA_DIR }}
         run: dotnet workload install android
       
       - name: Cache NuGet packages
@@ -110,8 +105,8 @@ jobs:
             nuget-${{ runner.os }}-
       
       - name: Build Android (unsigned)
-        working-directory: ${{ env.AVALONIA_DIR }}
+        working-directory: ${{ env.SRC_DIR }}
         run: |
-          dotnet build avalonia/AngorApp.Android/AngorApp.Android.csproj \
+          dotnet build design/App.Android/App.Android.csproj \
             -c Release \
-            -f net9.0-android
+            -f net10.0-android

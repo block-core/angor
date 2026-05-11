@@ -246,7 +246,7 @@ public partial class PrototypeSettings : ReactiveObject
         // Persist after visible state changes so disk I/O never competes with the theme flip.
         this.WhenAnyValue(x => x.IsDebugMode, x => x.IsDarkTheme, x => x.SelectedWalletId)
             .Skip(1)
-            .Throttle(TimeSpan.FromMilliseconds(250), RxApp.TaskpoolScheduler)
+            .Throttle(TimeSpan.FromMilliseconds(250), RxSchedulers.TaskpoolScheduler)
             .Subscribe(_ => ScheduleSaveSettings());
     }
 

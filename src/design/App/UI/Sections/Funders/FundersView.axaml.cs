@@ -130,11 +130,11 @@ public partial class FundersView : UserControl, ISectionView
           .Subscribe(isRefreshing =>
           {
               var refreshBtn = this.FindControl<Button>("RefreshButton");
-              var icon = refreshBtn?.GetLogicalDescendants().OfType<Projektanker.Icons.Avalonia.Icon>().FirstOrDefault();
+              var icon = refreshBtn?.GetLogicalDescendants().OfType<Optris.Icons.Avalonia.Icon>().FirstOrDefault();
               icon?.Classes.Set("Spinning", isRefreshing);
 
               var emptyRefreshBtn = this.FindControl<Button>("EmptyRefreshButton");
-              var emptyIcon = emptyRefreshBtn?.GetLogicalDescendants().OfType<Projektanker.Icons.Avalonia.Icon>().FirstOrDefault();
+              var emptyIcon = emptyRefreshBtn?.GetLogicalDescendants().OfType<Optris.Icons.Avalonia.Icon>().FirstOrDefault();
               emptyIcon?.Classes.Set("Spinning", isRefreshing);
           });
         _subscriptions.Add(refreshSub);

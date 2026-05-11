@@ -1,0 +1,34 @@
+# Rocky Linux 9 (RHEL clone) — .NET 10 test runner
+FROM rockylinux:9
+
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
+ENV DOTNET_NOLOGO=1
+
+# Install .NET 10 SDK via install script + dependencies for headless Avalonia
+RUN dnf install -y --allowerasing --setopt=install_weak_deps=False \
+        ca-certificates \
+        curl \
+        libicu \
+        openssl-libs \
+        libX11 \
+        libX11-xcb \
+        libxcb \
+        libXrandr \
+        libXi \
+        mesa-libGL \
+        fontconfig \
+        freetype \
+        xorg-x11-server-Xvfb \
+    && curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh \
+    && chmod +x /tmp/dotnet-install.sh \
+    && /tmp/dotnet-install.sh --channel 10.0 --install-dir /usr/share/dotnet \
+    && /tmp/dotnet-install.sh --channel 8.0 --runtime dotnet --install-dir /usr/share/dotnet \
+    && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
+    && rm /tmp/dotnet-install.sh \
+    && dnf clean all
+
+COPY run-tests.sh /run-tests.sh
+RUN sed -i 's/\r$//' /run-tests.sh && chmod +x /run-tests.sh
+
+WORKDIR /src
+ENTRYPOINT ["/run-tests.sh"]
