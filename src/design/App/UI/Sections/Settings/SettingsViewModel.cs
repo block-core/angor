@@ -19,7 +19,7 @@ namespace App.UI.Sections.Settings;
 /// Manages network selection, explorer/indexer/relay configuration,
 /// theme, currency display, and data wipe operations.
 /// </summary>
-public partial class SettingsViewModel : ReactiveObject
+public partial class SettingsViewModel : ReactiveObject, IDisposable
 {
     private readonly INetworkService _networkService;
     private readonly INetworkConfiguration _networkConfig;
@@ -33,6 +33,7 @@ public partial class SettingsViewModel : ReactiveObject
     private readonly SignatureStore _signatureStore;
     private readonly ShellViewModel _shellViewModel;
     private readonly ILogger<SettingsViewModel> _logger;
+    private readonly CompositeDisposable _disposables = new();
 
     public string AppVersion { get; } = GetVersion();
 
@@ -179,10 +180,12 @@ public partial class SettingsViewModel : ReactiveObject
                 x => x.NetworkChangeConfirmed,
                 x => x.SelectedNetworkToSwitch,
                 x => x.NetworkType)
-            .Subscribe(_ => this.RaisePropertyChanged(nameof(CanConfirmNetworkSwitch)));
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(CanConfirmNetworkSwitch)))
+            .DisposeWith(_disposables);
 
         this.WhenAnyValue(x => x.IsExportingLogs)
-            .Subscribe(_ => this.RaisePropertyChanged(nameof(CanExportLogs)));
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(CanExportLogs)))
+            .DisposeWith(_disposables);
     }
 
     /// <summary>
@@ -502,6 +505,8 @@ public partial class SettingsViewModel : ReactiveObject
             IsExportingLogs = false;
         }
     }
+
+    public void Dispose() => _disposables.Dispose();
 }
 
 // ── Table item models ──

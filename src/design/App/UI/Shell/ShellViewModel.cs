@@ -196,16 +196,30 @@ public partial class PrototypeSettings : ReactiveObject
     {
         _store = store;
 
-        // Load persisted values
-        var result = _store.Load<PrototypeSettingsData>(SettingsKey).GetAwaiter().GetResult();
-        if (result.IsSuccess)
-        {
-            isDebugMode = result.Value.IsDebugMode;
-            isDarkTheme = result.Value.IsDarkTheme;
-            selectedWalletId = result.Value.SelectedWalletId;
-        }
+        // Load persisted values asynchronously to avoid blocking the UI thread.
+        // Default field values are used until loading completes.
+        Observable.StartAsync(async ct =>
+            {
+                var result = await _store.Load<PrototypeSettingsData>(SettingsKey);
+                return result;
+            })
+            .Subscribe(result =>
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    if (result.IsSuccess)
+                    {
+                        IsDebugMode = result.Value.IsDebugMode;
+                        SelectedWalletId = result.Value.SelectedWalletId;
 
-        // Apply persisted theme immediately
+                        // Set IsDarkTheme last — its WhenAnyValue subscription
+                        // applies the theme, so we want the other fields settled first.
+                        IsDarkTheme = result.Value.IsDarkTheme;
+                    }
+                });
+            });
+
+        // Apply persisted theme immediately (defaults to light until async load completes)
         if (Application.Current != null)
         {
             Application.Current.RequestedThemeVariant = isDarkTheme
@@ -291,8 +305,9 @@ public record NavItem(string Label, string Icon, bool IconIsFilled = false) : Na
 /// </summary>
 public record NavGroupHeader(string Title) : NavEntry;
 
-public partial class ShellViewModel : ReactiveObject
+public partial class ShellViewModel : ReactiveObject, IDisposable
 {
+    private readonly CompositeDisposable _disposables = new();
     private readonly PortfolioViewModel _portfolioVm;
     private readonly SignatureStore _signatureStore;
     private readonly Func<string, object?> _viewFactory;
@@ -488,7 +503,8 @@ public partial class ShellViewModel : ReactiveObject
                 SyncMobileTabState();
                 this.RaisePropertyChanged(nameof(CurrentSectionContent));
                 this.RaisePropertyChanged(nameof(SelectedSectionName));
-            });
+            })
+            .DisposeWith(_disposables);
 
         this.WhenAnyValue(x => x.IsSettingsOpen)
             .Where(open => open)
@@ -497,10 +513,12 @@ public partial class ShellViewModel : ReactiveObject
                 SyncMobileTabState();
                 this.RaisePropertyChanged(nameof(CurrentSectionContent));
                 this.RaisePropertyChanged(nameof(SelectedSectionName));
-            });
+            })
+            .DisposeWith(_disposables);
 
         this.WhenAnyValue(x => x.SectionTitleOverride)
-            .Subscribe(_ => this.RaisePropertyChanged(nameof(SelectedSectionName)));
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(SelectedSectionName)))
+            .DisposeWith(_disposables);
 
         // ── Initialize wallet context and subscribe to updates ──
         _ = _walletContext.ReloadAsync();
@@ -512,20 +530,25 @@ public partial class ShellViewModel : ReactiveObject
                 this.RaisePropertyChanged(nameof(AvailableBalanceDisplay));
                 this.RaisePropertyChanged(nameof(SwitcherWallets));
                 _ = LoadTotalInvestedAsync(SelectedWallet);
-            });
+            })
+            .DisposeWith(_disposables);
 
         // Refresh invested balance after portfolio finishes loading (investment records
         // may have been fetched from relay and saved to DB during the portfolio sync).
         _portfolioVm.WhenAnyValue(x => x.IsLoading)
             .Where(isLoading => !isLoading)
-            .Subscribe(__ => _ = LoadTotalInvestedAsync(SelectedWallet));
+            .Subscribe(__ => _ = LoadTotalInvestedAsync(SelectedWallet))
+            .DisposeWith(_disposables);
 
         // When toast message changes, notify HasToast
         this.WhenAnyValue(x => x.ToastMessage)
-            .Subscribe(_ => this.RaisePropertyChanged(nameof(HasToast)));
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(HasToast)))
+            .DisposeWith(_disposables);
     }
 
     public ObservableCollection<NavEntry> NavEntries { get; }
+
+    public void Dispose() => _disposables.Dispose();
 
     public string SelectedSectionName => IsSettingsOpen ? "Settings" : (SectionTitleOverride ?? SelectedNavItem?.Label ?? "");
 

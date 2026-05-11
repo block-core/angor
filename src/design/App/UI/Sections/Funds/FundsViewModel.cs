@@ -26,7 +26,7 @@ public class SeedGroupViewModel
 /// Funds ViewModel — connected to Angor.SDK wallet services.
 /// Uses <see cref="IWalletContext"/> for wallet state and <see cref="IWalletAppService"/> for wallet operations.
 /// </summary>
-public partial class FundsViewModel : ReactiveObject
+public partial class FundsViewModel : ReactiveObject, IDisposable
 {
     private readonly IWalletAppService _walletAppService;
     private readonly IWalletAccountBalanceService _balanceService;
@@ -35,6 +35,7 @@ public partial class FundsViewModel : ReactiveObject
     private readonly ICurrencyService _currencyService;
     private readonly ILogger<FundsViewModel> _logger;
     private readonly IFaucetService _faucetService;
+    private readonly CompositeDisposable _disposables = new();
 
     /// <summary>True when wallets exist and populated state should show.</summary>
     [Reactive] private bool hasWallets;
@@ -86,7 +87,8 @@ public partial class FundsViewModel : ReactiveObject
 
         // Subscribe to wallet context updates to rebuild display state
         _walletContext.WalletsUpdated
-            .Subscribe(_ => Dispatcher.UIThread.Post(RebuildSeedGroups));
+            .Subscribe(_ => Dispatcher.UIThread.Post(RebuildSeedGroups))
+            .DisposeWith(_disposables);
 
         RebuildSeedGroups();
     }
@@ -380,4 +382,5 @@ public partial class FundsViewModel : ReactiveObject
         });
     }
 
+    public void Dispose() => _disposables.Dispose();
 }
