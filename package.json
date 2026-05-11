@@ -6,15 +6,10 @@
     "version": "node -p \"require('./package.json').version\"",
     "changelog": "conventional-changelog -i CHANGELOG.md -s -r 0 && git add CHANGELOG.md",
     "build": "dotnet build src/webapp/Angor.Client",
-    "start": "dotnet run --project src/webapp/Angor.Client",
-    "cypress:open": "cypress open --config-file src/Testing/cypress.config.js",
-    "cypress:run": "cypress run --config-file src/Testing/cypress.config.js"
+    "start": "dotnet run --project src/webapp/Angor.Client"
   },
   "private": true,
   "dependencies": {
     "js-base64": "^3.7.7"
-  },
-  "devDependencies": {
-    "cypress": "^13.9.0"
   }
 }
