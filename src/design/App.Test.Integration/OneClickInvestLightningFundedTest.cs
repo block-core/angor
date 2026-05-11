@@ -7,7 +7,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using FluentAssertions;
 using Xunit;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace App.Test.Integration;
 

@@ -99,12 +99,12 @@ public partial class EditProfileViewModel : ReactiveObject
         // Load image previews when URLs change
         this.WhenAnyValue(x => x.ProfilePicture)
             .Throttle(TimeSpan.FromMilliseconds(500))
-            .ObserveOn(RxApp.MainThreadScheduler)
+            .ObserveOn(RxSchedulers.MainThreadScheduler)
             .Subscribe(url => ImageCacheService.LoadBitmapAsync(url, bmp => ProfilePictureBitmap = bmp));
 
         this.WhenAnyValue(x => x.ProfileBanner)
             .Throttle(TimeSpan.FromMilliseconds(500))
-            .ObserveOn(RxApp.MainThreadScheduler)
+            .ObserveOn(RxSchedulers.MainThreadScheduler)
             .Subscribe(url => ImageCacheService.LoadBitmapAsync(url, bmp => ProfileBannerBitmap = bmp));
 
         _ = LoadAsync();

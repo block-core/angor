@@ -82,12 +82,12 @@ public partial class CreateProjectStep3View : UserControl
         {
             _bannerUrlSub = vm.WhenAnyValue(x => x.BannerUrl)
                 .Throttle(TimeSpan.FromMilliseconds(400))
-                .ObserveOn(RxApp.MainThreadScheduler)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Subscribe(url => UpdatePreviewFromUrl(url, true));
 
             _profileUrlSub = vm.WhenAnyValue(x => x.ProfileUrl)
                 .Throttle(TimeSpan.FromMilliseconds(400))
-                .ObserveOn(RxApp.MainThreadScheduler)
+                .ObserveOn(RxSchedulers.MainThreadScheduler)
                 .Subscribe(url => UpdatePreviewFromUrl(url, false));
 
             // Show current preview if URLs are already set (e.g. debug prefill)
@@ -300,8 +300,8 @@ public partial class CreateProjectStep3View : UserControl
         var iconName = isBanner ? "BannerUploadIcon" : "ProfileUploadIcon";
         var spinnerName = isBanner ? "BannerUploadSpinner" : "ProfileUploadSpinner";
 
-        var icon = this.FindControl<Projektanker.Icons.Avalonia.Icon>(iconName);
-        var spinner = this.FindControl<Projektanker.Icons.Avalonia.Icon>(spinnerName);
+        var icon = this.FindControl<Optris.Icons.Avalonia.Icon>(iconName);
+        var spinner = this.FindControl<Optris.Icons.Avalonia.Icon>(spinnerName);
 
         if (icon != null) icon.IsVisible = !inProgress;
         if (spinner != null) spinner.IsVisible = inProgress;

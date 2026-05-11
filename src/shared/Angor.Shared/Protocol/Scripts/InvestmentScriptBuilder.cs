@@ -71,9 +71,9 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 
         var recoveryOps = new List<Op>
         {
-            Op.GetPushOp(new NBitcoin.PubKey(projectInfo.FounderRecoveryKey).GetTaprootFullPubKey().ToBytes()),
+            Op.GetPushOp(TaprootKeyHelper.GetTaprootOutputKeyBytes(projectInfo.FounderRecoveryKey)),
             OpcodeType.OP_CHECKSIGVERIFY,
-            Op.GetPushOp(new NBitcoin.PubKey(parameters.InvestorKey).GetTaprootFullPubKey().ToBytes()),
+            Op.GetPushOp(TaprootKeyHelper.GetTaprootOutputKeyBytes(parameters.InvestorKey)),
         };
 
         var secretHashOps = parameters.HashOfSecret == null
@@ -114,7 +114,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 
         return new Script(new List<Op>
         {
-            Op.GetPushOp(new NBitcoin.PubKey(founderKey).GetTaprootFullPubKey().ToBytes()),
+            Op.GetPushOp(TaprootKeyHelper.GetTaprootOutputKeyBytes(founderKey)),
             OpcodeType.OP_CHECKSIGVERIFY,
             Op.GetPushOp(locktimeFounder),
             OpcodeType.OP_CHECKLOCKTIMEVERIFY
@@ -127,7 +127,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 
         return new Script(new List<Op>
         {
-            Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
+            Op.GetPushOp(TaprootKeyHelper.GetTaprootOutputKeyBytes(investorKey)),
             OpcodeType.OP_CHECKSIGVERIFY,
             Op.GetPushOp(locktimeExpiery),
             OpcodeType.OP_CHECKLOCKTIMEVERIFY

@@ -5,8 +5,9 @@ using Avalonia.Headless;
 using Avalonia.Markup.Xaml.Styling;
 using App.Composition;
 using App.Test.Integration.Helpers;
-using Projektanker.Icons.Avalonia;
-using Projektanker.Icons.Avalonia.FontAwesome;
+using Optris.Icons.Avalonia;
+using Optris.Icons.Avalonia.FontAwesome;
+using ReactiveUI.Avalonia;
 
 [assembly: AvaloniaTestApplication(typeof(App.Test.Integration.TestAppBuilder))]
 
@@ -15,7 +16,8 @@ namespace App.Test.Integration;
 public class TestAppBuilder
 {
     public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<TestApp>()
-        .UseHeadless(new AvaloniaHeadlessPlatformOptions());
+        .UseHeadless(new AvaloniaHeadlessPlatformOptions())
+        .UseReactiveUI(b => b.WithAvalonia());
 
     public static void RefreshServicesForCurrentProfile()
     {

@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Angor.Shared.Integration.Lightning.Models;
+using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 
@@ -301,6 +302,10 @@ public class BoltzSwapService : IBoltzSwapService
     {
         try
         {
+            var guardError = TransactionGuard.RejectAllZeroP2trOutputs(transactionHex);
+            if (guardError != null)
+                return Result.Failure<string>(guardError);
+
             _logger.LogInformation("Broadcasting transaction via Boltz API");
 
             var request = new BroadcastRequest { Hex = transactionHex };
