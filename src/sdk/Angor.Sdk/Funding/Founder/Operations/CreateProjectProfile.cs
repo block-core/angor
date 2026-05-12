@@ -81,6 +81,8 @@ public static class CreateProjectProfile
                 Nip57 = project.Nip57
             };
 
+            var nip65Published = 0;
+
             var resultId = await relayService.CreateNostrProfileAsync(
                 nostrMetadata,
                 nostrKey,
@@ -92,6 +94,10 @@ public static class CreateProjectProfile
                           tcs.TrySetResult(Result.Failure<string>($"Failed to store the project profile on the relay: {okResponse.CommunicatorName} - {okResponse.Message}"));
                           return;
                       }
+
+                      // The OK callback fires once per relay. Only publish NIP-65 once.
+                      if (Interlocked.CompareExchange(ref nip65Published, 1, 0) != 0)
+                          return;
 
                       relayService.PublishNip65List(nostrKey, nip65OkResponse =>
                       {
