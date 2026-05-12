@@ -4,6 +4,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Angor.Sdk.Wallet.Domain;
 using App.UI.Shared.Helpers;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,16 +28,21 @@ public partial class ShareModal : UserControl, IBackdropCloseable
     /// Parameterless constructor for XAML designer/loader.
     /// Not used at runtime — use the parameterized constructor instead.
     /// </summary>
-    public ShareModal() : this("Sample Project", "A sample project description")
+    public ShareModal() : this("angor1abc123", "Sample Project", "A sample project description")
     {
     }
 
-    public ShareModal(string projectName, string projectDescription, string? avatarUrl = null)
+    public ShareModal(string projectId, string projectName, string projectDescription, string? avatarUrl = null)
     {
         _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<ShareModal>();
         _projectName = projectName;
         _projectDescription = projectDescription;
-        _shareUrl = $"https://angor.io/project/{projectName.ToLowerInvariant().Replace(" ", "-")}";
+
+        var getNetwork = App.Services.GetRequiredService<Func<BitcoinNetwork>>();
+        var isTestnet = getNetwork() != BitcoinNetwork.Mainnet;
+        _shareUrl = isTestnet
+            ? $"https://angor.io/project/{projectId}?network=testnet"
+            : $"https://angor.io/project/{projectId}";
 
         InitializeComponent();
 
