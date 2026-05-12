@@ -87,4 +87,35 @@ public class SectionPanel : Panel
 
     /// <summary>Get a registered section view by key.</summary>
     public Control? GetSection(string key) => _sections.GetValueOrDefault(key);
+
+    /// <summary>
+    /// Temporarily removes inactive cached sections from the live visual tree.
+    /// Useful before global theme changes: hidden sections remain cached, but do
+    /// not all participate in theme resource invalidation at the same time.
+    /// </summary>
+    public void DetachInactiveSections()
+    {
+        foreach (KeyValuePair<string, Control> section in _sections)
+        {
+            if (section.Key == _activeKey)
+                continue;
+
+            Children.Remove(section.Value);
+        }
+    }
+
+    /// <summary>
+    /// Reattaches cached sections after a temporary detach. Inactive sections are
+    /// kept invisible so tab switching semantics remain unchanged.
+    /// </summary>
+    public void RestoreDetachedSections()
+    {
+        foreach (KeyValuePair<string, Control> section in _sections)
+        {
+            section.Value.IsVisible = section.Key == _activeKey;
+
+            if (!Children.Contains(section.Value))
+                Children.Add(section.Value);
+        }
+    }
 }

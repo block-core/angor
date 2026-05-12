@@ -10,7 +10,7 @@ This test fixes the on-chain half of the "1-click invest" plumbing in place befo
 
 - Internet connectivity (testnet indexer + faucet API + Nostr relays)
 - Profile isolation: uses a `FindProjectsInvoiceFlowTest` profile via `TestProfileScope`
-- Testnet faucet must be operational at `https://faucettmp.angor.io`
+- Testnet faucet must be operational at `https://test.faucet.angor.io`
 
 ## Why on-chain (not Lightning) for this test?
 
@@ -40,7 +40,7 @@ This test fixes the on-chain half of the "1-click invest" plumbing in place befo
 6. **Find the project on the indexer** — Navigate to Find Projects, repeatedly call `LoadProjectsFromSdkAsync()` until the project surfaces by GUID match (handles indexer lag).
 7. **Open invest page and submit amount** — `OpenProjectDetail` → `OpenInvestPage` → set `InvestmentAmount = "0.001"` (well below the 0.5 threshold so the SDK auto-publishes) → `Submit()` → assert `CurrentScreen == WalletSelector`.
 8. **Switch to invoice path** — Call `ShowInvoice()` → assert `CurrentScreen == Invoice`. Call `PayViaInvoice()` and wait until `IsProcessing && PaymentStatusText.Contains("Waiting for payment")` so we know the address was generated and monitoring is live.
-9. **Pay the invoice address externally** — Read the same next-receive address via `IWalletAppService.GetNextReceiveAddress` (pure read — no pointer mutation) and `GET https://faucettmp.angor.io/api/faucet/send/{address}/2` to mimic a QR-scan payer.
+9. **Pay the invoice address externally** — Read the same next-receive address via `IWalletAppService.GetNextReceiveAddress` (pure read — no pointer mutation) and `GET https://test.faucet.angor.io/api/faucet/send/{address}/2` to mimic a QR-scan payer.
 10. **Wait for detection and publication** — Poll until `CurrentScreen == InvestScreen.Success` or an `ErrorMessage` appears. Log every distinct `PaymentStatusText` transition for diagnostics.
 11. **Assert success state** — `PaymentReceived == true`, status text passed through "Payment received!", `IsSuccess == true`, success copy populated, and `IsAutoApproved == true` (since 0.001 BTC < 0.5 BTC threshold means the SDK published directly rather than requesting founder signatures).
 

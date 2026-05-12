@@ -10,6 +10,7 @@ using App.UI.Shared;
 using App.UI.Shared.Controls;
 using App.UI.Shared.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 
 namespace App.UI.Sections.Funds;
@@ -36,8 +37,16 @@ public partial class FundsView : UserControl, ISectionView
 
     public FundsView(FundsViewModel vm)
     {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
         InitializeComponent();
+        var initMs = sw.ElapsedMilliseconds;
+
+        sw.Restart();
         DataContext = vm;
+
+        // Strip hover transitions + BoxShadow on mobile — they never fire and waste GPU
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
+            Classes.Add("Mobile");
 
         CacheControls();
         SubscribeLayout();
@@ -45,6 +54,12 @@ public partial class FundsView : UserControl, ISectionView
         // Handle button clicks from EmptyState "Add Wallet", populated "Add Wallet",
         // and WalletCard action buttons (BtnSend, BtnReceive, BtnUtxo)
         AddHandler(Button.ClickEvent, OnButtonClick, RoutingStrategies.Bubble);
+
+        var totalMs = sw.ElapsedMilliseconds + initMs;
+        App.Services.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("FundsPerf")
+            .LogInformation("[FundsView.ctor] init={Init}ms wire={Wire}ms total={Total}ms",
+                initMs, sw.ElapsedMilliseconds, totalMs);
     }
 
     private void CacheControls()
@@ -385,8 +400,10 @@ public partial class FundsView : UserControl, ISectionView
 
     public void OnBecameActive()
     {
-        if (DataContext is FundsViewModel vm)
-            _ = vm.ReloadWalletsAsync();
+        // WalletContext is already reloaded at startup and after wallet create/import/delete.
+        // Reloading on every mobile tab activation forces collection rebuild + wallet card
+        // layout before the tab can paint, which showed up as ~250ms on Android.
+        InvalidateVisual();
     }
 
     public void OnBecameInactive() { }

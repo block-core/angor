@@ -30,6 +30,17 @@ public static class ImageCacheService
     private static ILogger Logger => _logger ??= App.Services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(ImageCacheService));
 
     /// <summary>
+    /// Default decode width for banner images (pixels).
+    /// Full-resolution decodes waste memory and GPU time, especially on mobile.
+    /// </summary>
+    private const int DefaultBannerDecodeWidth = 640;
+
+    /// <summary>
+    /// Default decode width for avatar/icon images (pixels).
+    /// </summary>
+    private const int DefaultAvatarDecodeWidth = 128;
+
+    /// <summary>
     /// In-memory cache: URL → Bitmap. Once a bitmap is loaded it stays in RAM
     /// for the lifetime of the app (same as the old RamCachedWebImageLoader).
     /// </summary>
@@ -48,11 +59,29 @@ public static class ImageCacheService
         "App", "ImageCache");
 
     /// <summary>
-    /// Get a bitmap for the given URL. Returns the cached instance if available,
+    /// Get a bitmap for the given URL at full resolution.
+    /// Returns the cached instance if available,
     /// otherwise downloads (with disk caching) and decodes it.
     /// Thread-safe — multiple concurrent requests for the same URL will share a single download.
     /// </summary>
-    public static async Task<Bitmap?> GetBitmapAsync(string? url)
+    public static Task<Bitmap?> GetBitmapAsync(string? url) => GetBitmapAsync(url, null);
+
+    /// <summary>
+    /// Get a bitmap for a banner image, decoded at <see cref="DefaultBannerDecodeWidth"/> pixels wide.
+    /// </summary>
+    public static Task<Bitmap?> GetBannerBitmapAsync(string? url) => GetBitmapAsync(url, DefaultBannerDecodeWidth);
+
+    /// <summary>
+    /// Get a bitmap for an avatar image, decoded at <see cref="DefaultAvatarDecodeWidth"/> pixels wide.
+    /// </summary>
+    public static Task<Bitmap?> GetAvatarBitmapAsync(string? url) => GetBitmapAsync(url, DefaultAvatarDecodeWidth);
+
+    /// <summary>
+    /// Get a bitmap for the given URL, optionally limiting decode width.
+    /// When <paramref name="decodeWidth"/> is specified, the image is decoded at that width
+    /// (maintaining aspect ratio), reducing memory and decode time.
+    /// </summary>
+    public static async Task<Bitmap?> GetBitmapAsync(string? url, int? decodeWidth)
     {
         if (string.IsNullOrWhiteSpace(url))
             return null;
@@ -62,7 +91,7 @@ public static class ImageCacheService
             return cached;
 
         // 2. Download (or join existing in-flight request)
-        var bitmap = await InFlight.GetOrAdd(url, DownloadAndCacheAsync);
+        var bitmap = await InFlight.GetOrAdd(url, u => DownloadAndCacheAsync(u, decodeWidth));
 
         // Clean up the in-flight tracker
         InFlight.TryRemove(url, out _);
@@ -78,14 +107,14 @@ public static class ImageCacheService
     {
         if (string.IsNullOrWhiteSpace(url))
         {
-            onLoaded(null);
+            Dispatcher.UIThread.Post(() => onLoaded(null));
             return;
         }
 
         // Fast path: already in memory
         if (MemoryCache.TryGetValue(url, out var cached))
         {
-            onLoaded(cached);
+            Dispatcher.UIThread.Post(() => onLoaded(cached));
             return;
         }
 
@@ -105,7 +134,7 @@ public static class ImageCacheService
         });
     }
 
-    private static async Task<Bitmap?> DownloadAndCacheAsync(string url)
+    private static async Task<Bitmap?> DownloadAndCacheAsync(string url, int? decodeWidth)
     {
         try
         {
@@ -120,7 +149,7 @@ public static class ImageCacheService
                 try
                 {
                     await using var fs = File.OpenRead(cacheFile);
-                    var bitmap = new Bitmap(fs);
+                    var bitmap = DecodeBitmap(fs, decodeWidth);
                     MemoryCache.TryAdd(url, bitmap);
                     return bitmap;
                 }
@@ -159,7 +188,7 @@ public static class ImageCacheService
 
             // 4. Decode bitmap
             using var ms = new MemoryStream(bytes);
-            var bmp = new Bitmap(ms);
+            var bmp = DecodeBitmap(ms, decodeWidth);
             MemoryCache.TryAdd(url, bmp);
             return bmp;
         }
@@ -168,6 +197,18 @@ public static class ImageCacheService
             Logger.LogWarning(ex, "DownloadAndCacheAsync failed for '{Url}'", url);
             return null;
         }
+    }
+
+    /// <summary>
+    /// Decodes a bitmap from a stream, optionally limiting the decode width.
+    /// When <paramref name="decodeWidth"/> is specified, the image is decoded at that pixel width
+    /// (height is auto-calculated to maintain aspect ratio), saving memory and GPU decode time.
+    /// </summary>
+    private static Bitmap DecodeBitmap(Stream stream, int? decodeWidth)
+    {
+        if (decodeWidth is > 0)
+            return Bitmap.DecodeToWidth(stream, decodeWidth.Value);
+        return new Bitmap(stream);
     }
 
     /// <summary>

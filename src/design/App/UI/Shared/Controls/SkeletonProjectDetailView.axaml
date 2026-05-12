@@ -1,0 +1,79 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="App.UI.Shared.Controls.SkeletonProjectDetailView">
+    <!-- Skeleton matching ProjectDetailView — single-column stacked layout
+         that works on both mobile and desktop. Shown briefly during first inflate. -->
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Disabled">
+    <StackPanel Spacing="20" Margin="16,16,16,24">
+
+        <!-- Project card skeleton — full width -->
+        <Border CornerRadius="16" BorderThickness="1"
+                BorderBrush="{DynamicResource Stroke}"
+                Background="{DynamicResource Surface}"
+                BoxShadow="{DynamicResource ItemShadow}"
+                ClipToBounds="True">
+            <StackPanel>
+                <Border Classes="Skeleton" Height="180" CornerRadius="0" />
+                <Panel Margin="24,0,0,0" Height="32">
+                    <Border Classes="Skeleton Circle" HorizontalAlignment="Left"
+                            VerticalAlignment="Top" Margin="0,-32,0,0" />
+                </Panel>
+                <StackPanel Margin="24,16,24,24" Spacing="8">
+                    <Border Classes="Skeleton TextHeading" Width="280" HorizontalAlignment="Left" />
+                    <StackPanel Spacing="6">
+                        <Border Classes="Skeleton TextLine" />
+                        <Border Classes="Skeleton TextLine" Width="260" HorizontalAlignment="Left" />
+                        <Border Classes="Skeleton TextLine" Width="200" HorizontalAlignment="Left" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Status card skeleton — full width -->
+        <Border CornerRadius="16" BorderThickness="1"
+                BorderBrush="{DynamicResource Stroke}"
+                Background="{DynamicResource Surface}"
+                BoxShadow="{DynamicResource ItemShadow}"
+                Padding="20">
+            <StackPanel Spacing="14">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Border Classes="Skeleton Pill" />
+                    <Border Classes="Skeleton Pill" Width="70" />
+                </StackPanel>
+                <Border Classes="Skeleton TextHeading" Width="200" HorizontalAlignment="Left" />
+                <StackPanel Spacing="8">
+                    <Border Classes="Skeleton TextLine" />
+                    <Border Classes="Skeleton TextLine" Width="240" HorizontalAlignment="Left" />
+                </StackPanel>
+                <Border Classes="Skeleton" Height="44" CornerRadius="8" Margin="0,4,0,0" />
+            </StackPanel>
+        </Border>
+
+        <!-- Stats card skeleton — full width -->
+        <Border CornerRadius="16" Padding="20"
+                Background="{DynamicResource SurfaceLow}">
+            <StackPanel Spacing="12">
+                <Border Classes="Skeleton TextHeading" Width="160" HorizontalAlignment="Left" />
+                <Border Classes="Skeleton" Height="64" CornerRadius="12" />
+                <Border Classes="Skeleton" Height="64" CornerRadius="12" />
+                <Border Classes="Skeleton" Height="64" CornerRadius="12" />
+                <Border Classes="Skeleton Bar" />
+            </StackPanel>
+        </Border>
+
+        <!-- Info section skeleton — full width -->
+        <Border CornerRadius="16" BorderThickness="1"
+                BorderBrush="{DynamicResource Stroke}"
+                Background="{DynamicResource Surface}"
+                Padding="20">
+            <StackPanel Spacing="12">
+                <Border Classes="Skeleton TextHeading" Width="220" HorizontalAlignment="Left" />
+                <Border Classes="Skeleton" Height="56" CornerRadius="12" />
+                <Border Classes="Skeleton" Height="56" CornerRadius="12" />
+                <Border Classes="Skeleton" Height="56" CornerRadius="12" />
+                <Border Classes="Skeleton" Height="56" CornerRadius="12" />
+            </StackPanel>
+        </Border>
+    </StackPanel>
+    </ScrollViewer>
+</UserControl>

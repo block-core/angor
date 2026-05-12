@@ -52,6 +52,8 @@ public static class CheckForReleaseSignatures
             var projectNostrPubKey = project.Value.NostrPubKey;
 
             var tcs = new TaskCompletionSource<bool>();
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            cts.Token.Register(() => { tcs.TrySetResult(false); cts.Dispose(); });
 
             signService.LookupReleaseSigs(
                 investorNostrPubKey,

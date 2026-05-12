@@ -302,6 +302,8 @@ public class InvestmentHandshakeService(
         try
         {
             var tcs = new TaskCompletionSource<bool>();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            cts.Token.Register(() => tcs.TrySetResult(true));
             
             var requests = new List<DirectMessage>();
             var notifications = new List<DirectMessage>();

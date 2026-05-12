@@ -38,12 +38,14 @@
         <!-- "Find Projects" button with search icon                 -->
         <!-- ═══════════════════════════════════════════════════════ -->
         <controls:EmptyState Title="FUNDED"
-                             Description="You haven't funded any projects yet. Browse the latest to find one."
-                             DescriptionFontSize="20"
-                             HasButton="True"
-                             ButtonText="Find Projects"
-                             ButtonIconValue="fa-solid fa-magnifying-glass"
-                             IsVisible="{Binding !HasInvestments}" />
+                              Description="You haven't funded any projects yet. Browse the latest to find one."
+                              DescriptionFontSize="20"
+                              HasButton="True"
+                              ButtonText="Find Projects"
+                              ButtonIconValue="fa-solid fa-magnifying-glass"
+                              ButtonClick="OnFindProjectsEmptyStateClick"
+                              IsVisible="False"
+                              Name="EmptyStatePanel" />
 
         <!-- ═══════════════════════════════════════════════════════ -->
         <!-- INVESTMENT DETAIL: lazy-mounted by code-behind on first  -->
@@ -101,7 +103,7 @@
 
                         <!-- Buttons Row: Refresh + Penalties -->
                         <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
-                            <Button Name="RefreshButton" Classes="Primary" Padding="20,8"
+                            <Button Name="RefreshButton" Classes="Primary MobileAction" Padding="20,8"
                                    AutomationProperties.AutomationId="PortfolioRefreshButton">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="13"
@@ -110,7 +112,7 @@
                                                Foreground="White" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
-                            <Button Name="PenaltiesButton" Padding="20,8"
+                            <Button Name="PenaltiesButton" Classes="MobileAction" Padding="20,8"
                                     Background="#F7931A" CornerRadius="8"
                                     Cursor="Hand">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
@@ -257,6 +259,69 @@
                 <controls:ScrollableView Name="PortfolioContent" Grid.Column="1" ContentPadding="0,0,16,0">
                 <StackPanel Spacing="16">
 
+                    <!-- ═══════════════════════════════════════ -->
+                    <!-- MOBILE COMPACT HEADER: replaces sidebar -->
+                    <!-- ~48px inline stats + action buttons     -->
+                    <!-- Hidden on desktop, shown on compact     -->
+                    <!-- ═══════════════════════════════════════ -->
+                    <Border Name="MobilePortfolioHeader"
+                            Background="{DynamicResource Surface}"
+                            BorderBrush="{DynamicResource Stroke}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="12,10"
+                            IsVisible="False">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <!-- Stats chips -->
+                            <WrapPanel Grid.Column="0" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,12,0">
+                                    <i:Icon Value="fa-solid fa-file-lines" FontSize="12"
+                                            Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding FundedProjects}" FontSize="13" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextStrong}" VerticalAlignment="Center" />
+                                    <TextBlock Text="funded" FontSize="12"
+                                               Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,12,0">
+                                    <TextBlock Text="·" FontSize="13"
+                                               Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
+                                    <i:Icon Value="fa-brands fa-bitcoin" FontSize="12"
+                                            Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding TotalInvested}" FontSize="13" FontWeight="Bold"
+                                               Foreground="{DynamicResource TextStrong}" VerticalAlignment="Center" />
+                                    <TextBlock Text="BTC" FontSize="11"
+                                               Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Spacing="4"
+                                            IsVisible="{Binding HasRecoveryProjects}">
+                                    <TextBlock Text="·" FontSize="13"
+                                               Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
+                                    <i:Icon Value="fa-solid fa-triangle-exclamation" FontSize="11"
+                                            Foreground="#E5A536" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding ProjectsInRecovery}" FontSize="13" FontWeight="Bold"
+                                               Foreground="#E5A536" VerticalAlignment="Center" />
+                                    <TextBlock Text="recovery" FontSize="12"
+                                               Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </WrapPanel>
+
+                            <!-- Action buttons -->
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <Button Name="MobileRefreshButton" Classes="MobileAction IconOnly" Padding="8,6" CornerRadius="8"
+                                        Background="{DynamicResource SurfaceLow}"
+                                        BorderBrush="{DynamicResource Stroke}" BorderThickness="1">
+                                    <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="13"
+                                            Foreground="{DynamicResource TextMuted}" />
+                                </Button>
+                                <Button Name="MobilePenaltiesButton" Classes="MobileAction IconOnly" Padding="8,6" CornerRadius="8"
+                                        Background="#F7931A" Cursor="Hand">
+                                    <i:Icon Value="fa-solid fa-lock" FontSize="13"
+                                            Foreground="White" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
                     <!-- Section heading -->
                     <TextBlock Text="Your Investments"
                                FontSize="24"
@@ -266,8 +331,8 @@
                     <!-- Skeleton placeholder grid — visible until first data arrives -->
                     <ItemsControl IsVisible="{Binding IsInitialLoad}">
                         <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <controls:ResponsiveGrid MinItemWidth="320" ColumnSpacing="16" RowSpacing="16" />
+                                                    <ItemsPanelTemplate>
+                                <controls:ResponsiveGrid MinItemWidth="320" MaxColumns="2" ColumnSpacing="16" RowSpacing="16" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <controls:SkeletonInvestmentCard />
@@ -280,8 +345,8 @@
                     <ItemsControl ItemsSource="{Binding Investments}"
                                   IsVisible="{Binding !IsInitialLoad}">
                         <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <controls:ResponsiveGrid MinItemWidth="320" ColumnSpacing="16" RowSpacing="16" />
+                                                    <ItemsPanelTemplate>
+                                <controls:ResponsiveGrid MinItemWidth="320" MaxColumns="2" ColumnSpacing="16" RowSpacing="16" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
@@ -293,14 +358,7 @@
                                         CornerRadius="16"
                                         ClipToBounds="False"
                                         BoxShadow="{DynamicResource ItemShadow}"
-                                        Name="InvestmentCardBorder"
-                                        RenderTransform="translate(0px, 0px)">
-                                    <Border.Transitions>
-                                        <Transitions>
-                                            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" />
-                                            <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.3" />
-                                        </Transitions>
-                                    </Border.Transitions>
+                                        Name="InvestmentCardBorder">
                                     <!-- Inner clip border for banner image overflow -->
                                     <Border CornerRadius="15" ClipToBounds="True">
                                     <StackPanel Spacing="0">
@@ -328,7 +386,7 @@
 
                                             <!-- Type + Status pills — using shared Pill style classes -->
                                             <!-- Vue: .investment-pills gap:8px -->
-                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <WrapPanel>
                                                 <!-- Type pill: Investment (blue), Funding (amber), Subscription (pink) -->
                                                 <ContentControl Classes="Pill Blue"
                                                                 Content="{Binding TypeLabel}"
@@ -357,13 +415,14 @@
                                                 <ContentControl Classes="Pill Blue"
                                                                 Content="{Binding StatusText}"
                                                                 IsVisible="{Binding IsStatusRecovered}" />
-                                            </StackPanel>
+                                            </WrapPanel>
 
                                             <!-- Project name — Vue: .investment-title font-size:16px font-weight:700 -->
                                             <TextBlock Text="{Binding ProjectName}"
-                                                       FontSize="16"
-                                                       FontWeight="Bold"
-                                                       Foreground="{DynamicResource TextStrong}" />
+                                                        FontSize="16"
+                                                        FontWeight="Bold"
+                                                        Foreground="{DynamicResource TextStrong}"
+                                                        TextWrapping="Wrap" />
 
                                             <!-- Funding info — Vue: .investment-stats flex justify-between -->
                                             <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto"
@@ -378,7 +437,8 @@
                                                            FontSize="14"
                                                            FontWeight="Bold"
                                                            Foreground="{DynamicResource TextStrong}"
-                                                           HorizontalAlignment="Right" />
+                                                           HorizontalAlignment="Right"
+                                                           TextTrimming="CharacterEllipsis" />
 
                                                 <TextBlock Grid.Row="1" Grid.Column="0"
                                                            Text="Date:"
@@ -388,7 +448,8 @@
                                                            Text="{Binding FundingDate}"
                                                            FontSize="13"
                                                            Foreground="{DynamicResource TextMuted}"
-                                                           HorizontalAlignment="Right" />
+                                                           HorizontalAlignment="Right"
+                                                           TextTrimming="CharacterEllipsis" />
                                             </Grid>
 
                                             <!-- Payment Progress (subscription/fund type with payment plan) -->

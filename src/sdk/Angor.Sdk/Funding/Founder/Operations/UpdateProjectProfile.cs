@@ -65,6 +65,8 @@ public static class UpdateProjectProfile
 
             // Publish kind 0 (profile metadata)
             var profileTcs = new TaskCompletionSource<Result<string>>();
+            var profileCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            profileCts.Token.Register(() => { profileTcs.TrySetResult(Result.Failure<string>("Nostr profile update timed out after 30s")); profileCts.Dispose(); });
             var nostrMetadata = new NostrMetadata
             {
                 Name = request.Metadata.Name,

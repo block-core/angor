@@ -19,6 +19,8 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
     private ConcurrentDictionary<string, ConcurrentHashSet<string>> _eoseCalledOnSubscriptionClients;
     private ConcurrentDictionary<string, ConcurrentHashSet<string>> _okCalledOnSubscriptionClients;
 
+    public event Action<string>? RelayDisconnected;
+
     public NostrCommunicationFactory(ILogger<NostrWebsocketClient> clientLogger, ILogger<NostrCommunicationFactory> logger)
     {
         _clientLogger = clientLogger;
@@ -245,6 +247,37 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
                 _logger.LogDebug(
                     "Relay {relayName} disconnected, type: {Type}, reason: {CloseStatusDescription}", 
                     relayName, e.Type, e.CloseStatusDescription);
+
+            // Remove the disconnected relay from all pending EOSE tracking sets
+            // so that remaining healthy relays can satisfy the "all relays responded" check.
+            foreach (var kvp in _eoseCalledOnSubscriptionClients)
+            {
+                if (kvp.Value.TryRemove(relayName))
+                {
+                    _logger.LogWarning(
+                        "Removed disconnected relay {RelayName} from EOSE tracking for subscription {Subscription}",
+                        relayName, kvp.Key);
+                }
+            }
+
+            foreach (var kvp in _okCalledOnSubscriptionClients)
+            {
+                if (kvp.Value.TryRemove(relayName))
+                {
+                    _logger.LogWarning(
+                        "Removed disconnected relay {RelayName} from OK tracking for event {EventId}",
+                        relayName, kvp.Key);
+                }
+            }
+
+            try
+            {
+                RelayDisconnected?.Invoke(relayName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in RelayDisconnected handler for relay {RelayName}", relayName);
+            }
         }));
 
         if (_logger.IsEnabled(LogLevel.Information))

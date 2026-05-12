@@ -4,16 +4,18 @@ using AsyncImageLoader.Loaders;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using App.Composition;
+using Microsoft.Extensions.DependencyInjection;
 using App.UI.Shared;
 using App.UI.Shell;
-using Projektanker.Icons.Avalonia;
-using Projektanker.Icons.Avalonia.FontAwesome;
+using Optris.Icons.Avalonia;
+using Optris.Icons.Avalonia.FontAwesome;
 
 namespace App;
 
 public partial class App : Application
 {
     public static IServiceProvider Services { get; private set; } = null!;
+    public static Action<ServiceCollection>? PlatformServices { get; set; }
 
     public override void Initialize()
     {
@@ -58,15 +60,24 @@ public partial class App : Application
         var profileName = ProfileNameResolver.GetProfileName(lifetime?.Args);
 
         // Build DI container with profile-specific data isolation
-        Services = CompositionRoot.BuildServiceProvider(profileName);
+        Services = CompositionRoot.BuildServiceProvider(profileName, platformServices: PlatformServices);
 
         if (lifetime != null)
         {
             lifetime.MainWindow = new MainWindow();
         }
+        else if (ApplicationLifetime is IActivityApplicationLifetime activity)
+        {
+            // Android (Avalonia 12) — uses the new IActivityApplicationLifetime
+            // with a MainViewFactory delegate. Must be checked before
+            // ISingleViewApplicationLifetime because IActivityApplicationLifetime
+            // also implements ISingleViewApplicationLifetime in some configurations.
+            LayoutModeService.Instance.UpdateWidth(400);
+            activity.MainViewFactory = () => new ShellView();
+        }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
         {
-            // Android / iOS / WASM — no window, just set the main view directly.
+            // iOS / WASM — no window, just set the main view directly.
             // Force mobile layout since there's no resizable window.
             LayoutModeService.Instance.UpdateWidth(400);
             singleView.MainView = new ShellView();

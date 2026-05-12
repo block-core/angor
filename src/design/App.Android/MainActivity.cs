@@ -1,8 +1,9 @@
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
-using Avalonia;
+using App.UI.Shared.Helpers;
 using Avalonia.Android;
+using Avalonia.Threading;
 
 namespace App.Android;
 
@@ -11,16 +12,12 @@ namespace App.Android;
     Theme = "@style/MyTheme.NoActionBar",
     Icon = "@drawable/icon",
     MainLauncher = true,
+    ScreenOrientation = ScreenOrientation.Portrait,
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
-public class MainActivity : AvaloniaMainActivity<global::App.App>
+public class MainActivity : AvaloniaMainActivity
 {
     private PerfTabReceiver? _perfReceiver;
-
-    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
-    {
-        return base.CustomizeAppBuilder(builder)
-            .WithInterFont();
-    }
+    private bool _handlingPlatformBack;
 
     protected override void OnResume()
     {
@@ -38,6 +35,24 @@ public class MainActivity : AvaloniaMainActivity<global::App.App>
             UnregisterReceiver(_perfReceiver);
             _perfReceiver = null;
         }
+    }
+
+    public override void OnBackPressed()
+    {
+        if (_handlingPlatformBack)
+        {
+            base.OnBackPressed();
+            return;
+        }
+
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (ShellService.TryHandlePlatformBack()) return;
+
+            _handlingPlatformBack = true;
+            OnBackPressed();
+            _handlingPlatformBack = false;
+        });
     }
 }
 

@@ -15,6 +15,7 @@ namespace Angor.Sdk.Funding.Investor.Operations;
 /// User pays the Lightning invoice → funds go directly on-chain to the investment address.
 /// No intermediate wallet or custody required.
 /// </summary>
+[Obsolete("Use CreateLightningSwap instead — it accepts a claim public key directly and works for both invest and deploy flows.")]
 public static class CreateLightningSwapForInvestment
 {
     /// <summary>

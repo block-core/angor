@@ -177,6 +177,19 @@
         <Setter Property="RenderTransform" Value="translate(0px, 0px)" />
     </Style>
 
+    <!-- Chrome-less buttons draw their own inner visuals. Keep them stationary so
+         1px strokes are not clipped by parent previews or tight containers. -->
+    <Style Selector="Button.NoPressShift">
+        <Setter Property="RenderTransform" Value="translate(0px, 0px)" />
+        <Setter Property="Transitions" Value="{x:Null}" />
+    </Style>
+    <Style Selector="Button.NoPressShift:pointerover">
+        <Setter Property="RenderTransform" Value="translate(0px, 0px)" />
+    </Style>
+    <Style Selector="Button.NoPressShift:pressed">
+        <Setter Property="RenderTransform" Value="translate(0px, 0px)" />
+    </Style>
+
     <!-- Disabled state: reduced opacity + no cursor + no hover effects -->
     <Style Selector="Button:disabled">
         <Setter Property="Opacity" Value="0.45" />

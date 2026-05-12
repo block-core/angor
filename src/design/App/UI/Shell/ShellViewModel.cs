@@ -164,6 +164,7 @@ public partial class PrototypeSettings : ReactiveObject
 {
     private readonly IStore _store;
     private const string SettingsKey = "prototype_settings.json";
+    private CancellationTokenSource? saveSettingsCts;
 
     /// <summary>
     /// When true, sections show hardcoded sample data (populated state).
@@ -195,40 +196,36 @@ public partial class PrototypeSettings : ReactiveObject
     {
         _store = store;
 
-        // Load persisted values
-        var result = _store.Load<PrototypeSettingsData>(SettingsKey).GetAwaiter().GetResult();
-        if (result.IsSuccess)
-        {
-            isDebugMode = result.Value.IsDebugMode;
-            isDarkTheme = result.Value.IsDarkTheme;
-            selectedWalletId = result.Value.SelectedWalletId;
-        }
+        // Load persisted values asynchronously to avoid blocking the UI thread.
+        // Default field values are used until loading completes.
+        Observable.StartAsync(async ct =>
+            {
+                var result = await _store.Load<PrototypeSettingsData>(SettingsKey);
+                return result;
+            })
+            .Subscribe(result =>
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    if (result.IsSuccess)
+                    {
+                        IsDebugMode = result.Value.IsDebugMode;
+                        SelectedWalletId = result.Value.SelectedWalletId;
 
-        // Apply persisted theme immediately
+                        // Set IsDarkTheme last — its WhenAnyValue subscription
+                        // applies the theme, so we want the other fields settled first.
+                        IsDarkTheme = result.Value.IsDarkTheme;
+                    }
+                });
+            });
+
+        // Apply persisted theme immediately (defaults to light until async load completes)
         if (Application.Current != null)
         {
             Application.Current.RequestedThemeVariant = isDarkTheme
                 ? Avalonia.Styling.ThemeVariant.Dark
                 : Avalonia.Styling.ThemeVariant.Light;
         }
-
-        // Persist on changes
-        this.WhenAnyValue(x => x.IsDebugMode, x => x.IsDarkTheme, x => x.SelectedWalletId)
-            .Skip(1)
-            .Subscribe(async _ =>
-            {
-                var saveResult = await _store.Save(SettingsKey, new PrototypeSettingsData
-                {
-                    IsDebugMode = IsDebugMode,
-                    IsDarkTheme = IsDarkTheme,
-                    SelectedWalletId = SelectedWalletId,
-                });
-                if (saveResult.IsFailure)
-                {
-                    var logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(PrototypeSettings));
-                    logger.LogWarning("Failed to save settings: {Error}", saveResult.Error);
-                }
-            });
 
         // Apply theme whenever IsDarkTheme changes
         this.WhenAnyValue(x => x.IsDarkTheme)
@@ -237,11 +234,50 @@ public partial class PrototypeSettings : ReactiveObject
             {
                 if (Application.Current != null)
                 {
-                    Application.Current.RequestedThemeVariant = dark
-                        ? Avalonia.Styling.ThemeVariant.Dark
-                        : Avalonia.Styling.ThemeVariant.Light;
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        ShellService.PrepareForThemeChange(true);
+                        Application.Current.RequestedThemeVariant = dark
+                            ? Avalonia.Styling.ThemeVariant.Dark
+                            : Avalonia.Styling.ThemeVariant.Light;
+                        ShellService.PrepareForThemeChange(false);
+                    }, Avalonia.Threading.DispatcherPriority.Render);
                 }
             });
+
+        // Persist after visible state changes so disk I/O never competes with the theme flip.
+        this.WhenAnyValue(x => x.IsDebugMode, x => x.IsDarkTheme, x => x.SelectedWalletId)
+            .Skip(1)
+            .Throttle(TimeSpan.FromMilliseconds(250), RxSchedulers.TaskpoolScheduler)
+            .Subscribe(_ => ScheduleSaveSettings());
+    }
+
+    private void ScheduleSaveSettings()
+    {
+        saveSettingsCts?.Cancel();
+        saveSettingsCts?.Dispose();
+        saveSettingsCts = new CancellationTokenSource();
+
+        bool currentDebugMode = IsDebugMode;
+        bool currentDarkTheme = IsDarkTheme;
+        string? currentWalletId = SelectedWalletId;
+        CancellationToken token = saveSettingsCts.Token;
+
+        Task.Run(async () =>
+        {
+            Result saveResult = await _store.Save(SettingsKey, new PrototypeSettingsData
+            {
+                IsDebugMode = currentDebugMode,
+                IsDarkTheme = currentDarkTheme,
+                SelectedWalletId = currentWalletId,
+            });
+
+            if (!token.IsCancellationRequested && saveResult.IsFailure)
+            {
+                var logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(PrototypeSettings));
+                logger.LogWarning("Failed to save settings: {Error}", saveResult.Error);
+            }
+        }, token);
     }
 
     private class PrototypeSettingsData
@@ -269,8 +305,9 @@ public record NavItem(string Label, string Icon, bool IconIsFilled = false) : Na
 /// </summary>
 public record NavGroupHeader(string Title) : NavEntry;
 
-public partial class ShellViewModel : ReactiveObject
+public partial class ShellViewModel : ReactiveObject, IDisposable
 {
+    private readonly CompositeDisposable _disposables = new();
     private readonly PortfolioViewModel _portfolioVm;
     private readonly SignatureStore _signatureStore;
     private readonly Func<string, object?> _viewFactory;
@@ -298,6 +335,7 @@ public partial class ShellViewModel : ReactiveObject
     [Reactive] private string projectDetailActionVerb = "Invest";
     [Reactive] private bool isInvestmentDetailOpen;
     [Reactive] private bool isManageFundsOpen;
+    [Reactive] private bool isEditProfileOpen;
     [Reactive] private bool isCreatingProject;
 
     /// <summary>
@@ -317,6 +355,50 @@ public partial class ShellViewModel : ReactiveObject
     /// the wizard from within My Projects itself (no routing needed).
     /// </summary>
     public string? WizardOriginNavLabel { get; set; }
+
+    public void SyncDetailStateFromCachedViews()
+    {
+        if (_viewCache.TryGetValue("Find Projects", out var findProjectsView)
+            && findProjectsView is FindProjectsView { DataContext: FindProjectsViewModel findProjectsVm })
+        {
+            IsInvestPageOpen = findProjectsVm.InvestPageViewModel != null;
+            IsProjectDetailOpen = findProjectsVm.SelectedProject != null && !IsInvestPageOpen;
+            if (findProjectsVm.SelectedProject != null)
+            {
+                ProjectDetailActionVerb = ProjectTypeTerminology.ActionVerb(
+                    ProjectTypeExtensions.FromDisplayString(findProjectsVm.SelectedProject.ProjectType));
+            }
+        }
+        else
+        {
+            IsInvestPageOpen = false;
+            IsProjectDetailOpen = false;
+        }
+
+        if (_viewCache.TryGetValue("Funded", out var fundedView)
+            && fundedView is PortfolioView { DataContext: PortfolioViewModel portfolioVm })
+        {
+            IsInvestmentDetailOpen = portfolioVm.SelectedInvestment != null;
+        }
+        else
+        {
+            IsInvestmentDetailOpen = false;
+        }
+
+        if (_viewCache.TryGetValue("My Projects", out var myProjectsView)
+            && myProjectsView is MyProjectsView { DataContext: MyProjectsViewModel myProjectsVm })
+        {
+            IsCreatingProject = myProjectsVm.ShowCreateWizard;
+            IsManageFundsOpen = myProjectsVm.SelectedManageProject != null;
+            IsEditProfileOpen = myProjectsVm.SelectedEditProject != null;
+        }
+        else
+        {
+            IsCreatingProject = false;
+            IsManageFundsOpen = false;
+            IsEditProfileOpen = false;
+        }
+    }
 
     /// <summary>
     /// Shell-level modal overlay state. Any section can push a modal view here
@@ -421,7 +503,8 @@ public partial class ShellViewModel : ReactiveObject
                 SyncMobileTabState();
                 this.RaisePropertyChanged(nameof(CurrentSectionContent));
                 this.RaisePropertyChanged(nameof(SelectedSectionName));
-            });
+            })
+            .DisposeWith(_disposables);
 
         this.WhenAnyValue(x => x.IsSettingsOpen)
             .Where(open => open)
@@ -430,10 +513,12 @@ public partial class ShellViewModel : ReactiveObject
                 SyncMobileTabState();
                 this.RaisePropertyChanged(nameof(CurrentSectionContent));
                 this.RaisePropertyChanged(nameof(SelectedSectionName));
-            });
+            })
+            .DisposeWith(_disposables);
 
         this.WhenAnyValue(x => x.SectionTitleOverride)
-            .Subscribe(_ => this.RaisePropertyChanged(nameof(SelectedSectionName)));
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(SelectedSectionName)))
+            .DisposeWith(_disposables);
 
         // ── Initialize wallet context and subscribe to updates ──
         _ = _walletContext.ReloadAsync();
@@ -445,14 +530,25 @@ public partial class ShellViewModel : ReactiveObject
                 this.RaisePropertyChanged(nameof(AvailableBalanceDisplay));
                 this.RaisePropertyChanged(nameof(SwitcherWallets));
                 _ = LoadTotalInvestedAsync(SelectedWallet);
-            });
+            })
+            .DisposeWith(_disposables);
+
+        // Refresh invested balance after portfolio finishes loading (investment records
+        // may have been fetched from relay and saved to DB during the portfolio sync).
+        _portfolioVm.WhenAnyValue(x => x.IsLoading)
+            .Where(isLoading => !isLoading)
+            .Subscribe(__ => _ = LoadTotalInvestedAsync(SelectedWallet))
+            .DisposeWith(_disposables);
 
         // When toast message changes, notify HasToast
         this.WhenAnyValue(x => x.ToastMessage)
-            .Subscribe(_ => this.RaisePropertyChanged(nameof(HasToast)));
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(HasToast)))
+            .DisposeWith(_disposables);
     }
 
     public ObservableCollection<NavEntry> NavEntries { get; }
+
+    public void Dispose() => _disposables.Dispose();
 
     public string SelectedSectionName => IsSettingsOpen ? "Settings" : (SectionTitleOverride ?? SelectedNavItem?.Label ?? "");
 
@@ -759,11 +855,52 @@ public partial class ShellViewModel : ReactiveObject
         if (_viewCache.TryGetValue("My Projects", out var v) &&
             v is MyProjectsView { DataContext: MyProjectsViewModel mpVm })
         {
-            mpVm.CloseManageProject();
+            if (IsCreatingProject)
+                mpVm.CloseCreateWizard();
+            else if (IsEditProfileOpen)
+                mpVm.CloseEditProfile();
+            else
+                mpVm.CloseManageProject();
         }
         // Ensure the founder tab is set and sub-tabs re-appear
         MobileActiveTab = "founder";
         MobileFounderSubTab = "my-projects";
+    }
+
+    /// <summary>
+    /// Handles platform back requests (Android physical/system back) by routing to
+    /// the same in-app back actions used by the mobile floating back bars.
+    /// Returns false when the app is already at a root screen so Android may exit.
+    /// </summary>
+    public bool TryHandlePlatformBack()
+    {
+        SyncDetailStateFromCachedViews();
+
+        if (IsModalOpen)
+        {
+            HideModal();
+            return true;
+        }
+
+        if (IsInvestPageOpen || IsProjectDetailOpen)
+        {
+            BackFromInvestorDetail();
+            return true;
+        }
+
+        if (IsInvestmentDetailOpen)
+        {
+            BackFromInvestmentDetail();
+            return true;
+        }
+
+        if (IsCreatingProject || IsManageFundsOpen || IsEditProfileOpen)
+        {
+            CloseManageFundsFromShell();
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -784,6 +921,19 @@ public partial class ShellViewModel : ReactiveObject
     /// Action for the invest/submit CTA button on the mobile back bar.
     /// Vue: showInvestPage ? handleInvestPageAction() : viewInvestPage()
     /// </summary>
+    /// <summary>Returns the current InvestPageViewModel if the invest page is open, null otherwise.</summary>
+    public InvestPageViewModel? CurrentInvestPageViewModel
+    {
+        get
+        {
+            if (_viewCache.TryGetValue("Find Projects", out var v) &&
+                v is FindProjectsView { DataContext: FindProjectsViewModel fpVm } &&
+                fpVm.InvestPageViewModel is { } investVm)
+                return investVm;
+            return null;
+        }
+    }
+
     public void MobileInvestAction()
     {
         if (IsInvestPageOpen)
@@ -819,6 +969,7 @@ public partial class ShellViewModel : ReactiveObject
         IsInvestPageOpen = false;
         IsInvestmentDetailOpen = false;
         IsManageFundsOpen = false;
+        IsEditProfileOpen = false;
         IsCreatingProject = false;
     }
 
@@ -919,6 +1070,16 @@ public partial class ShellViewModel : ReactiveObject
     /// <summary>Clear the view cache so sections are recreated with fresh data on next navigation.</summary>
     public void ClearViewCache() => _viewCache.Clear();
 
+    public void ClearViewCacheExcept(params string[] keysToKeep)
+    {
+        HashSet<string> keep = keysToKeep.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (string key in _viewCache.Keys.ToList())
+        {
+            if (!keep.Contains(key))
+                _viewCache.Remove(key);
+        }
+    }
+
     /// <summary>
     /// Ensure a view exists in the cache for the given key. Creates it via the
     /// view factory if missing. Used by SectionPanel on mobile for on-demand
@@ -947,6 +1108,37 @@ public partial class ShellViewModel : ReactiveObject
     /// this to incrementally add views to the SectionPanel on mobile.
     /// </summary>
     public event Action<string, object>? ViewPreWarmed;
+
+    public void ResetAfterNetworkSwitch()
+    {
+        const string settingsKey = "Settings";
+
+        _signatureStore.Clear();
+        _portfolioVm.ResetAfterDataWipe();
+        InvestedBalanceDisplay = "0.0000 " + _currencyService.Symbol;
+        ModalContent = null;
+        IsModalOpen = false;
+
+        if (_viewCache.TryGetValue("My Projects", out object? myProjectsView)
+            && myProjectsView is MyProjectsView { DataContext: MyProjectsViewModel myProjectsVm })
+        {
+            myProjectsVm.ResetAfterNetworkSwitch();
+        }
+
+        if (_viewCache.TryGetValue("Find Projects", out object? findProjectsView)
+            && findProjectsView is FindProjectsView { DataContext: FindProjectsViewModel findProjectsVm })
+        {
+            findProjectsVm.ResetAfterNetworkSwitch();
+        }
+
+        if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())
+            ClearViewCacheExcept(settingsKey);
+
+        this.RaisePropertyChanged(nameof(SelectedWallet));
+        this.RaisePropertyChanged(nameof(AvailableBalanceDisplay));
+        this.RaisePropertyChanged(nameof(SelectedWalletName));
+        this.RaisePropertyChanged(nameof(SwitcherWallets));
+    }
 
     /// <summary>
     /// Resolves the current section key from SelectedNavItem / IsSettingsOpen.

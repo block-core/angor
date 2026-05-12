@@ -1,4 +1,8 @@
 using Angor.Sdk.Common;
+using Angor.Data.Documents.Interfaces;
+using Angor.Sdk.Funding.Founder.Domain;
+using Angor.Sdk.Funding.Investor.Domain;
+using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Wallet.Application;
 using Angor.Sdk.Wallet.Domain;
 using Angor.Sdk.Wallet.Infrastructure.History;
@@ -7,6 +11,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Blockcore.NBitcoin.BIP39;
 using CSharpFunctionalExtensions;
+using Microsoft.Extensions.Logging;
 
 namespace Angor.Sdk.Wallet.Infrastructure.Impl;
 
@@ -18,7 +23,13 @@ public class WalletAppService(
     IPsbtOperations psbtOperations,
     ITransactionHistory transactionHistory,
     IHttpClientFactory httpClientFactory,
-    IWalletAccountBalanceService accountBalanceService)
+    IWalletAccountBalanceService accountBalanceService,
+    IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeys,
+    IGenericDocumentCollection<FounderProjectsDocument> founderProjects,
+    IGenericDocumentCollection<InvestmentRecordsDocument> investmentRecords,
+    IGenericDocumentCollection<InvestmentHandshake> investmentHandshakes,
+    ISecureKeyProvider secureKeyProvider,
+    ILogger<WalletAppService> logger)
     : IWalletAppService
 {
     //public static readonly WalletId SingleWalletId = new("8E3C5250-4E26-4A13-8075-0A189AEAF793");
@@ -200,9 +211,9 @@ public class WalletAppService(
         }
     }
 
-    public async Task<Result<WalletId>> CreateWallet(string name, string seedWords, Maybe<string> passphrase, string encryptionKey, BitcoinNetwork network)
+    public async Task<Result<WalletId>> CreateWallet(string name, string seedWords, Maybe<string> passphrase, BitcoinNetwork network)
     {
-        var wallet = await walletFactory.CreateWallet(name ?? SingleWalletName, seedWords, passphrase, encryptionKey, network);
+        var wallet = await walletFactory.CreateWallet(name ?? SingleWalletName, seedWords, passphrase, network);
 
         if (wallet.IsFailure)
             return Result.Failure<WalletId>(wallet.Error);
@@ -211,11 +222,11 @@ public class WalletAppService(
 
         if (accountInfoResult.IsFailure)
             return Result.Failure<WalletId>(accountInfoResult.Error);
-        
+
         return Result.Success(wallet.Value.Id);
     }
-    
-    public Task<Result<WalletId>> CreateWallet(string name, string encryptionKey, BitcoinNetwork network)
+
+    public Task<Result<WalletId>> CreateWallet(string name, BitcoinNetwork network)
     {
         if (string.IsNullOrEmpty(name))
             name = network + " Wallet";
@@ -225,19 +236,8 @@ public class WalletAppService(
         var seedWords = mnemonic.ToString();
         var passphrase = Maybe<string>.None;
 
-        //No need to refresh the wallet as we create it from scratch here
-        return walletFactory.CreateWallet(name, seedWords, passphrase, encryptionKey, network)
+        return walletFactory.CreateWallet(name, seedWords, passphrase, network)
             .Map(_ => _.Id);
-    }
-
-    /// <summary>
-    /// Create a wallet without a user-provided password.
-    /// Uses a default encryption key; will be replaced by secure storage in a future iteration.
-    /// </summary>
-    public Task<Result<WalletId>> CreateWalletWithoutPassword(BitcoinNetwork network)
-    {
-        // TODO: replace "DEFAULT" with ISecureKeyProvider.GetOrCreateKey() when secure storage is available
-        return CreateWallet(network + " Wallet", "default-key", network);
     }
     
     public async Task<Result> DeleteWallet(WalletId walletId)
@@ -249,17 +249,16 @@ public class WalletAppService(
         }
 
         var wallets = walletsResult.Value.ToList();
-
         var wallet = wallets.FirstOrDefault(w => w.Id == walletId.Value);
-        
-        if (wallet == null)
-            return Result.Failure("Wallet not found");
-        
-        var deleteAccountResult = await accountBalanceService.DeleteAccountBalanceInfoAsync(walletId);
-        
-        if (deleteAccountResult.IsFailure)
-            return Result.Failure(deleteAccountResult.Error);
-        
+
+        if (wallet is null)
+        {
+            var cleanupMissing = await DeleteRelatedDocumentsAsync(walletId);
+            return cleanupMissing.IsSuccess
+                ? Result.Failure("Wallet not found")
+                : cleanupMissing;
+        }
+
         wallets.Remove(wallet);
 
         var saveResult = await walletStore.SaveAll(wallets);
@@ -269,6 +268,78 @@ public class WalletAppService(
         }
 
         sensitiveWalletDataProvider.RemoveSensitiveData(walletId);
+        await secureKeyProvider.Remove(walletId);
+
+        var cleanup = await DeleteRelatedDocumentsAsync(walletId);
+        if (cleanup.IsFailure)
+        {
+            logger.LogWarning("Wallet {WalletId} was deleted from wallet storage, but related document cleanup failed: {Error}", walletId.Value, cleanup.Error);
+        }
+
+        return Result.Success();
+    }
+
+    // Removes related documents for wallet
+    private async Task<Result> DeleteRelatedDocumentsAsync(WalletId walletId)
+    {
+        var errors = new System.Collections.Generic.List<string>();
+
+        var delDerived = await derivedProjectKeys.DeleteAsync(walletId.Value);
+        if (delDerived.IsFailure)
+        {
+            var error = $"Failed to delete DerivedProjectKeys {delDerived.Error}";
+            logger.LogWarning("Wallet cleanup issue for {WalletId}: {Error}", walletId.Value, error);
+            errors.Add(error);
+        }
+
+        var delFounder = await founderProjects.DeleteAsync(walletId.Value);
+        if (delFounder.IsFailure)
+        {
+            var error = $"Failed to delete FounderProjectsDocument {delFounder.Error}";
+            logger.LogWarning("Wallet cleanup issue for {WalletId}: {Error}", walletId.Value, error);
+            errors.Add(error);
+        }
+
+        var delInvestments = await investmentRecords.DeleteAsync(walletId.Value);
+        if (delInvestments.IsFailure)
+        {
+            var error = $"Failed to delete InvestmentRecordsDocument {delInvestments.Error}";
+            logger.LogWarning("Wallet cleanup issue for {WalletId}: {Error}", walletId.Value, error);
+            errors.Add(error);
+        }
+
+        var handshakes = await investmentHandshakes.FindAsync(h => h.WalletId == walletId.Value);
+        if (handshakes.IsFailure)
+        {
+            var error = $"Failed to query InvestmentHandshakes {handshakes.Error}";
+            logger.LogWarning("Wallet cleanup issue for {WalletId}: {Error}", walletId.Value, error);
+            errors.Add(error);
+        }
+        else
+        {
+            foreach (var hs in handshakes.Value)
+            {
+                var delHs = await investmentHandshakes.DeleteAsync(hs.Id);
+                if (delHs.IsFailure)
+                {
+                    var error = $"Failed to delete InvestmentHandshake {hs.Id}: {delHs.Error}";
+                    logger.LogWarning("Wallet cleanup issue for {WalletId}: {Error}", walletId.Value, error);
+                    errors.Add(error);
+                }
+            }
+        }
+
+        var deleteAccountResult = await accountBalanceService.DeleteAccountBalanceInfoAsync(walletId);
+        if (deleteAccountResult.IsFailure)
+        {
+            logger.LogWarning("Wallet cleanup issue for {WalletId}: {Error}", walletId.Value, deleteAccountResult.Error);
+            errors.Add(deleteAccountResult.Error);
+        }
+
+        if (errors.Count > 0)
+        {
+            return Result.Failure(string.Join("; ", errors));
+        }
 
         return Result.Success();
     }
@@ -302,7 +373,7 @@ public class WalletAppService(
             }
 
             var httpClient = httpClientFactory.CreateClient();
-            var response = await httpClient.GetAsync($"https://faucettmp.angor.io/api/faucet/send/{addressResult.Value.Value}/10");
+            var response = await httpClient.GetAsync($"https://test.faucet.angor.io/api/faucet/send/{addressResult.Value.Value}/10");
             
             if (!response.IsSuccessStatusCode)
             {
@@ -317,13 +388,16 @@ public class WalletAppService(
         }
     }
 
-    public async Task<Result> RebuildAllWalletBalancesAsync()
+    public async Task<Result> RebuildAllWalletBalancesAsync(WalletId? targetWalletId = null)
     {
         var walletsResult = await walletStore.GetAll();
         if (walletsResult.IsFailure)
             return Result.Failure(walletsResult.Error);
 
         var wallets = walletsResult.Value.ToList();
+        if (targetWalletId != null)
+            wallets = wallets.Where(w => w.Id == targetWalletId.Value).ToList();
+
         if (wallets.Count == 0)
             return Result.Success();
 
@@ -390,6 +464,35 @@ public class WalletAppService(
         catch (Exception ex)
         {
             return Task.FromResult(Result.Failure<(long Fee, long VirtualSize)>($"Error calculating transaction fee: {ex.Message}"));
+        }
+    }
+
+    public async Task<Result<string>> GetPublicKeyForAddress(WalletId walletId, string address)
+    {
+        try
+        {
+            var sensitiveDataResult = await sensitiveWalletDataProvider.RequestSensitiveData(walletId);
+            if (sensitiveDataResult.IsFailure)
+                return Result.Failure<string>(sensitiveDataResult.Error);
+
+            var accountBalanceInfo = await accountBalanceService.GetAccountBalanceInfoAsync(walletId);
+            if (accountBalanceInfo.IsFailure)
+                return Result.Failure<string>(accountBalanceInfo.Error);
+
+            var addressInfo = accountBalanceInfo.Value.AccountInfo.AllAddresses()
+                .FirstOrDefault(a => a.Address == address);
+
+            if (addressInfo == null)
+                return Result.Failure<string>($"Address {address} not found in wallet");
+
+            var walletWords = sensitiveDataResult.Value.ToWalletWords();
+            var compressedPubKey = walletOperations.DerivePublicKey(walletWords, addressInfo.HdPath);
+
+            return Result.Success(compressedPubKey);
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure<string>($"Error getting public key: {ex.Message}");
         }
     }
 }

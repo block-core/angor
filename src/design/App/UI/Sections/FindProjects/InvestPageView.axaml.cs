@@ -8,6 +8,7 @@ using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
 using App.UI.Shared;
 using App.UI.Shared.Helpers;
+using App.UI.Shared.PaymentFlow;
 using App.UI.Shell;
 using ReactiveUI;
 
@@ -30,15 +31,21 @@ public partial class InvestPageView : UserControl
     private Border? _subscriptionCard;
     private Border? _stagesCard;
     private Border? _transactionCard;
+    private IDisposable? _amountCardSizeSubscription;
+    private IDisposable? _stagesCardSizeSubscription;
     private Panel? _topSpacer;
     private Panel? _bottomSpacer;
     private UniformGrid? _mobileHeaderStats;
     private Border? _mobileSubmitButton;
     private ScrollViewer? _contentScroller;
+    private bool _isCompact;
 
     public InvestPageView()
     {
         InitializeComponent();
+
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
+            Classes.Add("Mobile");
 
         // Cache controls once
         _navBar = this.FindControl<DockPanel>("NavBar");
@@ -55,14 +62,32 @@ public partial class InvestPageView : UserControl
         _mobileSubmitButton = this.FindControl<Border>("MobileSubmitButton");
         _contentScroller = this.FindControl<ScrollViewer>("ContentScroller");
 
+        _amountCardSizeSubscription = _amountCard?.GetObservable(BoundsProperty)
+            .Subscribe(bounds => UpdateQuickAmountsColumns(bounds.Width > 0 && bounds.Width < 560 ? 2 : 4));
+        _stagesCardSizeSubscription = _stagesCard?.GetObservable(BoundsProperty)
+            .Subscribe(bounds => UpdateStageRowLayout(bounds.Width));
+
         // Wire up button clicks
         AddHandler(Button.ClickEvent, OnButtonClick);
         // Quick amount + submit + subscription plan border clicks
         AddHandler(Border.PointerPressedEvent, OnBorderPressed, RoutingStrategies.Bubble);
 
-        // ── Responsive layout switching ──
-        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
-            .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
+        SubscribeToLayoutMode();
+    }
+
+    private void SubscribeToLayoutMode()
+    {
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.WindowWidth)
+            .Subscribe(width => ApplyResponsiveLayout(width));
+    }
+
+    private void ApplyResponsiveLayout(double width)
+    {
+        bool isCompact = width < LayoutModeService.TabletBreakpoint;
+
+        _isCompact = isCompact;
+        ApplyResponsiveLayout(isCompact);
     }
 
     /// <summary>
@@ -96,7 +121,8 @@ public partial class InvestPageView : UserControl
         if (_bottomSpacer != null)
             _bottomSpacer.Height = isCompact ? 120 : 92;
 
-        // ── Content grid: 3-column → single column stacked (SIGABRT-safe in-place mutation) ──
+        // ── Content grid: 3-column desktop → single column compact.
+        // SIGABRT-safe: mutate existing definitions in-place.
         if (_contentGrid != null)
         {
             if (isCompact)
@@ -176,10 +202,32 @@ public partial class InvestPageView : UserControl
             }
         }
 
-        // ── Quick amounts: 4 columns → 2 columns on compact ──
-        // Vue: .quick-amounts { grid-template-columns: repeat(2, 1fr) } at ≤768px
-        // The UniformGrid is inside an ItemsPanelTemplate — find it by visual tree walk
-        UpdateQuickAmountsColumns(isCompact ? 2 : 4);
+        UpdateQuickAmountsColumns(isCompact || (_amountCard?.Bounds.Width is > 0 and < 560) ? 2 : 4);
+    }
+
+    private void UpdateStageRowLayout(double stagesCardWidth)
+    {
+        bool isNarrow = stagesCardWidth > 0 && stagesCardWidth < 640;
+
+        foreach (Grid row in this.GetVisualDescendants().OfType<Grid>())
+        {
+            if (!row.Classes.Contains("StageRow"))
+                continue;
+
+            ApplyStageRowLayout(row, isNarrow);
+        }
+    }
+
+    private static void ApplyStageRowLayout(Grid row, bool isNarrow)
+    {
+        Grid? topRow = row.Children.OfType<Grid>().FirstOrDefault(child => child.Classes.Contains("StageTopRow"));
+        Grid? bottomRow = row.Children.OfType<Grid>().FirstOrDefault(child => child.Classes.Contains("StageBottomRow"));
+
+        if (topRow != null)
+            topRow.Margin = new Thickness(0);
+
+        if (bottomRow != null)
+            bottomRow.Margin = isNarrow ? new Thickness(0, 8, 0, 0) : new Thickness(0, 6, 0, 0);
     }
 
     /// <summary>
@@ -266,6 +314,16 @@ public partial class InvestPageView : UserControl
         _screenSubscription = null;
         _layoutSubscription?.Dispose();
         _layoutSubscription = null;
+        _amountCardSizeSubscription?.Dispose();
+        _amountCardSizeSubscription = null;
+        _stagesCardSizeSubscription?.Dispose();
+        _stagesCardSizeSubscription = null;
+    }
+
+    protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToLogicalTree(e);
+        SubscribeToLayoutMode();
     }
 
     private InvestPageViewModel? Vm => DataContext as InvestPageViewModel;
@@ -277,27 +335,23 @@ public partial class InvestPageView : UserControl
     }
 
     /// <summary>
-    /// Create InvestModalsView and push it to the shell-level modal overlay.
+    /// Create PaymentFlowView backed by the VM's PaymentFlowViewModel
+    /// and push it to the shell-level modal overlay.
     /// </summary>
     private void ShowShellModal(InvestPageViewModel vm)
     {
         var shellVm = GetShellVm();
-        if (shellVm == null || shellVm.IsModalOpen) return;
+        if (shellVm == null || shellVm.IsModalOpen || vm.PaymentFlow == null) return;
 
-        var modalsView = new InvestModalsView
+        // Subscribe to invest completion — navigate to Funded section
+        vm.InvestCompleted += () =>
         {
-            DataContext = vm,
-            OnNavigateBackToList = () =>
-            {
-                // Add the invested project to the Portfolio section
-                vm.AddToPortfolio();
-                // Navigate to the Funded section to show the new investment
-                var shell = GetShellVm();
-                shell?.NavigateToFunded();
-            }
+            shellVm.HideModal();
+            shellVm.NavigateToFunded();
         };
 
-        shellVm.ShowModal(modalsView);
+        var paymentFlowView = new PaymentFlowView { DataContext = vm.PaymentFlow };
+        shellVm.ShowModal(paymentFlowView);
     }
 
     private void OnButtonClick(object? sender, RoutedEventArgs e)

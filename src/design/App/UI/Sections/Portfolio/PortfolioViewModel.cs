@@ -461,13 +461,14 @@ public class InvestmentViewModel : INotifyPropertyChanged
 /// Portfolio/Funded ViewModel — connected to SDK for investment discovery and management.
 /// Uses IInvestmentAppService for loading investments and performing recovery/release operations.
 /// </summary>
-public partial class PortfolioViewModel : ReactiveObject
+public partial class PortfolioViewModel : ReactiveObject, IDisposable
 {
     private readonly IInvestmentAppService _investmentAppService;
     private readonly IWalletContext _walletContext;
     private readonly SignatureStore _signatureStore;
     private readonly ICurrencyService _currencyService;
     private readonly ILogger<PortfolioViewModel> _logger;
+    private readonly CompositeDisposable _disposables = new();
 
     public event Action<string>? ToastRequested;
 
@@ -481,6 +482,7 @@ public partial class PortfolioViewModel : ReactiveObject
     public string TotalInvested { get; private set; } = "0.0000";
     public string RecoveredToPenalty { get; private set; } = "0.0000";
     public int ProjectsInRecovery { get; private set; }
+    public bool HasRecoveryProjects => ProjectsInRecovery > 0;
     public string TotalAvailable { get; private set; } = "0.0000";
 
     // ── Right panel investments ──
@@ -518,7 +520,9 @@ public partial class PortfolioViewModel : ReactiveObject
         // This fixes the race condition where PortfolioViewModel is constructed before wallets are
         // loaded from LiteDB, resulting in an empty portfolio on app restart.
         _walletContext.WalletsUpdated
-            .Subscribe(__ => _ = LoadInvestmentsFromSdkAsync());
+            .Throttle(TimeSpan.FromMilliseconds(500))
+            .Subscribe(__ => Avalonia.Threading.Dispatcher.UIThread.Post(() => _ = LoadInvestmentsFromSdkAsync()))
+            .DisposeWith(_disposables);
 
         // Load investments from SDK
         _ = LoadInvestmentsFromSdkAsync();
@@ -538,7 +542,7 @@ public partial class PortfolioViewModel : ReactiveObject
 
         try
         {
-            var wallets = _walletContext.Wallets;
+            var wallets = _walletContext.Wallets.ToList();
             if (wallets.Count == 0)
             {
                 _logger.LogInformation("No wallets found — clearing investments");
@@ -549,13 +553,15 @@ public partial class PortfolioViewModel : ReactiveObject
             // Snapshot existing items so we can preserve optimistic adds and stale-response state
             var previousItems = Investments.ToList();
 
-            Investments.Clear();
+            // Don't clear Investments yet — keep old cards visible while loading.
+            // We'll replace them after new data is ready to avoid flicker.
             double totalInvested = 0;
             double totalInRecovery = 0;
             int recoveryCount = 0;
 
             // Track which previous items were matched by SDK results
             var matchedPreviousIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var newInvestments = new List<InvestmentViewModel>();
 
             foreach (var wallet in wallets)
             {
@@ -639,8 +645,9 @@ public partial class PortfolioViewModel : ReactiveObject
                         ProjectType = projectType,
                         Step = step,
                         ApprovalStatus = dto.FounderStatus == Angor.Sdk.Funding.Investor.FounderStatus.Approved ? "Approved" : "Pending",
-                        AvatarUrl = dto.LogoUri?.ToString(),
-                        ProjectIdentifier = dto.Id ?? "",
+                    AvatarUrl = dto.LogoUri?.ToString(),
+                    BannerUrl = dto.BannerUri?.ToString(),
+                    ProjectIdentifier = dto.Id ?? "",
                         InvestmentWalletId = wallet.Id.Value,
                         InvestmentTransactionId = dto.InvestmentId ?? "",
                         CurrencySymbol = _currencyService.Symbol
@@ -659,13 +666,11 @@ public partial class PortfolioViewModel : ReactiveObject
                         }
                     }
 
-                    Investments.Add(vm);
+                    newInvestments.Add(vm);
                 }
             }
 
             // Restore optimistic items that the SDK didn't return yet (indexer lag).
-            // These are items previously added via AddInvestmentFromProject() that
-            // the indexer hasn't caught up with.
             foreach (var prev in previousItems)
             {
                 bool wasMatchedById = !string.IsNullOrEmpty(prev.ProjectIdentifier)
@@ -678,9 +683,14 @@ public partial class PortfolioViewModel : ReactiveObject
                     _logger.LogInformation(
                         "Restoring optimistic investment '{ProjectName}' (ID: {ProjectId}) — not yet returned by SDK",
                         prev.ProjectName, prev.ProjectIdentifier);
-                    Investments.Insert(0, prev);
+                    newInvestments.Insert(0, prev);
                 }
             }
+
+            // Single atomic swap — keeps old cards visible until new data is ready
+            Investments.Clear();
+            foreach (var inv in newInvestments)
+                Investments.Add(inv);
 
             FundedProjects = Investments.Count;
             TotalInvested = totalInvested.ToString("F4", CultureInfo.InvariantCulture);
@@ -695,6 +705,7 @@ public partial class PortfolioViewModel : ReactiveObject
             this.RaisePropertyChanged(nameof(TotalInvested));
             this.RaisePropertyChanged(nameof(RecoveredToPenalty));
             this.RaisePropertyChanged(nameof(ProjectsInRecovery));
+            this.RaisePropertyChanged(nameof(HasRecoveryProjects));
             this.RaisePropertyChanged(nameof(PenaltyInvestments));
             this.RaisePropertyChanged(nameof(HasPenaltyInvestments));
             this.RaisePropertyChanged(nameof(TotalAvailable));
@@ -1195,6 +1206,7 @@ public partial class PortfolioViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(TotalInvested));
         this.RaisePropertyChanged(nameof(RecoveredToPenalty));
         this.RaisePropertyChanged(nameof(ProjectsInRecovery));
+        this.RaisePropertyChanged(nameof(HasRecoveryProjects));
         this.RaisePropertyChanged(nameof(PenaltyInvestments));
         this.RaisePropertyChanged(nameof(HasPenaltyInvestments));
         this.RaisePropertyChanged(nameof(TotalAvailable));
@@ -1349,5 +1361,11 @@ public partial class PortfolioViewModel : ReactiveObject
 
         _logger.LogInformation("Investment added to portfolio: project='{ProjectName}', autoApproved={IsAutoApproved}, step={Step}, status='{StatusText}'",
             investment.ProjectName, investment.Step == 3, investment.Step, investment.StatusText);
+    }
+
+    public void Dispose()
+    {
+        _signatureStore.SignatureStatusChanged -= OnSignatureStatusChanged;
+        _disposables.Dispose();
     }
 }

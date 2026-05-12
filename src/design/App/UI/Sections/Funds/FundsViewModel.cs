@@ -19,13 +19,14 @@ public class SeedGroupViewModel
     public string GroupName { get; set; } = "";
     public string GroupBalance { get; set; } = "0.00000000";
     public ReadOnlyObservableCollection<WalletInfo>? Wallets { get; set; }
+    public bool ShowWalletDividers => Wallets?.Count > 1;
 }
 
 /// <summary>
 /// Funds ViewModel — connected to Angor.SDK wallet services.
 /// Uses <see cref="IWalletContext"/> for wallet state and <see cref="IWalletAppService"/> for wallet operations.
 /// </summary>
-public partial class FundsViewModel : ReactiveObject
+public partial class FundsViewModel : ReactiveObject, IDisposable
 {
     private readonly IWalletAppService _walletAppService;
     private readonly IWalletAccountBalanceService _balanceService;
@@ -34,6 +35,7 @@ public partial class FundsViewModel : ReactiveObject
     private readonly ICurrencyService _currencyService;
     private readonly ILogger<FundsViewModel> _logger;
     private readonly IFaucetService _faucetService;
+    private readonly CompositeDisposable _disposables = new();
 
     /// <summary>True when wallets exist and populated state should show.</summary>
     [Reactive] private bool hasWallets;
@@ -85,7 +87,8 @@ public partial class FundsViewModel : ReactiveObject
 
         // Subscribe to wallet context updates to rebuild display state
         _walletContext.WalletsUpdated
-            .Subscribe(_ => Dispatcher.UIThread.Post(RebuildSeedGroups));
+            .Subscribe(_ => Dispatcher.UIThread.Post(RebuildSeedGroups))
+            .DisposeWith(_disposables);
 
         RebuildSeedGroups();
     }
@@ -163,17 +166,18 @@ public partial class FundsViewModel : ReactiveObject
     /// Create a new wallet using the SDK.
     /// Generates random seed words, creates wallet with encryption key.
     /// </summary>
-    public async Task<(bool Success, string? SeedWords)> CreateWalletAsync(string walletName, string encryptionKey)
+    public async Task<(bool Success, string? SeedWords)> CreateWalletAsync(string walletName)
     {
         _logger.LogInformation("Creating new wallet '{WalletName}' (generating random seed words)", walletName);
         var seedWords = _walletAppService.GenerateRandomSeedwords();
 
-        var result = await _walletAppService.CreateWallet(
+        // Offload to background thread — CreateWallet performs key derivation (CPU)
+        // and blockchain gap-limit scanning (network I/O) that would block the UI thread.
+        var result = await Task.Run(() => _walletAppService.CreateWallet(
             walletName,
             seedWords,
             CSharpFunctionalExtensions.Maybe<string>.None,
-            encryptionKey,
-            _getNetwork());
+            _getNetwork()));
 
         if (result.IsSuccess)
         {
@@ -189,15 +193,18 @@ public partial class FundsViewModel : ReactiveObject
     /// <summary>
     /// Import an existing wallet from user-provided seed words.
     /// </summary>
-    public async Task<bool> ImportWalletAsync(string walletName, string seedWords, string encryptionKey)
+    public async Task<bool> ImportWalletAsync(string walletName, string seedWords)
     {
         _logger.LogInformation("Importing wallet '{WalletName}' from seed words", walletName);
-        var result = await _walletAppService.CreateWallet(
+
+        // Offload to background thread — for imported wallets with history, the gap-limit
+        // address scan in RefreshAccountBalanceInfoAsync can take 10-30+ seconds of network I/O,
+        // which would trigger an ANR on Android if run on the UI thread.
+        var result = await Task.Run(() => _walletAppService.CreateWallet(
             walletName,
             seedWords,
             CSharpFunctionalExtensions.Maybe<string>.None,
-            encryptionKey,
-            _getNetwork());
+            _getNetwork()));
 
         if (result.IsSuccess)
         {
@@ -214,7 +221,7 @@ public partial class FundsViewModel : ReactiveObject
     /// Send funds from a wallet to a destination address.
     /// Returns the transaction ID on success.
     /// </summary>
-    public async Task<(bool Success, string? TxId)> SendAsync(string walletId, string destinationAddress, double amountBtc, long feeRateSatsPerVByte)
+    public async Task<(bool Success, string? TxId, string? Error)> SendAsync(string walletId, string destinationAddress, double amountBtc, long feeRateSatsPerVByte)
     {
         try
         {
@@ -230,17 +237,17 @@ public partial class FundsViewModel : ReactiveObject
             {
                 // Refresh the sending wallet's balance from the indexer
                 await _walletContext.RefreshBalanceAsync(id);
-                return (true, result.Value.Value);
+                return (true, result.Value.Value, null);
             }
 
             _logger.LogError("SendAmount failed for wallet {WalletId} to address '{Address}' amount {Sats} sats feeRate {FeeRate}: {Error}", walletId, destinationAddress, sats, feeRateSatsPerVByte, result.Error);
+            return (false, null, result.Error);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "SendAsync threw an exception for wallet {WalletId}", walletId);
+            return (false, null, ex.Message);
         }
-
-        return (false, null);
     }
 
     /// <summary>
@@ -375,4 +382,5 @@ public partial class FundsViewModel : ReactiveObject
         });
     }
 
+    public void Dispose() => _disposables.Dispose();
 }

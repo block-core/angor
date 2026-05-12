@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:mp="clr-namespace:App.UI.Sections.MyProjects"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
-             mc:Ignorable="d" d:DesignWidth="680" d:DesignHeight="600"
+             mc:Ignorable="d" d:DesignWidth="680" d:DesignHeight="700"
              x:Class="App.UI.Sections.MyProjects.Steps.CreateProjectStep3View"
              x:DataType="mp:CreateProjectViewModel">
 
@@ -12,93 +12,246 @@
     <!-- STEP 3: PROJECT IMAGES                   -->
     <!-- ═══════════════════════════════════════ -->
     <StackPanel Spacing="24">
-        <!-- Subtitle — matches reference -->
-        <TextBlock Text="Upload your project's banner and profile images."
-                   FontSize="14" Foreground="{DynamicResource TextMuted}" />
+        <!-- Subtitle -->
+        <TextBlock Text="Add a banner and profile image for your project. Enter a URL or upload a file to a Blossom server."
+                   FontSize="14" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" />
 
-        <!-- Single unified profile card preview (matches reference layout) -->
+        <!-- Preview card — shows the images from the URLs entered below -->
         <Border CornerRadius="10" BorderBrush="{DynamicResource Stroke}" BorderThickness="2"
                 Background="{DynamicResource Surface}" ClipToBounds="True">
             <StackPanel>
-                <!-- Banner area — tiled pattern background with upload prompt -->
-                <Panel Height="200">
+                <!-- Banner area -->
+                <Panel Height="180">
                     <Rectangle Fill="{DynamicResource SurfaceMedium}" />
                     <Rectangle Fill="{DynamicResource TiledLogoBrush}" />
-                    <!-- Banner image preview (shown when banner is selected) -->
-                    <Image Name="BannerPreviewImage" Stretch="UniformToFill"
-                           IsVisible="False" />
-                    <!-- "820x312px recommended" badge (top-right) -->
+                    <Image Name="BannerPreviewImage" Stretch="UniformToFill" IsVisible="False" />
                     <Border Background="#80000000" CornerRadius="6" Padding="10,5"
                             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="12">
-                        <TextBlock Text="820x312px recommended" FontSize="11"
-                                   Foreground="White" />
+                        <TextBlock Text="820x312px recommended" FontSize="11" Foreground="White" />
                     </Border>
-                    <!-- Upload Banner button (centered) -->
-                    <Button Name="UploadBannerButton" Background="Transparent"
-                            BorderThickness="0" Padding="0" Cursor="Hand"
-                            HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Border Background="{DynamicResource Surface}" CornerRadius="8"
-                                Padding="16,10"
-                                BorderBrush="{DynamicResource Stroke}" BorderThickness="1">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <i:Icon Value="fa-solid fa-image"
-                                        FontSize="16"
-                                        Foreground="{DynamicResource TextStrong}" />
-                                <TextBlock Text="Upload Banner" FontSize="14" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextStrong}" />
-                            </StackPanel>
-                        </Border>
-                    </Button>
                 </Panel>
 
-                <!-- Content area: avatar + project info -->
-                <StackPanel Margin="24,-64,24,24" Spacing="16">
-                    <!-- Circular avatar placeholder overlapping banner — clickable -->
-                    <Border Name="UploadAvatarButton" Background="Transparent"
-                            Cursor="Hand"
-                            Width="128" Height="128"
-                            HorizontalAlignment="Left"
-                            ClipToBounds="False">
-                        <Border Width="128" Height="128" CornerRadius="64"
-                                Background="{DynamicResource SurfaceMedium}"
-                                BorderBrush="White" BorderThickness="4"
-                                BoxShadow="0 10 30 0 #22000000" ClipToBounds="True">
-                            <Panel>
-                                <!-- Avatar image preview — EllipseGeometry clip for
-                                     perfect circle (CornerRadius on parent Border can
-                                     distort when FluentTheme injects chrome) -->
-                                <Image Name="AvatarPreviewImage" Stretch="UniformToFill"
-                                       Width="120" Height="120"
-                                       IsVisible="False">
-                                    <Image.Clip>
-                                        <EllipseGeometry Center="60,60" RadiusX="60" RadiusY="60" />
-                                    </Image.Clip>
-                                </Image>
-                                <!-- Camera overlay icon (white circle with camera) matching Vue prototype -->
-                                <Border Name="AvatarUploadIcon"
-                                        Background="White" CornerRadius="16"
-                                        Width="32" Height="32"
-                                        BoxShadow="0 2 8 0 #40000000"
-                                        HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <i:Icon Value="fa-solid fa-camera"
-                                            FontSize="16"
-                                            Foreground="#1a1a1a"
-                                            HorizontalAlignment="Center"
-                                            VerticalAlignment="Center" />
-                                </Border>
-                            </Panel>
-                        </Border>
+                <!-- Avatar + project info -->
+                <StackPanel Margin="24,-56,24,20" Spacing="12">
+                    <Border Width="112" Height="112" CornerRadius="56"
+                            Background="{DynamicResource SurfaceMedium}"
+                            BorderBrush="White" BorderThickness="4"
+                            BoxShadow="0 10 30 0 #22000000" ClipToBounds="True"
+                            HorizontalAlignment="Left">
+                        <Panel>
+                            <Image Name="AvatarPreviewImage" Stretch="UniformToFill"
+                                   Width="104" Height="104" IsVisible="False">
+                                <Image.Clip>
+                                    <EllipseGeometry Center="52,52" RadiusX="52" RadiusY="52" />
+                                </Image.Clip>
+                            </Image>
+                            <i:Icon Value="fa-solid fa-user" FontSize="36"
+                                    Foreground="{DynamicResource TextMuted}"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Panel>
                     </Border>
-
-                    <!-- Project name + description preview -->
                     <StackPanel Spacing="4">
                         <TextBlock Text="{Binding ProjectName, FallbackValue='Project Name'}"
-                                   FontSize="20" FontWeight="Bold"
+                                   FontSize="18" FontWeight="Bold"
                                    Foreground="{DynamicResource TextStrong}" />
                         <TextBlock Text="{Binding ProjectAbout, FallbackValue='Project description'}"
-                                   FontSize="14" Foreground="{DynamicResource TextMuted}"
+                                   FontSize="13" Foreground="{DynamicResource TextMuted}"
                                    TextWrapping="Wrap" />
                     </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- ── Banner Image Input ── -->
+        <Border CornerRadius="12" BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                Background="{DynamicResource Surface}" ClipToBounds="True">
+            <StackPanel>
+                <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24,16">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <i:Icon Value="fa-solid fa-image" FontSize="14"
+                                Foreground="{DynamicResource PrimaryGreenBrush}"
+                                VerticalAlignment="Center" />
+                        <TextBlock Text="Banner Image" FontSize="16" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextStrong}" />
+                    </StackPanel>
+                </Border>
+                <StackPanel Spacing="12" Margin="24">
+                    <!-- Direct URL input -->
+                    <TextBlock Text="Image URL" FontSize="13" FontWeight="Medium"
+                               Foreground="{DynamicResource TextMuted}" />
+                    <TextBox Name="BannerUrlTextBox"
+                             Text="{Binding BannerUrl, Mode=TwoWay}"
+                             Watermark="https://example.com/banner.jpg"
+                             Padding="12,10" FontSize="14" CornerRadius="8" />
+
+                    <!-- Divider -->
+                    <Grid ColumnDefinitions="*,Auto,*" Margin="0,4">
+                        <Rectangle Grid.Column="0" Height="1" VerticalAlignment="Center"
+                                   Fill="{DynamicResource Stroke}" />
+                        <TextBlock Grid.Column="1" Text="or upload to a Blossom server"
+                                   FontSize="12" Foreground="{DynamicResource TextMuted}"
+                                   Margin="12,0" VerticalAlignment="Center" />
+                        <Rectangle Grid.Column="2" Height="1" VerticalAlignment="Center"
+                                   Fill="{DynamicResource Stroke}" />
+                    </Grid>
+
+                    <!-- Blossom upload row -->
+                    <TextBox Name="BannerBlossomServerTextBox"
+                             Text="https://blossom.angor.io"
+                             Watermark="Blossom server URL"
+                             Padding="12,10" FontSize="14" CornerRadius="8" />
+                    <DockPanel>
+                        <Button Name="BannerUploadBtn"
+                                DockPanel.Dock="Right"
+                                Padding="16,10"
+                                CornerRadius="8"
+                                Cursor="Hand"
+                                Background="{DynamicResource PrimaryGreenBrush}"
+                                Foreground="White"
+                                FontSize="14" FontWeight="SemiBold"
+                                Margin="8,0,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <i:Icon Name="BannerUploadIcon" Value="fa-solid fa-cloud-arrow-up"
+                                        FontSize="13" Foreground="White" IsVisible="True" />
+                                <i:Icon Name="BannerUploadSpinner" Value="fa-solid fa-spinner"
+                                        FontSize="13" Foreground="White" IsVisible="False"
+                                        RenderTransformOrigin="50%,50%">
+                                    <i:Icon.RenderTransform><RotateTransform /></i:Icon.RenderTransform>
+                                    <i:Icon.Styles>
+                                        <Style Selector="i|Icon[IsVisible=True]">
+                                            <Style.Animations>
+                                                <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                    <KeyFrame Cue="0%"><Setter Property="RotateTransform.Angle" Value="0" /></KeyFrame>
+                                                    <KeyFrame Cue="100%"><Setter Property="RotateTransform.Angle" Value="360" /></KeyFrame>
+                                                </Animation>
+                                            </Style.Animations>
+                                        </Style>
+                                    </i:Icon.Styles>
+                                </i:Icon>
+                                <TextBlock Name="BannerUploadBtnText" Text="Upload"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           Foreground="White" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Name="BannerBrowseBtn"
+                                DockPanel.Dock="Right"
+                                Content="Browse…"
+                                Padding="14,10"
+                                CornerRadius="8"
+                                Cursor="Hand"
+                                FontSize="14"
+                                Background="{DynamicResource SurfaceMedium}"
+                                Foreground="{DynamicResource TextStrong}" />
+                        <TextBlock Name="BannerFileNameText"
+                                   Text="No file selected"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"
+                                   Margin="0,0,8,0" />
+                    </DockPanel>
+                    <TextBlock Name="BannerStatusText"
+                               IsVisible="False"
+                               FontSize="12"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextMuted}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- ── Profile Picture Input ── -->
+        <Border CornerRadius="12" BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                Background="{DynamicResource Surface}" ClipToBounds="True">
+            <StackPanel>
+                <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24,16">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <i:Icon Value="fa-solid fa-circle-user" FontSize="14"
+                                Foreground="{DynamicResource PrimaryGreenBrush}"
+                                VerticalAlignment="Center" />
+                        <TextBlock Text="Profile Picture" FontSize="16" FontWeight="Bold"
+                                   Foreground="{DynamicResource TextStrong}" />
+                    </StackPanel>
+                </Border>
+                <StackPanel Spacing="12" Margin="24">
+                    <!-- Direct URL input -->
+                    <TextBlock Text="Image URL" FontSize="13" FontWeight="Medium"
+                               Foreground="{DynamicResource TextMuted}" />
+                    <TextBox Name="ProfileUrlTextBox"
+                             Text="{Binding ProfileUrl, Mode=TwoWay}"
+                             Watermark="https://example.com/avatar.jpg"
+                             Padding="12,10" FontSize="14" CornerRadius="8" />
+
+                    <!-- Divider -->
+                    <Grid ColumnDefinitions="*,Auto,*" Margin="0,4">
+                        <Rectangle Grid.Column="0" Height="1" VerticalAlignment="Center"
+                                   Fill="{DynamicResource Stroke}" />
+                        <TextBlock Grid.Column="1" Text="or upload to a Blossom server"
+                                   FontSize="12" Foreground="{DynamicResource TextMuted}"
+                                   Margin="12,0" VerticalAlignment="Center" />
+                        <Rectangle Grid.Column="2" Height="1" VerticalAlignment="Center"
+                                   Fill="{DynamicResource Stroke}" />
+                    </Grid>
+
+                    <!-- Blossom upload row -->
+                    <TextBox Name="ProfileBlossomServerTextBox"
+                             Text="https://blossom.angor.io"
+                             Watermark="Blossom server URL"
+                             Padding="12,10" FontSize="14" CornerRadius="8" />
+                    <DockPanel>
+                        <Button Name="ProfileUploadBtn"
+                                DockPanel.Dock="Right"
+                                Padding="16,10"
+                                CornerRadius="8"
+                                Cursor="Hand"
+                                Background="{DynamicResource PrimaryGreenBrush}"
+                                Foreground="White"
+                                FontSize="14" FontWeight="SemiBold"
+                                Margin="8,0,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <i:Icon Name="ProfileUploadIcon" Value="fa-solid fa-cloud-arrow-up"
+                                        FontSize="13" Foreground="White" IsVisible="True" />
+                                <i:Icon Name="ProfileUploadSpinner" Value="fa-solid fa-spinner"
+                                        FontSize="13" Foreground="White" IsVisible="False"
+                                        RenderTransformOrigin="50%,50%">
+                                    <i:Icon.RenderTransform><RotateTransform /></i:Icon.RenderTransform>
+                                    <i:Icon.Styles>
+                                        <Style Selector="i|Icon[IsVisible=True]">
+                                            <Style.Animations>
+                                                <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                    <KeyFrame Cue="0%"><Setter Property="RotateTransform.Angle" Value="0" /></KeyFrame>
+                                                    <KeyFrame Cue="100%"><Setter Property="RotateTransform.Angle" Value="360" /></KeyFrame>
+                                                </Animation>
+                                            </Style.Animations>
+                                        </Style>
+                                    </i:Icon.Styles>
+                                </i:Icon>
+                                <TextBlock Name="ProfileUploadBtnText" Text="Upload"
+                                           FontSize="14" FontWeight="SemiBold"
+                                           Foreground="White" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Name="ProfileBrowseBtn"
+                                DockPanel.Dock="Right"
+                                Content="Browse…"
+                                Padding="14,10"
+                                CornerRadius="8"
+                                Cursor="Hand"
+                                FontSize="14"
+                                Background="{DynamicResource SurfaceMedium}"
+                                Foreground="{DynamicResource TextStrong}" />
+                        <TextBlock Name="ProfileFileNameText"
+                                   Text="No file selected"
+                                   FontSize="13"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"
+                                   Margin="0,0,8,0" />
+                    </DockPanel>
+                    <TextBlock Name="ProfileStatusText"
+                               IsVisible="False"
+                               FontSize="12"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextMuted}" />
                 </StackPanel>
             </StackPanel>
         </Border>

@@ -14,4 +14,11 @@ public interface INostrCommunicationFactory
     bool OkEventReceivedOnAllRelays(string eventId);
     void MonitoringOkReceivedOnSubscription(string eventId);
     void ClearOkReceivedOnSubscriptionMonitoring(string eventId);
+
+    /// <summary>
+    /// Raised when a relay disconnects. Subscribers (e.g. RelaySubscriptionsHandling)
+    /// should re-evaluate pending EOSE/OK actions that may now be satisfied.
+    /// The argument is the disconnected relay name.
+    /// </summary>
+    event Action<string>? RelayDisconnected;
 }

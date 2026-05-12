@@ -44,6 +44,7 @@ public class BoltzSwapIntegrationTests : IDisposable
     private readonly HttpClient _httpClient;
     private readonly Mock<ISeedwordsProvider> _mockSeedwordsProvider;
     private readonly Mock<IProjectService> _mockProjectService;
+    private readonly Mock<IWalletAccountBalanceService> _mockWalletAccountBalanceService;
 
     private const string TestWalletWords = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
     private const string TestWalletPassphrase = "";
@@ -119,13 +120,14 @@ public class BoltzSwapIntegrationTests : IDisposable
             .ReturnsAsync(Result.Success<(string, Maybe<string>)>((TestWalletWords, Maybe<string>.None)));
 
         _mockProjectService = new Mock<IProjectService>();
+        _mockWalletAccountBalanceService = new Mock<IWalletAccountBalanceService>();
 
         _claimHandler = new ClaimLightningSwap.ClaimLightningSwapByIdHandler(
             _boltzClaimService,
             _boltzSwapStorageService,
-            _mockProjectService.Object,
             _mockSeedwordsProvider.Object,
-            _derivationOperations,
+            new HdOperations(),
+            _mockWalletAccountBalanceService.Object,
             new NullLogger<ClaimLightningSwap.ClaimLightningSwapByIdHandler>());
     }
 

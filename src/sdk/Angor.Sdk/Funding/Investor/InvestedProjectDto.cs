@@ -10,6 +10,7 @@ public class InvestedProjectDto
     public string Id { get; set; }
     public FounderStatus FounderStatus { get; set; }
     public Uri LogoUri { get; set; }
+    public Uri BannerUri { get; set; }
     public Amount Target { get; set; }
     
     public Amount Investment { get; set; }

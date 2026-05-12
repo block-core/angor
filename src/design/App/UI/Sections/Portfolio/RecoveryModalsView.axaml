@@ -75,7 +75,7 @@
                         Background="{DynamicResource RecoveryModalBg}">
                     <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
                         <!-- Cancel -->
-                        <Button Name="CancelRecoveryModal" Classes="ModalBtn" Cursor="Hand">
+                        <Button Name="CancelRecoveryModal" Classes="ModalBtn MobileAction" Cursor="Hand">
                             <Border CornerRadius="8" Padding="24,12"
                                     Background="{DynamicResource ModalCancelBg}">
                                 <TextBlock Text="Cancel" FontSize="14" FontWeight="SemiBold"
@@ -83,7 +83,7 @@
                             </Border>
                         </Button>
                         <!-- Confirm -->
-                        <Button Name="ConfirmRecoveryModal" Classes="ModalBtn" Cursor="Hand">
+                        <Button Name="ConfirmRecoveryModal" Classes="ModalBtn MobileAction" Cursor="Hand">
                             <Border CornerRadius="8" Padding="24,12"
                                     ClipToBounds="True"
                                     Background="{DynamicResource GreenGradient}">
@@ -328,7 +328,7 @@
                                 <Run Text="{Binding PenaltyDaysRemaining, Mode=OneWay}" /><Run Text=" days" />
                             </TextBlock>
                             <!-- Claim Penalty button (green gradient, inline) -->
-                            <Button Name="ClaimPenaltyButton" Grid.Column="2" Classes="ModalBtn"
+                        <Button Name="ClaimPenaltyButton" Grid.Column="2" Classes="ModalBtn MobileAction"
                                     Cursor="Hand" VerticalAlignment="Center">
                                 <Border CornerRadius="8" Padding="16,8"
                                         Background="{DynamicResource GreenGradient}">
@@ -427,14 +427,14 @@
                         BorderBrush="{DynamicResource ModalHeaderBorder}"
                         Background="{DynamicResource RecoveryModalBg}">
                     <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
-                        <Button Name="CancelReleaseModal" Classes="ModalBtn" Cursor="Hand">
+                        <Button Name="CancelReleaseModal" Classes="ModalBtn MobileAction" Cursor="Hand">
                             <Border CornerRadius="8" Padding="24,12"
                                     Background="{DynamicResource ModalCancelBg}">
                                 <TextBlock Text="Cancel" FontSize="14" FontWeight="SemiBold"
                                            Foreground="{DynamicResource ModalCancelFg}" />
                             </Border>
                         </Button>
-                        <Button Name="ConfirmReleaseModal" Classes="ModalBtn" Cursor="Hand">
+                        <Button Name="ConfirmReleaseModal" Classes="ModalBtn MobileAction" Cursor="Hand">
                             <Border CornerRadius="8" Padding="24,12"
                                     ClipToBounds="True"
                                     Background="{DynamicResource GreenGradient}">
@@ -609,7 +609,7 @@
                            Margin="0,0,0,32" />
 
                 <!-- Go to Funds Tab button (green gradient, full width) -->
-                <Button Name="GoToFundsButton" Classes="ModalBtn" Cursor="Hand"
+                <Button Name="GoToFundsButton" Classes="ModalBtn MobileAction" Cursor="Hand"
                         HorizontalAlignment="Stretch">
                     <Border CornerRadius="8" Padding="24,12"
                             HorizontalAlignment="Stretch"

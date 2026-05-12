@@ -123,6 +123,8 @@ public static class BuildRecoveryTransaction
 
             var signatureInfo = new SignatureInfo();
             var tcs = new TaskCompletionSource<Result<SignatureInfo?>>();
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            cts.Token.Register(() => { if (!tcs.Task.IsCompleted) tcs.TrySetResult(Result.Success<SignatureInfo?>(null)); });
 
             var projectPubKey = project.NostrPubKey;
 

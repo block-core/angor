@@ -27,7 +27,7 @@ public class PublishInvestmentTests
     private readonly Mock<IDerivationOperations> _mockDerivationOperations;
     private readonly Mock<ISeedwordsProvider> _mockSeedwordsProvider;
     private readonly Mock<IProjectService> _mockProjectService;
-    private readonly Mock<IWalletOperations> _mockWalletOperations;
+    private readonly Mock<IIndexerService> _mockIndexerService;
     private readonly Mock<IPortfolioService> _mockPortfolioService;
     private readonly Mock<IWalletAccountBalanceService> _mockWalletAccountBalanceService;
     private readonly Mock<ILogger> _mockLogger;
@@ -43,7 +43,7 @@ public class PublishInvestmentTests
         _mockDerivationOperations = new Mock<IDerivationOperations>();
         _mockSeedwordsProvider = new Mock<ISeedwordsProvider>();
         _mockProjectService = new Mock<IProjectService>();
-        _mockWalletOperations = new Mock<IWalletOperations>();
+        _mockIndexerService = new Mock<IIndexerService>();
         _mockPortfolioService = new Mock<IPortfolioService>();
         _mockWalletAccountBalanceService = new Mock<IWalletAccountBalanceService>();
         _mockLogger = new Mock<ILogger>();
@@ -57,7 +57,7 @@ public class PublishInvestmentTests
             _mockDerivationOperations.Object,
             _mockSeedwordsProvider.Object,
             _mockProjectService.Object,
-            _mockWalletOperations.Object,
+            _mockIndexerService.Object,
             _mockPortfolioService.Object,
             _mockWalletAccountBalanceService.Object,
             _mockLogger.Object);

@@ -25,6 +25,8 @@ public partial class SignatureRequestViewModel : ReactiveObject
     public string Time { get; set; } = "";
     /// <summary>Status: waiting, approved, rejected</summary>
     [Reactive] private string status = SignatureStatus.Waiting.ToLowerString();
+    /// <summary>Whether the card detail panel is expanded (binding-driven for virtualization safety)</summary>
+    [Reactive] private bool isExpanded;
     /// <summary>Investor npub key (shown in expanded details)</summary>
     public string Npub { get; set; } = "";
     /// <summary>Whether the chat has messages</summary>
@@ -69,8 +71,6 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
     [Reactive] private bool isLoading;
     [Reactive] private bool isRefreshing;
 
-    public ObservableCollection<int> ExpandedSignatureIds { get; } = new();
-
     private List<SignatureRequestViewModel>? _cachedAllViewModels;
 
     public int WaitingCount => GetAllViewModels().Count(s => s.Status == SignatureStatus.Waiting.ToLowerString());
@@ -104,8 +104,9 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
             .Subscribe(_ => UpdateFilteredSignatures())
             .DisposeWith(_disposables);
 
-        // Load investment requests from SDK
-        _ = LoadInvestmentRequestsAsync();
+        // Loading is started by FundersView.OnBecameActive(). Pre-warmed mobile views
+        // are hidden, so eager SDK requests here compete with tab switching and can
+        // make Android show an ANR while the user is on another section.
     }
 
     /// <summary>
@@ -117,60 +118,67 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
 
         try
         {
-            var wallets = _walletContext.Wallets;
-
-            _sdkSignatures.Clear();
-            int idCounter = 10000; // high ID to avoid collision with shared store IDs
-
-            foreach (var wallet in wallets)
+            var wallets = _walletContext.Wallets.ToList();
+            var loadedSignatures = await Task.Run(async () =>
             {
-                // Get founder's projects
-                var projectsResult = await _projectAppService.GetFounderProjects(wallet.Id);
-                if (projectsResult.IsFailure) continue;
+                var signatures = new List<SignatureRequestViewModel>();
+                int idCounter = 10000; // high ID to avoid collision with shared store IDs
 
-                foreach (var project in projectsResult.Value.Projects)
+                foreach (var wallet in wallets)
                 {
-                    if (project.Id == null) continue;
+                    // Get founder's projects
+                    var projectsResult = await _projectAppService.GetFounderProjects(wallet.Id);
+                    if (projectsResult.IsFailure) continue;
 
-                    // Get investment requests for this project
-                    var investmentsResult = await _founderAppService.GetProjectInvestments(
-                        new GetProjectInvestments.GetProjectInvestmentsRequest(wallet.Id, project.Id));
-
-                    if (investmentsResult.IsFailure) continue;
-
-                    foreach (var investment in investmentsResult.Value.Investments)
+                    foreach (var project in projectsResult.Value.Projects)
                     {
-                        var status = investment.Status switch
-                        {
-                            InvestmentStatus.PendingFounderSignatures => SignatureStatus.Waiting.ToLowerString(),
-                            InvestmentStatus.FounderSignaturesReceived or InvestmentStatus.Invested =>
-                                SignatureStatus.Approved.ToLowerString(),
-                            InvestmentStatus.Cancelled => SignatureStatus.Rejected.ToLowerString(),
-                            _ => SignatureStatus.Waiting.ToLowerString()
-                        };
+                        if (project.Id == null) continue;
 
-                        var amountBtc = (double)investment.Amount.ToUnitBtc();
+                        // Get investment requests for this project
+                        var investmentsResult = await _founderAppService.GetProjectInvestments(
+                            new GetProjectInvestments.GetProjectInvestmentsRequest(wallet.Id, project.Id));
 
-                        _sdkSignatures.Add(new SignatureRequestViewModel
+                        if (investmentsResult.IsFailure) continue;
+
+                        foreach (var investment in investmentsResult.Value.Investments)
                         {
-                            Id = idCounter++,
-                            ProjectTitle = project.Name ?? "Unknown Project",
-                            Amount = amountBtc.ToString("F4", System.Globalization.CultureInfo.InvariantCulture),
-                            Currency = _currencyService.Symbol,
-                            Date = investment.CreatedOn.ToString("dd MMM yyyy"),
-                            Time = investment.CreatedOn.ToString("HH:mm"),
-                            Status = status,
-                            Npub = investment.InvestorNostrPubKey ?? "",
-                            EventId = investment.EventId ?? "",
-                            ProjectIdentifier = project.Id.Value,
-                            FounderWalletId = wallet.Id.Value,
-                            InvestmentTransactionHex = investment.InvestmentTransactionHex ?? "",
-                            InvestorNostrPubKey = investment.InvestorNostrPubKey ?? "",
-                            AmountSats = investment.Amount
-                        });
+                            var status = investment.Status switch
+                            {
+                                InvestmentStatus.PendingFounderSignatures => SignatureStatus.Waiting.ToLowerString(),
+                                InvestmentStatus.FounderSignaturesReceived or InvestmentStatus.Invested =>
+                                    SignatureStatus.Approved.ToLowerString(),
+                                InvestmentStatus.Cancelled => SignatureStatus.Rejected.ToLowerString(),
+                                _ => SignatureStatus.Waiting.ToLowerString()
+                            };
+
+                            var amountBtc = (double)investment.Amount.ToUnitBtc();
+
+                            signatures.Add(new SignatureRequestViewModel
+                            {
+                                Id = idCounter++,
+                                ProjectTitle = project.Name ?? "Unknown Project",
+                                Amount = amountBtc.ToString("F4", System.Globalization.CultureInfo.InvariantCulture),
+                                Currency = _currencyService.Symbol,
+                                Date = investment.CreatedOn.ToString("dd MMM yyyy"),
+                                Time = investment.CreatedOn.ToString("HH:mm"),
+                                Status = status,
+                                Npub = investment.InvestorNostrPubKey ?? "",
+                                EventId = investment.EventId ?? "",
+                                ProjectIdentifier = project.Id.Value,
+                                FounderWalletId = wallet.Id.Value,
+                                InvestmentTransactionHex = investment.InvestmentTransactionHex ?? "",
+                                InvestorNostrPubKey = investment.InvestorNostrPubKey ?? "",
+                                AmountSats = investment.Amount
+                            });
+                        }
                     }
                 }
-            }
+
+                return signatures;
+            });
+
+            _sdkSignatures.Clear();
+            _sdkSignatures.AddRange(loadedSignatures);
 
             _cachedAllViewModels = null;
             UpdateFilteredSignatures();
@@ -310,13 +318,12 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
 
     public void ToggleExpanded(int id)
     {
-        if (ExpandedSignatureIds.Contains(id))
-            ExpandedSignatureIds.Remove(id);
-        else
-            ExpandedSignatureIds.Add(id);
+        var sig = GetAllViewModels().FirstOrDefault(s => s.Id == id);
+        if (sig != null)
+            sig.IsExpanded = !sig.IsExpanded;
     }
 
-    public bool IsExpanded(int id) => ExpandedSignatureIds.Contains(id);
+    public bool IsExpanded(int id) => GetAllViewModels().FirstOrDefault(s => s.Id == id)?.IsExpanded ?? false;
 
     public void SetFilter(string filter) => CurrentFilter = filter;
 

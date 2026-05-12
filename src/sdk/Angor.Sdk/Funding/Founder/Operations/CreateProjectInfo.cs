@@ -72,6 +72,8 @@ public static class CreateProjectInfo
         private async Task<Result<string>> CreateProjectInfoOnNostr(string nostrKeyHex, CreateProjectDto project, ProjectSeedDto founderKeys)
         {
             var tsc = new TaskCompletionSource<Result<string>>();
+            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            cts.Token.Register(() => { tsc.TrySetResult(Result.Failure<string>("Nostr project info creation timed out after 30s")); cts.Dispose(); });
 
             // Create base ProjectInfo with common properties
             var projectInfo = new ProjectInfo

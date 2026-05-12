@@ -3,12 +3,13 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
-using Avalonia.Media;
 using Avalonia.VisualTree;
 using App.UI.Shared;
 using App.UI.Shared.Controls;
 using App.UI.Shared.Helpers;
 using App.UI.Shell;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -19,15 +20,28 @@ public partial class FundersView : UserControl, ISectionView
 {
     private CompositeDisposable? _subscriptions;
     private IDisposable? _layoutSubscription;
-    private ScrollableView? _fundersScrollable;
+    private Border? _fundersTitleIcon;
+    private TextBlock? _fundersTitleText;
+    private TextBlock? _approveAllText;
 
     /// <summary>Design-time only.</summary>
     public FundersView() => InitializeComponent();
 
     public FundersView(FundersViewModel vm)
     {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
         InitializeComponent();
+        var initMs = sw.ElapsedMilliseconds;
+
+        sw.Restart();
         DataContext = vm;
+
+        // Strip hover transitions + BoxShadow on mobile — they never fire and waste GPU.
+        // Compact desktop previews should use the same layout as phones.
+        bool isDeviceMobile = OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
+        if (isDeviceMobile)
+            Classes.Add("Mobile");
+
         AddHandler(Button.ClickEvent, OnButtonClick, RoutingStrategies.Bubble);
 
         // Wire up filter tab click handlers (Borders use Tapped, not Button.Click)
@@ -42,18 +56,42 @@ public partial class FundersView : UserControl, ISectionView
         DataContextChanged += (_, _) => SubscribeToVisibility();
         SubscribeToVisibility();
 
-        // Cache ScrollableView for responsive bottom padding
-        _fundersScrollable = this.FindControl<ScrollableView>("FundersListPanel");
+        // Cache named controls for responsive layout
+        _fundersTitleIcon = this.FindControl<Border>("FundersTitleIcon");
+        _fundersTitleText = this.FindControl<TextBlock>("FundersTitleText");
+        _approveAllText = this.FindControl<TextBlock>("ApproveAllText");
 
-        // ── Responsive layout: adjust bottom padding for tab bar clearance ──
+        // ── Responsive layout: adjust padding for tab bar clearance ──
         _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
             .Subscribe(isCompact =>
             {
-                if (_fundersScrollable != null)
-                    _fundersScrollable.ContentPadding = isCompact
-                        ? new Thickness(16, 16, 16, 96)
-                        : new Thickness(24);
+                Classes.Set("Mobile", isCompact || isDeviceMobile);
+
+                // Adjust ListBox bottom margin for mobile tab bar clearance
+                var listBox = this.FindControl<ListBox>("SignaturesListPanel");
+                if (listBox != null)
+                    listBox.Margin = isCompact
+                        ? new Thickness(16, 0, 16, 96)
+                        : new Thickness(24, 0, 24, 24);
+
+                if (_fundersTitleIcon != null)
+                {
+                    _fundersTitleIcon.Width = isCompact ? 32 : 40;
+                    _fundersTitleIcon.Height = isCompact ? 32 : 40;
+                }
+
+                if (_fundersTitleText != null)
+                    _fundersTitleText.FontSize = isCompact ? 22 : 24;
+
+                if (_approveAllText != null)
+                    _approveAllText.Text = isCompact ? "Approve" : "Approve All";
             });
+
+        var totalMs = sw.ElapsedMilliseconds + initMs;
+        App.Services.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("FundersPerf")
+            .LogInformation("[FundersView.ctor] init={Init}ms wire={Wire}ms total={Total}ms",
+                initMs, sw.ElapsedMilliseconds, totalMs);
     }
 
     private void SetFilterFromTab(string filter)
@@ -92,8 +130,12 @@ public partial class FundersView : UserControl, ISectionView
           .Subscribe(isRefreshing =>
           {
               var refreshBtn = this.FindControl<Button>("RefreshButton");
-              var icon = refreshBtn?.GetLogicalDescendants().OfType<Projektanker.Icons.Avalonia.Icon>().FirstOrDefault();
+              var icon = refreshBtn?.GetLogicalDescendants().OfType<Optris.Icons.Avalonia.Icon>().FirstOrDefault();
               icon?.Classes.Set("Spinning", isRefreshing);
+
+              var emptyRefreshBtn = this.FindControl<Button>("EmptyRefreshButton");
+              var emptyIcon = emptyRefreshBtn?.GetLogicalDescendants().OfType<Optris.Icons.Avalonia.Icon>().FirstOrDefault();
+              emptyIcon?.Classes.Set("Spinning", isRefreshing);
           });
         _subscriptions.Add(refreshSub);
 
@@ -124,7 +166,15 @@ public partial class FundersView : UserControl, ISectionView
         base.OnDetachedFromLogicalTree(e);
     }
 
-    public void OnBecameActive() { }
+    public void OnBecameActive()
+    {
+        if (DataContext is FundersViewModel vm)
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(
+                () => _ = vm.RefreshAsync(),
+                Avalonia.Threading.DispatcherPriority.Background);
+        }
+    }
     public void OnBecameInactive() { }
 
     /// <summary>
@@ -152,28 +202,35 @@ public partial class FundersView : UserControl, ISectionView
                 break;
 
             case "RefreshButton":
+            case "EmptyRefreshButton":
                 _ = vm.RefreshAsync();
                 e.Handled = true;
                 break;
 
-            case "ApproveButton" when btn.Tag is int approveId:
+            case "ApproveButton":
+            case "MobileApproveButton":
+                if (btn.Tag is not int approveId) break;
                 vm.ApproveSignature(approveId);
                 e.Handled = true;
                 break;
 
-            case "RejectButton" when btn.Tag is int rejectId:
+            case "RejectButton":
+            case "MobileRejectButton":
+                if (btn.Tag is not int rejectId) break;
                 vm.RejectSignature(rejectId);
                 e.Handled = true;
                 break;
 
             case "ChatButton":
+            case "MobileChatButton":
                 // Chat action — placeholder for now
                 e.Handled = true;
                 break;
 
-            case "ExpandButton" when btn.Tag is int expandId:
+            case "ExpandButton":
+            case "MobileExpandButton":
+                if (btn.Tag is not int expandId) break;
                 vm.ToggleExpanded(expandId);
-                ToggleExpandedPanel(expandId, vm.IsExpanded(expandId));
                 e.Handled = true;
                 break;
 
@@ -184,30 +241,4 @@ public partial class FundersView : UserControl, ISectionView
         }
     }
 
-    /// <summary>
-    /// Find the ExpandedPanel with matching Tag and toggle its visibility.
-    /// Also rotate the chevron icon on the ExpandButton.
-    /// </summary>
-    private void ToggleExpandedPanel(int id, bool isExpanded)
-    {
-        // Walk the visual tree of SignaturesListPanel to find matching panels
-        if (SignaturesListPanel == null) return;
-
-        foreach (var container in SignaturesListPanel.GetLogicalDescendants())
-        {
-            // Find ExpandedPanel borders with matching Tag
-            if (container is Border { Name: "ExpandedPanel" } panel && panel.Tag is int panelId && panelId == id)
-            {
-                panel.IsVisible = isExpanded;
-            }
-
-            // Rotate the expand button chevron
-            if (container is Button { Name: "ExpandButton" } expandBtn && expandBtn.Tag is int btnId && btnId == id)
-            {
-                expandBtn.RenderTransform = isExpanded
-                    ? new RotateTransform(180)
-                    : new RotateTransform(0);
-            }
-        }
-    }
 }

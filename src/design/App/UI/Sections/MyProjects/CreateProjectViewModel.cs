@@ -149,6 +149,9 @@ public partial class CreateProjectViewModel : ReactiveObject
 
     private readonly ICurrencyService _currencyService;
     private readonly INetworkConfiguration _networkConfiguration;
+    private readonly ProjectDraftStorage _draftStorage;
+    private readonly IWalletContext _walletContext;
+    private bool _isLoadingDraft;
 
     /// <summary>
     /// True when debug mode is enabled AND on testnet.
@@ -169,11 +172,13 @@ public partial class CreateProjectViewModel : ReactiveObject
     /// <summary>e.g. "Price per period (BTC) *"</summary>
     public string PricePerPeriodLabel => _currencyService.PricePerPeriodLabel;
 
-    public CreateProjectViewModel(DeployFlowViewModel deployFlow, ICurrencyService currencyService, INetworkConfiguration networkConfiguration)
+    public CreateProjectViewModel(DeployFlowViewModel deployFlow, ICurrencyService currencyService, INetworkConfiguration networkConfiguration, ProjectDraftStorage draftStorage, IWalletContext walletContext)
     {
         DeployFlow = deployFlow;
         _currencyService = currencyService;
         _networkConfiguration = networkConfiguration;
+        _draftStorage = draftStorage;
+        _walletContext = walletContext;
         // Default start date to today (UTC)
         StartDate = DateTime.UtcNow.ToString("yyyy-MM-dd");
         InvestStartDate = DateTime.UtcNow;
@@ -256,6 +261,36 @@ public partial class CreateProjectViewModel : ReactiveObject
                 this.RaisePropertyChanged(nameof(HasFormError));
                 this.RaisePropertyChanged(nameof(HasEndDateError));
             });
+
+        // ── Auto-save draft on any user input change (debounced) ──
+        Observable.Merge(
+                this.WhenAnyValue(x => x.ProjectType).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.ProjectName).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.ProjectAbout).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.ProjectWebsite).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.BannerUrl).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.ProfileUrl).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.TargetAmount).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.InvestStartDate).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.InvestEndDate).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.PenaltyDays).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.ApprovalThreshold).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.SubscriptionPrice).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.DurationValue).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.DurationUnit).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.DurationPreset).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.ReleaseFrequency).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.PayoutFrequency).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.MonthlyPayoutDate).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.WeeklyPayoutDay).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.CurrentStep).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.ShowWelcome).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.ShowStep5Welcome).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.IsAdvancedEditor).Select(_ => Unit.Default),
+                this.WhenAnyValue(x => x.ShowGenerateForm).Select(_ => Unit.Default))
+            .Throttle(TimeSpan.FromSeconds(2))
+            .Where(_ => !_isLoadingDraft && HasInProgressData)
+            .Subscribe(unit => { Task.Run(() => SaveDraftAsync()); });
     }
 
     public string DeployButtonText => IsDeploying ? "Deploying..." : "Deploy Project";
@@ -601,14 +636,25 @@ public partial class CreateProjectViewModel : ReactiveObject
     /// </summary>
     public void Deploy()
     {
-        // Build the CreateProjectDto from wizard fields
-        var dto = BuildCreateProjectDto();
+        CreateProjectDto dto;
+        try
+        {
+            // Build the CreateProjectDto from wizard fields
+            dto = BuildCreateProjectDto();
+        }
+        catch (InvalidOperationException ex)
+        {
+            FormError = ex.Message;
+            return;
+        }
+
         DeployFlow.ProjectData = dto;
 
         DeployFlow.OnDeployCompleted = () =>
         {
             IsDeployed = true;
             this.RaisePropertyChanged(nameof(DeployButtonText));
+            _ = DeleteDraftAsync();
             // Matches Vue goToMyProjects(): add project to list + close wizard + navigate to list
             OnProjectDeployed?.Invoke();
         };
@@ -1092,8 +1138,32 @@ public partial class CreateProjectViewModel : ReactiveObject
     }
 
     /// <summary>
+    /// Returns true if the wizard has unsaved in-progress data that should be preserved
+    /// when the user navigates away and returns.
+    /// False when the wizard is in its initial state or has already been deployed.
+    /// </summary>
+    public bool HasInProgressData
+    {
+        get
+        {
+            if (IsDeployed)
+                return false;
+
+            // The user has advanced beyond the welcome screen
+            bool hasAdvancedBeyondWelcome = !ShowWelcome || CurrentStep > 1;
+
+            // The user has entered at least some data
+            bool hasUserInputData = !string.IsNullOrEmpty(ProjectType)
+                || !string.IsNullOrEmpty(ProjectName)
+                || !string.IsNullOrEmpty(ProjectAbout);
+
+            return hasAdvancedBeyondWelcome || hasUserInputData;
+        }
+    }
+
+    /// <summary>
     /// Reset all wizard state to initial values so the wizard can be re-opened fresh.
-    /// Called by MyProjectsView.OpenCreateWizard() before wiring callbacks.
+    /// Called by MyProjectsView.OpenCreateWizard() when no in-progress data exists.
     /// </summary>
     public void ResetWizard()
     {
@@ -1155,6 +1225,7 @@ public partial class CreateProjectViewModel : ReactiveObject
         // Step 6: Deploy
         IsDeploying = false;
         IsDeployed = false;
+        DeployFlow.Close();
         this.RaisePropertyChanged(nameof(DeployButtonText));
 
         // Clear callback
@@ -1165,7 +1236,193 @@ public partial class CreateProjectViewModel : ReactiveObject
 
         // Re-evaluate debug mode (may have changed in settings since last open)
         this.RaisePropertyChanged(nameof(IsDebugMode));
-    }    /// <summary>
+
+        // Delete persisted draft
+        _ = DeleteDraftAsync();
+    }
+
+    /// <summary>
+    /// Load a previously saved draft from disk and populate all wizard fields.
+    /// Called by MyProjectsView when opening the wizard.
+    /// </summary>
+    public async Task<bool> LoadDraftAsync()
+    {
+        try
+        {
+            string? walletId = _walletContext.SelectedWallet?.Id.Value;
+            if (string.IsNullOrEmpty(walletId)) return false;
+
+            var result = await _draftStorage.LoadAsync(walletId);
+            if (result.IsFailure) return false;
+
+            ProjectDraft? draft = result.Value;
+            if (draft == null) return false;
+
+            _isLoadingDraft = true;
+            try
+            {
+            // Navigation
+            ShowWelcome = draft.ShowWelcome;
+            ShowStep5Welcome = draft.ShowStep5Welcome;
+
+            // Step 1
+            ProjectType = draft.ProjectType;
+            this.RaisePropertyChanged(nameof(IsInvestment));
+            this.RaisePropertyChanged(nameof(IsFund));
+            this.RaisePropertyChanged(nameof(IsSubscription));
+            this.RaisePropertyChanged(nameof(IsTypeSelected));
+            this.RaisePropertyChanged(nameof(StepNames));
+
+            // Step 2
+            ProjectName = draft.ProjectName;
+            ProjectAbout = draft.ProjectAbout;
+            ProjectWebsite = draft.ProjectWebsite;
+
+            // Step 3
+            BannerUrl = draft.BannerUrl;
+            ProfileUrl = draft.ProfileUrl;
+
+            // Step 4
+            TargetAmount = draft.TargetAmount;
+            StartDate = draft.StartDate;
+            EndDate = draft.EndDate;
+            PenaltyDays = draft.PenaltyDays;
+            ApprovalThreshold = draft.ApprovalThreshold;
+            SubscriptionPrice = draft.SubscriptionPrice;
+            InvestStartDate = draft.InvestStartDate;
+            InvestEndDate = draft.InvestEndDate;
+
+            // Step 5
+            DurationValue = draft.DurationValue;
+            DurationUnit = draft.DurationUnit;
+            DurationPreset = draft.DurationPreset;
+            ReleaseFrequency = draft.ReleaseFrequency;
+            PayoutFrequency = draft.PayoutFrequency;
+            MonthlyPayoutDate = draft.MonthlyPayoutDate;
+            WeeklyPayoutDay = draft.WeeklyPayoutDay;
+            SelectedInstallmentCounts.Clear();
+            foreach (int count in draft.SelectedInstallmentCounts)
+                SelectedInstallmentCounts.Add(count);
+            IsAdvancedEditor = draft.IsAdvancedEditor;
+            ShowGenerateForm = draft.ShowGenerateForm;
+            SelectedPayoutPattern = draft.SelectedPayoutPattern;
+            PayoutDay = draft.PayoutDay;
+
+            // Stages
+            Stages.Clear();
+            foreach (StageDraft stageDraft in draft.Stages)
+            {
+                Stages.Add(new ProjectStageViewModel
+                {
+                    StageNumber = stageDraft.StageNumber,
+                    PercentageValue = stageDraft.PercentageValue,
+                    ReleaseDateValue = stageDraft.ReleaseDateValue,
+                    StageLabel = stageDraft.StageLabel,
+                    Percentage = $"{stageDraft.PercentageValue:F0}%",
+                    ReleaseDate = stageDraft.ReleaseDateValue.ToString("d MMMM yyyy"),
+                });
+            }
+            this.RaisePropertyChanged(nameof(HasStages));
+            this.RaisePropertyChanged(nameof(ScheduleSummary));
+
+            // Navigation (set last so step visibility is correct after all data is loaded)
+            CurrentStep = draft.CurrentStep;
+            MaxStepReached = draft.MaxStepReached;
+            RaiseAllStepProperties();
+
+            return true;
+            }
+            finally
+            {
+                _isLoadingDraft = false;
+            }
+        }
+        catch
+        {
+            // Draft may be corrupted or incompatible — discard it
+            _isLoadingDraft = false;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Persist current wizard state to disk.
+    /// </summary>
+    public async Task SaveDraftAsync()
+    {
+        try
+        {
+            string? walletId = _walletContext.SelectedWallet?.Id.Value;
+            if (string.IsNullOrEmpty(walletId)) return;
+
+            var draft = new ProjectDraft
+            {
+                WalletId = walletId,
+                CurrentStep = CurrentStep,
+                MaxStepReached = MaxStepReached,
+                ShowWelcome = ShowWelcome,
+                ShowStep5Welcome = ShowStep5Welcome,
+                ProjectType = ProjectType,
+                ProjectName = ProjectName,
+                ProjectAbout = ProjectAbout,
+                ProjectWebsite = ProjectWebsite,
+                BannerUrl = BannerUrl,
+                ProfileUrl = ProfileUrl,
+                TargetAmount = TargetAmount,
+                StartDate = StartDate,
+                EndDate = EndDate,
+                PenaltyDays = PenaltyDays,
+                ApprovalThreshold = ApprovalThreshold,
+                SubscriptionPrice = SubscriptionPrice,
+                InvestStartDate = InvestStartDate,
+                InvestEndDate = InvestEndDate,
+                DurationValue = DurationValue,
+                DurationUnit = DurationUnit,
+                DurationPreset = DurationPreset,
+                ReleaseFrequency = ReleaseFrequency,
+                PayoutFrequency = PayoutFrequency,
+                MonthlyPayoutDate = MonthlyPayoutDate,
+                WeeklyPayoutDay = WeeklyPayoutDay,
+                SelectedInstallmentCounts = SelectedInstallmentCounts.ToList(),
+                IsAdvancedEditor = IsAdvancedEditor,
+                ShowGenerateForm = ShowGenerateForm,
+                SelectedPayoutPattern = SelectedPayoutPattern,
+                PayoutDay = PayoutDay,
+                Stages = Stages.Select(s => new StageDraft
+                {
+                    StageNumber = s.StageNumber,
+                    PercentageValue = s.PercentageValue,
+                    ReleaseDateValue = s.ReleaseDateValue,
+                    StageLabel = s.StageLabel,
+                }).ToList(),
+            };
+
+            await _draftStorage.SaveAsync(draft);
+        }
+        catch
+        {
+            // Silently ignore save failures — draft persistence is best-effort
+        }
+    }
+
+    /// <summary>
+    /// Delete the persisted draft for the current wallet.
+    /// </summary>
+    public async Task DeleteDraftAsync()
+    {
+        try
+        {
+            string? walletId = _walletContext.SelectedWallet?.Id.Value;
+            if (string.IsNullOrEmpty(walletId)) return;
+            await _draftStorage.DeleteAsync(walletId);
+        }
+        catch
+        {
+            // Silently ignore delete failures
+        }
+    }
+
+    /// <summary>
     /// Prepopulate all wizard fields with debug/test data so the user can
     /// click Next through every step and deploy quickly on testnet.
     /// Values mirror the Avalonia app's PopulateInvestDebugDefaults / PopulateFundDebugDefaults.

@@ -10,11 +10,22 @@ namespace App.UI.Shared.Helpers;
 public static class ShellService
 {
     private static ShellViewModel? _vm;
+    private static Action<bool>? _prepareForThemeChange;
 
     /// <summary>
     /// Register the shell ViewModel instance. Called once from ShellView constructor.
     /// </summary>
     public static void Register(ShellViewModel vm) => _vm = vm;
+
+    /// <summary>
+    /// Register a view-level hook used by the shell to reduce live mobile UI
+    /// before and after global theme resource invalidation.
+    /// </summary>
+    public static void RegisterThemeChangePreparation(Action<bool> prepareForThemeChange)
+        => _prepareForThemeChange = prepareForThemeChange;
+
+    public static void PrepareForThemeChange(bool isChanging)
+        => _prepareForThemeChange?.Invoke(isChanging);
 
     /// <summary>
     /// Show a toast notification with auto-dismiss.
@@ -33,4 +44,10 @@ public static class ShellService
     /// </summary>
     public static void HideModal()
         => _vm?.HideModal();
+
+    /// <summary>
+    /// Route platform back requests through the shell navigation stack.
+    /// </summary>
+    public static bool TryHandlePlatformBack()
+        => _vm?.TryHandlePlatformBack() ?? false;
 }

@@ -4,9 +4,10 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using FluentAssertions;
-using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.FindProjects;
+using App.UI.Shared.PaymentFlow;
+using NetworkTab = App.UI.Shared.PaymentFlow.NetworkTab;
 using App.UI.Shared.Controls;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -231,8 +232,7 @@ public class FindProjectsPanelTests
         investVm!.CurrentScreen.Should().Be(InvestScreen.InvestForm);
         investVm.IsInvestForm.Should().BeTrue();
         investVm.IsWalletSelector.Should().BeFalse();
-        investVm.IsInvoice.Should().BeFalse();
-        investVm.IsSuccess.Should().BeFalse();
+        investVm.PaymentFlow.Should().BeNull("PaymentFlow is only created after submission");
         investVm.InvestmentAmount.Should().BeEmpty("amount should start empty");
 
         // ── Quick amount button ──
@@ -370,18 +370,18 @@ public class FindProjectsPanelTests
 
         // ── Wallet selection state ──
         TestHelpers.Log("[2.5] Testing wallet selection...");
-        investVm.SelectWallet(wallet);
+        investVm.PaymentFlow.SelectWallet(wallet);
         Dispatcher.UIThread.RunJobs();
 
-        investVm.SelectedWallet.Should().Be(wallet);
-        investVm.HasSelectedWallet.Should().BeTrue();
+        investVm.PaymentFlow.SelectedWallet.Should().Be(wallet);
+        investVm.PaymentFlow.HasSelectedWallet.Should().BeTrue();
         wallet.IsSelected.Should().BeTrue();
-        investVm.PayButtonText.Should().Contain(wallet.Name);
+        investVm.PaymentFlow.PayButtonText.Should().Contain(wallet.Name);
 
         // ── Insufficient balance error ──
         TestHelpers.Log("[2.6] Testing insufficient balance error...");
         // Reset and try with large amount
-        investVm.CloseModal();
+        investVm.PaymentFlow.Reset();
         Dispatcher.UIThread.RunJobs();
 
         vm.CloseInvestPage();
@@ -395,34 +395,33 @@ public class FindProjectsPanelTests
         Dispatcher.UIThread.RunJobs();
 
         wallet = investVm.Wallets[0];
-        investVm.SelectWallet(wallet);
+        investVm.PaymentFlow.SelectWallet(wallet);
         Dispatcher.UIThread.RunJobs();
-
-        var passwordProvider = global::App.App.Services.GetRequiredService<SimplePasswordProvider>();
-        passwordProvider.SetKey("default-key");
 
         var tcs = new TaskCompletionSource();
         var wasProcessingDuringExecution = false;
-        investVm.PayWithWalletCommand.Execute().Subscribe(
-            _ => { wasProcessingDuringExecution = wasProcessingDuringExecution || investVm.IsProcessing; },
+        investVm.PaymentFlow.PayWithWalletCommand.Execute().Subscribe(
+            _ => { wasProcessingDuringExecution = wasProcessingDuringExecution || investVm.PaymentFlow.IsProcessing; },
             ex => tcs.TrySetException(ex),
             () => tcs.TrySetResult());
         // Check IsProcessing is set immediately after command starts (comment #9)
         Dispatcher.UIThread.RunJobs();
-        wasProcessingDuringExecution = wasProcessingDuringExecution || investVm.IsProcessing;
+        wasProcessingDuringExecution = wasProcessingDuringExecution || investVm.PaymentFlow.IsProcessing;
         await tcs.Task.WaitAsync(TimeSpan.FromSeconds(30));
         Dispatcher.UIThread.RunJobs();
 
         wasProcessingDuringExecution.Should().BeTrue("IsProcessing should be true while PayWithWallet executes (comment #9)");
-        investVm.IsProcessing.Should().BeFalse("IsProcessing should be false after PayWithWallet completes (comment #9)");
+        investVm.PaymentFlow.IsProcessing.Should().BeFalse("IsProcessing should be false after PayWithWallet completes (comment #9)");
 
-        TestHelpers.Log($"[2.6] Error message: {investVm.ErrorMessage}");
-        investVm.ErrorMessage.Should().NotBeNullOrWhiteSpace("should show error for insufficient balance");
-        investVm.ErrorMessage.Should().Contain("Insufficient");
+        TestHelpers.Log($"[2.6] Error message: {investVm.PaymentFlow.ErrorMessage}");
+        investVm.PaymentFlow.ErrorMessage.Should().NotBeNullOrWhiteSpace("should show error for insufficient balance");
+        investVm.PaymentFlow.ErrorMessage.Should().Match(
+            s => s.Contains("Insufficient") || s.Contains("Not enough funds"),
+            "should indicate insufficient funds");
         investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector, "should stay on WalletSelector");
 
         // ── Reset, reopen invest page for invoice/modal tests ──
-        investVm.CloseModal();
+        investVm.PaymentFlow.Reset();
         Dispatcher.UIThread.RunJobs();
         vm.CloseInvestPage();
         Dispatcher.UIThread.RunJobs();
@@ -436,37 +435,46 @@ public class FindProjectsPanelTests
 
         // ── Invoice screen toggle ──
         TestHelpers.Log("[2.7] Testing invoice screen toggle...");
-        investVm.ShowInvoice();
+        investVm.PaymentFlow.ShowInvoice();
         Dispatcher.UIThread.RunJobs();
 
-        investVm.CurrentScreen.Should().Be(InvestScreen.Invoice);
-        investVm.IsInvoice.Should().BeTrue();
-        investVm.IsWalletSelector.Should().BeFalse();
-
-        // Back to wallet selector
-        investVm.BackToWalletSelector();
-        Dispatcher.UIThread.RunJobs();
-
-        investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector);
+        investVm.PaymentFlow.CurrentScreen.Should().Be(PaymentFlowScreen.Invoice);
+        investVm.PaymentFlow.IsInvoice.Should().BeTrue();
+        // InvestPageViewModel stays on WalletSelector; PaymentFlow manages its own sub-screens
         investVm.IsWalletSelector.Should().BeTrue();
-        investVm.IsInvoice.Should().BeFalse();
+
+        // PaymentFlow.Reset() invokes OnDismissed → CancelPaymentFlow, which sets
+        // CurrentScreen back to InvestForm and nulls out PaymentFlow.
+        // Verify that dismissal works correctly.
+        investVm.PaymentFlow.Reset();
+        Dispatcher.UIThread.RunJobs();
+
+        investVm.CurrentScreen.Should().Be(InvestScreen.InvestForm,
+            "PaymentFlow.Reset invokes OnDismissed → CancelPaymentFlow, returning to InvestForm");
+        investVm.PaymentFlow.Should().BeNull("CancelPaymentFlow nulls out PaymentFlow");
+        investVm.IsInvestForm.Should().BeTrue();
 
         // ── Close modal reset ──
         TestHelpers.Log("[2.8] Testing close modal reset...");
+        // Re-submit to get back to wallet selector for the next test
+        investVm.InvestmentAmount = "0.01";
+        Dispatcher.UIThread.RunJobs();
+        investVm.Submit();
+        Dispatcher.UIThread.RunJobs();
+        investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector);
+
         wallet = investVm.Wallets[0];
-        investVm.SelectWallet(wallet);
+        investVm.PaymentFlow!.SelectWallet(wallet);
         Dispatcher.UIThread.RunJobs();
-        investVm.SelectedWallet.Should().NotBeNull("precondition: wallet should be selected");
+        investVm.PaymentFlow.SelectedWallet.Should().NotBeNull("precondition: wallet should be selected");
 
-        investVm.CloseModal();
+        investVm.PaymentFlow.Reset();
         Dispatcher.UIThread.RunJobs();
 
-        investVm.CurrentScreen.Should().Be(InvestScreen.InvestForm, "should return to InvestForm");
-        investVm.SelectedWallet.Should().BeNull("wallet selection should be cleared");
-        investVm.IsProcessing.Should().BeFalse("processing flag should be reset");
-        investVm.PaymentReceived.Should().BeFalse("payment flag should be reset");
-        investVm.ErrorMessage.Should().BeNull("error message should be cleared");
-        investVm.PaymentStatusText.Should().Be("Awaiting payment...", "status text should reset");
+        // Reset triggers OnDismissed → CancelPaymentFlow → back to InvestForm, PaymentFlow = null
+        investVm.CurrentScreen.Should().Be(InvestScreen.InvestForm,
+            "PaymentFlow.Reset invokes OnDismissed → CancelPaymentFlow");
+        investVm.PaymentFlow.Should().BeNull("CancelPaymentFlow nulls out PaymentFlow");
 
         window.Close();
         TestHelpers.Log("═══ Flow 2 PASSED ═══");

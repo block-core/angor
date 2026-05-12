@@ -76,6 +76,7 @@ public static class GetInvestments
                         Name = project.Name,
                         Description = project.ShortDescription,
                         LogoUri = project.Picture,
+                        BannerUri = project.Banner,
                         Target = new Amount(project.TargetAmount),
                         FounderStatus = investment == null ? FounderStatus.Requested : FounderStatus.Approved,
                         InvestmentStatus = investment == null ? InvestmentStatus.Invalid : InvestmentStatus.Invested,

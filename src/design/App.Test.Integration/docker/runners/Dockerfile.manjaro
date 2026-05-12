@@ -1,0 +1,36 @@
+# Manjaro (Arch-based, rolling) — .NET 10 test runner
+FROM manjarolinux/base
+
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
+ENV DOTNET_NOLOGO=1
+
+# Update keyring first (Manjaro images can have stale keys)
+RUN pacman -Sy --noconfirm archlinux-keyring manjaro-keyring \
+    && pacman-key --populate archlinux manjaro \
+    && pacman -Syu --noconfirm \
+        icu \
+        openssl \
+        libx11 \
+        libxcb \
+        libxrandr \
+        libxi \
+        mesa \
+        fontconfig \
+        freetype2 \
+        xorg-server-xvfb \
+        curl \
+    && pacman -Scc --noconfirm
+
+# Install .NET 10 SDK + .NET 8 runtime via install script
+RUN curl -sSL https://dot.net/v1/dotnet-install.sh -o /tmp/dotnet-install.sh \
+    && chmod +x /tmp/dotnet-install.sh \
+    && /tmp/dotnet-install.sh --channel 10.0 --install-dir /usr/share/dotnet \
+    && /tmp/dotnet-install.sh --channel 8.0 --runtime dotnet --install-dir /usr/share/dotnet \
+    && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
+    && rm /tmp/dotnet-install.sh
+
+COPY run-tests.sh /run-tests.sh
+RUN sed -i 's/\r$//' /run-tests.sh && chmod +x /run-tests.sh
+
+WORKDIR /src
+ENTRYPOINT ["/run-tests.sh"]

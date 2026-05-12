@@ -32,7 +32,7 @@ public static class PenaltyThresholdHelper
 
         if (!IsInvestmentAbovePenaltyThreshold(projectInfo, investmentAmount))
         {
-            return projectInfo.StartDate;
+            return projectInfo.StartDate.Date;
         }
 
         return null;

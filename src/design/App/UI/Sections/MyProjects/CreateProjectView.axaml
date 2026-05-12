@@ -170,7 +170,7 @@
                 <StackPanel Name="StepperPanel" Spacing="0" Margin="24,0"
                             VerticalAlignment="Center">
                     <!-- Step 1 -->
-                    <Button Name="StepBtn1" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                    <Button Name="StepBtn1" Classes="NoPressShift" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <Border Name="StepCircle1" Classes="StepCircle StepCurrent"
@@ -190,7 +190,7 @@
                             HorizontalAlignment="Left" />
 
                     <!-- Step 2 -->
-                    <Button Name="StepBtn2" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                    <Button Name="StepBtn2" Classes="NoPressShift" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <Border Name="StepCircle2" Classes="StepCircle"
@@ -210,7 +210,7 @@
                             HorizontalAlignment="Left" />
 
                     <!-- Step 3 -->
-                    <Button Name="StepBtn3" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                    <Button Name="StepBtn3" Classes="NoPressShift" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <Border Name="StepCircle3" Classes="StepCircle"
@@ -230,7 +230,7 @@
                             HorizontalAlignment="Left" />
 
                     <!-- Step 4 -->
-                    <Button Name="StepBtn4" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                    <Button Name="StepBtn4" Classes="NoPressShift" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <Border Name="StepCircle4" Classes="StepCircle"
@@ -250,7 +250,7 @@
                             HorizontalAlignment="Left" />
 
                     <!-- Step 5 -->
-                    <Button Name="StepBtn5" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                    <Button Name="StepBtn5" Classes="NoPressShift" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <Border Name="StepCircle5" Classes="StepCircle"
@@ -270,7 +270,7 @@
                             HorizontalAlignment="Left" />
 
                     <!-- Step 6 -->
-                    <Button Name="StepBtn6" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                    <Button Name="StepBtn6" Classes="NoPressShift" Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <Border Name="StepCircle6" Classes="StepCircle"
@@ -301,6 +301,7 @@
                     <Grid ColumnDefinitions="Auto,*,Auto">
                         <!-- Cancel / Previous button — outlined, standardized sizing -->
                         <Button Grid.Column="0" Name="PrevStepButton"
+                                Classes="MobileAction"
                                 Height="44" Padding="16,0,16,0" CornerRadius="8"
                                 Background="Transparent"
                                 BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
@@ -321,7 +322,7 @@
                         <Panel Grid.Column="2">
                             <!-- Next button — shown on steps 1-5 -->
                             <Border Classes="ButtonShadow" IsVisible="{Binding !IsLastStep}">
-                                <Button Name="NextStepButton" Height="44" CornerRadius="8" Padding="16,0,16,0"
+                                <Button Name="NextStepButton" Classes="MobileAction" Height="44" CornerRadius="8" Padding="16,0,16,0"
                                         FontSize="14" FontWeight="SemiBold">
                                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                         <TextBlock Text="Next" VerticalAlignment="Center" />
@@ -337,6 +338,7 @@
                             <!-- Deploy Now button — shown on step 6 (IsLastStep) -->
                             <!-- Vue: footer primary button triggers openDeployModal -->
                             <Button Name="DeployButton" IsVisible="{Binding IsLastStep}"
+                                    Classes="MobileAction"
                                     Height="44" CornerRadius="8" Padding="16,0,24,0"
                                     FontSize="14" FontWeight="Bold"
                                     IsEnabled="{Binding !IsDeploying}"
@@ -434,7 +436,7 @@
 
                                 <!-- Start button — green, no arrow -->
                                 <Border HorizontalAlignment="Center" Classes="ButtonShadow" Margin="0,4,0,0">
-                                    <Button Name="StartButton" CornerRadius="12" Padding="40,14"
+                                    <Button Name="StartButton" Classes="MobileAction" CornerRadius="12" Padding="40,14"
                                             FontWeight="Bold" FontSize="16"
                                             Content="Start">
                                         <Button.Background>
@@ -498,7 +500,7 @@
 
                                 <!-- "Ok, Let's Go" button — green -->
                                 <Border HorizontalAlignment="Center" Classes="ButtonShadow" Margin="0,4,0,0">
-                                    <Button Name="Step5WelcomeButton" CornerRadius="12" Padding="40,14"
+                                    <Button Name="Step5WelcomeButton" Classes="MobileAction" CornerRadius="12" Padding="40,14"
                                             FontWeight="Bold" FontSize="16"
                                             Content="Ok, Let's Go">
                                         <Button.Background>
@@ -582,7 +584,7 @@
                  wins no matter what the clip does. Matches ContentBorder's
                  CornerRadius=16 and BorderThickness=1. IsHitTestVisible=False
                  so it doesn't block clicks on the stepper/content beneath. -->
-            <Border Grid.Column="0" Grid.ColumnSpan="2"
+            <Border Name="StrokeOverlay" Grid.Column="0" Grid.ColumnSpan="2"
                     BorderBrush="{DynamicResource Stroke}"
                     BorderThickness="1"
                     CornerRadius="16"

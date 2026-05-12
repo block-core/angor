@@ -15,6 +15,8 @@ public interface IHdOperations
     //PubKey GeneratePublicKey(string accountExtPubKey, int index, bool isChange);
     PubKey GeneratePublicKey(ExtPubKey accountExtPubKey, int index, bool isChange);
     string CreateHdPath(int purpose, int coinType, int accountIndex, bool isChange, int addressIndex);
+    string DerivePublicKey(string mnemonic, string? passphrase, string hdPath);
+    string DerivePrivateKey(string mnemonic, string? passphrase, string hdPath);
 }
 
 public class HdOperations : IHdOperations
@@ -277,5 +279,24 @@ public class HdOperations : IHdOperations
 
             return Key.Parse(encryptedSeed, password, network);
         }
+
+        public string DerivePublicKey(string mnemonic, string? passphrase, string hdPath)
+        {
+            ExtKey.UseBCForHMACSHA512 = true;
+            Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+
+            var extendedKey = GetExtendedKey(mnemonic, passphrase);
+            var derivedKey = extendedKey.Derive(new KeyPath(hdPath));
+            return derivedKey.PrivateKey.PubKey.ToHex();
+        }
+
+        public string DerivePrivateKey(string mnemonic, string? passphrase, string hdPath)
+        {
+            ExtKey.UseBCForHMACSHA512 = true;
+            Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
+
+            var extendedKey = GetExtendedKey(mnemonic, passphrase);
+            var derivedKey = extendedKey.Derive(new KeyPath(hdPath));
+            return Blockcore.NBitcoin.DataEncoders.Encoders.Hex.EncodeData(derivedKey.PrivateKey.ToBytes());
+        }
     }
-    

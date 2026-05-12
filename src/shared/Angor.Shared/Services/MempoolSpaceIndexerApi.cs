@@ -125,7 +125,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
     private HttpClient GetIndexerClient()
     {
         var indexer = _networkService.GetPrimaryIndexer();
-        var key = string.IsNullOrEmpty(indexer.Name) ? indexer.Name : indexer.Url;
+        var key = string.IsNullOrEmpty(indexer.Name) ? indexer.Url : indexer.Name;
         if (_clients.TryGetValue(key, out var indexerClient))
             return indexerClient;
 
@@ -140,20 +140,47 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
     public async Task<string> PublishTransactionAsync(string trxHex)
     {
-        var response = await GetIndexerClient().PostAsync($"{MempoolApiRoute}/tx", new StringContent(trxHex));
+        var guardError = TransactionGuard.RejectAllZeroP2trOutputs(trxHex);
+        if (guardError != null)
+            return guardError;
 
-        _networkService.CheckAndHandleError(response);
+        const int maxAttempts = 3;
+        string lastError = "Unknown broadcast error";
 
-        if (response.IsSuccessStatusCode)
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
         {
-            var txId = await response.Content.ReadAsStringAsync(); //The txId
-            _logger.LogInformation("trx " + txId + "posted ");
-            return string.Empty;
+            var response = await GetIndexerClient().PostAsync($"{MempoolApiRoute}/tx", new StringContent(trxHex));
+
+            _networkService.CheckAndHandleError(response);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var txId = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("Transaction {TxId} posted on attempt {Attempt}", txId, attempt);
+                return string.Empty;
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            var errorMessage = response.ReasonPhrase + content;
+
+            if (errorMessage.Contains("already in block", StringComparison.OrdinalIgnoreCase) ||
+                errorMessage.Contains("already known", StringComparison.OrdinalIgnoreCase) ||
+                errorMessage.Contains("txn-already-in-mempool", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation("Transaction already exists (attempt {Attempt}): {Message}", attempt, errorMessage);
+                return string.Empty;
+            }
+
+            lastError = errorMessage;
+            _logger.LogError("Broadcast attempt {Attempt}/{Max} failed: {Message}", attempt, maxAttempts, errorMessage);
+
+            if (attempt < maxAttempts)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(2 * attempt));
+            }
         }
 
-        var content = await response.Content.ReadAsStringAsync();
-
-        return response.ReasonPhrase + content;
+        return lastError;
     }
 
     public async Task<AddressBalance[]> GetAdressBalancesAsync(List<AddressInfo> data, bool includeUnconfirmed = false)

@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:funds="clr-namespace:App.UI.Sections.Funds"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
+             xmlns:shared="clr-namespace:App.UI.Shared"
              mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="600"
              x:Class="App.UI.Sections.Funds.ReceiveFundsModal"
              x:DataType="funds:FundsViewModel">
@@ -67,7 +68,7 @@
                         </Border>
                     </StackPanel>
 
-                    <!-- QR Code placeholder -->
+                    <!-- QR Code -->
                     <!-- Vue: 192x192, wrapped in p-4 rounded-2xl border-4, centered -->
                     <Border HorizontalAlignment="Center"
                             CornerRadius="16"
@@ -75,21 +76,29 @@
                             BorderThickness="4"
                             Padding="16"
                             Background="{DynamicResource DeployModalBackground}">
-                        <!-- QR placeholder: dark grid pattern to simulate QR code -->
                         <Border Width="192" Height="192"
                                 CornerRadius="4"
-                                Background="{DynamicResource DeployModalBackground}">
-                            <!-- Stub: QR code icon centered (real QR generation is backend work) -->
-                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8">
-                                <i:Icon Value="fa-solid fa-qrcode"
-                                       FontSize="80"
-                                       Foreground="{DynamicResource TextMuted}"
-                                       HorizontalAlignment="Center" />
-                                <TextBlock Text="QR Code"
-                                           FontSize="11"
+                                Background="{DynamicResource DeployModalBackground}"
+                                Name="QrCodeBorder">
+                            <Panel>
+                                <!-- Real QR code image — visible once address is loaded -->
+                                <Image Name="QrCodeImage"
+                                       Width="192" Height="192"
+                                       Stretch="Uniform"
+                                       IsVisible="False" />
+                                <!-- Placeholder icon shown while address is loading -->
+                                <StackPanel Name="QrCodePlaceholder"
+                                            VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8">
+                                    <i:Icon Value="fa-solid fa-qrcode"
+                                           FontSize="80"
                                            Foreground="{DynamicResource TextMuted}"
                                            HorizontalAlignment="Center" />
-                            </StackPanel>
+                                    <TextBlock Text="QR Code"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               HorizontalAlignment="Center" />
+                                </StackPanel>
+                            </Panel>
                         </Border>
                     </Border>
 
@@ -107,7 +116,7 @@
                             CornerRadius="8"
                             Padding="12,10">
                         <DockPanel>
-                            <Button Name="BtnCopyAddress" DockPanel.Dock="Right"
+                            <Button Name="BtnCopyAddress" Classes="NoPressShift" DockPanel.Dock="Right"
                                     Background="Transparent" BorderThickness="0"
                                     Padding="4" Cursor="Hand"
                                     VerticalAlignment="Center">
@@ -127,7 +136,7 @@
                     </Border>
 
                     <!-- Done button (green gradient, full width) -->
-                    <Button Name="BtnDone" AutomationProperties.AutomationId="BtnReceiveDone" HorizontalAlignment="Stretch"
+                    <Button Name="BtnDone" Classes="MobileAction" AutomationProperties.AutomationId="BtnReceiveDone" HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Center"
                             Padding="14,12" CornerRadius="8"
                             Foreground="White"

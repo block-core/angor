@@ -15,6 +15,12 @@
     -->
 
     <UserControl.Styles>
+        <!-- Mobile: shell owns the back bar; strip desktop hover shadows/transitions. -->
+        <Style Selector="ep|EditProfileView.Mobile Border.FloatingBtn">
+            <Setter Property="Transitions" Value="{x:Null}" />
+            <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />
+        </Style>
+
         <Style Selector="Border.FloatingBtn:pointerover">
             <Setter Property="RenderTransform" Value="translate(0px, -1px)" />
             <Setter Property="BoxShadow" Value="0 6 16 0 #33000000" />
@@ -87,7 +93,7 @@
             <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
         </Style>
         <Style Selector="Button.RemoveBtn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Background" Value="#1AFF3333" />
+            <Setter Property="Background" Value="{DynamicResource ErrorSoft}" />
         </Style>
     </UserControl.Styles>
 
@@ -101,7 +107,8 @@
 
             <!-- RIGHT: Save button -->
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="12">
-                <Border Classes="FloatingBtn"
+                <Border Name="SaveButtonChrome"
+                        Classes="FloatingBtn"
                         Background="{DynamicResource FloatingBtnBg}"
                         BorderBrush="{DynamicResource FloatingBtnBorder}"
                         BorderThickness="1"
@@ -146,7 +153,8 @@
                                     </i:Icon.Styles>
                                 </i:Icon>
                             </Panel>
-                            <TextBlock Text="Save Profile"
+                            <TextBlock Name="SaveButtonText"
+                                       Text="Save Profile"
                                        FontSize="14" FontWeight="Medium"
                                        Foreground="{DynamicResource PrimaryGreenBrush}"
                                        VerticalAlignment="Center" />
@@ -157,7 +165,8 @@
 
             <!-- LEFT: Back + Project Name -->
             <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="12">
-                <Border Classes="FloatingBtn"
+                <Border Name="EditBackButtonChrome"
+                        Classes="FloatingBtn"
                         Background="{DynamicResource FloatingBtnBg}"
                         BorderBrush="{DynamicResource FloatingBtnBorder}"
                         BorderThickness="1"
@@ -193,7 +202,8 @@
                     </Button>
                 </Border>
 
-                <Border Classes="FloatingBtn"
+                <Border Name="ProjectPill"
+                        Classes="FloatingBtn"
                         Background="{DynamicResource FloatingBtnBg}"
                         BorderBrush="{DynamicResource FloatingBtnBorder}"
                         BorderThickness="1"
@@ -222,12 +232,84 @@
             </StackPanel>
         </DockPanel>
 
+        <!-- Compact sticky header: save + tabs stay available while form content scrolls. -->
+        <StackPanel Name="MobileStickyEditHeader"
+                    VerticalAlignment="Top"
+                    ZIndex="100"
+                    Margin="16,16,16,0"
+                    Spacing="16"
+                    IsVisible="False">
+            <Border Background="{DynamicResource FloatingBtnBg}"
+                    BorderBrush="{DynamicResource FloatingBtnBorder}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Height="52">
+                <Button Name="MobileSaveButton"
+                        Classes="NavBtn"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
+                        Cursor="Hand"
+                        IsEnabled="{Binding !IsSaving}">
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Panel>
+                            <i:Icon Value="fa-solid fa-floppy-disk" FontSize="14"
+                                    Foreground="{DynamicResource PrimaryGreenBrush}"
+                                    IsVisible="{Binding !IsSaving}" />
+                            <i:Icon Value="fa-solid fa-spinner" FontSize="14"
+                                    Foreground="{DynamicResource PrimaryGreenBrush}"
+                                    IsVisible="{Binding IsSaving}"
+                                    RenderTransformOrigin="50%,50%">
+                                <i:Icon.RenderTransform><RotateTransform /></i:Icon.RenderTransform>
+                                <i:Icon.Styles>
+                                    <Style Selector="i|Icon[IsVisible=True]">
+                                        <Style.Animations>
+                                            <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                <KeyFrame Cue="0%"><Setter Property="RotateTransform.Angle" Value="0" /></KeyFrame>
+                                                <KeyFrame Cue="100%"><Setter Property="RotateTransform.Angle" Value="360" /></KeyFrame>
+                                            </Animation>
+                                        </Style.Animations>
+                                    </Style>
+                                </i:Icon.Styles>
+                            </i:Icon>
+                        </Panel>
+                        <TextBlock Name="MobileSaveButtonText"
+                                   Text="Save Profile"
+                                   FontSize="14"
+                                   FontWeight="Medium"
+                                   Foreground="{DynamicResource PrimaryGreenBrush}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </Border>
+
+            <Border Name="MobileEditTabsBorder"
+                    Background="{DynamicResource SurfaceLow}"
+                    BorderBrush="{DynamicResource Stroke}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="6">
+                <ScrollViewer HorizontalScrollBarVisibility="Hidden"
+                              VerticalScrollBarVisibility="Disabled">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <Button Name="MobileTabProfile" Classes="TabBtn" Content="Profile" />
+                        <Button Name="MobileTabProject" Classes="TabBtn" Content="Project" />
+                        <Button Name="MobileTabFaq" Classes="TabBtn" Content="FAQ" />
+                        <Button Name="MobileTabMembers" Classes="TabBtn" Content="Members" />
+                        <Button Name="MobileTabMedia" Classes="TabBtn" Content="Media" />
+                        <Button Name="MobileTabRelays" Classes="TabBtn" Content="Relays" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </StackPanel>
+
         <!-- ═══ SCROLLABLE CONTENT ═══ -->
         <ScrollViewer VerticalScrollBarVisibility="Auto">
             <StackPanel Name="EditContentStack" Spacing="24" Margin="24,0,24,24">
 
                 <!-- Spacer for nav bar: 24 + 44 + 24 = 92px -->
-                <Panel Height="92" />
+                <Panel Name="EditNavSpacer" Height="92" />
 
                 <!-- ── Loading indicator ── -->
                 <Border Background="{DynamicResource Surface}"
@@ -260,19 +342,23 @@
                 </Border>
 
                 <!-- ── Tab Bar ── -->
-                <Border Background="{DynamicResource SurfaceLow}"
+                <Border Name="EditTabsBorder"
+                        Background="{DynamicResource SurfaceLow}"
                         BorderBrush="{DynamicResource Stroke}"
                         BorderThickness="1"
                         CornerRadius="12"
                         Padding="6">
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                        <Button Name="TabProfile" Classes="TabBtn" Content="Profile" />
-                        <Button Name="TabProject" Classes="TabBtn" Content="Project" />
-                        <Button Name="TabFaq" Classes="TabBtn" Content="FAQ" />
-                        <Button Name="TabMembers" Classes="TabBtn" Content="Members" />
-                        <Button Name="TabMedia" Classes="TabBtn" Content="Media" />
-                        <Button Name="TabRelays" Classes="TabBtn" Content="Relays" />
-                    </StackPanel>
+                    <ScrollViewer HorizontalScrollBarVisibility="Hidden"
+                                  VerticalScrollBarVisibility="Disabled">
+                        <StackPanel Name="EditTabsPanel" Orientation="Horizontal" Spacing="4">
+                            <Button Name="TabProfile" Classes="TabBtn" Content="Profile" />
+                            <Button Name="TabProject" Classes="TabBtn" Content="Project" />
+                            <Button Name="TabFaq" Classes="TabBtn" Content="FAQ" />
+                            <Button Name="TabMembers" Classes="TabBtn" Content="Members" />
+                            <Button Name="TabMedia" Classes="TabBtn" Content="Media" />
+                            <Button Name="TabRelays" Classes="TabBtn" Content="Relays" />
+                        </StackPanel>
+                    </ScrollViewer>
                 </Border>
 
                 <!-- ═══ TAB CONTENT ═══ -->
@@ -280,9 +366,9 @@
                 <!-- ── PROFILE TAB ── -->
                 <StackPanel Name="ProfileTabContent" Spacing="20">
                     <!-- Profile picture + basic info -->
-                    <Grid ColumnDefinitions="260,*" ColumnSpacing="20">
+                    <Grid Name="ProfileMainGrid" ColumnDefinitions="260,*" RowDefinitions="Auto,Auto" ColumnSpacing="20" RowSpacing="16">
                         <!-- Left: profile picture -->
-                        <Border Grid.Column="0"
+                        <Border Name="ProfilePictureCard" Grid.Column="0"
                                 Background="{DynamicResource Surface}"
                                 BorderBrush="{DynamicResource Stroke}"
                                 BorderThickness="1"
@@ -312,11 +398,84 @@
                                 <TextBox Classes="EditField"
                                          Text="{Binding ProfilePicture}"
                                          Watermark="https://example.com/avatar.jpg" />
+                                <!-- Blossom upload for profile picture -->
+                                <Border Background="{DynamicResource SurfaceLow}"
+                                        BorderBrush="{DynamicResource Stroke}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Padding="12">
+                                    <StackPanel Spacing="8">
+                                        <TextBlock Text="Upload to Blossom server"
+                                                   FontSize="12" FontWeight="Medium"
+                                                   Foreground="{DynamicResource TextMuted}" />
+                                        <TextBox Name="PicBlossomServerBox"
+                                                 Classes="EditField"
+                                                 Text="https://blossom.angor.io"
+                                                 Watermark="Blossom server URL"
+                                                 FontSize="13" />
+                                        <DockPanel>
+                                            <Button Name="PicUploadBtn"
+                                                    DockPanel.Dock="Right"
+                                                    Classes="Primary"
+                                                    Padding="10,7"
+                                                    Margin="6,0,0,0"
+                                                    FontSize="13"
+                                                    Cursor="Hand">
+                                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                                    <i:Icon Name="PicUploadIcon"
+                                                            Value="fa-solid fa-cloud-arrow-up"
+                                                            FontSize="11"
+                                                            Foreground="{DynamicResource PrimaryButtonForeground}"
+                                                            IsVisible="True" />
+                                                    <i:Icon Name="PicUploadSpinner"
+                                                            Value="fa-solid fa-spinner"
+                                                            FontSize="11"
+                                                            Foreground="{DynamicResource PrimaryButtonForeground}"
+                                                            IsVisible="False"
+                                                            RenderTransformOrigin="50%,50%">
+                                                        <i:Icon.RenderTransform><RotateTransform /></i:Icon.RenderTransform>
+                                                        <i:Icon.Styles>
+                                                            <Style Selector="i|Icon[IsVisible=True]">
+                                                                <Style.Animations>
+                                                                    <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                                        <KeyFrame Cue="0%"><Setter Property="RotateTransform.Angle" Value="0" /></KeyFrame>
+                                                                        <KeyFrame Cue="100%"><Setter Property="RotateTransform.Angle" Value="360" /></KeyFrame>
+                                                                    </Animation>
+                                                                </Style.Animations>
+                                                            </Style>
+                                                        </i:Icon.Styles>
+                                                    </i:Icon>
+                                                    <TextBlock Text="Upload"
+                                                               FontSize="13"
+                                                               Foreground="{DynamicResource PrimaryButtonForeground}"
+                                                               VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Button>
+                                            <Button Name="PicBrowseBtn"
+                                                    DockPanel.Dock="Right"
+                                                    Content="Browse…"
+                                                    Padding="10,7"
+                                                    FontSize="13"
+                                                    Cursor="Hand" />
+                                            <TextBlock Name="PicFileNameText"
+                                                       Text="No file selected"
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource TextMuted}"
+                                                       VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </DockPanel>
+                                        <TextBlock Name="PicStatusText"
+                                                   IsVisible="False"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource TextMuted}"
+                                                   TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
                         </Border>
 
                         <!-- Right: basic info -->
-                        <Border Grid.Column="1"
+                        <Border Name="BasicInfoCard" Grid.Column="1"
                                 Background="{DynamicResource Surface}"
                                 BorderBrush="{DynamicResource Stroke}"
                                 BorderThickness="1"
@@ -327,14 +486,14 @@
                                     <i:Icon Value="fa-solid fa-user" FontSize="14" Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center" />
                                     <TextBlock Classes="SectionHeader" Text="Basic Information" Margin="0" />
                                 </StackPanel>
-                                <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
-                                    <StackPanel Grid.Column="0" Spacing="6">
+                                <Grid Name="BasicInfoGrid" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="12">
+                                    <StackPanel Name="UsernameField" Grid.Column="0" Spacing="6">
                                         <TextBlock Classes="FieldLabel" Text="Username" />
                                         <TextBox Classes="EditField"
                                                  Text="{Binding ProfileName}"
                                                  Watermark="Your username" />
                                     </StackPanel>
-                                    <StackPanel Grid.Column="1" Spacing="6">
+                                    <StackPanel Name="DisplayNameField" Grid.Column="1" Spacing="6">
                                         <TextBlock Classes="FieldLabel" Text="Display Name" />
                                         <TextBox Classes="EditField"
                                                  Text="{Binding ProfileDisplayName}"
@@ -383,6 +542,79 @@
                             <TextBox Classes="EditField"
                                      Text="{Binding ProfileBanner}"
                                      Watermark="https://example.com/banner.jpg" />
+                            <!-- Blossom upload for banner -->
+                            <Border Background="{DynamicResource SurfaceLow}"
+                                    BorderBrush="{DynamicResource Stroke}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="12">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Upload to Blossom server"
+                                               FontSize="12" FontWeight="Medium"
+                                               Foreground="{DynamicResource TextMuted}" />
+                                    <TextBox Name="BannerBlossomServerBox"
+                                             Classes="EditField"
+                                             Text="https://blossom.angor.io"
+                                             Watermark="Blossom server URL"
+                                             FontSize="13" />
+                                    <DockPanel>
+                                        <Button Name="BannerUploadBtn"
+                                                DockPanel.Dock="Right"
+                                                Classes="Primary"
+                                                Padding="10,7"
+                                                Margin="6,0,0,0"
+                                                FontSize="13"
+                                                Cursor="Hand">
+                                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                                <i:Icon Name="BannerUploadIcon"
+                                                        Value="fa-solid fa-cloud-arrow-up"
+                                                        FontSize="11"
+                                                        Foreground="{DynamicResource PrimaryButtonForeground}"
+                                                        IsVisible="True" />
+                                                <i:Icon Name="BannerUploadSpinner"
+                                                        Value="fa-solid fa-spinner"
+                                                        FontSize="11"
+                                                        Foreground="{DynamicResource PrimaryButtonForeground}"
+                                                        IsVisible="False"
+                                                        RenderTransformOrigin="50%,50%">
+                                                    <i:Icon.RenderTransform><RotateTransform /></i:Icon.RenderTransform>
+                                                    <i:Icon.Styles>
+                                                        <Style Selector="i|Icon[IsVisible=True]">
+                                                            <Style.Animations>
+                                                                <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                                    <KeyFrame Cue="0%"><Setter Property="RotateTransform.Angle" Value="0" /></KeyFrame>
+                                                                    <KeyFrame Cue="100%"><Setter Property="RotateTransform.Angle" Value="360" /></KeyFrame>
+                                                                </Animation>
+                                                            </Style.Animations>
+                                                        </Style>
+                                                    </i:Icon.Styles>
+                                                </i:Icon>
+                                                <TextBlock Text="Upload"
+                                                           FontSize="13"
+                                                           Foreground="{DynamicResource PrimaryButtonForeground}"
+                                                           VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Name="BannerBrowseBtn"
+                                                DockPanel.Dock="Right"
+                                                Content="Browse…"
+                                                Padding="10,7"
+                                                FontSize="13"
+                                                Cursor="Hand" />
+                                        <TextBlock Name="BannerFileNameText"
+                                                   Text="No file selected"
+                                                   FontSize="12"
+                                                   Foreground="{DynamicResource TextMuted}"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </DockPanel>
+                                    <TextBlock Name="BannerStatusText"
+                                               IsVisible="False"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
                     </Border>
 
@@ -394,8 +626,8 @@
                             Padding="20">
                         <StackPanel Spacing="16">
                             <TextBlock Classes="SectionHeader" Text="Additional Information" />
-                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="16">
-                                <StackPanel Grid.Column="0" Spacing="6">
+                            <Grid Name="AdditionalInfoGrid" ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="16" RowSpacing="12">
+                                <StackPanel Name="Nip05Field" Grid.Column="0" Spacing="6">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                         <i:Icon Value="fa-solid fa-at" FontSize="12" Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center" />
                                         <TextBlock Classes="FieldLabel" Text="NIP-05 Verification" Margin="0" />
@@ -404,7 +636,7 @@
                                              Text="{Binding ProfileNip05}"
                                              Watermark="you@example.com" />
                                 </StackPanel>
-                                <StackPanel Grid.Column="1" Spacing="6">
+                                <StackPanel Name="LightningField" Grid.Column="1" Spacing="6">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                         <i:Icon Value="fa-solid fa-bolt" FontSize="12" Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center" />
                                         <TextBlock Classes="FieldLabel" Text="Lightning Address" Margin="0" />
@@ -413,7 +645,7 @@
                                              Text="{Binding ProfileLud16}"
                                              Watermark="your@lightning.address" />
                                 </StackPanel>
-                                <StackPanel Grid.Column="2" Spacing="6">
+                                <StackPanel Name="WebsiteField" Grid.Column="2" Spacing="6">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                         <i:Icon Value="fa-solid fa-globe" FontSize="12" Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center" />
                                         <TextBlock Classes="FieldLabel" Text="Website" Margin="0" />
@@ -540,7 +772,7 @@
                                        TextWrapping="Wrap" />
 
                             <!-- Add member input -->
-                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <Grid Name="MemberInputGrid" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="8">
                                 <TextBox Classes="EditField"
                                          Grid.Column="0"
                                          Text="{Binding NewMemberPubKey}"
@@ -616,7 +848,7 @@
                             </StackPanel>
 
                             <!-- Add media input -->
-                            <Grid ColumnDefinitions="*,140,Auto" ColumnSpacing="12">
+                            <Grid Name="MediaInputGrid" ColumnDefinitions="*,140,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="8">
                                 <TextBox Classes="EditField"
                                          Grid.Column="0"
                                          Text="{Binding NewMediaUrl}"
@@ -703,7 +935,7 @@
                                        TextWrapping="Wrap" />
 
                             <!-- Add relay input -->
-                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <Grid Name="RelayInputGrid" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="8">
                                 <TextBox Classes="EditField"
                                          Grid.Column="0"
                                          Text="{Binding NewRelayUrl}"

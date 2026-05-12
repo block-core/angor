@@ -11,6 +11,6 @@ namespace App.UI.Shared.Services;
 public sealed record FaucetOptions(string BaseUrl, string SendPathTemplate)
 {
     public static FaucetOptions AngorPublic { get; } = new(
-        "https://faucettmp.angor.io",
+        "https://test.faucet.angor.io",
         "api/faucet/send/{0}/{1}");
 }

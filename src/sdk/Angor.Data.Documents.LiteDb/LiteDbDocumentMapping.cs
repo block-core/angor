@@ -9,5 +9,9 @@ public class LiteDbDocumentMapping
             .Id(x => x.Id)
             .Field(x => x.CreatedAt, "created_at")
             .Field(x => x.UpdatedAt, "updated_at");
+
+        BsonMapper.Global.RegisterType<DateOnly>(
+            serialize: d => d.ToString("O"),
+            deserialize: bson => DateOnly.ParseExact(bson.AsString, "O"));
     }
 }

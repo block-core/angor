@@ -12,6 +12,7 @@ using Angor.Sdk.Wallet.Domain;
 using Angor.Sdk.Wallet.Infrastructure.Impl;
 using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using Angor.Shared;
+using Angor.Shared.Integration.Lightning;
 using Angor.Shared.Services;
 using App.Composition.Adapters;
 using App.UI.Sections.FindProjects;
@@ -38,7 +39,7 @@ namespace App.Composition;
 /// </summary>
 public static class CompositionRoot
 {
-    public static IServiceProvider BuildServiceProvider(string profileName = "Default", bool enableConsoleLogging = true)
+    public static IServiceProvider BuildServiceProvider(string profileName = "Default", bool enableConsoleLogging = true, Action<ServiceCollection>? platformServices = null)
     {
         var services = new ServiceCollection();
 
@@ -69,11 +70,14 @@ public static class CompositionRoot
 
             // Add Serilog as a provider for file logging
             var fileLogger = new LoggerConfiguration()
+                .Destructure.With<SensitiveDataRedactor>()
                 .MinimumLevel.Information()
                 .WriteTo.File(
                     logFilePath,
                     rollingInterval: Serilog.RollingInterval.Day,
                     retainedFileCountLimit: 15,
+                    fileSizeLimitBytes: 10 * 1024 * 1024,
+                    rollOnFileSizeLimit: true,
                     outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
                 .CreateLogger();
 
@@ -106,10 +110,21 @@ public static class CompositionRoot
 
         // Security adapters
         services.AddSingleton<IPassphraseProvider, SimplePassphraseProvider>();
-        services.AddSingleton<SimplePasswordProvider>();
-        services.AddSingleton<IPasswordProvider>(sp => sp.GetRequiredService<SimplePasswordProvider>());
         services.AddSingleton<IWalletSecurityContext, WalletSecurityContext>();
         services.AddSingleton<IWalletEncryption, AesWalletEncryption>();
+
+        // Platform-specific secure key storage — registered before SDK services
+        // so TryAddSingleton in WalletContextServices does not override.
+        platformServices?.Invoke(services);
+        if (!services.Any(d => d.ServiceType == typeof(ISecureKeyProvider)))
+        {
+            if (OperatingSystem.IsWindows())
+                services.AddSingleton<ISecureKeyProvider, DpapiSecureKeyProvider>();
+            else if (OperatingSystem.IsLinux())
+                services.AddSingleton<ISecureKeyProvider, LinuxSecureKeyProvider>();
+            else
+                throw new PlatformNotSupportedException("No ISecureKeyProvider implementation available for this platform.");
+        }
 
         // Register SDK services
         WalletContextServices.Register(services, serilogLogger, network);
@@ -137,6 +152,8 @@ public static class CompositionRoot
         services.AddHttpClient();
         services.AddSingleton(ResolveFaucetOptions());
         services.AddSingleton<IFaucetService, HttpFaucetService>();
+        services.AddSingleton<BlossomUploadService>();
+        services.AddSingleton<ILogExportService, LogExportService>();
 
         // ── Shared singletons (replaces SharedViewModels static class) ──
         services.AddSingleton<SignatureStore>();
@@ -152,6 +169,7 @@ public static class CompositionRoot
         services.AddTransient<MyProjectsViewModel>();
         services.AddTransient<FundersViewModel>();
         services.AddTransient<CreateProjectViewModel>();
+        services.AddSingleton<ProjectDraftStorage>();
         services.AddTransient<DeployFlowViewModel>();
         services.AddTransient<HomeViewModel>();
 
@@ -161,6 +179,7 @@ public static class CompositionRoot
                 project,
                 sp.GetRequiredService<IWalletAppService>(),
                 sp.GetRequiredService<IInvestmentAppService>(),
+                sp.GetRequiredService<IBoltzSwapService>(),
                 sp.GetRequiredService<PortfolioViewModel>(),
                 sp.GetRequiredService<ICurrencyService>(),
                 sp.GetRequiredService<IWalletContext>(),
@@ -221,15 +240,17 @@ public static class CompositionRoot
         // The full Latest() fetch runs when the user actually opens Find Projects.
         _ = Task.Run(async () =>
         {
-            var prewarmLogger = provider.GetRequiredService<ILoggerFactory>().CreateLogger("Prewarm");
+            Microsoft.Extensions.Logging.ILogger? prewarmLogger = null;
             try
             {
+                prewarmLogger = provider.GetRequiredService<ILoggerFactory>().CreateLogger("Prewarm");
+
                 await FindProjectsViewModel.LoadCachedDtosFromDiskAsync(
                     provider.GetRequiredService<IStore>(), prewarmLogger);
             }
             catch (Exception ex)
             {
-                prewarmLogger.LogWarning(ex, "Disk cache load failed");
+                prewarmLogger?.LogWarning(ex, "Disk cache load failed");
             }
         });
 

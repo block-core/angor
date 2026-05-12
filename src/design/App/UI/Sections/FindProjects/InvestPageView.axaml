@@ -53,6 +53,18 @@
             <Setter Property="Background" Value="{DynamicResource SubPlanBtnSelectedBg}" />
             <Setter Property="BorderBrush" Value="{DynamicResource SubPlanBtnSelectedBorder}" />
         </Style>
+        <Style Selector="Border.FundPatternBtn.SubPlanSelected">
+            <Setter Property="Background" Value="{DynamicResource PillOrangeBg}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BitcoinOrange}" />
+        </Style>
+        <Style Selector="Border.WarmMobileCard">
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="{DynamicResource StatsDetailCardBorder}" />
+        </Style>
+        <Style Selector="fp|InvestPageView.Mobile Border.WarmMobileCard">
+            <Setter Property="BorderThickness" Value="2" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BitcoinOrange}" />
+        </Style>
         <!-- Quick amount button default state (via style, not inline) -->
         <Style Selector="Border.QuickAmountBtn">
             <Setter Property="Background" Value="{DynamicResource StatsDetailInnerBackground}" />
@@ -78,12 +90,14 @@
         </Style>
         <!-- Disabled submit button: dim + no cursor (attribute selector — Border :disabled pseudo-class is unreliable) -->
         <Style Selector="Border#SubmitButton[IsEnabled=False]">
-            <Setter Property="Opacity" Value="0.45" />
+            <Setter Property="Opacity" Value="0.35" />
             <Setter Property="Cursor" Value="Arrow" />
+            <Setter Property="Background" Value="#3A3A3A" />
         </Style>
         <Style Selector="Border#MobileSubmitButton[IsEnabled=False]">
-            <Setter Property="Opacity" Value="0.45" />
+            <Setter Property="Opacity" Value="0.35" />
             <Setter Property="Cursor" Value="Arrow" />
+            <Setter Property="Background" Value="#3A3A3A" />
         </Style>
     </UserControl.Styles>
 
@@ -229,8 +243,9 @@
                CornerRadius="16,16,0,0"
                BorderThickness="0,1,0,0"
                BorderBrush="{DynamicResource Stroke}"
-               Background="{DynamicResource Surface}"
-               BoxShadow="0 -4 12 0 #14000000">
+                Background="{DynamicResource CardSurface}"
+                BoxShadow="0 -4 12 0 #14000000"
+                IsVisible="False">
             <!-- Vue: .footer-content { justify-content: flex-end } -->
             <StackPanel Orientation="Horizontal" Spacing="24"
                         HorizontalAlignment="Right" VerticalAlignment="Center"
@@ -291,7 +306,7 @@
                         BoxShadow="0 2 8 0 #4D4B7C5A"
                         VerticalAlignment="Center"
                         IsEnabled="{Binding CanSubmit}"
-                        Opacity="{Binding SubmitOpacity}">
+                        IsHitTestVisible="{Binding CanSubmit}">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                             <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
@@ -401,10 +416,9 @@
                     <!-- ── INVESTMENT AMOUNT (shown for invest/fund) ── -->
                     <!-- Vue: linear-gradient(to bottom right, #fff7ed, #fef3c7), border #fed7aa -->
                     <Border Name="AmountCard" Grid.Column="0"
+                            Classes="WarmMobileCard"
                             CornerRadius="16" Padding="24"
-                            BorderThickness="1"
                             Background="{DynamicResource StatsDetailCardBackground}"
-                            BorderBrush="{DynamicResource StatsDetailCardBorder}"
                             IsVisible="{Binding IsNotSubscription}">
                         <StackPanel Spacing="20">
                             <!-- Header: Bitcoin icon + title -->
@@ -487,10 +501,9 @@
                     </Border>
 
                     <!-- ── FUNDING PATTERN SELECTOR (shown for fund type with patterns) ── -->
-                    <Border CornerRadius="16" Padding="24"
-                            BorderThickness="1"
+                    <Border Classes="WarmMobileCard"
+                            CornerRadius="16" Padding="24"
                             Background="{DynamicResource StatsDetailCardBackground}"
-                            BorderBrush="{DynamicResource StatsDetailCardBorder}"
                             IsVisible="{Binding ShowFundingPatternSelector}">
                         <StackPanel Spacing="20">
                             <!-- Header -->
@@ -521,7 +534,7 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="fp:FundingPatternOption">
                                         <Border Name="FundPatternBorder"
-                                                Classes="SubPlanBtn"
+                                                Classes="SubPlanBtn FundPatternBtn"
                                                 CornerRadius="12" Padding="16"
                                                 Cursor="Hand"
                                                 BorderThickness="2">
@@ -533,9 +546,10 @@
                                                                    FontSize="16" FontWeight="Bold"
                                                                    Foreground="{DynamicResource SubPlanLabel}" />
                                                         <Border CornerRadius="10" Padding="8,2"
-                                                                Background="{DynamicResource AccentBrush}">
-                                                            <TextBlock FontSize="12" FontWeight="SemiBold"
-                                                                       Foreground="White">
+                                                                 Background="{DynamicResource PillOrangeBg}">
+                                                            <TextBlock Classes="FundPatternStageCount"
+                                                                       FontSize="12" FontWeight="SemiBold"
+                                                                       Foreground="{DynamicResource PillOrangeText}">
                                                                 <TextBlock.Text>
                                                                     <MultiBinding StringFormat="{}{0} stages">
                                                                         <Binding Path="StageCount" />
@@ -566,10 +580,9 @@
                     <!-- Vue: .subscription-card { background: linear-gradient(to bottom right, #fff7ed, #fef3c7) } -->
                     <!-- Same warm gradient as investment card but with subscription-specific content -->
                     <Border Name="SubscriptionCard" Grid.Column="0"
+                            Classes="WarmMobileCard"
                             CornerRadius="16" Padding="24"
-                            BorderThickness="1"
                             Background="{DynamicResource StatsDetailCardBackground}"
-                            BorderBrush="{DynamicResource StatsDetailCardBorder}"
                             IsVisible="{Binding IsSubscription}">
                         <StackPanel Spacing="20">
                             <!-- Header: Recurring arrows icon + "Subscription Plan" -->
@@ -673,36 +686,56 @@
                                                 Background="{DynamicResource Surface}"
                                                 BorderBrush="{DynamicResource Stroke}"
                                                 BorderThickness="1">
-                                            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
-                                                <!-- Stage/Payment label (bound, no code-behind needed) -->
-                                                <TextBlock Grid.Column="0"
-                                                           Text="{Binding LabelText}"
-                                                           FontSize="14" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextStrong}"
-                                                           VerticalAlignment="Center" />
-                                                <!-- Date -->
-                                                <TextBlock Grid.Column="1"
-                                                           Text="{Binding ReleaseDate}"
-                                                           FontSize="12"
-                                                           Foreground="{DynamicResource TextMuted}"
-                                                           VerticalAlignment="Center"
-                                                           HorizontalAlignment="Center" />
-                                                <!-- Percentage pill: hidden for subscription -->
-                                                <Border Grid.Column="2" CornerRadius="4"
-                                                        Padding="8,2" Margin="8,0"
-                                                        Background="{DynamicResource BadgeApprovedBackground}"
-                                                        VerticalAlignment="Center"
-                                                        IsVisible="{Binding !IsSubscriptionRow}">
-                                                    <TextBlock Text="{Binding Percentage}"
-                                                               FontSize="12" FontWeight="SemiBold"
-                                                               Foreground="{DynamicResource StageAmountGreen}" />
-                                                </Border>
-                                                <!-- Amount display (bound, no code-behind needed) -->
-                                                <TextBlock Grid.Column="3"
-                                                           Text="{Binding AmountDisplayText}"
-                                                           FontSize="14" FontWeight="Bold"
-                                                           Foreground="{DynamicResource StageAmountGreen}"
-                                                           VerticalAlignment="Center" />
+                                            <Grid Classes="StageRow" RowDefinitions="Auto,Auto">
+                                                <Grid Classes="StageTopRow" Grid.Row="0" ColumnDefinitions="*,Auto">
+                                                    <!-- Stage/Payment label (bound, no code-behind needed) -->
+                                                    <TextBlock Grid.Column="0"
+                                                               Classes="StageLabel"
+                                                               Text="{Binding LabelText}"
+                                                               FontSize="14" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource TextStrong}"
+                                                               TextWrapping="NoWrap"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               VerticalAlignment="Center" />
+                                                    <!-- Percentage pill: hidden for subscription -->
+                                                    <Border Grid.Column="1"
+                                                            Classes="StagePercentage"
+                                                            CornerRadius="4"
+                                                            Padding="8,2"
+                                                            Margin="8,0,0,0"
+                                                            MinWidth="48"
+                                                            Background="{DynamicResource BadgeApprovedBackground}"
+                                                            VerticalAlignment="Center"
+                                                            HorizontalAlignment="Right"
+                                                            IsVisible="{Binding !IsSubscriptionRow}">
+                                                        <TextBlock Text="{Binding Percentage}"
+                                                                   FontSize="12" FontWeight="SemiBold"
+                                                                   TextAlignment="Center"
+                                                                   TextWrapping="NoWrap"
+                                                                   Foreground="{DynamicResource StageAmountGreen}" />
+                                                    </Border>
+                                                </Grid>
+                                                <Grid Classes="StageBottomRow" Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+                                                    <!-- Date below, independent from the percentage column width. -->
+                                                    <TextBlock Grid.Column="0"
+                                                               Classes="StageDate"
+                                                               Text="{Binding ReleaseDate}"
+                                                               FontSize="12"
+                                                               Foreground="{DynamicResource TextMuted}"
+                                                               TextWrapping="NoWrap"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               VerticalAlignment="Center" />
+                                                    <!-- Amount display (bound, no code-behind needed) -->
+                                                    <TextBlock Grid.Column="1"
+                                                               Classes="StageAmount"
+                                                               Text="{Binding AmountDisplayText}"
+                                                               FontSize="14" FontWeight="Bold"
+                                                               Foreground="{DynamicResource StageAmountGreen}"
+                                                               HorizontalAlignment="Right"
+                                                               TextWrapping="NoWrap"
+                                                               VerticalAlignment="Center"
+                                                               Margin="8,0,0,0" />
+                                                </Grid>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
@@ -825,7 +858,7 @@
                         HorizontalAlignment="Stretch"
                         IsVisible="False"
                         IsEnabled="{Binding CanSubmit}"
-                        Opacity="{Binding SubmitOpacity}">
+                        IsHitTestVisible="{Binding CanSubmit}">
                     <Border.Background>
                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                             <GradientStop Color="#2D5A3D" Offset="0" />

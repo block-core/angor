@@ -131,11 +131,12 @@ public class AngornetMinerFaucet
             signedTransaction.TransactionFee);
 
         // Publish transaction
-        var publishResult = await _walletOperations.PublishTransactionAsync(_network, signedTransaction.Transaction);
-        
-        if (!publishResult.Success)
+        var hex = signedTransaction.Transaction.ToHex(_network.Consensus.ConsensusFactory);
+        var publishError = await _indexerService.PublishTransactionAsync(hex);
+
+        if (!string.IsNullOrEmpty(publishError))
         {
-            throw new InvalidOperationException($"Failed to publish transaction: {publishResult.Message}");
+            throw new InvalidOperationException($"Failed to publish transaction: {publishError}");
         }
 
         var txId = signedTransaction.Transaction.GetHash().ToString();

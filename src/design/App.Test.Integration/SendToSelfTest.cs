@@ -6,7 +6,6 @@ using Avalonia.VisualTree;
 using FluentAssertions;
 using Angor.Sdk.Common;
 using Angor.Shared.Utilities;
-using App.Composition.Adapters;
 using App.Test.Integration.Helpers;
 using App.UI.Sections.Funds;
 using App.UI.Shared.Services;
@@ -291,10 +290,6 @@ public class SendToSelfTest
     /// </summary>
     private async Task<string?> SendToSelf(Window window, string address)
     {
-        var passwordProvider = global::App.App.Services.GetRequiredService<SimplePasswordProvider>();
-        passwordProvider.SetKey("default-key");
-        TestHelpers.Log("  [Send] Set SimplePasswordProvider key to 'default-key'.");
-
         TestHelpers.Log("  [Send] Clicking WalletCardBtnSend...");
         await window.ClickWalletCardButton("WalletCardBtnSend");
         await Task.Delay(500);
