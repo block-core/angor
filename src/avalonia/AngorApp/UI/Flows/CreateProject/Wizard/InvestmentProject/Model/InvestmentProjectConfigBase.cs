@@ -151,13 +151,13 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject.Model
             this.ValidationRule(x => x.PenaltyDays, x => x is null || x >= 10, "Penalty period must be at least 10 days.").DisposeWith(Disposables);
 
 
-            this.ValidationRule(x => x.FundingEndDate, x => x == null || x.Value.Date > DateTime.Now.Date, "Funding end date must be after today.").DisposeWith(Disposables);
-            this.ValidationRule(x => x.FundingEndDate, x => x == null || (x.Value - DateTime.Now) <= TimeSpan.FromDays(365), "Funding period cannot exceed one year.").DisposeWith(Disposables);
+            this.ValidationRule(x => x.FundingEndDate, x => x == null || x.Value.Date > DateTime.UtcNow.Date, "Funding end date must be after today.").DisposeWith(Disposables);
+            this.ValidationRule(x => x.FundingEndDate, x => x == null || (x.Value - DateTime.UtcNow) <= TimeSpan.FromDays(365), "Funding period cannot exceed one year.").DisposeWith(Disposables);
         }
 
         private void AddDebugValidations()
         {
-            this.ValidationRule(x => x.FundingEndDate, x => x == null || x.Value.Date >= DateTime.Now.Date, "Funding end date must be on or after today.").DisposeWith(Disposables);
+            this.ValidationRule(x => x.FundingEndDate, x => x == null || x.Value.Date >= DateTime.UtcNow.Date, "Funding end date must be on or after today.").DisposeWith(Disposables);
         }
 
         public void AddStage()

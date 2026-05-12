@@ -22,7 +22,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.InvestmentProject
 
             if (NewProject.StartDate == null)
             {
-                NewProject.StartDate = DateTime.Now.Date;
+                NewProject.StartDate = DateTime.UtcNow.Date;
             }
 
             if (NewProject.TargetAmount == null)
