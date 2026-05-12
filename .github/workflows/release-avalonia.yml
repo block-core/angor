@@ -148,6 +148,7 @@ jobs:
           APPIMAGE=artifacts/Angor-${{ needs.prepare.outputs.version }}-x86_64.AppImage
           chmod +x "$APPIMAGE"
           "$APPIMAGE" --appimage-extract
+          sed -i 's/\r$//' squashfs-root/*.desktop
           ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 appimagetool -n squashfs-root "$APPIMAGE"
           rm -rf squashfs-root
 
@@ -186,6 +187,7 @@ jobs:
           # Can't execute arm64 binary on x86_64, so extract squashfs manually
           OFFSET=$(LC_ALL=C grep -abom1 'hsqs' "$APPIMAGE" | head -1 | cut -d: -f1)
           unsquashfs -offset "$OFFSET" "$APPIMAGE"
+          sed -i 's/\r$//' squashfs-root/*.desktop
           ARCH=aarch64 APPIMAGE_EXTRACT_AND_RUN=1 appimagetool -n squashfs-root "$APPIMAGE"
           rm -rf squashfs-root
 
