@@ -1,6 +1,7 @@
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
+using Android.Views;
 using App.UI.Shared.Helpers;
 using Avalonia.Android;
 using Avalonia.Threading;
@@ -13,6 +14,7 @@ namespace App.Android;
     Icon = "@drawable/icon",
     MainLauncher = true,
     ScreenOrientation = ScreenOrientation.Portrait,
+    WindowSoftInputMode = SoftInput.AdjustNothing,
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
 public class MainActivity : AvaloniaMainActivity
 {
