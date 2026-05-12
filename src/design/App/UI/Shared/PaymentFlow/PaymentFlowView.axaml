@@ -380,17 +380,19 @@
                         BorderThickness="1"
                         BorderBrush="{DynamicResource DeployFeeBarBorder}"
                         Background="{DynamicResource DeployFeeBarBg}">
-                    <Panel>
-                        <StackPanel Spacing="2" VerticalAlignment="Center"
-                                    HorizontalAlignment="Left">
-                            <TextBlock Text="Amount Required"
+                    <StackPanel Spacing="8">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0"
+                                       Text="Amount Required"
                                        FontSize="12"
+                                       VerticalAlignment="Center"
                                        Foreground="{DynamicResource DeployFeeLabel}" />
-                            <TextBlock Text="{Binding AmountDisplay}"
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding AmountDisplay}"
                                        FontSize="20" FontWeight="Bold"
                                        Foreground="{DynamicResource DeployFeeValue}" />
-                        </StackPanel>
-                        <Border HorizontalAlignment="Right" VerticalAlignment="Center"
+                        </Grid>
+                        <Border HorizontalAlignment="Center"
                                 CornerRadius="12" Padding="12,6"
                                 BorderThickness="1"
                                 BorderBrush="{DynamicResource DeployFeePillBorder}"
@@ -406,7 +408,7 @@
                                            VerticalAlignment="Center" />
                             </StackPanel>
                         </Border>
-                    </Panel>
+                    </StackPanel>
                 </Border>
             </StackPanel>
         </Border>
