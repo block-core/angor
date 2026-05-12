@@ -79,6 +79,10 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageVersion>
+    <!-- CLI / MCP packages -->
+    <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+    <PackageVersion Include="ModelContextProtocol" Version="1.3.0" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.10" />
     <!-- Shared / legacy packages -->
     <PackageVersion Include="Blockcore.Core" Version="1.1.41" />
     <PackageVersion Include="Blockcore.Nostr.Client" Version="2.0.2" />
