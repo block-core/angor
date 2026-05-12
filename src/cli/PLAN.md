@@ -2,7 +2,7 @@
 
 ## Overview
 
-A .NET 9 console application at `src/cli/Angor.Cli/` that exposes the Angor SDK as both a command-line tool and an MCP (Model Context Protocol) server. An AI agent can call any Angor operation — browse projects, manage wallets, invest, recover funds — through structured tool calls.
+A .NET 10 console application at `src/cli/Angor.Cli/` that exposes the Angor SDK as both a command-line tool and an MCP (Model Context Protocol) server. An AI agent can call any Angor operation — browse projects, manage wallets, invest, recover funds — through structured tool calls.
 
 **Entry modes:**
 
@@ -10,6 +10,43 @@ A .NET 9 console application at `src/cli/Angor.Cli/` that exposes the Angor SDK 
 angor-cli [command] [options]     # CLI mode (human / script use)
 angor-cli --mcp                   # MCP server mode (JSON-RPC over stdio, AI agent use)
 ```
+
+---
+
+## Implementation Progress
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| 1 — Scaffolding + headless DI | **DONE** | `Angor.Cli.csproj`, `CompositionRoot`, headless providers |
+| 2 — Wallet commands | **DONE** | 12 CLI commands + 12 MCP tools |
+| 3 — Project commands (read-only) | **DONE** | 6 CLI commands + 7 MCP tools |
+| 6 — MCP protocol layer | **DONE** | `--mcp` flag, `ModelContextProtocol` 1.3.0, stdio transport |
+| 4 — Founder commands | Pending | |
+| 5 — Investor commands | Pending | |
+| 7 — Lightning + config | Pending | |
+| 8 — Testing + polish | Pending | |
+
+### What was built (MVP)
+
+- **Project:** `src/cli/Angor.Cli/Angor.Cli.csproj` targeting `net10.0`
+- **DI:** Headless `CompositionRoot` mirroring `src/design/App/Composition/CompositionRoot.cs` — registers SDK wallet + funding services, LiteDB, Serilog file logging, platform-specific `ISecureKeyProvider` (DPAPI on Windows, Linux fallback on Linux/macOS). No UI dependencies.
+- **Security:** `HeadlessPasswordProvider` (env var `ANGOR_WALLET_PASSWORD` or masked console prompt in CLI mode), `HeadlessPassphraseProvider` (env var `ANGOR_WALLET_PASSPHRASE`), `HeadlessSeedwordsProvider` (delegates to SDK's built-in `SeedwordsProvider`).
+- **CLI commands:** `wallet` (12 subcommands) and `project` (6 subcommands) via `System.CommandLine`. All commands support `--json` for structured output.
+- **MCP tools:** `WalletTools` (12 tools) and `ProjectTools` (7 tools) using `[McpServerToolType]` / `[McpServerTool]` attributes. Tools are auto-discovered via `WithToolsFromAssembly()`.
+- **Packages added to `Directory.Packages.props`:** `System.CommandLine` 2.0.0-beta4, `ModelContextProtocol` 1.3.0, `Microsoft.Extensions.Hosting` 9.0.10.
+
+### What was NOT needed
+
+- **No business logic refactoring from UI to SDK.** All wallet and project operations were already fully implemented behind `IWalletAppService` and `IProjectAppService` in the SDK. The CLI simply wires up the same DI container and calls the same app services.
+- **No `ConsoleSecurityContext`.** The SDK's `WalletSecurityContext` works as-is with the headless providers.
+- **No separate `Cli.sln`.** The project builds standalone via `dotnet build src/cli/Angor.Cli/Angor.Cli.csproj`. Can be added to a solution later.
+
+### Implementation decisions
+
+- Targeted `net10.0` (matching current SDK/design TFM) instead of `net9.0` from the original plan.
+- `LatestProjectsRequest` takes no constructor arguments (no offset/limit) — the SDK doesn't support pagination on that endpoint yet.
+- `Balance` is a simple `record Balance(long Sats)` — no confirmed/unconfirmed split at the SDK level.
+- MCP server builds a separate `IHost` and re-registers resolved SDK services from the headless `CompositionRoot` into the host's DI container.
 
 ---
 
@@ -28,46 +65,49 @@ This means the CLI project doubles as a forcing function for architectural hygie
 ```
 src/
   cli/
-    Angor.Cli/                     net9.0 console app
+    PLAN.md                        This file
+    Angor.Cli/                     net10.0 console app
       Angor.Cli.csproj
       Program.cs                   Entry point: CLI vs MCP mode
       Composition/
         CompositionRoot.cs         Headless DI (SDK + wallet, no UI)
+        CliApplicationStorage.cs   IApplicationStorage for CLI
         HeadlessPasswordProvider.cs
         HeadlessPassphraseProvider.cs
         HeadlessSeedwordsProvider.cs
-        ConsoleSecurityContext.cs
       Commands/                    CLI commands (System.CommandLine)
         Wallet/
+          WalletCommands.cs        ✅ 12 commands implemented
         Projects/
-        Founder/
-        Investor/
-        Lightning/
-        Config/
+          ProjectCommands.cs       ✅ 6 commands implemented
+        Founder/                   ⬜ Phase 4
+        Investor/                  ⬜ Phase 5
+        Lightning/                 ⬜ Phase 7
+        Config/                    ⬜ Phase 7
       McpTools/                    MCP tool wrappers
-        WalletTools.cs
-        ProjectTools.cs
-        FounderTools.cs
-        InvestorTools.cs
-        LightningTools.cs
-        ConfigTools.cs
-    Angor.Cli.Tests/               xUnit test project
+        WalletTools.cs             ✅ 12 tools implemented
+        ProjectTools.cs            ✅ 7 tools implemented
+        FounderTools.cs            ⬜ Phase 4
+        InvestorTools.cs           ⬜ Phase 5
+        LightningTools.cs          ⬜ Phase 7
+        ConfigTools.cs             ⬜ Phase 7
+    Angor.Cli.Tests/               ⬜ Phase 8
       Angor.Cli.Tests.csproj
 ```
 
 ### NuGet Packages
 
-| Package | Purpose |
-|---------|---------|
-| `System.CommandLine` (2.0.0-beta) | CLI command parsing |
-| `ModelContextProtocol` (latest) | Official C# MCP SDK |
-| `Microsoft.Extensions.DependencyInjection` | DI container |
-| `Microsoft.Extensions.Hosting` | MCP server hosting |
-| `Serilog.Sinks.File` | Log to file (console is reserved for MCP stdio) |
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `System.CommandLine` | 2.0.0-beta4.22272.1 | CLI command parsing |
+| `ModelContextProtocol` | 1.3.0 | Official C# MCP SDK |
+| `Microsoft.Extensions.DependencyInjection` | 9.0.10 (CPM) | DI container |
+| `Microsoft.Extensions.Hosting` | 9.0.10 | MCP server hosting |
+| `Serilog.Sinks.File` | 7.0.0 (CPM) | Log to file (console is reserved for MCP stdio) |
 
 ---
 
-## Phase 1: Project Scaffolding + Headless DI (2-3 hours)
+## Phase 1: Project Scaffolding + Headless DI — ✅ DONE
 
 ### 1.1 Create project files
 
@@ -123,7 +163,7 @@ else
 
 ---
 
-## Phase 2: Wallet Commands (2-3 hours)
+## Phase 2: Wallet Commands — ✅ DONE
 
 ### 2.1 CLI commands
 
@@ -160,7 +200,7 @@ Each command becomes an MCP tool. Tool names use snake_case: `wallet_create`, `w
 
 ---
 
-## Phase 3: Read-Only Project Commands (1-2 hours)
+## Phase 3: Read-Only Project Commands — ✅ DONE
 
 ### 3.1 CLI commands
 
@@ -253,7 +293,7 @@ Same as Phase 4 — review investor ViewModels for leaked business logic and pus
 
 ---
 
-## Phase 6: MCP Protocol Layer (2-3 hours)
+## Phase 6: MCP Protocol Layer — ✅ DONE
 
 ### 6.1 MCP server setup
 
@@ -367,19 +407,22 @@ Expose read-only data as MCP resources:
 
 ## Timeline
 
-| Phase | Scope | Estimate |
-|-------|-------|----------|
-| 1 | Scaffolding + headless DI | 2-3 hours |
-| 2 | Wallet commands | 2-3 hours |
-| 3 | Project commands (read-only) | 1-2 hours |
-| 4 | Founder commands | 3-4 hours |
-| 5 | Investor commands | 3-4 hours |
-| 6 | MCP protocol layer | 2-3 hours |
-| 7 | Lightning + config | 1-2 hours |
-| 8 | Testing + polish | 2-3 hours |
-| **Total** | | **~16-24 hours (~2 days)** |
+| Phase | Scope | Estimate | Status |
+|-------|-------|----------|--------|
+| 1 | Scaffolding + headless DI | 2-3 hours | ✅ Done |
+| 2 | Wallet commands | 2-3 hours | ✅ Done |
+| 3 | Project commands (read-only) | 1-2 hours | ✅ Done |
+| 4 | Founder commands | 3-4 hours | ⬜ Next |
+| 5 | Investor commands | 3-4 hours | ⬜ |
+| 6 | MCP protocol layer | 2-3 hours | ✅ Done |
+| 7 | Lightning + config | 1-2 hours | ⬜ |
+| 8 | Testing + polish | 2-3 hours | ⬜ |
+| 9 | AI coding skill | 1-2 hours | ⬜ |
+| **Total** | | **~18-27 hours (~2-3 days)** | **MVP done** |
 
-**MVP (Phases 1-3 + 6):** ~7-11 hours — wallet management + project browsing via CLI and MCP. An AI agent can explore projects, manage wallets, and check balances.
+**MVP (Phases 1-3 + 6): COMPLETE.** Wallet management + project browsing via CLI and MCP. An AI agent can explore projects, manage wallets, and check balances.
+
+**Next up: Phase 4 (Founder commands)** — this is where SDK refactoring may be needed if founder flows have business logic in ViewModels.
 
 ---
 
@@ -395,3 +438,53 @@ Expose read-only data as MCP resources:
 | Investor | ~16 |
 | Lightning | ~2 |
 | Config | ~3 |
+
+---
+
+## Phase 9: AI Coding Skill (1-2 hours)
+
+Create a skill file so that AI coding agents (OpenCode, Cursor, Claude Code, etc.) can use the Angor CLI as a tool when working on or with the Angor codebase.
+
+### 9.1 Skill definition file
+
+Create a skill markdown file (e.g. `src/cli/SKILL-ANGOR-CLI.md` or in the repo's `.opencode/skills/` directory) that an AI agent can load to learn how to use the CLI. The skill should contain:
+
+**Context:**
+- What the Angor CLI is and when to use it
+- How to build and run it: `dotnet run --project src/cli/Angor.Cli -- <command>`
+- Available command groups and their purpose
+
+**Command reference:**
+- Full list of all implemented CLI commands with arguments and example usage
+- Common workflows (create wallet, check balance, browse projects, invest, etc.)
+- Environment variables (`ANGOR_WALLET_PASSWORD`, `ANGOR_WALLET_PASSPHRASE`) and when to set them
+
+**MCP server mode:**
+- How to configure the CLI as an MCP server in `claude_desktop_config.json` or OpenCode MCP config
+- Example MCP config snippet:
+  ```json
+  {
+    "mcpServers": {
+      "angor": {
+        "command": "dotnet",
+        "args": ["run", "--project", "src/cli/Angor.Cli", "--", "--mcp"],
+        "env": { "ANGOR_WALLET_PASSWORD": "<password>" }
+      }
+    }
+  }
+  ```
+
+**Workflow examples for AI agents:**
+- "Create a testnet wallet and fund it" — step-by-step commands
+- "Browse projects and show details" — which commands to chain
+- "Invest in a project" — full founder/investor flow (once Phases 4-5 are done)
+
+### 9.2 Integration with AGENTS.md
+
+Add a section to the repo's `AGENTS.md` pointing AI agents at the CLI skill and explaining when to use the CLI vs the SDK directly (e.g. use CLI for testing/validation, use SDK for code changes).
+
+### 9.3 Acceptance criteria
+
+- An AI agent loading the skill can immediately use the CLI without needing to explore the codebase
+- MCP server config works out of the box with Claude Desktop and OpenCode
+- Skill covers all implemented commands at time of writing
