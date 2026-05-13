@@ -65,20 +65,6 @@ public class LiteDbGenericDocumentCollection<T>(IAngorDocumentDatabase database)
         return await _documentCollection.UpsertAsync(document);
     }
     
-    public async Task<Result<bool>> UpdateAsync(Expression<Func<T,string>> getDocumentId,T entity)
-    {
-        var compiledGetter = getDocumentId.Compile();
-        var document = new Document<T>(entity, compiledGetter.Invoke(entity));
-        return await _documentCollection.UpdateAsync(document);
-    }
-
-    public async Task<Result<bool>> UpsertAsync(Expression<Func<T,string>> getDocumentId,T entity)
-    {
-        var compiledGetter = getDocumentId.Compile();
-        var document = new Document<T>(entity, compiledGetter.Invoke(entity));
-        return await _documentCollection.UpsertAsync(document);
-    }
-
     public async Task<Result<bool>> DeleteAsync(string id)
     {
         return await _documentCollection.DeleteAsync(id);
