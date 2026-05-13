@@ -147,8 +147,7 @@ jobs:
         run: |
           APPIMAGE=artifacts/Angor-${{ needs.prepare.outputs.version }}-x86_64.AppImage
           chmod +x "$APPIMAGE"
-          OFFSET=$(LC_ALL=C grep -abom1 'hsqs' "$APPIMAGE" | head -1 | cut -d: -f1)
-          unsquashfs -offset "$OFFSET" "$APPIMAGE"
+          APPIMAGE_EXTRACT_AND_RUN=1 "$APPIMAGE" --appimage-extract
           sed -i 's/\r$//' squashfs-root/*.desktop
           grep -q '^Categories=' squashfs-root/*.desktop || sed -i '/^\[Desktop Entry\]/a Categories=Finance;Network;' squashfs-root/*.desktop
           ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 appimagetool -n squashfs-root "$APPIMAGE"
