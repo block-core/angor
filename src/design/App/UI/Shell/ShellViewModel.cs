@@ -856,7 +856,12 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
             v is MyProjectsView { DataContext: MyProjectsViewModel mpVm })
         {
             if (IsCreatingProject)
-                mpVm.CloseCreateWizard();
+            {
+                if (mpVm.CreateProjectVm.CurrentStep > 1)
+                    mpVm.CreateProjectVm.GoBack();
+                else
+                    mpVm.CloseCreateWizard();
+            }
             else if (IsEditProfileOpen)
                 mpVm.CloseEditProfile();
             else
@@ -894,9 +899,49 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
             return true;
         }
 
+        if (TryHandleMyProjectsPlatformBack())
+            return true;
+
         if (IsCreatingProject || IsManageFundsOpen || IsEditProfileOpen)
         {
             CloseManageFundsFromShell();
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool TryHandleMyProjectsPlatformBack()
+    {
+        if (!_viewCache.TryGetValue("My Projects", out var v) ||
+            v is not MyProjectsView { DataContext: MyProjectsViewModel mpVm })
+            return false;
+
+        if (mpVm.ShowCreateWizard)
+        {
+            if (mpVm.CreateProjectVm.CurrentStep > 1)
+                mpVm.CreateProjectVm.GoBack();
+            else
+                mpVm.CloseCreateWizard();
+
+            MobileActiveTab = "founder";
+            MobileFounderSubTab = "my-projects";
+            return true;
+        }
+
+        if (mpVm.SelectedEditProject != null)
+        {
+            mpVm.CloseEditProfile();
+            MobileActiveTab = "founder";
+            MobileFounderSubTab = "my-projects";
+            return true;
+        }
+
+        if (mpVm.SelectedManageProject != null)
+        {
+            mpVm.CloseManageProject();
+            MobileActiveTab = "founder";
+            MobileFounderSubTab = "my-projects";
             return true;
         }
 
