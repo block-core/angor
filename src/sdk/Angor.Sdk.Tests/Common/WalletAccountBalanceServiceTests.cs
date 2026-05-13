@@ -61,7 +61,7 @@ public class WalletAccountBalanceServiceTests
                 AccountBalanceInfo = balanceInfo
             }));
         _collection
-            .Setup(x => x.UpsertAsync(It.IsAny<System.Linq.Expressions.Expression<System.Func<WalletAccountBalanceInfo, string>>>(), It.IsAny<WalletAccountBalanceInfo>()))
+            .Setup(x => x.UpsertAsync(It.IsAny<System.Func<WalletAccountBalanceInfo, string>>(), It.IsAny<WalletAccountBalanceInfo>()))
             .ReturnsAsync(Result.Success(true));
 
         var sut = CreateSut();
