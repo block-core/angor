@@ -67,14 +67,14 @@ public class CreateProjectTest
         var profileImageUrl = $"https://picsum.photos/seed/{Guid.NewGuid().ToString("N")[..8]}/100/100";
 
         // Wizard input parameters — declared up front so validation can reference them
-        // These values are deliberately chosen to ONLY pass in debug mode:
-        //   - targetAmountBtc 0.0001 is below production minimum of 0.001 BTC
-        //   - investEndDate = today fails production rule "must be after today"
-        //   - penaltyDays = 0 fails production minimum of 10 days
+        // These values use protocol minimums to pass ProjectInfoValidator:
+        //   - targetAmountBtc 0.001 BTC = 100,000 sats (protocol minimum)
+        //   - investEndDate = today (debug mode only, production requires future date)
+        //   - penaltyDays = 10 (protocol minimum)
         // With debug mode ON + testnet, these constraints are relaxed.
-        var targetAmountBtc = "0.0001";
+        var targetAmountBtc = "0.001"; // protocol minimum: 100,000 sats (0.001 BTC)
         var investEndDate = DateTime.Now.Date; // same day — debug only
-        var penaltyDays = 0; // below production minimum of 10
+        var penaltyDays = 10; // protocol minimum enforced by ProjectInfoValidator
         var durationValue = "6";
         var durationUnit = "Months";
         var releaseFrequency = "Monthly";
@@ -493,7 +493,7 @@ public class CreateProjectTest
         projectDto.Name.Should().Be(projectName);
         projectDto.ShortDescription.Should().Contain(runId);
         projectDto.ProjectType.Should().Be(Angor.Shared.Models.ProjectType.Invest);
-        projectDto.TargetAmount.Should().Be(10_000L, "0.0001 BTC = 10,000 sats");
+        projectDto.TargetAmount.Should().Be(100_000L, "0.001 BTC = 100,000 sats");
         projectDto.Banner.Should().NotBeNull("Banner URI should be set");
         projectDto.Banner!.ToString().Should().Contain("picsum.photos");
         projectDto.Avatar.Should().NotBeNull("Avatar URI should be set");
@@ -531,8 +531,8 @@ public class CreateProjectTest
         TestHelpers.Log($"[STEP 8] Dates: start={projectDto.FundingStartDate:yyyy-MM-dd}, end={projectDto.FundingEndDate:yyyy-MM-dd}");
 
         // 8g. Validate penalty configuration
-        projectDto.PenaltyDuration.TotalDays.Should().BeApproximately(0, 1,
-            "Penalty duration should be ~0 days (debug mode value)");
+        projectDto.PenaltyDuration.TotalDays.Should().BeApproximately(10, 1,
+            "Penalty duration should be ~10 days (protocol minimum)");
         TestHelpers.Log($"[STEP 8] Penalty duration: {projectDto.PenaltyDuration.TotalDays} days");
 
         // ──────────────────────────────────────────────────────────────

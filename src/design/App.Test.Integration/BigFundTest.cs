@@ -305,13 +305,13 @@ public class BigFundTest
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
-        Log(profileName, "Configuring target amount, threshold, and zero penalty days...");
+        Log(profileName, "Configuring target amount, threshold, and penalty days...");
         wizardVm.TargetAmount = "1.0";
         wizardVm.ApprovalThreshold = thresholdAmountBtc;
-        wizardVm.PenaltyDays = 0;
+        wizardVm.PenaltyDays = 10; // protocol minimum enforced by ProjectInfoValidator
         wizardVm.TargetAmount.Should().Be("1.0");
         wizardVm.ApprovalThreshold.Should().Be(thresholdAmountBtc);
-        wizardVm.PenaltyDays.Should().Be(0);
+        wizardVm.PenaltyDays.Should().Be(10);
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
