@@ -6,7 +6,7 @@
              xmlns:shared="clr-namespace:AngorApp.UI.Shared"
              xmlns:avvi="https://github.com/AVVI94"
              x:Class="AngorApp.App"
-             RequestedThemeVariant="Default">
+             RequestedThemeVariant="Dark">
     <Application.Resources>
         <ResourceDictionary>
 
