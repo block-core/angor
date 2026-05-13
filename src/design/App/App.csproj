@@ -46,7 +46,7 @@
         <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)generated</CompilerGeneratedFilesOutputPath>
     </PropertyGroup>
     <PropertyGroup>
-        <SupportNpub></SupportNpub>
+        <SupportNpub>npub1n2pwqvvuaz9q67vk945l06krlzdcjnxxl4mp7dzrfye5v580x2es5luz4t</SupportNpub>
     </PropertyGroup>
     <ItemGroup>
         <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
