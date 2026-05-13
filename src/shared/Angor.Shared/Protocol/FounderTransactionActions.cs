@@ -5,7 +5,7 @@ using Blockcore.NBitcoin.DataEncoders;
 using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using System.Diagnostics;
+using System.Buffers.Binary;
 using static NBitcoin.Scripting.OutputDescriptor;
 //using Angor.Shared.Protocol;
 using IndexedTxOut = NBitcoin.IndexedTxOut;
@@ -71,7 +71,7 @@ public class FounderTransactionActions : IFounderTransactionActions
 
             var hashHex = Encoders.Hex.EncodeData(hash.ToBytes());
 
-            _logger.LogInformation($"creating sig for project={projectInfo.ProjectIdentifier}; founder-recovery-pubkey={key.PubKey.ToHex()}; stage={stageIndex}; hash={hash}; encodedHash={hashHex} signature-hex={sig}");
+            _logger.LogInformation($"creating sig for project={projectInfo.ProjectIdentifier}; founder-recovery-pubkey={key.PubKey.ToHex()}; stage={stageIndex}");
 
             var result = new TaprootPubKey(
                 Angor.Shared.Protocol.Scripts.TaprootKeyHelper.GetTaprootOutputKeyBytes(key.PubKey))
@@ -168,14 +168,10 @@ public class FounderTransactionActions : IFounderTransactionActions
             var execData = new TaprootExecutionData(inputIndex, tapScript.LeafHash) { SigHash = sigHash };
             var hash = spendingTransaction.GetSignatureHashTaproot(trxData, execData);
 
-            _logger.LogInformation($"sig hash of inputIndex {inputIndex} spendingTransaction hex {hash.ToString()}");
-
             var sig = key.SignTaprootKeySpend(hash, sigHash);
 
-            _logger.LogInformation($"sig of inputIndex {inputIndex} spendingTransaction hex {sig.ToString()}");
-
-            // todo: throw a proper exception
-            Debug.Assert(key.CreateTaprootKeyPair().PubKey.VerifySignature(hash, sig.SchnorrSignature));
+            if (!key.CreateTaprootKeyPair().PubKey.VerifySignature(hash, sig.SchnorrSignature))
+                throw new InvalidOperationException($"Taproot signature verification failed for input {inputIndex}");
 
             input.WitScript = new WitScript(
                 Op.GetPushOp(sig.ToBytes()),
@@ -298,7 +294,7 @@ public class FounderTransactionActions : IFounderTransactionActions
 
         spendingTransaction.Outputs[0].Value += stageOutput.TxOut.Value;
 
-        var input = spendingTransaction.Inputs.Add(new OutPoint(stageOutput.Transaction, stageOutput.N), null, null, new NBitcoin.Sequence(spendingTransaction.LockTime.Value));
+        var input = spendingTransaction.Inputs.Add(new OutPoint(stageOutput.Transaction, stageOutput.N), null, null, new NBitcoin.Sequence(0xFFFFFFFE));
 
         ProjectScripts scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, fundingParameters, stageTransactionInput.StageNumber - 1);
 
