@@ -150,6 +150,7 @@ jobs:
           APPIMAGE_EXTRACT_AND_RUN=1 "$APPIMAGE" --appimage-extract
           sed -i 's/\r$//' squashfs-root/*.desktop
           grep -q '^Categories=' squashfs-root/*.desktop || sed -i '/^\[Desktop Entry\]/a Categories=Finance;Network;' squashfs-root/*.desktop
+          cp squashfs-root/usr/share/icons/hicolor/256x256/apps/angor.png squashfs-root/angor.png 2>/dev/null || true
           ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 appimagetool -n squashfs-root "$APPIMAGE"
           rm -rf squashfs-root
 
@@ -190,6 +191,7 @@ jobs:
           unsquashfs -offset "$OFFSET" "$APPIMAGE"
           sed -i 's/\r$//' squashfs-root/*.desktop
           grep -q '^Categories=' squashfs-root/*.desktop || sed -i '/^\[Desktop Entry\]/a Categories=Finance;Network;' squashfs-root/*.desktop
+          cp squashfs-root/usr/share/icons/hicolor/256x256/apps/angor.png squashfs-root/angor.png 2>/dev/null || true
           ARCH=aarch64 APPIMAGE_EXTRACT_AND_RUN=1 appimagetool -n squashfs-root "$APPIMAGE"
           rm -rf squashfs-root
 
