@@ -157,7 +157,7 @@
                         </Button>
                         <TextBox Name="ShareLinkInput"
                                  IsReadOnly="True"
-                                 Text="https://angor.io/project/abc123"
+                                 Text="https://angor.io/project/angor1..."
                                  Background="{DynamicResource ShareInputBg}"
                                  BorderBrush="{DynamicResource StrokeSubtle}"
                                  CornerRadius="8"

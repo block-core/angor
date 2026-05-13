@@ -511,7 +511,7 @@ public partial class ProjectDetailView : UserControl
             var shell = this.FindAncestorOfType<ShellView>();
             if (shell?.DataContext is ShellViewModel shellVm && !shellVm.IsModalOpen)
             {
-                var modal = new ShareModal(project.ProjectName, project.ShortDescription);
+                var modal = new ShareModal(project.ProjectId, project.ProjectName, project.ShortDescription);
                 shellVm.ShowModal(modal);
                 e.Handled = true;
             }

@@ -914,7 +914,7 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
             fpVm.SelectedProject is not { } project)
             return;
 
-        ShowModal(new Shared.Controls.ShareModal(project.ProjectName, project.ShortDescription));
+        ShowModal(new Shared.Controls.ShareModal(project.ProjectId, project.ProjectName, project.ShortDescription));
     }
 
     /// <summary>
