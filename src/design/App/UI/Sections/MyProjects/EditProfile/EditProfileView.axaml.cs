@@ -577,13 +577,6 @@ public partial class EditProfileView : UserControl
         try
         {
             var nostrKeyHex = await GetNostrPrivateKeyHexAsync();
-            if (nostrKeyHex == null)
-            {
-                SetBlossomStatus(isBanner, "No wallet selected or unable to access wallet keys.", isError: true);
-                SetBlossomUploadInProgress(isBanner, false);
-                return;
-            }
-
             var result = await _blossomService.UploadAsync(serverUrl, fileBytes, contentType, nostrKeyHex);
 
             if (result.IsFailure)
@@ -660,7 +653,7 @@ public partial class EditProfileView : UserControl
     /// <summary>
     /// Gets the Nostr private key (hex) from the currently selected wallet for BUD-02 auth.
     /// </summary>
-    private async Task<string?> GetNostrPrivateKeyHexAsync()
+    private async Task<string> GetNostrPrivateKeyHexAsync()
     {
         try
         {
@@ -668,16 +661,18 @@ public partial class EditProfileView : UserControl
             var selectedWallet = walletContext.SelectedWallet;
             if (selectedWallet == null)
             {
-                _logger.LogWarning("No wallet selected for Blossom auth");
-                return null;
+                _logger.LogWarning("No wallet selected for Blossom auth, using an ephemeral key");
+                return GenerateEphemeralNostrPrivateKeyHex();
             }
 
             var seedwordsProvider = App.Services.GetRequiredService<ISeedwordsProvider>();
             var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(selectedWallet.Id.Value);
             if (sensitiveDataResult.IsFailure)
             {
-                _logger.LogWarning("Failed to get wallet sensitive data: {Error}", sensitiveDataResult.Error);
-                return null;
+                _logger.LogWarning(
+                    "Failed to get wallet sensitive data for Blossom auth: {Error}. Using an ephemeral key",
+                    sensitiveDataResult.Error);
+                return GenerateEphemeralNostrPrivateKeyHex();
             }
 
             var (words, passphrase) = sensitiveDataResult.Value;
@@ -693,10 +688,13 @@ public partial class EditProfileView : UserControl
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to derive Nostr key for Blossom auth");
-            return null;
+            _logger.LogError(ex, "Failed to derive Nostr key for Blossom auth, using an ephemeral key");
+            return GenerateEphemeralNostrPrivateKeyHex();
         }
     }
+
+    private static string GenerateEphemeralNostrPrivateKeyHex() =>
+        Convert.ToHexString(new Key().ToBytes()).ToLowerInvariant();
 
     /// <summary>Wire the Back button to navigate back to the project list.</summary>
     public void SetBackAction(Action backAction)
