@@ -1,5 +1,4 @@
-﻿using System.Linq.Expressions;
-using System.Text;
+﻿using System.Text;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Blockcore.NBitcoin;
@@ -21,11 +20,11 @@ namespace Angor.Test.DataBuilders
             return new Script(address.ScriptPubKey.ToBytes());
         }
         
-        public static Script CreateControlBlock(ProjectScripts scripts, Expression<Func<ProjectScripts,Script>> func)
+        public static Script CreateControlBlock(ProjectScripts scripts, Func<ProjectScripts, Script> func)
         {
             var treeInfo = AngorScripts.BuildTaprootSpendInfo(scripts);
 
-            var script = func.Compile().Invoke(scripts);
+            var script = func(scripts);
 
             ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(script.ToBytes()).ToTapScript(TapLeafVersion.C0));
 
