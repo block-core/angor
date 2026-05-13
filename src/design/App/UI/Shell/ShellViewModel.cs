@@ -852,21 +852,8 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
     /// </summary>
     public void CloseManageFundsFromShell()
     {
-        if (_viewCache.TryGetValue("My Projects", out var v) &&
-            v is MyProjectsView { DataContext: MyProjectsViewModel mpVm })
-        {
-            if (IsCreatingProject)
-            {
-                if (mpVm.CreateProjectVm.CurrentStep > 1)
-                    mpVm.CreateProjectVm.GoBack();
-                else
-                    mpVm.CloseCreateWizard();
-            }
-            else if (IsEditProfileOpen)
-                mpVm.CloseEditProfile();
-            else
-                mpVm.CloseManageProject();
-        }
+        _ = TryHandleMyProjectsPlatformBack();
+
         // Ensure the founder tab is set and sub-tabs re-appear
         MobileActiveTab = "founder";
         MobileFounderSubTab = "my-projects";
@@ -900,11 +887,9 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
         }
 
         if (TryHandleMyProjectsPlatformBack())
-            return true;
-
-        if (IsCreatingProject || IsManageFundsOpen || IsEditProfileOpen)
         {
-            CloseManageFundsFromShell();
+            MobileActiveTab = "founder";
+            MobileFounderSubTab = "my-projects";
             return true;
         }
 
@@ -923,25 +908,18 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
                 mpVm.CreateProjectVm.GoBack();
             else
                 mpVm.CloseCreateWizard();
-
-            MobileActiveTab = "founder";
-            MobileFounderSubTab = "my-projects";
             return true;
         }
 
         if (mpVm.SelectedEditProject != null)
         {
             mpVm.CloseEditProfile();
-            MobileActiveTab = "founder";
-            MobileFounderSubTab = "my-projects";
             return true;
         }
 
         if (mpVm.SelectedManageProject != null)
         {
             mpVm.CloseManageProject();
-            MobileActiveTab = "founder";
-            MobileFounderSubTab = "my-projects";
             return true;
         }
 
