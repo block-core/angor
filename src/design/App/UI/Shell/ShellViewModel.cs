@@ -280,6 +280,32 @@ public partial class PrototypeSettings : ReactiveObject
         }, token);
     }
 
+    /// <summary>
+    /// Immediately persists the current settings to disk, bypassing the throttle.
+    /// Called from Android lifecycle handlers (OnStop) to ensure the selected wallet ID
+    /// is saved before the process is killed.
+    /// </summary>
+    public async Task FlushAsync()
+    {
+        // Cancel any pending throttled save to avoid a race
+        saveSettingsCts?.Cancel();
+        saveSettingsCts?.Dispose();
+        saveSettingsCts = null;
+
+        Result saveResult = await _store.Save(SettingsKey, new PrototypeSettingsData
+        {
+            IsDebugMode = IsDebugMode,
+            IsDarkTheme = IsDarkTheme,
+            SelectedWalletId = SelectedWalletId,
+        });
+
+        if (saveResult.IsFailure)
+        {
+            var logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(PrototypeSettings));
+            logger.LogWarning("FlushAsync: Failed to save settings: {Error}", saveResult.Error);
+        }
+    }
+
     private class PrototypeSettingsData
     {
         public bool IsDebugMode { get; set; }
