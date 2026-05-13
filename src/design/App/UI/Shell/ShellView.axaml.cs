@@ -606,6 +606,21 @@ public partial class ShellView : UserControl
             ApplySafeAreaInsets(insets.SafeAreaPadding);
             insets.SafeAreaChanged += OnSafeAreaChanged;
         }
+
+        // On Android/iOS, enabling edge-to-edge changes the window bounds
+        // asynchronously. The first layout pass may use stale (pre-edge-to-edge)
+        // dimensions, leaving the tab bar floating above the true screen bottom.
+        // Re-read insets and force the shell Grid to re-measure once the platform
+        // has had a chance to commit the new window geometry.
+        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (insets != null)
+                    ApplySafeAreaInsets(insets.SafeAreaPadding);
+                _shellContent?.InvalidateMeasure();
+            }, Avalonia.Threading.DispatcherPriority.Render);
+        }
     }
 
     private void OnSafeAreaChanged(object? sender, Avalonia.Controls.Platform.SafeAreaChangedArgs e)
@@ -621,6 +636,12 @@ public partial class ShellView : UserControl
             _bottomTabBar.Padding = new Avalonia.Thickness(0, 0, 0, _safeAreaBottom);
         if (_shellContent != null && LayoutModeService.Instance.IsCompact)
             _shellContent.Margin = new Avalonia.Thickness(0, _safeAreaTop, 0, 0);
+
+        // Explicitly invalidate the shell Grid so star-row heights are
+        // recalculated after inset changes. The padding/margin setters above
+        // should cascade, but on Android the cascade can be swallowed when
+        // the change occurs during the initial attachment layout pass.
+        _shellContent?.InvalidateMeasure();
     }
 
     protected override void OnDetachedFromLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs e)
