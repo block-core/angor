@@ -174,7 +174,7 @@ public static class GetRecoveryStatus
             var isAboveThreshold = projectInfo.ProjectType == ProjectType.Fund
                 && investorTransactionActions.IsInvestmentAbovePenaltyThreshold(projectInfo, totalInvestmentAmount);
             
-            var isEndOfProject = projectInfo.ExpiryDate < DateTime.Now;
+            var isEndOfProject = projectInfo.ExpiryDate < DateTime.UtcNow;
 
             var response = new InvestorProjectRecoveryDto
             {
@@ -294,7 +294,7 @@ public static class GetRecoveryStatus
                                     }
                                     else
                                     {
-                                        var days = (penaltyExpieryDate - DateTime.Now).TotalDays;
+                            var days = (penaltyExpieryDate - DateTime.UtcNow).TotalDays;
                                         item.Status = days > 0
                                             ? $"Penalty, released in {days.ToString("0.0")} days"
                                             : "Penalty can be released";

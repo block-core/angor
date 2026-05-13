@@ -20,6 +20,19 @@ public class LiteDbDocumentDatabase : IAngorDocumentDatabase
         
         try
         {
+            // Force LiteDB to store and retrieve all DateTime values in UTC.
+            // LiteDB 5.x stores DateTime as BSON DateTime (UTC milliseconds)
+            // but on deserialization may return DateTimeKind.Local, silently
+            // converting UTC dates to local time.  When those dates are later
+            // used to rebuild Bitcoin taproot scripts (CLTV locktimes, expiry
+            // dates), the different Kind causes .Date to return a different
+            // calendar day in non-UTC timezones, producing a different script
+            // hash and "Witness program hash mismatch".
+            BsonMapper.Global.RegisterType<DateTime>(
+                serialize: dt => new BsonValue(dt.ToUniversalTime()),
+                deserialize: bson => bson.AsDateTime.ToUniversalTime()
+            );
+
             _database = new LiteDatabase(connectionString);
             _logger.LogInformation("Initialized LiteDB database: {ConnectionString}", connectionString);
         }
