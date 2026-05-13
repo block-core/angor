@@ -10,6 +10,7 @@ using Avalonia.LogicalTree;
 using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 using App.UI.Shared;
+using App.UI.Shared.Helpers;
 using App.UI.Shell;
 using App.UI.Shared.Services;
 using Blockcore.NBitcoin;
@@ -661,8 +662,9 @@ public partial class EditProfileView : UserControl
             var selectedWallet = walletContext.SelectedWallet;
             if (selectedWallet == null)
             {
-                _logger.LogWarning("No wallet selected for Blossom auth, using an ephemeral key");
-                return GenerateEphemeralNostrPrivateKeyHex();
+                _logger.LogWarning(
+                    "No wallet selected for Blossom auth, using an ephemeral key for this upload only");
+                return BlossomAuthKeyHelper.CreateEphemeralPrivateKeyHex();
             }
 
             var seedwordsProvider = App.Services.GetRequiredService<ISeedwordsProvider>();
@@ -672,7 +674,7 @@ public partial class EditProfileView : UserControl
                 _logger.LogWarning(
                     "Failed to get wallet sensitive data for Blossom auth: {Error}. Using an ephemeral key",
                     sensitiveDataResult.Error);
-                return GenerateEphemeralNostrPrivateKeyHex();
+                return BlossomAuthKeyHelper.CreateEphemeralPrivateKeyHex();
             }
 
             var (words, passphrase) = sensitiveDataResult.Value;
@@ -689,12 +691,9 @@ public partial class EditProfileView : UserControl
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to derive Nostr key for Blossom auth, using an ephemeral key");
-            return GenerateEphemeralNostrPrivateKeyHex();
+            return BlossomAuthKeyHelper.CreateEphemeralPrivateKeyHex();
         }
     }
-
-    private static string GenerateEphemeralNostrPrivateKeyHex() =>
-        Convert.ToHexString(new Key().ToBytes()).ToLowerInvariant();
 
     /// <summary>Wire the Back button to navigate back to the project list.</summary>
     public void SetBackAction(Action backAction)

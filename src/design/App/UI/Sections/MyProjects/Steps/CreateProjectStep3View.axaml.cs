@@ -314,8 +314,9 @@ public partial class CreateProjectStep3View : UserControl
             var selectedWallet = walletContext.SelectedWallet;
             if (selectedWallet == null)
             {
-                _logger.LogWarning("No wallet selected for Blossom auth, using an ephemeral key");
-                return GenerateEphemeralNostrPrivateKeyHex();
+                _logger.LogWarning(
+                    "No wallet selected for Blossom auth, using an ephemeral key for this upload only");
+                return BlossomAuthKeyHelper.CreateEphemeralPrivateKeyHex();
             }
 
             var seedwordsProvider = App.Services.GetRequiredService<ISeedwordsProvider>();
@@ -325,7 +326,7 @@ public partial class CreateProjectStep3View : UserControl
                 _logger.LogWarning(
                     "Failed to get wallet sensitive data for Blossom auth: {Error}. Using an ephemeral key",
                     sensitiveDataResult.Error);
-                return GenerateEphemeralNostrPrivateKeyHex();
+                return BlossomAuthKeyHelper.CreateEphemeralPrivateKeyHex();
             }
 
             var (words, passphrase) = sensitiveDataResult.Value;
@@ -342,12 +343,9 @@ public partial class CreateProjectStep3View : UserControl
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to derive Nostr key for Blossom auth, using an ephemeral key");
-            return GenerateEphemeralNostrPrivateKeyHex();
+            return BlossomAuthKeyHelper.CreateEphemeralPrivateKeyHex();
         }
     }
-
-    private static string GenerateEphemeralNostrPrivateKeyHex() =>
-        Convert.ToHexString(new Key().ToBytes()).ToLowerInvariant();
 
     /// <summary>
     /// Reset image previews to default state (called by parent on wizard reset).
