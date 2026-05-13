@@ -73,7 +73,7 @@ public static class BuildUnfundedReleaseTransaction
             var investorReleaseSigInfo = signatureLookup.Value;
             
             // Sign the release transaction
-            var unsignedReleaseTransaction = investorTransactionActions.AddSignaturesToUnfundedReleaseFundsTransaction(project.Value.ToProjectInfo(), investmentTransaction, investorReleaseSigInfo, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), investment.UnfundedReleaseAddress);
+            var unsignedReleaseTransaction = investorTransactionActions.AddSignaturesToUnfundedReleaseFundsTransaction(project.Value.ToProjectInfo(), investmentTransaction, investorReleaseSigInfo, investorPrivateKey, investment.UnfundedReleaseAddress);
 
             // Validate the signatures
             var sigCheckResult = investorTransactionActions.CheckInvestorUnfundedReleaseSignatures(project.Value.ToProjectInfo(), investmentTransaction, investorReleaseSigInfo, investment.UnfundedReleaseAddress);

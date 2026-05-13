@@ -192,7 +192,7 @@ else
 
         recoveryTransaction = SeederTransactionActions.BuildRecoverSeederFundsTransaction(context.ProjectInfo, transactionInfo.Transaction, context.ProjectInfo.PenaltyDays, testAddress.PubKey.ToHex());
 
-        var signatures = FounderTransactionActions.SignInvestorRecoveryTransactions(context.ProjectInfo, context.TransactionHex, recoveryTransaction, Encoders.Hex.EncodeData(privateFounderKey.PrivateKey.ToBytes()));
+        var signatures = FounderTransactionActions.SignInvestorRecoveryTransactions(context.ProjectInfo, context.TransactionHex, recoveryTransaction, AngorKey.From(privateFounderKey.PrivateKey));
 
         var sendInfo = new SendInfo
         {
@@ -205,11 +205,11 @@ else
 
         var fee = await _walletOperations.GetFeeEstimationAsync();
 
-        recoveryTransaction = SeederTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(context.ProjectInfo, transactionInfo.Transaction, testAddress.PubKey.ToHex(), signatures, Encoders.Hex.EncodeData(privateFounderKey.PrivateKey.ToBytes()),
+        recoveryTransaction = SeederTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(context.ProjectInfo, transactionInfo.Transaction, testAddress.PubKey.ToHex(), signatures, AngorKey.From(privateFounderKey.PrivateKey),
             Encoders.Hex.EncodeData(secret.ToBytes()));
 
         var founderTransactionRes = FounderTransactionActions.SpendFounderStage(context.ProjectInfo, new List<string>() { transactionInfo.Transaction.ToHex() }, 1,
-            testAddress.ScriptPubKey , privateFounderKey.PrivateKey.ToHex(network.Consensus.ConsensusFactory), fee.First());
+            testAddress.ScriptPubKey , AngorKey.From(privateFounderKey.PrivateKey), fee.First());
 
         founderTransaction = founderTransactionRes.Transaction;
 

@@ -231,7 +231,7 @@ public class SpendStageFundsTests
                 It.IsAny<IEnumerable<string>>(),
                 It.IsAny<int>(),
                 It.IsAny<Blockcore.Consensus.ScriptInfo.Script>(),
-                It.IsAny<string>(),
+                It.IsAny<AngorKey>(),
                 It.IsAny<FeeEstimation>()))
             .Returns(new Angor.Shared.Models.TransactionInfo
             {
@@ -322,6 +322,6 @@ public class SpendStageFundsTests
 
         _mockDerivationOperations
             .Setup(x => x.DeriveFounderPrivateKey(It.IsAny<WalletWords>(), It.IsAny<int>()))
-            .Returns(new Key());
+            .Returns(AngorKey.From(new Key()));
     }
 }

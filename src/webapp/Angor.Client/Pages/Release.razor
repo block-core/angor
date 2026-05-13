@@ -1,4 +1,4 @@
-﻿@page "/release/{ProjectIdentifier}"
+@page "/release/{ProjectIdentifier}"
 @using Angor.Shared
 @using Angor.Client.Storage
 @using Angor.Shared.Models
@@ -406,7 +406,7 @@
             var investmentTransaction = _networkConfiguration.GetNetwork().CreateTransaction(signedTransactionHex);
 
             // Sign the release transaction
-            unsignedReleaseTransaction = InvestorTransactionActions.AddSignaturesToUnfundedReleaseFundsTransaction(InvestorProject.ProjectInfo, investmentTransaction, InvestorReleaseSigInfo, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), InvestorProject.UnfundedReleaseAddress);
+            unsignedReleaseTransaction = InvestorTransactionActions.AddSignaturesToUnfundedReleaseFundsTransaction(InvestorProject.ProjectInfo, investmentTransaction, InvestorReleaseSigInfo, investorPrivateKey, InvestorProject.UnfundedReleaseAddress);
 
             // Validate the signatures
             var sigCheckResult = InvestorTransactionActions.CheckInvestorUnfundedReleaseSignatures(InvestorProject.ProjectInfo, investmentTransaction, InvestorReleaseSigInfo, InvestorProject.UnfundedReleaseAddress);

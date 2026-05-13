@@ -223,7 +223,7 @@ namespace Angor.Test.Protocol
 
             var founderTrxForSeeder1Stage1 = _founderTransactionActions.SpendFounderStage(projectInvestmentInfo,
                 founderContext.InvestmentTrasnactionsHex, 1,
-                funderReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(funderKey.ToBytes())
+                funderReceiveCoinsKey.PubKey.ScriptPubKey, funderKey
                 , _expectedFeeEstimation);
 
             TransactionValidation.ThanTheTransactionHasNoErrors(founderTrxForSeeder1Stage1.Transaction,
@@ -274,7 +274,7 @@ namespace Angor.Test.Protocol
 
             var seeder1Expierytrx = _seederTransactionActions.RecoverEndOfProjectFunds(seeder1InvTrx.ToHex(), projectInvestmentInfo,
                 1, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString(),
-                Encoders.Hex.EncodeData(seeder11Key.ToBytes()), _expectedFeeEstimation);
+                AngorKey.From(seeder11Key), _expectedFeeEstimation);
 
             Assert.NotNull(seeder1Expierytrx);
 
@@ -327,7 +327,7 @@ namespace Angor.Test.Protocol
             var investor1Expierytrx = _investorTransactionActions.RecoverEndOfProjectFunds(investorInvTrx.ToHex(),
                 projectInvestmentInfo,
                 1, seeder1ReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString(),
-                Encoders.Hex.EncodeData(seeder11Key.ToBytes()), _expectedFeeEstimation);
+                AngorKey.From(seeder11Key), _expectedFeeEstimation);
 
             Assert.NotNull(investor1Expierytrx);
 
@@ -384,7 +384,7 @@ namespace Angor.Test.Protocol
 
             var investorExpierytrx = _investorTransactionActions.RecoverEndOfProjectFunds(investorInvTrx.ToHex(),
                 projectInvestmentInfo, 1, investorReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString(),
-                Encoders.Hex.EncodeData(investorKey.ToBytes()), _expectedFeeEstimation);
+                AngorKey.From(investorKey), _expectedFeeEstimation);
 
             Assert.NotNull(investorExpierytrx);
 
@@ -447,11 +447,11 @@ namespace Angor.Test.Protocol
 
             var founderSignatures = _founderTransactionActions.SignInvestorRecoveryTransactions(investorContext.ProjectInfo,
                 investmentTransaction.ToHex(), recoveryTransaction,
-                Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
+                founderRecoveryPrivateKey);
 
             var signedRecoveryTransaction = _seederTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(investorContext.ProjectInfo,
                 investmentTransaction, seederFundsRecoveryKey.PubKey.ToHex(),
-                founderSignatures, Encoders.Hex.EncodeData(seederKey.ToBytes()), Encoders.Hex.EncodeData(seederSecret.ToBytes()));
+                founderSignatures, AngorKey.From(seederKey), Encoders.Hex.EncodeData(seederSecret.ToBytes()));
 
             // Adding the input that will be spent as fee 
             signedRecoveryTransaction.Inputs.Add(new Blockcore.Consensus.TransactionInfo.TxIn(new Blockcore.Consensus.TransactionInfo.OutPoint(Blockcore.NBitcoin.uint256.Zero, 0))); //Add fee to the transaction
@@ -515,14 +515,14 @@ namespace Angor.Test.Protocol
 
             var founderSignatures = _founderTransactionActions.SignInvestorRecoveryTransactions(investorContext.ProjectInfo,
                 investmentTransaction.ToHex(), recoveryTransaction,
-                Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
+                founderRecoveryPrivateKey);
 
             var sigCheckResult = _investorTransactionActions.CheckInvestorRecoverySignatures(investorContext.ProjectInfo, investmentTransaction, founderSignatures);
             Assert.True(sigCheckResult, "failed to validate the founders signatures");
 
             var signedRecoveryTransaction = _investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(investorContext.ProjectInfo,
                 investmentTransaction,
-                founderSignatures, Encoders.Hex.EncodeData(investorKey.ToBytes()));
+                founderSignatures, AngorKey.From(investorKey));
 
             List<Coin> coins = new();
             foreach (var indexedTxOut in investmentTransaction.Outputs.AsIndexedOutputs().Where(w => !w.TxOut.ScriptPubKey.IsUnspendable))
@@ -540,7 +540,7 @@ namespace Angor.Test.Protocol
 
             // recover the coins after the penalty
             var releaseTransaction = _investorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(investorContext.ProjectInfo, investmentTransaction, signedRecoveryTransaction,
-                investorContext.ChangeAddress, _expectedFeeEstimation, Encoders.Hex.EncodeData(investorKey.ToBytes()));
+                investorContext.ChangeAddress, _expectedFeeEstimation, AngorKey.From(investorKey));
 
             coins = new();
             foreach (var indexedTxOut in signedRecoveryTransaction.Outputs.AsIndexedOutputs())
@@ -618,7 +618,7 @@ namespace Angor.Test.Protocol
                 var investorRecoverFundsNoPenalty = _investorTransactionActions.RecoverRemainingFundsWithOutPenalty(
                     investorInvTrx.ToHex(), projectInvestmentInfo, startStageNumber,
                     investorReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(Networks.Bitcoin.Testnet()).ToString(),
-                    Encoders.Hex.EncodeData(investorKey.ToBytes()), _expectedFeeEstimation, partSecrets
+                    AngorKey.From(investorKey), _expectedFeeEstimation, partSecrets
                 );
 
                 Assert.NotNull(investorRecoverFundsNoPenalty);
@@ -683,10 +683,10 @@ namespace Angor.Test.Protocol
             // Sign the release transaction
             var founderSignatures = _founderTransactionActions.SignInvestorRecoveryTransactions(investorContext.ProjectInfo,
                 investmentTransaction.ToHex(), releaseTransaction,
-                Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
+                founderRecoveryPrivateKey);
 
             var signedReleaseTransaction = _investorTransactionActions.AddSignaturesToUnfundedReleaseFundsTransaction(investorContext.ProjectInfo,
-                investmentTransaction, founderSignatures, Encoders.Hex.EncodeData(investorKey.ToBytes()), investorReleasePubKey);
+                investmentTransaction, founderSignatures, AngorKey.From(investorKey), investorReleasePubKey);
 
             // Validate the signatures
             var sigCheckResult = _investorTransactionActions.CheckInvestorUnfundedReleaseSignatures(investorContext.ProjectInfo, investmentTransaction, founderSignatures, investorReleasePubKey);
@@ -772,7 +772,7 @@ namespace Angor.Test.Protocol
                 projectInvestmentInfo,
                 1,
                 investorReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString(),
-                Encoders.Hex.EncodeData(investorKey.ToBytes()), _expectedFeeEstimation);
+                AngorKey.From(investorKey), _expectedFeeEstimation);
 
             Assert.NotNull(investor1Expierytrx);
 
@@ -844,7 +844,7 @@ namespace Angor.Test.Protocol
             var investor1Expierytrx = _investorTransactionActions.RecoverEndOfProjectFunds(investorInvTrx.ToHex(),
            projectInvestmentInfo,
              1, investorReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString(),
-             Encoders.Hex.EncodeData(investorKey.ToBytes()), _expectedFeeEstimation);
+              AngorKey.From(investorKey), _expectedFeeEstimation);
 
             Assert.NotNull(investor1Expierytrx);
 
@@ -947,7 +947,7 @@ namespace Angor.Test.Protocol
                 projectInfo,
                 2, // Stage 1
                 investor1ReceiveAddress,
-                Encoders.Hex.EncodeData(investor1PrivateKey),
+                AngorKey.FromHex(Encoders.Hex.EncodeData(investor1PrivateKey)),
                 _expectedFeeEstimation);
 
             Assert.NotNull(investor1RecoverStage1);
@@ -967,7 +967,7 @@ namespace Angor.Test.Protocol
                     projectInfo,
                     investor2Trx.ToHex(),
                     investor2RecoveryTrx,
-                    Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
+                    founderRecoveryPrivateKey);
 
             Assert.NotNull(founderSignatures);
             Assert.NotEmpty(founderSignatures.Signatures);
@@ -981,7 +981,7 @@ namespace Angor.Test.Protocol
                 projectInfo,
                 investor2Trx,
                 founderSignatures,
-                Encoders.Hex.EncodeData(investor2PrivateKey));
+                AngorKey.FromHex(Encoders.Hex.EncodeData(investor2PrivateKey)));
 
             Assert.NotNull(investor2SignedRecoveryTrx);
 
@@ -1005,7 +1005,7 @@ namespace Angor.Test.Protocol
                     investor2SignedRecoveryTrx,
                     investor2ReceiveAddress,
                     _expectedFeeEstimation,
-                    Encoders.Hex.EncodeData(investor2PrivateKey));
+                    AngorKey.FromHex(Encoders.Hex.EncodeData(investor2PrivateKey)));
 
             Assert.NotNull(investor2RecoverStage1);
             Assert.NotNull(investor2RecoverStage1.Transaction);
@@ -1020,7 +1020,7 @@ namespace Angor.Test.Protocol
                     projectInfo,
                     allInvestmentHexes,
                     founderReceiveAddress,
-                    Encoders.Hex.EncodeData(founderKey.ToBytes()),
+                    founderKey,
                     _expectedFeeEstimation);
 
             Assert.NotNull(founderSpendStage2);
@@ -1098,7 +1098,7 @@ namespace Angor.Test.Protocol
                 new[] { investorInvTrx.ToHex() },
                 1,
                 founderReceiveAddress,
-                Encoders.Hex.EncodeData(founderKey.ToBytes()),
+                founderKey,
                 _expectedFeeEstimation);
 
             Assert.NotNull(founderSpendStage1);
@@ -1112,7 +1112,7 @@ namespace Angor.Test.Protocol
                           projectInvestmentInfo,
                        2,
              investorReceiveCoinsKey.PubKey.ScriptPubKey.WitHash.GetAddress(network).ToString(),
-                Encoders.Hex.EncodeData(investorKey.ToBytes()),
+                AngorKey.From(investorKey),
                  _expectedFeeEstimation);
 
             Assert.NotNull(investor1RecoverStage2);

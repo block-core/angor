@@ -1,4 +1,4 @@
-﻿@page "/unfunded/{ProjectIdentifier}"
+@page "/unfunded/{ProjectIdentifier}"
 @using Angor.Shared
 @using Angor.Client.Storage
 @using Angor.Shared.Models
@@ -619,7 +619,7 @@
         try
         {
             var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(words, FounderProject.ProjectInfo.FounderKey);
-            var signatureInfo = CreateReleaseSignatures(signature.SignRecoveryRequest?.InvestmentTransactionHex, FounderProject.ProjectInfo, Encoders.Hex.EncodeData(key.ToBytes()), signature.SignRecoveryRequest?.UnfundedReleaseAddress ?? signature.SignRecoveryRequest.UnfundedReleaseKey);
+            var signatureInfo = CreateReleaseSignatures(signature.SignRecoveryRequest?.InvestmentTransactionHex, FounderProject.ProjectInfo, key, signature.SignRecoveryRequest?.UnfundedReleaseAddress ?? signature.SignRecoveryRequest.UnfundedReleaseKey);
 
             var sigJson = serializer.Serialize(signatureInfo);
 
@@ -639,7 +639,7 @@
         }
     }
 
-    private SignatureInfo CreateReleaseSignatures(string transactionHex, ProjectInfo info, string founderSigningPrivateKey, string investorReleaseAddress)
+    private SignatureInfo CreateReleaseSignatures(string transactionHex, ProjectInfo info, AngorKey founderSigningPrivateKey, string investorReleaseAddress)
     {
         var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(transactionHex);
 

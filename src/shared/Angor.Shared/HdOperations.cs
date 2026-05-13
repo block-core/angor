@@ -16,7 +16,9 @@ public interface IHdOperations
     PubKey GeneratePublicKey(ExtPubKey accountExtPubKey, int index, bool isChange);
     string CreateHdPath(int purpose, int coinType, int accountIndex, bool isChange, int addressIndex);
     string DerivePublicKey(string mnemonic, string? passphrase, string hdPath);
-    string DerivePrivateKey(string mnemonic, string? passphrase, string hdPath);
+    AngorKey DerivePrivateKey(string mnemonic, string? passphrase, string hdPath);
+    string DerivePublicKey(ExtKey extKey, string hdPath);
+    AngorKey DerivePrivateKey(ExtKey extKey, string hdPath);
 }
 
 public class HdOperations : IHdOperations
@@ -290,13 +292,25 @@ public class HdOperations : IHdOperations
             return derivedKey.PrivateKey.PubKey.ToHex();
         }
 
-        public string DerivePrivateKey(string mnemonic, string? passphrase, string hdPath)
+        public AngorKey DerivePrivateKey(string mnemonic, string? passphrase, string hdPath)
         {
             ExtKey.UseBCForHMACSHA512 = true;
             Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
 
             var extendedKey = GetExtendedKey(mnemonic, passphrase);
             var derivedKey = extendedKey.Derive(new KeyPath(hdPath));
-            return Blockcore.NBitcoin.DataEncoders.Encoders.Hex.EncodeData(derivedKey.PrivateKey.ToBytes());
+            return AngorKey.From(derivedKey.PrivateKey);
+        }
+
+        public string DerivePublicKey(ExtKey extKey, string hdPath)
+        {
+            var derivedKey = extKey.Derive(new KeyPath(hdPath));
+            return derivedKey.PrivateKey.PubKey.ToHex();
+        }
+
+        public AngorKey DerivePrivateKey(ExtKey extKey, string hdPath)
+        {
+            var derivedKey = extKey.Derive(new KeyPath(hdPath));
+            return AngorKey.From(derivedKey.PrivateKey);
         }
     }

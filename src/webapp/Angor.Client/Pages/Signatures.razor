@@ -1,4 +1,4 @@
-﻿@page "/signatures/{ProjectIdentifier}"
+@page "/signatures/{ProjectIdentifier}"
 @using Angor.Shared
 @using Angor.Client.Storage
 @using Angor.Shared.Models
@@ -700,7 +700,7 @@
         try
         {
             var key = DerivationOperations.DeriveFounderRecoveryPrivateKey(words, FounderProject.ProjectInfo.FounderKey);
-            var signatureInfo = CreateRecoverySignatures(signature.SignRecoveryRequest.InvestmentTransactionHex, FounderProject.ProjectInfo, Encoders.Hex.EncodeData(key.ToBytes()));
+            var signatureInfo = CreateRecoverySignatures(signature.SignRecoveryRequest.InvestmentTransactionHex, FounderProject.ProjectInfo, key);
 
             var sigJson = serializer.Serialize(signatureInfo);
 
@@ -724,7 +724,7 @@
         }
     }
 
-    private SignatureInfo CreateRecoverySignatures(string transactionHex, ProjectInfo info, string founderSigningPrivateKey)
+    private SignatureInfo CreateRecoverySignatures(string transactionHex, ProjectInfo info, AngorKey founderSigningPrivateKey)
     {
         var investorTrx = _networkConfiguration.GetNetwork().CreateTransaction(transactionHex);
 

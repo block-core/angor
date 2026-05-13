@@ -37,14 +37,14 @@ public class FounderTransactionActions : IFounderTransactionActions
     }
 
     public SignatureInfo SignInvestorRecoveryTransactions(ProjectInfo projectInfo, string investmentTrxHex,
-        Transaction recoveryTransaction, string founderPrivateKey)
+        Transaction recoveryTransaction, AngorKey founderPrivateKey)
     {
         var network = _networkConfiguration.GetNetwork();
         var nbitcoinNetwork = NetworkMapper.Map(network);
         var nbitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork);
         var nbitcoinInvestmentTransaction = NBitcoin.Transaction.Parse(investmentTrxHex, nbitcoinNetwork);
 
-        var key = new Key(Encoders.Hex.DecodeData(founderPrivateKey));
+        var key = founderPrivateKey;
         const TaprootSigHash sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
 
         var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, network.CreateTransaction(investmentTrxHex));
@@ -84,14 +84,14 @@ public class FounderTransactionActions : IFounderTransactionActions
         return info;
     }
 
-    public TransactionInfo SpendFounderStage(ProjectInfo projectInfo, IEnumerable<string> investmentTransactionsHex, int stageNumber, Script founderRecieveAddress, string founderPrivateKey, FeeEstimation fee)
+    public TransactionInfo SpendFounderStage(ProjectInfo projectInfo, IEnumerable<string> investmentTransactionsHex, int stageNumber, Script founderRecieveAddress, AngorKey founderPrivateKey, FeeEstimation fee)
     {
         // For Invest projects, all transactions use the same stage number
         var stageTransactionInputs = investmentTransactionsHex.Select(trx => new StageTransactionInput(trx, stageNumber)).ToList();
         return SpendFounderStage(projectInfo, stageTransactionInputs, founderRecieveAddress, founderPrivateKey, fee);
     }
 
-    public TransactionInfo SpendFounderStage(ProjectInfo projectInfo, IEnumerable<StageTransactionInput> stageTransactionInput, Script founderRecieveAddress, string founderPrivateKey, FeeEstimation fee)
+    public TransactionInfo SpendFounderStage(ProjectInfo projectInfo, IEnumerable<StageTransactionInput> stageTransactionInput, Script founderRecieveAddress, AngorKey founderPrivateKey, FeeEstimation fee)
     {
         // H4: Reject fee rates below the protocol minimum — a sub-minimum rate
         // indicates a bug in fee estimation or a unit mismatch. FeeRate must be in sat/kB.
@@ -161,7 +161,7 @@ public class FounderTransactionActions : IFounderTransactionActions
         // Step 4 - sign the taproot inputs
         var trxData = spendingTransaction.PrecomputeTransactionData(stageOutputs.Select(_ => _.TxOut).ToArray());
         const TaprootSigHash sigHash = TaprootSigHash.All;
-        var key = new Key(Encoders.Hex.DecodeData(founderPrivateKey));
+        var key = founderPrivateKey;
 
         var inputIndex = 0;
         foreach (var input in spendingTransaction.Inputs)

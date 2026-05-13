@@ -220,7 +220,7 @@ namespace Angor.Test
 
                 // Assert
                 results.Should().NotBeNull().And.NotContainNulls();
-                results.Should().OnlyContain(r => r is Key);
+                results.Should().OnlyContain(r => r is AngorKey);
             }
             
             [Fact]

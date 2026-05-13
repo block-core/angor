@@ -15,7 +15,7 @@ public interface IBoltzClaimService
     /// </summary>
     Task<Result<BoltzClaimResult>> ClaimSwapAsync(
         BoltzSubmarineSwap swap,
-        string claimPrivateKeyHex,
+        AngorKey claimPrivateKey,
         string lockupTransactionHex,
         int lockupOutputIndex = 0,
         long feeRate = 2);
