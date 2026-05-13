@@ -5,6 +5,7 @@ using Angor.Sdk.Funding.Shared;
 using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
+using Angor.Shared.Protocol;
 using Angor.Shared.Services;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
@@ -132,6 +133,13 @@ public static class CreateProjectInfo
                 default:
                     tsc.SetResult(Result.Failure<string>("Unsupported project type"));
                     return await tsc.Task;
+            }
+
+            // Validate protocol-level constraints before publishing
+            var validationError = ProjectInfoValidator.Validate(projectInfo);
+            if (validationError != null)
+            {
+                return Result.Failure<string>($"Project validation failed: {validationError}");
             }
 
             var resultId = await relayService.AddProjectAsync(projectInfo, nostrKeyHex,

@@ -108,8 +108,11 @@ public class SeederTransactionActions : ISeederTransactionActions
     public TransactionInfo RecoverEndOfProjectFunds(string investmentTransactionHex, ProjectInfo projectInfo, int stageIndex, string investorReceiveAddress,
         string investorPrivateKey, FeeEstimation feeEstimation)
     {
+        // H4: Enforce minimum fee rate
+        var effectiveFeeRate = Math.Max(feeEstimation.FeeRate, ProtocolConstants.MinFeeRateSatsPerKb);
+
         return _spendingTransactionBuilder.BuildRecoverInvestorRemainingFundsInProject(investmentTransactionHex, projectInfo, stageIndex,
-            investorReceiveAddress, investorPrivateKey, new FeeRate(new NBitcoin.Money(feeEstimation.FeeRate)),
+            investorReceiveAddress, investorPrivateKey, new FeeRate(new NBitcoin.Money(effectiveFeeRate)),
             _ =>
             {
                 var controlBlock = _taprootScriptBuilder.CreateControlBlock(_, script => script.EndOfProject);

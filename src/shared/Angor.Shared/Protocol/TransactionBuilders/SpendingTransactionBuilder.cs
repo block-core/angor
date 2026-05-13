@@ -25,6 +25,23 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
         Func<ProjectScripts, WitScript> buildWitScriptWithSigPlaceholder,
         Func<WitScript, TaprootSignature, WitScript> addSignatureToWitScript)
     {
+        // M1: Validate inputs
+        if (string.IsNullOrWhiteSpace(investmentTransactionHex))
+            throw new ArgumentException("Investment transaction hex cannot be null or empty.", nameof(investmentTransactionHex));
+
+        if (string.IsNullOrWhiteSpace(receiveAddress))
+            throw new ArgumentException("Receive address cannot be null or empty.", nameof(receiveAddress));
+
+        if (string.IsNullOrWhiteSpace(privateKey))
+            throw new ArgumentException("Private key cannot be null or empty.", nameof(privateKey));
+
+        if (startStageNumber < 1)
+            throw new ArgumentOutOfRangeException(nameof(startStageNumber), "Stage number must be at least 1.");
+
+        // H4: Enforce minimum fee rate to prevent fee-rate sniping
+        if (feeRate.FeePerK.Satoshi < ProtocolConstants.MinFeeRateSatsPerKb)
+            feeRate = new FeeRate(Money.Satoshis(ProtocolConstants.MinFeeRateSatsPerKb));
+
         var network = _networkConfiguration.GetNetwork();
 
         // We'll use the NBitcoin lib because its a taproot spend
@@ -35,6 +52,11 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
         var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, network.CreateTransaction(investmentTransactionHex));
 
         var investmentTrxOutputs = GetInvestorTransactionData(investmentTransactionHex, startStageNumber, projectInfo);
+
+        // M1: Validate that we found Taproot outputs to spend
+        if (investmentTrxOutputs.Count == 0)
+            throw new InvalidOperationException(
+                $"No Taproot outputs found starting at stage {startStageNumber} in the investment transaction.");
 
         // Determine the effective expiry date
         // If expiryDateOverride is provided, use it; otherwise, use the project's standard ExpiryDate
@@ -81,6 +103,18 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
             feeToReduce = minimumFee;
 
         spendingTrx.Outputs.Single().Value -= feeToReduce;
+
+        // M1: Validate the output is above dust after fee deduction
+        var outputValue = spendingTrx.Outputs.Single().Value;
+        if (outputValue.Satoshi <= 0)
+            throw new InvalidOperationException(
+                $"Recovery output is non-positive ({outputValue.Satoshi} sats) after fee deduction of {feeToReduce.Satoshi} sats. " +
+                $"The stage funds are insufficient to cover the transaction fee.");
+
+        if (outputValue.Satoshi < ProtocolConstants.DustThresholdSats)
+            throw new InvalidOperationException(
+                $"Recovery output ({outputValue.Satoshi} sats) is below the dust threshold of {ProtocolConstants.DustThresholdSats} sats " +
+                $"after fee deduction. The stage funds are insufficient for an economically viable recovery.");
 
         // Step 4 - sign the taproot inputs
         var trxData = spendingTrx.PrecomputeTransactionData(investmentTrxOutputs.Select(s => s.TxOut).ToArray());

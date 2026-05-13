@@ -94,6 +94,9 @@ public class FounderTransactionActions : IFounderTransactionActions
 
     public TransactionInfo SpendFounderStage(ProjectInfo projectInfo, IEnumerable<StageTransactionInput> stageTransactionInput, Script founderRecieveAddress, string founderPrivateKey, FeeEstimation fee)
     {
+        // H4: Enforce minimum fee rate to prevent fee-rate sniping
+        var effectiveFeeRate = Math.Max(fee.FeeRate, ProtocolConstants.MinFeeRateSatsPerKb);
+
         var network = _networkConfiguration.GetNetwork();
         var nbitcoinNetwork = NetworkMapper.Map(network);
         var spendingTransaction = nbitcoinNetwork.CreateTransaction();
@@ -133,12 +136,12 @@ public class FounderTransactionActions : IFounderTransactionActions
         }
 
         var txSize = spendingTransaction.GetVirtualSize();
-        var minimumFee = new FeeRate(Money.Satoshis(1100)).GetFee(txSize); //1000 sats per kilobyte
+        var minimumFee = new FeeRate(Money.Satoshis(ProtocolConstants.MinFeeRateSatsPerKb)).GetFee(txSize);
 
         var totalFee = nbitcoinNetwork
             .CreateTransactionBuilder()
             .AddCoins(stageOutputs.Select(_ => _.ToCoin()))
-            .EstimateFees(spendingTransaction, new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(fee.FeeRate)));
+            .EstimateFees(spendingTransaction, new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(effectiveFeeRate)));
 
         var appliedFee = totalFee < minimumFee ? minimumFee : totalFee;
 
