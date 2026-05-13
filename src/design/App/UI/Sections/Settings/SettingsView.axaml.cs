@@ -158,6 +158,7 @@ public partial class SettingsView : UserControl, ISectionView
                 : Avalonia.Layout.HorizontalAlignment.Center;
             _networkModalCard.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
             _networkModalCard.MaxWidth = isCompact ? double.PositiveInfinity : 500;
+            _networkModalCard.MaxHeight = isCompact ? double.PositiveInfinity : 700;
         }
 
         if (_networkModalHeader != null)

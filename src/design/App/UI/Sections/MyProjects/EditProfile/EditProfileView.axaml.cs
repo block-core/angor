@@ -31,6 +31,7 @@ public partial class EditProfileView : UserControl
 
     private IDisposable? _layoutSubscription;
     private IDisposable? _tabSubscription;
+    private EditProfileViewModel? _subscribedVm;
 
     // Blossom upload state
     private byte[]? _picFileBytes;
@@ -104,6 +105,8 @@ public partial class EditProfileView : UserControl
             Classes.Add("Mobile");
 
         WireControls();
+
+        DataContextChanged += OnDataContextChanged;
 
         _layoutSubscription = LayoutModeService.Instance
             .WhenAnyValue(x => x.IsCompact)
@@ -397,32 +400,52 @@ public partial class EditProfileView : UserControl
     protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
     {
         base.OnAttachedToLogicalTree(e);
+        SubscribeToViewModel();
+    }
 
-        if (DataContext is EditProfileViewModel vm)
-        {
-            // Subscribe to toast notifications
-            vm.ToastRequested += OnToastRequested;
-
-            // Subscribe to active tab changes to keep visuals in sync
-            _tabSubscription = vm.WhenAnyValue(x => x.ActiveTab)
-                .Subscribe(tab => UpdateTabVisuals(tab ?? "profile"));
-
-            // Show initial tab
-            UpdateTabVisuals(vm.ActiveTab ?? "profile");
-        }
+    private void OnDataContextChanged(object? sender, EventArgs e)
+    {
+        SubscribeToViewModel();
     }
 
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
     {
-        _tabSubscription?.Dispose();
-        _tabSubscription = null;
         _layoutSubscription?.Dispose();
         _layoutSubscription = null;
-
-        if (DataContext is EditProfileViewModel vm)
-            vm.ToastRequested -= OnToastRequested;
+        DataContextChanged -= OnDataContextChanged;
+        UnsubscribeFromViewModel();
 
         base.OnDetachedFromLogicalTree(e);
+    }
+
+    private void SubscribeToViewModel()
+    {
+        if (Vm == _subscribedVm)
+            return;
+
+        UnsubscribeFromViewModel();
+
+        if (Vm == null)
+            return;
+
+        _subscribedVm = Vm;
+        _subscribedVm.ToastRequested += OnToastRequested;
+
+        _tabSubscription = _subscribedVm.WhenAnyValue(x => x.ActiveTab)
+            .Subscribe(tab => UpdateTabVisuals(tab ?? "profile"));
+
+        UpdateTabVisuals(_subscribedVm.ActiveTab ?? "profile");
+    }
+
+    private void UnsubscribeFromViewModel()
+    {
+        _tabSubscription?.Dispose();
+        _tabSubscription = null;
+
+        if (_subscribedVm != null)
+            _subscribedVm.ToastRequested -= OnToastRequested;
+
+        _subscribedVm = null;
     }
 
     private void OnToastRequested(string message)

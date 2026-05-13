@@ -24,6 +24,9 @@ public partial class FindProjectsView : UserControl, ISectionView
     private Panel? _investPanel;
     private ScrollableView? _projectListScrollable;
     private ScrollViewer? _listScrollViewer;
+    private Grid? _headerGrid;
+    private Border? _searchContainer;
+    private TextBlock? _searchErrorText;
 
     // Lazy-mounted drill-down children — materialised on first visibility
     // to avoid the ~1800-line XAML inflate cost on the initial tab switch.
@@ -48,6 +51,9 @@ public partial class FindProjectsView : UserControl, ISectionView
         _detailPanel = this.FindControl<Panel>("ProjectDetailPanel");
         _investPanel = this.FindControl<Panel>("InvestPagePanel");
         _projectListScrollable = this.FindControl<ScrollableView>("ProjectListPanel");
+        _headerGrid = this.FindControl<Grid>("FindProjectsHeaderGrid");
+        _searchContainer = this.FindControl<Border>("SearchContainer");
+        _searchErrorText = this.FindControl<TextBlock>("SearchErrorText");
 
         // Wire refresh button
         var refreshBtn = this.FindControl<Button>("RefreshProjectsButton");
@@ -122,6 +128,44 @@ public partial class FindProjectsView : UserControl, ISectionView
             _projectListScrollable.ContentPadding = isCompact
                 ? new Thickness(16, 16, 16, 96)
                 : new Thickness(24);
+
+        if (_headerGrid == null || _searchContainer == null || _searchErrorText == null)
+            return;
+
+        if (isCompact)
+        {
+            _headerGrid.ColumnDefinitions[0].Width = GridLength.Star;
+            _headerGrid.ColumnDefinitions[1].Width = new GridLength(0);
+            _headerGrid.ColumnDefinitions[2].Width = GridLength.Auto;
+            _headerGrid.RowDefinitions[1].Height = GridLength.Auto;
+
+            Grid.SetRow(_searchContainer, 1);
+            Grid.SetColumn(_searchContainer, 0);
+            Grid.SetColumnSpan(_searchContainer, 3);
+            _searchContainer.Margin = new Thickness(0, 12, 0, 0);
+
+            Grid.SetRow(_searchErrorText, 1);
+            Grid.SetColumn(_searchErrorText, 0);
+            Grid.SetColumnSpan(_searchErrorText, 3);
+            _searchErrorText.Margin = new Thickness(0, 60, 0, 0);
+        }
+        else
+        {
+            _headerGrid.ColumnDefinitions[0].Width = GridLength.Auto;
+            _headerGrid.ColumnDefinitions[1].Width = GridLength.Star;
+            _headerGrid.ColumnDefinitions[2].Width = GridLength.Auto;
+            _headerGrid.RowDefinitions[1].Height = GridLength.Auto;
+
+            Grid.SetRow(_searchContainer, 0);
+            Grid.SetColumn(_searchContainer, 1);
+            Grid.SetColumnSpan(_searchContainer, 1);
+            _searchContainer.Margin = new Thickness(16, 0);
+
+            Grid.SetRow(_searchErrorText, 1);
+            Grid.SetColumn(_searchErrorText, 1);
+            Grid.SetColumnSpan(_searchErrorText, 1);
+            _searchErrorText.Margin = new Thickness(16, 4, 0, 0);
+        }
     }
 
     private void SubscribeToVisibility()

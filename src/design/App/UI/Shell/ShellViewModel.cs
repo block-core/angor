@@ -855,6 +855,8 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
         if (_viewCache.TryGetValue("My Projects", out var v) &&
             v is MyProjectsView { DataContext: MyProjectsViewModel mpVm })
         {
+            if (IsCreatingProject && mpVm.TryGoBackInCreateWizard())
+                return;
             if (IsCreatingProject)
                 mpVm.CloseCreateWizard();
             else if (IsEditProfileOpen)

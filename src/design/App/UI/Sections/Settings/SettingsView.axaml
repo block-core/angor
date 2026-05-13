@@ -53,6 +53,10 @@
         <Style Selector="Border.SettingsCheckbox:pointerover">
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
         </Style>
+        <Style Selector="CheckBox.NetworkConfirmCheckbox /template/ Border#NormalRectangle">
+            <Setter Property="BorderBrush" Value="{DynamicResource StrokeSubtle}" />
+            <Setter Property="BorderThickness" Value="2" />
+        </Style>
     </UserControl.Styles>
 
     <Panel AutomationProperties.AutomationId="SettingsRootPanel">
@@ -761,9 +765,10 @@
                     </Transitions>
                 </Border.Transitions>
 
-                <StackPanel>
+                <Grid RowDefinitions="Auto,*,Auto">
                     <!-- Modal header: Vue .modal-header -->
                     <Border Name="NetworkModalHeader"
+                            Grid.Row="0"
                             BorderBrush="{DynamicResource Stroke}"
                             BorderThickness="0,0,0,1"
                             Padding="24">
@@ -790,8 +795,9 @@
                     </Border>
 
                     <!-- Modal content -->
-                    <Border Name="NetworkModalBody" Padding="24">
-                        <StackPanel Name="NetworkModalBodyStack" Spacing="20">
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <Border Name="NetworkModalBody" Padding="24">
+                            <StackPanel Name="NetworkModalBodyStack" Spacing="20">
                             <!-- Warning banner: Vue .network-warning-container -->
                             <Border Background="{DynamicResource NetworkWarningBg}"
                                     BorderBrush="{DynamicResource NetworkWarningBorder}"
@@ -924,7 +930,8 @@
 
                             <!-- Confirmation checkbox: Vue .network-confirmation-checkbox -->
                             <DockPanel Name="NetworkConfirmationRow">
-                                <CheckBox IsChecked="{Binding NetworkChangeConfirmed, Mode=TwoWay}"
+                                <CheckBox Classes="NetworkConfirmCheckbox"
+                                          IsChecked="{Binding NetworkChangeConfirmed, Mode=TwoWay}"
                                           DockPanel.Dock="Left"
                                           Margin="0,0,12,0"
                                           VerticalAlignment="Top" />
@@ -935,11 +942,13 @@
                                            LineHeight="21"
                                            VerticalAlignment="Top" />
                             </DockPanel>
-                        </StackPanel>
-                    </Border>
+                            </StackPanel>
+                        </Border>
+                    </ScrollViewer>
 
                     <!-- Modal footer: Vue .modal-footer -->
                     <Border Name="NetworkModalFooter"
+                            Grid.Row="2"
                             BorderBrush="{DynamicResource Stroke}"
                             BorderThickness="0,1,0,0"
                             Padding="24,20">
@@ -980,7 +989,7 @@
                             </Button>
                         </StackPanel>
                     </Border>
-                </StackPanel>
+                </Grid>
             </Border>
         </Border>
 

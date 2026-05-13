@@ -6,11 +6,28 @@
              xmlns:controls="clr-namespace:App.UI.Shared.Controls"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="800"
-             x:Class="App.UI.Sections.FindProjects.FindProjectsView"
-             x:DataType="fp:FindProjectsViewModel">
+              x:Class="App.UI.Sections.FindProjects.FindProjectsView"
+              x:DataType="fp:FindProjectsViewModel">
     <Design.DataContext>
         <fp:FindProjectsViewModel />
     </Design.DataContext>
+
+    <UserControl.Styles>
+        <Style Selector="Button.SearchIconButton">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="10,0" />
+            <Setter Property="MinWidth" Value="40" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="Button.SearchIconButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.SearchIconButton:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+    </UserControl.Styles>
 
     <Panel AutomationProperties.AutomationId="FindProjectsRootPanel">
         <!-- ═══════════════════════════════════════════════════════ -->
@@ -33,46 +50,53 @@
         <controls:ScrollableView Name="ProjectListPanel" ContentPadding="24,24,24,24">
             <StackPanel Spacing="16">
                 <!-- Header with search bar and refresh button -->
-                <Grid ColumnDefinitions="Auto,*,Auto">
-                    <TextBlock Grid.Column="0"
+                <Grid Name="FindProjectsHeaderGrid" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto">
+                    <TextBlock Name="DiscoverProjectsTitle"
+                               Grid.Row="0" Grid.Column="0"
                                Text="Discover Projects"
                                FontSize="20" FontWeight="Bold"
                                VerticalAlignment="Center" />
                     <!-- Search bar -->
-                    <Border Grid.Column="1"
-                            Background="{DynamicResource CardBackground}"
-                            CornerRadius="8"
-                            Padding="4"
+                    <Border Name="SearchContainer"
+                            Grid.Row="0" Grid.Column="1"
+                            Background="{DynamicResource CardSurface}"
+                            CornerRadius="12"
+                            Padding="4,0"
                             Margin="16,0"
-                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderBrush="{DynamicResource StrokeSubtle}"
                             BorderThickness="1"
-                            VerticalAlignment="Center">
-                        <Grid ColumnDefinitions="*,Auto">
-                            <TextBox Grid.Column="0"
-                                     Name="SearchTextBox"
-                                     Text="{Binding SearchText, Mode=TwoWay}"
-                                     Watermark="Search by Project ID..."
-                                     BorderThickness="0"
-                                     Background="Transparent"
+                            VerticalAlignment="Center"
+                            MinHeight="44">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <i:Icon Grid.Column="0"
+                                    Value="fa-solid fa-magnifying-glass"
+                                    FontSize="14"
+                                    Foreground="{DynamicResource TextMuted}"
+                                    Margin="12,0,6,0"
+                                    VerticalAlignment="Center" />
+                            <TextBox Grid.Column="1"
+                                      Name="SearchTextBox"
+                                      Text="{Binding SearchText, Mode=TwoWay}"
+                                      PlaceholderText="Search by Project ID..."
+                                      BorderThickness="0"
+                                      Background="Transparent"
+                                      VerticalAlignment="Center"
+                                      Padding="4,8" />
+                            <Button Grid.Column="2"
+                                     Name="SearchButton"
+                                     Classes="SearchIconButton"
                                      VerticalAlignment="Center"
-                                     Padding="8,6" />
-                            <Button Grid.Column="1"
-                                    Name="SearchButton"
-                                    Classes="Primary Light MobileAction"
-                                    Padding="10,6"
-                                    Margin="4,0,0,0"
-                                    VerticalAlignment="Center"
-                                    IsEnabled="{Binding !IsSearching}">
-                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                     IsEnabled="{Binding !IsSearching}">
+                                <Panel Width="18" Height="18">
                                     <i:Icon Value="fa-solid fa-magnifying-glass"
                                             FontSize="13"
                                             IsVisible="{Binding !IsSearching}"
-                                            Foreground="{DynamicResource LightPrimaryButtonForeground}"
+                                            Foreground="{DynamicResource TextMuted}"
                                             VerticalAlignment="Center" />
                                     <i:Icon Value="fa-solid fa-spinner"
                                             FontSize="13"
                                             IsVisible="{Binding IsSearching}"
-                                            Foreground="{DynamicResource LightPrimaryButtonForeground}"
+                                            Foreground="{DynamicResource TextMuted}"
                                             VerticalAlignment="Center"
                                             RenderTransformOrigin="50%,50%">
                                         <i:Icon.RenderTransform>
@@ -93,19 +117,20 @@
                                             </Style>
                                         </i:Icon.Styles>
                                     </i:Icon>
-                                </StackPanel>
+                                </Panel>
                             </Button>
                         </Grid>
                     </Border>
                     <!-- Search error message -->
-                    <TextBlock Grid.Column="1"
+                    <TextBlock Name="SearchErrorText"
+                               Grid.Row="1" Grid.Column="1"
                                Text="{Binding SearchError}"
                                IsVisible="{Binding SearchError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                Foreground="Red"
                                FontSize="12"
                                Margin="16,4,0,0"
                                VerticalAlignment="Bottom" />
-                    <Button Name="RefreshProjectsButton" Grid.Column="2"
+                    <Button Name="RefreshProjectsButton" Grid.Row="0" Grid.Column="2"
                             Classes="Primary Light MobileAction"
                             Padding="12,8"
                             VerticalAlignment="Center"

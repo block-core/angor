@@ -33,7 +33,7 @@ public class WalletAppService(
     : IWalletAppService
 {
     //public static readonly WalletId SingleWalletId = new("8E3C5250-4E26-4A13-8075-0A189AEAF793");
-    private const string SingleWalletName = "<default>";
+    private const string SingleWalletName = "Angor Wallet";
 
     public Task<Result<IEnumerable<WalletMetadata>>> GetMetadatas()
     {

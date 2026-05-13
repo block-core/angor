@@ -37,6 +37,19 @@
         <Style Selector="Button.ModalBtn:pressed /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="Transparent" />
         </Style>
+
+        <Style Selector="Button.ModalBtn Border">
+            <Setter Property="HorizontalAlignment" Value="Stretch" />
+        </Style>
+        <Style Selector="Button.ModalBtn TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextAlignment" Value="Center" />
+        </Style>
+        <Style Selector="CheckBox.FeeCustomCheckbox /template/ Border#NormalRectangle">
+            <Setter Property="BorderBrush" Value="{DynamicResource TextMuted}" />
+            <Setter Property="BorderThickness" Value="2" />
+        </Style>
     </UserControl.Styles>
 
     <Panel>
@@ -74,27 +87,34 @@
                         CornerRadius="0,0,15,15"
                         BorderBrush="{DynamicResource ModalHeaderBorder}"
                         Background="{DynamicResource RecoveryModalBg}">
-                    <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12" HorizontalAlignment="Stretch">
                         <!-- Cancel -->
-                        <Button Name="CancelButton" Classes="ModalBtn MobileAction" Cursor="Hand">
-                            <Border CornerRadius="8" Padding="24,12"
+                        <Button Name="CancelButton" Grid.Column="0" Classes="ModalBtn MobileAction" Cursor="Hand"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                            <Border CornerRadius="8" Padding="24,12" HorizontalAlignment="Stretch"
                                     Background="{DynamicResource ModalCancelBg}">
                                 <TextBlock Text="Cancel" FontSize="14" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource ModalCancelFg}" />
+                                           Foreground="{DynamicResource ModalCancelFg}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           TextAlignment="Center" />
                             </Border>
                         </Button>
                         <!-- Confirm -->
-                        <Button Name="ConfirmButton" Classes="ModalBtn MobileAction" Cursor="Hand"
-                                AutomationProperties.AutomationId="FeeConfirmButton">
-                            <Border CornerRadius="8" Padding="24,12"
-                                    ClipToBounds="True"
-                                    Background="{DynamicResource GreenGradient}">
+                        <Button Name="ConfirmButton" Grid.Column="1" Classes="ModalBtn MobileAction" Cursor="Hand"
+                                AutomationProperties.AutomationId="FeeConfirmButton"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                            <Border CornerRadius="8" Padding="24,12" HorizontalAlignment="Stretch"
+                                     ClipToBounds="True"
+                                     Background="{DynamicResource GreenGradient}">
                                 <TextBlock Text="Confirm" FontSize="14" FontWeight="SemiBold"
-                                           Foreground="White"
-                                           HorizontalAlignment="Center" />
+                                            Foreground="White"
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            TextAlignment="Center" />
                             </Border>
                         </Button>
-                    </StackPanel>
+                    </Grid>
                 </Border>
 
                 <!-- ── Content ── -->
@@ -180,7 +200,7 @@
 
                     <!-- Custom Fee Rate -->
                     <StackPanel Spacing="8">
-                        <CheckBox Name="CustomFeeCheckbox" Margin="0">
+                        <CheckBox Name="CustomFeeCheckbox" Classes="FeeCustomCheckbox" Margin="0">
                             <TextBlock Text="Custom Fee Rate" FontSize="14"
                                        Foreground="{DynamicResource TextStrong}" />
                         </CheckBox>

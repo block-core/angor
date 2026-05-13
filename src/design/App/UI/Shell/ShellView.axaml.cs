@@ -132,6 +132,7 @@ public partial class ShellView : UserControl
     private Button _investorCtaBtn = null!;
 
     private IDisposable? _layoutSubscription;
+    private IDisposable? _boundsSubscription;
     private IDisposable? _detailStateSubscription;
     private IDisposable? _investCanSubmitSubscription;
     private SectionPanel? _sectionPanel;
@@ -146,6 +147,8 @@ public partial class ShellView : UserControl
     /// </summary>
     private double _safeAreaBottom;
     private double _safeAreaTop;
+    private const double MaxMobileTopInset = 72;
+    private const double MaxMobileBottomInset = 24;
 
     public ShellView()
     {
@@ -193,6 +196,9 @@ public partial class ShellView : UserControl
         _layoutSubscription = LayoutModeService.Instance
             .WhenAnyValue(x => x.IsCompact)
             .Subscribe(isCompact => ApplyShellLayout(!isCompact));
+
+        _boundsSubscription = this.GetObservable(BoundsProperty)
+            .Subscribe(bounds => RefreshLayoutFromBounds(bounds.Width));
 
         // Apply backdrop transitions once
         backdrop.Transitions = BackdropTransitions;
@@ -606,6 +612,24 @@ public partial class ShellView : UserControl
             ApplySafeAreaInsets(insets.SafeAreaPadding);
             insets.SafeAreaChanged += OnSafeAreaChanged;
         }
+
+        RefreshLayoutFromBounds(Bounds.Width);
+        Avalonia.Threading.Dispatcher.UIThread.Post(
+            () => RefreshLayoutFromBounds(Bounds.Width),
+            Avalonia.Threading.DispatcherPriority.Render);
+    }
+
+    private void RefreshLayoutFromBounds(double width)
+    {
+        if (width > 0)
+            LayoutModeService.Instance.UpdateWidth(width);
+
+        ApplyShellLayout(!LayoutModeService.Instance.IsCompact);
+        _shellContent?.InvalidateMeasure();
+        _shellContent?.InvalidateArrange();
+
+        if (_sectionPanel?.GetSection("Home") is ISectionView homeView)
+            homeView.OnBecameActive();
     }
 
     private void OnSafeAreaChanged(object? sender, Avalonia.Controls.Platform.SafeAreaChangedArgs e)
@@ -615,8 +639,8 @@ public partial class ShellView : UserControl
 
     private void ApplySafeAreaInsets(Avalonia.Thickness padding)
     {
-        _safeAreaBottom = padding.Bottom;
-        _safeAreaTop = padding.Top;
+        _safeAreaBottom = Math.Clamp(padding.Bottom, 0, MaxMobileBottomInset);
+        _safeAreaTop = Math.Clamp(padding.Top, 0, MaxMobileTopInset);
         if (_bottomTabBar != null && _bottomTabBar.IsVisible)
             _bottomTabBar.Padding = new Avalonia.Thickness(0, 0, 0, _safeAreaBottom);
         if (_shellContent != null && LayoutModeService.Instance.IsCompact)
@@ -628,6 +652,8 @@ public partial class ShellView : UserControl
         base.OnDetachedFromLogicalTree(e);
         _layoutSubscription?.Dispose();
         _layoutSubscription = null;
+        _boundsSubscription?.Dispose();
+        _boundsSubscription = null;
         _detailStateSubscription?.Dispose();
         _detailStateSubscription = null;
 
