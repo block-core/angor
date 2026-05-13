@@ -111,6 +111,7 @@ public partial class InvestPageViewModel : ReactiveObject, IDisposable
     private readonly IWalletAppService _walletAppService;
     private readonly IInvestmentAppService _investmentAppService;
     private readonly IBoltzSwapService _boltzSwapService;
+    private readonly IBoltzSwapStorageService _swapStorageService;
     private readonly PortfolioViewModel _portfolioVm;
     private readonly ICurrencyService _currencyService;
     private readonly IWalletContext _walletContext;
@@ -247,6 +248,7 @@ public partial class InvestPageViewModel : ReactiveObject, IDisposable
         IWalletAppService walletAppService,
         IInvestmentAppService investmentAppService,
         IBoltzSwapService boltzSwapService,
+        IBoltzSwapStorageService swapStorageService,
         PortfolioViewModel portfolioVm,
         ICurrencyService currencyService,
         IWalletContext walletContext,
@@ -257,6 +259,7 @@ public partial class InvestPageViewModel : ReactiveObject, IDisposable
         _walletAppService = walletAppService;
         _investmentAppService = investmentAppService;
         _boltzSwapService = boltzSwapService;
+        _swapStorageService = swapStorageService;
         _portfolioVm = portfolioVm;
         _currencyService = currencyService;
         _walletContext = walletContext;
@@ -714,6 +717,7 @@ public partial class InvestPageViewModel : ReactiveObject, IDisposable
             _walletAppService,
             _investmentAppService,
             _boltzSwapService,
+            _swapStorageService,
             _walletContext,
             _currencyService,
             _getNetwork,

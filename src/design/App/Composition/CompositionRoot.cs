@@ -180,6 +180,7 @@ public static class CompositionRoot
                 sp.GetRequiredService<IWalletAppService>(),
                 sp.GetRequiredService<IInvestmentAppService>(),
                 sp.GetRequiredService<IBoltzSwapService>(),
+                sp.GetRequiredService<IBoltzSwapStorageService>(),
                 sp.GetRequiredService<PortfolioViewModel>(),
                 sp.GetRequiredService<ICurrencyService>(),
                 sp.GetRequiredService<IWalletContext>(),

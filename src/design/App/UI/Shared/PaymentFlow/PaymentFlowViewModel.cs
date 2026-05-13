@@ -6,6 +6,7 @@ using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Wallet.Application;
 using Angor.Shared.Integration.Lightning;
+using Angor.Shared.Integration.Lightning.Models;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Wallet.Domain;
 using App.UI.Shared.Services;
@@ -43,6 +44,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
     private readonly IWalletAppService _walletAppService;
     private readonly IInvestmentAppService _investmentAppService;
     private readonly IBoltzSwapService _boltzSwapService;
+    private readonly IBoltzSwapStorageService _swapStorageService;
     private readonly IWalletContext _walletContext;
     private readonly ICurrencyService _currencyService;
     private readonly Func<BitcoinNetwork> _getNetwork;
@@ -132,6 +134,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         IWalletAppService walletAppService,
         IInvestmentAppService investmentAppService,
         IBoltzSwapService boltzSwapService,
+        IBoltzSwapStorageService swapStorageService,
         IWalletContext walletContext,
         ICurrencyService currencyService,
         Func<BitcoinNetwork> getNetwork,
@@ -141,6 +144,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         _walletAppService = walletAppService;
         _investmentAppService = investmentAppService;
         _boltzSwapService = boltzSwapService;
+        _swapStorageService = swapStorageService;
         _walletContext = walletContext;
         _currencyService = currencyService;
         _getNetwork = getNetwork;
@@ -323,6 +327,15 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             return;
         }
 
+        // Check for a pending lightning swap that was interrupted (e.g. app closed mid-swap)
+        var resumedSwap = await CheckForPendingSwapAsync(wallet.Id);
+        if (resumedSwap != null)
+        {
+            // Pending swap found and verified active — resume it
+            await ResumeLightningSwapAsync(wallet.Id, resumedSwap);
+            return;
+        }
+
         PaymentStatusText = "Refreshing wallet...";
         try
         {
@@ -361,6 +374,179 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         _logger.LogInformation("Receive address generated: {Address}", OnChainAddress);
 
         PayToOnChainAddress();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Pending Swap Recovery
+    // ═══════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Checks the DB for a resumable lightning swap for this wallet.
+    /// Verifies with Boltz API that the swap is still active.
+    ///
+    /// If the invoice was already paid (funds locked on-chain), the swap MUST be
+    /// resumed regardless of amount mismatch — otherwise those funds would be lost.
+    /// Unpaid swaps with a different amount are skipped and marked expired in the DB.
+    /// </summary>
+    private async Task<BoltzSwapDocument?> CheckForPendingSwapAsync(WalletId walletId)
+    {
+        try
+        {
+            var swapsResult = await _swapStorageService.GetResumableSwapsAsync(walletId.Value);
+            if (swapsResult.IsFailure || !swapsResult.Value.Any())
+                return null;
+
+            // Check each swap with Boltz API (most recent first)
+            foreach (var swap in swapsResult.Value)
+            {
+                var statusResult = await _boltzSwapService.GetSwapStatusAsync(swap.SwapId);
+                if (statusResult.IsFailure)
+                {
+                    _logger.LogWarning("Could not verify swap {SwapId} with Boltz: {Error}",
+                        swap.SwapId, statusResult.Error);
+                    continue;
+                }
+
+                var liveStatus = statusResult.Value.Status;
+
+                if (liveStatus.IsFailed())
+                {
+                    // Swap is dead — update DB so we don't check it again
+                    _logger.LogInformation("Swap {SwapId} is no longer active (status: {Status}), updating DB",
+                        swap.SwapId, liveStatus);
+                    await _swapStorageService.UpdateSwapStatusAsync(
+                        swap.SwapId, walletId.Value, liveStatus.ToString());
+                    continue;
+                }
+
+                if (liveStatus.IsComplete())
+                {
+                    _logger.LogInformation("Swap {SwapId} already completed (status: {Status}), skipping",
+                        swap.SwapId, liveStatus);
+                    continue;
+                }
+
+                // Funds are already locked on-chain — MUST resume to claim them, even if amount changed
+                bool fundsLocked = liveStatus is SwapState.InvoicePaid
+                    or SwapState.TransactionMempool
+                    or SwapState.TransactionConfirmed;
+
+                if (fundsLocked)
+                {
+                    _logger.LogInformation(
+                        "Swap {SwapId} has funds locked (status: {Status}) — resuming to claim",
+                        swap.SwapId, liveStatus);
+                    return swap;
+                }
+
+                // Invoice not yet paid — only resume if the amount matches
+                bool amountMatches = swap.RequestedAmountSats == 0
+                    || swap.RequestedAmountSats == _config.AmountSats;
+
+                if (amountMatches)
+                {
+                    _logger.LogInformation(
+                        "Found resumable swap {SwapId} (DB status: {DbStatus}, Boltz status: {LiveStatus})",
+                        swap.SwapId, swap.Status, liveStatus);
+                    return swap;
+                }
+
+                // Amount mismatch and invoice not paid — let it expire, mark in DB
+                _logger.LogInformation(
+                    "Swap {SwapId} amount mismatch (swap: {SwapAmount}, current: {ConfigAmount}) and unpaid — marking expired",
+                    swap.SwapId, swap.RequestedAmountSats, _config.AmountSats);
+                await _swapStorageService.UpdateSwapStatusAsync(
+                    swap.SwapId, walletId.Value, SwapState.SwapExpired.ToString());
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error checking for pending swaps — proceeding with normal flow");
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Restores the lightning UI state from a pending swap and resumes monitoring.
+    /// </summary>
+    private async Task ResumeLightningSwapAsync(WalletId walletId, BoltzSwapDocument swap)
+    {
+        _logger.LogInformation(
+            "Resuming lightning swap {SwapId} for wallet {WalletId}",
+            swap.SwapId, walletId.Value);
+
+        // Restore UI state
+        OnChainAddress = swap.Address;
+        LightningInvoice = swap.Invoice;
+        LightningSwapId = swap.SwapId;
+        SelectedNetworkTab = NetworkTab.Lightning;
+        IsGeneratingLightningInvoice = false;
+        PaymentStatusText = "Resuming Lightning payment...";
+
+        _monitorCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _monitorCts = cts;
+
+        try
+        {
+            var receivingAddress = swap.Address;
+
+            // Monitor the swap via WebSocket (handles claiming automatically)
+            PaymentStatusText = "Waiting for Lightning payment...";
+            var monitorSwapRequest = new MonitorLightningSwap.MonitorLightningSwapRequest(
+                walletId, swap.SwapId, TimeSpan.FromMinutes(30));
+
+            var monitorSwapResult = await _investmentAppService.MonitorLightningSwap(monitorSwapRequest);
+            if (monitorSwapResult.IsFailure)
+            {
+                _logger.LogError("MonitorLightningSwap failed for resumed swap {SwapId}: {Error}",
+                    swap.SwapId, monitorSwapResult.Error);
+                ErrorMessage = monitorSwapResult.Error;
+                IsProcessing = false;
+                return;
+            }
+
+            // Wait for on-chain funds to arrive at the destination address
+            PaymentStatusText = "Confirming on-chain claim...";
+            var monitorAddressRequest = new MonitorOp.MonitorAddressForFundsRequest(
+                walletId, receivingAddress,
+                new Amount(_config.AmountSats),
+                TimeSpan.FromMinutes(30));
+
+            var monitorAddressResult = await _investmentAppService.MonitorAddressForFunds(
+                monitorAddressRequest, cts.Token);
+            if (monitorAddressResult.IsFailure)
+            {
+                if (cts.IsCancellationRequested)
+                {
+                    _logger.LogInformation("Resumed swap on-chain monitoring cancelled");
+                    return;
+                }
+                ErrorMessage = monitorAddressResult.Error;
+                IsProcessing = false;
+                return;
+            }
+
+            PaymentStatusText = "Payment received!";
+            PaymentReceived = true;
+
+            await RunPostPaymentCallbackAsync(walletId, receivingAddress);
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("Resumed swap monitoring was cancelled for {SwapId}", swap.SwapId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error resuming lightning swap {SwapId}", swap.SwapId);
+            ErrorMessage = $"Error resuming swap: {ex.Message}";
+        }
+        finally
+        {
+            IsProcessing = false;
+            IsGeneratingLightningInvoice = false;
+        }
     }
 
     private async Task<Result> EnsureWalletExistsAsync()

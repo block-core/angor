@@ -39,6 +39,7 @@ public partial class DeployFlowViewModel : ReactiveObject
     private readonly IWalletAppService _walletAppService;
     private readonly IInvestmentAppService _investmentAppService;
     private readonly IBoltzSwapService _boltzSwapService;
+    private readonly IBoltzSwapStorageService _swapStorageService;
     private readonly IProjectAppService _projectAppService;
     private readonly IFounderAppService _founderAppService;
     private readonly ICurrencyService _currencyService;
@@ -90,6 +91,7 @@ public partial class DeployFlowViewModel : ReactiveObject
         IWalletAppService walletAppService,
         IInvestmentAppService investmentAppService,
         IBoltzSwapService boltzSwapService,
+        IBoltzSwapStorageService swapStorageService,
         IProjectAppService projectAppService,
         IFounderAppService founderAppService,
         ICurrencyService currencyService,
@@ -100,6 +102,7 @@ public partial class DeployFlowViewModel : ReactiveObject
         _walletAppService = walletAppService;
         _investmentAppService = investmentAppService;
         _boltzSwapService = boltzSwapService;
+        _swapStorageService = swapStorageService;
         _projectAppService = projectAppService;
         _founderAppService = founderAppService;
         _currencyService = currencyService;
@@ -161,6 +164,7 @@ public partial class DeployFlowViewModel : ReactiveObject
             _walletAppService,
             _investmentAppService,
             _boltzSwapService,
+            _swapStorageService,
             _walletContext,
             _currencyService,
             _getNetwork,
