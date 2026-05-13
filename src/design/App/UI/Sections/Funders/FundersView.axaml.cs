@@ -3,7 +3,6 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
-using Avalonia.Media;
 using Avalonia.VisualTree;
 using App.UI.Shared;
 using App.UI.Shared.Controls;
@@ -21,7 +20,6 @@ public partial class FundersView : UserControl, ISectionView
 {
     private CompositeDisposable? _subscriptions;
     private IDisposable? _layoutSubscription;
-    private ScrollableView? _fundersScrollable;
     private Border? _fundersTitleIcon;
     private TextBlock? _fundersTitleText;
     private TextBlock? _approveAllText;
@@ -58,22 +56,23 @@ public partial class FundersView : UserControl, ISectionView
         DataContextChanged += (_, _) => SubscribeToVisibility();
         SubscribeToVisibility();
 
-        // Cache ScrollableView for responsive bottom padding
-        _fundersScrollable = this.FindControl<ScrollableView>("FundersListPanel");
+        // Cache named controls for responsive layout
         _fundersTitleIcon = this.FindControl<Border>("FundersTitleIcon");
         _fundersTitleText = this.FindControl<TextBlock>("FundersTitleText");
         _approveAllText = this.FindControl<TextBlock>("ApproveAllText");
 
-        // ── Responsive layout: adjust bottom padding for tab bar clearance ──
+        // ── Responsive layout: adjust padding for tab bar clearance ──
         _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
             .Subscribe(isCompact =>
             {
                 Classes.Set("Mobile", isCompact || isDeviceMobile);
 
-                if (_fundersScrollable != null)
-                    _fundersScrollable.ContentPadding = isCompact
-                        ? new Thickness(16, 16, 16, 96)
-                        : new Thickness(24);
+                // Adjust ListBox bottom margin for mobile tab bar clearance
+                var listBox = this.FindControl<ListBox>("SignaturesListPanel");
+                if (listBox != null)
+                    listBox.Margin = isCompact
+                        ? new Thickness(16, 0, 16, 96)
+                        : new Thickness(24, 0, 24, 24);
 
                 if (_fundersTitleIcon != null)
                 {
@@ -131,11 +130,11 @@ public partial class FundersView : UserControl, ISectionView
           .Subscribe(isRefreshing =>
           {
               var refreshBtn = this.FindControl<Button>("RefreshButton");
-              var icon = refreshBtn?.GetLogicalDescendants().OfType<Projektanker.Icons.Avalonia.Icon>().FirstOrDefault();
+              var icon = refreshBtn?.GetLogicalDescendants().OfType<Optris.Icons.Avalonia.Icon>().FirstOrDefault();
               icon?.Classes.Set("Spinning", isRefreshing);
 
               var emptyRefreshBtn = this.FindControl<Button>("EmptyRefreshButton");
-              var emptyIcon = emptyRefreshBtn?.GetLogicalDescendants().OfType<Projektanker.Icons.Avalonia.Icon>().FirstOrDefault();
+              var emptyIcon = emptyRefreshBtn?.GetLogicalDescendants().OfType<Optris.Icons.Avalonia.Icon>().FirstOrDefault();
               emptyIcon?.Classes.Set("Spinning", isRefreshing);
           });
         _subscriptions.Add(refreshSub);
@@ -232,7 +231,6 @@ public partial class FundersView : UserControl, ISectionView
             case "MobileExpandButton":
                 if (btn.Tag is not int expandId) break;
                 vm.ToggleExpanded(expandId);
-                ToggleExpandedPanel(expandId, vm.IsExpanded(expandId));
                 e.Handled = true;
                 break;
 
@@ -243,33 +241,4 @@ public partial class FundersView : UserControl, ISectionView
         }
     }
 
-    /// <summary>
-    /// Find the ExpandedPanel with matching Tag and toggle its visibility.
-    /// Also rotate the chevron icon on the ExpandButton.
-    /// </summary>
-    private void ToggleExpandedPanel(int id, bool isExpanded)
-    {
-        // Walk the visual tree of SignaturesListPanel to find matching panels
-        if (SignaturesListPanel == null) return;
-
-        foreach (var container in SignaturesListPanel.GetLogicalDescendants())
-        {
-            // Find ExpandedPanel borders with matching Tag
-            if (container is Border { Name: "ExpandedPanel" } panel && panel.Tag is int panelId && panelId == id)
-            {
-                panel.IsVisible = isExpanded;
-            }
-
-            // Rotate the expand button chevron
-            if (container is Button expandBtn
-                && (expandBtn.Name == "ExpandButton" || expandBtn.Name == "MobileExpandButton")
-                && expandBtn.Tag is int btnId
-                && btnId == id)
-            {
-                expandBtn.RenderTransform = isExpanded
-                    ? new RotateTransform(180)
-                    : new RotateTransform(0);
-            }
-        }
-    }
 }

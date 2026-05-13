@@ -12,7 +12,7 @@ using App.UI.Shared.Helpers;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Projektanker.Icons.Avalonia;
+using Optris.Icons.Avalonia;
 
 namespace App.UI.Sections.Funds;
 

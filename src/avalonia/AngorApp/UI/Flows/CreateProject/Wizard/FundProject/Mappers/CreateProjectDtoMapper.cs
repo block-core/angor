@@ -26,7 +26,7 @@ public static class CreateProjectDtoMapper
 
             ProjectType = Angor.Shared.Models.ProjectType.Fund,
             Sats = satsValue,
-            StartDate = DateTime.Now.Date,
+            StartDate = DateTime.UtcNow.Date,
 
             EndDate = null,
 

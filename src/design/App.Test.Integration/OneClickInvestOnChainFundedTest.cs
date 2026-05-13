@@ -9,7 +9,7 @@ using Avalonia.VisualTree;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace App.Test.Integration;
 

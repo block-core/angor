@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
         <RootNamespace>App</RootNamespace>
@@ -18,9 +18,9 @@
         <!-- ReactiveUI -->
         <PackageReference Include="ReactiveUI.Avalonia" />
         <PackageReference Include="ReactiveUI.SourceGenerators" />
-        <!-- Projektanker Icons (FontAwesome) -->
-        <PackageReference Include="Projektanker.Icons.Avalonia" />
-        <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome" />
+        <!-- Optris Icons (FontAwesome) — Avalonia 12 compatible fork of Projektanker -->
+        <PackageReference Include="Optris.Icons.Avalonia" />
+        <PackageReference Include="Optris.Icons.Avalonia.FontAwesome" />
         <!-- SVG rendering -->
         <PackageReference Include="Svg.Controls.Skia.Avalonia" />
         <!-- Async image loading -->
@@ -45,4 +45,13 @@
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
         <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)generated</CompilerGeneratedFilesOutputPath>
     </PropertyGroup>
+    <PropertyGroup>
+        <SupportNpub>npub1n2pwqvvuaz9q67vk945l06krlzdcjnxxl4mp7dzrfye5v580x2es5luz4t</SupportNpub>
+    </PropertyGroup>
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+            <_Parameter1>SupportNpub</_Parameter1>
+            <_Parameter2>$(SupportNpub)</_Parameter2>
+        </AssemblyAttribute>
+    </ItemGroup>
 </Project>

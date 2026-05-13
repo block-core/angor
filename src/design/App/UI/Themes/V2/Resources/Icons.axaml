@@ -21,6 +21,8 @@
     <!-- ═══ Simple geometric shapes (render well as StreamGeometry at small sizes) ═══ -->
     <!-- Chevron down (Heroicons outline, 24x24) -->
     <StreamGeometry x:Key="ChevronDown">M19 9l-7 7-7-7</StreamGeometry>
+    <!-- Chevron up (Heroicons outline, 24x24) -->
+    <StreamGeometry x:Key="ChevronUp">M5 15l7-7 7 7</StreamGeometry>
     <!-- X/close icon (Heroicons outline, 24x24) — for cancel buttons -->
     <StreamGeometry x:Key="XMark">M6 18L18 6M6 6l12 12</StreamGeometry>
     <!-- Checkmark icon (Heroicons outline, 24x24) — for approve actions -->

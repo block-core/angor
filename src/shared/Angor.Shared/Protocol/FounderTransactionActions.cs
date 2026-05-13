@@ -73,7 +73,9 @@ public class FounderTransactionActions : IFounderTransactionActions
 
             _logger.LogInformation($"creating sig for project={projectInfo.ProjectIdentifier}; founder-recovery-pubkey={key.PubKey.ToHex()}; stage={stageIndex}; hash={hash}; encodedHash={hashHex} signature-hex={sig}");
 
-            var result = key.PubKey.GetTaprootFullPubKey().VerifySignature(hash, TaprootSignature.Parse(sig).SchnorrSignature);
+            var result = new TaprootPubKey(
+                Angor.Shared.Protocol.Scripts.TaprootKeyHelper.GetTaprootOutputKeyBytes(key.PubKey))
+                .VerifySignature(hash, TaprootSignature.Parse(sig).SchnorrSignature);
 
             _logger.LogInformation($"verification = {result}");
 

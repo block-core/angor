@@ -180,13 +180,16 @@
         <!-- ═══════════════════════════════════════════════════════ -->
         <!-- FUNDERS OVERVIEW: shown when HasFunders = true          -->
         <!-- Vue: App.vue desktop Funders page (lines 3152-3335)     -->
-        <!-- Layout: header + filter tabs + scrollable card list     -->
+        <!-- Layout: DockPanel — header + tabs fixed top, ListBox    -->
+        <!--         with VirtualizingStackPanel fills remaining     -->
         <!-- ═══════════════════════════════════════════════════════ -->
-        <controls:ScrollableView ContentPadding="24"
-                                 Name="FundersListPanel"
-                                 IsVisible="{Binding HasFunders}">
-            <!-- Vue: max-w-6xl mx-auto, px-4 md:px-8, pt-4 pb-20 -->
-            <StackPanel MaxWidth="1152" HorizontalAlignment="Stretch" Spacing="0">
+        <DockPanel Name="FundersListPanel"
+                   IsVisible="{Binding HasFunders}">
+
+            <!-- Fixed header area: doesn't scroll -->
+            <StackPanel DockPanel.Dock="Top" MaxWidth="1152"
+                        HorizontalAlignment="Stretch"
+                        Margin="24,24,24,0">
 
                 <!-- ═══════════════════════════════════════ -->
                 <!-- HEADER: Icon + Title + Approve All btn  -->
@@ -344,18 +347,47 @@
                     </StackPanel>
                 </Panel>
 
-                <!-- ═══════════════════════════════════════ -->
-                <!-- SIGNATURE REQUEST CARDS                 -->
-                <!-- Vue: space-y-3 (vertical list, gap 12px) -->
-                <!-- ═══════════════════════════════════════ -->
-                <ItemsControl Name="SignaturesListPanel"
-                              ItemsSource="{Binding FilteredSignatures}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Spacing="12" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
+            </StackPanel>
+
+            <!-- ═══════════════════════════════════════ -->
+            <!-- SIGNATURE REQUEST CARDS (virtualized)   -->
+            <!-- ListBox with VirtualizingStackPanel     -->
+            <!-- ═══════════════════════════════════════ -->
+            <ListBox Name="SignaturesListPanel"
+                     ItemsSource="{Binding FilteredSignatures}"
+                     Margin="24,0,24,24"
+                     MaxWidth="1152"
+                     HorizontalAlignment="Stretch"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.Styles>
+                    <!-- Remove selection chrome -->
+                    <Style Selector="ListBoxItem">
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Margin" Value="0,0,0,12" />
+                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    </Style>
+                    <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+                        <Setter Property="Background" Value="Transparent" />
+                    </Style>
+                    <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                        <Setter Property="Background" Value="Transparent" />
+                    </Style>
+                    <Style Selector="ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                        <Setter Property="Background" Value="Transparent" />
+                    </Style>
+                    <Style Selector="ListBoxItem:selected:focus /template/ ContentPresenter#PART_ContentPresenter">
+                        <Setter Property="Background" Value="Transparent" />
+                    </Style>
+                </ListBox.Styles>
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="funders:SignatureRequestViewModel">
                             <!-- Vue: rounded-xl p-5 border transition-all -->
                             <!-- Dark: bg-[#1a1a1a] border-[#404040] shadow: 0 4px 12px rgba(0,0,0,0.3) -->
@@ -366,12 +398,7 @@
                                     CornerRadius="12"
                                     BoxShadow="{DynamicResource ItemShadow}"
                                     Padding="20"
-                                    Classes="SignatureCard">
-                                <Border.Transitions>
-                                    <Transitions>
-                                        <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.3" />
-                                    </Transitions>
-                                </Border.Transitions>
+                                                    Classes="SignatureCard">
                                 <StackPanel Spacing="0">
 
                                     <!-- Row: Left info + Right action buttons -->
@@ -513,14 +540,26 @@
                                                     BorderThickness="2"
                                                     HorizontalContentAlignment="Center"
                                                     VerticalContentAlignment="Center">
-                                                <Viewbox Width="16" Height="16">
-                                                    <Path Data="{StaticResource ChevronDown}"
-                                                          Stroke="{DynamicResource PrimaryGreenBrush}"
-                                                          StrokeThickness="2"
-                                                          StrokeLineCap="Round"
-                                                          StrokeJoin="Round"
-                                                          Width="24" Height="24" Stretch="Uniform" />
-                                                </Viewbox>
+                                                <Panel>
+                                                    <Viewbox Width="16" Height="16"
+                                                             IsVisible="{Binding !IsExpanded}">
+                                                        <Path Data="{StaticResource ChevronDown}"
+                                                              Stroke="{DynamicResource PrimaryGreenBrush}"
+                                                              StrokeThickness="2"
+                                                              StrokeLineCap="Round"
+                                                              StrokeJoin="Round"
+                                                              Width="24" Height="24" Stretch="Uniform" />
+                                                    </Viewbox>
+                                                    <Viewbox Width="16" Height="16"
+                                                             IsVisible="{Binding IsExpanded}">
+                                                        <Path Data="{StaticResource ChevronUp}"
+                                                              Stroke="{DynamicResource PrimaryGreenBrush}"
+                                                              StrokeThickness="2"
+                                                              StrokeLineCap="Round"
+                                                              StrokeJoin="Round"
+                                                              Width="24" Height="24" Stretch="Uniform" />
+                                                    </Viewbox>
+                                                </Panel>
                                             </Button>
                                         </StackPanel>
 
@@ -632,7 +671,7 @@
                                     <!-- ═══════════════════════════════════════ -->
                                     <Border Name="ExpandedPanel"
                                             Tag="{Binding Id}"
-                                            IsVisible="False"
+                                            IsVisible="{Binding IsExpanded}"
                                             BorderThickness="0,1,0,0"
                                             BorderBrush="{DynamicResource Stroke}"
                                             Padding="0,16,0,0">
@@ -793,24 +832,35 @@
                                                      BorderThickness="2"
                                                      HorizontalContentAlignment="Center"
                                                      VerticalContentAlignment="Center">
-                                                 <Viewbox Width="16" Height="16">
-                                                     <Path Data="{StaticResource ChevronDown}"
-                                                           Stroke="{DynamicResource PrimaryGreenBrush}"
-                                                           StrokeThickness="2"
-                                                           StrokeLineCap="Round"
-                                                           StrokeJoin="Round"
-                                                           Width="24" Height="24" Stretch="Uniform" />
-                                                 </Viewbox>
+                                                 <Panel>
+                                                     <Viewbox Width="16" Height="16"
+                                                              IsVisible="{Binding !IsExpanded}">
+                                                         <Path Data="{StaticResource ChevronDown}"
+                                                               Stroke="{DynamicResource PrimaryGreenBrush}"
+                                                               StrokeThickness="2"
+                                                               StrokeLineCap="Round"
+                                                               StrokeJoin="Round"
+                                                               Width="24" Height="24" Stretch="Uniform" />
+                                                     </Viewbox>
+                                                     <Viewbox Width="16" Height="16"
+                                                              IsVisible="{Binding IsExpanded}">
+                                                         <Path Data="{StaticResource ChevronUp}"
+                                                               Stroke="{DynamicResource PrimaryGreenBrush}"
+                                                               StrokeThickness="2"
+                                                               StrokeLineCap="Round"
+                                                               StrokeJoin="Round"
+                                                               Width="24" Height="24" Stretch="Uniform" />
+                                                     </Viewbox>
+                                                 </Panel>
                                              </Button>
                                          </Grid>
                                      </StackPanel>
                                 </StackPanel>
                             </Border>
                         </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                    </ListBox.ItemTemplate>
+                </ListBox>
 
-            </StackPanel>
-        </controls:ScrollableView>
+            </DockPanel>
     </Panel>
 </UserControl>

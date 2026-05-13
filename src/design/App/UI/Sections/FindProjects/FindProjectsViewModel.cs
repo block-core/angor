@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
@@ -219,7 +220,7 @@ public class ProjectItemViewModel : INotifyPropertyChanged
 /// FindProjects ViewModel -- connected to SDK for project discovery.
 /// Falls back to sample data if SDK call fails.
 /// </summary>
-public partial class FindProjectsViewModel : ReactiveObject
+public partial class FindProjectsViewModel : ReactiveObject, IDisposable
 {
     /// <summary>
     /// Process-wide cache of the last successful Latest() DTOs.
@@ -291,6 +292,8 @@ public partial class FindProjectsViewModel : ReactiveObject
     private readonly PortfolioViewModel _portfolioViewModel;
     private readonly ICurrencyService _currencyService;
     private readonly ILogger<FindProjectsViewModel> _logger;
+    private readonly CompositeDisposable _disposables = new();
+
 
     /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
     public string CurrencySymbol => _currencyService.Symbol;
@@ -426,7 +429,12 @@ public partial class FindProjectsViewModel : ReactiveObject
 
         sw.Restart();
         // When the portfolio investments change, re-check HasInvested flags
-        _portfolioViewModel.Investments.CollectionChanged += (_, _) => UpdateHasInvestedFlags();
+        Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
+                h => _portfolioViewModel.Investments.CollectionChanged += h,
+                h => _portfolioViewModel.Investments.CollectionChanged -= h)
+            .Throttle(TimeSpan.FromMilliseconds(250))
+            .Subscribe(_ => Avalonia.Threading.Dispatcher.UIThread.Post(UpdateHasInvestedFlags))
+            .DisposeWith(_disposables);
         var subscribeMs = sw.ElapsedMilliseconds;
 
         sw.Restart();
@@ -436,32 +444,38 @@ public partial class FindProjectsViewModel : ReactiveObject
         //
         // On first load we only show the first page; the rest are held in
         // _pendingItems and revealed by LoadMore() as the user scrolls.
-        var seeded = 0;
-        if (CachedDtos is { Count: > 0 } seed)
-        {
-            var mapped = new List<ProjectItemViewModel>(seed.Count);
-            foreach (var dto in seed)
-            {
-                var vm = ProjectItemViewModel.FromDto(dto);
-                vm.CurrencySymbol = _currencyService.Symbol;
-                mapped.Add(vm);
-            }
-            SeedPaged(mapped);
-            UpdateHasInvestedFlags();
-            seeded = mapped.Count;
-        }
         var seedMs = sw.ElapsedMilliseconds;
 
         sw.Restart();
-        // Run load on threadpool so the synchronous prefix of
-        // _projectAppService.Latest() doesn't block the UI thread.
-        // LoadProjectsFromSdkAsync marshals its UI mutations back via Dispatcher.
-        _ = Task.Run(LoadProjectsFromSdkAsync);
+
+        // Defer cache seeding so the view renders immediately with skeleton
+        // placeholders. Once the UI is up, we post back to seed from the
+        // in-memory cache (near-instant) and then kick off the network refresh.
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            if (CachedDtos is { Count: > 0 } seed)
+            {
+                var mapped = new List<ProjectItemViewModel>(seed.Count);
+                foreach (var dto in seed)
+                {
+                    var vm = ProjectItemViewModel.FromDto(dto);
+                    vm.CurrencySymbol = _currencyService.Symbol;
+                    mapped.Add(vm);
+                }
+                SeedPaged(mapped);
+                UpdateHasInvestedFlags();
+                IsInitialLoad = false;
+            }
+
+            // Run load on threadpool so the synchronous prefix of
+            // _projectAppService.Latest() doesn't block the UI thread.
+            _ = Task.Run(LoadProjectsFromSdkAsync);
+        }, Avalonia.Threading.DispatcherPriority.Background);
         var loadKickMs = sw.ElapsedMilliseconds;
 
         _logger.LogInformation(
-            "[FindProjectsViewModel.ctor] fields={Fields}ms subscribe={Subscribe}ms seeded={Seeded} seed={SeedMs}ms loadKick={LoadKick}ms",
-            fieldsMs, subscribeMs, seeded, seedMs, loadKickMs);
+            "[FindProjectsViewModel.ctor] fields={Fields}ms subscribe={Subscribe}ms seed={SeedMs}ms loadKick={LoadKick}ms (cache seed + load deferred to dispatcher)",
+            fieldsMs, subscribeMs, seedMs, loadKickMs);
     }
 
     /// <summary>
@@ -740,5 +754,10 @@ public partial class FindProjectsViewModel : ReactiveObject
 
         _logger.LogInformation("[Paged] LoadMore revealed={Take} visible={Visible} pending={Pending}",
             take, Projects.Count, pendingItems.Count);
+    }
+
+    public void Dispose()
+    {
+        _disposables.Dispose();
     }
 }

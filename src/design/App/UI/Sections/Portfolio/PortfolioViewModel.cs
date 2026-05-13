@@ -461,13 +461,14 @@ public class InvestmentViewModel : INotifyPropertyChanged
 /// Portfolio/Funded ViewModel — connected to SDK for investment discovery and management.
 /// Uses IInvestmentAppService for loading investments and performing recovery/release operations.
 /// </summary>
-public partial class PortfolioViewModel : ReactiveObject
+public partial class PortfolioViewModel : ReactiveObject, IDisposable
 {
     private readonly IInvestmentAppService _investmentAppService;
     private readonly IWalletContext _walletContext;
     private readonly SignatureStore _signatureStore;
     private readonly ICurrencyService _currencyService;
     private readonly ILogger<PortfolioViewModel> _logger;
+    private readonly CompositeDisposable _disposables = new();
 
     public event Action<string>? ToastRequested;
 
@@ -519,7 +520,9 @@ public partial class PortfolioViewModel : ReactiveObject
         // This fixes the race condition where PortfolioViewModel is constructed before wallets are
         // loaded from LiteDB, resulting in an empty portfolio on app restart.
         _walletContext.WalletsUpdated
-            .Subscribe(__ => _ = LoadInvestmentsFromSdkAsync());
+            .Throttle(TimeSpan.FromMilliseconds(500))
+            .Subscribe(__ => Avalonia.Threading.Dispatcher.UIThread.Post(() => _ = LoadInvestmentsFromSdkAsync()))
+            .DisposeWith(_disposables);
 
         // Load investments from SDK
         _ = LoadInvestmentsFromSdkAsync();
@@ -539,7 +542,7 @@ public partial class PortfolioViewModel : ReactiveObject
 
         try
         {
-            var wallets = _walletContext.Wallets;
+            var wallets = _walletContext.Wallets.ToList();
             if (wallets.Count == 0)
             {
                 _logger.LogInformation("No wallets found — clearing investments");
@@ -1358,5 +1361,11 @@ public partial class PortfolioViewModel : ReactiveObject
 
         _logger.LogInformation("Investment added to portfolio: project='{ProjectName}', autoApproved={IsAutoApproved}, step={Step}, status='{StatusText}'",
             investment.ProjectName, investment.Step == 3, investment.Step, investment.StatusText);
+    }
+
+    public void Dispose()
+    {
+        _signatureStore.SignatureStatusChanged -= OnSignatureStatusChanged;
+        _disposables.Dispose();
     }
 }

@@ -49,7 +49,7 @@ namespace AngorApp.UI.Flows.CreateProject.Wizard.FundProject
                     var generated = PayoutGenerator.Generate(
                         newProject.PayoutFrequency.Value,
                         maxInstallments,
-                        DateTime.Now,
+                        DateTime.UtcNow,
                         newProject.MonthlyPayoutDate,
                         newProject.WeeklyPayoutDay
                     );

@@ -25,6 +25,8 @@ public partial class SignatureRequestViewModel : ReactiveObject
     public string Time { get; set; } = "";
     /// <summary>Status: waiting, approved, rejected</summary>
     [Reactive] private string status = SignatureStatus.Waiting.ToLowerString();
+    /// <summary>Whether the card detail panel is expanded (binding-driven for virtualization safety)</summary>
+    [Reactive] private bool isExpanded;
     /// <summary>Investor npub key (shown in expanded details)</summary>
     public string Npub { get; set; } = "";
     /// <summary>Whether the chat has messages</summary>
@@ -68,8 +70,6 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
     [Reactive] private string currentFilter = SignatureStatus.Waiting.ToLowerString();
     [Reactive] private bool isLoading;
     [Reactive] private bool isRefreshing;
-
-    public ObservableCollection<int> ExpandedSignatureIds { get; } = new();
 
     private List<SignatureRequestViewModel>? _cachedAllViewModels;
 
@@ -318,13 +318,12 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
 
     public void ToggleExpanded(int id)
     {
-        if (ExpandedSignatureIds.Contains(id))
-            ExpandedSignatureIds.Remove(id);
-        else
-            ExpandedSignatureIds.Add(id);
+        var sig = GetAllViewModels().FirstOrDefault(s => s.Id == id);
+        if (sig != null)
+            sig.IsExpanded = !sig.IsExpanded;
     }
 
-    public bool IsExpanded(int id) => ExpandedSignatureIds.Contains(id);
+    public bool IsExpanded(int id) => GetAllViewModels().FirstOrDefault(s => s.Id == id)?.IsExpanded ?? false;
 
     public void SetFilter(string filter) => CurrentFilter = filter;
 

@@ -26,7 +26,7 @@ public static class CreateProjectDtoMapper
 
             ProjectType = newProject.ProjectType,
             Sats = satsValue,
-            StartDate = (newProject.StartDate ?? DateTime.Now).Date,
+            StartDate = (newProject.StartDate ?? DateTime.UtcNow).Date,
 
             ExpiryDate = newProject.ExpiryDate?.Date,
             EndDate = newProject.FundingEndDate?.Date,

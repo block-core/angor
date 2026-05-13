@@ -1,12 +1,10 @@
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
-using Angor.Sdk.Wallet.Infrastructure.Interfaces;
+using Android.Views;
 using App.UI.Shared.Helpers;
-using Avalonia;
 using Avalonia.Android;
 using Avalonia.Threading;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace App.Android;
 
@@ -16,22 +14,12 @@ namespace App.Android;
     Icon = "@drawable/icon",
     MainLauncher = true,
     ScreenOrientation = ScreenOrientation.Portrait,
+    WindowSoftInputMode = SoftInput.AdjustNothing,
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
-public class MainActivity : AvaloniaMainActivity<global::App.App>
+public class MainActivity : AvaloniaMainActivity
 {
     private PerfTabReceiver? _perfReceiver;
     private bool _handlingPlatformBack;
-
-    protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
-    {
-        global::App.App.PlatformServices = services =>
-        {
-            services.AddSingleton<ISecureKeyProvider, AndroidKeyStoreSecureKeyProvider>();
-        };
-
-        return base.CustomizeAppBuilder(builder)
-            .WithInterFont();
-    }
 
     protected override void OnResume()
     {

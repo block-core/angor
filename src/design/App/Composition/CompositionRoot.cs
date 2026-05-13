@@ -70,11 +70,14 @@ public static class CompositionRoot
 
             // Add Serilog as a provider for file logging
             var fileLogger = new LoggerConfiguration()
+                .Destructure.With<SensitiveDataRedactor>()
                 .MinimumLevel.Information()
                 .WriteTo.File(
                     logFilePath,
                     rollingInterval: Serilog.RollingInterval.Day,
                     retainedFileCountLimit: 15,
+                    fileSizeLimitBytes: 10 * 1024 * 1024,
+                    rollOnFileSizeLimit: true,
                     outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
                 .CreateLogger();
 
@@ -150,6 +153,7 @@ public static class CompositionRoot
         services.AddSingleton(ResolveFaucetOptions());
         services.AddSingleton<IFaucetService, HttpFaucetService>();
         services.AddSingleton<BlossomUploadService>();
+        services.AddSingleton<ILogExportService, LogExportService>();
 
         // ── Shared singletons (replaces SharedViewModels static class) ──
         services.AddSingleton<SignatureStore>();

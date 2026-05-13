@@ -39,7 +39,7 @@ public enum NetworkTab
 /// Consumers provide a <see cref="PaymentFlowConfig"/> with callbacks for what to do after
 /// payment (build invest tx, deploy project, etc.) and where to navigate on success.
 /// </summary>
-public partial class PaymentFlowViewModel : ReactiveObject
+public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
 {
     private readonly IWalletAppService _walletAppService;
     private readonly IInvestmentAppService _investmentAppService;
@@ -50,6 +50,7 @@ public partial class PaymentFlowViewModel : ReactiveObject
     private readonly Func<BitcoinNetwork> _getNetwork;
     private readonly ILogger _logger;
     private readonly PaymentFlowConfig _config;
+    private readonly CompositeDisposable _disposables = new();
     private CancellationTokenSource? _monitorCts;
 
     // ── State ──
@@ -170,25 +171,25 @@ public partial class PaymentFlowViewModel : ReactiveObject
         {
             _logger.LogError(ex, "GenerateReceiveAddressCommand error");
             PaymentStatusText = $"Error: {ex.Message}";
-        });
+        }).DisposeWith(_disposables);
         PayToOnChainAddressCommand = ReactiveCommand.CreateFromTask(PayToOnChainAddressAsync);
         PayToOnChainAddressCommand.ThrownExceptions.Subscribe(ex =>
         {
             _logger.LogError(ex, "PayToOnChainAddressCommand error");
             PaymentStatusText = $"Error: {ex.Message}";
-        });
+        }).DisposeWith(_disposables);
         PayViaLightningCommand = ReactiveCommand.CreateFromTask(PayViaLightningAsync);
         PayViaLightningCommand.ThrownExceptions.Subscribe(ex =>
         {
             _logger.LogError(ex, "PayViaLightningCommand error");
             PaymentStatusText = $"Error: {ex.Message}";
-        });
+        }).DisposeWith(_disposables);
         PayWithWalletCommand = ReactiveCommand.CreateFromTask(PayWithWalletAsync);
         PayWithWalletCommand.ThrownExceptions.Subscribe(ex =>
         {
             _logger.LogError(ex, "PayWithWalletCommand error");
             PaymentStatusText = $"Error: {ex.Message}";
-        });
+        }).DisposeWith(_disposables);
 
         // Raise derived property notifications
         this.WhenAnyValue(x => x.CurrentScreen).Subscribe(_ =>
@@ -196,14 +197,14 @@ public partial class PaymentFlowViewModel : ReactiveObject
             this.RaisePropertyChanged(nameof(IsWalletSelector));
             this.RaisePropertyChanged(nameof(IsInvoice));
             this.RaisePropertyChanged(nameof(IsSuccess));
-        });
+        }).DisposeWith(_disposables);
         this.WhenAnyValue(x => x.SelectedWallet).Subscribe(_ =>
         {
             this.RaisePropertyChanged(nameof(HasSelectedWallet));
             this.RaisePropertyChanged(nameof(PayButtonText));
-        });
+        }).DisposeWith(_disposables);
         this.WhenAnyValue(x => x.ErrorMessage).Subscribe(_ =>
-            this.RaisePropertyChanged(nameof(HasError)));
+            this.RaisePropertyChanged(nameof(HasError))).DisposeWith(_disposables);
         this.WhenAnyValue(x => x.SelectedNetworkTab).Subscribe(_ =>
         {
             this.RaisePropertyChanged(nameof(IsOnChainTab));
@@ -214,13 +215,13 @@ public partial class PaymentFlowViewModel : ReactiveObject
             this.RaisePropertyChanged(nameof(InvoiceTabIcon));
             this.RaisePropertyChanged(nameof(InvoiceString));
             this.RaisePropertyChanged(nameof(QrCodeContent));
-        });
+        }).DisposeWith(_disposables);
         this.WhenAnyValue(x => x.OnChainAddress, x => x.LightningInvoice, x => x.PaymentStatusText)
             .Subscribe(_ =>
             {
                 this.RaisePropertyChanged(nameof(InvoiceString));
                 this.RaisePropertyChanged(nameof(QrCodeContent));
-            });
+            }).DisposeWith(_disposables);
 
         SelectWallet(_walletContext.SelectedWallet ?? Wallets.FirstOrDefault());
     }
@@ -853,4 +854,6 @@ public partial class PaymentFlowViewModel : ReactiveObject
         IsGeneratingLightningInvoice = false;
         _config.OnDismissed?.Invoke();
     }
+
+    public void Dispose() => _disposables.Dispose();
 }

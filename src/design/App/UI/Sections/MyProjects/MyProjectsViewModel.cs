@@ -49,7 +49,7 @@ public class MyProjectItemViewModel
 /// My Projects ViewModel — connected to SDK for founder project discovery and management.
 /// Uses IProjectAppService.GetFounderProjects() to load projects owned by the user.
 /// </summary>
-public partial class MyProjectsViewModel : ReactiveObject
+public partial class MyProjectsViewModel : ReactiveObject, IDisposable
 {
     private readonly IProjectAppService _projectAppService;
     private readonly IWalletContext _walletContext;
@@ -57,6 +57,7 @@ public partial class MyProjectsViewModel : ReactiveObject
     private readonly Func<MyProjectItemViewModel, EditProfileViewModel> _editProfileFactory;
     private readonly ICurrencyService _currencyService;
     private readonly ILogger<MyProjectsViewModel> _logger;
+    private readonly CompositeDisposable _disposables = new();
 
     /// <summary>Raised when the VM wants to show a transient toast notification.</summary>
     public event Action<string>? ToastRequested;
@@ -289,4 +290,6 @@ public partial class MyProjectsViewModel : ReactiveObject
     }
 
     public void CloseEditProfile() => SelectedEditProject = null;
+
+    public void Dispose() => _disposables.Dispose();
 }
