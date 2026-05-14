@@ -68,6 +68,7 @@ public class MultiFundReleaseUnfundedAndClaimTest
         await WithProfileWindow(FounderProfile, initializedProfiles, async window =>
         {
             await CreateWalletAndFundAsync(window, FounderProfile);
+            await window.EnableDebugMode();
             project = await CreateFundProjectAsync(
                 window,
                 FounderProfile,

@@ -98,8 +98,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     public TransactionInfo BuildAndSignRecoverReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction,
         Transaction recoveryTransaction, string investorReceiveAddress, FeeEstimation feeEstimation, string investorPrivateKey)
     {
-        // H4: Reject fee rates below the protocol minimum — a sub-minimum rate
-        // indicates a bug in fee estimation or a manipulation attempt.
+        // H4: Reject fee rates below the protocol minimum — FeeRate must be in sat/kB.
         if (feeEstimation.FeeRate < ProtocolConstants.MinFeeRateSatsPerKb)
             throw new ArgumentOutOfRangeException(nameof(feeEstimation),
                 $"Fee rate {feeEstimation.FeeRate} sat/kB is below the protocol minimum of {ProtocolConstants.MinFeeRateSatsPerKb} sat/kB.");

@@ -94,8 +94,7 @@ public class FounderTransactionActions : IFounderTransactionActions
     public TransactionInfo SpendFounderStage(ProjectInfo projectInfo, IEnumerable<StageTransactionInput> stageTransactionInput, Script founderRecieveAddress, string founderPrivateKey, FeeEstimation fee)
     {
         // H4: Reject fee rates below the protocol minimum — a sub-minimum rate
-        // indicates a bug in fee estimation or a manipulation attempt. The transaction
-        // would be rejected by relay nodes anyway (BIP-133 feefilter).
+        // indicates a bug in fee estimation or a unit mismatch. FeeRate must be in sat/kB.
         if (fee.FeeRate < ProtocolConstants.MinFeeRateSatsPerKb)
             throw new ArgumentOutOfRangeException(nameof(fee),
                 $"Fee rate {fee.FeeRate} sat/kB is below the protocol minimum of {ProtocolConstants.MinFeeRateSatsPerKb} sat/kB.");
