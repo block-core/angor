@@ -120,7 +120,7 @@ public static class CompositionRoot
         {
             if (OperatingSystem.IsWindows())
                 services.AddSingleton<ISecureKeyProvider, DpapiSecureKeyProvider>();
-            else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+            else if (OperatingSystem.IsLinux())
                 services.AddSingleton<ISecureKeyProvider, LinuxSecureKeyProvider>();
             else
                 throw new PlatformNotSupportedException("No ISecureKeyProvider implementation available for this platform.");
