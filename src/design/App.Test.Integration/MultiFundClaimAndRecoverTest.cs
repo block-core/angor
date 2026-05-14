@@ -49,7 +49,7 @@ public class MultiFundClaimAndRecoverTest
         var initializedProfiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var runId = Guid.NewGuid().ToString("N")[..12];
         var projectName = $"Multi Fund {runId}";
-        var projectAbout = $"{TestName} run {runId}. Founder claims stage 1, one investor recovers to penalty, the other without penalty.";
+        var projectAbout = $"{TestName} run {runId}. Founder claims stage 1, one investor recovers with penalty then from penalty, the other without penalty.";
         var bannerImageUrl = $"https://picsum.photos/seed/{Guid.NewGuid().ToString("N")[..8]}/320/200";
         var profileImageUrl = $"https://picsum.photos/seed/{Guid.NewGuid().ToString("N")[..8]}/100/100";
         var thresholdAmountBtc = "0.01";
@@ -242,13 +242,13 @@ public class MultiFundClaimAndRecoverTest
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
-        Log(profileName, "Configuring target amount, threshold, and penalty days...");
+        Log(profileName, "Configuring target amount, threshold, and zero penalty days...");
         wizardVm.TargetAmount = "1.0";
         wizardVm.ApprovalThreshold = thresholdAmountBtc;
-        wizardVm.PenaltyDays = 10; // protocol minimum enforced by ProjectInfoValidator
+        wizardVm.PenaltyDays = 0; // debug mode bypasses the 10-day minimum, allowing penalty release testing
         wizardVm.TargetAmount.Should().Be("1.0");
         wizardVm.ApprovalThreshold.Should().Be(thresholdAmountBtc);
-        wizardVm.PenaltyDays.Should().Be(10);
+        wizardVm.PenaltyDays.Should().Be(0);
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
@@ -646,37 +646,42 @@ public class MultiFundClaimAndRecoverTest
         Log(profileName, "Verifying PenaltiesModal displays penalty investment...");
         await VerifyPenaltiesModalAsync(window, portfolioVm, investment, profileName);
 
-        // Penalty release (PenaltyReleaseFundsAsync) is intentionally skipped here.
-        // With PenaltyDays=10, the penalty outputs have a BIP68 CSV relative timelock of
-        // ~1440 blocks (10 days). On signet/testnet, this timelock cannot be satisfied
-        // within the test's execution window. The penalty release transaction would be
-        // rejected with "non-BIP68-final". The penalty release mechanism is validated by
-        // unit tests (SpendingTransactionBuilder, InvestorTransactionActions).
-        Log(profileName, $"Skipping penalty release — CSV timelock of {10} days cannot be satisfied on signet.");
+        Log(profileName, "Recovering from penalty (penalty days = 0)...");
+        await EnsureWalletHasFeeFunds(window, profileName, investment.InvestmentWalletId, "before penalty release");
+        var penaltyReleaseResult = await ExecuteRecoveryActionWithRetry(
+            profileName,
+            "penalty-release",
+            () => portfolioVm.PenaltyReleaseFundsAsync(investment).ContinueWith(t => t.Result.Success),
+            () => LogRecoveryBuildDiagnostics(investment, RecoveryAction.PenaltyRelease));
+        penaltyReleaseResult.Should().BeTrue();
 
-        // Verify that stages show "In Penalty" or "Recovered (In Penalty)" status after recovery-to-penalty.
-        Log(profileName, "Verifying stage statuses after recovery to penalty...");
+        // #16 regression: after penalty release, stages should show "Recovered after penalty" or "Spent by investor" (not blank)
+        Log(profileName, "Verifying stage statuses after penalty release...");
         var statusDeadline = DateTime.UtcNow + IndexerLagTimeout;
         while (DateTime.UtcNow < statusDeadline)
         {
             await portfolioVm.LoadRecoveryStatusAsync(investment);
             Dispatcher.UIThread.RunJobs();
 
-            var penaltyStages = investment.Stages
-                .Where(s => s.Status != null && s.Status.Contains("Penalty", StringComparison.OrdinalIgnoreCase))
+            var recoveredStages = investment.Stages
+                .Where(s => s.Status == "Recovered after penalty" || s.Status == "Spent by investor")
                 .ToList();
 
-            if (penaltyStages.Count > 0)
+            if (recoveredStages.Count > 0)
             {
-                Log(profileName, $"Found {penaltyStages.Count} stage(s) in penalty status: {string.Join(", ", penaltyStages.Select(s => $"stage {s.StageNumber}='{s.Status}'"))}");
+                Log(profileName, $"Found {recoveredStages.Count} stage(s) with recovered status: {string.Join(", ", recoveredStages.Select(s => $"stage {s.StageNumber}='{s.Status}'"))}");
+                foreach (var stage in recoveredStages)
+                {
+                    stage.IsStatusRecovered.Should().BeTrue($"stage {stage.StageNumber} with status '{stage.Status}' should be recognized as recovered");
+                }
                 break;
             }
 
             await Task.Delay(PollInterval);
         }
 
-        investment.Stages.Any(s => s.Status != null && s.Status.Contains("Penalty", StringComparison.OrdinalIgnoreCase)).Should().BeTrue(
-            "at least one stage should show a penalty-related status after recovery to penalty");
+        investment.Stages.Any(s => s.Status == "Recovered after penalty" || s.Status == "Spent by investor").Should().BeTrue(
+            "at least one stage should show 'Recovered after penalty' or 'Spent by investor' after penalty release");
     }
 
     private async Task RecoverBelowThresholdInvestmentAsync(Window window, string profileName, ProjectHandle project)

@@ -67,14 +67,13 @@ public class CreateProjectTest
         var profileImageUrl = $"https://picsum.photos/seed/{Guid.NewGuid().ToString("N")[..8]}/100/100";
 
         // Wizard input parameters — declared up front so validation can reference them
-        // These values use protocol minimums to pass ProjectInfoValidator:
-        //   - targetAmountBtc 0.001 BTC = 100,000 sats (protocol minimum)
-        //   - investEndDate = today (debug mode only, production requires future date)
-        //   - penaltyDays = 10 (protocol minimum)
+        // These values exercise edge cases that are only allowed in debug mode:
+        //   - investEndDate = today fails production rule "must be after today"
+        //   - penaltyDays = 0 fails production minimum of 10 days
         // With debug mode ON + testnet, these constraints are relaxed.
         var targetAmountBtc = "0.001"; // protocol minimum: 100,000 sats (0.001 BTC)
         var investEndDate = DateTime.Now.Date; // same day — debug only
-        var penaltyDays = 10; // protocol minimum enforced by ProjectInfoValidator
+        var penaltyDays = 0; // below production minimum of 10, allowed in debug mode
         var durationValue = "6";
         var durationUnit = "Months";
         var releaseFrequency = "Monthly";
@@ -531,8 +530,8 @@ public class CreateProjectTest
         TestHelpers.Log($"[STEP 8] Dates: start={projectDto.FundingStartDate:yyyy-MM-dd}, end={projectDto.FundingEndDate:yyyy-MM-dd}");
 
         // 8g. Validate penalty configuration
-        projectDto.PenaltyDuration.TotalDays.Should().BeApproximately(10, 1,
-            "Penalty duration should be ~10 days (protocol minimum)");
+        projectDto.PenaltyDuration.TotalDays.Should().BeApproximately(0, 1,
+            "Penalty duration should be ~0 days (debug mode allows below protocol minimum)");
         TestHelpers.Log($"[STEP 8] Penalty duration: {projectDto.PenaltyDuration.TotalDays} days");
 
         // ──────────────────────────────────────────────────────────────

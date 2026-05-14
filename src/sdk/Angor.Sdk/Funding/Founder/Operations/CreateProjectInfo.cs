@@ -136,7 +136,7 @@ public static class CreateProjectInfo
             }
 
             // Validate protocol-level constraints before publishing
-            var validationError = ProjectInfoValidator.Validate(projectInfo);
+            var validationError = ProjectInfoValidator.Validate(projectInfo, networkConfiguration.GetDebugMode());
             if (validationError != null)
             {
                 return Result.Failure<string>($"Project validation failed: {validationError}");

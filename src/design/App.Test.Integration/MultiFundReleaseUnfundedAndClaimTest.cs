@@ -244,10 +244,10 @@ public class MultiFundReleaseUnfundedAndClaimTest
         Log(profileName, "Configuring target amount, threshold, and penalty days...");
         wizardVm.TargetAmount = "1.0";
         wizardVm.ApprovalThreshold = thresholdAmountBtc;
-        wizardVm.PenaltyDays = 10; // protocol minimum enforced by ProjectInfoValidator
+        wizardVm.PenaltyDays = 0; // debug mode bypasses the 10-day minimum
         wizardVm.TargetAmount.Should().Be("1.0");
         wizardVm.ApprovalThreshold.Should().Be(thresholdAmountBtc);
-        wizardVm.PenaltyDays.Should().Be(10);
+        wizardVm.PenaltyDays.Should().Be(0);
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 

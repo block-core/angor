@@ -13,9 +13,12 @@ public static class ProjectInfoValidator
     /// Validates all protocol-level constraints on a ProjectInfo.
     /// Returns null if valid, or an error message string if invalid.
     /// </summary>
-    public static string? Validate(ProjectInfo projectInfo)
+    /// <param name="projectInfo">The project info to validate.</param>
+    /// <param name="isDebugMode">When true, relaxes constraints that would prevent testing
+    /// (e.g. allows PenaltyDays=0 so penalty release flows can be exercised on signet).</param>
+    public static string? Validate(ProjectInfo projectInfo, bool isDebugMode = false)
     {
-        var error = ValidatePenaltyDays(projectInfo);
+        var error = ValidatePenaltyDays(projectInfo, isDebugMode);
         if (error != null) return error;
 
         error = ValidateTargetAmount(projectInfo);
@@ -37,13 +40,16 @@ public static class ProjectInfoValidator
     /// L2: Validates penalty duration is within protocol bounds.
     /// Penalty must be between <see cref="ProtocolConstants.MinPenaltyDays"/> and
     /// <see cref="ProtocolConstants.MaxPenaltyDays"/> for project types that enforce penalties.
+    /// In debug mode, the minimum is relaxed to 0 to allow testing penalty release flows.
     /// </summary>
-    public static string? ValidatePenaltyDays(ProjectInfo projectInfo)
+    public static string? ValidatePenaltyDays(ProjectInfo projectInfo, bool isDebugMode = false)
     {
         if (!projectInfo.HasPenalty)
             return null;
 
-        if (projectInfo.PenaltyDays < ProtocolConstants.MinPenaltyDays)
+        // In debug mode, allow PenaltyDays=0 so tests can exercise penalty release
+        // without waiting for real timelocks to mature.
+        if (!isDebugMode && projectInfo.PenaltyDays < ProtocolConstants.MinPenaltyDays)
             return $"Penalty period must be at least {ProtocolConstants.MinPenaltyDays} days, got {projectInfo.PenaltyDays}.";
 
         if (projectInfo.PenaltyDays > ProtocolConstants.MaxPenaltyDays)
