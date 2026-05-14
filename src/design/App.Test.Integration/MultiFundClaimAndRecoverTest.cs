@@ -68,6 +68,7 @@ public class MultiFundClaimAndRecoverTest
         await WithProfileWindow(FounderProfile, initializedProfiles, async window =>
         {
             await CreateWalletAndFundAsync(window, FounderProfile);
+            await window.EnableDebugMode();
             project = await CreateFundProjectAsync(
                 window,
                 FounderProfile,
@@ -245,7 +246,7 @@ public class MultiFundClaimAndRecoverTest
         Log(profileName, "Configuring target amount, threshold, and zero penalty days...");
         wizardVm.TargetAmount = "1.0";
         wizardVm.ApprovalThreshold = thresholdAmountBtc;
-        wizardVm.PenaltyDays = 0;
+        wizardVm.PenaltyDays = 0; // debug mode bypasses the 10-day minimum, allowing penalty release testing
         wizardVm.TargetAmount.Should().Be("1.0");
         wizardVm.ApprovalThreshold.Should().Be(thresholdAmountBtc);
         wizardVm.PenaltyDays.Should().Be(0);
@@ -670,7 +671,6 @@ public class MultiFundClaimAndRecoverTest
             if (recoveredStages.Count > 0)
             {
                 Log(profileName, $"Found {recoveredStages.Count} stage(s) with recovered status: {string.Join(", ", recoveredStages.Select(s => $"stage {s.StageNumber}='{s.Status}'"))}");
-                // Verify the UI helper recognizes them as recovered
                 foreach (var stage in recoveredStages)
                 {
                     stage.IsStatusRecovered.Should().BeTrue($"stage {stage.StageNumber} with status '{stage.Status}' should be recognized as recovered");

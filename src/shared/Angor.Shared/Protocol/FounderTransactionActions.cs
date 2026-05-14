@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using System.Buffers.Binary;
 using static NBitcoin.Scripting.OutputDescriptor;
-//using Angor.Shared.Protocol;
 using IndexedTxOut = NBitcoin.IndexedTxOut;
 using Key = NBitcoin.Key;
 using Op = NBitcoin.Op;
@@ -94,6 +93,12 @@ public class FounderTransactionActions : IFounderTransactionActions
 
     public TransactionInfo SpendFounderStage(ProjectInfo projectInfo, IEnumerable<StageTransactionInput> stageTransactionInput, Script founderRecieveAddress, string founderPrivateKey, FeeEstimation fee)
     {
+        // H4: Reject fee rates below the protocol minimum — a sub-minimum rate
+        // indicates a bug in fee estimation or a unit mismatch. FeeRate must be in sat/kB.
+        if (fee.FeeRate < ProtocolConstants.MinFeeRateSatsPerKb)
+            throw new ArgumentOutOfRangeException(nameof(fee),
+                $"Fee rate {fee.FeeRate} sat/kB is below the protocol minimum of {ProtocolConstants.MinFeeRateSatsPerKb} sat/kB.");
+
         var network = _networkConfiguration.GetNetwork();
         var nbitcoinNetwork = NetworkMapper.Map(network);
         var spendingTransaction = nbitcoinNetwork.CreateTransaction();
@@ -133,7 +138,7 @@ public class FounderTransactionActions : IFounderTransactionActions
         }
 
         var txSize = spendingTransaction.GetVirtualSize();
-        var minimumFee = new FeeRate(Money.Satoshis(1100)).GetFee(txSize); //1000 sats per kilobyte
+        var minimumFee = new FeeRate(Money.Satoshis(ProtocolConstants.MinFeeRateSatsPerKb)).GetFee(txSize);
 
         var totalFee = nbitcoinNetwork
             .CreateTransactionBuilder()

@@ -67,14 +67,13 @@ public class CreateProjectTest
         var profileImageUrl = $"https://picsum.photos/seed/{Guid.NewGuid().ToString("N")[..8]}/100/100";
 
         // Wizard input parameters — declared up front so validation can reference them
-        // These values are deliberately chosen to ONLY pass in debug mode:
-        //   - targetAmountBtc 0.0001 is below production minimum of 0.001 BTC
+        // These values exercise edge cases that are only allowed in debug mode:
         //   - investEndDate = today fails production rule "must be after today"
         //   - penaltyDays = 0 fails production minimum of 10 days
         // With debug mode ON + testnet, these constraints are relaxed.
-        var targetAmountBtc = "0.0001";
+        var targetAmountBtc = "0.001"; // protocol minimum: 100,000 sats (0.001 BTC)
         var investEndDate = DateTime.Now.Date; // same day — debug only
-        var penaltyDays = 0; // below production minimum of 10
+        var penaltyDays = 0; // below production minimum of 10, allowed in debug mode
         var durationValue = "6";
         var durationUnit = "Months";
         var releaseFrequency = "Monthly";
@@ -493,7 +492,7 @@ public class CreateProjectTest
         projectDto.Name.Should().Be(projectName);
         projectDto.ShortDescription.Should().Contain(runId);
         projectDto.ProjectType.Should().Be(Angor.Shared.Models.ProjectType.Invest);
-        projectDto.TargetAmount.Should().Be(10_000L, "0.0001 BTC = 10,000 sats");
+        projectDto.TargetAmount.Should().Be(100_000L, "0.001 BTC = 100,000 sats");
         projectDto.Banner.Should().NotBeNull("Banner URI should be set");
         projectDto.Banner!.ToString().Should().Contain("picsum.photos");
         projectDto.Avatar.Should().NotBeNull("Avatar URI should be set");
@@ -532,7 +531,7 @@ public class CreateProjectTest
 
         // 8g. Validate penalty configuration
         projectDto.PenaltyDuration.TotalDays.Should().BeApproximately(0, 1,
-            "Penalty duration should be ~0 days (debug mode value)");
+            "Penalty duration should be ~0 days (debug mode allows below protocol minimum)");
         TestHelpers.Log($"[STEP 8] Penalty duration: {projectDto.PenaltyDuration.TotalDays} days");
 
         // ──────────────────────────────────────────────────────────────

@@ -68,6 +68,7 @@ public class MultiFundReleaseUnfundedAndClaimTest
         await WithProfileWindow(FounderProfile, initializedProfiles, async window =>
         {
             await CreateWalletAndFundAsync(window, FounderProfile);
+            await window.EnableDebugMode();
             project = await CreateFundProjectAsync(
                 window,
                 FounderProfile,
@@ -241,10 +242,10 @@ public class MultiFundReleaseUnfundedAndClaimTest
         wizardVm.GoNext();
         Dispatcher.UIThread.RunJobs();
 
-        Log(profileName, "Configuring target amount, threshold, and zero penalty days...");
+        Log(profileName, "Configuring target amount, threshold, and penalty days...");
         wizardVm.TargetAmount = "1.0";
         wizardVm.ApprovalThreshold = thresholdAmountBtc;
-        wizardVm.PenaltyDays = 0;
+        wizardVm.PenaltyDays = 0; // debug mode bypasses the 10-day minimum
         wizardVm.TargetAmount.Should().Be("1.0");
         wizardVm.ApprovalThreshold.Should().Be(thresholdAmountBtc);
         wizardVm.PenaltyDays.Should().Be(0);

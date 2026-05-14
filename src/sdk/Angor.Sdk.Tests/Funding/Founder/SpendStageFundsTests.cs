@@ -74,7 +74,7 @@ public class SpendStageFundsTests
         var request = new SpendStageFunds.SpendStageFundsRequest(
             new WalletId("wallet-1"),
             new ProjectId("project-1"),
-            new FeeEstimation { Confirmations = 1, FeeRate = 10 },
+            new FeeEstimation { Confirmations = 1, FeeRate = 10_000 },
             toSpend);
 
         // Act
@@ -258,7 +258,7 @@ public class SpendStageFundsTests
         return new SpendStageFunds.SpendStageFundsRequest(
             new WalletId("wallet-1"),
             new ProjectId("project-1"),
-            new FeeEstimation { Confirmations = 1, FeeRate = 10 },
+            new FeeEstimation { Confirmations = 1, FeeRate = 10_000 },
             toSpend);
     }
 
