@@ -63,7 +63,7 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
 
              return new TxIn(new OutPoint(_.Transaction, _.N))
              {
-                 Sequence = new Sequence(spendingTrx.LockTime.Value),
+                 Sequence = new Sequence(0xFFFFFFFE),
                  WitScript = witScript
              };
          }));

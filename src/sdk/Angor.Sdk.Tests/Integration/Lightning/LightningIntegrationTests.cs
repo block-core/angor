@@ -49,7 +49,7 @@ public class BoltzSwapIntegrationTests : IDisposable
     private const string TestWalletWords = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
     private const string TestWalletPassphrase = "";
     private const string TestProjectId = "test-project-id";
-    private const string BoltzApiUrl = "https://boltz.thedude.cloud/";
+    private const string BoltzApiUrl = "https://test.boltz.angor.io/";
     private const bool UseV2Prefix = true;
 
     public BoltzSwapIntegrationTests(ITestOutputHelper output)

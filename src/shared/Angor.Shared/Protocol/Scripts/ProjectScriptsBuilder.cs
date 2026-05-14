@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using Angor.Shared.Models;
 using Blockcore.Consensus.ScriptInfo;
 using Blockcore.NBitcoin;
@@ -12,6 +13,13 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
     public ProjectScriptsBuilder(IDerivationOperations derivationOperations)
     {
         _derivationOperations = derivationOperations;
+    }
+
+    private static byte[] BitConverterToLittleEndian(short value)
+    {
+        var bytes = new byte[2];
+        BinaryPrimitives.WriteInt16LittleEndian(bytes, value);
+        return bytes;
     }
 
     public Script GetAngorFeeOutputScript(string angorKey)
@@ -44,7 +52,7 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
     {
         return new Script(OpcodeType.OP_RETURN,
             Op.GetPushOp(new PubKey(founderKey).ToBytes()),
-            Op.GetPushOp(BitConverter.GetBytes(keyType)),
+            Op.GetPushOp(BitConverterToLittleEndian(keyType)),
             Op.GetPushOp(Encoders.Hex.DecodeData(nostrEventId)));
     }
 
@@ -79,6 +87,14 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
 
         var ops = script.ToOps();
 
+        // Validate minimum structure: OP_RETURN + at least one push
+        if (ops.Count < 2 || ops[1].PushData == null)
+            throw new Exception($"Unexpected OP_RETURN format: expected at least 2 operations with push data, got {ops.Count}");
+
+        // Validate investor key is a valid compressed public key (33 bytes)
+        if (ops[1].PushData.Length != 33)
+            throw new Exception($"Invalid investor key length in OP_RETURN: expected 33 bytes (compressed pubkey), got {ops[1].PushData.Length}");
+
         if (ops.Count == 2)
         {
             // Invest project: investor key only
@@ -88,27 +104,38 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
         if (ops.Count == 3)
         {
             // Could be:
-            // 1. Invest project with seeder: investor key + secret hash
-            // 2. Fund/Subscribe project: investor key + dynamic info
+            // 1. Invest project with seeder: investor key + secret hash (32 bytes)
+            // 2. Fund/Subscribe project: investor key + dynamic info (4 bytes)
 
-            // Check if second push data is 32 bytes (secret hash) or 7 bytes (dynamic info)
-            if (ops[2].PushData?.Length == 32)
+            if (ops[2].PushData == null)
+                throw new Exception("Unexpected OP_RETURN format: third operation has no push data");
+
+            if (ops[2].PushData.Length == 32)
             {
                 // Seeder with secret hash
                 PubKey pubKey = new PubKey(ops[1].PushData);
                 uint256 secretHash = new uint256(ops[2].PushData);
                 return (pubKey.ToHex(), secretHash);
             }
-            else if (ops[2].PushData?.Length == 4)
+            else if (ops[2].PushData.Length == 4)
             {
                 // Dynamic stage info (no secret hash)
                 return (new PubKey(ops[1].PushData).ToHex(), null);
+            }
+            else
+            {
+                throw new Exception($"Unexpected OP_RETURN format: third push data has unrecognized length {ops[2].PushData.Length} (expected 32 for secret hash or 4 for dynamic info)");
             }
         }
 
         if (ops.Count == 4)
         {
             // Fund/Subscribe seeder: investor key + secret hash + dynamic info
+            if (ops[2].PushData?.Length != 32)
+                throw new Exception($"Unexpected OP_RETURN format: expected 32-byte secret hash at position 2, got {ops[2].PushData?.Length}");
+            if (ops[3].PushData?.Length != 4)
+                throw new Exception($"Unexpected OP_RETURN format: expected 4-byte dynamic info at position 3, got {ops[3].PushData?.Length}");
+
             PubKey pubKey = new PubKey(ops[1].PushData);
             uint256 secretHash = new uint256(ops[2].PushData);
             return (pubKey.ToHex(), secretHash);
