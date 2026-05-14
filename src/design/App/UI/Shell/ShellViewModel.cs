@@ -163,6 +163,7 @@ public class SignatureStore
 public partial class PrototypeSettings : ReactiveObject
 {
     private readonly IStore _store;
+    private readonly ILogger _logger;
     private const string SettingsKey = "prototype_settings.json";
     private CancellationTokenSource? saveSettingsCts;
 
@@ -192,9 +193,10 @@ public partial class PrototypeSettings : ReactiveObject
     /// </summary>
     [Reactive] private string? selectedWalletId;
 
-    public PrototypeSettings(IStore store)
+    public PrototypeSettings(IStore store, ILogger<PrototypeSettings> logger)
     {
         _store = store;
+        _logger = logger;
 
         // Load persisted values asynchronously to avoid blocking the UI thread.
         // Default field values are used until loading completes.
@@ -274,8 +276,7 @@ public partial class PrototypeSettings : ReactiveObject
 
             if (!token.IsCancellationRequested && saveResult.IsFailure)
             {
-                var logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(PrototypeSettings));
-                logger.LogWarning("Failed to save settings: {Error}", saveResult.Error);
+                _logger.LogWarning("Failed to save settings: {Error}", saveResult.Error);
             }
         }, token);
     }
@@ -301,8 +302,7 @@ public partial class PrototypeSettings : ReactiveObject
 
         if (saveResult.IsFailure)
         {
-            var logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(PrototypeSettings));
-            logger.LogWarning("FlushAsync: Failed to save settings: {Error}", saveResult.Error);
+            _logger.LogWarning("FlushAsync: Failed to save settings: {Error}", saveResult.Error);
         }
     }
 
