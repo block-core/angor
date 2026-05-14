@@ -250,3 +250,18 @@ services:
       - "${FAUCET_PORT:-48500}:5500"
     networks:
       - angor-test-net
+
+  # -----------------------------------------------------------------------
+  # NIP-44 interop tool — nak + custom nip44-tool Go binary for
+  # cross-language NIP-44 encrypt/decrypt validation.
+  # Stays alive via `sleep infinity` so tests can `docker exec` into it.
+  # -----------------------------------------------------------------------
+  nip44-tool:
+    container_name: angor-test-nip44-tool
+    image: angor-test/nip44-tool:local
+    build:
+      context: ./nak
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    networks:
+      - angor-test-net

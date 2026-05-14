@@ -60,7 +60,7 @@ public class LogExportRoundtripTest
             SenderPrivateKeyHex, recipientPubHex, zipBase64);
 
         _output.WriteLine($"Encrypted blob length: {encrypted.Length}");
-        encrypted.Should().Contain("?iv=", "NIP-04 format requires base64?iv=base64");
+        encrypted.Should().NotContain("?iv=", "NIP-44 format is plain base64 without ?iv= separator");
 
         // Act: decrypt (recipient decrypts from sender)
         var decrypted = await _encryptionService.DecryptNostrContentAsync(
@@ -130,7 +130,7 @@ public class LogExportRoundtripTest
             // Create a minimal decrypt helper that reads from local file instead of HTTPS.
             // Must run from DecryptScriptDir so ESM module resolution finds nostr-tools.
             var helperScript = $@"
-import {{ nip04 }} from 'nostr-tools';
+import {{ nip44 }} from 'nostr-tools';
 import {{ readFileSync, writeFileSync }} from 'fs';
 import {{ resolve }} from 'path';
 
@@ -139,14 +139,17 @@ const senderPubkeyHex = process.argv[3];
 const blobPath = resolve(process.argv[4]);
 const outputPath = resolve(process.argv[5]);
 
-const blobContent = readFileSync(blobPath, 'utf8');
+const blobContent = readFileSync(blobPath, 'utf8').trim();
 
-if (!blobContent.includes('?iv=')) {{
-  console.error('ERROR: Not NIP-04 format');
+if (blobContent.includes('?iv=')) {{
+  console.error('ERROR: NIP-04 format detected, expected NIP-44');
   process.exit(1);
 }}
 
-const zipBase64 = await nip04.decrypt(recipientPrivateKeyHex, senderPubkeyHex, blobContent);
+// Convert hex private key to Uint8Array
+const privKeyBytes = Uint8Array.from(Buffer.from(recipientPrivateKeyHex, 'hex'));
+const conversationKey = nip44.v2.utils.getConversationKey(privKeyBytes, senderPubkeyHex);
+const zipBase64 = nip44.v2.decrypt(blobContent, conversationKey);
 const zipBytes = Buffer.from(zipBase64, 'base64');
 
 if (zipBytes.length < 4 || zipBytes[0] !== 0x50 || zipBytes[1] !== 0x4B) {{
@@ -254,7 +257,7 @@ console.log(`OK: ${{zipBytes.length}} bytes`);
             // Create wrapper that patches global fetch to serve our local blob file,
             // then calls the real downloadAndDecrypt function from the script
             var wrapperScript = $@"
-import {{ nip04, nip19, getPublicKey }} from 'nostr-tools';
+import {{ nip44 }} from 'nostr-tools';
 import {{ readFileSync, writeFileSync }} from 'fs';
 import {{ resolve }} from 'path';
 
@@ -268,20 +271,21 @@ globalThis.fetch = async (url) => {{
   }};
 }};
 
-// Now replicate downloadAndDecrypt from the real script
 const privateKeyHex = process.argv[2];
 const senderPubkey = process.argv[3];
 const outputPath = resolve(process.argv[5] || 'decrypted-log.zip');
 
-const blobContent = readFileSync(blobPath, 'utf8');
+const blobContent = readFileSync(blobPath, 'utf8').trim();
 
-if (!blobContent.includes('?iv=')) {{
-  console.error('ERROR: Blob is not in NIP-04 format');
+if (blobContent.includes('?iv=')) {{
+  console.error('ERROR: NIP-04 format detected, expected NIP-44');
   process.exit(1);
 }}
 
-console.log('Decrypting blob...');
-const zipBase64 = await nip04.decrypt(privateKeyHex, senderPubkey, blobContent);
+console.log('Decrypting NIP-44 blob...');
+const privKeyBytes = Uint8Array.from(Buffer.from(privateKeyHex, 'hex'));
+const conversationKey = nip44.v2.utils.getConversationKey(privKeyBytes, senderPubkey);
+const zipBase64 = nip44.v2.decrypt(blobContent, conversationKey);
 const zipBuf = Buffer.from(zipBase64, 'base64');
 
 if (zipBuf.length < 4 || zipBuf[0] !== 0x50 || zipBuf[1] !== 0x4B) {{
@@ -357,9 +361,9 @@ console.log(`Decrypted zip saved to: ${{outputPath}} (${{zipBuf.length}} bytes)`
     }
 
     [Fact]
-    public async Task NIP04_SharedSecret_IsSymmetric()
+    public async Task NIP44_ConversationKey_IsSymmetric()
     {
-        // NIP-04 relies on ECDH: encrypt(senderPriv, recipPub) == decrypt(recipPriv, senderPub)
+        // NIP-44 relies on ECDH + HKDF: encrypt(senderPriv, recipPub) == decrypt(recipPriv, senderPub)
         var senderPub = GetPublicKeyHex(SenderPrivateKeyHex);
         var recipientPub = GetPublicKeyHex(RecipientPrivateKeyHex);
 
