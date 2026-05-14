@@ -98,8 +98,11 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     public TransactionInfo BuildAndSignRecoverReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction,
         Transaction recoveryTransaction, string investorReceiveAddress, FeeEstimation feeEstimation, string investorPrivateKey)
     {
-        // H4: Enforce minimum fee rate to prevent fee-rate sniping
-        var effectiveFeeRate = Math.Max(feeEstimation.FeeRate, ProtocolConstants.MinFeeRateSatsPerKb);
+        // H4: Reject fee rates below the protocol minimum — a sub-minimum rate
+        // indicates a bug in fee estimation or a manipulation attempt.
+        if (feeEstimation.FeeRate < ProtocolConstants.MinFeeRateSatsPerKb)
+            throw new ArgumentOutOfRangeException(nameof(feeEstimation),
+                $"Fee rate {feeEstimation.FeeRate} sat/kB is below the protocol minimum of {ProtocolConstants.MinFeeRateSatsPerKb} sat/kB.");
 
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
 
@@ -135,7 +138,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
         // reduce the network fee form the first output
         var virtualSize = transaction.GetVirtualSize(4);
-        var fee = new Blockcore.NBitcoin.FeeRate(Blockcore.NBitcoin.Money.Satoshis(effectiveFeeRate)).GetFee(virtualSize);
+        var fee = new Blockcore.NBitcoin.FeeRate(Blockcore.NBitcoin.Money.Satoshis(feeEstimation.FeeRate)).GetFee(virtualSize);
         transaction.Outputs[0].Value -= new Blockcore.NBitcoin.Money(fee);
 
         // sign the inputs (replace fake WitScript with real one)
@@ -160,11 +163,13 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     public TransactionInfo RecoverEndOfProjectFunds(string transactionHex, ProjectInfo projectInfo, int startStageNumber,
         string investorReceiveAddress, string investorPrivateKey, FeeEstimation feeEstimation)
     {
-        // H4: Enforce minimum fee rate
-        var effectiveFeeRate = Math.Max(feeEstimation.FeeRate, ProtocolConstants.MinFeeRateSatsPerKb);
+        // H4: Reject fee rates below the protocol minimum
+        if (feeEstimation.FeeRate < ProtocolConstants.MinFeeRateSatsPerKb)
+            throw new ArgumentOutOfRangeException(nameof(feeEstimation),
+                $"Fee rate {feeEstimation.FeeRate} sat/kB is below the protocol minimum of {ProtocolConstants.MinFeeRateSatsPerKb} sat/kB.");
 
         return _spendingTransactionBuilder.BuildRecoverInvestorRemainingFundsInProject(transactionHex, projectInfo, startStageNumber,
-            investorReceiveAddress, investorPrivateKey, new NBitcoin.FeeRate(new NBitcoin.Money(effectiveFeeRate)),
+            investorReceiveAddress, investorPrivateKey, new NBitcoin.FeeRate(new NBitcoin.Money(feeEstimation.FeeRate)),
             projectScripts =>
             {
                 var controlBlock = _taprootScriptBuilder.CreateControlBlock(projectScripts, _ => _.EndOfProject);
@@ -187,13 +192,15 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         string investorReceiveAddress, string investorPrivateKey, FeeEstimation feeEstimation,
         IEnumerable<byte[]> seederSecrets)
     {
-        // H4: Enforce minimum fee rate
-        var effectiveFeeRate = Math.Max(feeEstimation.FeeRate, ProtocolConstants.MinFeeRateSatsPerKb);
+        // H4: Reject fee rates below the protocol minimum
+        if (feeEstimation.FeeRate < ProtocolConstants.MinFeeRateSatsPerKb)
+            throw new ArgumentOutOfRangeException(nameof(feeEstimation),
+                $"Fee rate {feeEstimation.FeeRate} sat/kB is below the protocol minimum of {ProtocolConstants.MinFeeRateSatsPerKb} sat/kB.");
 
         var secrets = seederSecrets.Select(_ => new Key(_));
 
         return _spendingTransactionBuilder.BuildRecoverInvestorRemainingFundsInProject(transactionHex, projectInfo, startStageNumber,
-            investorReceiveAddress, investorPrivateKey, new NBitcoin.FeeRate(new NBitcoin.Money(effectiveFeeRate)),
+            investorReceiveAddress, investorPrivateKey, new NBitcoin.FeeRate(new NBitcoin.Money(feeEstimation.FeeRate)),
             _ =>
             {
                 var result = _taprootScriptBuilder.CreateControlSeederSecrets(_, projectInfo.ProjectSeeders.Threshold, secrets.ToArray());
