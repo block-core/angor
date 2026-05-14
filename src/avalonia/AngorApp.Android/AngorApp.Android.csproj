@@ -8,7 +8,6 @@
         <ApplicationVersion>1</ApplicationVersion>
         <ApplicationDisplayVersion>0.0.0</ApplicationDisplayVersion>
         <AndroidPackageFormat>apk</AndroidPackageFormat>
-        <AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
         <RuntimeIdentifier>android-arm64</RuntimeIdentifier>
@@ -20,6 +19,7 @@
         <DebugSymbols>false</DebugSymbols>
         <DebugType>none</DebugType>
         <RunAOTCompilation>true</RunAOTCompilation>
+        <AndroidEnableProfiledAot>true</AndroidEnableProfiledAot>
         <EnableAssemblyILStripping>false</EnableAssemblyILStripping>
         <NoWarn>$(NoWarn);IL2026;IL2111</NoWarn>
         <AspectInjectorEnabled>false</AspectInjectorEnabled>
