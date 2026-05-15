@@ -252,6 +252,18 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
         ShowCreateWizard = false;
     }
 
+    public bool TryGoBackInCreateWizard()
+    {
+        if (!ShowCreateWizard)
+            return false;
+
+        if (!CreateProjectVm.CanGoBack)
+            return false;
+
+        CreateProjectVm.GoBack();
+        return true;
+    }
+
     /// <summary>
     /// Cancel the wizard: reset all data, delete the draft, and close.
     /// </summary>
