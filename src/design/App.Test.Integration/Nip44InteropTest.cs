@@ -59,7 +59,7 @@ public class Nip44InteropTest : IAsyncLifetime
 
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 
-    [Fact]
+    [Fact(Skip = "Requires angor-test-nip44-tool Docker container: docker compose up -d nip44-tool")]
     public async Task PubKeyDerivation_CSharp_Matches_Go()
     {
         SkipIfNoContainer();
@@ -75,7 +75,7 @@ public class Nip44InteropTest : IAsyncLifetime
         goBobPub.Should().Be(_bobPubHex, "C# and Go should derive the same public key for Bob");
     }
 
-    [Fact]
+    [Fact(Skip = "Requires angor-test-nip44-tool Docker container: docker compose up -d nip44-tool")]
     public async Task ConversationKey_CSharp_Matches_Go()
     {
         SkipIfNoContainer();
@@ -96,7 +96,7 @@ public class Nip44InteropTest : IAsyncLifetime
         // interop by encrypting in one and decrypting in the other (next tests).
     }
 
-    [Fact]
+    [Fact(Skip = "Requires angor-test-nip44-tool Docker container: docker compose up -d nip44-tool")]
     public async Task EncryptCSharp_DecryptGo()
     {
         SkipIfNoContainer();
@@ -121,7 +121,7 @@ public class Nip44InteropTest : IAsyncLifetime
             "Go should decrypt what C# encrypted using NIP-44");
     }
 
-    [Fact]
+    [Fact(Skip = "Requires angor-test-nip44-tool Docker container: docker compose up -d nip44-tool")]
     public async Task EncryptGo_DecryptCSharp()
     {
         SkipIfNoContainer();
@@ -146,7 +146,7 @@ public class Nip44InteropTest : IAsyncLifetime
             "C# should decrypt what Go encrypted using NIP-44");
     }
 
-    [Fact]
+    [Fact(Skip = "Requires angor-test-nip44-tool Docker container: docker compose up -d nip44-tool")]
     public async Task LargePayload_Roundtrip_BothDirections()
     {
         SkipIfNoContainer();

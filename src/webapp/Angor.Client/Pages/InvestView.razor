@@ -1847,7 +1847,6 @@
                 // Derive claim private key (same path as the public key used at swap creation)
                 var words = await passwordComponent.GetWalletAsync();
                 var claimPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, project!.ProjectInfo.FounderKey);
-                var claimPrivateKeyHex = Encoders.Hex.EncodeData(claimPrivateKey.ToBytes());
 
                 _Logger.LogInformation("Claiming swap {SwapId} from lockup {LockupAddress}",
                     lightningSwapId, currentSwap!.LockupAddress);
@@ -1856,7 +1855,7 @@
                 StateHasChanged();
 
                 var claimResult = await _boltzClaimService.ClaimSwapAsync(
-                    currentSwap, claimPrivateKeyHex, lockupTxHex);
+                    currentSwap, claimPrivateKey, lockupTxHex);
 
                 if (claimResult.IsFailure)
                 {

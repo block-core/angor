@@ -33,7 +33,7 @@ public class BoltzClaimService : IBoltzClaimService
     /// <inheritdoc />
     public async Task<Result<BoltzClaimResult>> ClaimSwapAsync(
         BoltzSubmarineSwap swap,
-        string claimPrivateKeyHex,
+        AngorKey claimPrivateKey,
         string lockupTransactionHex,
         int lockupOutputIndex = 0,
         long feeRate = 2)
@@ -69,7 +69,7 @@ public class BoltzClaimService : IBoltzClaimService
             try
             {
                 var cooperativeResult = await CooperativeMusig2Claim(
-                    swap, claimPrivateKeyHex, lockupTransactionHex, lockupOutputIndex, feeRate, preimageBytes);
+                    swap, claimPrivateKey, lockupTransactionHex, lockupOutputIndex, feeRate, preimageBytes);
                 
                 if (cooperativeResult.IsSuccess)
                 {
@@ -91,7 +91,7 @@ public class BoltzClaimService : IBoltzClaimService
             _logger.LogInformation("Proceeding with manual claim transaction (Taproot script path spend)...");
             
             var scriptPathResult = await BuildAndBroadcastClaimTransaction(
-                swap, claimPrivateKeyHex, lockupTransactionHex, lockupOutputIndex, feeRate, preimageBytes);
+                swap, claimPrivateKey, lockupTransactionHex, lockupOutputIndex, feeRate, preimageBytes);
             
             if (scriptPathResult.IsFailure && cooperativeError != null)
             {
@@ -113,7 +113,7 @@ public class BoltzClaimService : IBoltzClaimService
     /// </summary>
     private async Task<Result<BoltzClaimResult>> CooperativeMusig2Claim(
         BoltzSubmarineSwap swap,
-        string claimPrivateKeyHex,
+        AngorKey claimPrivateKey,
         string lockupTransactionHex,
         int lockupOutputIndex,
         long feeRate,
@@ -158,7 +158,7 @@ public class BoltzClaimService : IBoltzClaimService
         var lockupOutpoint = new NBitcoin.OutPoint(lockupTx.GetHash(), foundOutputIndex);
         
         // Initialize MuSig2 session
-        var claimPrivateKeyBytes = Convert.FromHexString(claimPrivateKeyHex);
+        var claimPrivateKeyBytes = claimPrivateKey.ToBytes();
         var boltzRefundKeyBytes = Convert.FromHexString(swap.RefundPublicKey);
         
         // Verify the derived claim key matches what was registered with Boltz
@@ -339,7 +339,7 @@ public class BoltzClaimService : IBoltzClaimService
     /// </summary>
     private async Task<Result<BoltzClaimResult>> BuildAndBroadcastClaimTransaction(
         BoltzSubmarineSwap swap,
-        string claimPrivateKeyHex,
+        AngorKey claimPrivateKey,
         string lockupTransactionHex,
         int lockupOutputIndex,
         long feeRate,
@@ -363,7 +363,7 @@ public class BoltzClaimService : IBoltzClaimService
                 }
             }
 
-            if (string.IsNullOrEmpty(claimPrivateKeyHex))
+            if (claimPrivateKey == null)
             {
                 return Result.Failure<BoltzClaimResult>("Claim private key is required");
             }
@@ -435,7 +435,7 @@ public class BoltzClaimService : IBoltzClaimService
             var claimTx = BuildClaimTransaction(lockupOutpoint, lockupOutput, swap.Address, feeRate, network);
 
             // Sign the transaction
-            var claimKey = new NBitcoin.Key(Convert.FromHexString(claimPrivateKeyHex));
+            var claimKey = claimPrivateKey;
             var tapScript = claimScript.ToTapScript(NBitcoin.TapLeafVersion.C0);
             var leafHash = tapScript.LeafHash;
 

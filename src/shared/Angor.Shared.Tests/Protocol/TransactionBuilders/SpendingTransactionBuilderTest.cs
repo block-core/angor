@@ -1,3 +1,4 @@
+using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.Protocol.Scripts;
@@ -44,7 +45,7 @@ public class SpendingTransactionBuilderTest : AngorTestData
             projectInfo,
             1,
             changeAddress.ScriptPubKey.WitHash.GetAddress(Networks.Bitcoin.Testnet()).ToString(),
-            Encoders.Hex.EncodeData(new Key().ToBytes()),
+            AngorKey.From(new Key()),
             new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(1000)), // 1 sat/vB - realistic fee rate
             _ => { return GetRandomDataWitScript(3); },
             (_, s) => { return GetRandomDataWitScript(3); }
@@ -70,7 +71,7 @@ public class SpendingTransactionBuilderTest : AngorTestData
             projectInfo,
             1,
             changeAddress.ScriptPubKey.WitHash.GetAddress(Networks.Bitcoin.Testnet()).ToString(),
-            Encoders.Hex.EncodeData(new Key().ToBytes()),
+            AngorKey.From(new Key()),
             new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(1000)), // 1 sat/vB - realistic fee rate
             _ => { return expectedWitSigWithFakeSig; },
             (_, s) =>
@@ -115,7 +116,7 @@ public class SpendingTransactionBuilderTest : AngorTestData
             projectInfo,
             1,
             changeAddress.ScriptPubKey.WitHash.GetAddress(Networks.Bitcoin.Testnet()).ToString(),
-            Encoders.Hex.EncodeData(new Key().ToBytes()),
+            AngorKey.From(new Key()),
             new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(1000)), // 1 sat/vB - realistic fee rate
             _ =>
             {

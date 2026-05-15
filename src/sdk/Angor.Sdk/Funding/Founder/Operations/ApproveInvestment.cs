@@ -63,7 +63,7 @@ public static class ApproveInvestment
             {
                 var key = derivationOperations.DeriveFounderRecoveryPrivateKey(words, projectInfo.FounderKey);
                 
-                var signatureInfo = CreateRecoverySignatures(investmentTransactionHex, projectInfo, Encoders.Hex.EncodeData(key.ToBytes()));
+                var signatureInfo = CreateRecoverySignatures(investmentTransactionHex, projectInfo, key);
 
                 var sigJson = serializer.Serialize(signatureInfo);
 
@@ -77,7 +77,7 @@ public static class ApproveInvestment
             });
         }
 
-        private SignatureInfo CreateRecoverySignatures(string transactionHex, ProjectInfo info, string founderSigningPrivateKey)
+        private SignatureInfo CreateRecoverySignatures(string transactionHex, ProjectInfo info, AngorKey founderSigningPrivateKey)
         {
             var investorTrx = networkConfiguration.GetNetwork().CreateTransaction(transactionHex);
 

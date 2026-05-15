@@ -412,7 +412,7 @@ public class WalletOperations : IWalletOperations
         ExtKey extendedKey;
         try
         {
-            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase); //TODO change this to be the extended key 
+            extendedKey = walletWords.GetOrDeriveExtKey(_hdOperations);
         }
         catch (NotSupportedException ex)
         {
@@ -445,10 +445,10 @@ public class WalletOperations : IWalletOperations
 
 
     public string DerivePublicKey(WalletWords walletWords, string hdPath)
-        => _hdOperations.DerivePublicKey(walletWords.Words, walletWords.Passphrase, hdPath);
+        => _hdOperations.DerivePublicKey(walletWords.GetOrDeriveExtKey(_hdOperations), hdPath);
 
-    public string DerivePrivateKey(WalletWords walletWords, string hdPath)
-        => _hdOperations.DerivePrivateKey(walletWords.Words, walletWords.Passphrase, hdPath);
+    public AngorKey DerivePrivateKey(WalletWords walletWords, string hdPath)
+        => _hdOperations.DerivePrivateKey(walletWords.GetOrDeriveExtKey(_hdOperations), hdPath);
 
     public AccountInfo BuildAccountInfoForWalletWords(WalletWords walletWords)
     {
@@ -461,7 +461,7 @@ public class WalletOperations : IWalletOperations
         ExtKey extendedKey;
         try
         {
-            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
+            extendedKey = walletWords.GetOrDeriveExtKey(_hdOperations);
         }
         catch (NotSupportedException ex)
         {

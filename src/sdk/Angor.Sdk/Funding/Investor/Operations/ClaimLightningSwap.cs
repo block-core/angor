@@ -1,4 +1,4 @@
-﻿using Angor.Sdk.Common;
+using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Services;
 using Angor.Shared;
 using Angor.Shared.Integration.Lightning;
@@ -124,28 +124,28 @@ public static class ClaimLightningSwap
             }
         }
 
-        private async Task<Result<string>> DeriveClaimPrivateKeyFromAddress(WalletId walletId, string address)
+        private async Task<Result<AngorKey>> DeriveClaimPrivateKeyFromAddress(WalletId walletId, string address)
         {
             if (string.IsNullOrEmpty(address))
-                return Result.Failure<string>("Swap has no receive address — cannot derive claim key");
+                return Result.Failure<AngorKey>("Swap has no receive address — cannot derive claim key");
 
             var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(walletId.Value);
             if (sensitiveDataResult.IsFailure)
-                return Result.Failure<string>($"Failed to get wallet data: {sensitiveDataResult.Error}");
+                return Result.Failure<AngorKey>($"Failed to get wallet data: {sensitiveDataResult.Error}");
 
             var accountResult = await walletAccountBalanceService.GetAccountBalanceInfoAsync(walletId);
             if (accountResult.IsFailure)
-                return Result.Failure<string>($"Failed to get account info: {accountResult.Error}");
+                return Result.Failure<AngorKey>($"Failed to get account info: {accountResult.Error}");
 
             var addressInfo = accountResult.Value.AccountInfo.AllAddresses()
                 .FirstOrDefault(a => a.Address == address);
             if (addressInfo == null)
-                return Result.Failure<string>($"Address {address} not found in wallet — cannot derive claim key");
+                return Result.Failure<AngorKey>($"Address {address} not found in wallet — cannot derive claim key");
 
             var (seed, passphrase) = sensitiveDataResult.Value;
-            var privateKeyHex = hdOperations.DerivePrivateKey(seed, passphrase.GetValueOrDefault(), addressInfo.HdPath);
+            var privateKey = hdOperations.DerivePrivateKey(seed, passphrase.GetValueOrDefault(), addressInfo.HdPath);
 
-            return Result.Success(privateKeyHex);
+            return Result.Success(privateKey);
         }
     }
 }

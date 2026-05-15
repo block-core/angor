@@ -179,7 +179,7 @@ public class NotifyFounderOfInvestmentTests
 
         _mockDerivationOperations
             .Setup(x => x.DeriveProjectNostrPrivateKeyAsync(It.IsAny<WalletWords>(), It.IsAny<string>()))
-            .ReturnsAsync(new Key());
+            .ReturnsAsync(AngorKey.From(new Key()));
 
         _mockSerializer
             .Setup(x => x.Serialize(It.IsAny<InvestmentNotification>()))
@@ -215,7 +215,7 @@ public class NotifyFounderOfInvestmentTests
 
         _mockDerivationOperations
             .Setup(x => x.DeriveProjectNostrPrivateKeyAsync(It.IsAny<WalletWords>(), It.IsAny<string>()))
-            .ReturnsAsync(new Key());
+            .ReturnsAsync(AngorKey.From(new Key()));
 
         _mockSerializer
             .Setup(x => x.Serialize(It.IsAny<InvestmentNotification>()))

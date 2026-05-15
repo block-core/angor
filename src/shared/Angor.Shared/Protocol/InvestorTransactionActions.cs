@@ -96,7 +96,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     }
 
     public TransactionInfo BuildAndSignRecoverReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction,
-        Transaction recoveryTransaction, string investorReceiveAddress, FeeEstimation feeEstimation, string investorPrivateKey)
+        Transaction recoveryTransaction, string investorReceiveAddress, FeeEstimation feeEstimation, AngorKey investorPrivateKey)
     {
         // H4: Reject fee rates below the protocol minimum — FeeRate must be in sat/kB.
         if (feeEstimation.FeeRate < ProtocolConstants.MinFeeRateSatsPerKb)
@@ -141,7 +141,8 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         transaction.Outputs[0].Value -= new Blockcore.NBitcoin.Money(fee);
 
         // sign the inputs (replace fake WitScript with real one)
-        var key = new Key(Encoders.Hex.DecodeData(investorPrivateKey));
+        // Convert AngorKey (NBitcoin.Key) to Blockcore Key for P2WSH signing
+        var key = new Key(investorPrivateKey.ToBytes());
 
         foreach (var intput in transaction.Inputs)
         {
@@ -160,7 +161,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     }
 
     public TransactionInfo RecoverEndOfProjectFunds(string transactionHex, ProjectInfo projectInfo, int startStageNumber,
-        string investorReceiveAddress, string investorPrivateKey, FeeEstimation feeEstimation)
+        string investorReceiveAddress, AngorKey investorPrivateKey, FeeEstimation feeEstimation)
     {
         // H4: Reject fee rates below the protocol minimum
         if (feeEstimation.FeeRate < ProtocolConstants.MinFeeRateSatsPerKb)
@@ -188,7 +189,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     }
 
     public TransactionInfo RecoverRemainingFundsWithOutPenalty(string transactionHex, ProjectInfo projectInfo, int startStageNumber,
-        string investorReceiveAddress, string investorPrivateKey, FeeEstimation feeEstimation,
+        string investorReceiveAddress, AngorKey investorPrivateKey, FeeEstimation feeEstimation,
         IEnumerable<byte[]> seederSecrets)
     {
         // H4: Reject fee rates below the protocol minimum
@@ -249,7 +250,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             });
     }
 
-    public Transaction AddSignaturesToRecoverSeederFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, SignatureInfo founderSignatures, string investorPrivateKey)
+    public Transaction AddSignaturesToRecoverSeederFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, SignatureInfo founderSignatures, AngorKey investorPrivateKey)
     {
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
 
@@ -260,7 +261,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         return recoverTransaction;
     }
 
-    public Transaction AddSignaturesToUnfundedReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, SignatureInfo founderSignatures, string investorPrivateKey, string investorReleaseKey)
+    public Transaction AddSignaturesToUnfundedReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, SignatureInfo founderSignatures, AngorKey investorPrivateKey, string investorReleaseKey)
     {
         var unsignedUnfundedReleaseTransaction = _investmentTransactionBuilder.BuildUpfrontUnfundedReleaseFundsTransaction(projectInfo, investmentTransaction, investorReleaseKey);
 
@@ -300,7 +301,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         return PenaltyThresholdHelper.GetExpiryDateOverride(projectInfo, investmentAmount);
     }
 
-    private Transaction AddSignaturesToRecoveryPathTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, Transaction recoveryTransaction, SignatureInfo founderSignatures, string investorPrivateKey)
+    private Transaction AddSignaturesToRecoveryPathTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, Transaction recoveryTransaction, SignatureInfo founderSignatures, AngorKey investorPrivateKey)
     {
         // Verify founder signatures before incorporating them
         if (!CheckRecoverySignatures(projectInfo, investmentTransaction, recoveryTransaction, founderSignatures))
@@ -312,7 +313,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         var nbitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork);
         var nbitcoinInvestmentTransaction = NBitcoin.Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork);
 
-        var key = new NBitcoin.Key(Encoders.Hex.DecodeData(investorPrivateKey));
+        var key = new NBitcoin.Key(investorPrivateKey.ToBytes());
         var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
 
         var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, investmentTransaction);

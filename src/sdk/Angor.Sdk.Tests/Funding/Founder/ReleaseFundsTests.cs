@@ -171,7 +171,7 @@ public class ReleaseFundsTests
         _mockFounderTransactionActions
             .Setup(x => x.SignInvestorRecoveryTransactions(
                 It.IsAny<ProjectInfo>(), It.IsAny<string>(),
-                It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>(), It.IsAny<string>()))
+                It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>(), It.IsAny<AngorKey>()))
             .Returns(new SignatureInfo());
 
         _mockInvestorTransactionActions
@@ -279,10 +279,10 @@ public class ReleaseFundsTests
     {
         _mockDerivationOperations
             .Setup(x => x.DeriveFounderRecoveryPrivateKey(It.IsAny<WalletWords>(), It.IsAny<string>()))
-            .Returns(new Key());
+            .Returns(AngorKey.From(new Key()));
 
         _mockDerivationOperations
             .Setup(x => x.DeriveProjectNostrPrivateKeyAsync(It.IsAny<WalletWords>(), It.IsAny<string>()))
-            .ReturnsAsync(new Key());
+            .ReturnsAsync(AngorKey.From(new Key()));
     }
 }

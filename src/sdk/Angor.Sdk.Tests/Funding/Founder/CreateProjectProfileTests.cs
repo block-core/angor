@@ -261,6 +261,6 @@ public class CreateProjectProfileTests
     {
         _mockDerivationOperations
             .Setup(x => x.DeriveProjectNostrPrivateKeyAsync(It.IsAny<WalletWords>(), It.IsAny<string>()))
-            .ReturnsAsync(new Key());
+            .ReturnsAsync(AngorKey.From(new Key()));
     }
 }
