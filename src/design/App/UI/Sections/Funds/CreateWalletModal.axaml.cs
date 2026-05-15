@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using App.UI.Shell;
+using App.UI.Shared.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -30,6 +31,8 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         AddHandler(Button.ClickEvent, OnButtonClick);
 
         _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<CreateWalletModal>();
+
+        ExistingWalletList.SelectionChanged += OnExistingWalletSelected;
     }
 
     private FundsViewModel? Vm => DataContext as FundsViewModel;
@@ -154,6 +157,13 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         ImportPanel.IsVisible = step == "import";
         BackupPanel.IsVisible = step == "backup";
         SuccessPanel.IsVisible = step == "success";
+
+        if (step == "import")
+        {
+            // Show the existing-wallets dropdown only when there are wallets in the store
+            ExistingWalletsSection.IsVisible = Vm?.ExistingWallets.Count > 0;
+            ExistingWalletList.SelectedItem = null;
+        }
     }
 
     /// <summary>
@@ -191,6 +201,27 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
 
         var spinner = this.FindControl<StackPanel>("ImportBtnSpinner");
         if (spinner != null) spinner.IsVisible = isProcessing;
+    }
+
+    /// <summary>
+    /// Handles selection of an existing wallet from the dropdown in the import step.
+    /// Selects that wallet as active and closes the modal without requiring seed words.
+    /// </summary>
+    private void OnExistingWalletSelected(object? sender, SelectionChangedEventArgs e)
+    {
+        if (ExistingWalletList.SelectedItem is not WalletInfo wallet) return;
+
+        _logger.LogInformation("Existing wallet selected from dropdown: {WalletName} ({WalletId})",
+            wallet.Name, wallet.Id.Value);
+
+        Vm?.SelectExistingWallet(wallet);
+        _walletCreated = true;
+
+        // Deselect so the list doesn't stay highlighted if the modal is re-opened
+        ExistingWalletList.SelectedItem = null;
+
+        ShellVm?.HideModal();
+        OnDismissed?.Invoke(true);
     }
 
     /// <summary>

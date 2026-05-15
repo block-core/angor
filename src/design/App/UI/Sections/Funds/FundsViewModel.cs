@@ -94,6 +94,22 @@ public partial class FundsViewModel : ReactiveObject, IDisposable
     }
 
     /// <summary>
+    /// All wallets already stored in the wallet file — shown in the import step dropdown.
+    /// </summary>
+    public ReadOnlyObservableCollection<WalletInfo> ExistingWallets => _walletContext.Wallets;
+
+    /// <summary>
+    /// Select an existing wallet from the wallet store (used by the import-step dropdown).
+    /// Sets it as the active wallet in <see cref="IWalletContext"/>.
+    /// </summary>
+    public void SelectExistingWallet(WalletInfo wallet)
+    {
+        _walletContext.SelectedWallet = wallet;
+        _logger.LogInformation("Existing wallet selected from import dropdown: {WalletName} ({WalletId})",
+            wallet.Name, wallet.Id.Value);
+    }
+
+    /// <summary>
     /// Get cached AccountBalanceInfo for a wallet (used by WalletDetailModal for real UTXOs).
     /// </summary>
     public AccountBalanceInfo? GetAccountBalanceInfo(string walletId)
