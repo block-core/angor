@@ -1,5 +1,6 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Domain;
+using Angor.Sdk.Wallet.Operations;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 
@@ -29,4 +30,10 @@ public interface IWalletAppService
 
     /// <summary>Retrieve the seed words for an existing wallet (requires unlock/decryption).</summary>
     Task<Result<string>> GetSeedWords(WalletId walletId);
+
+    /// <summary>Get all encrypted wallet entries from the wallet store (wallets.json).</summary>
+    Task<Result<IEnumerable<GetStoredWallets.StoredWalletSummary>>> GetStoredWallets();
+
+    /// <summary>Restore a wallet from the encrypted store using secure storage for decryption.</summary>
+    Task<Result<WalletId>> RestoreStoredWallet(string walletId, string walletName, BitcoinNetwork network);
 }

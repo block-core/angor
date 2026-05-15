@@ -62,7 +62,7 @@ public class GetInvestorNsecTests
             .ReturnsAsync(Result.Success(sensitiveData));
 
         // Use a real 32-byte key for test
-        var testKey = new Key();
+        var testKey = AngorKey.From(new Key());
         _mockDerivationOperations
             .Setup(x => x.DeriveProjectNostrPrivateKeyAsync(It.IsAny<WalletWords>(), founderKey))
             .ReturnsAsync(testKey);
@@ -90,7 +90,7 @@ public class GetInvestorNsecTests
             .Setup(x => x.GetSensitiveData(walletId.Value))
             .ReturnsAsync(Result.Success(sensitiveData));
 
-        var testKey = new Key();
+        var testKey = AngorKey.From(new Key());
         _mockDerivationOperations
             .Setup(x => x.DeriveProjectNostrPrivateKeyAsync(It.IsAny<WalletWords>(), "specific-founder-key"))
             .ReturnsAsync(testKey);

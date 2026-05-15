@@ -110,7 +110,7 @@ public static class SpendStageFunds
             return await transactionService.GetTransactionHexByIdAsync(investment.TransactionId) ?? string.Empty;
         }
 
-        private async Task<string?> GetProjectFounderKeyAsync(string walletId, string projectId)
+        private async Task<AngorKey?> GetProjectFounderKeyAsync(string walletId, string projectId)
         {
             // Try to get from storage first
             var storedKeysResult = await derivedProjectKeysCollection.FindByIdAsync(walletId.ToString());
@@ -126,7 +126,7 @@ public static class SpendStageFunds
             // Use the stored index to derive the founder private key
             var words = await seedwordsProvider.GetSensitiveData(walletId);
             var key = derivationOperations.DeriveFounderPrivateKey(words.Value.ToWalletWords(), storedKey.Index);
-            return Encoders.Hex.EncodeData(key.ToBytes());
+            return key;
         }
         
         private async Task<Result<string>> GetUnfundedReleaseAddress(WalletId walletId)

@@ -1,4 +1,4 @@
-﻿@page "/spend/{ProjectId}"
+@page "/spend/{ProjectId}"
 @using Angor.Shared
 @using Angor.Client.Storage
 @using Angor.Client.Services
@@ -905,7 +905,7 @@
 
             var key = _derivationOperations.DeriveFounderPrivateKey(words, keys.Index);
 
-            signedTransaction = _founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo, founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript, Encoders.Hex.EncodeData(key.ToBytes()), feeData.SelectedFeeEstimation);
+            signedTransaction = _founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo, founderContext.InvestmentTrasnactionsHex, selectedStageId, addressScript, key, feeData.SelectedFeeEstimation);
 
             showCreateModal = true;
         }
@@ -955,7 +955,7 @@
                 founderContext.InvestmentTrasnactionsHex,
                 selectedStageId,
                 addressScript,
-                Encoders.Hex.EncodeData(key.ToBytes()),
+                key,
                 feeData.SelectedFeeEstimation);
 
             StateHasChanged();

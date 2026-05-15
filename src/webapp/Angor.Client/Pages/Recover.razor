@@ -1,4 +1,4 @@
-﻿@page "/recover/{ProjectIdentifier}"
+@page "/recover/{ProjectIdentifier}"
 
 @using Angor.Shared
 @using Angor.Client.Storage
@@ -897,7 +897,7 @@
 
             var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, project.ProjectInfo.FounderKey);
 
-            unsignedRecoveryTransaction = _InvestorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project.ProjectInfo, investmentTransaction, project.SignaturesInfo, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
+            unsignedRecoveryTransaction = _InvestorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(project.ProjectInfo, investmentTransaction, project.SignaturesInfo, investorPrivateKey);
 
             // remove outputs that have been spent
             List<TxOut> removeTxout = new();
@@ -1063,7 +1063,7 @@
             }
 
             releaseRecoveryTransaction = _InvestorTransactionActions.BuildAndSignRecoverReleaseFundsTransaction(project.ProjectInfo, investmentTransaction, recoveryTransaction.Transaction,
-                accountInfo.GetNextChangeReceiveAddress(), feeData.SelectedFeeEstimation, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
+                accountInfo.GetNextChangeReceiveAddress(), feeData.SelectedFeeEstimation, investorPrivateKey);
 
             Logger.LogInformation($"recoveryReleaseTransactionId={releaseRecoveryTransaction.Transaction.GetHash().ToString()}");
 
@@ -1111,7 +1111,7 @@
                 recoveryTransaction.Transaction,
                 accountInfo.GetNextChangeReceiveAddress(),
                 feeData.SelectedFeeEstimation,
-                Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
+                investorPrivateKey);
 
             StateHasChanged();
         }
@@ -1200,7 +1200,7 @@
             var fromStage = StageInfo.Items.First(f => f.IsSpent == false);
 
             endOfProjectTransaction = _InvestorTransactionActions.RecoverEndOfProjectFunds(investmentTransaction.ToHex(network.Consensus.ConsensusFactory), project.ProjectInfo, fromStage.StageIndex,
-                accountInfo.GetNextChangeReceiveAddress(), Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), feeData.SelectedFeeEstimation);
+                accountInfo.GetNextChangeReceiveAddress(), investorPrivateKey, feeData.SelectedFeeEstimation);
 
             Logger.LogInformation($"EndOfProjectTransactionId={endOfProjectTransaction.Transaction.GetHash().ToString()}");
 
@@ -1248,7 +1248,7 @@
                 project.ProjectInfo,
                 fromStage.StageIndex,
                 accountInfo.GetNextChangeReceiveAddress(),
-                Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()),
+                investorPrivateKey,
                 feeData.SelectedFeeEstimation);
 
             StateHasChanged();

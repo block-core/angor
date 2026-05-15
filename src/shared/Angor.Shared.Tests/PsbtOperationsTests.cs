@@ -177,12 +177,12 @@ public class PsbtOperationsTests : AngorTestData
         Assert.Equal(signedInvestmentTransaction.Transaction.GetHash(), strippedInvestmentTransaction.GetHash());
 
         var unsignedRecoveryTransaction = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(projectInfo, strippedInvestmentTransaction);
-        var recoverySigs = _founderTransactionActions.SignInvestorRecoveryTransactions(projectInfo, strippedInvestmentTransaction.ToHex(), unsignedRecoveryTransaction, Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
+        var recoverySigs = _founderTransactionActions.SignInvestorRecoveryTransactions(projectInfo, strippedInvestmentTransaction.ToHex(), unsignedRecoveryTransaction, founderRecoveryPrivateKey);
 
         var sigCheckResult = _investorTransactionActions.CheckInvestorRecoverySignatures(projectInfo, signedInvestmentTransaction.Transaction, recoverySigs);
         Assert.True(sigCheckResult, "failed to validate the founders signatures");
 
-        var recoveryTransaction = _investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(projectInfo, signedInvestmentTransaction.Transaction, recoverySigs, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
+        var recoveryTransaction = _investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(projectInfo, signedInvestmentTransaction.Transaction, recoverySigs, investorPrivateKey);
 
         // remove the first stage to simulate that is was spent
         recoveryTransaction.Outputs.RemoveAt(0);

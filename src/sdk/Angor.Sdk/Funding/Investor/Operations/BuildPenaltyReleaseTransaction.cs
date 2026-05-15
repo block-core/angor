@@ -100,7 +100,7 @@ public static class BuildPenaltyReleaseTransaction
                 recoveryTransaction,
                 changeAddress,
                 feeEstimation,
-                Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()));
+                investorPrivateKey);
 
             return Result.Success(new BuildPenaltyReleaseTransactionResponse(new ReleaseTransactionDraft
             {

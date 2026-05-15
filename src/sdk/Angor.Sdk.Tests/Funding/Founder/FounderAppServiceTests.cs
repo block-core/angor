@@ -287,7 +287,7 @@ public class FounderAppServiceTests : IClassFixture<TestNetworkFixture>
 
         _mockDerivationOperations
             .Setup(x => x.DeriveProjectNostrPrivateKeyAsync(It.IsAny<WalletWords>(), founderKeys.FounderKey))
-            .ReturnsAsync(new Key());
+            .ReturnsAsync(AngorKey.From(new Key()));
 
         var handler = new CreateProjectInfo.CreateProjectInfoHandler(
             _mockSeedwordsProvider.Object,

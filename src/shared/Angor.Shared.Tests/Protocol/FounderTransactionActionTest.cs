@@ -112,7 +112,7 @@ public class FounderTransactionActionTest : AngorTestData
             new (Encoders.Hex.DecodeData("a1b81722e2946e2679561f7ec3b475a35f0d3624a20b7366f6fcb94769fb080e"))
         };
         
-        var result = _sut.SignInvestorRecoveryTransactions(projectInvestmentInfo, investmentTrxHex, recoveryTransaction, Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
+        var result = _sut.SignInvestorRecoveryTransactions(projectInvestmentInfo, investmentTrxHex, recoveryTransaction, founderRecoveryPrivateKey);
 
         Assert.NotEmpty(result.Signatures);
         Assert.Equal(3,result.Signatures.Count);
@@ -158,7 +158,7 @@ public class FounderTransactionActionTest : AngorTestData
     };
 
     var founderTrx = _sut.SpendFounderStage(projectInvestmentInfo, transactionHexList
-        , 1, funderReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(funderPrivateKey.ToBytes())
+        , 1, funderReceiveCoinsKey.PubKey.ScriptPubKey, funderPrivateKey
         , _expectedFeeEstimation);
         
         TransactionValidation.ThanTheTransactionHasNoErrors(founderTrx.Transaction,
@@ -190,7 +190,7 @@ public class FounderTransactionActionTest : AngorTestData
         
         var founderTrxSpendStageOne = _sut.SpendFounderStage(projectInvestmentInfo,
             transactionList.Select(_ => _.ToHex()), stageNumber,
-            funderReceiveCoinsKey.PubKey.ScriptPubKey, Encoders.Hex.EncodeData(funderPrivateKey.ToBytes())
+            funderReceiveCoinsKey.PubKey.ScriptPubKey, funderPrivateKey
             , _expectedFeeEstimation);
 
         TransactionValidation.ThanTheTransactionHasNoErrors(founderTrxSpendStageOne.Transaction,

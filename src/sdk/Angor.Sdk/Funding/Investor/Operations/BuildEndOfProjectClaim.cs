@@ -83,7 +83,7 @@ public static class BuildEndOfProjectClaim
             var stageNumber = firstUnspentTaproot.index - 1;
 
             var endOfProjectTransaction = investorTransactionActions.RecoverEndOfProjectFunds(investment.InvestmentTransactionHex, project.Value.ToProjectInfo(), stageNumber,
-                changeAddress, Encoders.Hex.EncodeData(investorPrivateKey.ToBytes()), new FeeEstimation(){FeeRate = request.SelectedFeeRate.SatsPerKilobyte});
+                changeAddress, investorPrivateKey, new FeeEstimation(){FeeRate = request.SelectedFeeRate.SatsPerKilobyte});
             
             return Result.Success(new BuildEndOfProjectClaimResponse(new EndOfProjectTransactionDraft()
                {

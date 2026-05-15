@@ -1,6 +1,5 @@
 using Angor.Shared.Models;
 using Blockcore.Consensus.ScriptInfo;
-using Blockcore.NBitcoin;
 
 namespace Angor.Shared;
 
@@ -14,17 +13,17 @@ public interface IDerivationOperations
     string DeriveAngorKey(string angorRootKey, string founderKey);
     Script AngorKeyToScript(string angorKey);
     string DeriveInvestorKey(WalletWords walletWords, string founderKey);
-    Key DeriveInvestorPrivateKey(WalletWords walletWords, string founderKey);
+    AngorKey DeriveInvestorPrivateKey(WalletWords walletWords, string founderKey);
     string DeriveLeadInvestorSecretHash(WalletWords walletWords, string founderKey);
-    Key DeriveFounderPrivateKey(WalletWords walletWords, int index);
-    Key DeriveFounderRecoveryPrivateKey(WalletWords walletWords, string founderKey);
-    Key DeriveProjectNostrPrivateKey(WalletWords walletWords, string founderKey);
+    AngorKey DeriveFounderPrivateKey(WalletWords walletWords, int index);
+    AngorKey DeriveFounderRecoveryPrivateKey(WalletWords walletWords, string founderKey);
+    AngorKey DeriveProjectNostrPrivateKey(WalletWords walletWords, string founderKey);
     string DeriveNostrPubKey(WalletWords walletWords, string founderKey);
-    Task<Key> DeriveProjectNostrPrivateKeyAsync(WalletWords walletWords, string founderKey);
+    Task<AngorKey> DeriveProjectNostrPrivateKeyAsync(WalletWords walletWords, string founderKey);
     string DeriveNostrStoragePassword(WalletWords walletWords);
-    Key DeriveNostrStorageKey(WalletWords walletWords);
+    AngorKey DeriveNostrStorageKey(WalletWords walletWords);
     string DeriveNostrStoragePubKeyHex(WalletWords walletWords);
     string ConvertAngorKeyToBitcoinAddress(string projectId);
-    Key DeriveSupportDmKey(WalletWords walletWords);
+    AngorKey DeriveSupportDmKey(WalletWords walletWords);
     string DeriveSupportDmPubKeyHex(WalletWords walletWords);
 }

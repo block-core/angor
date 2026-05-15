@@ -4,6 +4,7 @@ using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Integration.Lightning;
+using Blockcore.NBitcoin;
 using Angor.Shared.Integration.Lightning.Models;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
@@ -204,7 +205,7 @@ public class ClaimLightningSwapTests
         SetupSuccessfulKeyDerivation();
 
         _mockBoltzClaimService
-            .Setup(x => x.ClaimSwapAsync(It.IsAny<BoltzSubmarineSwap>(), It.IsAny<string>(), "lockup-hex-abc", 0, 2))
+            .Setup(x => x.ClaimSwapAsync(It.IsAny<BoltzSubmarineSwap>(), It.IsAny<AngorKey>(), "lockup-hex-abc", 0, 2))
             .ReturnsAsync(Result.Failure<BoltzClaimResult>("Claim failed: invalid preimage"));
 
         // Act
@@ -231,7 +232,7 @@ public class ClaimLightningSwapTests
 
         var claimResult = new BoltzClaimResult("claim-tx-id", "claim-tx-hex");
         _mockBoltzClaimService
-            .Setup(x => x.ClaimSwapAsync(It.IsAny<BoltzSubmarineSwap>(), It.IsAny<string>(), "lockup-hex-abc", 0, 2))
+            .Setup(x => x.ClaimSwapAsync(It.IsAny<BoltzSubmarineSwap>(), It.IsAny<AngorKey>(), "lockup-hex-abc", 0, 2))
             .ReturnsAsync(Result.Success(claimResult));
 
         _mockSwapStorageService
@@ -263,7 +264,7 @@ public class ClaimLightningSwapTests
 
         var claimResult = new BoltzClaimResult("claim-tx-id", "claim-tx-hex");
         _mockBoltzClaimService
-            .Setup(x => x.ClaimSwapAsync(It.IsAny<BoltzSubmarineSwap>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<long>()))
+            .Setup(x => x.ClaimSwapAsync(It.IsAny<BoltzSubmarineSwap>(), It.IsAny<AngorKey>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<long>()))
             .ReturnsAsync(Result.Success(claimResult));
 
         _mockSwapStorageService
@@ -296,7 +297,7 @@ public class ClaimLightningSwapTests
 
         var claimResult = new BoltzClaimResult("claim-tx-id", "claim-tx-hex");
         _mockBoltzClaimService
-            .Setup(x => x.ClaimSwapAsync(It.IsAny<BoltzSubmarineSwap>(), It.IsAny<string>(), "doc-lockup-hex", 0, 2))
+            .Setup(x => x.ClaimSwapAsync(It.IsAny<BoltzSubmarineSwap>(), It.IsAny<AngorKey>(), "doc-lockup-hex", 0, 2))
             .ReturnsAsync(Result.Success(claimResult));
 
         _mockSwapStorageService
@@ -328,7 +329,7 @@ public class ClaimLightningSwapTests
 
         _mockHdOperations
             .Setup(x => x.DerivePrivateKey(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string>()))
-            .Returns("derived-private-key-hex");
+            .Returns(AngorKey.From(new Key()));
     }
 
     private static BoltzSwapDocument CreateSwapDocument(string? projectId, string? lockupTxHex = "lockup-hex")
