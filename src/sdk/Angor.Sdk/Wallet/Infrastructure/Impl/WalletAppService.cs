@@ -495,4 +495,13 @@ public class WalletAppService(
             return Result.Failure<string>($"Error getting public key: {ex.Message}");
         }
     }
+
+    public async Task<Result<string>> GetSeedWords(WalletId walletId)
+    {
+        var sensitiveDataResult = await sensitiveWalletDataProvider.RequestSensitiveData(walletId);
+        if (sensitiveDataResult.IsFailure)
+            return Result.Failure<string>(sensitiveDataResult.Error);
+
+        return Result.Success(sensitiveDataResult.Value.seed);
+    }
 }

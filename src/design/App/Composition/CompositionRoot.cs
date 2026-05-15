@@ -185,6 +185,7 @@ public static class CompositionRoot
                 sp.GetRequiredService<ICurrencyService>(),
                 sp.GetRequiredService<IWalletContext>(),
                 sp.GetRequiredService<Func<BitcoinNetwork>>(),
+                sp.GetRequiredService<PrototypeSettings>(),
                 sp.GetRequiredService<ILoggerFactory>().CreateLogger<InvestPageViewModel>()));
 
         services.AddSingleton<Func<MyProjectItemViewModel, ManageProjectViewModel>>(sp =>

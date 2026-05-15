@@ -102,6 +102,20 @@
                         VerticalAlignment="Center" Margin="12,0,0,0">
                     <TextBlock Text="{Binding ProfileName}" FontSize="12" Foreground="White" />
                 </Border>
+                <!-- Backup warning — red badge, visible when selected wallet needs backup -->
+                <Border IsVisible="{Binding ShowBackupWarning}"
+                        Background="#DC2626"
+                        CornerRadius="4" Padding="8,2"
+                        VerticalAlignment="Center" Margin="12,0,0,0"
+                        Cursor="Hand"
+                        Name="BackupWarningBadge"
+                        PointerPressed="OnBackupWarningClick">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <i:Icon Value="fa-solid fa-triangle-exclamation"
+                               FontSize="12" Foreground="White" />
+                        <TextBlock Text="Backup Required" FontSize="12" Foreground="White" FontWeight="SemiBold" />
+                    </StackPanel>
+                </Border>
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Right" Spacing="16" Orientation="Horizontal">
                     <TextBlock VerticalAlignment="Center"
                              AutomationProperties.AutomationId="ShellInvestedBalanceText">

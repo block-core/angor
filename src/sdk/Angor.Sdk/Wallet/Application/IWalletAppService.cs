@@ -26,4 +26,7 @@ public interface IWalletAppService
     /// <summary>Get the compressed public key hex for a receive address owned by this wallet.
     /// Used as the claim key for Boltz Lightning swaps.</summary>
     Task<Result<string>> GetPublicKeyForAddress(WalletId walletId, string address);
+
+    /// <summary>Retrieve the seed words for an existing wallet (requires unlock/decryption).</summary>
+    Task<Result<string>> GetSeedWords(WalletId walletId);
 }

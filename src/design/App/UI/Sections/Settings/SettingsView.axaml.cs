@@ -2,6 +2,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
+using Avalonia.Platform.Storage;
 using App.UI.Shared;
 using App.UI.Shared.Controls;
 using App.UI.Shell;
@@ -314,6 +315,63 @@ public partial class SettingsView : UserControl, ISectionView
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "OnExportLogsClick failed");
+        }
+    }
+
+    // ── Backup ──
+    private async void OnRevealSeedClick(object? sender, RoutedEventArgs e)
+    {
+        if (Vm == null) return;
+        if (Vm.SeedWordsVisible)
+        {
+            Vm.HideSeedWords();
+            var text = this.FindControl<TextBlock>("RevealSeedText");
+            if (text != null) text.Text = "Show Seed Words";
+        }
+        else
+        {
+            await Vm.LoadSeedWordsAsync();
+            var text = this.FindControl<TextBlock>("RevealSeedText");
+            if (text != null) text.Text = "Hide Seed Words";
+
+            // Clear backup warning after viewing seed words
+            Vm.MarkWalletBackedUp();
+        }
+    }
+
+    private async void OnDownloadBackupClick(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (Vm?.SeedWords == null) return;
+
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel?.StorageProvider == null) return;
+
+            var file = await topLevel.StorageProvider.SaveFilePickerAsync(
+                new FilePickerSaveOptions
+                {
+                    Title = "Save Seed Phrase",
+                    SuggestedFileName = "seed-backup.txt",
+                    DefaultExtension = "txt"
+                });
+
+            if (file != null)
+            {
+                await using var stream = await file.OpenWriteAsync();
+                await using var writer = new System.IO.StreamWriter(stream);
+                await writer.WriteAsync(Vm.SeedWords);
+
+                var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
+                shellVm?.ShowToast("Seed phrase saved successfully.");
+            }
+
+            // Clear backup warning after downloading
+            Vm.MarkWalletBackedUp();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "OnDownloadBackupClick failed");
         }
     }
 

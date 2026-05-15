@@ -99,6 +99,11 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
     // Log export
     [Reactive] private bool isExportingLogs;
 
+    // Backup
+    [Reactive] private string? seedWords;
+    [Reactive] private bool isLoadingSeedWords;
+    [Reactive] private bool seedWordsVisible;
+
     public bool CanExportLogs => _walletContext.SelectedWallet != null && !IsExportingLogs;
 
     private readonly PrototypeSettings _prototypeSettings;
@@ -503,6 +508,71 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
         finally
         {
             IsExportingLogs = false;
+        }
+    }
+
+    // Backup wallet
+    public async Task LoadSeedWordsAsync()
+    {
+        if (IsLoadingSeedWords) return;
+        var wallet = _walletContext.SelectedWallet;
+        if (wallet == null)
+        {
+            ToastRequested?.Invoke("No wallet selected.");
+            return;
+        }
+
+        IsLoadingSeedWords = true;
+        try
+        {
+            var result = await _walletAppService.GetSeedWords(wallet.Id);
+            if (result.IsFailure)
+            {
+                _logger.LogError("Failed to load seed words: {Error}", result.Error);
+                ToastRequested?.Invoke("Failed to load seed words.");
+                return;
+            }
+
+            SeedWords = result.Value;
+            SeedWordsVisible = true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "LoadSeedWordsAsync failed");
+            ToastRequested?.Invoke($"Failed to load seed words: {ex.Message}");
+        }
+        finally
+        {
+            IsLoadingSeedWords = false;
+        }
+    }
+
+    public void HideSeedWords()
+    {
+        SeedWords = null;
+        SeedWordsVisible = false;
+    }
+
+    /// <summary>
+    /// Mark the selected wallet as backed up, clearing the backup warning.
+    /// </summary>
+    public void MarkWalletBackedUp()
+    {
+        var wallet = _walletContext.SelectedWallet;
+        if (wallet == null) return;
+
+        _prototypeSettings.ClearWalletNeedsBackup(wallet.Id.Value);
+        _shellViewModel.RefreshBackupWarning();
+    }
+
+    /// <summary>Whether the selected wallet needs backup.</summary>
+    public bool SelectedWalletNeedsBackup
+    {
+        get
+        {
+            var wallet = _walletContext.SelectedWallet;
+            if (wallet == null) return false;
+            return _prototypeSettings.DoesWalletNeedBackup(wallet.Id.Value);
         }
     }
 
