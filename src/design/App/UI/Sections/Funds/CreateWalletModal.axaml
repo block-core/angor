@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:funds="clr-namespace:App.UI.Sections.Funds"
-             xmlns:services="clr-namespace:App.UI.Shared.Services;assembly=App"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="600"
              x:Class="App.UI.Sections.Funds.CreateWalletModal"
@@ -131,96 +130,107 @@
                                Foreground="{DynamicResource TextMuted}"
                                TextWrapping="Wrap" />
 
-                    <!-- ── Existing wallets dropdown ── -->
-                    <!-- Shown only when at least one wallet is already stored in the wallets file. -->
-                    <!-- The user can click a wallet to make it active instead of re-entering seed words. -->
-                    <Border Name="ExistingWalletsSection" IsVisible="False">
-                        <Expander Name="ExistingWalletsExpander"
+                    <!-- ── Restore from backup ── -->
+                    <!-- Shown when wallets.json contains encrypted wallets not yet in the app. -->
+                    <Border Name="StoredWalletsSection" IsVisible="False"
+                            Margin="0,8,0,0">
+                        <Expander Name="StoredWalletsExpander"
                                   IsExpanded="False"
                                   Background="Transparent">
                             <Expander.Header>
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <i:Icon Value="fa-solid fa-wallet"
+                                    <i:Icon Value="fa-solid fa-key"
                                            FontSize="13"
                                            Foreground="{DynamicResource TextMuted}"
                                            VerticalAlignment="Center" />
-                                    <TextBlock Text="Select from existing wallets"
+                                    <TextBlock Text="Restore from backup"
                                                FontSize="13"
                                                Foreground="{DynamicResource TextMuted}"
                                                VerticalAlignment="Center" />
                                 </StackPanel>
                             </Expander.Header>
 
-                            <Border Margin="0,8,0,0"
-                                    Background="{DynamicResource CreateWalletInputBg}"
-                                    BorderBrush="{DynamicResource CreateWalletInputBorder}"
-                                    BorderThickness="1"
-                                    CornerRadius="8"
-                                    Padding="4">
-                                <ListBox Name="ExistingWalletList"
-                                         ItemsSource="{Binding ExistingWallets}"
-                                         SelectionMode="Single"
-                                         Background="Transparent"
-                                         BorderThickness="0"
-                                         MaxHeight="160">
-                                    <ListBox.ItemContainerTheme>
-                                        <ControlTheme TargetType="ListBoxItem">
-                                            <Setter Property="Background" Value="Transparent" />
-                                            <Setter Property="Padding" Value="0" />
-                                            <Setter Property="Template">
-                                                <ControlTemplate>
-                                                    <ContentPresenter Content="{TemplateBinding Content}"
-                                                                      ContentTemplate="{TemplateBinding ContentTemplate}"
-                                                                      Padding="{TemplateBinding Padding}"
-                                                                      Background="{TemplateBinding Background}"
-                                                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
-                                                </ControlTemplate>
-                                            </Setter>
-                                        </ControlTheme>
-                                    </ListBox.ItemContainerTheme>
-                                    <ListBox.ItemTemplate>
-                                        <DataTemplate x:DataType="services:WalletInfo">
-                                            <Border Padding="10,8"
-                                                    CornerRadius="6"
-                                                    Cursor="Hand"
-                                                    Background="Transparent">
-                                                <Border.Styles>
-                                                    <Style Selector="Border:pointerover">
-                                                        <Setter Property="Background" Value="{DynamicResource DeployWalletItemBg}" />
-                                                    </Style>
-                                                </Border.Styles>
-                                                <Grid ColumnDefinitions="Auto,*,Auto">
-                                                    <Border Grid.Column="0" Width="32" Height="32"
-                                                            CornerRadius="6"
-                                                            Background="{DynamicResource DeployWalletIconBg}"
-                                                            VerticalAlignment="Center">
-                                                        <i:Icon Value="fa-brands fa-bitcoin"
-                                                               FontSize="16"
-                                                               Foreground="#F59E0B" />
-                                                    </Border>
-                                                    <StackPanel Grid.Column="1" Spacing="1"
-                                                                VerticalAlignment="Center"
-                                                                Margin="10,0,0,0">
-                                                        <TextBlock Text="{Binding Name}"
-                                                                   FontSize="13" FontWeight="SemiBold"
-                                                                   Foreground="{DynamicResource TextStrong}" />
-                                                        <TextBlock Text="{Binding WalletType}"
-                                                                   FontSize="11"
-                                                                   Foreground="{DynamicResource TextMuted}" />
-                                                    </StackPanel>
-                                                    <i:Icon Grid.Column="2"
-                                                           Value="fa-solid fa-check"
-                                                           FontSize="14"
-                                                           Foreground="{DynamicResource PrimaryGreenBrush}"
-                                                           VerticalAlignment="Center"
-                                                           IsVisible="{Binding IsSelected}" />
-                                                </Grid>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ListBox.ItemTemplate>
-                                </ListBox>
-                            </Border>
+                            <StackPanel Margin="0,8,0,0" Spacing="8">
+                                <Border Background="{DynamicResource CreateWalletInputBg}"
+                                        BorderBrush="{DynamicResource CreateWalletInputBorder}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Padding="4">
+                                    <ListBox Name="StoredWalletList"
+                                             ItemsSource="{Binding StoredWallets}"
+                                             SelectionMode="Single"
+                                             Background="Transparent"
+                                             BorderThickness="0"
+                                             MaxHeight="160">
+                                        <ListBox.ItemContainerTheme>
+                                            <ControlTheme TargetType="ListBoxItem">
+                                                <Setter Property="Background" Value="Transparent" />
+                                                <Setter Property="Padding" Value="0" />
+                                                <Setter Property="Template">
+                                                    <ControlTemplate>
+                                                        <ContentPresenter Content="{TemplateBinding Content}"
+                                                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                                          Padding="{TemplateBinding Padding}"
+                                                                          Background="{TemplateBinding Background}"
+                                                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                                                    </ControlTemplate>
+                                                </Setter>
+                                            </ControlTheme>
+                                        </ListBox.ItemContainerTheme>
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate x:DataType="funds:StoredWalletEntry">
+                                                <Border Padding="10,8"
+                                                        CornerRadius="6"
+                                                        Cursor="Hand"
+                                                        Background="Transparent">
+                                                    <Border.Styles>
+                                                        <Style Selector="Border:pointerover">
+                                                            <Setter Property="Background" Value="{DynamicResource DeployWalletItemBg}" />
+                                                        </Style>
+                                                    </Border.Styles>
+                                                    <Grid ColumnDefinitions="Auto,*">
+                                                        <Border Grid.Column="0" Width="32" Height="32"
+                                                                CornerRadius="6"
+                                                                Background="{DynamicResource DeployWalletIconBg}"
+                                                                VerticalAlignment="Center">
+                                                            <i:Icon Value="fa-solid fa-lock"
+                                                                   FontSize="16"
+                                                                   Foreground="#F59E0B" />
+                                                        </Border>
+                                                        <StackPanel Grid.Column="1" Spacing="1"
+                                                                    VerticalAlignment="Center"
+                                                                    Margin="10,0,0,0">
+                                                            <TextBlock Text="{Binding Name}"
+                                                                       FontSize="13" FontWeight="SemiBold"
+                                                                       Foreground="{DynamicResource TextStrong}" />
+                                                            <TextBlock Text="{Binding ShortId}"
+                                                                       FontSize="11"
+                                                                       Foreground="{DynamicResource TextMuted}" />
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </Border>
+
+                                <!-- Restore spinner (shown while decrypting/importing) -->
+                                <StackPanel Name="RestoreSpinnerPanel" IsVisible="False"
+                                            Orientation="Horizontal" Spacing="10"
+                                            HorizontalAlignment="Center"
+                                            Margin="0,8,0,0">
+                                    <i:Icon Value="fa-solid fa-spinner"
+                                           FontSize="18"
+                                           Foreground="{DynamicResource PrimaryGreenBrush}"
+                                           VerticalAlignment="Center"
+                                           Classes="spin" />
+                                    <TextBlock Text="Restoring wallet..."
+                                               FontSize="13"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </StackPanel>
                         </Expander>
                     </Border>
 

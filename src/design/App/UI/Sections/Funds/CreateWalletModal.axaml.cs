@@ -2,7 +2,6 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using App.UI.Shell;
-using App.UI.Shared.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -32,7 +31,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
 
         _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<CreateWalletModal>();
 
-        ExistingWalletList.SelectionChanged += OnExistingWalletSelected;
+        StoredWalletList.SelectionChanged += OnStoredWalletSelected;
     }
 
     private FundsViewModel? Vm => DataContext as FundsViewModel;
@@ -160,10 +159,17 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
 
         if (step == "import")
         {
-            // Show the existing-wallets dropdown only when there are wallets in the store
-            ExistingWalletsSection.IsVisible = Vm?.ExistingWallets.Count > 0;
-            ExistingWalletList.SelectedItem = null;
+            // Load encrypted wallets from wallets.json and show the restore section
+            _ = LoadStoredWalletsAsync();
+            StoredWalletList.SelectedItem = null;
         }
+    }
+
+    private async Task LoadStoredWalletsAsync()
+    {
+        if (Vm == null) return;
+        await Vm.LoadStoredWalletsAsync();
+        StoredWalletsSection.IsVisible = Vm.StoredWallets.Count > 0;
     }
 
     /// <summary>
@@ -204,24 +210,42 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
     }
 
     /// <summary>
-    /// Handles selection of an existing wallet from the dropdown in the import step.
-    /// Selects that wallet as active and closes the modal without requiring seed words.
+    /// Handles selection of a stored wallet — decrypts via secure storage and imports it.
     /// </summary>
-    private void OnExistingWalletSelected(object? sender, SelectionChangedEventArgs e)
+    private async void OnStoredWalletSelected(object? sender, SelectionChangedEventArgs e)
     {
-        if (ExistingWalletList.SelectedItem is not WalletInfo wallet) return;
+        if (StoredWalletList.SelectedItem is not StoredWalletEntry wallet) return;
 
-        _logger.LogInformation("Existing wallet selected from dropdown: {WalletName} ({WalletId})",
-            wallet.Name, wallet.Id.Value);
+        _logger.LogInformation("Stored wallet selected for restore: {ShortId}", wallet.ShortId);
+        StoredWalletList.IsEnabled = false;
+        RestoreSpinnerPanel.IsVisible = true;
 
-        Vm?.SelectExistingWallet(wallet);
-        _walletCreated = true;
-
-        // Deselect so the list doesn't stay highlighted if the modal is re-opened
-        ExistingWalletList.SelectedItem = null;
-
-        ShellVm?.HideModal();
-        OnDismissed?.Invoke(true);
+        try
+        {
+            var (success, error) = await Vm!.RestoreStoredWalletAsync(wallet.Id);
+            if (success)
+            {
+                _walletCreated = true;
+                _logger.LogInformation("Wallet restored from backup: {ShortId}", wallet.ShortId);
+                ShowStep("success");
+            }
+            else
+            {
+                _logger.LogError("Failed to restore wallet {ShortId}: {Error}", wallet.ShortId, error);
+                ShellVm?.ShowToast($"Restore failed: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unhandled exception during wallet restore");
+            ShellVm?.ShowToast($"Restore failed: {ex.Message}");
+        }
+        finally
+        {
+            StoredWalletList.IsEnabled = true;
+            RestoreSpinnerPanel.IsVisible = false;
+            StoredWalletList.SelectedItem = null;
+        }
     }
 
     /// <summary>
