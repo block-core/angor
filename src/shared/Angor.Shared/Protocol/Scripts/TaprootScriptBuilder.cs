@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using System.Text;
 using Angor.Shared.Models;
 using Blockcore.NBitcoin;
@@ -24,11 +23,11 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
         return new Script(scriptBytes);
     }
 
-    public Script CreateControlBlock(ProjectScripts scripts, Expression<Func<ProjectScripts,Script>> scriptSelector)
+    public Script CreateControlBlock(ProjectScripts scripts, Func<ProjectScripts, Script> scriptSelector)
     {
         var treeInfo = BuildTaprootSpendInfo(scripts);
 
-        var script = scriptSelector.Compile().Invoke(scripts);
+        var script = scriptSelector(scripts);
 
         ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(script.ToBytes()).ToTapScript(TapLeafVersion.C0));
 

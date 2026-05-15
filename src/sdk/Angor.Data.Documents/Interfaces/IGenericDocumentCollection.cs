@@ -11,9 +11,9 @@ public interface IGenericDocumentCollection<T> where T : class
     Task<Result<IEnumerable<T>>> FindAllAsync();
     Task<Result<IEnumerable<T>>> FindAsync(Expression<Func<T, bool>> predicate);
     Task<Result<bool>> ExistsAsync(string id);
-    Task<Result<int>> InsertAsync(Expression<Func<T,string>> getDocumentId,params T[] entities);
-    Task<Result<bool>> UpdateAsync(Expression<Func<T,string>> getDocumentId,T entity);
-    Task<Result<bool>> UpsertAsync(Expression<Func<T,string>> getDocumentId,T entity);
+    Task<Result<int>> InsertAsync(Func<T,string> getDocumentId,params T[] entities);
+    Task<Result<bool>> UpdateAsync(Func<T,string> getDocumentId,T entity);
+    Task<Result<bool>> UpsertAsync(Func<T,string> getDocumentId,T entity);
     Task<Result<bool>> DeleteAsync(string id);
     Task<Result<int>> DeleteAllAsync();
     Task<Result<int>> CountAsync(Expression<Func<T, bool>>? predicate = null);
