@@ -26,7 +26,12 @@ public class WalletWords : IDisposable
             ObjectDisposedException.ThrowIf(disposed, this);
             return new string(wordsChars);
         }
-        set => wordsChars = value?.ToCharArray() ?? Array.Empty<char>();
+        set
+        {
+            ObjectDisposedException.ThrowIf(disposed, this);
+            ArgumentNullException.ThrowIfNull(value);
+            wordsChars = value.ToCharArray();
+        }
     }
 
     /// <summary>Optional BIP-39 passphrase.</summary>
