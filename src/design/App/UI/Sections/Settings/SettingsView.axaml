@@ -539,7 +539,7 @@
                                         BorderThickness="1"
                                         CornerRadius="8"
                                         Padding="16">
-                                    <TextBlock Text="{Binding SeedWords}"
+                                    <SelectableTextBlock Text="{Binding SeedWords}"
                                                FontSize="14"
                                                FontFamily="Cascadia Mono, Consolas, monospace"
                                                Foreground="{DynamicResource CreateWalletSeedText}"
