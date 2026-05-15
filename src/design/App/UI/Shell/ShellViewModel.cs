@@ -1363,29 +1363,69 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
     /// Optional <paramref name="onReuse"/> callback runs when returning an already-cached view
     /// (e.g. to reset sub-navigation state).
     /// </summary>
+    private bool _deferredViewReady;
+
     private object? GetOrCreateView(string key, Action<object>? onReuse = null)
     {
         if (_viewCache.TryGetValue(key, out var existing))
         {
-            var swReuse = Stopwatch.StartNew();
             onReuse?.Invoke(existing);
-            swReuse.Stop();
-            PerfLog("GetOrCreateView", $"key={key} cached=true onReuseMs={swReuse.ElapsedMilliseconds}");
-            return existing;
+            PerfLog("GetOrCreateView", $"key={key} cached=true");
+
+            // On the deferred re-evaluation, return the real view.
+            if (_deferredViewReady)
+            {
+                _deferredViewReady = false;
+                return existing;
+            }
+
+            // Defer swapping the cached view in so the tab highlight animates
+            // instantly without blocking on Avalonia's layout/measure pass.
+            _deferredViewReady = true;
+            Avalonia.Threading.Dispatcher.UIThread.Post(
+                () => this.RaisePropertyChanged(nameof(CurrentSectionContent)),
+                Avalonia.Threading.DispatcherPriority.Background);
+
+            return _loadingPlaceholder ??= CreateLoadingPlaceholder();
         }
 
-        var sw = Stopwatch.StartNew();
-        var view = _viewFactory(key);
-        sw.Stop();
-        PerfLog("GetOrCreateView", $"key={key} cached=false factoryMs={sw.ElapsedMilliseconds}");
-
-        if (view != null)
+        // Return a placeholder immediately and create the view on the
+        // next dispatcher frame so the UI doesn't freeze during DI + XAML inflate.
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
-            _viewCache[key] = view;
-            ViewPreWarmed?.Invoke(key, view);
-            AttachRenderTiming(key, view, sw.ElapsedMilliseconds);
-        }
-        return view;
+            if (!_viewCache.ContainsKey(key))
+            {
+                var sw = Stopwatch.StartNew();
+                var view = _viewFactory(key);
+                sw.Stop();
+                PerfLog("GetOrCreateView", $"key={key} cached=false factoryMs={sw.ElapsedMilliseconds}");
+
+                if (view != null)
+                {
+                    _viewCache[key] = view;
+                    ViewPreWarmed?.Invoke(key, view);
+                    AttachRenderTiming(key, view, sw.ElapsedMilliseconds);
+                }
+            }
+            _deferredViewReady = true;
+            this.RaisePropertyChanged(nameof(CurrentSectionContent));
+        }, Avalonia.Threading.DispatcherPriority.Background);
+
+        return _loadingPlaceholder ??= CreateLoadingPlaceholder();
+    }
+
+    private Avalonia.Controls.Control? _loadingPlaceholder;
+
+    private static Avalonia.Controls.Control CreateLoadingPlaceholder()
+    {
+        return new Avalonia.Controls.TextBlock
+        {
+            Text = "Loading…",
+            FontSize = 16,
+            Opacity = 0.5,
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+        };
     }
 
     // ── Perf: programmatic tab switch for adb-driven benchmarks ──
