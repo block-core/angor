@@ -90,7 +90,7 @@ public class SeederTransactionActions : ISeederTransactionActions
             var execData = new TaprootExecutionData(stageIndex, tapScript.LeafHash) { SigHash = sigHash };
             var hash = nbitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs, execData);
 
-            _logger.LogInformation($"project={projectInfo.ProjectIdentifier}; seeder-pubkey={key.PubKey.ToHex()}; stage={stageIndex}; hash={hash}");
+            _logger.LogInformation($"project={projectInfo.ProjectIdentifier}; seeder-pubkey={key.PubKey.ToHex()}; stage={stageIndex}");
 
             var investorSignature = key.SignTaprootKeySpend(hash, sigHash);
 
@@ -108,6 +108,11 @@ public class SeederTransactionActions : ISeederTransactionActions
     public TransactionInfo RecoverEndOfProjectFunds(string investmentTransactionHex, ProjectInfo projectInfo, int stageIndex, string investorReceiveAddress,
         string investorPrivateKey, FeeEstimation feeEstimation)
     {
+        // H4: Reject fee rates below the protocol minimum
+        if (feeEstimation.FeeRate < ProtocolConstants.MinFeeRateSatsPerKb)
+            throw new ArgumentOutOfRangeException(nameof(feeEstimation),
+                $"Fee rate {feeEstimation.FeeRate} sat/kB is below the protocol minimum of {ProtocolConstants.MinFeeRateSatsPerKb} sat/kB.");
+
         return _spendingTransactionBuilder.BuildRecoverInvestorRemainingFundsInProject(investmentTransactionHex, projectInfo, stageIndex,
             investorReceiveAddress, investorPrivateKey, new FeeRate(new NBitcoin.Money(feeEstimation.FeeRate)),
             _ =>

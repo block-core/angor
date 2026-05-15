@@ -98,6 +98,11 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     public TransactionInfo BuildAndSignRecoverReleaseFundsTransaction(ProjectInfo projectInfo, Transaction investmentTransaction,
         Transaction recoveryTransaction, string investorReceiveAddress, FeeEstimation feeEstimation, string investorPrivateKey)
     {
+        // H4: Reject fee rates below the protocol minimum — FeeRate must be in sat/kB.
+        if (feeEstimation.FeeRate < ProtocolConstants.MinFeeRateSatsPerKb)
+            throw new ArgumentOutOfRangeException(nameof(feeEstimation),
+                $"Fee rate {feeEstimation.FeeRate} sat/kB is below the protocol minimum of {ProtocolConstants.MinFeeRateSatsPerKb} sat/kB.");
+
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
 
         var spendingScript = _investmentScriptBuilder.GetInvestorPenaltyTransactionScript(
@@ -157,6 +162,11 @@ public class InvestorTransactionActions : IInvestorTransactionActions
     public TransactionInfo RecoverEndOfProjectFunds(string transactionHex, ProjectInfo projectInfo, int startStageNumber,
         string investorReceiveAddress, string investorPrivateKey, FeeEstimation feeEstimation)
     {
+        // H4: Reject fee rates below the protocol minimum
+        if (feeEstimation.FeeRate < ProtocolConstants.MinFeeRateSatsPerKb)
+            throw new ArgumentOutOfRangeException(nameof(feeEstimation),
+                $"Fee rate {feeEstimation.FeeRate} sat/kB is below the protocol minimum of {ProtocolConstants.MinFeeRateSatsPerKb} sat/kB.");
+
         return _spendingTransactionBuilder.BuildRecoverInvestorRemainingFundsInProject(transactionHex, projectInfo, startStageNumber,
             investorReceiveAddress, investorPrivateKey, new NBitcoin.FeeRate(new NBitcoin.Money(feeEstimation.FeeRate)),
             projectScripts =>
@@ -181,6 +191,11 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         string investorReceiveAddress, string investorPrivateKey, FeeEstimation feeEstimation,
         IEnumerable<byte[]> seederSecrets)
     {
+        // H4: Reject fee rates below the protocol minimum
+        if (feeEstimation.FeeRate < ProtocolConstants.MinFeeRateSatsPerKb)
+            throw new ArgumentOutOfRangeException(nameof(feeEstimation),
+                $"Fee rate {feeEstimation.FeeRate} sat/kB is below the protocol minimum of {ProtocolConstants.MinFeeRateSatsPerKb} sat/kB.");
+
         var secrets = seederSecrets.Select(_ => new Key(_));
 
         return _spendingTransactionBuilder.BuildRecoverInvestorRemainingFundsInProject(transactionHex, projectInfo, startStageNumber,
@@ -208,18 +223,23 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             },
             (witScript, sig) =>
             {
+                if (witScript.PushCount < 3)
+                    throw new InvalidOperationException($"Unexpected witness structure: expected at least 3 pushes (sig, script, controlblock), got {witScript.PushCount}");
+
                 var controBlock = new NBitcoin.Script(witScript[witScript.PushCount - 1]);
                 var scriptToExecute = new NBitcoin.Script(witScript[witScript.PushCount - 2]);
 
                 List<Op> ops = new List<Op>();
 
-                // the last 3 items on the stack are the fakesig, script and controlblock anything before that is the secrets
+                // Witness layout: [fakeSig] [secret_0 .. secret_n] [scriptToExecute] [controlBlock]
+                // Replace fakeSig with real sig, preserve secrets, reattach script + controlblock
+                var secretCount = witScript.PushCount - 3; // exclude fakeSig, script, controlblock
 
                 ops.Add(Op.GetPushOp(sig.ToBytes()));
 
-                foreach (var oppush in witScript.Pushes.Skip(1).Take(witScript.Pushes.Count() - 3))
+                for (int i = 0; i < secretCount; i++)
                 {
-                    ops.Add(Op.GetPushOp(oppush));
+                    ops.Add(Op.GetPushOp(witScript[i + 1])); // secrets start at index 1
                 }
 
                 ops.Add(Op.GetPushOp(scriptToExecute.ToBytes()));
@@ -282,6 +302,10 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
     private Transaction AddSignaturesToRecoveryPathTransaction(ProjectInfo projectInfo, Transaction investmentTransaction, Transaction recoveryTransaction, SignatureInfo founderSignatures, string investorPrivateKey)
     {
+        // Verify founder signatures before incorporating them
+        if (!CheckRecoverySignatures(projectInfo, investmentTransaction, recoveryTransaction, founderSignatures))
+            throw new InvalidOperationException("Founder recovery signature verification failed. Refusing to co-sign with invalid founder signatures.");
+
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
 
         var nbitcoinNetwork = NetworkMapper.Map(_networkConfiguration.GetNetwork());
@@ -310,7 +334,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
             var hash = nbitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs, execData);
 
-            _logger.LogInformation($"project={projectInfo.ProjectIdentifier}; investor-pubkey={key.PubKey.ToHex()}; stage={stageIndex}; hash={hash}");
+            _logger.LogInformation($"project={projectInfo.ProjectIdentifier}; investor-pubkey={key.PubKey.ToHex()}; stage={stageIndex}");
 
             var investorSignature = key.SignTaprootKeySpend(hash, sigHash);
 
@@ -357,7 +381,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
             var result = pubkey.VerifySignature(hash, TaprootSignature.Parse(sig).SchnorrSignature);
 
-            _logger.LogInformation($"verifying sig for project={projectInfo.ProjectIdentifier}; success = {result}; founder-recovery-pubkey={projectInfo.FounderRecoveryKey}; stage={stageIndex}; hash={hash}; signature-hex={sig}");
+            _logger.LogInformation($"verifying sig for project={projectInfo.ProjectIdentifier}; success = {result}; founder-recovery-pubkey={projectInfo.FounderRecoveryKey}; stage={stageIndex}");
 
             // if even one sig failed we fail all the validation
             if (result == false)

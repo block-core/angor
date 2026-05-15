@@ -1,10 +1,15 @@
+using System;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.Views;
+using Angor.Data.Documents.Interfaces;
 using App.UI.Shared.Helpers;
+using App.UI.Shell;
 using Avalonia.Android;
 using Avalonia.Threading;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace App.Android;
 
@@ -36,6 +41,44 @@ public class MainActivity : AvaloniaMainActivity
         {
             UnregisterReceiver(_perfReceiver);
             _perfReceiver = null;
+        }
+    }
+
+    protected override void OnStop()
+    {
+        base.OnStop();
+
+        // Flush all pending state to disk before the process may be killed.
+        // Android can terminate the process at any point after OnStop returns.
+        try
+        {
+            var services = global::App.App.Services;
+            if (services == null) return;
+
+            // Checkpoint LiteDB to flush the WAL into the main data file
+            var db = services.GetService<IAngorDocumentDatabase>();
+            if (db != null)
+            {
+                db.CheckpointAsync().GetAwaiter().GetResult();
+            }
+
+            // Flush prototype settings (selected wallet ID, theme, etc.)
+            var settings = services.GetService<PrototypeSettings>();
+            settings?.FlushAsync().GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                var logger = global::App.App.Services?
+                    .GetService<ILoggerFactory>()?
+                    .CreateLogger<MainActivity>();
+                logger?.LogError(ex, "Failed to flush data in OnStop");
+            }
+            catch
+            {
+                // Swallow — logging infrastructure may already be disposed
+            }
         }
     }
 

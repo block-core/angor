@@ -1,4 +1,3 @@
-using System.Reflection;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -12,6 +11,8 @@ public class UnhandledExceptionBehavior<TRequest, TResponse>(
     ILogger<UnhandledExceptionBehavior<TRequest, TResponse>> logger)
     : IPipelineBehavior<TRequest, TResponse>
 {
+    private static readonly Func<string, TResponse>? FailureFactory = BuildFailureFactory();
+
     public async Task<TResponse> Handle(
         TRequest request,
         RequestHandlerDelegate<TResponse> next,
@@ -28,32 +29,46 @@ public class UnhandledExceptionBehavior<TRequest, TResponse>(
         catch (Exception ex)
         {
             logger.LogError(ex, "Unhandled exception executing {RequestName}", typeof(TRequest).Name);
-            return CreateFailureResult($"Angor API failed: {ex.Message}");
+
+            if (FailureFactory == null)
+            {
+                throw new InvalidOperationException(
+                    $"Unhandled pipeline response type {typeof(TResponse).FullName}. Only Result and Result<T> are supported.");
+            }
+
+            return FailureFactory($"Angor API failed: {ex.Message}");
         }
     }
 
-    private static TResponse CreateFailureResult(string message)
+    private static Func<string, TResponse>? BuildFailureFactory()
     {
-        var responseType = typeof(TResponse);
-
-        if (responseType == typeof(Result))
+        if (typeof(TResponse) == typeof(Result))
         {
-            return (TResponse)(object)Result.Failure(message);
+            return message => (TResponse)(object)Result.Failure(message);
         }
 
-        if (responseType.IsGenericType &&
-            responseType.GetGenericTypeDefinition() == typeof(Result<>))
+        if (typeof(TResponse).IsGenericType &&
+            typeof(TResponse).GetGenericTypeDefinition() == typeof(Result<>))
         {
-            var payloadType = responseType.GetGenericArguments()[0];
-            var failureMethod = typeof(Result)
-                .GetMethods(BindingFlags.Static | BindingFlags.Public)
-                .First(m => m.Name == nameof(Result.Failure) && m.IsGenericMethod && m.GetParameters().Length == 1);
+            // MakeGenericMethod is used once during static initialization (not per-call),
+            // and the result is cached as a typed delegate. The AOT compiler can resolve
+            // this because all closed generic instantiations are known from DI registration.
+            var helperMethod = typeof(UnhandledExceptionBehavior<TRequest, TResponse>)
+                .GetMethod(nameof(CreateTypedFailure), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
 
-            var genericFailure = failureMethod.MakeGenericMethod(payloadType);
-            return (TResponse)genericFailure.Invoke(null, new object[] { message })!;
+            if (helperMethod != null)
+            {
+                var payloadType = typeof(TResponse).GetGenericArguments()[0];
+                var closedMethod = helperMethod.MakeGenericMethod(payloadType);
+                return (Func<string, TResponse>)Delegate.CreateDelegate(typeof(Func<string, TResponse>), closedMethod);
+            }
         }
 
-        throw new InvalidOperationException(
-            $"Unhandled pipeline response type {responseType.FullName}. Only Result and Result<T> are supported.");
+        return null;
+    }
+
+    private static TResponse CreateTypedFailure<TPayload>(string message)
+    {
+        return (TResponse)(object)Result.Failure<TPayload>(message);
     }
 }

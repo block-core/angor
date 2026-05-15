@@ -1,4 +1,5 @@
 using Angor.Shared.Models;
+using Angor.Shared.Protocol;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Utilities;
 using Blockcore.Consensus.ScriptInfo;
@@ -83,6 +84,15 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
                 totalAllocated += stageAmount;
             }
             stageAmounts.Add(stageAmount);
+        }
+
+        // H5: Validate that no stage output is below dust threshold
+        for (int i = 0; i < stageAmounts.Count; i++)
+        {
+            if (stageAmounts[i] < ProtocolConstants.DustThresholdSats)
+                throw new InvalidOperationException(
+                    $"Stage {i + 1} output amount ({stageAmounts[i]} sats) is below the dust threshold " +
+                    $"of {ProtocolConstants.DustThresholdSats} sats. Increase the investment amount or adjust stage percentages.");
         }
 
         var stagesOutputs = stagesScripts.Select((script, i) =>

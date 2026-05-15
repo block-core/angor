@@ -3,6 +3,8 @@ using System.Text;
 using Angor.Shared.Services;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
+using Nostr.Client.Keys;
+using Nostr.Client.Utils;
 
 namespace Angor.Sdk.Funding.Projects;
 
@@ -92,56 +94,52 @@ public class EncryptionService : IEncryptionService
 
     public Task<string> EncryptNostrContentAsync(string nsec, string npub, string content)
     {
-        var secretHex = GetSharedSecretHexWithoutPrefix(nsec, npub);
-        byte[] sharedSecret = Encoders.Hex.DecodeData(secretHex);
-            
-        // Encrypt using AES-CBC (as in JS)
-        using var aes = Aes.Create();
-        aes.Mode = CipherMode.CBC;
-        aes.Key = sharedSecret;
-        aes.GenerateIV(); // Generate 16-byte IV
-            
-        ICryptoTransform encryptor = aes.CreateEncryptor();
-            
-        byte[] contentBytes = Encoding.UTF8.GetBytes(content);
-        byte[] encryptedBytes;
-            
-        using (var ms = new MemoryStream())
-        {
-            using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
-            {
-                cs.Write(contentBytes, 0, contentBytes.Length);
-                cs.FlushFinalBlock();
-            }
-            encryptedBytes = ms.ToArray();
-        }
-            
-        // Format: encryptedBase64?iv=ivBase64
-        string encryptedBase64 = Convert.ToBase64String(encryptedBytes);
-        string ivBase64 = Convert.ToBase64String(aes.IV);
-            
-        return Task.FromResult($"{encryptedBase64}?iv={ivBase64}");
+        var privateKey = NostrPrivateKey.FromHex(nsec);
+        var publicKey = NostrPublicKey.FromHex(npub);
+        var conversationKey = privateKey.DeriveConversationKeyNip44(publicKey);
+
+        var encrypted = NostrEncryptionNip44.Encrypt(content, conversationKey);
+        return Task.FromResult(encrypted);
     }
 
     public Task<string> DecryptNostrContentAsync(string nsec, string npub, string encryptedContent)
     {
+        // NIP-04 format uses "?iv=" separator; NIP-44 is plain base64
+        if (encryptedContent.Contains("?iv="))
+        {
+            return DecryptNip04(nsec, npub, encryptedContent);
+        }
+
+        var privateKey = NostrPrivateKey.FromHex(nsec);
+        var publicKey = NostrPublicKey.FromHex(npub);
+        var conversationKey = privateKey.DeriveConversationKeyNip44(publicKey);
+
+        var decrypted = NostrEncryptionNip44.Decrypt(encryptedContent, conversationKey);
+        return Task.FromResult(decrypted);
+    }
+
+    /// <summary>
+    /// Legacy NIP-04 decryption for backward compatibility with existing messages.
+    /// </summary>
+    private static Task<string> DecryptNip04(string nsec, string npub, string encryptedContent)
+    {
         var secretHex = GetSharedSecretHexWithoutPrefix(nsec, npub);
         byte[] sharedSecret = Encoders.Hex.DecodeData(secretHex);
-            
+
         // Split ciphertext and IV
         string[] parts = encryptedContent.Split("?iv=");
         byte[] ciphertext = Convert.FromBase64String(parts[0]);
         byte[] iv = Convert.FromBase64String(parts[1]);
-            
+
         // Decrypt using AES-CBC
         using var aes = Aes.Create();
         aes.Mode = CipherMode.CBC;
         aes.Key = sharedSecret;
         aes.IV = iv;
-            
+
         ICryptoTransform decryptor = aes.CreateDecryptor();
         byte[] decryptedBytes;
-            
+
         using (var ms = new MemoryStream(ciphertext))
         using (var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read))
         using (var resultMs = new MemoryStream())
@@ -149,7 +147,7 @@ public class EncryptionService : IEncryptionService
             cs.CopyTo(resultMs);
             decryptedBytes = resultMs.ToArray();
         }
-            
+
         return Task.FromResult(Encoding.UTF8.GetString(decryptedBytes));
     }
 

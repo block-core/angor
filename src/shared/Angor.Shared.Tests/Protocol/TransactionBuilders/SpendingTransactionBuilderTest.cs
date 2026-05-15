@@ -45,7 +45,7 @@ public class SpendingTransactionBuilderTest : AngorTestData
             1,
             changeAddress.ScriptPubKey.WitHash.GetAddress(Networks.Bitcoin.Testnet()).ToString(),
             Encoders.Hex.EncodeData(new Key().ToBytes()),
-            new NBitcoin.FeeRate(new NBitcoin.Money(Random.Shared.Next())),
+            new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(1000)), // 1 sat/vB - realistic fee rate
             _ => { return GetRandomDataWitScript(3); },
             (_, s) => { return GetRandomDataWitScript(3); }
         );
@@ -71,7 +71,7 @@ public class SpendingTransactionBuilderTest : AngorTestData
             1,
             changeAddress.ScriptPubKey.WitHash.GetAddress(Networks.Bitcoin.Testnet()).ToString(),
             Encoders.Hex.EncodeData(new Key().ToBytes()),
-            new NBitcoin.FeeRate(new NBitcoin.Money(Random.Shared.Next())),
+            new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(1000)), // 1 sat/vB - realistic fee rate
             _ => { return expectedWitSigWithFakeSig; },
             (_, s) =>
             {
@@ -116,7 +116,7 @@ public class SpendingTransactionBuilderTest : AngorTestData
             1,
             changeAddress.ScriptPubKey.WitHash.GetAddress(Networks.Bitcoin.Testnet()).ToString(),
             Encoders.Hex.EncodeData(new Key().ToBytes()),
-            new NBitcoin.FeeRate(new NBitcoin.Money(Random.Shared.Next())),
+            new NBitcoin.FeeRate(NBitcoin.Money.Satoshis(1000)), // 1 sat/vB - realistic fee rate
             _ =>
             {
                 Assert.Same(_, expectedProjectScripts);

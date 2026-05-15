@@ -55,7 +55,7 @@ jobs:
         run: dotnet restore design/App.Desktop/App.Desktop.csproj
       
       - name: Build
-        run: dotnet build design/App.Desktop/App.Desktop.csproj --no-restore -c Release -p:SupportNpub=${{ vars.SUPPORT_NPUB }}
+        run: dotnet build design/App.Desktop/App.Desktop.csproj --no-restore -c Release
       
       - name: Test
         run: dotnet test sdk/Angor.Sdk.Tests/Angor.Sdk.Tests.csproj -c Release --verbosity normal
@@ -147,10 +147,10 @@ jobs:
         run: |
           APPIMAGE=artifacts/Angor-${{ needs.prepare.outputs.version }}-x86_64.AppImage
           chmod +x "$APPIMAGE"
-          OFFSET=$(LC_ALL=C grep -abom1 'hsqs' "$APPIMAGE" | head -1 | cut -d: -f1)
-          unsquashfs -offset "$OFFSET" "$APPIMAGE"
+          APPIMAGE_EXTRACT_AND_RUN=1 "$APPIMAGE" --appimage-extract
           sed -i 's/\r$//' squashfs-root/*.desktop
           grep -q '^Categories=' squashfs-root/*.desktop || sed -i '/^\[Desktop Entry\]/a Categories=Finance;Network;' squashfs-root/*.desktop
+          cp squashfs-root/usr/share/icons/hicolor/256x256/apps/angor.png squashfs-root/angor.png 2>/dev/null || true
           ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 appimagetool -n squashfs-root "$APPIMAGE"
           rm -rf squashfs-root
 
@@ -191,6 +191,7 @@ jobs:
           unsquashfs -offset "$OFFSET" "$APPIMAGE"
           sed -i 's/\r$//' squashfs-root/*.desktop
           grep -q '^Categories=' squashfs-root/*.desktop || sed -i '/^\[Desktop Entry\]/a Categories=Finance;Network;' squashfs-root/*.desktop
+          cp squashfs-root/usr/share/icons/hicolor/256x256/apps/angor.png squashfs-root/angor.png 2>/dev/null || true
           ARCH=aarch64 APPIMAGE_EXTRACT_AND_RUN=1 appimagetool -n squashfs-root "$APPIMAGE"
           rm -rf squashfs-root
 
@@ -255,7 +256,6 @@ jobs:
             -p:ApplicationDisplayVersion=${{ needs.prepare.outputs.version }} \
             -p:ApplicationVersion=${{ github.run_number }} \
             -p:Version=${{ needs.prepare.outputs.version }} \
-            -p:SupportNpub=${{ vars.SUPPORT_NPUB }} \
             -p:AndroidKeyStore=true \
             -p:AndroidSigningKeyStore=${{ github.workspace }}/android.keystore \
             -p:AndroidSigningKeyAlias=${{ secrets.ANDROID_KEY_ALIAS }} \
@@ -272,7 +272,6 @@ jobs:
             -p:ApplicationDisplayVersion=${{ needs.prepare.outputs.version }} \
             -p:ApplicationVersion=${{ github.run_number }} \
             -p:Version=${{ needs.prepare.outputs.version }} \
-            -p:SupportNpub=${{ vars.SUPPORT_NPUB }} \
             -o ${{ github.workspace }}/artifacts/
       
       - name: Rename APK

@@ -86,6 +86,9 @@ public class WalletOperations : IWalletOperations
             {
                 var key = coins.keys[index];
 
+                if (key.PubKey.WitHash.ScriptPubKey != coin.ScriptPubKey)
+                    throw new InvalidOperationException($"Derived key does not match coin ScriptPubKey at index {index}");
+
                 var input = clonedTransaction.Inputs.Single(p => p.PrevOut == coin.Outpoint);
                 var signature = clonedTransaction.SignInput(network, key, coin, SigHash.All);
                 input.WitScript = new WitScript(Op.GetPushOp(signature.ToBytes()), Op.GetPushOp(key.PubKey.ToBytes()));
@@ -214,6 +217,10 @@ public class WalletOperations : IWalletOperations
         foreach (var coin in coins.coins)
         {
             var key = coins.keys[index];
+
+            if (key.PubKey.WitHash.ScriptPubKey != coin.ScriptPubKey)
+                throw new InvalidOperationException($"Derived key does not match coin ScriptPubKey at index {index}");
+
             var input = clonedTransaction.Inputs.Single(p => p.PrevOut == coin.Outpoint);
             var signature = clonedTransaction.SignInput(network, key, coin, SigHash.All);
             input.WitScript = new WitScript(Op.GetPushOp(signature.ToBytes()), Op.GetPushOp(key.PubKey.ToBytes()));
@@ -277,6 +284,9 @@ public class WalletOperations : IWalletOperations
         foreach (var coin in coins.coins)
         {
             var key = coins.keys[index];
+
+            if (key.PubKey.WitHash.ScriptPubKey != coin.ScriptPubKey)
+                throw new InvalidOperationException($"Derived key does not match coin ScriptPubKey at index {index}");
 
             var input = clonedTransaction.Inputs.Single(p => p.PrevOut == coin.Outpoint);
             var signature = clonedTransaction.SignInput(network, key, coin, SigHash.All);

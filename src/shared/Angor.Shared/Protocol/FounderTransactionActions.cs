@@ -5,9 +5,8 @@ using Blockcore.NBitcoin.DataEncoders;
 using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using System.Diagnostics;
+using System.Buffers.Binary;
 using static NBitcoin.Scripting.OutputDescriptor;
-//using Angor.Shared.Protocol;
 using IndexedTxOut = NBitcoin.IndexedTxOut;
 using Key = NBitcoin.Key;
 using Op = NBitcoin.Op;
@@ -71,7 +70,7 @@ public class FounderTransactionActions : IFounderTransactionActions
 
             var hashHex = Encoders.Hex.EncodeData(hash.ToBytes());
 
-            _logger.LogInformation($"creating sig for project={projectInfo.ProjectIdentifier}; founder-recovery-pubkey={key.PubKey.ToHex()}; stage={stageIndex}; hash={hash}; encodedHash={hashHex} signature-hex={sig}");
+            _logger.LogInformation($"creating sig for project={projectInfo.ProjectIdentifier}; founder-recovery-pubkey={key.PubKey.ToHex()}; stage={stageIndex}");
 
             var result = new TaprootPubKey(
                 Angor.Shared.Protocol.Scripts.TaprootKeyHelper.GetTaprootOutputKeyBytes(key.PubKey))
@@ -94,6 +93,12 @@ public class FounderTransactionActions : IFounderTransactionActions
 
     public TransactionInfo SpendFounderStage(ProjectInfo projectInfo, IEnumerable<StageTransactionInput> stageTransactionInput, Script founderRecieveAddress, string founderPrivateKey, FeeEstimation fee)
     {
+        // H4: Reject fee rates below the protocol minimum — a sub-minimum rate
+        // indicates a bug in fee estimation or a unit mismatch. FeeRate must be in sat/kB.
+        if (fee.FeeRate < ProtocolConstants.MinFeeRateSatsPerKb)
+            throw new ArgumentOutOfRangeException(nameof(fee),
+                $"Fee rate {fee.FeeRate} sat/kB is below the protocol minimum of {ProtocolConstants.MinFeeRateSatsPerKb} sat/kB.");
+
         var network = _networkConfiguration.GetNetwork();
         var nbitcoinNetwork = NetworkMapper.Map(network);
         var spendingTransaction = nbitcoinNetwork.CreateTransaction();
@@ -133,7 +138,7 @@ public class FounderTransactionActions : IFounderTransactionActions
         }
 
         var txSize = spendingTransaction.GetVirtualSize();
-        var minimumFee = new FeeRate(Money.Satoshis(1100)).GetFee(txSize); //1000 sats per kilobyte
+        var minimumFee = new FeeRate(Money.Satoshis(ProtocolConstants.MinFeeRateSatsPerKb)).GetFee(txSize);
 
         var totalFee = nbitcoinNetwork
             .CreateTransactionBuilder()
@@ -168,14 +173,10 @@ public class FounderTransactionActions : IFounderTransactionActions
             var execData = new TaprootExecutionData(inputIndex, tapScript.LeafHash) { SigHash = sigHash };
             var hash = spendingTransaction.GetSignatureHashTaproot(trxData, execData);
 
-            _logger.LogInformation($"sig hash of inputIndex {inputIndex} spendingTransaction hex {hash.ToString()}");
-
             var sig = key.SignTaprootKeySpend(hash, sigHash);
 
-            _logger.LogInformation($"sig of inputIndex {inputIndex} spendingTransaction hex {sig.ToString()}");
-
-            // todo: throw a proper exception
-            Debug.Assert(key.CreateTaprootKeyPair().PubKey.VerifySignature(hash, sig.SchnorrSignature));
+            if (!key.CreateTaprootKeyPair().PubKey.VerifySignature(hash, sig.SchnorrSignature))
+                throw new InvalidOperationException($"Taproot signature verification failed for input {inputIndex}");
 
             input.WitScript = new WitScript(
                 Op.GetPushOp(sig.ToBytes()),
@@ -298,7 +299,7 @@ public class FounderTransactionActions : IFounderTransactionActions
 
         spendingTransaction.Outputs[0].Value += stageOutput.TxOut.Value;
 
-        var input = spendingTransaction.Inputs.Add(new OutPoint(stageOutput.Transaction, stageOutput.N), null, null, new NBitcoin.Sequence(spendingTransaction.LockTime.Value));
+        var input = spendingTransaction.Inputs.Add(new OutPoint(stageOutput.Transaction, stageOutput.N), null, null, new NBitcoin.Sequence(0xFFFFFFFE));
 
         ProjectScripts scriptStages = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, fundingParameters, stageTransactionInput.StageNumber - 1);
 

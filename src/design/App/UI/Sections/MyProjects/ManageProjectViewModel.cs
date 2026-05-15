@@ -480,7 +480,9 @@ public partial class ManageProjectViewModel : ReactiveObject
                 StageId = stageIndex
             });
 
-            var fee = new Angor.Shared.Models.FeeEstimation { FeeRate = feeRateSatsPerVByte, Confirmations = 1 };
+            // FeeEstimation.FeeRate is in sat/kB; the UI fee picker returns sat/vByte.
+            var feeRateSatsPerKb = feeRateSatsPerVByte * 1000;
+            var fee = new Angor.Shared.Models.FeeEstimation { FeeRate = feeRateSatsPerKb, Confirmations = 1 };
 
             var spendResult = await _founderAppService.SpendStageFunds(
                 new SpendStageFunds.SpendStageFundsRequest(walletId, projectId, fee, toSpend));
