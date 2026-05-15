@@ -784,6 +784,7 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
         _logger.LogInformation("Loading recovery status for project '{ProjectName}' (ID: {ProjectId}, WalletId: {WalletId})",
             investment.ProjectName, investment.ProjectIdentifier, investment.InvestmentWalletId);
 
+        investment.IsProcessing = true;
         try
         {
             var request = new GetRecoveryStatus.GetRecoveryStatusRequest(
@@ -858,6 +859,10 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error loading recovery status for project {ProjectId}", investment.ProjectIdentifier);
+        }
+        finally
+        {
+            investment.IsProcessing = false;
         }
     }
 

@@ -73,14 +73,23 @@ public class LogExportService : ILogExportService
         var supportDmKey = _derivationOperations.DeriveSupportDmKey(walletWords);
         var supportDmKeyHex = Encoders.Hex.EncodeData(supportDmKey.ToBytes());
 
-        // 4. Encrypt the zip using NIP-04 (ECDH shared secret with support npub)
+        // 4. Encrypt the zip using NIP-44 (ECDH shared secret with support npub)
+        //    NIP-44 has a 65535-byte plaintext limit, so encrypt in chunks.
         var zipBase64 = Convert.ToBase64String(zipBytes);
-        var encryptedBlob = await _encryptionService.EncryptNostrContentAsync(
-            supportDmKeyHex, supportNpubHex, zipBase64);
+        var encryptedChunks = new List<string>();
+        const int chunkSize = 60_000; // leave headroom below 65535
+        for (var i = 0; i < zipBase64.Length; i += chunkSize)
+        {
+            var chunk = zipBase64.Substring(i, Math.Min(chunkSize, zipBase64.Length - i));
+            var encryptedChunk = await _encryptionService.EncryptNostrContentAsync(
+                supportDmKeyHex, supportNpubHex, chunk);
+            encryptedChunks.Add(encryptedChunk);
+        }
+        var encryptedBlob = string.Join("\n", encryptedChunks);
         var encryptedBytes = System.Text.Encoding.UTF8.GetBytes(encryptedBlob);
 
         // 5. Upload encrypted blob to Blossom
-        var uploadResult = await UploadToBlossom(encryptedBytes, ct);
+        var uploadResult = await UploadToBlossom(encryptedBytes, supportDmKeyHex, ct);
         if (uploadResult.IsFailure)
             return Result.Failure(uploadResult.Error);
 
@@ -166,7 +175,7 @@ public class LogExportService : ILogExportService
         return Result.Success(ms.ToArray());
     }
 
-    private async Task<Result<string>> UploadToBlossom(byte[] encryptedBytes, CancellationToken ct)
+    private async Task<Result<string>> UploadToBlossom(byte[] encryptedBytes, string nostrPrivateKeyHex, CancellationToken ct)
     {
         var settings = _networkStorage.GetSettings();
         var servers = settings.ImageServers
@@ -180,7 +189,7 @@ public class LogExportService : ILogExportService
         foreach (var server in servers)
         {
             var result = await _blossomUploadService.UploadAsync(
-                server.Url, encryptedBytes, "application/octet-stream", cancellationToken: ct);
+                server.Url, encryptedBytes, "application/octet-stream", nostrPrivateKeyHex, ct);
 
             if (result.IsSuccess)
                 return result;

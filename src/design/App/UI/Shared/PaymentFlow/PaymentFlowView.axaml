@@ -400,7 +400,26 @@
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="11"
                                         Foreground="{DynamicResource DeployFeePillText}"
-                                        VerticalAlignment="Center" />
+                                        VerticalAlignment="Center"
+                                        RenderTransformOrigin="50%,50%">
+                                    <i:Icon.RenderTransform>
+                                        <RotateTransform />
+                                    </i:Icon.RenderTransform>
+                                    <i:Icon.Styles>
+                                        <Style Selector="i|Icon[IsVisible=True]">
+                                            <Style.Animations>
+                                                <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                    <KeyFrame Cue="0%">
+                                                        <Setter Property="RotateTransform.Angle" Value="0" />
+                                                    </KeyFrame>
+                                                    <KeyFrame Cue="100%">
+                                                        <Setter Property="RotateTransform.Angle" Value="360" />
+                                                    </KeyFrame>
+                                                </Animation>
+                                            </Style.Animations>
+                                        </Style>
+                                    </i:Icon.Styles>
+                                </i:Icon>
                                 <TextBlock Text="{Binding PaymentStatusText}"
                                            AutomationProperties.AutomationId="InvestPaymentStatus"
                                            FontSize="12" FontWeight="Medium"
