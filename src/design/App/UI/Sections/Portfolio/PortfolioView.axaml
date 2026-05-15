@@ -104,10 +104,29 @@
                         <!-- Buttons Row: Refresh + Penalties -->
                         <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
                             <Button Name="RefreshButton" Classes="Primary MobileAction" Padding="20,8"
-                                   AutomationProperties.AutomationId="PortfolioRefreshButton">
+                                   AutomationProperties.AutomationId="PortfolioRefreshButton"
+                                   IsEnabled="{Binding !IsLoading}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="13"
-                                            Foreground="White" VerticalAlignment="Center" />
+                                            Foreground="White" VerticalAlignment="Center">
+                                        <i:Icon.RenderTransform>
+                                            <RotateTransform />
+                                        </i:Icon.RenderTransform>
+                                        <i:Icon.Styles>
+                                            <Style Selector="i|Icon.Spinning">
+                                                <Style.Animations>
+                                                    <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                        <KeyFrame Cue="0%">
+                                                            <Setter Property="RotateTransform.Angle" Value="0" />
+                                                        </KeyFrame>
+                                                        <KeyFrame Cue="100%">
+                                                            <Setter Property="RotateTransform.Angle" Value="360" />
+                                                        </KeyFrame>
+                                                    </Animation>
+                                                </Style.Animations>
+                                            </Style>
+                                        </i:Icon.Styles>
+                                    </i:Icon>
                                     <TextBlock Text="Refresh" FontSize="13" FontWeight="SemiBold"
                                                Foreground="White" VerticalAlignment="Center" />
                                 </StackPanel>
@@ -309,9 +328,28 @@
                             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                 <Button Name="MobileRefreshButton" Classes="MobileAction IconOnly" Padding="8,6" CornerRadius="8"
                                         Background="{DynamicResource SurfaceLow}"
-                                        BorderBrush="{DynamicResource Stroke}" BorderThickness="1">
+                                        BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                                        IsEnabled="{Binding !IsLoading}">
                                     <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="13"
-                                            Foreground="{DynamicResource TextMuted}" />
+                                            Foreground="{DynamicResource TextMuted}">
+                                        <i:Icon.RenderTransform>
+                                            <RotateTransform />
+                                        </i:Icon.RenderTransform>
+                                        <i:Icon.Styles>
+                                            <Style Selector="i|Icon.Spinning">
+                                                <Style.Animations>
+                                                    <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                        <KeyFrame Cue="0%">
+                                                            <Setter Property="RotateTransform.Angle" Value="0" />
+                                                        </KeyFrame>
+                                                        <KeyFrame Cue="100%">
+                                                            <Setter Property="RotateTransform.Angle" Value="360" />
+                                                        </KeyFrame>
+                                                    </Animation>
+                                                </Style.Animations>
+                                            </Style>
+                                        </i:Icon.Styles>
+                                    </i:Icon>
                                 </Button>
                                 <Button Name="MobilePenaltiesButton" Classes="MobileAction IconOnly" Padding="8,6" CornerRadius="8"
                                         Background="#F7931A" Cursor="Hand">

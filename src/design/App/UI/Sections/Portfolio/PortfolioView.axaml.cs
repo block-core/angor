@@ -14,6 +14,7 @@ public partial class PortfolioView : UserControl, ISectionView
 {
     private IDisposable? _visibilitySubscription;
     private IDisposable? _layoutSubscription;
+    private IDisposable? _refreshSpinSubscription;
 
     // Cached controls for responsive layout
     private Grid? _portfolioGrid;
@@ -62,6 +63,20 @@ public partial class PortfolioView : UserControl, ISectionView
 
         // ── Responsive layout: 380px sidebar + content (desktop) → stacked (compact) ──
         SubscribeToLayoutMode();
+
+        // ── Refresh button spin animation ──
+        _refreshSpinSubscription = vm.WhenAnyValue(x => x.IsLoading)
+
+            .Subscribe(isLoading =>
+            {
+                var refreshBtn = this.FindControl<Button>("RefreshButton");
+                var icon = refreshBtn?.GetLogicalDescendants().OfType<Optris.Icons.Avalonia.Icon>().FirstOrDefault();
+                icon?.Classes.Set("Spinning", isLoading);
+
+                var mobileRefreshBtn = this.FindControl<Button>("MobileRefreshButton");
+                var mobileIcon = mobileRefreshBtn?.GetLogicalDescendants().OfType<Optris.Icons.Avalonia.Icon>().FirstOrDefault();
+                mobileIcon?.Classes.Set("Spinning", isLoading);
+            });
 
         // Mobile perf: sidebar is hidden via IsVisible=false on compact,
         // so no need to detach children. Strip hover transitions via .Mobile class.
