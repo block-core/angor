@@ -193,6 +193,11 @@ public partial class PrototypeSettings : ReactiveObject
     /// </summary>
     [Reactive] private string? selectedWalletId;
 
+    /// <summary>
+    /// Set of wallet IDs that were auto-created (e.g. 1-click invest) and have not been backed up yet.
+    /// </summary>
+    [Reactive] private HashSet<string> walletsNeedingBackup = new();
+
     public PrototypeSettings(IStore store, ILogger<PrototypeSettings> logger)
     {
         _store = store;
@@ -213,6 +218,7 @@ public partial class PrototypeSettings : ReactiveObject
                     {
                         IsDebugMode = result.Value.IsDebugMode;
                         SelectedWalletId = result.Value.SelectedWalletId;
+                        WalletsNeedingBackup = result.Value.WalletsNeedingBackup ?? new HashSet<string>();
 
                         // Set IsDarkTheme last — its WhenAnyValue subscription
                         // applies the theme, so we want the other fields settled first.
@@ -248,7 +254,7 @@ public partial class PrototypeSettings : ReactiveObject
             });
 
         // Persist after visible state changes so disk I/O never competes with the theme flip.
-        this.WhenAnyValue(x => x.IsDebugMode, x => x.IsDarkTheme, x => x.SelectedWalletId)
+        this.WhenAnyValue(x => x.IsDebugMode, x => x.IsDarkTheme, x => x.SelectedWalletId, x => x.WalletsNeedingBackup)
             .Skip(1)
             .Throttle(TimeSpan.FromMilliseconds(250), RxSchedulers.TaskpoolScheduler)
             .Subscribe(_ => ScheduleSaveSettings());
@@ -263,6 +269,7 @@ public partial class PrototypeSettings : ReactiveObject
         bool currentDebugMode = IsDebugMode;
         bool currentDarkTheme = IsDarkTheme;
         string? currentWalletId = SelectedWalletId;
+        HashSet<string> currentBackupSet = new(WalletsNeedingBackup);
         CancellationToken token = saveSettingsCts.Token;
 
         Task.Run(async () =>
@@ -272,6 +279,7 @@ public partial class PrototypeSettings : ReactiveObject
                 IsDebugMode = currentDebugMode,
                 IsDarkTheme = currentDarkTheme,
                 SelectedWalletId = currentWalletId,
+                WalletsNeedingBackup = currentBackupSet,
             });
 
             if (!token.IsCancellationRequested && saveResult.IsFailure)
@@ -298,6 +306,7 @@ public partial class PrototypeSettings : ReactiveObject
             IsDebugMode = IsDebugMode,
             IsDarkTheme = IsDarkTheme,
             SelectedWalletId = SelectedWalletId,
+            WalletsNeedingBackup = new HashSet<string>(WalletsNeedingBackup),
         });
 
         if (saveResult.IsFailure)
@@ -306,11 +315,30 @@ public partial class PrototypeSettings : ReactiveObject
         }
     }
 
+    /// <summary>Mark a wallet as needing backup (e.g. auto-created during 1-click invest).</summary>
+    public void MarkWalletNeedsBackup(string walletId)
+    {
+        var set = new HashSet<string>(WalletsNeedingBackup) { walletId };
+        WalletsNeedingBackup = set;
+    }
+
+    /// <summary>Clear the backup-needed flag for a wallet (after user backs up).</summary>
+    public void ClearWalletNeedsBackup(string walletId)
+    {
+        var set = new HashSet<string>(WalletsNeedingBackup);
+        set.Remove(walletId);
+        WalletsNeedingBackup = set;
+    }
+
+    /// <summary>Check if a wallet needs backup.</summary>
+    public bool DoesWalletNeedBackup(string walletId) => WalletsNeedingBackup.Contains(walletId);
+
     private class PrototypeSettingsData
     {
         public bool IsDebugMode { get; set; }
         public bool IsDarkTheme { get; set; }
         public string? SelectedWalletId { get; set; }
+        public HashSet<string>? WalletsNeedingBackup { get; set; }
     }
 }
 
@@ -468,6 +496,9 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
     /// <summary>Invested balance display string for the header. Updated from SDK GetTotalInvested.</summary>
     [Reactive] private string investedBalanceDisplay = "0.0000";
 
+    /// <summary>Whether to show the red backup warning banner in the header.</summary>
+    [Reactive] private bool showBackupWarning;
+
     /// <summary>Available balance display string for the header. Uses selected wallet balance.</summary>
     public string AvailableBalanceDisplay =>
         SelectedWallet != null
@@ -556,6 +587,7 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
                 this.RaisePropertyChanged(nameof(AvailableBalanceDisplay));
                 this.RaisePropertyChanged(nameof(SwitcherWallets));
                 _ = LoadTotalInvestedAsync(SelectedWallet);
+                RefreshBackupWarning();
             })
             .DisposeWith(_disposables);
 
@@ -675,6 +707,7 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
         this.RaisePropertyChanged(nameof(SelectedWalletName));
         this.RaisePropertyChanged(nameof(AvailableBalanceDisplay));
         _ = LoadTotalInvestedAsync(wallet);
+        RefreshBackupWarning();
     }
 
     /// <summary>
@@ -1025,6 +1058,16 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
     /// <param name="message">Toast text (e.g. "Copied to clipboard").</param>
     /// <param name="durationMs">Auto-dismiss delay. If 0 or not specified, auto-scales based on message length
     /// (min 3s, +1s per 30 chars, max 10s). Vue: 2000-3000ms for copy, 5000ms for save.</param>
+    /// <summary>
+    /// Refresh the backup warning state based on the selected wallet.
+    /// Called after wallet selection changes or after backup is completed.
+    /// </summary>
+    public void RefreshBackupWarning()
+    {
+        var wallet = _walletContext.SelectedWallet;
+        ShowBackupWarning = wallet != null && _prototypeSettings.DoesWalletNeedBackup(wallet.Id.Value);
+    }
+
     public void ShowToast(string message, int durationMs = 0)
     {
         // Cancel any previous dismiss timer

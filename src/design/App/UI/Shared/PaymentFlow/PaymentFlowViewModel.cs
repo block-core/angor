@@ -10,6 +10,7 @@ using Angor.Shared.Integration.Lightning.Models;
 using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Wallet.Domain;
 using App.UI.Shared.Services;
+using App.UI.Shell;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -50,6 +51,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
     private readonly Func<BitcoinNetwork> _getNetwork;
     private readonly ILogger _logger;
     private readonly PaymentFlowConfig _config;
+    private readonly PrototypeSettings _prototypeSettings;
     private readonly CompositeDisposable _disposables = new();
     private CancellationTokenSource? _monitorCts;
 
@@ -139,6 +141,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         ICurrencyService currencyService,
         Func<BitcoinNetwork> getNetwork,
         ILogger logger,
+        PrototypeSettings prototypeSettings,
         PaymentFlowConfig config)
     {
         _walletAppService = walletAppService;
@@ -149,6 +152,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         _currencyService = currencyService;
         _getNetwork = getNetwork;
         _logger = logger;
+        _prototypeSettings = prototypeSettings;
         _config = config;
         SelectedFeeRate = config.FeeRateSatsPerVbyte;
         SuccessTitle = config.SuccessTitle;
@@ -563,6 +567,10 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
 
         await _walletContext.ReloadAsync();
         _logger.LogInformation("Wallet auto-created: {WalletId}", result.Value.Value);
+
+        // Mark this auto-created wallet as needing backup
+        _prototypeSettings.MarkWalletNeedsBackup(result.Value.Value);
+
         return Result.Success();
     }
 

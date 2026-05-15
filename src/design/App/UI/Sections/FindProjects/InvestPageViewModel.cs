@@ -14,6 +14,7 @@ using App.UI.Shared;
 using App.UI.Shared.PaymentFlow;
 using ProjectType = App.UI.Shared.ProjectType;
 using App.UI.Shared.Services;
+using App.UI.Shell;
 using Microsoft.Extensions.Logging;
 using MonitorOp = Angor.Sdk.Funding.Investor.Operations.MonitorAddressForFunds;
 
@@ -117,6 +118,7 @@ public partial class InvestPageViewModel : ReactiveObject, IDisposable
     private readonly IWalletContext _walletContext;
     private readonly Func<BitcoinNetwork> _getNetwork;
     private readonly ILogger<InvestPageViewModel> _logger;
+    private readonly PrototypeSettings _prototypeSettings;
     private readonly CompositeDisposable _disposables = new();
     // ── Project Reference ──
     public ProjectItemViewModel Project { get; }
@@ -253,6 +255,7 @@ public partial class InvestPageViewModel : ReactiveObject, IDisposable
         ICurrencyService currencyService,
         IWalletContext walletContext,
         Func<BitcoinNetwork> getNetwork,
+        PrototypeSettings prototypeSettings,
         ILogger<InvestPageViewModel> logger)
     {
         Project = project;
@@ -264,6 +267,7 @@ public partial class InvestPageViewModel : ReactiveObject, IDisposable
         _currencyService = currencyService;
         _walletContext = walletContext;
         _getNetwork = getNetwork;
+        _prototypeSettings = prototypeSettings;
         _logger = logger;
 
         _logger.LogInformation("InvestPageViewModel created for project '{ProjectName}' (ID: {ProjectId}, Type: {ProjectType})",
@@ -722,6 +726,7 @@ public partial class InvestPageViewModel : ReactiveObject, IDisposable
             _currencyService,
             _getNetwork,
             _logger,
+            _prototypeSettings,
             config);
     }
 

@@ -13,6 +13,7 @@ using Angor.Shared.Integration.Lightning;
 using App.UI.Shared;
 using App.UI.Shared.PaymentFlow;
 using App.UI.Shared.Services;
+using App.UI.Shell;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -46,6 +47,7 @@ public partial class DeployFlowViewModel : ReactiveObject
     private readonly IWalletContext _walletContext;
     private readonly Func<BitcoinNetwork> _getNetwork;
     private readonly ILogger<DeployFlowViewModel> _logger;
+    private readonly PrototypeSettings _prototypeSettings;
     private CancellationTokenSource? _invoiceMonitorCts;
 
     // ── State ──
@@ -97,6 +99,7 @@ public partial class DeployFlowViewModel : ReactiveObject
         ICurrencyService currencyService,
         IWalletContext walletContext,
         Func<BitcoinNetwork> getNetwork,
+        PrototypeSettings prototypeSettings,
         ILogger<DeployFlowViewModel> logger)
     {
         _walletAppService = walletAppService;
@@ -108,6 +111,7 @@ public partial class DeployFlowViewModel : ReactiveObject
         _currencyService = currencyService;
         _walletContext = walletContext;
         _getNetwork = getNetwork;
+        _prototypeSettings = prototypeSettings;
         _logger = logger;
         // Initialize ReactiveCommands for async payment operations
         PayWithWalletCommand = ReactiveCommand.CreateFromTask(PayWithWalletAsync);
@@ -169,6 +173,7 @@ public partial class DeployFlowViewModel : ReactiveObject
             _currencyService,
             _getNetwork,
             _logger,
+            _prototypeSettings,
             new PaymentFlowConfig
             {
                 AmountSats = deployFeeSats,

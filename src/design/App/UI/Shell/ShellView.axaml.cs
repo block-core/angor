@@ -959,6 +959,17 @@ public partial class ShellView : UserControl
     }
 
     /// <summary>
+    /// Navigates to Settings when the backup warning badge is clicked.
+    /// </summary>
+    private void OnBackupWarningClick(object? sender, Avalonia.Input.PointerPressedEventArgs e)
+    {
+        if (DataContext is ShellViewModel vm)
+        {
+            vm.NavigateToSettings();
+        }
+    }
+
+    /// <summary>
     /// Opens the wallet switcher modal when the header wallet button is clicked.
     /// Vue: showWalletModal = true on wallet-selector-header click.
     /// </summary>

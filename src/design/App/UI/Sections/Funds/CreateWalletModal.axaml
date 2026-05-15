@@ -350,7 +350,7 @@
                             BorderThickness="1"
                             CornerRadius="8"
                             Padding="16">
-                        <TextBlock Name="SeedPhraseDisplay"
+                        <SelectableTextBlock Name="SeedPhraseDisplay"
                                    Text="abandon ability able about above absent absorb abstract absurd abuse access accident"
                                    FontSize="14"
                                    FontFamily="Cascadia Mono, Consolas, monospace"
