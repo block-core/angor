@@ -21,7 +21,7 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
     }
 
     public TransactionInfo BuildRecoverInvestorRemainingFundsInProject(string investmentTransactionHex, ProjectInfo projectInfo,
-        int startStageNumber, string receiveAddress, string privateKey, FeeRate feeRate,
+        int startStageNumber, string receiveAddress, AngorKey privateKey, FeeRate feeRate,
         Func<ProjectScripts, WitScript> buildWitScriptWithSigPlaceholder,
         Func<WitScript, TaprootSignature, WitScript> addSignatureToWitScript)
     {
@@ -32,8 +32,8 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
         if (string.IsNullOrWhiteSpace(receiveAddress))
             throw new ArgumentException("Receive address cannot be null or empty.", nameof(receiveAddress));
 
-        if (string.IsNullOrWhiteSpace(privateKey))
-            throw new ArgumentException("Private key cannot be null or empty.", nameof(privateKey));
+        if (privateKey is null)
+            throw new ArgumentNullException(nameof(privateKey), "Private key cannot be null.");
 
         if (startStageNumber < 1)
             throw new ArgumentOutOfRangeException(nameof(startStageNumber), "Stage number must be at least 1.");
@@ -118,7 +118,7 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
 
         // Step 4 - sign the taproot inputs
         var trxData = spendingTrx.PrecomputeTransactionData(investmentTrxOutputs.Select(s => s.TxOut).ToArray());
-        var key = new Key(Encoders.Hex.DecodeData(privateKey));
+        var key = new Key(privateKey.ToBytes());
 
         const TaprootSigHash sigHash = TaprootSigHash.All;
         var inputIndex = 0;

@@ -26,10 +26,9 @@ public class DerivationOperations : IDerivationOperations
     
     private ExtKey GetExtendedKey(WalletWords walletWords)
     {
-        ExtKey extendedKey;
         try
         {
-            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
+            return walletWords.GetOrDeriveExtKey(_hdOperations);
         }
         catch (NotSupportedException ex)
         {
@@ -40,8 +39,6 @@ public class DerivationOperations : IDerivationOperations
 
             throw;
         }
-
-        return extendedKey;
     }
 
     public FounderKeyCollection DeriveProjectKeys(WalletWords walletWords, string angorTestKey)
@@ -112,7 +109,7 @@ public class DerivationOperations : IDerivationOperations
         return extPubKey.PubKey.ToHex();
     }
 
-    public Key DeriveInvestorPrivateKey(WalletWords walletWords, string founderKey)
+    public AngorKey DeriveInvestorPrivateKey(WalletWords walletWords, string founderKey)
     {
         ExtKey extendedKey = GetExtendedKey(walletWords);
 
@@ -124,7 +121,7 @@ public class DerivationOperations : IDerivationOperations
 
         ExtKey extKey = extendedKey.Derive(new KeyPath(path));
 
-        return extKey.PrivateKey;
+        return AngorKey.From(extKey.PrivateKey);
     }
 
     public string DeriveFounderKey(WalletWords walletWords, int index)
@@ -164,7 +161,7 @@ public class DerivationOperations : IDerivationOperations
         return extPubKey.PubKey.ToHex();
     }
 
-    public Key DeriveFounderPrivateKey(WalletWords walletWords, int index)
+    public AngorKey DeriveFounderPrivateKey(WalletWords walletWords, int index)
     {
         ExtKey extendedKey = GetExtendedKey(walletWords);
 
@@ -172,26 +169,12 @@ public class DerivationOperations : IDerivationOperations
 
         ExtKey extKey = extendedKey.Derive(new KeyPath(path));
 
-        return extKey.PrivateKey;
+        return AngorKey.From(extKey.PrivateKey);
     }
 
-    public Key DeriveFounderRecoveryPrivateKey(WalletWords walletWords, string founderKey)
+    public AngorKey DeriveFounderRecoveryPrivateKey(WalletWords walletWords, string founderKey)
     {
-        ExtKey extendedKey;
-
-        try
-        {
-            extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
-        }
-        catch (NotSupportedException ex)
-        {
-            _logger.LogError("Exception occurred: {0}", ex.ToString());
-
-            if (ex.Message == "Unknown")
-                throw new Exception("Please make sure you enter valid mnemonic words.");
-
-            throw;
-        }
+        ExtKey extendedKey = GetExtendedKey(walletWords);
 
         var upi = this.DeriveUniqueProjectIdentifier(founderKey);
 
@@ -199,10 +182,10 @@ public class DerivationOperations : IDerivationOperations
 
         ExtKey extKey = extendedKey.Derive(new KeyPath(path));
 
-        return extKey.PrivateKey;
+        return AngorKey.From(extKey.PrivateKey);
     }
 
-    public Key DeriveProjectNostrPrivateKey(WalletWords walletWords, string founderKey)
+    public AngorKey DeriveProjectNostrPrivateKey(WalletWords walletWords, string founderKey)
     {
         ExtKey extendedKey = GetExtendedKey(walletWords);
 
@@ -212,10 +195,10 @@ public class DerivationOperations : IDerivationOperations
 
         ExtKey extKey = extendedKey.Derive(new KeyPath(path));
 
-        return extKey.PrivateKey;
+        return AngorKey.From(extKey.PrivateKey);
     }
     
-    public async Task<Key> DeriveProjectNostrPrivateKeyAsync(WalletWords walletWords, string founderKey)
+    public async Task<AngorKey> DeriveProjectNostrPrivateKeyAsync(WalletWords walletWords, string founderKey)
     {
         ExtKey extendedKey = GetExtendedKey(walletWords);
        
@@ -225,7 +208,7 @@ public class DerivationOperations : IDerivationOperations
 
         var extKey = await Task.Run(() => extendedKey.Derive(new KeyPath(path)));
         
-        return extKey.PrivateKey;
+        return AngorKey.From(extKey.PrivateKey);
     }
 
     public uint DeriveUniqueProjectIdentifier(string founderKey)
@@ -254,7 +237,7 @@ public class DerivationOperations : IDerivationOperations
         return key.PubKey.ToHex()[2..]; //Need the pub key without prefix
     }
 
-    public Key DeriveNostrStorageKey(WalletWords walletWords)
+    public AngorKey DeriveNostrStorageKey(WalletWords walletWords)
     {
         ExtKey extendedKey = GetExtendedKey(walletWords);
 
@@ -263,7 +246,7 @@ public class DerivationOperations : IDerivationOperations
 
         ExtKey extKey = extendedKey.Derive(new KeyPath(path));
 
-        return extKey.PrivateKey;
+        return AngorKey.From(extKey.PrivateKey);
     }
 
     /// <summary>
@@ -282,12 +265,12 @@ public class DerivationOperations : IDerivationOperations
         };
     }
 
-    public Key DeriveSupportDmKey(WalletWords walletWords)
+    public AngorKey DeriveSupportDmKey(WalletWords walletWords)
     {
         ExtKey extendedKey = GetExtendedKey(walletWords);
         var networkIndex = GetNetworkStorageIndex();
         var path = $"m/44'/1237'/2'/{networkIndex}/0";
-        return extendedKey.Derive(new KeyPath(path)).PrivateKey;
+        return AngorKey.From(extendedKey.Derive(new KeyPath(path)).PrivateKey);
     }
 
     public string DeriveSupportDmPubKeyHex(WalletWords walletWords)

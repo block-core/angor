@@ -178,7 +178,7 @@ public class BuildRecoveryTransactionTests
 
         _mockDerivationOperations
             .Setup(x => x.DeriveInvestorPrivateKey(It.IsAny<WalletWords>(), It.IsAny<string>()))
-            .Returns(new Key());
+            .Returns(AngorKey.From(new Key()));
 
         _mockDerivationOperations
             .Setup(x => x.DeriveNostrPubKey(It.IsAny<WalletWords>(), It.IsAny<string>()))
@@ -186,7 +186,7 @@ public class BuildRecoveryTransactionTests
 
         _mockDerivationOperations
             .Setup(x => x.DeriveProjectNostrPrivateKeyAsync(It.IsAny<WalletWords>(), It.IsAny<string>()))
-            .ReturnsAsync(new Key());
+            .ReturnsAsync(AngorKey.From(new Key()));
 
         // LookupSignatureForInvestmentRequest ends without finding signatures
         _mockSignService
@@ -220,7 +220,7 @@ public class BuildRecoveryTransactionTests
 
         _mockDerivationOperations
             .Setup(x => x.DeriveInvestorPrivateKey(It.IsAny<WalletWords>(), It.IsAny<string>()))
-            .Returns(new Key());
+            .Returns(AngorKey.From(new Key()));
 
         _mockDerivationOperations
             .Setup(x => x.DeriveNostrPubKey(It.IsAny<WalletWords>(), It.IsAny<string>()))
@@ -228,7 +228,7 @@ public class BuildRecoveryTransactionTests
 
         _mockDerivationOperations
             .Setup(x => x.DeriveProjectNostrPrivateKeyAsync(It.IsAny<WalletWords>(), It.IsAny<string>()))
-            .ReturnsAsync(new Key());
+            .ReturnsAsync(AngorKey.From(new Key()));
 
         // LookupSignatureForInvestmentRequest finds valid signatures
         var signatureInfo = new SignatureInfo();
@@ -263,7 +263,7 @@ public class BuildRecoveryTransactionTests
                 It.IsAny<ProjectInfo>(),
                 It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>(),
                 It.IsAny<SignatureInfo>(),
-                It.IsAny<string>()))
+                It.IsAny<AngorKey>()))
             .Returns(network.CreateTransaction());
 
         _mockTransactionService
