@@ -24,7 +24,7 @@ public static class ProjectInfoValidator
         error = ValidateTargetAmount(projectInfo);
         if (error != null) return error;
 
-        error = ValidateStageTimelocks(projectInfo);
+        error = ValidateStageTimelocks(projectInfo, isDebugMode);
         if (error != null) return error;
 
         error = ValidateStageAmounts(projectInfo);
@@ -82,11 +82,11 @@ public static class ProjectInfoValidator
     ///   days after the project start date.
     /// - For Fund/Subscribe projects: validates DynamicStagePattern constraints.
     /// </summary>
-    public static string? ValidateStageTimelocks(ProjectInfo projectInfo)
+    public static string? ValidateStageTimelocks(ProjectInfo projectInfo, bool isDebugMode = false)
     {
         if (projectInfo.ProjectType == ProjectType.Invest)
         {
-            return ValidateFixedStageTimelocks(projectInfo);
+            return ValidateFixedStageTimelocks(projectInfo, isDebugMode);
         }
 
         // Fund/Subscribe use DynamicStagePatterns — validate those
@@ -148,10 +148,13 @@ public static class ProjectInfoValidator
         return null;
     }
 
-    private static string? ValidateFixedStageTimelocks(ProjectInfo projectInfo)
+    private static string? ValidateFixedStageTimelocks(ProjectInfo projectInfo, bool isDebugMode = false)
     {
         if (projectInfo.Stages == null || projectInfo.Stages.Count == 0)
             return "Invest projects must have at least one stage.";
+
+        if (isDebugMode)
+            return null;
 
         var orderedStages = projectInfo.Stages.OrderBy(s => s.ReleaseDate).ToList();
 
