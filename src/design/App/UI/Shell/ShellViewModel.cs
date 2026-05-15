@@ -185,7 +185,7 @@ public partial class PrototypeSettings : ReactiveObject
     /// When true, the app uses the Dark theme; otherwise Light.
     /// Persisted to disk so the choice survives restarts.
     /// </summary>
-    [Reactive] private bool isDarkTheme;
+    [Reactive] private bool isDarkTheme = true;
 
     /// <summary>
     /// Persisted wallet ID for the currently selected wallet.
@@ -221,7 +221,7 @@ public partial class PrototypeSettings : ReactiveObject
                 });
             });
 
-        // Apply persisted theme immediately (defaults to light until async load completes)
+        // Apply persisted theme immediately so fresh profiles start dark before async settings load completes.
         if (Application.Current != null)
         {
             Application.Current.RequestedThemeVariant = isDarkTheme
