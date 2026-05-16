@@ -43,7 +43,7 @@ public class FindProjectsInvoiceFlowTest
     private static readonly TimeSpan TransactionTimeout = TimeSpan.FromSeconds(120);
     private static readonly TimeSpan UiTimeout = TimeSpan.FromSeconds(15);
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(5);
-    private static readonly TimeSpan IndexerLagTimeout = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan IndexerLagTimeout = TimeSpan.FromMinutes(1);
     private static readonly TimeSpan InvoicePaymentTimeout = TimeSpan.FromMinutes(5);
 
     [AvaloniaFact]

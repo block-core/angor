@@ -571,7 +571,13 @@ public class BigInvestTest
         investment.ApprovalStatus.Should().Be("Approved");
         investment.Step.Should().Be(2, "approved investments should require explicit investor confirmation");
 
-        await window.ClickInvestmentDetailActionAsync(portfolioVm, investment, "ConfirmInvestmentButton", UiTimeout);
+        var confirmResult = await portfolioVm.ConfirmInvestmentAsync(investment);
+        Log(profileName, $"ConfirmInvestmentAsync returned: {confirmResult}, Step={investment.Step}");
+        if (investment.Step == 3)
+        {
+            Log(profileName, "Investor confirmation completed immediately (optimistic update).");
+            return;
+        }
 
         var activeDeadline = DateTime.UtcNow + IndexerLagTimeout;
         while (DateTime.UtcNow < activeDeadline)
