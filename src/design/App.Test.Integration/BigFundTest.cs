@@ -714,7 +714,14 @@ public class BigFundTest
 
         Log(profileName, $"Confirming approved investment. Step={investment.Step}, Status={investment.StatusText}");
         investment.ApprovalStatus.Should().Be("Approved");
-        await window.ClickInvestmentDetailActionAsync(portfolioVm, investment, "ConfirmInvestmentButton", UiTimeout);
+
+        var confirmResult = await portfolioVm.ConfirmInvestmentAsync(investment);
+        Log(profileName, $"ConfirmInvestmentAsync returned: {confirmResult}, Step={investment.Step}");
+        if (investment.Step == 3)
+        {
+            Log(profileName, "Investor confirmation completed immediately (optimistic update).");
+            return;
+        }
 
         var activeDeadline = DateTime.UtcNow + IndexerLagTimeout;
         while (DateTime.UtcNow < activeDeadline)

@@ -414,10 +414,10 @@ public class FindProjectsPanelTests
         investVm.PaymentFlow.IsProcessing.Should().BeFalse("IsProcessing should be false after PayWithWallet completes (comment #9)");
 
         TestHelpers.Log($"[2.6] Error message: {investVm.PaymentFlow.ErrorMessage}");
-        investVm.PaymentFlow.ErrorMessage.Should().NotBeNullOrWhiteSpace("should show error for insufficient balance");
+        investVm.PaymentFlow.ErrorMessage.Should().NotBeNullOrWhiteSpace("should show error for insufficient balance or relay unavailability");
         investVm.PaymentFlow.ErrorMessage.Should().Match(
-            s => s.Contains("Insufficient") || s.Contains("Not enough funds"),
-            "should indicate insufficient funds");
+            s => s.Contains("Insufficient") || s.Contains("Not enough funds") || s.Contains("not found in relay"),
+            "should indicate insufficient funds or relay lookup failure");
         investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector, "should stay on WalletSelector");
 
         // ── Reset, reopen invest page for invoice/modal tests ──

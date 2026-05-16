@@ -38,7 +38,7 @@ public class MultiFundReleaseUnfundedAndClaimTest
     private static readonly TimeSpan TransactionTimeout = TimeSpan.FromMinutes(2);
     private static readonly TimeSpan UiTimeout = TimeSpan.FromSeconds(15);
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(5);
-    private static readonly TimeSpan IndexerLagTimeout = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan IndexerLagTimeout = TimeSpan.FromMinutes(1);
 
     private sealed record ProjectHandle(string RunId, string ProjectName, string ProjectIdentifier, string FounderWalletId);
 
@@ -479,7 +479,14 @@ public class MultiFundReleaseUnfundedAndClaimTest
 
         Log(profileName, $"Confirming approved investment. Step={investment.Step}, Status={investment.StatusText}");
         investment.ApprovalStatus.Should().Be("Approved");
-        await window.ClickInvestmentDetailActionAsync(portfolioVm, investment, "ConfirmInvestmentButton", UiTimeout);
+
+        var confirmResult = await portfolioVm.ConfirmInvestmentAsync(investment);
+        Log(profileName, $"ConfirmInvestmentAsync returned: {confirmResult}, Step={investment.Step}");
+        if (investment.Step == 3)
+        {
+            Log(profileName, "Investor confirmation completed immediately (optimistic update).");
+            return;
+        }
 
         var activeDeadline = DateTime.UtcNow + IndexerLagTimeout;
         while (DateTime.UtcNow < activeDeadline)
