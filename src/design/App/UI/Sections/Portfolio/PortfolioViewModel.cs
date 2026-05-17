@@ -867,6 +867,25 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
     }
 
     /// <summary>
+    /// Dispatches a recovery/release/claim operation based on the investment's RecoveryActionKey.
+    /// This is the single entry point for all recovery-type actions, used by both the UI
+    /// (RecoveryModalsView) and integration tests.
+    /// </summary>
+    public Task<(bool Success, string? Error)> ExecuteRecoveryAsync(
+        InvestmentViewModel investment, long feeRateSatsPerVByte = 20)
+    {
+        return investment.RecoveryActionKey switch
+        {
+            "recovery" => RecoverFundsAsync(investment, feeRateSatsPerVByte),
+            "belowThreshold" => ClaimEndOfProjectAsync(investment, feeRateSatsPerVByte),
+            "unfundedRelease" => ReleaseFundsAsync(investment, feeRateSatsPerVByte),
+            "endOfProject" => ClaimEndOfProjectAsync(investment, feeRateSatsPerVByte),
+            "penaltyRelease" => PenaltyReleaseFundsAsync(investment, feeRateSatsPerVByte),
+            _ => Task.FromResult<(bool, string?)>((false, $"Unknown recovery action: '{investment.RecoveryActionKey}'"))
+        };
+    }
+
+    /// <summary>
     /// Build and submit a recovery transaction for an investment.
     /// </summary>
     public async Task<(bool Success, string? Error)> RecoverFundsAsync(InvestmentViewModel investment, long feeRateSatsPerVByte = 20)

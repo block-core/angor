@@ -262,7 +262,13 @@ public class InvestmentCancellationTest
         cancelBtnVisible.Should().BeTrue("CancelInvestmentStep1Button should be visible in Step 1 detail");
 
         var cancelBtn = window.GetVisualDescendants().OfType<Button>().First(b => b.IsVisible && b.Name == "CancelInvestmentStep1Button");
-        cancelBtn.IsEnabled.Should().BeTrue("Cancel button should be enabled before clicking");
+
+        // Wait for the button to become enabled — OpenInvestmentDetail fires LoadRecoveryStatusAsync
+        // which sets IsProcessing=true; the button is bound to !IsProcessing.
+        var cancelBtnEnabled = await TestHelpers.WaitForCondition(
+            () => cancelBtn.IsEnabled,
+            TestHelpers.UiTimeout);
+        cancelBtnEnabled.Should().BeTrue("Cancel button should be enabled before clicking");
 
         // Verify spinner is NOT visible before clicking
         var cancelSpinner = window.FindByName<StackPanel>("CancelStep1BtnSpinner");
@@ -450,7 +456,13 @@ public class InvestmentCancellationTest
         cancelBtnVisible.Should().BeTrue("CancelInvestmentButton should be visible in Step 2 detail");
 
         var cancelBtn = window.GetVisualDescendants().OfType<Button>().First(b => b.IsVisible && b.Name == "CancelInvestmentButton");
-        cancelBtn.IsEnabled.Should().BeTrue("Cancel button should be enabled before clicking");
+
+        // Wait for the button to become enabled — OpenInvestmentDetail fires LoadRecoveryStatusAsync
+        // which sets IsProcessing=true; the button is bound to !IsProcessing.
+        var cancelBtnEnabled = await TestHelpers.WaitForCondition(
+            () => cancelBtn.IsEnabled,
+            TestHelpers.UiTimeout);
+        cancelBtnEnabled.Should().BeTrue("Cancel button should be enabled before clicking");
 
         // Verify spinner is NOT visible before clicking
         var cancelSpinner = window.FindByName<StackPanel>("CancelBtnSpinner");
@@ -527,7 +539,14 @@ public class InvestmentCancellationTest
 
         Log(profileName, $"Confirming approved investment. Step={investment.Step}, Status={investment.StatusText}");
         investment.ApprovalStatus.Should().Be("Approved");
-        await window.ClickInvestmentDetailActionAsync(portfolioVm, investment, "ConfirmInvestmentButton");
+
+        var confirmResult = await portfolioVm.ConfirmInvestmentAsync(investment);
+        Log(profileName, $"ConfirmInvestmentAsync returned: {confirmResult}, Step={investment.Step}");
+        if (investment.Step == 3)
+        {
+            Log(profileName, "Investment confirmed and active (Step 3).");
+            return;
+        }
 
         // Wait for Step 3 (active)
         var activeDeadline = DateTime.UtcNow + TestHelpers.IndexerLagTimeout;

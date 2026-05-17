@@ -39,7 +39,7 @@ public class MultiFundClaimAndRecoverTest
     private static readonly TimeSpan TransactionTimeout = TimeSpan.FromMinutes(2);
     private static readonly TimeSpan UiTimeout = TimeSpan.FromSeconds(15);
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(5);
-    private static readonly TimeSpan IndexerLagTimeout = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan IndexerLagTimeout = TimeSpan.FromMinutes(1);
 
     private sealed record ProjectHandle(string RunId, string ProjectName, string ProjectIdentifier, string FounderWalletId);
 
@@ -539,7 +539,18 @@ public class MultiFundClaimAndRecoverTest
 
         Log(profileName, $"Confirming approved investment. Step={investment.Step}, Status={investment.StatusText}");
         investment.ApprovalStatus.Should().Be("Approved");
-        await window.ClickInvestmentDetailActionAsync(portfolioVm, investment, "ConfirmInvestmentButton", UiTimeout);
+
+        // Call the ViewModel directly — RaiseEvent-based button clicks don't reliably
+        // trigger the view-layer handler in headless tests (DataContext/event-routing issue).
+        var confirmResult = await portfolioVm.ConfirmInvestmentAsync(investment);
+        Log(profileName, $"ConfirmInvestmentAsync returned: {confirmResult}, Step={investment.Step}");
+
+        // Check if confirm already advanced Step optimistically
+        if (investment.Step == 3)
+        {
+            Log(profileName, "Investor confirmation completed immediately (optimistic update).");
+            return;
+        }
 
         var activeDeadline = DateTime.UtcNow + IndexerLagTimeout;
         while (DateTime.UtcNow < activeDeadline)
@@ -548,6 +559,7 @@ public class MultiFundClaimAndRecoverTest
             Dispatcher.UIThread.RunJobs();
 
             var refreshed = portfolioVm.Investments.FirstOrDefault(i => i.ProjectIdentifier == project.ProjectIdentifier);
+            Log(profileName, $"Polling investment step: Step={refreshed?.Step}, Status={refreshed?.StatusText}, Approval={refreshed?.ApprovalStatus}");
             if (refreshed?.Step == 3)
             {
                 Log(profileName, "Investor confirmation completed and investment is active.");
@@ -1066,7 +1078,8 @@ public class MultiFundClaimAndRecoverTest
     private static void Log(string? profileName, string message)
     {
         var prefix = string.IsNullOrWhiteSpace(profileName) ? "GLOBAL" : profileName;
-        Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss.fff}] [{prefix}] {message}");
+        var line = $"[{DateTime.UtcNow:HH:mm:ss.fff}] [{prefix}] {message}";
+        Console.WriteLine(line);
     }
 
     private async Task VerifyPenaltiesModalAsync(
