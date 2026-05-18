@@ -528,9 +528,7 @@
             </StackPanel>
         </Panel>
 
-        <!-- ─── ADVANCED EDITOR (Investment only) ─── -->
-        <!-- Shown when IsAdvancedEditorVisible=true (IsAdvancedEditor AND IsInvestment). -->
-        <!-- AddStageButton / RemoveStageButton names bubble up to CreateProjectView.axaml.cs handlers. -->
+        <!-- ─── Advanced Editor -->
         <Border CornerRadius="12" BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
                 Background="{DynamicResource Surface}" ClipToBounds="True"
                 IsVisible="{Binding IsAdvancedEditorVisible}">

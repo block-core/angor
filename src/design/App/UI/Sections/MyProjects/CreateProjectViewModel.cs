@@ -24,8 +24,6 @@ public record DurationPresetItem(int Value, string Label);
 /// </summary>
 public partial class ProjectStageViewModel : ReactiveObject
 {
-    // [Reactive] generates the public PascalCase property for each field via source generator.
-    // Do NOT manually re-declare those properties — the generator would produce duplicate definitions.
     [Reactive] private int stageNumber;
     [Reactive] private string percentage = "0%";
     [Reactive] private string releaseDate = "";
@@ -633,6 +631,7 @@ public partial class CreateProjectViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(IsFund));
         this.RaisePropertyChanged(nameof(IsSubscription));
         this.RaisePropertyChanged(nameof(IsTypeSelected));
+        this.RaisePropertyChanged(nameof(IsAdvancedEditorVisible));
         this.RaisePropertyChanged(nameof(StepNames));
         this.RaisePropertyChanged(nameof(Step4Title));
         this.RaisePropertyChanged(nameof(Step5Title));
@@ -1032,6 +1031,9 @@ public partial class CreateProjectViewModel : ReactiveObject
             Stages[i].StageNumber = i + 1;
         this.RaisePropertyChanged(nameof(HasStages));
         this.RaisePropertyChanged(nameof(ScheduleSummary));
+
+        if (Stages.Count == 0)
+            ShowGenerateForm = true;
     }
 
     public void ToggleAdvancedEditor()
