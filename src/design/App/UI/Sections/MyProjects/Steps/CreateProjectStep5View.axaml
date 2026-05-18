@@ -528,6 +528,95 @@
             </StackPanel>
         </Panel>
 
+        <!-- ─── ADVANCED EDITOR (Investment only) ─── -->
+        <!-- Shown when IsAdvancedEditorVisible=true (IsAdvancedEditor AND IsInvestment). -->
+        <!-- AddStageButton / RemoveStageButton names bubble up to CreateProjectView.axaml.cs handlers. -->
+        <Border CornerRadius="12" BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                Background="{DynamicResource Surface}" ClipToBounds="True"
+                IsVisible="{Binding IsAdvancedEditorVisible}">
+            <StackPanel Spacing="0">
+                <!-- Header -->
+                <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="20,16">
+                    <TextBlock Text="Edit Stage Schedule" FontSize="16" FontWeight="Bold"
+                               Foreground="{DynamicResource TextStrong}" />
+                </Border>
+
+                <!-- Stage rows — editable percentage + date picker + remove -->
+                <ItemsControl ItemsSource="{Binding Stages}" Margin="20,16,20,4">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="mp:ProjectStageViewModel">
+                            <Border Padding="14,12" Margin="0,0,0,10" CornerRadius="10"
+                                    BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                                    Background="{DynamicResource SurfaceHover}">
+                                <Grid ColumnDefinitions="Auto,*,*,Auto" ColumnSpacing="12">
+                                    <!-- Stage number badge -->
+                                    <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18"
+                                            Background="{DynamicResource Accent}" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding StageNumber}" FontSize="14" FontWeight="Bold"
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+
+                                    <!-- Percentage input -->
+                                    <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                                        <TextBlock Text="Percentage" FontSize="11" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextMuted}" />
+                                        <TextBox Text="{Binding Percentage, Mode=TwoWay}"
+                                                 Watermark="e.g. 25%"
+                                                 FontSize="14" Padding="10,8" CornerRadius="8" />
+                                    </StackPanel>
+
+                                    <!-- Release date picker -->
+                                    <StackPanel Grid.Column="2" Spacing="4" VerticalAlignment="Center">
+                                        <TextBlock Text="Release Date" FontSize="11" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextMuted}" />
+                                        <CalendarDatePicker
+                                            SelectedDate="{Binding ReleaseDateAsDateTime, Mode=TwoWay}"
+                                            FontSize="14" HorizontalAlignment="Stretch" />
+                                    </StackPanel>
+
+                                    <!-- Remove button -->
+                                    <Button Grid.Column="3" Name="RemoveStageButton"
+                                            Tag="{Binding}"
+                                            Background="Transparent"
+                                            BorderBrush="{DynamicResource ErrorBannerBorder}" BorderThickness="1"
+                                            CornerRadius="8" Padding="10,8"
+                                            VerticalAlignment="Center">
+                                        <i:Icon Value="fa-solid fa-trash" FontSize="14"
+                                                Foreground="{DynamicResource ErrorBannerText}" />
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <!-- Add Stage button -->
+                <Button Name="AddStageButton" Margin="20,0,20,12"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                        Background="Transparent"
+                        BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                        CornerRadius="10" Padding="16,12" FontSize="14"
+                        Foreground="{DynamicResource TextMuted}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <i:Icon Value="fa-solid fa-plus" FontSize="14" />
+                        <TextBlock Text="Add Another Stage" FontSize="14" />
+                    </StackPanel>
+                </Button>
+
+                <!-- Stage guidelines -->
+                <Border Margin="20,0,20,16" Padding="12" CornerRadius="8"
+                        Background="#fffbeb" BorderBrush="#fde68a" BorderThickness="1">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <i:Icon Value="fa-solid fa-circle-info" FontSize="14" Foreground="#d97706"
+                                VerticalAlignment="Top" Margin="0,2,0,0" />
+                        <TextBlock FontSize="12" Foreground="#d97706" TextWrapping="Wrap"
+                                   Text="Stages must add up to 100%. Each release date must be after the funding end date." />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
         <!-- Generated Stages/Payouts Card (shared by all types, read-only mode) — AngorApp pattern -->
         <Border CornerRadius="12" BorderBrush="{DynamicResource Accent}" BorderThickness="1"
                 Background="{DynamicResource BrandWash}" ClipToBounds="True"

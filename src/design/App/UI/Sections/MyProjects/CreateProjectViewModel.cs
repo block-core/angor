@@ -22,29 +22,54 @@ public record DurationPresetItem(int Value, string Label);
 /// A stage in the project's release/payout schedule.
 /// Generated from the payout pattern selection.
 /// </summary>
-public class ProjectStageViewModel
+public partial class ProjectStageViewModel : ReactiveObject
 {
-    public int StageNumber { get; set; }
-    public string Percentage { get; set; } = "0%";
-    public string ReleaseDate { get; set; } = "";
-    public string AmountBtc { get; set; } = "0.00000000";
+    // [Reactive] generates the public PascalCase property for each field via source generator.
+    // Do NOT manually re-declare those properties — the generator would produce duplicate definitions.
+    [Reactive] private int stageNumber;
+    [Reactive] private string percentage = "0%";
+    [Reactive] private string releaseDate = "";
+    [Reactive] private string amountBtc = "0.00000000";
 
     /// <summary>
     /// The actual typed release date used for deployment.
     /// This is the source of truth — <see cref="ReleaseDate"/> is only for display.
     /// </summary>
-    public DateOnly ReleaseDateValue { get; set; }
+    [Reactive] private DateOnly releaseDateValue;
 
     /// <summary>Label for this stage row — "Stage", "Monthly Payout", "Weekly Payout", "Payment", etc.</summary>
-    public string StageLabel { get; set; } = "Stage";
+    [Reactive] private string stageLabel = "Stage";
 
     /// <summary>
     /// Pre-formatted display text for the right side of the stage row.
     /// Investment: "8% (0.0800 BTC) released on 28th April 2026"
     /// Fund/Sub: "33% paid on 28th April 2026"
     /// </summary>
-    public string DisplayText { get; set; } = "";
-    public double PercentageValue { get; set; }
+    [Reactive] private string displayText = "";
+    [Reactive] private double percentageValue;
+
+    /// <summary>
+    /// CalendarDatePicker bridge — converts between DateOnly (domain) and DateTime? (Avalonia control).
+    /// The source generator does NOT generate this — it is hand-written.
+    /// Setting this updates <see cref="ReleaseDateValue"/> (source of truth) and <see cref="ReleaseDate"/> (display string).
+    /// </summary>
+    public DateTime? ReleaseDateAsDateTime
+    {
+        get => ReleaseDateValue == default
+            ? null
+            : ReleaseDateValue.ToDateTime(TimeOnly.MinValue);
+        set
+        {
+            var incoming = value.HasValue
+                ? DateOnly.FromDateTime(value.Value)
+                : DateOnly.MinValue;
+            if (ReleaseDateValue == incoming) return;
+            ReleaseDateValue = incoming;
+            if (value.HasValue)
+                ReleaseDate = ReleaseDateValue.ToString("dd MMMM yyyy");
+            this.RaisePropertyChanged();
+        }
+    }
 }
 
 /// <summary>
@@ -1012,7 +1037,16 @@ public partial class CreateProjectViewModel : ReactiveObject
     public void ToggleAdvancedEditor()
     {
         IsAdvancedEditor = !IsAdvancedEditor;
+        this.RaisePropertyChanged(nameof(IsNotAdvancedEditor));
+        this.RaisePropertyChanged(nameof(AdvancedEditorButtonText));
+        this.RaisePropertyChanged(nameof(IsAdvancedEditorVisible));
     }
+
+    /// <summary>
+    /// True when Advanced Editor should actually be shown — requires IsAdvancedEditor AND IsInvestment.
+    /// Fund/Subscription use their own payout schedule and don't support the advanced stage editor.
+    /// </summary>
+    public bool IsAdvancedEditorVisible => IsAdvancedEditor && IsInvestment;
 
     /// <summary>Re-show the generate form to regenerate stages (without clearing existing ones first).</summary>
     public void ShowRegenerateForm()
