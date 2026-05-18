@@ -543,51 +543,87 @@
                 <ItemsControl ItemsSource="{Binding Stages}" Margin="20,16,20,4">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="mp:ProjectStageViewModel">
-                            <Border Padding="14,12" Margin="0,0,0,10" CornerRadius="10"
+                            <!-- Outer wrapper clips to rounded corners -->
+                            <Border Margin="0,0,0,10" CornerRadius="10" ClipToBounds="True"
                                     BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
                                     Background="{DynamicResource SurfaceHover}">
-                                <Grid ColumnDefinitions="Auto,*,*,Auto" ColumnSpacing="12">
-                                    <!-- Stage number badge -->
-                                    <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18"
-                                            Background="{DynamicResource Accent}" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding StageNumber}" FontSize="14" FontWeight="Bold"
-                                                   Foreground="White"
-                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                    </Border>
+                                <StackPanel>
+                                    <Grid ColumnDefinitions="Auto,*,*,Auto" ColumnSpacing="12" Margin="14,12,14,12">
+                                        <!-- Stage number badge -->
+                                        <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18"
+                                                Background="{DynamicResource Accent}" VerticalAlignment="Top" Margin="0,4,0,0">
+                                            <TextBlock Text="{Binding StageNumber}" FontSize="14" FontWeight="Bold"
+                                                       Foreground="White"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
 
-                                    <!-- Percentage input -->
-                                    <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
-                                        <TextBlock Text="Percentage" FontSize="11" FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource TextMuted}" />
-                                        <TextBox Text="{Binding Percentage, Mode=TwoWay}"
-                                                 Watermark="e.g. 25%"
-                                                 FontSize="14" Padding="10,8" CornerRadius="8" />
-                                    </StackPanel>
+                                        <!-- Percentage — NumericUpDown bound to decimal? bridge (avoids double↔decimal? mismatch) -->
+                                        <StackPanel Grid.Column="1" Spacing="4">
+                                            <TextBlock Text="Percentage %" FontSize="11" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextMuted}" />
+                                            <NumericUpDown Value="{Binding PercentageDecimal, Mode=TwoWay}"
+                                                           Minimum="0" Maximum="100"
+                                                           Increment="1" FormatString="0"
+                                                           FontSize="14" />
+                                            <TextBlock Text="Must be greater than 0" FontSize="11"
+                                                       Foreground="#ef4444"
+                                                       IsVisible="{Binding HasPercentageError}" />
+                                        </StackPanel>
 
-                                    <!-- Release date picker -->
-                                    <StackPanel Grid.Column="2" Spacing="4" VerticalAlignment="Center">
-                                        <TextBlock Text="Release Date" FontSize="11" FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource TextMuted}" />
-                                        <CalendarDatePicker
-                                            SelectedDate="{Binding ReleaseDateAsDateTime, Mode=TwoWay}"
-                                            FontSize="14" HorizontalAlignment="Stretch" />
-                                    </StackPanel>
+                                        <!-- Release date picker + inline error -->
+                                        <StackPanel Grid.Column="2" Spacing="4">
+                                            <TextBlock Text="Release Date" FontSize="11" FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextMuted}" />
+                                            <CalendarDatePicker
+                                                SelectedDate="{Binding ReleaseDateAsDateTime, Mode=TwoWay}"
+                                                FontSize="14" HorizontalAlignment="Stretch" />
+                                            <TextBlock Text="{Binding ReleaseDateError}" FontSize="11"
+                                                       Foreground="#ef4444" TextWrapping="Wrap"
+                                                       IsVisible="{Binding HasDateError}" />
+                                        </StackPanel>
 
-                                    <!-- Remove button -->
-                                    <Button Grid.Column="3" Name="RemoveStageButton"
-                                            Tag="{Binding}"
-                                            Background="Transparent"
-                                            BorderBrush="{DynamicResource ErrorBannerBorder}" BorderThickness="1"
-                                            CornerRadius="8" Padding="10,8"
-                                            VerticalAlignment="Center">
-                                        <i:Icon Value="fa-solid fa-trash" FontSize="14"
-                                                Foreground="{DynamicResource ErrorBannerText}" />
-                                    </Button>
-                                </Grid>
+                                        <!-- Remove button -->
+                                        <Button Grid.Column="3" Name="RemoveStageButton"
+                                                Tag="{Binding}"
+                                                Background="Transparent"
+                                                BorderBrush="{DynamicResource ErrorBannerBorder}" BorderThickness="1"
+                                                CornerRadius="8" Padding="10,8"
+                                                VerticalAlignment="Top" Margin="0,20,0,0">
+                                            <i:Icon Value="fa-solid fa-trash" FontSize="14"
+                                                    Foreground="{DynamicResource ErrorBannerText}" />
+                                        </Button>
+                                    </Grid>
+                                </StackPanel>
                             </Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+
+                <!-- Live % total badge -->
+                <Panel Margin="20,0,20,8">
+                    <!-- Complete: green -->
+                    <Border IsVisible="{Binding AdvancedEditorTotalIsComplete}"
+                            Padding="12,10" CornerRadius="8"
+                            Background="#f0fdf4" BorderBrush="#86efac" BorderThickness="1">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <i:Icon Value="fa-solid fa-circle-check" FontSize="14" Foreground="#16a34a"
+                                    VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding AdvancedEditorTotalLabel}" FontSize="13" FontWeight="SemiBold"
+                                       Foreground="#16a34a" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                    <!-- Incomplete: amber -->
+                    <Border IsVisible="{Binding AdvancedEditorTotalIsIncomplete}"
+                            Padding="12,10" CornerRadius="8"
+                            Background="#fffbeb" BorderBrush="#fde68a" BorderThickness="1">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <i:Icon Value="fa-solid fa-circle-exclamation" FontSize="14" Foreground="#d97706"
+                                    VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding AdvancedEditorTotalLabel}" FontSize="13" FontWeight="SemiBold"
+                                       Foreground="#d97706" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                </Panel>
 
                 <!-- Add Stage button -->
                 <Button Name="AddStageButton" Margin="20,0,20,12"
@@ -609,7 +645,7 @@
                         <i:Icon Value="fa-solid fa-circle-info" FontSize="14" Foreground="#d97706"
                                 VerticalAlignment="Top" Margin="0,2,0,0" />
                         <TextBlock FontSize="12" Foreground="#d97706" TextWrapping="Wrap"
-                                   Text="Stages must add up to 100%. Each release date must be after the funding end date." />
+                                   Text="Each release date must be after the funding end date." />
                     </StackPanel>
                 </Border>
             </StackPanel>

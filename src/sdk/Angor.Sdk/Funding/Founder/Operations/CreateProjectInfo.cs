@@ -100,14 +100,14 @@ public static class CreateProjectInfo
                         }
 
                         projectInfo.EndDate = project.EndDate ?? throw new InvalidOperationException("End date is required for Invest projects");
-                        projectInfo.ExpiryDate = project.ExpiryDate ?? project.Stages.OrderByDescending(x => x.startDate).First().startDate.AddMonths(2).ToDateTime(TimeOnly.MinValue);
+                        projectInfo.ExpiryDate = project.ExpiryDate ?? project.Stages.OrderByDescending(x => x.startDate).First().startDate.AddMonths(2).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
                         projectInfo.PenaltyDays = project.PenaltyDays;
                         projectInfo.PenaltyThreshold = project.PenaltyThreshold;
                         projectInfo.TargetAmount = project.TargetAmount.Sats;
                         projectInfo.Stages = project.Stages.Select(stage => new Stage
                         {
                             AmountToRelease = stage.PercentageOfTotal,
-                            ReleaseDate = stage.startDate.ToDateTime(TimeOnly.MinValue),
+                            ReleaseDate = stage.startDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc),
                         }).ToList();
                         break;
                     }
