@@ -1360,8 +1360,8 @@ public static class AutomationFlows
                 Dispatcher.UIThread.RunJobs();
             });
 
-            // Save to Nostr
-            var saveResult = await editVm.SaveAsync();
+            // Save to Nostr (must invoke on UI thread as SaveAsync triggers toast UI)
+            var saveResult = await Dispatcher.UIThread.InvokeAsync(async () => await editVm.SaveAsync());
             if (!saveResult)
             {
                 return new EditProjectProfileResponse { Success = false, Error = "SaveAsync returned false" };
