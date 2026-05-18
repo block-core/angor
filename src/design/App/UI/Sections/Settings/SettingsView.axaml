@@ -40,17 +40,17 @@
 
         <!-- Settings default-toggle checkbox: unchecked state -->
         <!-- Vue: 24x24, border 2px #e5e7eb / dark #404040, bg white / dark #2a2a2a, border-radius 4px -->
-        <Style Selector="Border.SettingsCheckbox">
+        <Style Selector="Button.SettingsCheckbox /template/ Border">
             <Setter Property="Background" Value="{DynamicResource SettingsCheckboxBg}" />
             <Setter Property="BorderBrush" Value="{DynamicResource SettingsCheckboxBorder}" />
         </Style>
         <!-- Vue: active → bg #4B7C5A, border #4B7C5A (same in both themes) -->
-        <Style Selector="Border.SettingsCheckbox.SettingsCheckboxChecked">
+        <Style Selector="Button.SettingsCheckbox.SettingsCheckboxChecked /template/ Border">
             <Setter Property="Background" Value="{DynamicResource PrimaryGreenBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
         </Style>
         <!-- Vue: hover → border-color #4B7C5A -->
-        <Style Selector="Border.SettingsCheckbox:pointerover">
+        <Style Selector="Button.SettingsCheckbox:pointerover /template/ Border">
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
         </Style>
         <Style Selector="CheckBox.NetworkConfirmCheckbox /template/ Border#NormalRectangle">
@@ -288,8 +288,8 @@
                                                                Foreground="#EF4444" />
                                                     </Button>
                                                     <!-- Default toggle -->
-                                                    <Border DockPanel.Dock="Right"
-                                                            Classes="SettingsCheckbox"
+                                                    <Button DockPanel.Dock="Right"
+                                                            Classes="Unstyled SettingsCheckbox"
                                                             Classes.SettingsCheckboxChecked="{Binding IsDefault}"
                                                             Margin="12,0"
                                                             Width="24" Height="24"
@@ -297,7 +297,7 @@
                                                             BorderThickness="2"
                                                             VerticalAlignment="Center"
                                                             Cursor="Hand"
-                                                            PointerPressed="OnToggleDefaultIndexer">
+                                                            Click="OnToggleDefaultIndexerClick">
                                                         <Path Data="{StaticResource Checkmark}"
                                                               Stroke="White"
                                                               StrokeThickness="2"
@@ -307,7 +307,7 @@
                                                               IsVisible="{Binding IsDefault}"
                                                               HorizontalAlignment="Center"
                                                               VerticalAlignment="Center" />
-                                                    </Border>
+                                                    </Button>
                                                     <!-- Status badge -->
                                                     <Border DockPanel.Dock="Right"
                                                             Margin="12,0"

@@ -16,11 +16,11 @@
 
     <UserControl.Styles>
         <!-- Fee priority button selection — Rule #9: NO BrushTransition on toggled elements -->
-        <Style Selector="Border.FeeBtn">
+        <Style Selector="Button.FeeBtn">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="{DynamicResource StrokeSubtle}" />
         </Style>
-        <Style Selector="Border.FeeBtn.FeeSelected">
+        <Style Selector="Button.FeeBtn.FeeSelected">
             <Setter Property="Background" Value="{DynamicResource RecoveryFeeSelectedBg}" />
             <Setter Property="BorderBrush" Value="{DynamicResource RecoveryFeeSelectedBorder}" />
         </Style>
@@ -144,8 +144,8 @@
                             <Grid.ColumnSpacing>12</Grid.ColumnSpacing>
 
                             <!-- Priority -->
-                            <Border Name="FeePriority" Grid.Column="0"
-                                    Classes="FeeBtn" CornerRadius="8" Padding="12"
+                            <Button Name="FeePriority" Grid.Column="0"
+                                    Classes="Unstyled FeeBtn" CornerRadius="8" Padding="12"
                                     BorderThickness="2" Cursor="Hand">
                                 <StackPanel Spacing="4" HorizontalAlignment="Center">
                                     <TextBlock Name="FeePriorityLabel" Text="Priority" FontSize="14"
@@ -159,11 +159,11 @@
                                                Foreground="{DynamicResource RecoveryFeeUnselectedText}"
                                                HorizontalAlignment="Center" Opacity="0.5" />
                                 </StackPanel>
-                            </Border>
+                            </Button>
 
                             <!-- Standard (default selected) -->
-                            <Border Name="FeeStandard" Grid.Column="1"
-                                    Classes="FeeBtn FeeSelected" CornerRadius="8" Padding="12"
+                            <Button Name="FeeStandard" Grid.Column="1"
+                                    Classes="Unstyled FeeBtn FeeSelected" CornerRadius="8" Padding="12"
                                     BorderThickness="2" Cursor="Hand">
                                 <StackPanel Spacing="4" HorizontalAlignment="Center">
                                     <TextBlock Name="FeeStandardLabel" Text="Standard" FontSize="14"
@@ -176,11 +176,11 @@
                                                Foreground="White"
                                                HorizontalAlignment="Center" Opacity="0.5" />
                                 </StackPanel>
-                            </Border>
+                            </Button>
 
                             <!-- Economy -->
-                            <Border Name="FeeEconomy" Grid.Column="2"
-                                    Classes="FeeBtn" CornerRadius="8" Padding="12"
+                            <Button Name="FeeEconomy" Grid.Column="2"
+                                    Classes="Unstyled FeeBtn" CornerRadius="8" Padding="12"
                                     BorderThickness="2" Cursor="Hand">
                                 <StackPanel Spacing="4" HorizontalAlignment="Center">
                                     <TextBlock Name="FeeEconomyLabel" Text="Economy" FontSize="14"
@@ -194,7 +194,7 @@
                                                Foreground="{DynamicResource RecoveryFeeUnselectedText}"
                                                HorizontalAlignment="Center" Opacity="0.5" />
                                 </StackPanel>
-                            </Border>
+                            </Button>
                         </Grid>
                     </StackPanel>
 

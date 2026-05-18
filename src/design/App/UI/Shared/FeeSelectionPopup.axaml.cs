@@ -1,8 +1,6 @@
 using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Avalonia.VisualTree;
 using App.UI.Shell;
 
 namespace App.UI.Shared;
@@ -28,7 +26,6 @@ public partial class FeeSelectionPopup : UserControl, IBackdropCloseable
     {
         InitializeComponent();
         AddHandler(Button.ClickEvent, OnButtonClick, RoutingStrategies.Bubble);
-        AddHandler(Border.PointerPressedEvent, OnBorderPressed, RoutingStrategies.Bubble);
 
         // Toggle custom fee panel visibility when checkbox changes
         CustomFeeCheckbox.IsCheckedChanged += (_, _) =>
@@ -38,14 +35,12 @@ public partial class FeeSelectionPopup : UserControl, IBackdropCloseable
 
             if (isCustom)
             {
-                // Deselect all presets when switching to custom
                 _selectedPreset = "";
                 UpdatePresetVisuals();
                 CustomFeeInput.Focus();
             }
             else
             {
-                // Revert to standard when unchecking custom
                 _selectedPreset = "standard";
                 UpdatePresetVisuals();
                 CustomFeeError.IsVisible = false;
@@ -96,6 +91,25 @@ public partial class FeeSelectionPopup : UserControl, IBackdropCloseable
             case "ConfirmButton":
                 Confirm();
                 break;
+
+            case "FeePriority":
+            case "FeeStandard":
+            case "FeeEconomy":
+                _selectedPreset = btn.Name switch
+                {
+                    "FeePriority" => "priority",
+                    "FeeStandard" => "standard",
+                    "FeeEconomy" => "economy",
+                    _ => "standard"
+                };
+                if (CustomFeeCheckbox.IsChecked == true)
+                {
+                    CustomFeeCheckbox.IsChecked = false;
+                    CustomFeePanel.IsVisible = false;
+                    CustomFeeError.IsVisible = false;
+                }
+                UpdatePresetVisuals();
+                break;
         }
     }
 
@@ -133,48 +147,8 @@ public partial class FeeSelectionPopup : UserControl, IBackdropCloseable
         }
     }
 
-    // ── Fee preset border selection handling ──
-
-    private void OnBorderPressed(object? sender, PointerPressedEventArgs e)
-    {
-        var source = e.Source as Control;
-
-        // Walk up the tree to find a named fee border
-        while (source != null)
-        {
-            if (source is Border b && !string.IsNullOrEmpty(b.Name))
-            {
-                var name = b.Name;
-                if (name is "FeePriority" or "FeeStandard" or "FeeEconomy")
-                {
-                    _selectedPreset = name switch
-                    {
-                        "FeePriority" => "priority",
-                        "FeeStandard" => "standard",
-                        "FeeEconomy" => "economy",
-                        _ => "standard"
-                    };
-
-                    // Uncheck custom checkbox if a preset is selected
-                    if (CustomFeeCheckbox.IsChecked == true)
-                    {
-                        CustomFeeCheckbox.IsChecked = false;
-                        CustomFeePanel.IsVisible = false;
-                        CustomFeeError.IsVisible = false;
-                    }
-
-                    UpdatePresetVisuals();
-                    e.Handled = true;
-                    return;
-                }
-            }
-            source = source.Parent as Control;
-        }
-    }
-
     /// <summary>
     /// Updates the FeeSelected CSS class and text foreground colors for all 3 presets.
-    /// Per Rule #9: no BrushTransition — instant state changes only.
     /// </summary>
     private void UpdatePresetVisuals()
     {
@@ -186,12 +160,12 @@ public partial class FeeSelectionPopup : UserControl, IBackdropCloseable
             "FeeEconomyLabel", "FeeEconomyDesc", "FeeEconomyRate");
     }
 
-    private void SetFeeSelection(Border? border, bool isSelected,
+    private void SetFeeSelection(Button? button, bool isSelected,
         string labelName, string descName, string rateName)
     {
-        if (border == null) return;
+        if (button == null) return;
 
-        border.Classes.Set("FeeSelected", isSelected);
+        button.Classes.Set("FeeSelected", isSelected);
 
         var selectedFg = Brushes.White;
         var unselectedFg = this.TryFindResource("RecoveryFeeUnselectedText", out var res) && res is IBrush brush

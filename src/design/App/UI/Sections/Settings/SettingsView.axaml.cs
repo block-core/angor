@@ -270,9 +270,9 @@ public partial class SettingsView : UserControl, ISectionView
             Vm?.RemoveIndexerLink(item);
     }
 
-    private void OnToggleDefaultIndexer(object? sender, PointerPressedEventArgs e)
+    private void OnToggleDefaultIndexerClick(object? sender, RoutedEventArgs e)
     {
-        if (sender is Border { DataContext: IndexerItem item })
+        if (sender is Button { DataContext: IndexerItem item })
             Vm?.SetDefaultIndexer(item);
     }
 

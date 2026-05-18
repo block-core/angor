@@ -2,7 +2,6 @@ using System.Reactive.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
-using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
@@ -18,9 +17,9 @@ public partial class InvestPageView : UserControl
 {
     private IDisposable? _screenSubscription;
     private IDisposable? _layoutSubscription;
-    private Border? _selectedQuickAmountBorder;
-    private Border? _selectedSubPlanBorder;
-    private Border? _selectedFundPatternBorder;
+    private Button? _selectedQuickAmountButton;
+    private Button? _selectedSubPlanButton;
+    private Button? _selectedFundPatternButton;
 
     // Cached controls for responsive layout
     private DockPanel? _navBar;
@@ -36,7 +35,7 @@ public partial class InvestPageView : UserControl
     private Panel? _topSpacer;
     private Panel? _bottomSpacer;
     private UniformGrid? _mobileHeaderStats;
-    private Border? _mobileSubmitButton;
+    private Button? _mobileSubmitButton;
     private ScrollViewer? _contentScroller;
     private bool _isCompact;
 
@@ -59,7 +58,7 @@ public partial class InvestPageView : UserControl
         _topSpacer = this.FindControl<Panel>("TopSpacer");
         _bottomSpacer = this.FindControl<Panel>("BottomSpacer");
         _mobileHeaderStats = this.FindControl<UniformGrid>("MobileHeaderStats");
-        _mobileSubmitButton = this.FindControl<Border>("MobileSubmitButton");
+        _mobileSubmitButton = this.FindControl<Button>("MobileSubmitButton");
         _contentScroller = this.FindControl<ScrollViewer>("ContentScroller");
 
         _amountCardSizeSubscription = _amountCard?.GetObservable(BoundsProperty)
@@ -69,8 +68,6 @@ public partial class InvestPageView : UserControl
 
         // Wire up button clicks
         AddHandler(Button.ClickEvent, OnButtonClick);
-        // Quick amount + submit + subscription plan border clicks
-        AddHandler(Border.PointerPressedEvent, OnBorderPressed, RoutingStrategies.Bubble);
 
         SubscribeToLayoutMode();
     }
@@ -275,13 +272,13 @@ public partial class InvestPageView : UserControl
             {
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
-                    // Find the SubPlanBorder whose DataContext has IsSelected == true
-                    foreach (var border in this.GetVisualDescendants().OfType<Border>())
+                    // Find the SubPlanButton whose DataContext has IsSelected == true
+                    foreach (var btn in this.GetVisualDescendants().OfType<Button>())
                     {
-                        if (border.Name == "SubPlanBorder" &&
-                            border.DataContext is SubscriptionPlanOption { IsSelected: true })
+                        if (btn.Name == "SubPlanButton" &&
+                            btn.DataContext is SubscriptionPlanOption { IsSelected: true })
                         {
-                            UpdateSubscriptionPlanSelection(border);
+                            UpdateSubscriptionPlanSelection(btn);
                             break;
                         }
                     }
@@ -293,12 +290,12 @@ public partial class InvestPageView : UserControl
             {
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
-                    foreach (var border in this.GetVisualDescendants().OfType<Border>())
+                    foreach (var btn in this.GetVisualDescendants().OfType<Button>())
                     {
-                        if (border.Name == "FundPatternBorder" &&
-                            border.DataContext is FundingPatternOption { IsSelected: true })
+                        if (btn.Name == "FundPatternButton" &&
+                            btn.DataContext is FundingPatternOption { IsSelected: true })
                         {
-                            UpdateFundPatternSelection(border);
+                            UpdateFundPatternSelection(btn);
                             break;
                         }
                     }
@@ -364,41 +361,7 @@ public partial class InvestPageView : UserControl
             case "BackButton":
                 NavigateBackToDetail();
                 break;
-        }
-    }
 
-    /// <summary>
-    /// Handle clicks on Border elements — quick amounts, submit button, copy project ID,
-    /// mobile submit button, and subscription plan buttons.
-    /// </summary>
-    private void OnBorderPressed(object? sender, PointerPressedEventArgs e)
-    {
-        var source = e.Source as Control;
-        Border? found = null;
-        string? foundName = null;
-
-        while (source != null)
-        {
-            if (source is Border b && !string.IsNullOrEmpty(b.Name))
-            {
-                var name = b.Name;
-                if (name == "QuickAmountBorder" || name == "SubmitButton" ||
-                    name == "CopyProjectIdButton" || name == "SubPlanBorder" ||
-                    name == "FundPatternBorder" ||
-                    name == "MobileSubmitButton")
-                {
-                    found = b;
-                    foundName = name;
-                    break;
-                }
-            }
-            source = source.Parent as Control;
-        }
-
-        if (found == null || foundName == null) return;
-
-        switch (foundName)
-        {
             case "SubmitButton":
             case "MobileSubmitButton":
                 if (Vm?.CanSubmit == true)
@@ -407,42 +370,36 @@ public partial class InvestPageView : UserControl
                 }
                 else
                 {
-                    // Scroll to top so user sees the amount input
                     _contentScroller?.ScrollToHome();
                 }
-                e.Handled = true;
                 break;
 
-            case "QuickAmountBorder":
-                if (found.DataContext is QuickAmountOption option)
+            case "QuickAmountButton":
+                if (btn.CommandParameter is QuickAmountOption option)
                 {
                     Vm?.SelectQuickAmount(option.Amount);
-                    UpdateQuickAmountSelection(found);
-                    e.Handled = true;
+                    UpdateQuickAmountSelection(btn);
                 }
                 break;
 
-            case "SubPlanBorder":
-                if (found.DataContext is SubscriptionPlanOption plan)
+            case "SubPlanButton":
+                if (btn.CommandParameter is SubscriptionPlanOption plan)
                 {
                     Vm?.SelectSubscriptionPlan(plan.PatternId);
-                    UpdateSubscriptionPlanSelection(found);
-                    e.Handled = true;
+                    UpdateSubscriptionPlanSelection(btn);
                 }
                 break;
 
-            case "FundPatternBorder":
-                if (found.DataContext is FundingPatternOption fundPattern)
+            case "FundPatternButton":
+                if (btn.CommandParameter is FundingPatternOption fundPattern)
                 {
                     Vm?.SelectFundingPattern(fundPattern);
-                    UpdateFundPatternSelection(found);
-                    e.Handled = true;
+                    UpdateFundPatternSelection(btn);
                 }
                 break;
 
             case "CopyProjectIdButton":
                 ClipboardHelper.CopyToClipboard(this, Vm?.ProjectId);
-                e.Handled = true;
                 break;
         }
     }
@@ -457,33 +414,27 @@ public partial class InvestPageView : UserControl
         }
     }
 
-    /// <summary>Update quick amount borders via CSS class toggling.
-    /// Tracks previously-selected border to avoid full tree walk.</summary>
-    private void UpdateQuickAmountSelection(Border newSelected)
+    /// <summary>Update quick amount buttons via CSS class toggling.</summary>
+    private void UpdateQuickAmountSelection(Button newSelected)
     {
-        // Deselect previous
-        _selectedQuickAmountBorder?.Classes.Set("QuickAmountSelected", false);
-        // Select new
+        _selectedQuickAmountButton?.Classes.Set("QuickAmountSelected", false);
         newSelected.Classes.Set("QuickAmountSelected", true);
-        _selectedQuickAmountBorder = newSelected;
+        _selectedQuickAmountButton = newSelected;
     }
 
-    /// <summary>Update subscription plan borders via CSS class toggling.
-    /// Tracks previously-selected border to avoid full tree walk.</summary>
-    private void UpdateSubscriptionPlanSelection(Border newSelected)
+    /// <summary>Update subscription plan buttons via CSS class toggling.</summary>
+    private void UpdateSubscriptionPlanSelection(Button newSelected)
     {
-        // Deselect previous
-        _selectedSubPlanBorder?.Classes.Set("SubPlanSelected", false);
-        // Select new
+        _selectedSubPlanButton?.Classes.Set("SubPlanSelected", false);
         newSelected.Classes.Set("SubPlanSelected", true);
-        _selectedSubPlanBorder = newSelected;
+        _selectedSubPlanButton = newSelected;
     }
 
-    /// <summary>Update funding pattern borders via CSS class toggling.</summary>
-    private void UpdateFundPatternSelection(Border newSelected)
+    /// <summary>Update funding pattern buttons via CSS class toggling.</summary>
+    private void UpdateFundPatternSelection(Button newSelected)
     {
-        _selectedFundPatternBorder?.Classes.Set("SubPlanSelected", false);
+        _selectedFundPatternButton?.Classes.Set("SubPlanSelected", false);
         newSelected.Classes.Set("SubPlanSelected", true);
-        _selectedFundPatternBorder = newSelected;
+        _selectedFundPatternButton = newSelected;
     }
 }
