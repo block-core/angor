@@ -199,4 +199,100 @@ public static class AutomationFlowDtos
         [JsonPropertyName("projectIdentifier")]
         public string ProjectIdentifier { get; init; } = "";
     }
+
+    public sealed class EditProjectProfileRequest
+    {
+        [JsonPropertyName("projectIdentifier")]
+        public string ProjectIdentifier { get; init; } = "";
+
+        [JsonPropertyName("name")]
+        public string? Name { get; init; }
+
+        [JsonPropertyName("displayName")]
+        public string? DisplayName { get; init; }
+
+        [JsonPropertyName("about")]
+        public string? About { get; init; }
+
+        [JsonPropertyName("picture")]
+        public string? Picture { get; init; }
+
+        [JsonPropertyName("banner")]
+        public string? Banner { get; init; }
+
+        [JsonPropertyName("website")]
+        public string? Website { get; init; }
+
+        [JsonPropertyName("projectContent")]
+        public string? ProjectContent { get; init; }
+    }
+
+    public sealed class EditProjectProfileResponse
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; init; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; init; }
+    }
+
+    public sealed class FetchProjectProfileRequest
+    {
+        [JsonPropertyName("projectIdentifier")]
+        public string ProjectIdentifier { get; init; } = "";
+    }
+
+    public sealed class FetchProjectProfileResponse
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; init; }
+
+        [JsonPropertyName("name")]
+        public string? Name { get; init; }
+
+        [JsonPropertyName("displayName")]
+        public string? DisplayName { get; init; }
+
+        [JsonPropertyName("about")]
+        public string? About { get; init; }
+
+        [JsonPropertyName("picture")]
+        public string? Picture { get; init; }
+
+        [JsonPropertyName("banner")]
+        public string? Banner { get; init; }
+
+        [JsonPropertyName("website")]
+        public string? Website { get; init; }
+
+        [JsonPropertyName("projectContent")]
+        public string? ProjectContent { get; init; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; init; }
+    }
+
+    public sealed class UploadToBlossomRequest
+    {
+        [JsonPropertyName("projectIdentifier")]
+        public string ProjectIdentifier { get; init; } = "";
+
+        [JsonPropertyName("imageUrl")]
+        public string ImageUrl { get; init; } = "";
+
+        [JsonPropertyName("blossomServer")]
+        public string BlossomServer { get; init; } = "https://blossom.angor.io";
+    }
+
+    public sealed class UploadToBlossomResponse
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; init; }
+
+        [JsonPropertyName("uploadedUrl")]
+        public string? UploadedUrl { get; init; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; init; }
+    }
 }

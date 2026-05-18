@@ -354,6 +354,30 @@ public sealed class AutomationServer : IDisposable
                 return (200, result);
             }
 
+            // POST /flows/edit-project-profile
+            if (method == "POST" && path == "/flows/edit-project-profile")
+            {
+                var req = Deserialize<EditProjectProfileRequest>(body);
+                var result = await AutomationFlows.EditProjectProfileAsync(services, req);
+                return (200, result);
+            }
+
+            // POST /flows/fetch-project-profile
+            if (method == "POST" && path == "/flows/fetch-project-profile")
+            {
+                var req = Deserialize<FetchProjectProfileRequest>(body);
+                var result = await AutomationFlows.FetchProjectProfileAsync(services, req);
+                return (200, result);
+            }
+
+            // POST /flows/upload-to-blossom
+            if (method == "POST" && path == "/flows/upload-to-blossom")
+            {
+                var req = Deserialize<UploadToBlossomRequest>(body);
+                var result = await AutomationFlows.UploadToBlossomAsync(services, req);
+                return (200, result);
+            }
+
             return (404, new ActionResponse { Success = false, Error = $"Unknown route: {method} {path}" });
         }
         catch (Exception ex)

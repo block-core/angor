@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Linq;
 using System.Threading.Tasks;
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Wallet.Application;
 using Angor.Shared.Utilities;
 using Avalonia;
@@ -18,9 +19,11 @@ using App.UI.Sections.Funders;
 using App.UI.Sections.Funds;
 using App.UI.Sections.MyProjects;
 using App.UI.Sections.MyProjects.Deploy;
+using App.UI.Sections.MyProjects.EditProfile;
 using App.UI.Sections.Portfolio;
 using App.UI.Sections.Settings;
 using App.UI.Shared.PaymentFlow;
+using App.UI.Shared.Services;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using static App.Automation.AutomationDtos;
@@ -1288,6 +1291,190 @@ public static class AutomationFlows
     {
         button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, button));
         Dispatcher.UIThread.RunJobs();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Edit Project Profile
+    // ═══════════════════════════════════════════════════════════════════
+
+    public static async Task<EditProjectProfileResponse> EditProjectProfileAsync(
+        IServiceProvider services,
+        EditProjectProfileRequest request)
+    {
+        try
+        {
+            var window = await RequireWindowAsync();
+            await NavigateToAsync(window, "My Projects");
+
+            var myProjectsVm = await Dispatcher.UIThread.InvokeAsync(() => GetMyProjectsViewModel(window));
+            if (myProjectsVm == null)
+            {
+                return new EditProjectProfileResponse { Success = false, Error = "MyProjectsViewModel not found" };
+            }
+
+            await Dispatcher.UIThread.InvokeAsync(async () => await myProjectsVm.LoadFounderProjectsAsync());
+            await Task.Delay(500);
+
+            var project = await Dispatcher.UIThread.InvokeAsync(() =>
+                myProjectsVm.Projects.FirstOrDefault(p =>
+                    string.Equals(p.ProjectIdentifier, request.ProjectIdentifier, StringComparison.Ordinal)));
+
+            if (project == null)
+            {
+                return new EditProjectProfileResponse { Success = false, Error = $"Project '{request.ProjectIdentifier}' not found in My Projects" };
+            }
+
+            // Open edit profile
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                myProjectsVm.OpenEditProfile(project);
+                Dispatcher.UIThread.RunJobs();
+            });
+            await Task.Delay(1000); // Allow LoadAsync to fetch current profile from Nostr
+
+            var editVm = await Dispatcher.UIThread.InvokeAsync(() => myProjectsVm.SelectedEditProject);
+            if (editVm == null)
+            {
+                return new EditProjectProfileResponse { Success = false, Error = "EditProfileViewModel not opened" };
+            }
+
+            // Wait for loading to complete
+            var loadDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
+            while (DateTime.UtcNow < loadDeadline)
+            {
+                var isLoading = await Dispatcher.UIThread.InvokeAsync(() => editVm.IsLoading);
+                if (!isLoading) break;
+                await Task.Delay(500);
+            }
+
+            // Apply requested changes
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (request.Name != null) editVm.ProfileName = request.Name;
+                if (request.DisplayName != null) editVm.ProfileDisplayName = request.DisplayName;
+                if (request.About != null) editVm.ProfileAbout = request.About;
+                if (request.Picture != null) editVm.ProfilePicture = request.Picture;
+                if (request.Banner != null) editVm.ProfileBanner = request.Banner;
+                if (request.Website != null) editVm.ProfileWebsite = request.Website;
+                if (request.ProjectContent != null) editVm.ProjectContent = request.ProjectContent;
+                Dispatcher.UIThread.RunJobs();
+            });
+
+            // Save to Nostr
+            var saveResult = await editVm.SaveAsync();
+            if (!saveResult)
+            {
+                return new EditProjectProfileResponse { Success = false, Error = "SaveAsync returned false" };
+            }
+
+            // Close edit profile
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                myProjectsVm.CloseEditProfile();
+                Dispatcher.UIThread.RunJobs();
+            });
+
+            return new EditProjectProfileResponse { Success = true };
+        }
+        catch (Exception ex)
+        {
+            return new EditProjectProfileResponse { Success = false, Error = ex.ToString() };
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Fetch Project Profile (verify saved data)
+    // ═══════════════════════════════════════════════════════════════════
+
+    public static async Task<FetchProjectProfileResponse> FetchProjectProfileAsync(
+        IServiceProvider services,
+        FetchProjectProfileRequest request)
+    {
+        try
+        {
+            var projectAppService = services.GetRequiredService<Angor.Sdk.Funding.Projects.IProjectAppService>();
+            var projectId = new ProjectId(request.ProjectIdentifier);
+
+            var result = await projectAppService.FetchProjectProfileData(projectId);
+            if (result.IsFailure)
+            {
+                return new FetchProjectProfileResponse { Success = false, Error = result.Error };
+            }
+
+            var data = result.Value;
+            return new FetchProjectProfileResponse
+            {
+                Success = true,
+                Name = data.Metadata?.Name,
+                DisplayName = data.Metadata?.DisplayName,
+                About = data.Metadata?.About,
+                Picture = data.Metadata?.Picture,
+                Banner = data.Metadata?.Banner,
+                Website = data.Metadata?.Website,
+                ProjectContent = data.ProjectContent,
+            };
+        }
+        catch (Exception ex)
+        {
+            return new FetchProjectProfileResponse { Success = false, Error = ex.ToString() };
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Upload to Blossom (download image from URL, upload to blossom server)
+    // ═══════════════════════════════════════════════════════════════════
+
+    public static async Task<UploadToBlossomResponse> UploadToBlossomAsync(
+        IServiceProvider services,
+        UploadToBlossomRequest request)
+    {
+        try
+        {
+            var blossomService = services.GetRequiredService<BlossomUploadService>();
+
+            // Download the image from the provided URL
+            using var httpClient = new System.Net.Http.HttpClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(30);
+            var imageBytes = await httpClient.GetByteArrayAsync(request.ImageUrl);
+            var contentType = "image/jpeg"; // default; picsum returns JPEG
+
+            // Get Nostr key from the project's wallet for Blossom auth
+            var window = await RequireWindowAsync();
+            await NavigateToAsync(window, "My Projects");
+
+            var myProjectsVm = await Dispatcher.UIThread.InvokeAsync(() => GetMyProjectsViewModel(window));
+            if (myProjectsVm == null)
+            {
+                return new UploadToBlossomResponse { Success = false, Error = "MyProjectsViewModel not found" };
+            }
+
+            await Dispatcher.UIThread.InvokeAsync(async () => await myProjectsVm.LoadFounderProjectsAsync());
+            await Task.Delay(500);
+
+            var project = await Dispatcher.UIThread.InvokeAsync(() =>
+                myProjectsVm.Projects.FirstOrDefault(p =>
+                    string.Equals(p.ProjectIdentifier, request.ProjectIdentifier, StringComparison.Ordinal)));
+
+            if (project == null)
+            {
+                return new UploadToBlossomResponse { Success = false, Error = $"Project '{request.ProjectIdentifier}' not found" };
+            }
+
+            // Use an ephemeral key for Blossom auth (simpler for testing)
+            var nostrKeyHex = global::App.UI.Shared.Helpers.BlossomAuthKeyHelper.CreateEphemeralPrivateKeyHex();
+
+            var uploadResult = await blossomService.UploadAsync(request.BlossomServer, imageBytes, contentType, nostrKeyHex);
+            if (uploadResult.IsFailure)
+            {
+                return new UploadToBlossomResponse { Success = false, Error = uploadResult.Error };
+            }
+
+            return new UploadToBlossomResponse { Success = true, UploadedUrl = uploadResult.Value };
+        }
+        catch (Exception ex)
+        {
+            return new UploadToBlossomResponse { Success = false, Error = ex.ToString() };
+        }
     }
 
     private static void Log(string ctx, string msg)

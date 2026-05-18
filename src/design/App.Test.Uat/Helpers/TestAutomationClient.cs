@@ -278,6 +278,27 @@ public sealed class TestAutomationClient : IDisposable
         return await PostAsync<ActionResponse>("/flows/release-funds", request, ct);
     }
 
+    public async Task<EditProjectProfileResponse> EditProjectProfileAsync(
+        EditProjectProfileRequest request,
+        CancellationToken ct = default)
+    {
+        return await PostAsync<EditProjectProfileResponse>("/flows/edit-project-profile", request, ct);
+    }
+
+    public async Task<FetchProjectProfileResponse> FetchProjectProfileAsync(
+        FetchProjectProfileRequest request,
+        CancellationToken ct = default)
+    {
+        return await PostAsync<FetchProjectProfileResponse>("/flows/fetch-project-profile", request, ct);
+    }
+
+    public async Task<UploadToBlossomResponse> UploadToBlossomAsync(
+        UploadToBlossomRequest request,
+        CancellationToken ct = default)
+    {
+        return await PostAsync<UploadToBlossomResponse>("/flows/upload-to-blossom", request, ct);
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // HTTP Helpers
     // ═══════════════════════════════════════════════════════════════════
