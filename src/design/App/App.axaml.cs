@@ -3,6 +3,7 @@ using AsyncImageLoader;
 using AsyncImageLoader.Loaders;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using App.Automation;
 using App.Composition;
 using Microsoft.Extensions.DependencyInjection;
 using App.UI.Shared;
@@ -61,6 +62,9 @@ public partial class App : Application
 
         // Build DI container with profile-specific data isolation
         Services = CompositionRoot.BuildServiceProvider(profileName, platformServices: PlatformServices);
+
+        // Start test automation server if ANGOR_TEST_API=1
+        AutomationServer.StartIfEnabled(Services);
 
         if (lifetime != null)
         {
