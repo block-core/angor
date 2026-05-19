@@ -31,13 +31,12 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
 
         // Wire copy button for claim project ID
         // Vue: copyToClipboard(recoveryProjectId) in Claim Penalties modal
-        var copyClaimBtn = this.FindControl<Border>("CopyClaimProjectIdBtn");
+        var copyClaimBtn = this.FindControl<Button>("CopyClaimProjectIdBtn");
         if (copyClaimBtn != null)
-            copyClaimBtn.PointerPressed += (_, ev) =>
+            copyClaimBtn.Click += (_, _) =>
             {
                 if (DataContext is InvestmentViewModel vm)
                     ClipboardHelper.CopyToClipboard(this, vm.RecoveryProjectId);
-                ev.Handled = true;
             };
     }
 

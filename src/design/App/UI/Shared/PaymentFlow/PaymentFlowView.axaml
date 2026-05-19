@@ -21,18 +21,18 @@
             <Setter Property="Background" Value="{DynamicResource DeployWalletSelectedBg}" />
             <Setter Property="BorderBrush" Value="{DynamicResource DeployWalletSelectedBorder}" />
         </Style>
-        <Style Selector="Border.NetworkTab">
+        <Style Selector="Button.NetworkTab /template/ Border">
             <Setter Property="BorderBrush" Value="{DynamicResource Border}" />
             <Setter Property="Background" Value="{DynamicResource DeployTabUnselectedBg}" />
         </Style>
-        <Style Selector="Border.NetworkTab.Selected">
+        <Style Selector="Button.NetworkTab.Selected /template/ Border">
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
             <Setter Property="Background" Value="{DynamicResource DeployTabSelectedBg}" />
         </Style>
-        <Style Selector="Border.NetworkTab > TextBlock">
+        <Style Selector="Button.NetworkTab TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource DeployTabUnselectedText}" />
         </Style>
-        <Style Selector="Border.NetworkTab.Selected > TextBlock">
+        <Style Selector="Button.NetworkTab.Selected TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
         </Style>
     </UserControl.Styles>
@@ -176,12 +176,14 @@
                         <ItemsControl ItemsSource="{Binding Wallets}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="services:WalletInfo">
-                                    <Border Name="WalletBorder" Classes="WalletCard"
+                                    <Button Name="WalletButton" Classes="Unstyled WalletCard"
                                             CornerRadius="8" Padding="16"
                                             Margin="0,0,0,8"
                                             BorderThickness="2"
                                             Classes.WalletSelected="{Binding IsSelected}"
-                                            Cursor="Hand">
+                                            Cursor="Hand"
+                                            HorizontalContentAlignment="Stretch"
+                                            CommandParameter="{Binding}">
                                         <Grid ColumnDefinitions="Auto,*,Auto">
                                             <Border Grid.Column="0" Width="40" Height="40"
                                                     CornerRadius="8"
@@ -215,7 +217,7 @@
                                                 </Viewbox>
                                             </StackPanel>
                                         </Grid>
-                                    </Border>
+                                    </Button>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
@@ -271,28 +273,32 @@
                 <!-- Network tabs -->
                 <Grid ColumnDefinitions="*,*,*" Margin="0,0,0,16">
                     <Grid.ColumnSpacing>8</Grid.ColumnSpacing>
-                    <Border Grid.Column="0" Name="OnChainTabBorder"
+                    <Button Grid.Column="0" Name="OnChainTabButton"
                             AutomationProperties.AutomationId="InvestOnChainTab"
-                            Classes="NetworkTab"
+                            Classes="Unstyled NetworkTab"
                             Classes.Selected="{Binding IsOnChainTab}"
-                            CornerRadius="12" Padding="12,8" BorderThickness="2" Cursor="Hand">
+                            CornerRadius="12" Padding="12,8" BorderThickness="2" Cursor="Hand"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
                         <TextBlock Text="On-Chain" FontSize="13" FontWeight="SemiBold"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-                    <Border Grid.Column="1" Name="LightningTabBorder"
+                    </Button>
+                    <Button Grid.Column="1" Name="LightningTabButton"
                             AutomationProperties.AutomationId="InvestLightningTab"
-                            Classes="NetworkTab"
+                            Classes="Unstyled NetworkTab"
                             Classes.Selected="{Binding IsLightningTab}"
-                            CornerRadius="12" Padding="12,8" BorderThickness="2" Cursor="Hand">
+                            CornerRadius="12" Padding="12,8" BorderThickness="2" Cursor="Hand"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
                         <TextBlock Text="Lightning" FontSize="13" FontWeight="SemiBold"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-                    <Border Grid.Column="2" Name="ImportTabBorder" Classes="NetworkTab"
+                    </Button>
+                    <Button Grid.Column="2" Name="ImportTabButton"
+                            Classes="Unstyled NetworkTab"
                             Classes.Selected="{Binding IsImportTab}"
-                            CornerRadius="12" Padding="12,8" BorderThickness="2" Cursor="Hand">
+                            CornerRadius="12" Padding="12,8" BorderThickness="2" Cursor="Hand"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
                         <TextBlock Text="Import" FontSize="13" FontWeight="SemiBold"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
+                    </Button>
                 </Grid>
 
                 <!-- QR Code -->

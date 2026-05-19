@@ -23,6 +23,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App.Android", "design\App.A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App.iOS", "design\App.iOS\App.iOS.csproj", "{5EE5BA69-B721-4A1D-ACD2-167D3A1EEBAF}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "design", "design", "{0FB89327-7F89-47BB-664C-22E34CB4C7E1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App.Test.Uat", "design\App.Test.Uat\App.Test.Uat.csproj", "{4DA7BF5E-D0EA-4608-9625-6F1CAC74351E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -141,6 +145,18 @@ Global
 		{5EE5BA69-B721-4A1D-ACD2-167D3A1EEBAF}.Release|x64.Build.0 = Release|Any CPU
 		{5EE5BA69-B721-4A1D-ACD2-167D3A1EEBAF}.Release|x86.ActiveCfg = Release|Any CPU
 		{5EE5BA69-B721-4A1D-ACD2-167D3A1EEBAF}.Release|x86.Build.0 = Release|Any CPU
+		{4DA7BF5E-D0EA-4608-9625-6F1CAC74351E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DA7BF5E-D0EA-4608-9625-6F1CAC74351E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DA7BF5E-D0EA-4608-9625-6F1CAC74351E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4DA7BF5E-D0EA-4608-9625-6F1CAC74351E}.Debug|x64.Build.0 = Debug|Any CPU
+		{4DA7BF5E-D0EA-4608-9625-6F1CAC74351E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4DA7BF5E-D0EA-4608-9625-6F1CAC74351E}.Debug|x86.Build.0 = Debug|Any CPU
+		{4DA7BF5E-D0EA-4608-9625-6F1CAC74351E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DA7BF5E-D0EA-4608-9625-6F1CAC74351E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DA7BF5E-D0EA-4608-9625-6F1CAC74351E}.Release|x64.ActiveCfg = Release|Any CPU
+		{4DA7BF5E-D0EA-4608-9625-6F1CAC74351E}.Release|x64.Build.0 = Release|Any CPU
+		{4DA7BF5E-D0EA-4608-9625-6F1CAC74351E}.Release|x86.ActiveCfg = Release|Any CPU
+		{4DA7BF5E-D0EA-4608-9625-6F1CAC74351E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

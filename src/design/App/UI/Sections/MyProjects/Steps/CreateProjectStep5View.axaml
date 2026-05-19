@@ -12,15 +12,15 @@
     <UserControl.Styles>
         <!-- ═══ INSTALLMENT MULTISELECT: row + checkbox styles ═══ -->
         <!-- Vue: .settings-toggle-button — 24x24 border-2 rounded-4px checkbox -->
-        <Style Selector="Border.InstallmentOption">
+        <Style Selector="Button.InstallmentOption">
             <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
             <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
         </Style>
-        <Style Selector="Border.InstallmentOption:pointerover">
+        <Style Selector="Button.InstallmentOption:pointerover /template/ Border">
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
         </Style>
         <!-- Selected: green border + subtle green bg -->
-        <Style Selector="Border.InstallmentOption.InstallmentSelected">
+        <Style Selector="Button.InstallmentOption.InstallmentSelected">
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
             <Setter Property="Background" Value="{DynamicResource TypeCardInvestSelectedBg}" />
         </Style>
@@ -44,15 +44,15 @@
 
         <!-- ═══ PAYOUT FREQUENCY RADIO: row + radio circle styles ═══ -->
         <!-- Vue: flex items-center justify-between p-4 rounded-lg border-2 -->
-        <Style Selector="Border.PayoutFreqOption">
+        <Style Selector="Button.PayoutFreqOption">
             <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
             <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
         </Style>
-        <Style Selector="Border.PayoutFreqOption:pointerover">
+        <Style Selector="Button.PayoutFreqOption:pointerover /template/ Border">
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
         </Style>
         <!-- Selected row: green border + subtle green bg -->
-        <Style Selector="Border.PayoutFreqOption.PayoutFreqSelected">
+        <Style Selector="Button.PayoutFreqOption.PayoutFreqSelected">
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
             <Setter Property="Background" Value="{DynamicResource TypeCardInvestSelectedBg}" />
         </Style>
@@ -182,7 +182,8 @@
 
                             <!-- Duration input + unit dropdown — Vue: flex gap-2, input w-1/2 + select w-1/2 -->
                             <Grid ColumnDefinitions="*,*" HorizontalAlignment="Stretch">
-                                <TextBox Text="{Binding DurationValue, Mode=TwoWay}"
+                                <TextBox Name="DurationValueInput"
+                                         Text="{Binding DurationValue, Mode=TwoWay}"
                                          Watermark="0"
                                          FontSize="16" Padding="12,12,16,12" CornerRadius="8" />
                                 <ComboBox Name="DurationUnitCombo" Grid.Column="1" Margin="8,0,0,0"
@@ -308,7 +309,7 @@
                         <StackPanel Spacing="12" Margin="24">
                             <!-- Monthly radio button -->
                             <!-- Vue: flex items-center justify-between p-4 rounded-lg border-2 -->
-                            <Border Name="PayoutFreqMonthly" Classes="PayoutFreqOption"
+                            <Button Name="PayoutFreqMonthly" Classes="Unstyled PayoutFreqOption"
                                     CornerRadius="10" BorderThickness="2" Padding="16"
                                     BorderBrush="{DynamicResource Stroke}"
                                     Background="{DynamicResource SurfaceHover}"
@@ -329,9 +330,9 @@
                                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
                                 </Grid>
-                            </Border>
+                            </Button>
                             <!-- Weekly radio button -->
-                            <Border Name="PayoutFreqWeekly" Classes="PayoutFreqOption"
+                            <Button Name="PayoutFreqWeekly" Classes="Unstyled PayoutFreqOption"
                                     CornerRadius="10" BorderThickness="2" Padding="16"
                                     BorderBrush="{DynamicResource Stroke}"
                                     Background="{DynamicResource SurfaceHover}"
@@ -351,7 +352,7 @@
                                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
                                 </Grid>
-                            </Border>
+                            </Button>
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -367,7 +368,7 @@
                         </Border>
                         <StackPanel Spacing="12" Margin="24">
                             <!-- 3 Installments -->
-                            <Border Name="Installment3" Classes="InstallmentOption"
+                            <Button Name="Installment3" Classes="Unstyled InstallmentOption"
                                     CornerRadius="10" BorderThickness="2" Padding="16"
                                     BorderBrush="{DynamicResource Stroke}"
                                     Background="{DynamicResource SurfaceHover}"
@@ -377,7 +378,6 @@
                                                Text="3 Installments" FontSize="14" FontWeight="Bold"
                                                Foreground="{DynamicResource TextStrong}"
                                                VerticalAlignment="Center" />
-                                    <!-- Checkbox indicator: 24x24 rounded-4px, green fill + checkmark when active -->
                                     <Border Grid.Column="1" Name="Check3" Classes="CheckboxIndicator" Width="24" Height="24" CornerRadius="4"
                                             BorderThickness="2"
                                             VerticalAlignment="Center">
@@ -386,9 +386,9 @@
                                                 HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
                                 </Grid>
-                            </Border>
+                            </Button>
                             <!-- 6 Installments -->
-                            <Border Name="Installment6" Classes="InstallmentOption"
+                            <Button Name="Installment6" Classes="Unstyled InstallmentOption"
                                     CornerRadius="10" BorderThickness="2" Padding="16"
                                     BorderBrush="{DynamicResource Stroke}"
                                     Background="{DynamicResource SurfaceHover}"
@@ -406,9 +406,9 @@
                                                 HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
                                 </Grid>
-                            </Border>
+                            </Button>
                             <!-- 9 Installments -->
-                            <Border Name="Installment9" Classes="InstallmentOption"
+                            <Button Name="Installment9" Classes="Unstyled InstallmentOption"
                                     CornerRadius="10" BorderThickness="2" Padding="16"
                                     BorderBrush="{DynamicResource Stroke}"
                                     Background="{DynamicResource SurfaceHover}"
@@ -426,7 +426,7 @@
                                                 HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
                                 </Grid>
-                            </Border>
+                            </Button>
                         </StackPanel>
                     </StackPanel>
                 </Border>

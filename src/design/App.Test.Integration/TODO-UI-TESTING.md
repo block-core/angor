@@ -19,11 +19,44 @@ Integration tests bypass the view layer and call ViewModel methods directly:
 
 This validates the full SDK round-trip but leaves the view-layer wiring untested.
 
+## Implemented direction
+
+The repository now has the start of a real-window automation path built around one process per profile.
+
+### Current implementation
+
+- `src/design/App/Automation/AutomationServer.cs`
+  Starts inside the real app process when `ANGOR_TEST_API=1` and `ANGOR_TEST_API_PORT` are set.
+- `src/design/App/Automation/AutomationFlows.cs`
+  Runs higher-level flows inside the app process on `Dispatcher.UIThread`, so the real visual tree, modal system, and ViewModels are used.
+- `src/design/App.Test.Integration/Helpers/TestProcessHost.cs`
+  Launches a dedicated `App.Desktop` process per profile and keeps it alive for the duration of the test.
+- `src/design/App.Test.Integration/Helpers/TestAutomationClient.cs`
+  Calls the automation server over localhost HTTP.
+- `src/design/App.Test.Integration/BigFundTest.cs`
+  New per-process orchestration test for the large fund scenario.
+- `src/design/App.Test.Integration/BigInvestTest.cs`
+  New per-process orchestration test for the large investment scenario.
+
+### Key architecture decisions
+
+- The automation code lives in shared `src/design/App/Automation/` so the same server model can later be reused by Desktop and Android.
+- Communication uses a lightweight localhost HTTP protocol served from a `TcpListener`, not Avalonia headless APIs.
+- Each profile runs in its own real app process instead of swapping profiles inside one headless process.
+- The two large integration tests now orchestrate via process hosts and automation client calls instead of directly manipulating headless windows.
+
+### Why this direction
+
+- Real `DataContext` binding for code-behind handlers
+- Real modal orchestration and routed events
+- Isolation between profiles and between long-running flows
+- Better future portability to Docker/Xvfb and Android emulator forwarding
+
 ## Proposed solutions
 
-### Option A: In-process test API (preferred)
+### Option A: In-process test API (implemented direction)
 
-Build a test automation API that the app exposes when launched in test mode. An external test process launches the real app and communicates with it over IPC (named pipe, HTTP on localhost, or similar) to query the visual tree and trigger actions.
+Build a test automation API that the app exposes when launched in test mode. An external test process launches the real app and communicates with it over HTTP on localhost to query the visual tree and trigger actions.
 
 #### Architecture
 
@@ -42,9 +75,9 @@ Test Process (xUnit)                App Process (real Avalonia UI)
 
 #### Components
 
-1. **`TestAutomationServer`** — embedded in the app, started conditionally (e.g. `--test-api` flag or environment variable). Runs a lightweight HTTP/named-pipe listener. Dispatches commands to the UI thread via `Dispatcher.UIThread.InvokeAsync`.
+1. **`TestAutomationServer`** — embedded in the shared app project, started conditionally via environment variables. Runs a lightweight HTTP server over `TcpListener`. Dispatches commands to the UI thread via `Dispatcher.UIThread.InvokeAsync`.
 
-2. **`TestAutomationClient`** — NuGet package or shared library consumed by the test project. Provides a typed API:
+2. **`TestAutomationClient`** — shared helper consumed by the test project. Provides a typed API.
 
     ```csharp
     var client = new TestAutomationClient("pipe://angor-test");
@@ -62,9 +95,11 @@ Test Process (xUnit)                App Process (real Avalonia UI)
     Assert.Equal(3, portfolio.InvestmentStep);
     ```
 
-3. **Control lookup** — walks `Window.GetVisualDescendants()` on the UI thread, returns serializable descriptors (Name, AutomationId, Type, IsVisible, IsEnabled, DataContext type, bounds).
+3. **Control lookup** — walks `Window.GetVisualDescendants()` on the UI thread, returns serializable descriptors.
 
 4. **Action dispatch** — all mutations run on `Dispatcher.UIThread` so `DataContext`, event routing, and modal orchestration work exactly as in production.
+
+5. **Composite flow endpoints** — higher-level endpoints in `AutomationFlows.cs` encapsulate multi-step flows such as wallet creation, project deployment, investing, approval, stage claims, and recovery/release actions. This avoids hundreds of tiny round trips from the test process.
 
 #### Advantages over headless
 
@@ -76,11 +111,11 @@ Test Process (xUnit)                App Process (real Avalonia UI)
 
 #### Implementation steps
 
-1. Add `App.TestApi` project with `TestAutomationServer` (named pipe listener)
-2. Wire it into `App.Desktop` behind a `--test-api` launch flag
-3. Add `TestAutomationClient` helper class to the test project
-4. Convert the affected UI tests (see table below) to use the client
-5. CI: launch app with `--test-api` + `Xvfb` on Linux, run tests against it
+1. Keep automation code in shared `App/Automation/`
+2. Start the app with `ANGOR_TEST_API=1` and `ANGOR_TEST_API_PORT=<port>`
+3. Launch one real app process per profile and keep it alive for the test duration
+4. Drive the two big integration tests through the automation client
+5. CI: run the desktop app under `Xvfb` on Linux runners
 
 ### Option B: Real-window in-process (simpler, limited)
 

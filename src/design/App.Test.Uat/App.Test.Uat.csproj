@@ -6,8 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
-    <RootNamespace>App.Test.Integration</RootNamespace>
-    <UserSecretsId>6ae97228-693c-4462-8d00-26bfca701423</UserSecretsId>
+    <RootNamespace>App.Test.Uat</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,21 +14,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia.Headless.XUnit" />
-    <PackageReference Include="Avalonia.Themes.Fluent" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="FluentAssertions" />
-    <PackageReference Include="Moq" />
-    <PackageReference Include="coverlet.collector" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\App\App.csproj" />
   </ItemGroup>
-
 
 </Project>

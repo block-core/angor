@@ -15,11 +15,11 @@
     <UserControl.Styles>
         <!-- Wallet card selection styles — uses DynamicResource so theme switching works.
              Code-behind toggles the "WalletSelected" class; no color logic in C#. -->
-        <Style Selector="Border.WalletCard">
+        <Style Selector="Button.WalletCard">
             <Setter Property="Background" Value="{DynamicResource DeployWalletItemBg}" />
             <Setter Property="BorderBrush" Value="{DynamicResource DeployWalletItemBorder}" />
         </Style>
-        <Style Selector="Border.WalletCard.WalletSelected">
+        <Style Selector="Button.WalletCard.WalletSelected">
             <Setter Property="Background" Value="{DynamicResource DeployWalletSelectedBg}" />
             <Setter Property="BorderBrush" Value="{DynamicResource DeployWalletSelectedBorder}" />
         </Style>
@@ -192,11 +192,13 @@
                                 <DataTemplate x:DataType="services:WalletInfo">
                                     <!-- Wallet item: w-full p-4 rounded-lg border-2 text-left
                                          Vue: space-y-3 → 12px gap, but user wants 8px -->
-                                    <Border Name="WalletBorder" Classes="WalletCard"
+                                    <Button Name="WalletButton" Classes="Unstyled WalletCard"
                                             CornerRadius="8" Padding="16"
                                             Margin="0,0,0,8"
                                             BorderThickness="2"
-                                            Cursor="Hand">
+                                            Cursor="Hand"
+                                            HorizontalContentAlignment="Stretch"
+                                            CommandParameter="{Binding}">
                                         <Grid ColumnDefinitions="Auto,*,Auto">
                                             <!-- Wallet icon: w-10 h-10 rounded-lg -->
                                             <Border Grid.Column="0" Width="40" Height="40"
@@ -236,7 +238,7 @@
                                                 </Viewbox>
                                             </StackPanel>
                                         </Grid>
-                                    </Border>
+                                    </Button>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>

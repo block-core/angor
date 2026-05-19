@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Interactivity;
 using App.UI.Shared.Services;
 
@@ -13,14 +12,13 @@ namespace App.UI.Shell;
 /// </summary>
 public partial class WalletSwitcherModal : UserControl, IBackdropCloseable
 {
-    private Border? _selectedWalletBorder;
+    private Button? _selectedWalletButton;
 
     public WalletSwitcherModal()
     {
         InitializeComponent();
 
         AddHandler(Button.ClickEvent, OnButtonClick);
-        AddHandler(Border.PointerPressedEvent, OnBorderPressed, RoutingStrategies.Bubble);
     }
 
     private ShellViewModel? Vm => DataContext as ShellViewModel;
@@ -42,38 +40,19 @@ public partial class WalletSwitcherModal : UserControl, IBackdropCloseable
             case "CloseWalletSwitcher":
                 Vm?.HideModal();
                 break;
-        }
-    }
 
-    private void OnBorderPressed(object? sender, PointerPressedEventArgs e)
-    {
-        var source = e.Source as Control;
-        Border? found = null;
+            case "WalletButton":
+                if (btn.CommandParameter is WalletInfo wallet)
+                {
+                    Vm?.SelectSwitcherWallet(wallet);
 
-        while (source != null)
-        {
-            if (source is Border b && b.Name == "WalletBorder")
-            {
-                found = b;
+                    _selectedWalletButton?.Classes.Set("WalletSelected", false);
+                    btn.Classes.Set("WalletSelected", true);
+                    _selectedWalletButton = btn;
+
+                    Vm?.HideModal();
+                }
                 break;
-            }
-            source = source.Parent as Control;
-        }
-
-        if (found?.DataContext is WalletInfo wallet)
-        {
-            // Select the wallet
-            Vm?.SelectSwitcherWallet(wallet);
-
-            // Update visual states: deselect previous, select new (no tree walk)
-            _selectedWalletBorder?.Classes.Set("WalletSelected", false);
-            found.Classes.Set("WalletSelected", true);
-            _selectedWalletBorder = found;
-
-            // Vue behavior: selecting a wallet immediately closes the modal
-            Vm?.HideModal();
-
-            e.Handled = true;
         }
     }
 }

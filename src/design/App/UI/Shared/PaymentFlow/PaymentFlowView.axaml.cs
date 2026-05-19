@@ -1,4 +1,3 @@
-using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using App.UI.Sections.Funds;
@@ -16,14 +15,13 @@ namespace App.UI.Shared.PaymentFlow;
 /// </summary>
 public partial class PaymentFlowView : UserControl, IBackdropCloseable
 {
-    private Border? _selectedWalletBorder;
+    private Button? _selectedWalletButton;
 
     public PaymentFlowView()
     {
         InitializeComponent();
 
         AddHandler(Button.ClickEvent, OnButtonClick);
-        AddHandler(Border.PointerPressedEvent, OnBorderPressed, RoutingStrategies.Bubble);
     }
 
     private PaymentFlowViewModel? Vm => DataContext as PaymentFlowViewModel;
@@ -84,6 +82,24 @@ public partial class PaymentFlowView : UserControl, IBackdropCloseable
                 GetShellVm()?.HideModal();
                 Vm?.OnSuccessButtonClicked();
                 break;
+
+            case "WalletButton":
+                if (btn.CommandParameter is WalletInfo wallet)
+                {
+                    Vm?.SelectWallet(wallet);
+                    _selectedWalletButton = WalletSelectionHelper.UpdateWalletSelection(_selectedWalletButton, btn);
+                }
+                break;
+
+            case "OnChainTabButton":
+                Vm?.SelectNetworkTab(NetworkTab.OnChain);
+                break;
+            case "LightningTabButton":
+                Vm?.SelectNetworkTab(NetworkTab.Lightning);
+                break;
+            case "ImportTabButton":
+                OpenImportWalletModal();
+                break;
         }
     }
 
@@ -133,55 +149,5 @@ public partial class PaymentFlowView : UserControl, IBackdropCloseable
         Vm.SelectedFeeRate = feeRate.Value;
         shellVm.ShowModal(this);
         Vm.PayWithWalletCommand.Execute().Subscribe();
-    }
-
-    private void OnBorderPressed(object? sender, PointerPressedEventArgs e)
-    {
-        var source = e.Source as Control;
-        Border? found = null;
-        string? foundName = null;
-
-        while (source != null)
-        {
-            if (source is Border b && !string.IsNullOrEmpty(b.Name))
-            {
-                var name = b.Name;
-                if (name is "WalletBorder" or "OnChainTabBorder" or "LightningTabBorder"
-                    or "LiquidTabBorder" or "ImportTabBorder")
-                {
-                    found = b;
-                    foundName = name;
-                    break;
-                }
-            }
-            source = source.Parent as Control;
-        }
-
-        if (found == null || foundName == null) return;
-
-        switch (foundName)
-        {
-            case "WalletBorder":
-                if (found.DataContext is WalletInfo wallet)
-                {
-                    Vm?.SelectWallet(wallet);
-                    _selectedWalletBorder = WalletSelectionHelper.UpdateWalletSelection(_selectedWalletBorder, found);
-                    e.Handled = true;
-                }
-                break;
-
-            case "OnChainTabBorder":
-                Vm?.SelectNetworkTab(NetworkTab.OnChain);
-                e.Handled = true;
-                break;
-            case "LightningTabBorder":
-                Vm?.SelectNetworkTab(NetworkTab.Lightning);
-                e.Handled = true;
-                break;
-            case "ImportTabBorder":
-                OpenImportWalletModal();
-                e.Handled = true;
-                break;
-        }
     }
 }
