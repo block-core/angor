@@ -1,6 +1,5 @@
 using System;
 using System.Globalization;
-using System.Reflection;
 using System.Linq;
 using System.Threading.Tasks;
 using Angor.Sdk.Common;
@@ -315,43 +314,29 @@ public static class AutomationFlows
                 await Task.Delay(TimeSpan.FromMilliseconds(500));
             }
 
+            // Select funding pattern via UI click if requested
             if (req.TargetPatternStageCount > 0)
             {
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    var investPageView = window.GetVisualDescendants().OfType<InvestPageView>().FirstOrDefault();
-                    var targetBorder = investPageView?.GetVisualDescendants()
-                        .OfType<Border>()
-                        .FirstOrDefault(b => b.Name == "FundPatternBorder"
-                            && b.DataContext is FundingPatternOption opt
-                            && opt.StageCount == req.TargetPatternStageCount);
-
-                    if (targetBorder?.DataContext is FundingPatternOption option)
-                    {
-                        investVm.SelectFundingPattern(option);
-                        Dispatcher.UIThread.RunJobs();
-                    }
-                });
-                await Task.Delay(300);
+                await ClickFundPatternByStageCountAsync(window, req.TargetPatternStageCount);
             }
 
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                investVm.InvestmentAmount = req.AmountBtc;
-                investVm.Submit();
-                Dispatcher.UIThread.RunJobs();
-            });
+            // Type investment amount into AmountInput TextBox, then click SubmitButton
+            await TypeTextByNameAsync(window, "AmountInput", req.AmountBtc);
+            await ClickByNameAsync(window, "SubmitButton");
+
+            // Wait for payment flow modal to appear (SubmitButton triggers shell modal)
+            await Task.Delay(500);
 
             var maxPayAttempts = 3;
             for (var payAttempt = 1; payAttempt <= maxPayAttempts; payAttempt++)
             {
-                await Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    var wallet = investVm.Wallets[0];
-                    investVm.PaymentFlow.SelectWallet(wallet);
-                    Dispatcher.UIThread.RunJobs();
-                    investVm.PaymentFlow.PayWithWalletCommand.Execute().Subscribe();
-                });
+                // Click the first WalletButton in the payment flow, then PayWithWalletButton
+                await ClickFirstWalletButtonAsync(window);
+                await ClickByNameAsync(window, "PayWithWalletButton");
+
+                // FeeSelectionPopup appears — click ConfirmButton (defaults to "standard" 20 sat/vB)
+                await ClickByNameAsync(window, "ConfirmButton", TimeSpan.FromSeconds(10));
+                await Task.Delay(300);
 
                 var investDeadline = DateTime.UtcNow + TxTimeout;
                 while (DateTime.UtcNow < investDeadline)
@@ -399,11 +384,8 @@ public static class AutomationFlows
                 return new InvestResponse { Success = false, Error = error ?? "Investment payment did not reach success" };
             }
 
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                investVm.AddToPortfolio();
-                Dispatcher.UIThread.RunJobs();
-            });
+            // Click SuccessActionButton (triggers AddToPortfolio + navigates to Funded)
+            await ClickByNameAsync(window, "SuccessActionButton");
 
             var isAutoApproved = await Dispatcher.UIThread.InvokeAsync(() => investVm.IsAutoApproved);
             return new InvestResponse { Success = true, IsAutoApproved = isAutoApproved };
@@ -463,23 +445,18 @@ public static class AutomationFlows
 
             foreach (var pendingSignature in pending)
             {
-                var approved = await Dispatcher.UIThread.InvokeAsync(async () =>
-                {
-                    var method = typeof(FundersViewModel).GetMethod(
-                        "ApproveSignatureAsync", BindingFlags.NonPublic | BindingFlags.Instance);
-                    if (method == null) return false;
-                    var task = (Task?)method.Invoke(fundersVm, new object[] { pendingSignature });
-                    if (task != null) await task;
-                    return true;
-                });
+                // Try clicking the ApproveButton in the visual tree first (virtualized ListBox)
+                var clickedViaUi = await ClickApproveButtonByIdAsync(window, pendingSignature.Id);
 
-                if (!approved)
+                if (!clickedViaUi)
                 {
-                    return new ApproveInvestmentsResponse
+                    // Fallback: call the VM's public ApproveSignature method
+                    // (handles virtualized items not in the visual tree)
+                    await Dispatcher.UIThread.InvokeAsync(() =>
                     {
-                        Success = false,
-                        Error = $"ApproveSignatureAsync method not found for signature {pendingSignature.Id}",
-                    };
+                        fundersVm.ApproveSignature(pendingSignature.Id);
+                        Dispatcher.UIThread.RunJobs();
+                    });
                 }
             }
 
@@ -522,16 +499,26 @@ public static class AutomationFlows
             await NavigateToAsync(window, "Funded");
 
             var portfolioVm = services.GetRequiredService<PortfolioViewModel>();
+
+            // Wait for the investment to appear at step >= 2 (founder-signed)
             var investment = await WaitForInvestmentAsync(portfolioVm, req.ProjectIdentifier, i => i.Step >= 2);
             if (investment == null)
             {
                 return new ConfirmInvestmentResponse { Success = false, Error = "Approved investment not found" };
             }
 
-            var result = await Dispatcher.UIThread.InvokeAsync(async () =>
-                await portfolioVm.ConfirmInvestmentAsync(investment));
-            _ = result;
+            // Click RefreshButton to ensure UI is up-to-date
+            await ClickByNameAsync(window, "RefreshButton");
+            await Task.Delay(500);
 
+            // Click the ManageButton for this investment
+            await ClickManageButtonByProjectAsync(window, req.ProjectIdentifier);
+            await Task.Delay(500);
+
+            // Click ConfirmInvestmentButton in the InvestmentDetailView
+            await ClickByNameAsync(window, "ConfirmInvestmentButton", TimeSpan.FromSeconds(30));
+
+            // Wait for investment to reach step 3
             var confirmed = await WaitForInvestmentAsync(portfolioVm, req.ProjectIdentifier, i => i.Step == 3);
             if (confirmed == null)
             {
@@ -629,53 +616,109 @@ public static class AutomationFlows
                 {
                     return new RecoveryResponse { Success = false, Error = feeResult.Error };
                 }
+
+                // Re-navigate to Funded after fee funding
+                await NavigateToAsync(window, "Funded");
             }
 
-            var deadline = DateTime.UtcNow + IndexerLag;
-            while (DateTime.UtcNow < deadline)
+            // Click RefreshButton to ensure portfolio is up-to-date
+            await ClickByNameAsync(window, "RefreshButton");
+            await Task.Delay(1000);
+
+            // Click ManageButton for this investment to open detail
+            await ClickManageButtonByProjectAsync(window, req.ProjectIdentifier);
+            await Task.Delay(500);
+
+            // Re-fetch the current investment VM (RefreshButton/ManageButton may have recreated VMs)
+            var currentInvestment = await Dispatcher.UIThread.InvokeAsync(() =>
+                portfolioVm.SelectedInvestment ?? portfolioVm.Investments.FirstOrDefault(i =>
+                    string.Equals(i.ProjectIdentifier, req.ProjectIdentifier, StringComparison.Ordinal)));
+
+            if (currentInvestment == null)
+            {
+                return new RecoveryResponse { Success = false, Error = "Investment VM not found after navigation" };
+            }
+
+            // Wait for recovery status to load and RecoverFundsButton to appear
+            var recoveryDeadline = DateTime.UtcNow + IndexerLag;
+            while (DateTime.UtcNow < recoveryDeadline)
             {
                 var actionKey = await Dispatcher.UIThread.InvokeAsync(async () =>
                 {
-                    await portfolioVm.LoadRecoveryStatusAsync(investment);
+                    // Re-fetch current investment VM (may be recreated by refresh)
+                    currentInvestment = portfolioVm.SelectedInvestment
+                        ?? portfolioVm.Investments.FirstOrDefault(i =>
+                            string.Equals(i.ProjectIdentifier, req.ProjectIdentifier, StringComparison.Ordinal));
+                    if (currentInvestment == null) return "none";
+
+                    await portfolioVm.LoadRecoveryStatusAsync(currentInvestment);
                     Dispatcher.UIThread.RunJobs();
-                    return investment.RecoveryState.ActionKey;
+                    return currentInvestment.RecoveryState.ActionKey;
                 });
 
-                if (string.Equals(actionKey, req.Action, StringComparison.OrdinalIgnoreCase)
-                    || (req.Action == "belowThreshold" && actionKey == "belowThreshold")
-                    || (req.Action == "unfundedRelease" && actionKey == "unfundedRelease"))
+                if (string.Equals(actionKey, req.Action, StringComparison.OrdinalIgnoreCase))
                 {
                     break;
+                }
+
+                // Click RefreshDetailButton to update
+                try { await ClickByNameAsync(window, "RefreshDetailButton", TimeSpan.FromSeconds(3)); }
+                catch (TimeoutException) { /* button may not exist */ }
+
+                await Task.Delay(PollInterval);
+            }
+
+            // Click RecoverFundsButton to launch recovery modals
+            await ClickByNameAsync(window, "RecoverFundsButton", TimeSpan.FromSeconds(30));
+            await Task.Delay(500);
+
+            // Click the appropriate confirm button based on recovery action
+            var confirmButtonName = req.Action switch
+            {
+                "recovery" => "ConfirmRecoveryModal",
+                "belowThreshold" => "ConfirmRecoveryModal",
+                "endOfProject" => "ClaimPenaltyButton",
+                "unfundedRelease" => "ConfirmReleaseModal",
+                "penaltyRelease" => "ConfirmReleaseModal",
+                _ => throw new InvalidOperationException($"Unknown recovery action: {req.Action}")
+            };
+
+            await ClickByNameAsync(window, confirmButtonName);
+            await Task.Delay(300);
+
+            // FeeSelectionPopup appears — click ConfirmButton (defaults to "standard" 20 sat/vB)
+            await ClickByNameAsync(window, "ConfirmButton", TimeSpan.FromSeconds(10));
+
+            // Wait for success modal to appear
+            var successDeadline = DateTime.UtcNow + IndexerLag;
+            while (DateTime.UtcNow < successDeadline)
+            {
+                var showSuccess = await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    Dispatcher.UIThread.RunJobs();
+                    // Re-fetch current investment VM (may have been replaced)
+                    currentInvestment = portfolioVm.SelectedInvestment
+                        ?? portfolioVm.Investments.FirstOrDefault(i =>
+                            string.Equals(i.ProjectIdentifier, req.ProjectIdentifier, StringComparison.Ordinal));
+                    return currentInvestment?.ShowSuccessModal == true;
+                });
+
+                if (showSuccess)
+                {
+                    return new RecoveryResponse { Success = true, ActionKey = req.Action };
+                }
+
+                // Check for error
+                var errorMsg = await Dispatcher.UIThread.InvokeAsync(() => currentInvestment?.ErrorMessage);
+                if (!string.IsNullOrEmpty(errorMsg))
+                {
+                    return new RecoveryResponse { Success = false, Error = errorMsg };
                 }
 
                 await Task.Delay(PollInterval);
             }
 
-            var succeeded = false;
-            var attemptDeadline = DateTime.UtcNow + IndexerLag;
-            while (DateTime.UtcNow < attemptDeadline && !succeeded)
-            {
-                succeeded = await Dispatcher.UIThread.InvokeAsync(async () =>
-                {
-                    return req.Action switch
-                    {
-                        "recovery" => (await portfolioVm.RecoverFundsAsync(investment)).Success,
-                        "penaltyRelease" => (await portfolioVm.PenaltyReleaseFundsAsync(investment)).Success,
-                        "belowThreshold" => (await portfolioVm.ClaimEndOfProjectAsync(investment)).Success,
-                        "unfundedRelease" => (await portfolioVm.ReleaseFundsAsync(investment)).Success,
-                        _ => false,
-                    };
-                });
-
-                if (!succeeded)
-                {
-                    await Task.Delay(PollInterval);
-                }
-            }
-
-            return succeeded
-                ? new RecoveryResponse { Success = true, ActionKey = req.Action }
-                : new RecoveryResponse { Success = false, Error = $"Recovery action '{req.Action}' failed" };
+            return new RecoveryResponse { Success = false, Error = $"Recovery action '{req.Action}' did not complete in time" };
         }
         catch (Exception ex)
         {
@@ -1006,36 +1049,6 @@ public static class AutomationFlows
         return null;
     }
 
-    private static async Task<bool> ClickApproveSignatureAsync(Window window, int signatureId)
-    {
-        var deadline = DateTime.UtcNow + UiTimeout;
-        while (DateTime.UtcNow < deadline)
-        {
-            var clicked = await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                var approveButton = window.GetVisualDescendants().OfType<Button>().FirstOrDefault(b =>
-                    b.IsVisible && b.Name == "ApproveButton" && b.Tag is int tag && tag == signatureId);
-
-                if (approveButton == null)
-                {
-                    return false;
-                }
-
-                ClickButton(approveButton);
-                return true;
-            });
-
-            if (clicked)
-            {
-                return true;
-            }
-
-            await Task.Delay(TimeSpan.FromMilliseconds(100));
-        }
-
-        return false;
-    }
-
     private static async Task<bool> ClickManageProjectClaimStageAsync(
         Window window,
         MyProjectsViewModel myProjectsVm,
@@ -1048,56 +1061,57 @@ public static class AutomationFlows
             Dispatcher.UIThread.RunJobs();
         });
 
+        // Wait for the stage claim button to appear and click it
         var deadline = DateTime.UtcNow + TimeSpan.FromMinutes(3);
         while (DateTime.UtcNow < deadline)
         {
-            var completed = await Dispatcher.UIThread.InvokeAsync(() =>
+            var stageClicked = await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                var manageVm = myProjectsVm.SelectedManageProject;
-                if (manageVm == null)
-                {
-                    return false;
-                }
-
                 var claimButton = window.GetVisualDescendants().OfType<Button>().FirstOrDefault(b =>
                     b.IsVisible && b.Classes.Contains("StageClaimBtn") && b.Tag is int tag && tag == stageNumber);
-                if (claimButton == null)
-                {
-                    return false;
-                }
-
+                if (claimButton == null) return false;
                 ClickButton(claimButton);
+                return true;
+            });
 
-                var claimSelected = FindByName<Button>(window, "ClaimSelectedBtn");
-                if (claimSelected == null || manageVm.SelectedStage?.AvailableTransactions.Count <= 0)
-                {
-                    return false;
-                }
+            if (stageClicked) break;
+            await Task.Delay(TimeSpan.FromMilliseconds(200));
+        }
 
+        // Select all UTXOs for the stage
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            var manageVm = myProjectsVm.SelectedManageProject;
+            if (manageVm?.SelectedStage?.AvailableTransactions != null)
+            {
                 foreach (var tx in manageVm.SelectedStage.AvailableTransactions)
                 {
                     tx.IsSelected = true;
                 }
-
                 Dispatcher.UIThread.RunJobs();
-                ClickButton(claimSelected);
+            }
+        });
+        await Task.Delay(200);
 
-                var feeConfirmButton = FindByAutomationId<Button>(window, "FeeConfirmButton");
-                if (feeConfirmButton == null)
-                {
-                    return false;
-                }
+        // Click ClaimSelectedBtn — this triggers FeeSelectionPopup (async)
+        await ClickByNameAsync(window, "ClaimSelectedBtn");
 
-                ClickButton(feeConfirmButton);
-                return !manageVm.IsClaiming || manageVm.ShowSuccessModal;
+        // FeeSelectionPopup appears — click ConfirmButton (defaults to "standard" 20 sat/vB)
+        await ClickByNameAsync(window, "ConfirmButton", TimeSpan.FromSeconds(10));
+
+        // Wait for claim to complete (success modal or IsClaiming becomes false)
+        var claimDeadline = DateTime.UtcNow + TxTimeout;
+        while (DateTime.UtcNow < claimDeadline)
+        {
+            var completed = await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                Dispatcher.UIThread.RunJobs();
+                var manageVm = myProjectsVm.SelectedManageProject;
+                return manageVm != null && (manageVm.ShowSuccessModal || !manageVm.IsClaiming);
             });
 
-            if (completed)
-            {
-                return true;
-            }
-
-            await Task.Delay(TimeSpan.FromMilliseconds(200));
+            if (completed) return true;
+            await Task.Delay(TimeSpan.FromMilliseconds(500));
         }
 
         return false;
@@ -1114,40 +1128,26 @@ public static class AutomationFlows
             Dispatcher.UIThread.RunJobs();
         });
 
-        var deadline = DateTime.UtcNow + UiTimeout;
+        // Click ReleaseFundsNavButton
+        await ClickWalletCardButtonAsync(window, "ReleaseFundsNavButton");
+        await Task.Delay(300);
+
+        // Click ReleaseFundsConfirmBtn
+        await ClickByNameAsync(window, "ReleaseFundsConfirmBtn");
+
+        // Wait for release to complete
+        var deadline = DateTime.UtcNow + TxTimeout;
         while (DateTime.UtcNow < deadline)
         {
             var completed = await Dispatcher.UIThread.InvokeAsync(() =>
             {
+                Dispatcher.UIThread.RunJobs();
                 var manageVm = myProjectsVm.SelectedManageProject;
-                if (manageVm == null)
-                {
-                    return false;
-                }
-
-                var releaseNav = FindByAutomationId<Button>(window, "ReleaseFundsNavButton");
-                if (releaseNav == null || !releaseNav.IsVisible)
-                {
-                    return false;
-                }
-
-                ClickButton(releaseNav);
-                var confirm = FindByName<Button>(window, "ReleaseFundsConfirmBtn");
-                if (confirm == null || !confirm.IsVisible)
-                {
-                    return false;
-                }
-
-                ClickButton(confirm);
-                return !manageVm.IsReleasingFunds || manageVm.ShowReleaseFundsSuccessModal;
+                return manageVm != null && manageVm.ShowReleaseFundsSuccessModal;
             });
 
-            if (completed)
-            {
-                return true;
-            }
-
-            await Task.Delay(TimeSpan.FromMilliseconds(200));
+            if (completed) return true;
+            await Task.Delay(TimeSpan.FromMilliseconds(500));
         }
 
         return false;
@@ -1283,6 +1283,124 @@ public static class AutomationFlows
     }
 
     /// <summary>
+    /// Try to click the ApproveButton with the matching Tag (signature Id) in the visual tree.
+    /// Returns false if button not found (e.g. virtualized out of view).
+    /// </summary>
+    private static async Task<bool> ClickApproveButtonByIdAsync(Window window, int signatureId)
+    {
+        return await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            var approveButton = window.GetVisualDescendants().OfType<Button>().FirstOrDefault(b =>
+                b.IsVisible && (b.Name == "ApproveButton" || b.Name == "MobileApproveButton")
+                && b.Tag is int tag && tag == signatureId);
+
+            if (approveButton == null) return false;
+            ClickButton(approveButton);
+            return true;
+        });
+    }
+
+    /// <summary>
+    /// Click the ManageButton whose Tag (InvestmentViewModel) matches the given projectIdentifier.
+    /// </summary>
+    private static async Task ClickManageButtonByProjectAsync(Window window, string projectIdentifier)
+    {
+        var deadline = DateTime.UtcNow + UiTimeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            var clicked = await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var buttons = window.GetVisualDescendants().OfType<Button>()
+                    .Where(b => b.Name == "ManageButton" && b.IsVisible);
+                foreach (var btn in buttons)
+                {
+                    if (btn.Tag is InvestmentViewModel inv &&
+                        string.Equals(inv.ProjectIdentifier, projectIdentifier, StringComparison.Ordinal))
+                    {
+                        ClickButton(btn);
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+            if (clicked)
+            {
+                await Task.Delay(200);
+                return;
+            }
+
+            await Task.Delay(100);
+        }
+
+        throw new TimeoutException($"ManageButton for project '{projectIdentifier}' not found within timeout");
+    }
+
+    /// <summary>
+    /// Click the FundPatternButton whose DataContext has the specified StageCount.
+    /// </summary>
+    private static async Task ClickFundPatternByStageCountAsync(Window window, int stageCount)
+    {
+        var deadline = DateTime.UtcNow + UiTimeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            var clicked = await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var buttons = window.GetVisualDescendants().OfType<Button>()
+                    .Where(b => b.Name == "FundPatternButton" && b.IsVisible);
+                foreach (var btn in buttons)
+                {
+                    if (btn.CommandParameter is FundingPatternOption opt && opt.StageCount == stageCount)
+                    {
+                        ClickButton(btn);
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+            if (clicked)
+            {
+                await Task.Delay(200);
+                return;
+            }
+
+            await Task.Delay(100);
+        }
+
+        throw new TimeoutException($"FundPatternButton with StageCount={stageCount} not found within timeout");
+    }
+
+    /// <summary>
+    /// Click the first visible WalletButton in the payment flow modal.
+    /// </summary>
+    private static async Task ClickFirstWalletButtonAsync(Window window)
+    {
+        var deadline = DateTime.UtcNow + UiTimeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            var clicked = await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var walletBtn = window.GetVisualDescendants().OfType<Button>()
+                    .FirstOrDefault(b => b.Name == "WalletButton" && b.IsVisible);
+                if (walletBtn == null) return false;
+                ClickButton(walletBtn);
+                return true;
+            });
+
+            if (clicked)
+            {
+                await Task.Delay(200);
+                return;
+            }
+
+            await Task.Delay(100);
+        }
+
+        throw new TimeoutException("WalletButton not found within timeout");
+    }
+
+    /// <summary>
     /// Click a Button found by Name (with optional wait+retry).
     /// Must be called from a background thread (dispatches to UI thread internally).
     /// </summary>
@@ -1400,24 +1518,37 @@ public static class AutomationFlows
                 await Task.Delay(500);
             }
 
-            // Apply requested changes
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            // Apply requested changes via UI TextBox typing
+            if (request.Name != null)
+                await TypeTextByNameAsync(window, "ProfileNameTextBox", request.Name);
+            if (request.DisplayName != null)
+                await TypeTextByNameAsync(window, "ProfileDisplayNameTextBox", request.DisplayName);
+            if (request.About != null)
+                await TypeTextByNameAsync(window, "ProfileAboutTextBox", request.About);
+            if (request.Picture != null)
+                await TypeTextByNameAsync(window, "ProfilePictureTextBox", request.Picture);
+            if (request.Banner != null)
+                await TypeTextByNameAsync(window, "ProfileBannerTextBox", request.Banner);
+            if (request.Website != null)
+                await TypeTextByNameAsync(window, "ProfileWebsiteTextBox", request.Website);
+            if (request.ProjectContent != null)
             {
-                if (request.Name != null) editVm.ProfileName = request.Name;
-                if (request.DisplayName != null) editVm.ProfileDisplayName = request.DisplayName;
-                if (request.About != null) editVm.ProfileAbout = request.About;
-                if (request.Picture != null) editVm.ProfilePicture = request.Picture;
-                if (request.Banner != null) editVm.ProfileBanner = request.Banner;
-                if (request.Website != null) editVm.ProfileWebsite = request.Website;
-                if (request.ProjectContent != null) editVm.ProjectContent = request.ProjectContent;
-                Dispatcher.UIThread.RunJobs();
-            });
+                // Switch to Project tab first, then type into ProjectContentBox
+                await ClickByNameAsync(window, "TabProject");
+                await Task.Delay(300);
+                await TypeTextByNameAsync(window, "ProjectContentBox", request.ProjectContent);
+            }
 
-            // Save to Nostr (must invoke on UI thread as SaveAsync triggers toast UI)
-            var saveResult = await Dispatcher.UIThread.InvokeAsync(async () => await editVm.SaveAsync());
-            if (!saveResult)
+            // Click SaveButton to save to Nostr
+            await ClickByNameAsync(window, "SaveButton");
+
+            // Wait for save to complete
+            var saveDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
+            while (DateTime.UtcNow < saveDeadline)
             {
-                return new EditProjectProfileResponse { Success = false, Error = "SaveAsync returned false" };
+                var isSaving = await Dispatcher.UIThread.InvokeAsync(() => editVm.IsSaving);
+                if (!isSaving) break;
+                await Task.Delay(300);
             }
 
             // Close edit profile

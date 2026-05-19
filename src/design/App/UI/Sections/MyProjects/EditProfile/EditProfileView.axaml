@@ -395,7 +395,7 @@
                                     </Panel>
                                 </Border>
                                 <TextBlock Classes="FieldLabel" Text="Picture URL" />
-                                <TextBox Classes="EditField"
+                                <TextBox Name="ProfilePictureTextBox" Classes="EditField"
                                          Text="{Binding ProfilePicture}"
                                          Watermark="https://example.com/avatar.jpg" />
                                 <!-- Blossom upload for profile picture -->
@@ -489,20 +489,20 @@
                                 <Grid Name="BasicInfoGrid" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="12">
                                     <StackPanel Name="UsernameField" Grid.Column="0" Spacing="6">
                                         <TextBlock Classes="FieldLabel" Text="Username" />
-                                        <TextBox Classes="EditField"
+                                        <TextBox Name="ProfileNameTextBox" Classes="EditField"
                                                  Text="{Binding ProfileName}"
                                                  Watermark="Your username" />
                                     </StackPanel>
                                     <StackPanel Name="DisplayNameField" Grid.Column="1" Spacing="6">
                                         <TextBlock Classes="FieldLabel" Text="Display Name" />
-                                        <TextBox Classes="EditField"
+                                        <TextBox Name="ProfileDisplayNameTextBox" Classes="EditField"
                                                  Text="{Binding ProfileDisplayName}"
                                                  Watermark="Your display name" />
                                     </StackPanel>
                                 </Grid>
                                 <StackPanel Spacing="6">
                                     <TextBlock Classes="FieldLabel" Text="About" />
-                                    <TextBox Classes="EditField"
+                                    <TextBox Name="ProfileAboutTextBox" Classes="EditField"
                                              Text="{Binding ProfileAbout}"
                                              Watermark="Tell us about yourself"
                                              TextWrapping="Wrap"
@@ -539,7 +539,7 @@
                                            IsVisible="{Binding ProfileBannerBitmap, Converter={x:Static ObjectConverters.IsNotNull}}" />
                                 </Panel>
                             </Border>
-                            <TextBox Classes="EditField"
+                            <TextBox Name="ProfileBannerTextBox" Classes="EditField"
                                      Text="{Binding ProfileBanner}"
                                      Watermark="https://example.com/banner.jpg" />
                             <!-- Blossom upload for banner -->
@@ -650,7 +650,7 @@
                                         <i:Icon Value="fa-solid fa-globe" FontSize="12" Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center" />
                                         <TextBlock Classes="FieldLabel" Text="Website" Margin="0" />
                                     </StackPanel>
-                                    <TextBox Classes="EditField"
+                                    <TextBox Name="ProfileWebsiteTextBox" Classes="EditField"
                                              Text="{Binding ProfileWebsite}"
                                              Watermark="https://your-website.com" />
                                 </StackPanel>
