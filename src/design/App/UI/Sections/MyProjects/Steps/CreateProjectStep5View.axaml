@@ -182,7 +182,8 @@
 
                             <!-- Duration input + unit dropdown — Vue: flex gap-2, input w-1/2 + select w-1/2 -->
                             <Grid ColumnDefinitions="*,*" HorizontalAlignment="Stretch">
-                                <TextBox Text="{Binding DurationValue, Mode=TwoWay}"
+                                <TextBox Name="DurationValueInput"
+                                         Text="{Binding DurationValue, Mode=TwoWay}"
                                          Watermark="0"
                                          FontSize="16" Padding="12,12,16,12" CornerRadius="8" />
                                 <ComboBox Name="DurationUnitCombo" Grid.Column="1" Margin="8,0,0,0"

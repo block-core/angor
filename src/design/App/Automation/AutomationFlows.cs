@@ -103,54 +103,54 @@ public static class AutomationFlows
 
             await OpenCreateWizardAsync(myProjectsVm);
 
+            // Step 0: Welcome → click Start
+            await ClickByNameAsync(window, "StartButton");
+
+            // Step 1: Select "fund" type → click TypeFundCard, then Next
+            await ClickByNameAsync(window, "TypeFundCard");
+            await ClickByNameAsync(window, "NextStepButton");
+
+            // Step 2: Project name + about → type text, then Next
+            await TypeTextByNameAsync(window, "ProjectNameTextBox", req.ProjectName);
+            await TypeTextByNameAsync(window, "AboutTextBox", req.ProjectAbout);
+            await ClickByNameAsync(window, "NextStepButton");
+
+            // Step 3: Banner + profile URLs → type text, then Next
+            await TypeTextByNameAsync(window, "BannerUrlTextBox", req.BannerUrl);
+            await TypeTextByNameAsync(window, "ProfileUrlTextBox", req.ProfileUrl);
+            await ClickByNameAsync(window, "NextStepButton");
+
+            // Step 4: Target amount + approval threshold + penalty days
+            await TypeTextByNameAsync(window, "FundTargetAmountInput", "1.0");
+            await TypeTextByNameAsync(window, "ApprovalThresholdInput", req.ThresholdAmountBtc);
+            // PenaltyDays has no UI input for fund type — set via VM (defaults to 0)
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 var wizardVm = myProjectsVm.CreateProjectVm;
-                wizardVm.DismissWelcome();
-                Dispatcher.UIThread.RunJobs();
-            });
-            await Task.Delay(200);
-
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                var wizardVm = myProjectsVm.CreateProjectVm;
-                wizardVm.SelectProjectType("fund");
-                wizardVm.GoNext();
-                Dispatcher.UIThread.RunJobs();
-
-                wizardVm.ProjectName = req.ProjectName;
-                wizardVm.ProjectAbout = req.ProjectAbout;
-                wizardVm.GoNext();
-                Dispatcher.UIThread.RunJobs();
-
-                wizardVm.BannerUrl = req.BannerUrl;
-                wizardVm.ProfileUrl = req.ProfileUrl;
-                wizardVm.GoNext();
-                Dispatcher.UIThread.RunJobs();
-
-                wizardVm.TargetAmount = "1.0";
-                wizardVm.ApprovalThreshold = req.ThresholdAmountBtc;
                 wizardVm.PenaltyDays = 0;
-                wizardVm.GoNext();
-                Dispatcher.UIThread.RunJobs();
-
-                wizardVm.DismissStep5Welcome();
                 Dispatcher.UIThread.RunJobs();
             });
+            await ClickByNameAsync(window, "NextStepButton");
 
+            // Step 5 interstitial: Dismiss welcome
+            await ClickByNameAsync(window, "Step5WelcomeButton");
             await Task.Delay(200);
 
+            // Step 5: Payout frequency + installments + day + generate
+            await ClickByNameAsync(window, "PayoutFreqWeekly");
+            await ClickByNameAsync(window, "Installment3");
+            await ClickByNameAsync(window, "Installment6");
+
+            // Select payout day via VM (ListBox selection is not easily clickable by Name)
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 var wizardVm = myProjectsVm.CreateProjectVm;
-                wizardVm.PayoutFrequency = "Weekly";
-                wizardVm.ToggleInstallmentCount(3);
-                wizardVm.ToggleInstallmentCount(6);
                 wizardVm.WeeklyPayoutDay = req.PayoutDay;
-                wizardVm.GeneratePayoutSchedule();
-                wizardVm.GoNext();
                 Dispatcher.UIThread.RunJobs();
             });
+
+            await ClickByNameAsync(window, "GeneratePayoutsButton");
+            await ClickByNameAsync(window, "NextStepButton");
 
             return await DeployProjectAsync(myProjectsVm, req.RunId, "fund");
         }
@@ -177,53 +177,51 @@ public static class AutomationFlows
 
             await OpenCreateWizardAsync(myProjectsVm);
 
+            // Step 0: Welcome → click Start
+            await ClickByNameAsync(window, "StartButton");
+
+            // Step 1: Select "investment" type → click TypeInvestCard, then Next
+            await ClickByNameAsync(window, "TypeInvestCard");
+            await ClickByNameAsync(window, "NextStepButton");
+
+            // Step 2: Project name + about → type text, then Next
+            await TypeTextByNameAsync(window, "ProjectNameTextBox", req.ProjectName);
+            await TypeTextByNameAsync(window, "AboutTextBox", req.ProjectAbout);
+            await ClickByNameAsync(window, "NextStepButton");
+
+            // Step 3: Banner + profile URLs → type text, then Next
+            await TypeTextByNameAsync(window, "BannerUrlTextBox", req.BannerUrl);
+            await TypeTextByNameAsync(window, "ProfileUrlTextBox", req.ProfileUrl);
+            await ClickByNameAsync(window, "NextStepButton");
+
+            // Step 4: Target amount + invest end date (date picker set via VM)
+            await TypeTextByNameAsync(window, "InvestTargetAmountInput", "1.0");
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 var wizardVm = myProjectsVm.CreateProjectVm;
-                wizardVm.DismissWelcome();
-                Dispatcher.UIThread.RunJobs();
-            });
-            await Task.Delay(200);
-
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                var wizardVm = myProjectsVm.CreateProjectVm;
-                wizardVm.SelectProjectType("investment");
-                wizardVm.GoNext();
-                Dispatcher.UIThread.RunJobs();
-
-                wizardVm.ProjectName = req.ProjectName;
-                wizardVm.ProjectAbout = req.ProjectAbout;
-                wizardVm.GoNext();
-                Dispatcher.UIThread.RunJobs();
-
-                wizardVm.BannerUrl = req.BannerUrl;
-                wizardVm.ProfileUrl = req.ProfileUrl;
-                wizardVm.GoNext();
-                Dispatcher.UIThread.RunJobs();
-
-                wizardVm.TargetAmount = "1.0";
                 wizardVm.InvestEndDate = DateTime.UtcNow.AddMonths(3);
-                wizardVm.GoNext();
-                Dispatcher.UIThread.RunJobs();
-
-                wizardVm.DismissStep5Welcome();
                 Dispatcher.UIThread.RunJobs();
             });
+            await ClickByNameAsync(window, "NextStepButton");
 
+            // Step 5 interstitial: Dismiss welcome
+            await ClickByNameAsync(window, "Step5WelcomeButton");
             await Task.Delay(200);
 
+            // Step 5: Duration + frequency + start date + generate stages
+            await TypeTextByNameAsync(window, "DurationValueInput", "3");
+            // ComboBox and ListBox selection + StartDate set via VM (no simple click target)
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 var wizardVm = myProjectsVm.CreateProjectVm;
-                wizardVm.DurationValue = "3";
                 wizardVm.DurationUnit = "Months";
                 wizardVm.ReleaseFrequency = "Monthly";
                 wizardVm.StartDate = DateTime.UtcNow.AddDays(-120).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-                wizardVm.GenerateInvestmentStages();
-                wizardVm.GoNext();
                 Dispatcher.UIThread.RunJobs();
             });
+
+            await ClickByNameAsync(window, "GenerateStagesButton");
+            await ClickByNameAsync(window, "NextStepButton");
 
             return await DeployProjectAsync(myProjectsVm, req.RunId, "investment");
         }
@@ -1291,6 +1289,70 @@ public static class AutomationFlows
     {
         button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, button));
         Dispatcher.UIThread.RunJobs();
+    }
+
+    /// <summary>
+    /// Click a Button found by Name (with optional wait+retry).
+    /// Must be called from a background thread (dispatches to UI thread internally).
+    /// </summary>
+    private static async Task ClickByNameAsync(Window window, string name, TimeSpan? timeout = null)
+    {
+        var deadline = DateTime.UtcNow + (timeout ?? UiTimeout);
+        while (DateTime.UtcNow < deadline)
+        {
+            var clicked = await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var button = FindByName<Button>(window, name)
+                          ?? FindByAutomationId<Button>(window, name);
+                if (button == null || !button.IsVisible || !button.IsEnabled) return false;
+                ClickButton(button);
+                return true;
+            });
+
+            if (clicked)
+            {
+                await Task.Delay(200);
+                return;
+            }
+
+            await Task.Delay(100);
+        }
+
+        throw new TimeoutException($"Button '{name}' not found/visible within timeout");
+    }
+
+    /// <summary>
+    /// Set text on a TextBox found by Name.
+    /// Must be called from a background thread.
+    /// </summary>
+    private static async Task TypeTextByNameAsync(Window window, string name, string text)
+    {
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            var textBox = FindByName<TextBox>(window, name)
+                       ?? FindByAutomationId<TextBox>(window, name);
+            if (textBox == null) throw new InvalidOperationException($"TextBox '{name}' not found");
+            textBox.Text = text;
+            Dispatcher.UIThread.RunJobs();
+        });
+        await Task.Delay(100);
+    }
+
+    /// <summary>
+    /// Set value on a NumericUpDown found by Name.
+    /// Must be called from a background thread.
+    /// </summary>
+    private static async Task SetNumericByNameAsync(Window window, string name, decimal value)
+    {
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            var nud = FindByName<NumericUpDown>(window, name)
+                   ?? FindByAutomationId<NumericUpDown>(window, name);
+            if (nud == null) throw new InvalidOperationException($"NumericUpDown '{name}' not found");
+            nud.Value = value;
+            Dispatcher.UIThread.RunJobs();
+        });
+        await Task.Delay(100);
     }
 
     // ═══════════════════════════════════════════════════════════════════

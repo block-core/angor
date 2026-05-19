@@ -2,88 +2,106 @@
 
 Track work needed to move from VM/service bypasses to fully UI-driven automation.
 
-## 1. Replace PointerPressed with Button.Command
+## 1. Replace PointerPressed with Button.Command ✅ DONE
 
-The root cause of most automation bypasses: `Border.PointerPressed` handlers can't be triggered programmatically because `PointerPressedEventArgs` requires a real pointer device reference. Replace with `Button Classes="Unstyled"` + `Command` binding (visually identical, fully automatable).
+Converted all actionable `Border.PointerPressed` handlers to `Button Classes="Unstyled"` + Click handlers.
 
-### Locations to refactor
+### Completed conversions
+- [x] WalletSwitcherModal — wallet cards
+- [x] DeployFlowOverlay — wallet cards
+- [x] InvestPageView — submit, quick-amount, sub-plan, fund-pattern, copy buttons
+- [x] CreateProjectStep1View — type cards (invest, fund, subscription)
+- [x] CreateProjectStep5View — payout frequency, installment toggles
+- [x] FeeSelectionPopup — fee priority buttons
+- [x] PaymentFlowView — wallet cards, network tabs (OnChain/Lightning/Import)
+- [x] ProjectDetailView — invest, nav CTA, share, copy, explorer, view JSON buttons
+- [x] ShareModal — social media buttons, email button
+- [x] SettingsView — indexer default toggle checkbox
+- [x] RecoveryModalsView — copy claim project ID button
 
-- [ ] Wallet selector cards (wallet picker modal)
-- [ ] Project type selection cards (create project wizard)
-- [ ] Stage list items (if clickable)
-- [ ] Sidebar navigation items
-- [ ] Project cards in Browse/MyProjects
-- [ ] Investor approval list items
-- [ ] Recovery/penalty action items
-- [ ] Any other `Border` or `Panel` with `PointerPressed` in `src/design/App/UI/`
+### Kept as PointerPressed (structural patterns, not simple button actions)
+- ManageProjectModalsView: UTXO item selection (tunnel routing), explorer link (bubble routing), backdrop
+- WalletDetailModal: dynamically created UTXO card selection
+- ProjectDetailView: collapsible section toggle (positional hit-testing)
+- ShellView, SettingsView: modal backdrop close, content propagation stop
 
-### Pattern
+## 2. Add Control Names / AutomationIds — PARTIALLY DONE
 
-```xml
-<!-- Before (not automatable) -->
-<Border PointerPressed="OnCardClicked" ...>
-  <StackPanel>...</StackPanel>
-</Border>
+Controls already have `Name` attributes that the automation server can find via `FindByName`.
+Added explicit Names to previously-unnamed inputs:
 
-<!-- After (automatable, visually identical) -->
-<Button Classes="Unstyled" Command="{Binding SelectCardCommand}" ...>
-  <StackPanel>...</StackPanel>
-</Button>
-```
+- [x] `InvestTargetAmountInput` — investment type target amount (Step 4)
+- [x] `FundTargetAmountInput` — fund type target amount (Step 4)
+- [x] `ApprovalThresholdInput` — fund approval threshold (Step 4)
+- [x] `DurationValueInput` — investment duration (Step 5)
+- [ ] Subscription price input (Step 4) — needs Name
+- [ ] Edit Profile fields — needs Names
 
-## 2. Add AutomationIds
+### Already named (no changes needed)
+- Wizard nav: `StartButton`, `NextStepButton`, `PrevStepButton`, `DeployButton`, `Step5WelcomeButton`
+- Step 1: `TypeInvestCard`, `TypeFundCard`, `TypeSubscriptionCard`
+- Step 2: `ProjectNameTextBox`, `AboutTextBox`
+- Step 3: `BannerUrlTextBox`, `ProfileUrlTextBox`
+- Step 4: `InvestStartDatePicker`, `InvestEndDatePicker`
+- Step 5: `PayoutFreqMonthly`, `PayoutFreqWeekly`, `Installment3/6/9`, `GeneratePayoutsButton`, `GenerateStagesButton`, `DurationUnitCombo`
 
-Add `AutomationProperties.AutomationId` to key interactive elements so the automation server can find them by ID instead of using reflection/VM hacks.
+## 3. Replace VM Method Calls with UI Actions — PARTIALLY DONE
 
-- [ ] Create Project wizard: all TextBoxes (project name, description, target amount, stages)
-- [ ] Create Project wizard: type selection cards (fund vs invest)
-- [ ] Wallet selector: each wallet card
-- [ ] Deploy flow: confirm button, fee input
-- [ ] Invest flow: amount input, confirm button
-- [ ] Approve investments: approve button per investor row
-- [ ] Recovery flow: recover button, confirm
-- [ ] Edit Profile: all fields (name, display name, about, picture, banner, website)
-- [ ] Seed words display area (for wallet creation)
+### Create Project wizard (fund + invest) ✅
+- [x] `DismissWelcome()` → click `StartButton`
+- [x] `SelectProjectType()` → click `TypeFundCard` / `TypeInvestCard`
+- [x] `GoNext()` → click `NextStepButton`
+- [x] `ProjectName`/`ProjectAbout` → type into `ProjectNameTextBox`/`AboutTextBox`
+- [x] `BannerUrl`/`ProfileUrl` → type into `BannerUrlTextBox`/`ProfileUrlTextBox`
+- [x] `TargetAmount` → type into `FundTargetAmountInput`/`InvestTargetAmountInput`
+- [x] `ApprovalThreshold` → type into `ApprovalThresholdInput`
+- [x] `DismissStep5Welcome()` → click `Step5WelcomeButton`
+- [x] `PayoutFrequency`/`ToggleInstallmentCount()` → click `PayoutFreqWeekly`/`Installment3`/`Installment6`
+- [x] `GeneratePayoutSchedule()`/`GenerateInvestmentStages()` → click `GeneratePayoutsButton`/`GenerateStagesButton`
+- [x] `DurationValue` → type into `DurationValueInput`
 
-## 3. Expose Seed Words Without Native File Picker
+### Still using VM property sets (no UI input available)
+- `PenaltyDays = 0` (fund type defaults, no UI control)
+- `InvestEndDate` (CalendarDatePicker — complex to automate via clicks)
+- `DurationUnit` (ComboBox selection)
+- `ReleaseFrequency` (ListBox selection)
+- `StartDate` (no UI input)
+- `WeeklyPayoutDay` (ListBox selection)
 
-Currently `CreateWalletViaGenerateAsync` uses reflection to grab `_generatedSeedWords` because the only way to get them is via a native "Save to file" dialog that blocks the process.
+### Not yet refactored
+- [ ] Invest flow: `investVm.InvestmentAmount` → type into `InvestAmountInput`
+- [ ] Invest flow: `investVm.Submit()` → click `InvestSubmitButton`
+- [ ] Invest flow: project search + open detail + open invest (VM calls for navigation)
+- [ ] Recovery flow
+- [ ] Edit profile flow
 
-- [ ] Add a "Copy to Clipboard" or "Show Seed" button in the wallet creation flow
-- [ ] Or: add an automation-only endpoint that returns seed words after generation (less ideal but pragmatic)
+## 4. Expose Seed Words Without Native File Picker
 
-## 4. Replace Reflection Hacks
+Currently `CreateWalletViaGenerateAsync` uses reflection to grab `_generatedSeedWords`.
+
+- [ ] Add a "Copy to Clipboard" or "Show Seed" button in wallet creation flow
+- [ ] Or: add an automation-only endpoint that returns seed words after generation
+
+## 5. Replace Reflection Hacks
 
 ### `_generatedSeedWords` field access
-- Blocked by item 3 above
+- Blocked by item 4 above
 
 ### `ApproveSignatureAsync` private method
-- [ ] Make the approve action triggerable via a Button with AutomationId in the investor list
-- [ ] Or: expose as a public command on the VM (less ideal)
+- [ ] Make approve action triggerable via Button with AutomationId
+- [ ] Or: expose as public command on VM
 
-## 5. Replace Direct VM Method Calls with UI Actions
+## 6. Replace Direct DI Service Calls (lowest priority)
 
-These flows currently call VM methods directly. Once Buttons+Commands are in place, the automation server can click them instead.
-
-- [ ] Wizard step navigation (Next/Back buttons with AutomationIds)
-- [ ] Invest flow (amount entry + confirm via AutomationId)
-- [ ] Recovery initiation (button click via AutomationId)
-- [ ] Deploy confirmation (button click via AutomationId)
-- [ ] Edit profile save (button click via AutomationId)
-
-## 6. Replace Direct DI Service Calls
-
-These bypass the UI entirely by resolving services from the container:
-
-- [ ] `IWalletAppService` calls → drive through wallet creation UI
-- [ ] `BlossomUploadService` calls → drive through upload button in edit profile
+- [ ] `BlossomUploadService` calls → drive through upload UI
 - [ ] `IProjectAppService` direct queries → drive through browse/refresh UI
 - [ ] `PortfolioViewModel` direct manipulation → drive through portfolio UI
 
 ## Priority Order
 
-1. **PointerPressed → Button.Command** (unblocks everything else)
-2. **Add AutomationIds** (enables finding elements)
-3. **Seed words exposure** (removes biggest reflection hack)
-4. **Replace VM method calls** (uses new AutomationIds)
-5. **Replace DI service calls** (final mile, lowest priority — some may stay as pragmatic bypasses)
+1. ~~PointerPressed → Button.Command~~ ✅
+2. ~~Add AutomationIds / Names~~ ✅ (key controls done)
+3. ~~Replace VM method calls in wizard~~ ✅ (create project done)
+4. **Seed words exposure** (removes biggest reflection hack)
+5. **Replace remaining VM calls** (invest, recovery, edit profile flows)
+6. **Replace DI service calls** (final mile — some may stay as pragmatic bypasses)
