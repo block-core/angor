@@ -881,47 +881,38 @@ public static class AutomationFlows
         });
         await Task.Delay(300);
 
+        // Click Generate to create seed words
         await ClickWalletCardButtonAsync(window, "BtnGenerate");
-        await Task.Delay(200);
+        await Task.Delay(500);
 
-        // Get the generated seed words from the CreateWalletModal
-        var seedWords = await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            var cwm = window.GetVisualDescendants().OfType<CreateWalletModal>().FirstOrDefault();
-            if (cwm == null) return null;
-            var field = typeof(CreateWalletModal)
-                .GetField("_generatedSeedWords", BindingFlags.NonPublic | BindingFlags.Instance);
-            return field?.GetValue(cwm) as string;
-        });
-
-        if (string.IsNullOrEmpty(seedWords))
-        {
-            throw new InvalidOperationException("Seed words not generated");
-        }
-
-        // Directly call ImportWalletAsync on the FundsViewModel, bypassing the code-behind
-        // button handler which has thread affinity issues with RaiseEvent + async void.
-        // Must run on UI thread so the sync context is preserved through await chains.
-        var fundsVm = await Dispatcher.UIThread.InvokeAsync(() => GetFundsViewModel(window));
-        if (fundsVm == null)
-        {
-            throw new InvalidOperationException("FundsViewModel not found during wallet creation");
-        }
-
-        var success = await Dispatcher.UIThread.InvokeAsync(async () =>
-            await fundsVm.ImportWalletAsync("Test Wallet", seedWords));
-        if (!success)
-        {
-            throw new InvalidOperationException("ImportWalletAsync returned false");
-        }
-
-        // Close the modal
+        // Mark seed as downloaded (skips native file dialog) and click Continue
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            var shellVm = GetShellVm(window);
-            shellVm.HideModal();
+            var cwm = window.GetVisualDescendants().OfType<CreateWalletModal>().FirstOrDefault();
+            cwm?.MarkSeedDownloaded();
             Dispatcher.UIThread.RunJobs();
         });
+        await Task.Delay(200);
+
+        // Click Continue Backup → triggers wallet creation via SDK
+        await ClickWalletCardButtonAsync(window, "BtnContinueBackup");
+
+        // Wait for success panel to appear
+        var successDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
+        while (DateTime.UtcNow < successDeadline)
+        {
+            var successVisible = await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var panel = FindByAutomationId<Panel>(window, "CreateWalletSuccessPanel");
+                return panel is { IsVisible: true };
+            });
+
+            if (successVisible) break;
+            await Task.Delay(300);
+        }
+
+        // Click Done to close the modal
+        await ClickWalletCardButtonAsync(window, "BtnCreateWalletDone");
         await Task.Delay(500);
     }
 
