@@ -94,8 +94,8 @@ public sealed class TestProcessHost : IAsyncDisposable
         var stdoutLog = Path.Combine(logDir, $"test-{profileName}-stdout.log");
         var stderrLog = Path.Combine(logDir, $"test-{profileName}-stderr.log");
 
-        _ = Task.Run(() => PipeToFile(process.StandardOutput, stdoutLog), ct);
-        _ = Task.Run(() => PipeToFile(process.StandardError, stderrLog), ct);
+        _ = Task.Run(() => PipeToFile(process.StandardOutput, stdoutLog, profileName), ct);
+        _ = Task.Run(() => PipeToFile(process.StandardError, stderrLog, $"{profileName}:err"), ct);
 
         Console.WriteLine($"[TestProcessHost] Launched PID={process.Id} for profile '{profileName}' on port {port}");
         Console.WriteLine($"[TestProcessHost] Stdout log: {stdoutLog}");
@@ -221,7 +221,7 @@ public sealed class TestProcessHost : IAsyncDisposable
             "Build App.Desktop first, or set ANGOR_DESKTOP_EXE environment variable.");
     }
 
-    private static async Task PipeToFile(StreamReader reader, string path)
+    private static async Task PipeToFile(StreamReader reader, string path, string? prefix = null)
     {
         try
         {
@@ -230,6 +230,12 @@ public sealed class TestProcessHost : IAsyncDisposable
             {
                 await writer.WriteLineAsync(line);
                 await writer.FlushAsync();
+
+                // Also write to console so logs appear in docker/CI output
+                if (prefix != null)
+                {
+                    Console.WriteLine($"[{prefix}] {line}");
+                }
             }
         }
         catch

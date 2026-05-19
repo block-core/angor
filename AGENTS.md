@@ -130,6 +130,15 @@ dotnet test src/design/App.Test.Uat/App.Test.Uat.csproj --filter "FullyQualified
 - Always capture full test output to log files for failure investigation (see "Cross-Distro Docker Test Runners" section)
 - Transient failures may indicate race conditions — always preserve full assertion messages and stack traces
 
+### Test integrity (CRITICAL)
+
+The purpose of tests is to verify the app is working as intended after code changes. When a test fails:
+
+1. **Investigate the app first** — assume the app is broken, not the test
+2. **Never modify a test just to make it pass** — if a test fails after an app change, the failure is telling you something is wrong in the app code
+3. **Only change tests when the intended behavior has changed** — if a feature was deliberately redesigned, update the test to match the new expected behavior, but be explicit about why
+4. **Treat test changes with extra scrutiny** — modifying tests to mask failures defeats their entire purpose and introduces silent regressions
+
 ## Architecture Rules
 
 ### SDK Access Pattern (CRITICAL)

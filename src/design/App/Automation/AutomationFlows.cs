@@ -575,7 +575,12 @@ public static class AutomationFlows
                 var ready = await Dispatcher.UIThread.InvokeAsync(async () =>
                 {
                     await myProjectsVm.LoadFounderProjectsAsync();
-                    myProjectsVm.OpenManageProject(founderProject);
+                    // Re-fetch the project reference after reload (collection is cleared and repopulated)
+                    var currentProject = myProjectsVm.Projects.FirstOrDefault(p =>
+                        string.Equals(p.ProjectIdentifier, founderProject.ProjectIdentifier, StringComparison.Ordinal));
+                    if (currentProject == null) return false;
+
+                    myProjectsVm.OpenManageProject(currentProject);
                     var manageVm = myProjectsVm.SelectedManageProject;
                     if (manageVm == null)
                     {
@@ -594,10 +599,22 @@ public static class AutomationFlows
                     break;
                 }
 
+                // Close manage panel so next iteration can re-open with fresh data
+                await Dispatcher.UIThread.InvokeAsync(() => myProjectsVm.CloseManageProject());
+
                 await Task.Delay(PollInterval);
             }
 
+            // Close manage panel so we can click through the UI
+            await Dispatcher.UIThread.InvokeAsync(() => myProjectsVm.CloseManageProject());
+            await Task.Delay(200);
+
             var clicked = await ClickManageProjectClaimStageAsync(window, myProjectsVm, founderProject, req.StageNumber);
+
+            // Close manage panel so subsequent flows (e.g. ReleaseFunds) can find project cards
+            await Dispatcher.UIThread.InvokeAsync(() => myProjectsVm.CloseManageProject());
+            await Task.Delay(200);
+
             return clicked
                 ? new ActionResponse { Success = true }
                 : new ActionResponse { Success = false, Error = "Claim stage flow did not complete" };
@@ -763,6 +780,11 @@ public static class AutomationFlows
             }
 
             var success = await ClickManageProjectReleaseFundsAsync(window, myProjectsVm, founderProject);
+
+            // Close manage panel so subsequent flows can find project cards
+            await Dispatcher.UIThread.InvokeAsync(() => myProjectsVm.CloseManageProject());
+            await Task.Delay(200);
+
             return success
                 ? new ActionResponse { Success = true }
                 : new ActionResponse { Success = false, Error = "Release funds flow did not complete" };
@@ -829,8 +851,8 @@ public static class AutomationFlows
         string runId,
         string projectType)
     {
-        // Click the Deploy button (NextStepButton on Step 6 triggers deploy)
-        await ClickByNameAsync(window, "NextStepButton");
+        // Click the Deploy button (DeployButton is shown on Step 6, NextStepButton is hidden)
+        await ClickByNameAsync(window, "DeployButton");
         await Task.Delay(1000);
 
         // Wait for wallet list to load in deploy overlay
@@ -840,8 +862,9 @@ public static class AutomationFlows
             var ready = await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 Dispatcher.UIThread.RunJobs();
-                var deployVm = myProjectsVm.CreateProjectVm.DeployFlow;
-                return deployVm?.Wallets.Count > 0;
+                var deployVm = myProjectsVm.CreateProjectVm?.DeployFlow;
+                var walletCount = deployVm?.Wallets?.Count ?? -1;
+                return walletCount > 0;
             });
             if (ready)
             {
@@ -852,6 +875,9 @@ public static class AutomationFlows
         }
 
         // Click the first WalletButton in the deploy overlay
+        // Give ItemsControl time to materialize templates after wallet list populated
+        await Task.Delay(1000);
+
         await ClickFirstWalletButtonAsync(window);
 
         // Click PayWithWalletButton — this triggers FeeSelectionPopup
@@ -877,8 +903,8 @@ public static class AutomationFlows
             await Task.Delay(PollInterval);
         }
 
-        // Click GoToMyProjectsButton in deploy success screen
-        await ClickByNameAsync(window, "GoToMyProjectsButton");
+        // Click SuccessActionButton in the PaymentFlowView success screen
+        await ClickByNameAsync(window, "SuccessActionButton");
         await Task.Delay(500);
 
         var projectPollDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
@@ -1443,13 +1469,17 @@ public static class AutomationFlows
         var deadline = DateTime.UtcNow + UiTimeout;
         while (DateTime.UtcNow < deadline)
         {
-            var clicked = await Dispatcher.UIThread.InvokeAsync(() =>
+            var (clicked, debugInfo) = await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                var walletBtn = window.GetVisualDescendants().OfType<Button>()
-                    .FirstOrDefault(b => b.Name == "WalletButton" && b.IsVisible);
-                if (walletBtn == null) return false;
+                var allButtons = window.GetVisualDescendants().OfType<Button>().ToList();
+                var walletBtns = allButtons.Where(b => b.Name == "WalletButton").ToList();
+                var visibleWalletBtns = walletBtns.Where(b => b.IsVisible).ToList();
+                var info = $"totalButtons={allButtons.Count}, namedWallet={walletBtns.Count}, visibleWallet={visibleWalletBtns.Count}";
+
+                var walletBtn = visibleWalletBtns.FirstOrDefault();
+                if (walletBtn == null) return (false, info);
                 ClickButton(walletBtn);
-                return true;
+                return (true, info);
             });
 
             if (clicked)
@@ -1763,16 +1793,14 @@ public static class AutomationFlows
                        ?? FindByAutomationId<ListBox>(window, listBoxName);
             if (listBox == null) throw new InvalidOperationException($"ListBox '{listBoxName}' not found");
 
-            foreach (var item in listBox.GetVisualDescendants().OfType<ListBoxItem>())
+            var items = listBox.GetVisualDescendants().OfType<ListBoxItem>().ToList();
+
+            foreach (var item in items)
             {
                 if (item.Tag is string tag && string.Equals(tag, tagValue, StringComparison.Ordinal))
                 {
-                    // Select via the ListBox — set SelectedItem to the ListBoxItem's content/data
-                    var content = item.DataContext ?? item.Content;
-                    if (content != null)
-                        listBox.SelectedItem = content;
-                    else
-                        item.IsSelected = true;
+                    item.IsSelected = true;
+                    listBox.SelectedItem = item;
                     Dispatcher.UIThread.RunJobs();
                     return;
                 }
@@ -1796,7 +1824,8 @@ public static class AutomationFlows
                 var cards = window.GetVisualDescendants().OfType<ProjectCard>().Where(c => c.IsVisible);
                 foreach (var card in cards)
                 {
-                    if (card.DataContext == project)
+                    if (card.DataContext is MyProjectItemViewModel vm &&
+                        string.Equals(vm.ProjectIdentifier, project.ProjectIdentifier, StringComparison.Ordinal))
                     {
                         var manageBtn = card.GetVisualDescendants().OfType<Button>()
                             .FirstOrDefault(b => b.Name == "PART_ManageButton" && b.IsVisible);
@@ -1819,7 +1848,7 @@ public static class AutomationFlows
             await Task.Delay(100);
         }
 
-        throw new TimeoutException($"PART_ManageButton for project not found within timeout");
+        throw new TimeoutException($"PART_ManageButton for project '{project.ProjectIdentifier}' not found within timeout");
     }
 
     /// <summary>
@@ -1835,7 +1864,8 @@ public static class AutomationFlows
                 var cards = window.GetVisualDescendants().OfType<ProjectCard>().Where(c => c.IsVisible);
                 foreach (var card in cards)
                 {
-                    if (card.DataContext == project)
+                    if (card.DataContext is MyProjectItemViewModel vm &&
+                        string.Equals(vm.ProjectIdentifier, project.ProjectIdentifier, StringComparison.Ordinal))
                     {
                         var editBtn = card.GetVisualDescendants().OfType<Button>()
                             .FirstOrDefault(b => b.Name == "PART_EditButton" && b.IsVisible);
@@ -1858,7 +1888,7 @@ public static class AutomationFlows
             await Task.Delay(100);
         }
 
-        throw new TimeoutException($"PART_EditButton for project not found within timeout");
+        throw new TimeoutException($"PART_EditButton for project '{project.ProjectIdentifier}' not found within timeout");
     }
 
     private static void Log(string ctx, string msg)
