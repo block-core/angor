@@ -10,6 +10,7 @@ using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -21,6 +22,7 @@ using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Sections.MyProjects.EditProfile;
 using App.UI.Sections.Portfolio;
 using App.UI.Sections.Settings;
+using App.UI.Shared.Controls;
 using App.UI.Shared.PaymentFlow;
 using App.UI.Shared.Services;
 using App.UI.Shell;
@@ -100,7 +102,7 @@ public static class AutomationFlows
                 return new ProjectCreatedResponse { Success = false, Error = "MyProjectsViewModel not found" };
             }
 
-            await OpenCreateWizardAsync(myProjectsVm);
+            await OpenCreateWizardAsync(myProjectsVm, window);
 
             // Step 0: Welcome → click Start
             await ClickByNameAsync(window, "StartButton");
@@ -151,7 +153,7 @@ public static class AutomationFlows
             await ClickByNameAsync(window, "GeneratePayoutsButton");
             await ClickByNameAsync(window, "NextStepButton");
 
-            return await DeployProjectAsync(myProjectsVm, req.RunId, "fund");
+            return await DeployProjectAsync(myProjectsVm, window, req.RunId, "fund");
         }
         catch (Exception ex)
         {
@@ -174,7 +176,7 @@ public static class AutomationFlows
                 return new ProjectCreatedResponse { Success = false, Error = "MyProjectsViewModel not found" };
             }
 
-            await OpenCreateWizardAsync(myProjectsVm);
+            await OpenCreateWizardAsync(myProjectsVm, window);
 
             // Step 0: Welcome → click Start
             await ClickByNameAsync(window, "StartButton");
@@ -193,14 +195,9 @@ public static class AutomationFlows
             await TypeTextByNameAsync(window, "ProfileUrlTextBox", req.ProfileUrl);
             await ClickByNameAsync(window, "NextStepButton");
 
-            // Step 4: Target amount + invest end date (date picker set via VM)
+            // Step 4: Target amount + invest end date (set via CalendarDatePicker control)
             await TypeTextByNameAsync(window, "InvestTargetAmountInput", "1.0");
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                var wizardVm = myProjectsVm.CreateProjectVm;
-                wizardVm.InvestEndDate = DateTime.UtcNow.AddMonths(3);
-                Dispatcher.UIThread.RunJobs();
-            });
+            await SetCalendarDateByNameAsync(window, "InvestEndDatePicker", DateTime.UtcNow.AddMonths(3));
             await ClickByNameAsync(window, "NextStepButton");
 
             // Step 5 interstitial: Dismiss welcome
@@ -209,20 +206,17 @@ public static class AutomationFlows
 
             // Step 5: Duration + frequency + start date + generate stages
             await TypeTextByNameAsync(window, "DurationValueInput", "3");
-            // ComboBox and ListBox selection + StartDate set via VM (no simple click target)
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                var wizardVm = myProjectsVm.CreateProjectVm;
-                wizardVm.DurationUnit = "Months";
-                wizardVm.ReleaseFrequency = "Monthly";
-                wizardVm.StartDate = DateTime.UtcNow.AddDays(-120).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-                Dispatcher.UIThread.RunJobs();
-            });
+            // Set DurationUnit via ComboBox control
+            await SetComboBoxByNameAsync(window, "DurationUnitCombo", "Months");
+            // Click "Monthly" ListBoxItem in InvestFrequencyPresets
+            await ClickListBoxItemByTagAsync(window, "InvestFrequencyPresets", "Monthly");
+            // Set StartDate via CalendarDatePicker control
+            await SetCalendarDateByNameAsync(window, "InvestStartDatePicker", DateTime.UtcNow.AddDays(-120));
 
             await ClickByNameAsync(window, "GenerateStagesButton");
             await ClickByNameAsync(window, "NextStepButton");
 
-            return await DeployProjectAsync(myProjectsVm, req.RunId, "investment");
+            return await DeployProjectAsync(myProjectsVm, window, req.RunId, "investment");
         }
         catch (Exception ex)
         {
@@ -277,18 +271,19 @@ public static class AutomationFlows
                 return new InvestResponse { Success = false, Error = "Project not found in SDK list" };
             }
 
+            // Click the ProjectCard in the visual tree to open project detail
+            // FindProjectsView uses TappedEvent bubbling — we call OpenProjectDetail via VM
+            // since Tapped requires complex pointer event args. The card click IS the user action,
+            // we just can't synthesize Tapped easily in Avalonia.
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 findProjectsVm.OpenProjectDetail(foundProject);
                 Dispatcher.UIThread.RunJobs();
             });
-            await Task.Delay(300);
+            await Task.Delay(500);
 
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                findProjectsVm.OpenInvestPage();
-                Dispatcher.UIThread.RunJobs();
-            });
+            // Click InvestButton in ProjectDetailView to navigate to invest page
+            await ClickByNameAsync(window, "InvestButton");
             await Task.Delay(500);
 
             var investVm = await Dispatcher.UIThread.InvokeAsync(() => findProjectsVm.InvestPageViewModel);
@@ -446,12 +441,32 @@ public static class AutomationFlows
             foreach (var pendingSignature in pending)
             {
                 // Try clicking the ApproveButton in the visual tree first (virtualized ListBox)
+                // If not found, scroll the item into view and retry
                 var clickedViaUi = await ClickApproveButtonByIdAsync(window, pendingSignature.Id);
 
                 if (!clickedViaUi)
                 {
-                    // Fallback: call the VM's public ApproveSignature method
-                    // (handles virtualized items not in the visual tree)
+                    // Scroll the ListBox to bring the item into view, then retry click
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        var listBox = window.GetVisualDescendants().OfType<ListBox>().FirstOrDefault(lb =>
+                            lb.ItemsSource is System.Collections.IEnumerable items &&
+                            items.Cast<object>().Any(i => i is SignatureRequestViewModel));
+                        if (listBox != null)
+                        {
+                            listBox.ScrollIntoView(pendingSignature);
+                            Dispatcher.UIThread.RunJobs();
+                        }
+                    });
+                    await Task.Delay(200);
+
+                    clickedViaUi = await ClickApproveButtonByIdAsync(window, pendingSignature.Id);
+                }
+
+                if (!clickedViaUi)
+                {
+                    // Final fallback: call the VM's public ApproveSignature method
+                    // (handles edge cases where scroll doesn't materialize the item)
                     await Dispatcher.UIThread.InvokeAsync(() =>
                     {
                         fundersVm.ApproveSignature(pendingSignature.Id);
@@ -810,24 +825,23 @@ public static class AutomationFlows
 
     private static async Task<ProjectCreatedResponse> DeployProjectAsync(
         MyProjectsViewModel myProjectsVm,
+        Window window,
         string runId,
         string projectType)
     {
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            myProjectsVm.CreateProjectVm.Deploy();
-            Dispatcher.UIThread.RunJobs();
-        });
+        // Click the Deploy button (NextStepButton on Step 6 triggers deploy)
+        await ClickByNameAsync(window, "NextStepButton");
         await Task.Delay(1000);
 
-        var deployVm = await Dispatcher.UIThread.InvokeAsync(() => myProjectsVm.CreateProjectVm.DeployFlow);
+        // Wait for wallet list to load in deploy overlay
         var walletLoadDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
         while (DateTime.UtcNow < walletLoadDeadline)
         {
             var ready = await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 Dispatcher.UIThread.RunJobs();
-                return deployVm.Wallets.Count > 0;
+                var deployVm = myProjectsVm.CreateProjectVm.DeployFlow;
+                return deployVm?.Wallets.Count > 0;
             });
             if (ready)
             {
@@ -837,12 +851,14 @@ public static class AutomationFlows
             await Task.Delay(TimeSpan.FromMilliseconds(500));
         }
 
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            deployVm.SelectWallet(deployVm.Wallets[0]);
-            Dispatcher.UIThread.RunJobs();
-            deployVm.PayWithWallet();
-        });
+        // Click the first WalletButton in the deploy overlay
+        await ClickFirstWalletButtonAsync(window);
+
+        // Click PayWithWalletButton — this triggers FeeSelectionPopup
+        await ClickByNameAsync(window, "PayWithWalletButton");
+
+        // FeeSelectionPopup appears — click ConfirmButton (defaults to "standard" 20 sat/vB)
+        await ClickByNameAsync(window, "ConfirmButton", TimeSpan.FromSeconds(10));
 
         var deployDeadline = DateTime.UtcNow + TxTimeout;
         while (DateTime.UtcNow < deployDeadline)
@@ -850,7 +866,8 @@ public static class AutomationFlows
             var success = await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 Dispatcher.UIThread.RunJobs();
-                return deployVm.CurrentScreen == DeployScreen.Success;
+                var deployVm = myProjectsVm.CreateProjectVm.DeployFlow;
+                return deployVm?.CurrentScreen == DeployScreen.Success;
             });
             if (success)
             {
@@ -860,11 +877,8 @@ public static class AutomationFlows
             await Task.Delay(PollInterval);
         }
 
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            deployVm.GoToMyProjects();
-            Dispatcher.UIThread.RunJobs();
-        });
+        // Click GoToMyProjectsButton in deploy success screen
+        await ClickByNameAsync(window, "GoToMyProjectsButton");
         await Task.Delay(500);
 
         var projectPollDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
@@ -894,19 +908,56 @@ public static class AutomationFlows
         return new ProjectCreatedResponse { Success = false, Error = "Project did not appear after deploy" };
     }
 
-    private static async Task OpenCreateWizardAsync(MyProjectsViewModel myProjectsVm)
+    private static async Task OpenCreateWizardAsync(MyProjectsViewModel myProjectsVm, Window window)
     {
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        // Try clicking the LaunchFromListButton (project list view) or the EmptyState "Launch a Project" button
+        var clicked = await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            myProjectsVm.CreateProjectVm.ResetWizard();
-            myProjectsVm.LaunchCreateWizard();
-            Dispatcher.UIThread.RunJobs();
-            myProjectsVm.CreateProjectVm.OnProjectDeployed = () =>
+            // Try LaunchFromListButton first (visible when projects exist)
+            var launchBtn = FindByName<Button>(window, "LaunchFromListButton");
+            if (launchBtn is { IsVisible: true })
             {
-                myProjectsVm.OnProjectDeployed(myProjectsVm.CreateProjectVm);
-                myProjectsVm.CloseCreateWizard();
-            };
+                ClickButton(launchBtn);
+                return true;
+            }
+
+            // Try MobileLaunchButton (compact mode)
+            var mobileLaunchBtn = FindByName<Button>(window, "MobileLaunchButton");
+            if (mobileLaunchBtn is { IsVisible: true })
+            {
+                ClickButton(mobileLaunchBtn);
+                return true;
+            }
+
+            // EmptyState button — find by content text
+            var buttons = window.GetVisualDescendants().OfType<Button>().Where(b => b.IsVisible);
+            foreach (var btn in buttons)
+            {
+                if (btn.Content is string s && s == "Launch a Project")
+                {
+                    ClickButton(btn);
+                    return true;
+                }
+                if (btn.Content is StackPanel sp)
+                {
+                    foreach (var child in sp.Children.OfType<TextBlock>())
+                    {
+                        if (child.Text == "Launch a Project")
+                        {
+                            ClickButton(btn);
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
         });
+
+        if (!clicked)
+        {
+            throw new InvalidOperationException("Could not find any 'Launch a Project' button");
+        }
+
         await Task.Delay(500);
     }
 
@@ -1055,11 +1106,8 @@ public static class AutomationFlows
         MyProjectItemViewModel project,
         int stageNumber)
     {
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            myProjectsVm.OpenManageProject(project);
-            Dispatcher.UIThread.RunJobs();
-        });
+        // Click PART_ManageButton on the ProjectCard whose DataContext matches
+        await ClickPartManageButtonAsync(window, project);
 
         // Wait for the stage claim button to appear and click it
         var deadline = DateTime.UtcNow + TimeSpan.FromMinutes(3);
@@ -1078,7 +1126,10 @@ public static class AutomationFlows
             await Task.Delay(TimeSpan.FromMilliseconds(200));
         }
 
-        // Select all UTXOs for the stage
+        // Select all UTXOs for the stage by toggling IsSelected on each item
+        // The UTXO toggle is driven by PointerPressed on UtxoItemBorder, which sets
+        // utxo.IsSelected and updates checkbox CSS class. We set IsSelected directly
+        // since PointerPressedEventArgs can't be easily synthesized in Avalonia.
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             var manageVm = myProjectsVm.SelectedManageProject;
@@ -1122,11 +1173,8 @@ public static class AutomationFlows
         MyProjectsViewModel myProjectsVm,
         MyProjectItemViewModel project)
     {
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            myProjectsVm.OpenManageProject(project);
-            Dispatcher.UIThread.RunJobs();
-        });
+        // Click PART_ManageButton on the ProjectCard whose DataContext matches
+        await ClickPartManageButtonAsync(window, project);
 
         // Click ReleaseFundsNavButton
         await ClickWalletCardButtonAsync(window, "ReleaseFundsNavButton");
@@ -1155,21 +1203,37 @@ public static class AutomationFlows
 
     private static async Task NavigateToAsync(Window window, string section)
     {
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        if (string.Equals(section, "Settings", StringComparison.OrdinalIgnoreCase))
         {
-            var vm = GetShellVm(window);
-            if (string.Equals(section, "Settings", StringComparison.OrdinalIgnoreCase))
+            // Click the SettingsButton in the desktop header
+            await ClickByNameAsync(window, "SettingsButton");
+        }
+        else
+        {
+            // Find the Nav ListBox in the sidebar, then click the ListBoxItem whose NavItem.Label matches
+            await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                vm.NavigateToSettings();
-            }
-            else
-            {
-                var navItem = vm.NavEntries.OfType<NavItem>().First(n => n.Label == section);
-                vm.SelectedNavItem = navItem;
-            }
+                var sidebar = window.GetVisualDescendants().OfType<Border>()
+                    .FirstOrDefault(b => b.Name == "DesktopSidebar");
+                if (sidebar == null)
+                    throw new InvalidOperationException("DesktopSidebar not found");
 
-            Dispatcher.UIThread.RunJobs();
-        });
+                var navListBox = sidebar.GetVisualDescendants().OfType<ListBox>().FirstOrDefault();
+                if (navListBox == null)
+                    throw new InvalidOperationException("Nav ListBox not found");
+
+                // Find the NavItem in the items source
+                var navItem = navListBox.ItemsSource?.Cast<object>()
+                    .OfType<NavItem>()
+                    .FirstOrDefault(n => string.Equals(n.Label, section, StringComparison.Ordinal));
+
+                if (navItem == null)
+                    throw new InvalidOperationException($"NavItem '{section}' not found");
+
+                navListBox.SelectedItem = navItem;
+                Dispatcher.UIThread.RunJobs();
+            });
+        }
         await Task.Delay(500);
     }
 
@@ -1495,12 +1559,8 @@ public static class AutomationFlows
                 return new EditProjectProfileResponse { Success = false, Error = $"Project '{request.ProjectIdentifier}' not found in My Projects" };
             }
 
-            // Open edit profile
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                myProjectsVm.OpenEditProfile(project);
-                Dispatcher.UIThread.RunJobs();
-            });
+            // Open edit profile by clicking PART_EditButton on the ProjectCard
+            await ClickPartEditButtonAsync(window, project);
             await Task.Delay(1000); // Allow LoadAsync to fetch current profile from Nostr
 
             var editVm = await Dispatcher.UIThread.InvokeAsync(() => myProjectsVm.SelectedEditProject);
@@ -1551,12 +1611,8 @@ public static class AutomationFlows
                 await Task.Delay(300);
             }
 
-            // Close edit profile
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                myProjectsVm.CloseEditProfile();
-                Dispatcher.UIThread.RunJobs();
-            });
+            // Close edit profile by clicking EditBackButton
+            await ClickByNameAsync(window, "EditBackButton");
 
             return new EditProjectProfileResponse { Success = true };
         }
@@ -1659,6 +1715,150 @@ public static class AutomationFlows
         {
             return new UploadToBlossomResponse { Success = false, Error = ex.ToString() };
         }
+    }
+
+    /// <summary>
+    /// Set SelectedDate on a CalendarDatePicker found by Name.
+    /// </summary>
+    private static async Task SetCalendarDateByNameAsync(Window window, string name, DateTime date)
+    {
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            var picker = FindByName<CalendarDatePicker>(window, name)
+                      ?? FindByAutomationId<CalendarDatePicker>(window, name);
+            if (picker == null) throw new InvalidOperationException($"CalendarDatePicker '{name}' not found");
+            picker.SelectedDate = date;
+            Dispatcher.UIThread.RunJobs();
+        });
+        await Task.Delay(100);
+    }
+
+    /// <summary>
+    /// Set SelectedItem on a ComboBox found by Name, matching by string value.
+    /// </summary>
+    private static async Task SetComboBoxByNameAsync(Window window, string name, string value)
+    {
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            var combo = FindByName<ComboBox>(window, name)
+                     ?? FindByAutomationId<ComboBox>(window, name);
+            if (combo == null) throw new InvalidOperationException($"ComboBox '{name}' not found");
+            var item = combo.ItemsSource?.Cast<object>().FirstOrDefault(i =>
+                string.Equals(i.ToString(), value, StringComparison.Ordinal));
+            if (item != null)
+                combo.SelectedItem = item;
+            Dispatcher.UIThread.RunJobs();
+        });
+        await Task.Delay(100);
+    }
+
+    /// <summary>
+    /// Click a ListBoxItem in a ListBox found by Name, matching by Tag value.
+    /// </summary>
+    private static async Task ClickListBoxItemByTagAsync(Window window, string listBoxName, string tagValue)
+    {
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            var listBox = FindByName<ListBox>(window, listBoxName)
+                       ?? FindByAutomationId<ListBox>(window, listBoxName);
+            if (listBox == null) throw new InvalidOperationException($"ListBox '{listBoxName}' not found");
+
+            foreach (var item in listBox.GetVisualDescendants().OfType<ListBoxItem>())
+            {
+                if (item.Tag is string tag && string.Equals(tag, tagValue, StringComparison.Ordinal))
+                {
+                    // Select via the ListBox — set SelectedItem to the ListBoxItem's content/data
+                    var content = item.DataContext ?? item.Content;
+                    if (content != null)
+                        listBox.SelectedItem = content;
+                    else
+                        item.IsSelected = true;
+                    Dispatcher.UIThread.RunJobs();
+                    return;
+                }
+            }
+
+            throw new InvalidOperationException($"ListBoxItem with Tag='{tagValue}' not found in '{listBoxName}'");
+        });
+        await Task.Delay(100);
+    }
+
+    /// <summary>
+    /// Click PART_ManageButton on a ProjectCard whose DataContext matches the given project.
+    /// </summary>
+    private static async Task ClickPartManageButtonAsync(Window window, MyProjectItemViewModel project)
+    {
+        var deadline = DateTime.UtcNow + UiTimeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            var clicked = await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var cards = window.GetVisualDescendants().OfType<ProjectCard>().Where(c => c.IsVisible);
+                foreach (var card in cards)
+                {
+                    if (card.DataContext == project)
+                    {
+                        var manageBtn = card.GetVisualDescendants().OfType<Button>()
+                            .FirstOrDefault(b => b.Name == "PART_ManageButton" && b.IsVisible);
+                        if (manageBtn != null)
+                        {
+                            ClickButton(manageBtn);
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            });
+
+            if (clicked)
+            {
+                await Task.Delay(500);
+                return;
+            }
+
+            await Task.Delay(100);
+        }
+
+        throw new TimeoutException($"PART_ManageButton for project not found within timeout");
+    }
+
+    /// <summary>
+    /// Click PART_EditButton on a ProjectCard whose DataContext matches the given project.
+    /// </summary>
+    private static async Task ClickPartEditButtonAsync(Window window, MyProjectItemViewModel project)
+    {
+        var deadline = DateTime.UtcNow + UiTimeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            var clicked = await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var cards = window.GetVisualDescendants().OfType<ProjectCard>().Where(c => c.IsVisible);
+                foreach (var card in cards)
+                {
+                    if (card.DataContext == project)
+                    {
+                        var editBtn = card.GetVisualDescendants().OfType<Button>()
+                            .FirstOrDefault(b => b.Name == "PART_EditButton" && b.IsVisible);
+                        if (editBtn != null)
+                        {
+                            ClickButton(editBtn);
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            });
+
+            if (clicked)
+            {
+                await Task.Delay(500);
+                return;
+            }
+
+            await Task.Delay(100);
+        }
+
+        throw new TimeoutException($"PART_EditButton for project not found within timeout");
     }
 
     private static void Log(string ctx, string msg)
