@@ -63,8 +63,10 @@ public partial class App : Application
         // Build DI container with profile-specific data isolation
         Services = CompositionRoot.BuildServiceProvider(profileName, platformServices: PlatformServices);
 
+#if DEBUG
         // Start test automation server if ANGOR_TEST_API=1
         AutomationServer.StartIfEnabled(Services);
+#endif
 
         if (lifetime != null)
         {
