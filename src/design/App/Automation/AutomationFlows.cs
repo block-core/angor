@@ -886,14 +886,17 @@ public static class AutomationFlows
         // FeeSelectionPopup appears — click ConfirmButton (defaults to "standard" 20 sat/vB)
         await ClickByNameAsync(window, "ConfirmButton", TimeSpan.FromSeconds(10));
 
+        // Wait for deploy to complete — check PaymentFlowViewModel.IsSuccess since the
+        // deploy modal is a PaymentFlowView (DeployFlowViewModel.CurrentScreen is not set
+        // in the wallet-pay path)
         var deployDeadline = DateTime.UtcNow + TxTimeout;
         while (DateTime.UtcNow < deployDeadline)
         {
             var success = await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 Dispatcher.UIThread.RunJobs();
-                var deployVm = myProjectsVm.CreateProjectVm.DeployFlow;
-                return deployVm?.CurrentScreen == DeployScreen.Success;
+                var paymentFlow = myProjectsVm.CreateProjectVm?.DeployFlow?.PaymentFlow;
+                return paymentFlow?.IsSuccess == true;
             });
             if (success)
             {
