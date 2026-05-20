@@ -82,9 +82,9 @@ public sealed class AutomationServer : IDisposable
             return null;
         }
 
-        var server = new AutomationServer(port, services);
-        server.Start();
-        return server;
+        var desktopServer = new AutomationServer(port, services);
+        desktopServer.Start();
+        return desktopServer;
     }
 
     private void Start()
