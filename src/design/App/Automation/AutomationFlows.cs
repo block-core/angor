@@ -325,12 +325,9 @@ public static class AutomationFlows
             var maxPayAttempts = 3;
             for (var payAttempt = 1; payAttempt <= maxPayAttempts; payAttempt++)
             {
-                // Click the first WalletButton in the payment flow, then PayWithWalletButton
+                // Click the first WalletButton in the payment flow, then PayWithWalletButton + ConfirmButton
                 await ClickFirstWalletButtonAsync(window);
-                await ClickByNameAsync(window, "PayWithWalletButton");
-
-                // FeeSelectionPopup appears — click ConfirmButton (defaults to "standard" 20 sat/vB)
-                await ClickByNameAsync(window, "ConfirmButton", TimeSpan.FromSeconds(10));
+                await ClickWithConfirmRetryAsync(window, "PayWithWalletButton");
                 await Task.Delay(300);
 
                 var investDeadline = DateTime.UtcNow + TxTimeout;
@@ -715,11 +712,7 @@ public static class AutomationFlows
                 _ => throw new InvalidOperationException($"Unknown recovery action: {req.Action}")
             };
 
-            await ClickByNameAsync(window, confirmButtonName);
-            await Task.Delay(300);
-
-            // FeeSelectionPopup appears — click ConfirmButton (defaults to "standard" 20 sat/vB)
-            await ClickByNameAsync(window, "ConfirmButton", TimeSpan.FromSeconds(10));
+            await ClickWithConfirmRetryAsync(window, confirmButtonName);
 
             // Wait for success modal to appear
             var successDeadline = DateTime.UtcNow + IndexerLag;
@@ -880,11 +873,8 @@ public static class AutomationFlows
 
         await ClickFirstWalletButtonAsync(window);
 
-        // Click PayWithWalletButton — this triggers FeeSelectionPopup
-        await ClickByNameAsync(window, "PayWithWalletButton");
-
-        // FeeSelectionPopup appears — click ConfirmButton (defaults to "standard" 20 sat/vB)
-        await ClickByNameAsync(window, "ConfirmButton", TimeSpan.FromSeconds(10));
+        // Click PayWithWalletButton — triggers FeeSelectionPopup, then click ConfirmButton with retry
+        await ClickWithConfirmRetryAsync(window, "PayWithWalletButton");
 
         // Wait for deploy to complete — check PaymentFlowViewModel.IsSuccess since the
         // deploy modal is a PaymentFlowView (DeployFlowViewModel.CurrentScreen is not set
@@ -1173,11 +1163,8 @@ public static class AutomationFlows
         });
         await Task.Delay(200);
 
-        // Click ClaimSelectedBtn — this triggers FeeSelectionPopup (async)
-        await ClickByNameAsync(window, "ClaimSelectedBtn");
-
-        // FeeSelectionPopup appears — click ConfirmButton (defaults to "standard" 20 sat/vB)
-        await ClickByNameAsync(window, "ConfirmButton", TimeSpan.FromSeconds(10));
+        // Click ClaimSelectedBtn — triggers FeeSelectionPopup, then click ConfirmButton with retry
+        await ClickWithConfirmRetryAsync(window, "ClaimSelectedBtn");
 
         // Wait for claim to complete (success modal or IsClaiming becomes false)
         var claimDeadline = DateTime.UtcNow + TxTimeout;
@@ -1495,6 +1482,51 @@ public static class AutomationFlows
         }
 
         throw new TimeoutException("WalletButton not found within timeout");
+    }
+
+    /// <summary>
+    /// Click a trigger button, then wait for a confirmation button (e.g. FeeSelectionPopup's ConfirmButton).
+    /// If the confirmation button doesn't appear within <paramref name="confirmTimeout"/>, retry clicking
+    /// the trigger button up to <paramref name="maxRetries"/> times. This handles cases where the first
+    /// click doesn't trigger the popup (e.g. due to UI timing or focus issues).
+    /// </summary>
+    private static async Task ClickWithConfirmRetryAsync(
+        Window window,
+        string triggerButtonName,
+        string confirmButtonName = "ConfirmButton",
+        TimeSpan? confirmTimeout = null,
+        int maxRetries = 3)
+    {
+        var timeout = confirmTimeout ?? TimeSpan.FromSeconds(5);
+
+        for (var attempt = 0; attempt <= maxRetries; attempt++)
+        {
+            await ClickByNameAsync(window, triggerButtonName);
+
+            var confirmDeadline = DateTime.UtcNow + timeout;
+            while (DateTime.UtcNow < confirmDeadline)
+            {
+                var found = await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    var button = FindByName<Button>(window, confirmButtonName)
+                              ?? FindByAutomationId<Button>(window, confirmButtonName);
+                    if (button == null || !button.IsVisible || !button.IsEnabled) return false;
+                    ClickButton(button);
+                    return true;
+                });
+
+                if (found)
+                {
+                    await Task.Delay(200);
+                    return;
+                }
+
+                await Task.Delay(100);
+            }
+        }
+
+        throw new TimeoutException(
+            $"'{confirmButtonName}' not found after clicking '{triggerButtonName}' {maxRetries + 1} times");
     }
 
     /// <summary>
