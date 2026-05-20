@@ -15,7 +15,9 @@
     <UserControl.Styles>
         <Style Selector="Button.SearchIconButton">
             <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
             <Setter Property="Padding" Value="10,0" />
             <Setter Property="MinWidth" Value="40" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
@@ -23,9 +25,58 @@
         </Style>
         <Style Selector="Button.SearchIconButton:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
         </Style>
         <Style Selector="Button.SearchIconButton:pressed /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+        </Style>
+        <Style Selector="Button.SearchIconButton:disabled /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        </Style>
+        <Style Selector="TextBox.SearchField">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="TextBox.SearchField:pointerover /template/ Border#PART_Border">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="TextBox.SearchField:focus /template/ Border#PART_Border">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="TextBox.SearchField:focus-within /template/ Border#PART_Border">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="TextBox.SearchField /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="TextBox.SearchField:pointerover /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="TextBox.SearchField:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+        <Style Selector="TextBox.SearchField:focus-within /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
         </Style>
     </UserControl.Styles>
 
@@ -50,7 +101,7 @@
         <controls:ScrollableView Name="ProjectListPanel" ContentPadding="24,24,24,24">
             <StackPanel Spacing="16">
                 <!-- Header with search bar and refresh button -->
-                <Grid Name="FindProjectsHeaderGrid" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto">
+                <Grid Name="FindProjectsHeaderGrid" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto">
                     <TextBlock Name="DiscoverProjectsTitle"
                                Grid.Row="0" Grid.Column="0"
                                Text="Discover Projects"
@@ -58,35 +109,30 @@
                                VerticalAlignment="Center" />
                     <!-- Search bar -->
                     <Border Name="SearchContainer"
-                            Grid.Row="0" Grid.Column="1"
-                            Background="{DynamicResource CardSurface}"
-                            CornerRadius="12"
-                            Padding="4,0"
-                            Margin="16,0"
-                            BorderBrush="{DynamicResource StrokeSubtle}"
-                            BorderThickness="1"
-                            VerticalAlignment="Center"
-                            MinHeight="44">
-                        <Grid ColumnDefinitions="Auto,*,Auto">
-                            <i:Icon Grid.Column="0"
-                                    Value="fa-solid fa-magnifying-glass"
-                                    FontSize="14"
-                                    Foreground="{DynamicResource TextMuted}"
-                                    Margin="12,0,6,0"
-                                    VerticalAlignment="Center" />
-                            <TextBox Grid.Column="1"
-                                      Name="SearchTextBox"
-                                      Text="{Binding SearchText, Mode=TwoWay}"
-                                      PlaceholderText="Search by Project ID..."
-                                      BorderThickness="0"
-                                      Background="Transparent"
-                                      VerticalAlignment="Center"
-                                      Padding="4,8" />
-                            <Button Grid.Column="2"
+                             Grid.Row="0" Grid.Column="1"
+                             Background="{DynamicResource Surface}"
+                             CornerRadius="22"
+                             Padding="0"
+                             Margin="16,0"
+                             BorderBrush="{DynamicResource StrokeSubtle}"
+                             BorderThickness="1"
+                             VerticalAlignment="Center"
+                             MinHeight="44">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBox Grid.Column="0"
+                                       Name="SearchTextBox"
+                                       Classes="SearchField"
+                                       Text="{Binding SearchText, Mode=TwoWay}"
+                                       PlaceholderText="Search by Project ID..."
+                                       VerticalAlignment="Center"
+                                       VerticalContentAlignment="Center"
+                                       MinHeight="42" />
+                            <Button Grid.Column="1"
                                      Name="SearchButton"
                                      Classes="SearchIconButton"
                                      VerticalAlignment="Center"
-                                     IsEnabled="{Binding !IsSearching}">
+                                     Foreground="{DynamicResource TextMuted}"
+                                     Margin="0,0,6,0">
                                 <Panel Width="18" Height="18">
                                     <i:Icon Value="fa-solid fa-magnifying-glass"
                                             FontSize="13"
@@ -122,17 +168,28 @@
                         </Grid>
                     </Border>
                     <!-- Search error message -->
-                    <TextBlock Name="SearchErrorText"
-                               Grid.Row="1" Grid.Column="1"
-                               Text="{Binding SearchError}"
-                               IsVisible="{Binding SearchError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                               Foreground="Red"
-                               FontSize="12"
-                               Margin="16,4,0,0"
-                               VerticalAlignment="Bottom" />
+                    <StackPanel Name="SearchErrorContainer"
+                                Grid.Row="1" Grid.Column="1"
+                                Orientation="Horizontal"
+                                Spacing="6"
+                                Margin="18,6,0,0"
+                                IsVisible="{Binding SearchError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <i:Icon Value="fa-solid fa-circle-info"
+                                FontSize="11"
+                                Foreground="{DynamicResource TextMuted}"
+                                VerticalAlignment="Center" />
+                        <TextBlock Name="SearchErrorText"
+                                   Text="{Binding SearchError}"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   FontSize="12"
+                                   FontWeight="Medium"
+                                   TextWrapping="Wrap"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
                     <Button Name="RefreshProjectsButton" Grid.Row="0" Grid.Column="2"
                             Classes="Primary Light MobileAction"
                             Padding="12,8"
+                            MinHeight="44"
                             VerticalAlignment="Center"
                             IsEnabled="{Binding !IsLoading}">
                         <StackPanel Orientation="Horizontal" Spacing="8">

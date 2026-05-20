@@ -125,7 +125,7 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
 
     public bool IsDarkThemeEnabled
     {
-        get => _prototypeSettings.IsDarkTheme;
+        get => _prototypeSettings.IsDarkTheme ?? Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
         set
         {
             _prototypeSettings.IsDarkTheme = value;
