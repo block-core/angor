@@ -164,7 +164,7 @@ public partial class MyProjectsView : UserControl, ISectionView
             _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.BackgroundProperty);
             _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.BorderThicknessProperty);
             _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.BoxShadowProperty);
-            _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.PaddingProperty);
+            _myProjectsSidebar.Padding = new Avalonia.Thickness(gridPadding);
 
             Grid.SetColumn(_myProjectsContent, 1);
             Grid.SetRow(_myProjectsContent, 0);
