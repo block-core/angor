@@ -405,6 +405,7 @@ FodyWeavers.xsd
 
 # AI task notes
 ai-tasks/
+RESUME.md
 
 # Windows reserved device names
 nul

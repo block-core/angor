@@ -182,10 +182,10 @@ public partial class PrototypeSettings : ReactiveObject
     [Reactive] private bool isDebugMode;
 
     /// <summary>
-    /// When true, the app uses the Dark theme; otherwise Light.
-    /// Persisted to disk so the choice survives restarts.
+    /// When set, the app uses the selected theme. When unset, Avalonia follows
+    /// the operating system appearance on macOS, Linux, Windows, Android, and iOS.
     /// </summary>
-    [Reactive] private bool isDarkTheme;
+    [Reactive] private bool? isDarkTheme;
 
     /// <summary>
     /// Persisted wallet ID for the currently selected wallet.
@@ -222,17 +222,18 @@ public partial class PrototypeSettings : ReactiveObject
 
                         // Set IsDarkTheme last — its WhenAnyValue subscription
                         // applies the theme, so we want the other fields settled first.
-                        IsDarkTheme = result.Value.IsDarkTheme;
+                        IsDarkTheme = result.Value.HasThemeOverride
+                            ? result.Value.IsDarkTheme
+                            : null;
                     }
                 });
             });
 
-        // Apply persisted theme immediately (defaults to light until async load completes)
+        // Follow the operating system appearance until the user explicitly chooses
+        // a theme in the app.
         if (Application.Current != null)
         {
-            Application.Current.RequestedThemeVariant = isDarkTheme
-                ? Avalonia.Styling.ThemeVariant.Dark
-                : Avalonia.Styling.ThemeVariant.Light;
+            Application.Current.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Default;
         }
 
         // Apply theme whenever IsDarkTheme changes
@@ -245,9 +246,12 @@ public partial class PrototypeSettings : ReactiveObject
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
                         ShellService.PrepareForThemeChange(true);
-                        Application.Current.RequestedThemeVariant = dark
-                            ? Avalonia.Styling.ThemeVariant.Dark
-                            : Avalonia.Styling.ThemeVariant.Light;
+                        Application.Current.RequestedThemeVariant = dark switch
+                        {
+                            true => Avalonia.Styling.ThemeVariant.Dark,
+                            false => Avalonia.Styling.ThemeVariant.Light,
+                            null => Avalonia.Styling.ThemeVariant.Default,
+                        };
                         ShellService.PrepareForThemeChange(false);
                     }, Avalonia.Threading.DispatcherPriority.Render);
                 }
@@ -267,7 +271,7 @@ public partial class PrototypeSettings : ReactiveObject
         saveSettingsCts = new CancellationTokenSource();
 
         bool currentDebugMode = IsDebugMode;
-        bool currentDarkTheme = IsDarkTheme;
+        bool? currentDarkTheme = IsDarkTheme;
         string? currentWalletId = SelectedWalletId;
         HashSet<string> currentBackupSet = new(WalletsNeedingBackup);
         CancellationToken token = saveSettingsCts.Token;
@@ -277,6 +281,7 @@ public partial class PrototypeSettings : ReactiveObject
             Result saveResult = await _store.Save(SettingsKey, new PrototypeSettingsData
             {
                 IsDebugMode = currentDebugMode,
+                HasThemeOverride = currentDarkTheme.HasValue,
                 IsDarkTheme = currentDarkTheme,
                 SelectedWalletId = currentWalletId,
                 WalletsNeedingBackup = currentBackupSet,
@@ -304,6 +309,7 @@ public partial class PrototypeSettings : ReactiveObject
         Result saveResult = await _store.Save(SettingsKey, new PrototypeSettingsData
         {
             IsDebugMode = IsDebugMode,
+            HasThemeOverride = IsDarkTheme.HasValue,
             IsDarkTheme = IsDarkTheme,
             SelectedWalletId = SelectedWalletId,
             WalletsNeedingBackup = new HashSet<string>(WalletsNeedingBackup),
@@ -336,7 +342,8 @@ public partial class PrototypeSettings : ReactiveObject
     private class PrototypeSettingsData
     {
         public bool IsDebugMode { get; set; }
-        public bool IsDarkTheme { get; set; }
+        public bool HasThemeOverride { get; set; }
+        public bool? IsDarkTheme { get; set; }
         public string? SelectedWalletId { get; set; }
         public HashSet<string>? WalletsNeedingBackup { get; set; }
     }
@@ -1123,7 +1130,7 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
 
     public bool IsDarkThemeEnabled
     {
-        get => _prototypeSettings.IsDarkTheme;
+        get => _prototypeSettings.IsDarkTheme ?? Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
         set
         {
             _prototypeSettings.IsDarkTheme = value;
