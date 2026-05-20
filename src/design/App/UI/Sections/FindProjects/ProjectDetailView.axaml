@@ -105,7 +105,7 @@
                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                         <Viewbox Width="10" Height="16">
                             <Path Data="{StaticResource ChevronLeftThick}"
-                                  Fill="{DynamicResource TextStrong}"
+                                   Fill="{DynamicResource IconStrongForeground}"
                                   Width="320" Height="512" Stretch="Uniform" />
                         </Viewbox>
                         <TextBlock Text="Back"
@@ -138,7 +138,7 @@
                 </Border.Transitions>
                 <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                     <i:Icon Value="fa-solid fa-share" FontSize="14"
-                           Foreground="{DynamicResource TextStrong}"
+                           Foreground="{DynamicResource IconStrongForeground}"
                            VerticalAlignment="Center" />
                     <TextBlock Text="Share"
                                FontSize="14"
@@ -415,7 +415,7 @@
                                     HorizontalAlignment="Center">
                                 <i:Icon Value="fa-solid fa-clock"
                                        FontSize="32"
-                                       Foreground="{DynamicResource TextMuted}" />
+                                       Foreground="{DynamicResource IconForeground}" />
                             </Border>
                             <TextBlock Text="Investment Period Closed"
                                        FontSize="22"
@@ -622,7 +622,7 @@
                                                Foreground="{DynamicResource TextMuted}" />
                                     <i:Icon Value="fa-solid fa-calendar"
                                            FontSize="18"
-                                           Foreground="{DynamicResource TextMuted}"
+                                            Foreground="{DynamicResource IconForeground}"
                                            DockPanel.Dock="Right" HorizontalAlignment="Right" />
                                 </DockPanel>
                                 <TextBlock Text="{Binding StartDate}" FontSize="20" FontWeight="Bold"
@@ -641,7 +641,7 @@
                                                Foreground="{DynamicResource TextMuted}" />
                                     <i:Icon Value="fa-solid fa-calendar"
                                            FontSize="18"
-                                           Foreground="{DynamicResource TextMuted}"
+                                            Foreground="{DynamicResource IconForeground}"
                                            DockPanel.Dock="Right" HorizontalAlignment="Right" />
                                 </DockPanel>
                                 <TextBlock Text="{Binding EndDate}" FontSize="20" FontWeight="Bold"
@@ -660,7 +660,7 @@
                                                Foreground="{DynamicResource TextMuted}" />
                                     <i:Icon Value="fa-solid fa-clock"
                                            FontSize="18"
-                                           Foreground="{DynamicResource TextMuted}"
+                                            Foreground="{DynamicResource IconForeground}"
                                            DockPanel.Dock="Right" HorizontalAlignment="Right" />
                                 </DockPanel>
                                 <TextBlock FontSize="20" FontWeight="Bold"
@@ -681,7 +681,7 @@
                                                Foreground="{DynamicResource TextMuted}" />
                                     <i:Icon Value="fa-solid fa-calendar"
                                            FontSize="18"
-                                           Foreground="{DynamicResource TextMuted}"
+                                            Foreground="{DynamicResource IconForeground}"
                                            DockPanel.Dock="Right" HorizontalAlignment="Right" />
                                 </DockPanel>
                                 <TextBlock Text="{Binding ExpiryDate}" FontSize="20" FontWeight="Bold"
@@ -704,7 +704,7 @@
                                                Foreground="{DynamicResource TextMuted}" />
                                     <i:Icon Value="fa-solid fa-clock"
                                            FontSize="18"
-                                           Foreground="{DynamicResource TextMuted}"
+                                            Foreground="{DynamicResource IconForeground}"
                                            DockPanel.Dock="Right" HorizontalAlignment="Right" />
                                 </DockPanel>
                                 <TextBlock Text="{Binding PayoutFrequency}" FontSize="20" FontWeight="Bold"
@@ -722,7 +722,7 @@
                                                Foreground="{DynamicResource TextMuted}" />
                                     <i:Icon Value="fa-solid fa-clock"
                                            FontSize="18"
-                                           Foreground="{DynamicResource TextMuted}"
+                                            Foreground="{DynamicResource IconForeground}"
                                            DockPanel.Dock="Right" HorizontalAlignment="Right" />
                                 </DockPanel>
                                 <TextBlock FontSize="20" FontWeight="Bold"
@@ -794,7 +794,7 @@
                         <DockPanel>
                             <i:Icon Value="fa-solid fa-circle-info"
                                    FontSize="24"
-                                   Foreground="{DynamicResource TextStrong}"
+                                   Foreground="{DynamicResource IconStrongForeground}"
                                    DockPanel.Dock="Left" Margin="0,0,12,0" />
                             <Border Name="DetailsChevron"
                                     Classes="CollapsibleChevron"
@@ -802,7 +802,7 @@
                                     VerticalAlignment="Center">
                                 <i:Icon Value="fa-solid fa-chevron-down"
                                        FontSize="16"
-                                       Foreground="{DynamicResource TextMuted}" />
+                                       Foreground="{DynamicResource IconForeground}" />
                             </Border>
                             <TextBlock Text="Project Details"
                                        FontSize="20" FontWeight="Bold"
@@ -827,7 +827,7 @@
                                             VerticalAlignment="Center">
                                     <i:Icon Value="fa-solid fa-arrow-up-right-from-square"
                                            FontSize="18"
-                                           Foreground="{DynamicResource TextMuted}"
+                                           Foreground="{DynamicResource IconForeground}"
                                            VerticalAlignment="Center" />
                                     <TextBlock Text="View the transaction"
                                                FontSize="14"
@@ -849,12 +849,12 @@
                                 <DockPanel>
                                     <i:Icon Value="fa-solid fa-cloud"
                                            FontSize="18"
-                                           Foreground="{DynamicResource TextMuted}"
+                                           Foreground="{DynamicResource IconForeground}"
                                            DockPanel.Dock="Left" Margin="0,0,8,0" />
                                     <Border Name="CopyProjectIdBtn" Cursor="Hand"
                                             DockPanel.Dock="Right" HorizontalAlignment="Right"
                                             Margin="8,0,0,0">
-                                        <i:Icon Value="fa-solid fa-copy" FontSize="14" Foreground="{DynamicResource TextMuted}" />
+                                        <i:Icon Value="fa-solid fa-copy" FontSize="14" Foreground="{DynamicResource IconForeground}" />
                                     </Border>
                                     <TextBlock Text="{Binding ProjectId}"
                                                FontSize="13"
@@ -877,12 +877,12 @@
                                 <DockPanel>
                                     <i:Icon Value="fa-solid fa-key"
                                            FontSize="18"
-                                           Foreground="{DynamicResource TextMuted}"
+                                           Foreground="{DynamicResource IconForeground}"
                                            DockPanel.Dock="Left" Margin="0,0,8,0" />
                                     <Border Name="CopyFounderKeyBtn" Cursor="Hand"
                                             DockPanel.Dock="Right" HorizontalAlignment="Right"
                                             Margin="8,0,0,0">
-                                        <i:Icon Value="fa-solid fa-copy" FontSize="14" Foreground="{DynamicResource TextMuted}" />
+                                        <i:Icon Value="fa-solid fa-copy" FontSize="14" Foreground="{DynamicResource IconForeground}" />
                                     </Border>
                                     <TextBlock Text="{Binding FounderKey}"
                                                FontSize="13"
@@ -909,7 +909,7 @@
                                 <i:Icon Value="fa-solid fa-code"
                                         FontSize="16"
                                         VerticalAlignment="Center"
-                                        Foreground="{DynamicResource TextStrong}" />
+                                        Foreground="{DynamicResource IconStrongForeground}" />
                                 <TextBlock Text="View Project Info JSON"
                                             FontSize="14" FontWeight="SemiBold"
                                             VerticalAlignment="Center"
@@ -938,7 +938,7 @@
                         <DockPanel>
                             <i:Icon Value="fa-solid fa-comment"
                                    FontSize="24"
-                                   Foreground="{DynamicResource TextStrong}"
+                                   Foreground="{DynamicResource IconStrongForeground}"
                                    DockPanel.Dock="Left" Margin="0,0,12,0" />
                             <Border Name="NostrChevron"
                                     Classes="CollapsibleChevron"
@@ -946,7 +946,7 @@
                                     VerticalAlignment="Center">
                                 <i:Icon Value="fa-solid fa-chevron-down"
                                        FontSize="16"
-                                       Foreground="{DynamicResource TextMuted}" />
+                                       Foreground="{DynamicResource IconForeground}" />
                             </Border>
                             <TextBlock Text="Nostr"
                                        FontSize="20" FontWeight="Bold"
@@ -968,12 +968,12 @@
                                 <DockPanel>
                                     <i:Icon Value="fa-solid fa-user"
                                            FontSize="18"
-                                           Foreground="{DynamicResource TextMuted}"
+                                           Foreground="{DynamicResource IconForeground}"
                                            DockPanel.Dock="Left" Margin="0,0,8,0" />
                                     <Border Name="CopyNpubBtn" Cursor="Hand"
                                             DockPanel.Dock="Right" HorizontalAlignment="Right"
                                             Margin="8,0,0,0">
-                                        <i:Icon Value="fa-solid fa-copy" FontSize="14" Foreground="{DynamicResource TextMuted}" />
+                                        <i:Icon Value="fa-solid fa-copy" FontSize="14" Foreground="{DynamicResource IconForeground}" />
                                     </Border>
                                     <TextBlock Text="{Binding NostrNpub}"
                                                FontSize="13"
@@ -999,7 +999,7 @@
                                 <i:Icon Value="fa-solid fa-arrow-up-right-from-square"
                                         FontSize="18"
                                         VerticalAlignment="Center"
-                                        Foreground="{DynamicResource TextStrong}" />
+                                        Foreground="{DynamicResource IconStrongForeground}" />
                                 <TextBlock Text="Open in Angor Projects"
                                             FontSize="14" FontWeight="SemiBold"
                                             VerticalAlignment="Center"

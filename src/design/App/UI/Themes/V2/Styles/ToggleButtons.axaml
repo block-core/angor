@@ -17,6 +17,7 @@
         <Setter Property="Padding" Value="0" />
         <Setter Property="Background" Value="{DynamicResource Surface}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+        <Setter Property="Foreground" Value="{DynamicResource IconForeground}" />
     </Style>
 
     <Design.PreviewWith>

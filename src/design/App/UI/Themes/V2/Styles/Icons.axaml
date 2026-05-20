@@ -5,9 +5,11 @@
     <!-- Icon utility styles — replaces Zafiro IconOptions attached properties.
          Projektanker icons use FontSize for sizing and Foreground for color. -->
 
-    <!-- Defaults: all i:Icon elements in UserControls get TextMuted color -->
-    <Style Selector=":is(UserControl) i|Icon">
-        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+    <!-- Defaults: all i:Icon elements get a theme-aware muted color. This keeps
+         Window-level icons and icons inside button/toggle states from falling
+         back to black during dark-mode transitions. -->
+    <Style Selector="i|Icon">
+        <Setter Property="Foreground" Value="{DynamicResource IconForeground}" />
     </Style>
 
     <!-- Sizes -->
@@ -26,7 +28,7 @@
         <Setter Property="Foreground" Value="White" />
     </Style>
     <Style Selector="i|Icon.Icon-Fill-Muted">
-        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        <Setter Property="Foreground" Value="{DynamicResource IconForeground}" />
     </Style>
     <Style Selector="i|Icon.Icon-Fill-Green">
         <Setter Property="Foreground" Value="{DynamicResource Brand}" />

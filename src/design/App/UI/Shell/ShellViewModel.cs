@@ -203,37 +203,27 @@ public partial class PrototypeSettings : ReactiveObject
         _store = store;
         _logger = logger;
 
-        // Load persisted values asynchronously to avoid blocking the UI thread.
-        // Default field values are used until loading completes.
-        Observable.StartAsync(async ct =>
-            {
-                var result = await _store.Load<PrototypeSettingsData>(SettingsKey);
-                return result;
-            })
-            .Subscribe(result =>
-            {
-                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                {
-                    if (result.IsSuccess)
-                    {
-                        IsDebugMode = result.Value.IsDebugMode;
-                        SelectedWalletId = result.Value.SelectedWalletId;
-                        WalletsNeedingBackup = result.Value.WalletsNeedingBackup ?? new HashSet<string>();
-
-                        // Set IsDarkTheme last — its WhenAnyValue subscription
-                        // applies the theme, so we want the other fields settled first.
-                        IsDarkTheme = result.Value.HasThemeOverride
-                            ? result.Value.IsDarkTheme
-                            : null;
-                    }
-                });
-            });
-
         // Follow the operating system appearance until the user explicitly chooses
         // a theme in the app.
         if (Application.Current != null)
         {
             Application.Current.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Default;
+        }
+
+        // Theme has to be applied before the first Shell render. If we load it
+        // asynchronously, icons can briefly render with light/default resources
+        // and remain black until a later style refresh.
+        Result<PrototypeSettingsData> loadResult = _store.Load<PrototypeSettingsData>(SettingsKey).GetAwaiter().GetResult();
+        if (loadResult.IsSuccess)
+        {
+            IsDebugMode = loadResult.Value.IsDebugMode;
+            SelectedWalletId = loadResult.Value.SelectedWalletId;
+            WalletsNeedingBackup = loadResult.Value.WalletsNeedingBackup ?? new HashSet<string>();
+            IsDarkTheme = loadResult.Value.HasThemeOverride
+                ? loadResult.Value.IsDarkTheme
+                : null;
+
+            ApplyRequestedTheme(IsDarkTheme);
         }
 
         // Apply theme whenever IsDarkTheme changes
@@ -246,12 +236,7 @@ public partial class PrototypeSettings : ReactiveObject
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
                         ShellService.PrepareForThemeChange(true);
-                        Application.Current.RequestedThemeVariant = dark switch
-                        {
-                            true => Avalonia.Styling.ThemeVariant.Dark,
-                            false => Avalonia.Styling.ThemeVariant.Light,
-                            null => Avalonia.Styling.ThemeVariant.Default,
-                        };
+                        ApplyRequestedTheme(dark);
                         ShellService.PrepareForThemeChange(false);
                     }, Avalonia.Threading.DispatcherPriority.Render);
                 }
@@ -262,6 +247,21 @@ public partial class PrototypeSettings : ReactiveObject
             .Skip(1)
             .Throttle(TimeSpan.FromMilliseconds(250), RxSchedulers.TaskpoolScheduler)
             .Subscribe(_ => ScheduleSaveSettings());
+    }
+
+    private static void ApplyRequestedTheme(bool? dark)
+    {
+        if (Application.Current == null)
+        {
+            return;
+        }
+
+        Application.Current.RequestedThemeVariant = dark switch
+        {
+            true => Avalonia.Styling.ThemeVariant.Dark,
+            false => Avalonia.Styling.ThemeVariant.Light,
+            null => Avalonia.Styling.ThemeVariant.Default,
+        };
     }
 
     private void ScheduleSaveSettings()

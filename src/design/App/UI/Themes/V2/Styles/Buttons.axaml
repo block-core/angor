@@ -114,7 +114,7 @@
         <Setter Property="Background" Value="{DynamicResource Surface}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        <Setter Property="Foreground" Value="{DynamicResource IconForeground}" />
         <Setter Property="Padding" Value="10" />
     </Style>
     
@@ -296,6 +296,7 @@
         <Setter Property="Padding" Value="0" />
         <Setter Property="Background" Value="{DynamicResource Surface}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+        <Setter Property="Foreground" Value="{DynamicResource IconForeground}" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
