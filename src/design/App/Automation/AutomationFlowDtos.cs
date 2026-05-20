@@ -40,14 +40,70 @@ public static class AutomationFlowDtos
         [JsonPropertyName("profileUrl")]
         public string ProfileUrl { get; init; } = "";
 
+        [JsonPropertyName("targetAmountBtc")]
+        public string TargetAmountBtc { get; init; } = "1.0";
+
         [JsonPropertyName("thresholdAmountBtc")]
         public string ThresholdAmountBtc { get; init; } = "0.01";
 
+        [JsonPropertyName("penaltyDays")]
+        public int PenaltyDays { get; init; }
+
+        /// <summary>
+        /// "Weekly" or "Monthly". Defaults to "Weekly".
+        /// </summary>
+        [JsonPropertyName("payoutFrequency")]
+        public string PayoutFrequency { get; init; } = "Weekly";
+
+        /// <summary>
+        /// Number of installments: 3, 6, or 9. Defaults to 3.
+        /// </summary>
+        [JsonPropertyName("installmentCount")]
+        public int InstallmentCount { get; init; } = 3;
+
+        /// <summary>
+        /// Day name for weekly payouts (e.g. "Monday"). Required when PayoutFrequency is "Weekly".
+        /// </summary>
         [JsonPropertyName("payoutDay")]
         public string PayoutDay { get; init; } = "";
 
+        /// <summary>
+        /// Day of month (1-29) for monthly payouts. Required when PayoutFrequency is "Monthly".
+        /// </summary>
+        [JsonPropertyName("monthlyPayoutDay")]
+        public int MonthlyPayoutDay { get; init; }
+
+        /// <summary>
+        /// Override the project start date (yyyy-MM-dd). When set, stage timelocks are calculated
+        /// from this date instead of today. Use a past date to make stages immediately claimable
+        /// in tests. Only effective in debug mode.
+        /// </summary>
+        [JsonPropertyName("startDate")]
+        public string StartDate { get; init; } = "";
+
         [JsonPropertyName("runId")]
         public string RunId { get; init; } = "";
+    }
+
+    public sealed class CancelInvestmentRequest
+    {
+        [JsonPropertyName("projectIdentifier")]
+        public string ProjectIdentifier { get; init; } = "";
+
+        /// <summary>
+        /// Which cancel stage: "beforeApproval" (Step 1) or "afterApproval" (Step 2).
+        /// </summary>
+        [JsonPropertyName("cancelStage")]
+        public string CancelStage { get; init; } = "beforeApproval";
+    }
+
+    public sealed class CancelInvestmentResponse
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; init; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; init; }
     }
 
     public sealed class CreateInvestProjectRequest

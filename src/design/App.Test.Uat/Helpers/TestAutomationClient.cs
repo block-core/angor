@@ -299,6 +299,13 @@ public sealed class TestAutomationClient : IDisposable
         return await PostAsync<UploadToBlossomResponse>("/flows/upload-to-blossom", request, ct);
     }
 
+    public async Task<CancelInvestmentResponse> CancelInvestmentAsync(
+        CancelInvestmentRequest request,
+        CancellationToken ct = default)
+    {
+        return await PostAsync<CancelInvestmentResponse>("/flows/cancel-investment", request, ct);
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // HTTP Helpers
     // ═══════════════════════════════════════════════════════════════════

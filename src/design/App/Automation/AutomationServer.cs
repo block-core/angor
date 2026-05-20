@@ -391,6 +391,14 @@ public sealed class AutomationServer : IDisposable
                 return (200, result);
             }
 
+            // POST /flows/cancel-investment
+            if (method == "POST" && path == "/flows/cancel-investment")
+            {
+                var req = Deserialize<CancelInvestmentRequest>(body);
+                var result = await AutomationFlows.CancelInvestmentAsync(services, req);
+                return (200, result);
+            }
+
             return (404, new ActionResponse { Success = false, Error = $"Unknown route: {method} {path}" });
         }
         catch (Exception ex)

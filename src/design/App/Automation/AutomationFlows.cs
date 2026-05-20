@@ -122,13 +122,12 @@ public static class AutomationFlows
             await ClickByNameAsync(window, "NextStepButton");
 
             // Step 4: Target amount + approval threshold + penalty days
-            await TypeTextByNameAsync(window, "FundTargetAmountInput", "1.0");
+            await TypeTextByNameAsync(window, "FundTargetAmountInput", req.TargetAmountBtc);
             await TypeTextByNameAsync(window, "ApprovalThresholdInput", req.ThresholdAmountBtc);
-            // PenaltyDays has no UI input for fund type — set via VM (defaults to 0)
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 var wizardVm = myProjectsVm.CreateProjectVm;
-                wizardVm.PenaltyDays = 0;
+                wizardVm.PenaltyDays = req.PenaltyDays;
                 Dispatcher.UIThread.RunJobs();
             });
             await ClickByNameAsync(window, "NextStepButton");
@@ -138,17 +137,53 @@ public static class AutomationFlows
             await Task.Delay(200);
 
             // Step 5: Payout frequency + installments + day + generate
-            await ClickByNameAsync(window, "PayoutFreqWeekly");
-            await ClickByNameAsync(window, "Installment3");
-            await ClickByNameAsync(window, "Installment6");
+            var freqButton = req.PayoutFrequency == "Monthly" ? "PayoutFreqMonthly" : "PayoutFreqWeekly";
+            await ClickByNameAsync(window, freqButton);
 
-            // Select payout day via VM (ListBox selection is not easily clickable by Name)
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            // Select installment count (UI defaults to 3; click to toggle if different)
+            var installmentButton = req.InstallmentCount switch
             {
-                var wizardVm = myProjectsVm.CreateProjectVm;
-                wizardVm.WeeklyPayoutDay = req.PayoutDay;
-                Dispatcher.UIThread.RunJobs();
-            });
+                6 => "Installment6",
+                9 => "Installment9",
+                _ => "Installment3",
+            };
+            // Click Installment3 first to ensure a known state, then click the desired one
+            await ClickByNameAsync(window, "Installment3");
+            if (installmentButton != "Installment3")
+            {
+                await ClickByNameAsync(window, installmentButton);
+            }
+
+            // Select payout day via VM
+            if (req.PayoutFrequency == "Monthly")
+            {
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    var wizardVm = myProjectsVm.CreateProjectVm;
+                    wizardVm.MonthlyPayoutDate = req.MonthlyPayoutDay > 0 ? req.MonthlyPayoutDay : 1;
+                    Dispatcher.UIThread.RunJobs();
+                });
+            }
+            else
+            {
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    var wizardVm = myProjectsVm.CreateProjectVm;
+                    wizardVm.WeeklyPayoutDay = req.PayoutDay;
+                    Dispatcher.UIThread.RunJobs();
+                });
+            }
+
+            // Override start date if provided (debug mode: use past date to make stages claimable)
+            if (!string.IsNullOrEmpty(req.StartDate))
+            {
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    var wizardVm = myProjectsVm.CreateProjectVm;
+                    wizardVm.StartDate = req.StartDate;
+                    Dispatcher.UIThread.RunJobs();
+                });
+            }
 
             await ClickByNameAsync(window, "GeneratePayoutsButton");
             await ClickByNameAsync(window, "NextStepButton");
@@ -1929,5 +1964,61 @@ public static class AutomationFlows
     private static void Log(string ctx, string msg)
     {
         Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss.fff}] [{ctx}] {msg}");
+    }
+
+    /// <summary>
+    /// Cancel an investment at Step 1 (before founder approval) or Step 2 (after approval, before confirm).
+    /// </summary>
+    public static async Task<CancelInvestmentResponse> CancelInvestmentAsync(
+        IServiceProvider services,
+        CancelInvestmentRequest req)
+    {
+        try
+        {
+            var window = await RequireWindowAsync();
+            await NavigateToAsync(window, "Funded");
+
+            var portfolioVm = services.GetRequiredService<PortfolioViewModel>();
+
+            // Determine the expected step based on cancelStage
+            var expectedStep = req.CancelStage == "afterApproval" ? 2 : 1;
+            var investment = await WaitForInvestmentAsync(portfolioVm, req.ProjectIdentifier, i => i.Step == expectedStep);
+            if (investment == null)
+            {
+                return new CancelInvestmentResponse { Success = false, Error = $"Investment at step {expectedStep} not found for {req.ProjectIdentifier}" };
+            }
+
+            // Click RefreshButton then ManageButton to open detail
+            await ClickByNameAsync(window, "RefreshButton");
+            await Task.Delay(1000);
+            await ClickManageButtonByProjectAsync(window, req.ProjectIdentifier);
+            await Task.Delay(500);
+
+            // Click the appropriate cancel button
+            var cancelButton = expectedStep == 1 ? "CancelInvestmentStep1Button" : "CancelInvestmentButton";
+            await ClickByNameAsync(window, cancelButton, TimeSpan.FromSeconds(10));
+
+            // Wait for investment to be removed (SelectedInvestment becomes null)
+            var deadline = DateTime.UtcNow + TimeSpan.FromMinutes(2);
+            while (DateTime.UtcNow < deadline)
+            {
+                var removed = await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    Dispatcher.UIThread.RunJobs();
+                    return portfolioVm.SelectedInvestment == null
+                        || !portfolioVm.Investments.Any(i =>
+                            string.Equals(i.ProjectIdentifier, req.ProjectIdentifier, StringComparison.Ordinal));
+                });
+
+                if (removed) break;
+                await Task.Delay(PollInterval);
+            }
+
+            return new CancelInvestmentResponse { Success = true };
+        }
+        catch (Exception ex)
+        {
+            return new CancelInvestmentResponse { Success = false, Error = ex.Message };
+        }
     }
 }
