@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using App.UI.Shared;
@@ -15,7 +14,7 @@ namespace App.UI.Sections.MyProjects.Deploy;
 /// </summary>
 public partial class DeployFlowOverlay : UserControl, IBackdropCloseable
 {
-    private Border? _selectedWalletBorder;
+    private Button? _selectedWalletButton;
 
     /// <summary>
     /// Callback invoked when the user completes the deploy flow (success → "Go to My Projects").
@@ -27,8 +26,6 @@ public partial class DeployFlowOverlay : UserControl, IBackdropCloseable
     {
         InitializeComponent();
         AddHandler(Button.ClickEvent, OnButtonClick);
-        // Handle wallet card clicks via PointerPressed on Border elements (no Button chrome)
-        AddHandler(Border.PointerPressedEvent, OnWalletBorderPressed, RoutingStrategies.Bubble);
     }
 
     private DeployFlowViewModel? Vm => DataContext as DeployFlowViewModel;
@@ -108,33 +105,14 @@ public partial class DeployFlowOverlay : UserControl, IBackdropCloseable
                 Vm?.CompleteProfile();
                 GetShellVm()?.HideModal();
                 break;
-        }
-    }
 
-    /// <summary>
-    /// Handle clicks on WalletBorder elements (replaces Button to avoid FluentTheme hover chrome).
-    /// Walks up from the clicked element to find the WalletBorder, then uses its DataContext.
-    /// </summary>
-    private void OnWalletBorderPressed(object? sender, PointerPressedEventArgs e)
-    {
-        // Walk up from the hit target to find a Border named "WalletBorder"
-        var source = e.Source as Control;
-        Border? walletBorder = null;
-        while (source != null)
-        {
-            if (source is Border b && b.Name == "WalletBorder")
-            {
-                walletBorder = b;
+            case "WalletButton":
+                if (btn.CommandParameter is WalletInfo wallet)
+                {
+                    Vm?.SelectWallet(wallet);
+                    _selectedWalletButton = WalletSelectionHelper.UpdateWalletSelection(_selectedWalletButton, btn);
+                }
                 break;
-            }
-            source = source.Parent as Control;
-        }
-
-        if (walletBorder?.DataContext is WalletInfo wallet)
-        {
-            Vm?.SelectWallet(wallet);
-            _selectedWalletBorder = WalletSelectionHelper.UpdateWalletSelection(_selectedWalletBorder, walletBorder);
-            e.Handled = true;
         }
     }
 

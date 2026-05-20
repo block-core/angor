@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -71,14 +70,14 @@ public partial class ShareModal : UserControl, IBackdropCloseable
         var copyBtn = this.FindControl<Button>("CopyButton");
         if (copyBtn != null) copyBtn.Click += OnCopyClick;
 
-        // Social buttons + email — PointerPressed on Borders
-        WireBorderClick("BtnTwitter", () => ShareOnPlatform("twitter"));
-        WireBorderClick("BtnFacebook", () => ShareOnPlatform("facebook"));
-        WireBorderClick("BtnLinkedIn", () => ShareOnPlatform("linkedin"));
-        WireBorderClick("BtnTelegram", () => ShareOnPlatform("telegram"));
-        WireBorderClick("BtnWhatsApp", () => ShareOnPlatform("whatsapp"));
-        WireBorderClick("BtnReddit", () => ShareOnPlatform("reddit"));
-        WireBorderClick("BtnEmail", () => ShareViaEmail());
+        // Social buttons + email — Click on Buttons
+        WireButtonClick("BtnTwitter", () => ShareOnPlatform("twitter"));
+        WireButtonClick("BtnFacebook", () => ShareOnPlatform("facebook"));
+        WireButtonClick("BtnLinkedIn", () => ShareOnPlatform("linkedin"));
+        WireButtonClick("BtnTelegram", () => ShareOnPlatform("telegram"));
+        WireButtonClick("BtnWhatsApp", () => ShareOnPlatform("whatsapp"));
+        WireButtonClick("BtnReddit", () => ShareOnPlatform("reddit"));
+        WireButtonClick("BtnEmail", () => ShareViaEmail());
     }
 
     private ShellViewModel? ShellVm =>
@@ -170,16 +169,12 @@ public partial class ShareModal : UserControl, IBackdropCloseable
         }
     }
 
-    private void WireBorderClick(string borderName, Action handler)
+    private void WireButtonClick(string buttonName, Action handler)
     {
-        var border = this.FindControl<Border>(borderName);
-        if (border != null)
+        var button = this.FindControl<Button>(buttonName);
+        if (button != null)
         {
-            border.PointerPressed += (_, e) =>
-            {
-                handler();
-                e.Handled = true;
-            };
+            button.Click += (_, _) => handler();
         }
     }
 }

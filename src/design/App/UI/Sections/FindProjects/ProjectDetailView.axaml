@@ -27,14 +27,12 @@
             <Setter Property="RenderTransform" Value="translate(0px, -1px)" />
             <Setter Property="BoxShadow" Value="0 6 16 0 #33000000" />
         </Style>
-        <Style Selector="Border.FloatingBtn:pointerover">
+        <Style Selector="Button.FloatingBtn:pointerover /template/ Border">
             <Setter Property="RenderTransform" Value="translate(0px, -1px)" />
-            <Setter Property="BoxShadow" Value="0 6 16 0 #33000000" />
         </Style>
-        <!-- Nav CTA hover: lift + enhanced shadow -->
-        <Style Selector="Border#NavCtaButton:pointerover">
+        <!-- Nav CTA hover: lift -->
+        <Style Selector="Button#NavCtaButton:pointerover /template/ Border">
             <Setter Property="RenderTransform" Value="translate(0px, -1px)" />
-            <Setter Property="BoxShadow" Value="0 6 16 0 #33000000" />
         </Style>
         <!-- Kill FluentTheme button chrome on the back button -->
         <Style Selector="Button.BackBtn">
@@ -118,24 +116,16 @@
             </Border>
 
             <!-- RIGHT: Share Button -->
-            <Border Name="ShareButton" DockPanel.Dock="Right"
-                    Classes="FloatingBtn"
+            <Button Name="ShareButton" DockPanel.Dock="Right"
+                    Classes="Unstyled FloatingBtn"
                     Background="{DynamicResource FloatingBtnBg}"
                     BorderBrush="{DynamicResource FloatingBtnBorder}"
                     BorderThickness="1"
                     CornerRadius="8"
-                    BoxShadow="{DynamicResource FloatingBtnShadow}"
                     Padding="16,0,16,0"
                     Height="44"
                     VerticalAlignment="Center"
-                    Cursor="Hand"
-                    RenderTransform="translate(0px, 0px)">
-                <Border.Transitions>
-                    <Transitions>
-                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" />
-                        <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
-                    </Transitions>
-                </Border.Transitions>
+                    Cursor="Hand">
                 <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                     <i:Icon Value="fa-solid fa-share" FontSize="14"
                            Foreground="{DynamicResource TextStrong}"
@@ -146,10 +136,11 @@
                                Foreground="{DynamicResource TextStrong}"
                                VerticalAlignment="Center" />
                 </StackPanel>
-            </Border>
+            </Button>
 
             <!-- RIGHT: Floating CTA button — fades in when InvestButton scrolls out of view -->
-            <Border Name="NavCtaButton"
+            <Button Name="NavCtaButton"
+                    Classes="Unstyled"
                     DockPanel.Dock="Right"
                     CornerRadius="8"
                     Padding="16,0,16,0"
@@ -160,21 +151,19 @@
                     Opacity="0"
                     IsHitTestVisible="False"
                     IsVisible="{Binding IsOpenAndNotInvested}"
-                    BoxShadow="{DynamicResource FloatingBtnShadow}"
                     RenderTransform="translate(0px, 0px)">
-                <Border.Transitions>
+                <Button.Transitions>
                     <Transitions>
                         <DoubleTransition Property="Opacity" Duration="0:0:0.25" Easing="CubicEaseInOut" />
                         <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" />
-                        <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
                     </Transitions>
-                </Border.Transitions>
-                <Border.Background>
+                </Button.Transitions>
+                <Button.Background>
                     <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                         <GradientStop Color="#2d5a3d" Offset="0" />
                         <GradientStop Color="#4a8f5f" Offset="1" />
                     </LinearGradientBrush>
-                </Border.Background>
+                </Button.Background>
                 <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
                     <i:Icon Value="fa-brands fa-bitcoin"
                            FontSize="16"
@@ -186,7 +175,7 @@
                                Foreground="White"
                                VerticalAlignment="Center" />
                 </StackPanel>
-            </Border>
+            </Button>
 
             <!-- CENTER: Project Name pill -->
             <Border Name="ProjectNamePill"
@@ -309,7 +298,8 @@
                                        TextAlignment="Center"
                                        HorizontalAlignment="Center" />
                             <!-- Invest button — Vue: white bg, color #2d5a3d, full width, border-radius 8px -->
-                            <Border Name="InvestButton"
+                            <Button Name="InvestButton"
+                                    Classes="Unstyled"
                                     Background="White"
                                     CornerRadius="8"
                                     Padding="24,14"
@@ -326,7 +316,7 @@
                                                Foreground="#2d5a3d"
                                                VerticalAlignment="Center" />
                                 </StackPanel>
-                            </Border>
+                            </Button>
                         </StackPanel>
                     </Border>
 
@@ -817,7 +807,7 @@
                         <StackPanel Spacing="6">
                             <TextBlock Text="Explorer" FontSize="13" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextMuted}" />
-                            <Border Name="ExplorerLink"
+                            <Button Name="ExplorerLink" Classes="Unstyled"
                                     Background="{DynamicResource SurfaceMedium}"
                                     BorderBrush="{DynamicResource Stroke}"
                                     BorderThickness="1"
@@ -835,7 +825,7 @@
                                                VerticalAlignment="Center"
                                                TextDecorations="Underline" />
                                 </StackPanel>
-                            </Border>
+                            </Button>
                         </StackPanel>
 
                         <!-- Project ID -->
@@ -851,11 +841,12 @@
                                            FontSize="18"
                                            Foreground="{DynamicResource TextMuted}"
                                            DockPanel.Dock="Left" Margin="0,0,8,0" />
-                                    <Border Name="CopyProjectIdBtn" Cursor="Hand"
+                                    <Button Name="CopyProjectIdBtn" Classes="Unstyled"
+                                            Cursor="Hand"
                                             DockPanel.Dock="Right" HorizontalAlignment="Right"
                                             Margin="8,0,0,0">
                                         <i:Icon Value="fa-solid fa-copy" FontSize="14" Foreground="{DynamicResource TextMuted}" />
-                                    </Border>
+                                    </Button>
                                     <TextBlock Text="{Binding ProjectId}"
                                                FontSize="13"
                                                FontFamily="Cascadia Code,Consolas,monospace"
@@ -879,11 +870,12 @@
                                            FontSize="18"
                                            Foreground="{DynamicResource TextMuted}"
                                            DockPanel.Dock="Left" Margin="0,0,8,0" />
-                                    <Border Name="CopyFounderKeyBtn" Cursor="Hand"
+                                    <Button Name="CopyFounderKeyBtn" Classes="Unstyled"
+                                            Cursor="Hand"
                                             DockPanel.Dock="Right" HorizontalAlignment="Right"
                                             Margin="8,0,0,0">
                                         <i:Icon Value="fa-solid fa-copy" FontSize="14" Foreground="{DynamicResource TextMuted}" />
-                                    </Border>
+                                    </Button>
                                     <TextBlock Text="{Binding FounderKey}"
                                                FontSize="13"
                                                FontFamily="Cascadia Code,Consolas,monospace"
@@ -895,13 +887,15 @@
                         </StackPanel>
 
                         <!-- View Project JSON -->
-                        <Border Name="ViewProjectJsonBtn"
+                        <Button Name="ViewProjectJsonBtn" Classes="Unstyled"
                                 Background="{DynamicResource SurfaceMedium}"
                                 BorderBrush="{DynamicResource Stroke}"
                                 BorderThickness="1"
                                 CornerRadius="8"
                                 Padding="12,10"
-                                Cursor="Hand">
+                                Cursor="Hand"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center">
                             <StackPanel Orientation="Horizontal"
                                         Spacing="8"
                                         HorizontalAlignment="Center"
@@ -915,7 +909,7 @@
                                             VerticalAlignment="Center"
                                             Foreground="{DynamicResource TextStrong}" />
                             </StackPanel>
-                        </Border>
+                        </Button>
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -970,11 +964,12 @@
                                            FontSize="18"
                                            Foreground="{DynamicResource TextMuted}"
                                            DockPanel.Dock="Left" Margin="0,0,8,0" />
-                                    <Border Name="CopyNpubBtn" Cursor="Hand"
+                                    <Button Name="CopyNpubBtn" Classes="Unstyled"
+                                            Cursor="Hand"
                                             DockPanel.Dock="Right" HorizontalAlignment="Right"
                                             Margin="8,0,0,0">
                                         <i:Icon Value="fa-solid fa-copy" FontSize="14" Foreground="{DynamicResource TextMuted}" />
-                                    </Border>
+                                    </Button>
                                     <TextBlock Text="{Binding NostrNpub}"
                                                FontSize="13"
                                                FontFamily="Cascadia Code,Consolas,monospace"

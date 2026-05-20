@@ -40,6 +40,28 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
     private string? _generatedSeedWords;
 
     /// <summary>
+    /// Exposes the generated seed words for automation/test access.
+    /// Returns null if no seed words have been generated yet.
+    /// </summary>
+    internal string? GeneratedSeedWords => _generatedSeedWords;
+
+    /// <summary>
+    /// Marks seed as downloaded (skipping the native file dialog) so the
+    /// Continue button becomes enabled. Used by automation flows.
+    /// </summary>
+    internal void MarkSeedDownloaded()
+    {
+        _seedDownloaded = true;
+        var btn = this.FindControl<Button>("BtnContinueBackup");
+        if (btn != null)
+        {
+            btn.IsEnabled = true;
+            btn.BorderBrush = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#4B7C5A"));
+            btn.Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#4B7C5A"));
+        }
+    }
+
+    /// <summary>
     /// Optional callback invoked whenever the modal is dismissed — success, cancel, or backdrop click.
     /// The bool indicates whether a wallet was successfully created/imported.
     /// Set by the caller (e.g. InvestModalsView) to re-show the invest flow after import.
