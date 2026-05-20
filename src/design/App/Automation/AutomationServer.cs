@@ -43,19 +43,32 @@ public sealed class AutomationServer : IDisposable
         WriteIndented = false,
     };
 
-    private AutomationServer(int port, IServiceProvider services)
+    /// <summary>Default port for Android automation (env vars are not available on Android).</summary>
+    private const int AndroidDefaultPort = 18721;
+
+    private AutomationServer(int port, IServiceProvider services, bool bindAny = false)
     {
         this.port = port;
         this.services = services;
-        listener = new TcpListener(IPAddress.Loopback, port);
+        listener = new TcpListener(bindAny ? IPAddress.Any : IPAddress.Loopback, port);
     }
 
     /// <summary>
-    /// Starts the automation server if ANGOR_TEST_API=1 is set.
+    /// Starts the automation server if ANGOR_TEST_API=1 is set (desktop)
+    /// or always on Android Debug builds (fixed port, bind to all interfaces).
     /// Call after DI container is built.
     /// </summary>
     public static AutomationServer? StartIfEnabled(IServiceProvider services)
     {
+        // On Android, always start with a fixed port (env vars are not available).
+        // Bind to IPAddress.Any so adb forward/reverse can reach the server.
+        if (OperatingSystem.IsAndroid())
+        {
+            var server = new AutomationServer(AndroidDefaultPort, services, bindAny: true);
+            server.Start();
+            return server;
+        }
+
         var enabled = Environment.GetEnvironmentVariable("ANGOR_TEST_API");
         if (!string.Equals(enabled, "1", StringComparison.Ordinal))
         {
