@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Reactive.Linq;
+using Angor.Shared.Models;
 using ConcurrentCollections;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Client;
@@ -62,9 +63,11 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         }
 
         foreach (var url in networkService.GetDiscoveryRelays()
-                     .Where(url => _nostrMultiWebsocketClientDiscovery.FindClient(url.Name) == null))
+                     .Where(url => !string.IsNullOrWhiteSpace(url.Url))
+                     .Where(url => _nostrMultiWebsocketClientDiscovery.FindClient(GetRelayKey(url)) == null))
         {
-            var communicator = CreateCommunicator(url.Url, url.Name);
+            var relayKey = GetRelayKey(url);
+            var communicator = CreateCommunicator(url.Url, relayKey);
             var client = new NostrWebsocketClient(communicator, _clientLogger);
 
             _serviceSubscriptions.Add(client.Streams.EoseStream.Subscribe(x =>
@@ -133,9 +136,11 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
     private void ConnectToAllRelaysInTheSettings(INetworkService networkService)
     {
         foreach (var url in networkService.GetRelays()
-                     .Where(url => _nostrMultiWebsocketClient.FindClient(url.Name) == null))
+                     .Where(url => !string.IsNullOrWhiteSpace(url.Url))
+                     .Where(url => _nostrMultiWebsocketClient.FindClient(GetRelayKey(url)) == null))
         {
-            var communicator = CreateCommunicator(url.Url, url.Name);
+            var relayKey = GetRelayKey(url);
+            var communicator = CreateCommunicator(url.Url, relayKey);
             var client = new NostrWebsocketClient(communicator, _clientLogger);
             
             _serviceSubscriptions.Add(client.Streams.EoseStream.Subscribe(x =>
@@ -228,6 +233,13 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
     {
         return _nostrMultiWebsocketClient?.Clients.Count ?? 0;
     }
+
+    /// <summary>
+    /// Returns a unique key for identifying a relay client.
+    /// Uses Url when Name is empty (the common default), matching the pattern used by discovery relays.
+    /// </summary>
+    private static string GetRelayKey(SettingsUrl url) =>
+        string.IsNullOrWhiteSpace(url.Name) ? url.Url : url.Name;
 
     public INostrCommunicator CreateCommunicator(string uri, string relayName)
     {
