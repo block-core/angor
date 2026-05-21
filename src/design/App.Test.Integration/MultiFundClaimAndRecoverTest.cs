@@ -356,7 +356,7 @@ public class MultiFundClaimAndRecoverTest
 
         investVm!.Wallets.Count.Should().BeGreaterThan(0);
 
-        // ── Select funding pattern via UI: find the FundPatternBorder, then invoke code-behind ──
+        // ── Select funding pattern via UI: find the FundPatternButton, then invoke its command ──
         if (targetPatternStageCount.HasValue)
         {
             Log(profileName, $"Selecting funding pattern with {targetPatternStageCount.Value} stages via UI...");
@@ -370,25 +370,22 @@ public class MultiFundClaimAndRecoverTest
                 .FirstOrDefault();
             investPageView.Should().NotBeNull("InvestPageView should be in the visual tree");
 
-            // Find all FundPatternBorder elements — proves the UI rendered them
-            var patternBorders = investPageView!.GetVisualDescendants()
-                .OfType<Border>()
-                .Where(b => b.Name == "FundPatternBorder")
+            // Find all FundPatternButton elements — proves the UI rendered them
+            var patternButtons = investPageView!.GetVisualDescendants()
+                .OfType<Button>()
+                .Where(b => b.Name == "FundPatternButton")
                 .ToList();
-            patternBorders.Should().HaveCountGreaterThan(1,
-                "invest page should render multiple FundPatternBorder elements");
+            patternButtons.Should().HaveCountGreaterThan(1,
+                "invest page should render multiple FundPatternButton elements");
 
-            // Find the border whose DataContext matches the target stage count
-            var targetBorder = patternBorders.FirstOrDefault(b =>
+            // Find the button whose DataContext matches the target stage count
+            var targetButton = patternButtons.FirstOrDefault(b =>
                 b.DataContext is FundingPatternOption opt && opt.StageCount == targetPatternStageCount.Value);
-            targetBorder.Should().NotBeNull(
-                $"a FundPatternBorder with StageCount={targetPatternStageCount.Value} should exist");
+            targetButton.Should().NotBeNull(
+                $"a FundPatternButton with StageCount={targetPatternStageCount.Value} should exist");
 
-            // Extract the FundingPatternOption and click via the ViewModel
-            // (PointerPressedEventArgs construction is not feasible in headless tests —
-            //  other tests in this suite also use VM calls for Border-based interactions)
-            var targetOption = (FundingPatternOption)targetBorder!.DataContext!;
-            investVm.SelectFundingPattern(targetOption);
+            // Raise Button.Click routed event to trigger the code-behind handler
+            targetButton!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, targetButton));
             Dispatcher.UIThread.RunJobs();
             await Task.Delay(300);
             Dispatcher.UIThread.RunJobs();

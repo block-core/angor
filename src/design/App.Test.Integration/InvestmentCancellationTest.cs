@@ -624,7 +624,7 @@ public class InvestmentCancellationTest
         await Task.Delay(300);
 
         var investBtnVisible = await TestHelpers.WaitForCondition(
-            () => window.FindByName<Avalonia.Controls.Border>("InvestButton") is { IsVisible: true },
+            () => window.FindByName<Avalonia.Controls.Button>("InvestButton") is { IsVisible: true },
             TestHelpers.UiTimeout);
         investBtnVisible.Should().BeTrue(
             "InvestButton should be visible on the project detail after cancellation");

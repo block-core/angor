@@ -192,7 +192,7 @@ public class FindProjectsPanelTests
         }
         if (openProject != null)
         {
-            var investBtn = detailView!.FindControl<Border>("InvestButton");
+            var investBtn = detailView!.FindControl<Button>("InvestButton");
             investBtn.Should().NotBeNull("InvestButton should exist in the detail view");
             investBtn!.IsVisible.Should().BeTrue("InvestButton should be visible for an open project");
         }
@@ -512,7 +512,7 @@ public class FindProjectsPanelTests
             var detailView = window.GetVisualDescendants().OfType<ProjectDetailView>().FirstOrDefault();
             detailView.Should().NotBeNull();
 
-            var investBtn = detailView!.FindControl<Border>("InvestButton");
+            var investBtn = detailView!.FindControl<Button>("InvestButton");
             if (investBtn != null)
             {
                 investBtn.IsVisible.Should().BeFalse("InvestButton should be hidden for a closed project");
