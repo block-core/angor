@@ -313,6 +313,34 @@ public sealed class TestAutomationClient : IDisposable
         return await PostAsync<CancelInvestmentResponse>("/flows/cancel-investment", request, ct);
     }
 
+    public async Task<InvestViaInvoiceResponse> InvestViaInvoiceAsync(
+        InvestViaInvoiceRequest request,
+        CancellationToken ct = default)
+    {
+        return await PostAsync<InvestViaInvoiceResponse>("/flows/invest-via-invoice", request, ct);
+    }
+
+    public async Task<WaitForInvoicePaymentResponse> WaitForInvoicePaymentAsync(
+        WaitForInvoicePaymentRequest request,
+        CancellationToken ct = default)
+    {
+        return await PostAsync<WaitForInvoicePaymentResponse>("/flows/wait-for-invoice-payment", request, ct);
+    }
+
+    public async Task<DeployViaInvoiceResponse> DeployViaInvoiceAsync(
+        DeployViaInvoiceRequest request,
+        CancellationToken ct = default)
+    {
+        return await PostAsync<DeployViaInvoiceResponse>("/flows/deploy-via-invoice", request, ct);
+    }
+
+    public async Task<WaitForDeployPaymentResponse> WaitForDeployPaymentAsync(
+        WaitForDeployPaymentRequest request,
+        CancellationToken ct = default)
+    {
+        return await PostAsync<WaitForDeployPaymentResponse>("/flows/wait-for-deploy-payment", request, ct);
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // HTTP Helpers
     // ═══════════════════════════════════════════════════════════════════

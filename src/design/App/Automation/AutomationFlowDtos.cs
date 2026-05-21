@@ -355,6 +355,179 @@ public static class AutomationFlowDtos
         public string? Error { get; init; }
     }
 
+    public sealed class InvestViaInvoiceRequest
+    {
+        [JsonPropertyName("projectIdentifier")]
+        public string ProjectIdentifier { get; init; } = "";
+
+        [JsonPropertyName("runId")]
+        public string RunId { get; init; } = "";
+
+        [JsonPropertyName("projectName")]
+        public string ProjectName { get; init; } = "";
+
+        [JsonPropertyName("amountBtc")]
+        public string AmountBtc { get; init; } = "";
+
+        /// <summary>
+        /// "onchain" or "lightning". Defaults to "onchain".
+        /// </summary>
+        [JsonPropertyName("network")]
+        public string Network { get; init; } = "onchain";
+
+        [JsonPropertyName("targetPatternStageCount")]
+        public int TargetPatternStageCount { get; init; }
+    }
+
+    public sealed class InvestViaInvoiceResponse
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; init; }
+
+        /// <summary>
+        /// On-chain address (when network=onchain) or BOLT11 invoice (when network=lightning).
+        /// </summary>
+        [JsonPropertyName("invoice")]
+        public string? Invoice { get; init; }
+
+        /// <summary>
+        /// The Boltz swap ID (lightning only).
+        /// </summary>
+        [JsonPropertyName("swapId")]
+        public string? SwapId { get; init; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; init; }
+    }
+
+    public sealed class WaitForInvoicePaymentRequest
+    {
+        /// <summary>
+        /// Timeout in seconds to wait for payment detection + success. Defaults to 300 (5 min).
+        /// </summary>
+        [JsonPropertyName("timeoutSeconds")]
+        public int TimeoutSeconds { get; init; } = 300;
+    }
+
+    public sealed class WaitForInvoicePaymentResponse
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; init; }
+
+        [JsonPropertyName("isAutoApproved")]
+        public bool IsAutoApproved { get; init; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; init; }
+    }
+
+    public sealed class DeployViaInvoiceRequest
+    {
+        /// <summary>
+        /// "fund" or "investment". Determines which wizard path to use.
+        /// </summary>
+        [JsonPropertyName("projectType")]
+        public string ProjectType { get; init; } = "fund";
+
+        /// <summary>
+        /// "onchain" or "lightning". Defaults to "onchain".
+        /// </summary>
+        [JsonPropertyName("network")]
+        public string Network { get; init; } = "onchain";
+
+        // ── Fund project fields ──
+
+        [JsonPropertyName("projectName")]
+        public string ProjectName { get; init; } = "";
+
+        [JsonPropertyName("projectAbout")]
+        public string ProjectAbout { get; init; } = "";
+
+        [JsonPropertyName("bannerUrl")]
+        public string BannerUrl { get; init; } = "";
+
+        [JsonPropertyName("profileUrl")]
+        public string ProfileUrl { get; init; } = "";
+
+        [JsonPropertyName("targetAmountBtc")]
+        public string TargetAmountBtc { get; init; } = "1.0";
+
+        [JsonPropertyName("thresholdAmountBtc")]
+        public string ThresholdAmountBtc { get; init; } = "0.01";
+
+        [JsonPropertyName("penaltyDays")]
+        public int PenaltyDays { get; init; }
+
+        [JsonPropertyName("payoutFrequency")]
+        public string PayoutFrequency { get; init; } = "Weekly";
+
+        [JsonPropertyName("installmentCount")]
+        public int InstallmentCount { get; init; } = 3;
+
+        [JsonPropertyName("payoutDay")]
+        public string PayoutDay { get; init; } = "";
+
+        [JsonPropertyName("monthlyPayoutDay")]
+        public int MonthlyPayoutDay { get; init; }
+
+        [JsonPropertyName("startDate")]
+        public string StartDate { get; init; } = "";
+
+        [JsonPropertyName("runId")]
+        public string RunId { get; init; } = "";
+    }
+
+    public sealed class DeployViaInvoiceResponse
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; init; }
+
+        /// <summary>
+        /// On-chain address (when network=onchain) or BOLT11 invoice (when network=lightning).
+        /// </summary>
+        [JsonPropertyName("invoice")]
+        public string? Invoice { get; init; }
+
+        /// <summary>
+        /// The Boltz swap ID (lightning only).
+        /// </summary>
+        [JsonPropertyName("swapId")]
+        public string? SwapId { get; init; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; init; }
+    }
+
+    public sealed class WaitForDeployPaymentRequest
+    {
+        [JsonPropertyName("runId")]
+        public string RunId { get; init; } = "";
+
+        /// <summary>
+        /// Timeout in seconds to wait for payment detection + deploy success. Defaults to 300 (5 min).
+        /// </summary>
+        [JsonPropertyName("timeoutSeconds")]
+        public int TimeoutSeconds { get; init; } = 300;
+    }
+
+    public sealed class WaitForDeployPaymentResponse
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; init; }
+
+        [JsonPropertyName("projectIdentifier")]
+        public string? ProjectIdentifier { get; init; }
+
+        [JsonPropertyName("ownerWalletId")]
+        public string? OwnerWalletId { get; init; }
+
+        [JsonPropertyName("projectType")]
+        public string? ProjectType { get; init; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; init; }
+    }
+
     public sealed class ImportWalletRequest
     {
         [JsonPropertyName("seedWords")]

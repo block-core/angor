@@ -407,6 +407,38 @@ public sealed class AutomationServer : IDisposable
                 return (200, result);
             }
 
+            // POST /flows/deploy-via-invoice
+            if (method == "POST" && path == "/flows/deploy-via-invoice")
+            {
+                var req = Deserialize<DeployViaInvoiceRequest>(body);
+                var result = await AutomationFlows.DeployViaInvoiceAsync(services, req);
+                return (200, result);
+            }
+
+            // POST /flows/wait-for-deploy-payment
+            if (method == "POST" && path == "/flows/wait-for-deploy-payment")
+            {
+                var req = Deserialize<WaitForDeployPaymentRequest>(body);
+                var result = await AutomationFlows.WaitForDeployPaymentAsync(services, req);
+                return (200, result);
+            }
+
+            // POST /flows/invest-via-invoice
+            if (method == "POST" && path == "/flows/invest-via-invoice")
+            {
+                var req = Deserialize<InvestViaInvoiceRequest>(body);
+                var result = await AutomationFlows.InvestViaInvoiceAsync(services, req);
+                return (200, result);
+            }
+
+            // POST /flows/wait-for-invoice-payment
+            if (method == "POST" && path == "/flows/wait-for-invoice-payment")
+            {
+                var req = Deserialize<WaitForInvoicePaymentRequest>(body);
+                var result = await AutomationFlows.WaitForInvoicePaymentAsync(services, req);
+                return (200, result);
+            }
+
             return (404, new ActionResponse { Success = false, Error = $"Unknown route: {method} {path}" });
         }
         catch (Exception ex)

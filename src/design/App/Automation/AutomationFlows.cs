@@ -2096,4 +2096,597 @@ public static class AutomationFlows
             return new CancelInvestmentResponse { Success = false, Error = ex.Message };
         }
     }
+
+    /// <summary>
+    /// Navigates to a project, sets the investment amount, submits, clicks "Pay invoice instead",
+    /// optionally switches to Lightning tab, and returns the on-chain address or BOLT11 invoice.
+    /// The test is responsible for paying externally, then calling WaitForInvoicePaymentAsync.
+    /// </summary>
+    public static async Task<InvestViaInvoiceResponse> InvestViaInvoiceAsync(
+        IServiceProvider services,
+        InvestViaInvoiceRequest req)
+    {
+        try
+        {
+            var window = await RequireWindowAsync();
+            await NavigateToAsync(window, "Find Projects");
+
+            var findProjectsVm = await Dispatcher.UIThread.InvokeAsync(() => GetFindProjectsViewModel(window));
+            if (findProjectsVm == null)
+            {
+                return new InvestViaInvoiceResponse { Success = false, Error = "FindProjectsViewModel not found" };
+            }
+
+            ProjectItemViewModel? foundProject = null;
+            var projectDeadline = DateTime.UtcNow + IndexerLag;
+            while (DateTime.UtcNow < projectDeadline)
+            {
+                foundProject = await Dispatcher.UIThread.InvokeAsync(async () =>
+                {
+                    await findProjectsVm.LoadProjectsFromSdkAsync();
+                    while (findProjectsVm.HasMoreItems)
+                    {
+                        findProjectsVm.LoadMore();
+                    }
+                    Dispatcher.UIThread.RunJobs();
+                    return findProjectsVm.Projects.FirstOrDefault(p =>
+                        string.Equals(p.ProjectId, req.ProjectIdentifier, StringComparison.Ordinal) ||
+                        p.Description.Contains(req.RunId, StringComparison.Ordinal) ||
+                        p.ShortDescription.Contains(req.RunId, StringComparison.Ordinal));
+                });
+
+                if (foundProject != null)
+                {
+                    break;
+                }
+
+                await Task.Delay(PollInterval);
+            }
+
+            if (foundProject == null)
+            {
+                return new InvestViaInvoiceResponse { Success = false, Error = "Project not found in SDK list" };
+            }
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                findProjectsVm.OpenProjectDetail(foundProject);
+                Dispatcher.UIThread.RunJobs();
+            });
+            await Task.Delay(500);
+
+            await ClickByNameAsync(window, "InvestButton");
+            await Task.Delay(500);
+
+            var investVm = await Dispatcher.UIThread.InvokeAsync(() => findProjectsVm.InvestPageViewModel);
+            if (investVm == null)
+            {
+                return new InvestViaInvoiceResponse { Success = false, Error = "InvestPageViewModel not found" };
+            }
+
+            // Select funding pattern via UI click if requested
+            if (req.TargetPatternStageCount > 0)
+            {
+                await ClickFundPatternByStageCountAsync(window, req.TargetPatternStageCount);
+            }
+
+            // Type investment amount and submit
+            await TypeTextByNameAsync(window, "AmountInput", req.AmountBtc);
+            await ClickByNameAsync(window, "SubmitButton");
+            await Task.Delay(500);
+
+            // Click "Pay invoice instead" button
+            await ClickByNameAsync(window, "PayInvoiceInsteadButton", TimeSpan.FromSeconds(15));
+            await Task.Delay(1000);
+
+            var pf = await Dispatcher.UIThread.InvokeAsync(() => investVm.PaymentFlow);
+            if (pf == null)
+            {
+                return new InvestViaInvoiceResponse { Success = false, Error = "PaymentFlow not available" };
+            }
+
+            // Wait for on-chain address to be generated (both tabs need it)
+            var addressDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
+            while (DateTime.UtcNow < addressDeadline)
+            {
+                var address = await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    Dispatcher.UIThread.RunJobs();
+                    return pf.OnChainAddress;
+                });
+
+                if (!string.IsNullOrEmpty(address))
+                {
+                    break;
+                }
+
+                var error = await Dispatcher.UIThread.InvokeAsync(() => pf.ErrorMessage);
+                if (error != null)
+                {
+                    return new InvestViaInvoiceResponse { Success = false, Error = $"Address generation failed: {error}" };
+                }
+
+                await Task.Delay(500);
+            }
+
+            var isLightning = string.Equals(req.Network, "lightning", StringComparison.OrdinalIgnoreCase);
+
+            if (isLightning)
+            {
+                // Switch to Lightning tab
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    pf.SelectNetworkTab(global::App.UI.Shared.PaymentFlow.NetworkTab.Lightning);
+                    Dispatcher.UIThread.RunJobs();
+                });
+
+                // Wait for BOLT11 invoice to be generated by Boltz
+                var invoiceDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(90);
+                while (DateTime.UtcNow < invoiceDeadline)
+                {
+                    var (invoice, swapId, error) = await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        Dispatcher.UIThread.RunJobs();
+                        return (pf.LightningInvoice, pf.LightningSwapId, pf.ErrorMessage);
+                    });
+
+                    if (!string.IsNullOrEmpty(invoice))
+                    {
+                        return new InvestViaInvoiceResponse
+                        {
+                            Success = true,
+                            Invoice = invoice,
+                            SwapId = swapId,
+                        };
+                    }
+
+                    if (error != null)
+                    {
+                        return new InvestViaInvoiceResponse { Success = false, Error = $"Lightning invoice generation failed: {error}" };
+                    }
+
+                    await Task.Delay(500);
+                }
+
+                return new InvestViaInvoiceResponse { Success = false, Error = "Lightning invoice not generated within timeout" };
+            }
+            else
+            {
+                // On-chain: return the receive address
+                var address = await Dispatcher.UIThread.InvokeAsync(() => pf.OnChainAddress);
+                return new InvestViaInvoiceResponse
+                {
+                    Success = true,
+                    Invoice = address,
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            return new InvestViaInvoiceResponse { Success = false, Error = ex.Message };
+        }
+    }
+
+    /// <summary>
+    /// Fills the project creation wizard and clicks Deploy, then clicks "Pay invoice instead"
+    /// to get an on-chain address or BOLT11 Lightning invoice for external payment.
+    /// The test pays externally, then calls WaitForDeployPaymentAsync.
+    /// </summary>
+    public static async Task<DeployViaInvoiceResponse> DeployViaInvoiceAsync(
+        IServiceProvider services,
+        DeployViaInvoiceRequest req)
+    {
+        try
+        {
+            var window = await RequireWindowAsync();
+            await NavigateToAsync(window, "My Projects");
+
+            var myProjectsVm = await Dispatcher.UIThread.InvokeAsync(() => GetMyProjectsViewModel(window));
+            if (myProjectsVm == null)
+            {
+                return new DeployViaInvoiceResponse { Success = false, Error = "MyProjectsViewModel not found" };
+            }
+
+            await OpenCreateWizardAsync(myProjectsVm, window);
+
+            // Step 0: Welcome → click Start
+            await ClickByNameAsync(window, "StartButton");
+
+            var isFund = string.Equals(req.ProjectType, "fund", StringComparison.OrdinalIgnoreCase);
+
+            if (isFund)
+            {
+                // Step 1: Select "fund" type
+                await ClickByNameAsync(window, "TypeFundCard");
+                await ClickByNameAsync(window, "NextStepButton");
+
+                // Step 2: Project name + about
+                await TypeTextByNameAsync(window, "ProjectNameTextBox", req.ProjectName);
+                await TypeTextByNameAsync(window, "AboutTextBox", req.ProjectAbout);
+                await ClickByNameAsync(window, "NextStepButton");
+
+                // Step 3: Banner + profile URLs
+                await TypeTextByNameAsync(window, "BannerUrlTextBox", req.BannerUrl);
+                await TypeTextByNameAsync(window, "ProfileUrlTextBox", req.ProfileUrl);
+                await ClickByNameAsync(window, "NextStepButton");
+
+                // Step 4: Target amount + approval threshold + penalty days
+                await TypeTextByNameAsync(window, "FundTargetAmountInput", req.TargetAmountBtc);
+                await TypeTextByNameAsync(window, "ApprovalThresholdInput", req.ThresholdAmountBtc);
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    var wizardVm = myProjectsVm.CreateProjectVm;
+                    wizardVm.PenaltyDays = req.PenaltyDays;
+                    Dispatcher.UIThread.RunJobs();
+                });
+                await ClickByNameAsync(window, "NextStepButton");
+
+                // Step 5 interstitial: Dismiss welcome
+                await ClickByNameAsync(window, "Step5WelcomeButton");
+                await Task.Delay(200);
+
+                // Step 5: Payout frequency + installments + day + generate
+                var freqButton = req.PayoutFrequency == "Monthly" ? "PayoutFreqMonthly" : "PayoutFreqWeekly";
+                await ClickByNameAsync(window, freqButton);
+
+                var installmentButton = req.InstallmentCount switch
+                {
+                    6 => "Installment6",
+                    9 => "Installment9",
+                    _ => "Installment3",
+                };
+                await ClickByNameAsync(window, "Installment3");
+                if (installmentButton != "Installment3")
+                {
+                    await ClickByNameAsync(window, installmentButton);
+                }
+
+                if (req.PayoutFrequency == "Monthly")
+                {
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        var wizardVm = myProjectsVm.CreateProjectVm;
+                        wizardVm.MonthlyPayoutDate = req.MonthlyPayoutDay > 0 ? req.MonthlyPayoutDay : 1;
+                        Dispatcher.UIThread.RunJobs();
+                    });
+                }
+                else
+                {
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        var wizardVm = myProjectsVm.CreateProjectVm;
+                        wizardVm.WeeklyPayoutDay = req.PayoutDay;
+                        Dispatcher.UIThread.RunJobs();
+                    });
+                }
+
+                if (!string.IsNullOrEmpty(req.StartDate))
+                {
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        var wizardVm = myProjectsVm.CreateProjectVm;
+                        wizardVm.StartDate = req.StartDate;
+                        Dispatcher.UIThread.RunJobs();
+                    });
+                }
+
+                await ClickByNameAsync(window, "GeneratePayoutsButton");
+                await ClickByNameAsync(window, "NextStepButton");
+            }
+            else
+            {
+                // Investment project wizard
+                // Step 1: Select "investment" type
+                await ClickByNameAsync(window, "TypeInvestCard");
+                await ClickByNameAsync(window, "NextStepButton");
+
+                // Step 2: Project name + about
+                await TypeTextByNameAsync(window, "ProjectNameTextBox", req.ProjectName);
+                await TypeTextByNameAsync(window, "AboutTextBox", req.ProjectAbout);
+                await ClickByNameAsync(window, "NextStepButton");
+
+                // Step 3: Banner + profile URLs
+                await TypeTextByNameAsync(window, "BannerUrlTextBox", req.BannerUrl);
+                await TypeTextByNameAsync(window, "ProfileUrlTextBox", req.ProfileUrl);
+                await ClickByNameAsync(window, "NextStepButton");
+
+                // Step 4: Target amount + invest end date
+                await TypeTextByNameAsync(window, "InvestTargetAmountInput", "1.0");
+                await SetCalendarDateByNameAsync(window, "InvestEndDatePicker", DateTime.UtcNow.AddMonths(3));
+                await ClickByNameAsync(window, "NextStepButton");
+
+                // Step 5 interstitial: Dismiss welcome
+                await ClickByNameAsync(window, "Step5WelcomeButton");
+                await Task.Delay(200);
+
+                // Step 5: Duration + frequency + start date + generate stages
+                await TypeTextByNameAsync(window, "DurationValueInput", "3");
+                await SetComboBoxByNameAsync(window, "DurationUnitCombo", "Months");
+                await ClickListBoxItemByTagAsync(window, "InvestFrequencyPresets", "Monthly");
+                await SetCalendarDateByNameAsync(window, "InvestStartDatePicker", DateTime.UtcNow.AddDays(-120));
+
+                await ClickByNameAsync(window, "GenerateStagesButton");
+                await ClickByNameAsync(window, "NextStepButton");
+            }
+
+            // Step 6: Click Deploy button to open deploy overlay / PaymentFlowView
+            await ClickByNameAsync(window, "DeployButton");
+            await Task.Delay(1000);
+
+            // The PaymentFlowView is shown as a shell modal. Wait for it to initialize.
+            var pf = await WaitForPaymentFlowAsync(myProjectsVm, TimeSpan.FromSeconds(30));
+            if (pf == null)
+            {
+                return new DeployViaInvoiceResponse { Success = false, Error = "PaymentFlow not found after clicking Deploy" };
+            }
+
+            // Click "Pay invoice instead" button in PaymentFlowView
+            await ClickByNameAsync(window, "PayInvoiceInsteadButton", TimeSpan.FromSeconds(15));
+            await Task.Delay(1000);
+
+            // Wait for on-chain address to be generated
+            var addressDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
+            while (DateTime.UtcNow < addressDeadline)
+            {
+                var address = await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    Dispatcher.UIThread.RunJobs();
+                    return pf.OnChainAddress;
+                });
+
+                if (!string.IsNullOrEmpty(address))
+                {
+                    break;
+                }
+
+                var error = await Dispatcher.UIThread.InvokeAsync(() => pf.ErrorMessage);
+                if (error != null)
+                {
+                    return new DeployViaInvoiceResponse { Success = false, Error = $"Address generation failed: {error}" };
+                }
+
+                await Task.Delay(500);
+            }
+
+            var isLightning = string.Equals(req.Network, "lightning", StringComparison.OrdinalIgnoreCase);
+
+            if (isLightning)
+            {
+                // Switch to Lightning tab
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    pf.SelectNetworkTab(global::App.UI.Shared.PaymentFlow.NetworkTab.Lightning);
+                    Dispatcher.UIThread.RunJobs();
+                });
+
+                // Wait for BOLT11 invoice to be generated by Boltz
+                var invoiceDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(90);
+                while (DateTime.UtcNow < invoiceDeadline)
+                {
+                    var (invoice, swapId, error) = await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        Dispatcher.UIThread.RunJobs();
+                        return (pf.LightningInvoice, pf.LightningSwapId, pf.ErrorMessage);
+                    });
+
+                    if (!string.IsNullOrEmpty(invoice))
+                    {
+                        return new DeployViaInvoiceResponse
+                        {
+                            Success = true,
+                            Invoice = invoice,
+                            SwapId = swapId,
+                        };
+                    }
+
+                    if (error != null)
+                    {
+                        return new DeployViaInvoiceResponse { Success = false, Error = $"Lightning invoice generation failed: {error}" };
+                    }
+
+                    await Task.Delay(500);
+                }
+
+                return new DeployViaInvoiceResponse { Success = false, Error = "Lightning invoice not generated within timeout" };
+            }
+            else
+            {
+                // On-chain: return the receive address
+                var address = await Dispatcher.UIThread.InvokeAsync(() => pf.OnChainAddress);
+                return new DeployViaInvoiceResponse
+                {
+                    Success = true,
+                    Invoice = address,
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            return new DeployViaInvoiceResponse { Success = false, Error = ex.Message };
+        }
+    }
+
+    /// <summary>
+    /// Waits for the deploy PaymentFlow payment to be detected and reach Success screen.
+    /// Must be called after DeployViaInvoiceAsync and after the external payment has been sent.
+    /// Returns the project identifier once the project appears in My Projects.
+    /// </summary>
+    public static async Task<WaitForDeployPaymentResponse> WaitForDeployPaymentAsync(
+        IServiceProvider services,
+        WaitForDeployPaymentRequest req)
+    {
+        try
+        {
+            var window = await RequireWindowAsync();
+
+            var myProjectsVm = await Dispatcher.UIThread.InvokeAsync(() => GetMyProjectsViewModel(window));
+            if (myProjectsVm == null)
+            {
+                return new WaitForDeployPaymentResponse { Success = false, Error = "MyProjectsViewModel not found" };
+            }
+
+            var pf = await Dispatcher.UIThread.InvokeAsync(() =>
+                myProjectsVm.CreateProjectVm?.DeployFlow?.PaymentFlow);
+            if (pf == null)
+            {
+                return new WaitForDeployPaymentResponse { Success = false, Error = "PaymentFlow not available — was DeployViaInvoice called?" };
+            }
+
+            var timeout = TimeSpan.FromSeconds(req.TimeoutSeconds > 0 ? req.TimeoutSeconds : 300);
+            var deadline = DateTime.UtcNow + timeout;
+
+            // Wait for PaymentFlowScreen.Success
+            while (DateTime.UtcNow < deadline)
+            {
+                var (screen, error) = await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    Dispatcher.UIThread.RunJobs();
+                    return (pf.CurrentScreen, pf.ErrorMessage);
+                });
+
+                if (screen == PaymentFlowScreen.Success)
+                {
+                    break;
+                }
+
+                if (error != null)
+                {
+                    return new WaitForDeployPaymentResponse { Success = false, Error = $"Deploy payment failed: {error}" };
+                }
+
+                await Task.Delay(PollInterval);
+            }
+
+            // Click SuccessActionButton
+            await ClickByNameAsync(window, "SuccessActionButton");
+            await Task.Delay(500);
+
+            // Poll for the project to appear in My Projects
+            var projectPollDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(60);
+            while (DateTime.UtcNow < projectPollDeadline)
+            {
+                var project = await Dispatcher.UIThread.InvokeAsync(async () =>
+                {
+                    await myProjectsVm.LoadFounderProjectsAsync();
+                    Dispatcher.UIThread.RunJobs();
+                    return myProjectsVm.Projects.FirstOrDefault(p => p.Description.Contains(req.RunId, StringComparison.Ordinal));
+                });
+
+                if (project != null)
+                {
+                    return new WaitForDeployPaymentResponse
+                    {
+                        Success = true,
+                        ProjectIdentifier = project.ProjectIdentifier,
+                        OwnerWalletId = project.OwnerWalletId,
+                        ProjectType = project.ProjectType,
+                    };
+                }
+
+                await Task.Delay(TimeSpan.FromSeconds(5));
+            }
+
+            return new WaitForDeployPaymentResponse { Success = false, Error = "Project did not appear after deploy" };
+        }
+        catch (Exception ex)
+        {
+            return new WaitForDeployPaymentResponse { Success = false, Error = ex.Message };
+        }
+    }
+
+    /// <summary>Helper to wait for the deploy PaymentFlowViewModel to be available.</summary>
+    private static async Task<PaymentFlowViewModel?> WaitForPaymentFlowAsync(
+        MyProjectsViewModel myProjectsVm,
+        TimeSpan timeout)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            var pf = await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                Dispatcher.UIThread.RunJobs();
+                return myProjectsVm.CreateProjectVm?.DeployFlow?.PaymentFlow;
+            });
+
+            if (pf != null)
+            {
+                return pf;
+            }
+
+            await Task.Delay(500);
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Waits for the current PaymentFlow invoice payment to be detected and reach Success screen.
+    /// Must be called after InvestViaInvoiceAsync and after the external payment has been sent.
+    /// </summary>
+    public static async Task<WaitForInvoicePaymentResponse> WaitForInvoicePaymentAsync(
+        IServiceProvider services,
+        WaitForInvoicePaymentRequest req)
+    {
+        try
+        {
+            var window = await RequireWindowAsync();
+
+            var findProjectsVm = await Dispatcher.UIThread.InvokeAsync(() => GetFindProjectsViewModel(window));
+            if (findProjectsVm == null)
+            {
+                return new WaitForInvoicePaymentResponse { Success = false, Error = "FindProjectsViewModel not found" };
+            }
+
+            var investVm = await Dispatcher.UIThread.InvokeAsync(() => findProjectsVm.InvestPageViewModel);
+            if (investVm == null)
+            {
+                return new WaitForInvoicePaymentResponse { Success = false, Error = "InvestPageViewModel not found — was InvestViaInvoice called?" };
+            }
+
+            var pf = await Dispatcher.UIThread.InvokeAsync(() => investVm.PaymentFlow);
+            if (pf == null)
+            {
+                return new WaitForInvoicePaymentResponse { Success = false, Error = "PaymentFlow not available" };
+            }
+
+            var timeout = TimeSpan.FromSeconds(req.TimeoutSeconds > 0 ? req.TimeoutSeconds : 300);
+            var deadline = DateTime.UtcNow + timeout;
+
+            while (DateTime.UtcNow < deadline)
+            {
+                var (screen, error) = await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    Dispatcher.UIThread.RunJobs();
+                    return (pf.CurrentScreen, pf.ErrorMessage);
+                });
+
+                if (screen == PaymentFlowScreen.Success)
+                {
+                    // Click SuccessActionButton
+                    await ClickByNameAsync(window, "SuccessActionButton");
+
+                    var isAutoApproved = await Dispatcher.UIThread.InvokeAsync(() => investVm.IsAutoApproved);
+                    return new WaitForInvoicePaymentResponse { Success = true, IsAutoApproved = isAutoApproved };
+                }
+
+                if (error != null)
+                {
+                    return new WaitForInvoicePaymentResponse { Success = false, Error = $"Payment failed: {error}" };
+                }
+
+                await Task.Delay(PollInterval);
+            }
+
+            var lastStatus = await Dispatcher.UIThread.InvokeAsync(() => pf.PaymentStatusText);
+            return new WaitForInvoicePaymentResponse
+            {
+                Success = false,
+                Error = $"Payment did not reach success within {timeout.TotalSeconds}s. Last status: {lastStatus}"
+            };
+        }
+        catch (Exception ex)
+        {
+            return new WaitForInvoicePaymentResponse { Success = false, Error = ex.Message };
+        }
+    }
 }
