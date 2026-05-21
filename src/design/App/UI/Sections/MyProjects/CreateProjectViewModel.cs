@@ -1129,6 +1129,9 @@ public partial class CreateProjectViewModel : ReactiveObject
             ? "Total: 100% ✓"
             : $"Total: {AdvancedEditorTotalPct:F0}%  —  needs {Math.Max(0, 100 - AdvancedEditorTotalPct):F0}% more";
 
+    /// <summary>True when at least one stage has a date validation error — drives the guidelines banner.</summary>
+    public bool HasAnyDateError => Stages.Any(s => s.HasDateError);
+
     private void OnStagesCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
@@ -1184,6 +1187,9 @@ public partial class CreateProjectViewModel : ReactiveObject
         {
             stage.ReleaseDateError = "";
         }
+
+        // Refresh the banner that shows when any stage has a date error
+        this.RaisePropertyChanged(nameof(HasAnyDateError));
     }
 
     private void RaiseAdvancedEditorTotals()
@@ -1192,6 +1198,7 @@ public partial class CreateProjectViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(AdvancedEditorTotalIsComplete));
         this.RaisePropertyChanged(nameof(AdvancedEditorTotalIsIncomplete));
         this.RaisePropertyChanged(nameof(AdvancedEditorTotalLabel));
+        this.RaisePropertyChanged(nameof(HasAnyDateError));
     }
 
     /// <summary>Re-show the generate form to regenerate stages (without clearing existing ones first).</summary>

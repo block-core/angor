@@ -638,11 +638,12 @@
                     </StackPanel>
                 </Button>
 
-                <!-- Stage guidelines -->
+                <!-- Stage guidelines: only shown when at least one stage has a date error -->
                 <Border Margin="20,0,20,16" Padding="12" CornerRadius="8"
-                        Background="#fffbeb" BorderBrush="#fde68a" BorderThickness="1">
+                        Background="#fffbeb" BorderBrush="#fde68a" BorderThickness="1"
+                        IsVisible="{Binding HasAnyDateError}">
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <i:Icon Value="fa-solid fa-circle-info" FontSize="14" Foreground="#d97706"
+                        <i:Icon Value="fa-solid fa-triangle-exclamation" FontSize="14" Foreground="#d97706"
                                 VerticalAlignment="Top" Margin="0,2,0,0" />
                         <TextBlock FontSize="12" Foreground="#d97706" TextWrapping="Wrap"
                                    Text="Each release date must be after the funding end date." />
