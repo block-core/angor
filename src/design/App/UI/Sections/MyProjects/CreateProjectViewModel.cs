@@ -330,7 +330,7 @@ public partial class CreateProjectViewModel : ReactiveObject
                 this.RaisePropertyChanged(nameof(HasFormError));
                 this.RaisePropertyChanged(nameof(HasEndDateError));
                 // Revalidate all stage release dates against the new end date
-                foreach (var s in Stages) UpdateStageDateError(s);
+                UpdateAllStageDateErrors();
             });
 
         // ── Advanced Editor: subscribe to Stages collection to enable live % total and date validation ──
@@ -1159,9 +1159,9 @@ public partial class CreateProjectViewModel : ReactiveObject
             .Subscribe(_ => RaiseAdvancedEditorTotals())
             .DisposeWith(d);
         stage.WhenAnyValue(x => x.ReleaseDateValue)
-            .Subscribe(_ => UpdateStageDateError(stage))
+            .Subscribe(_ => UpdateAllStageDateErrors())
             .DisposeWith(d);
-        UpdateStageDateError(stage); // validate immediately on add
+        UpdateAllStageDateErrors(); // validate immediately on add
         _stageDisposables[stage] = d;
     }
 
@@ -1174,17 +1174,38 @@ public partial class CreateProjectViewModel : ReactiveObject
         }
     }
 
-    private void UpdateStageDateError(ProjectStageViewModel stage)
+    private void UpdateAllStageDateErrors()
     {
-        if (InvestEndDate.HasValue && stage.ReleaseDateValue != default)
+        var ordered = Stages.OrderBy(s => s.StageNumber).ToList();
+        DateOnly? endDate = InvestEndDate.HasValue ? DateOnly.FromDateTime(InvestEndDate.Value) : null;
+
+        for (int i = 0; i < ordered.Count; i++)
         {
-            var endDate = DateOnly.FromDateTime(InvestEndDate.Value);
-            stage.ReleaseDateError = stage.ReleaseDateValue < endDate
-                ? $"Must be on or after {endDate:dd MMM yyyy}"
-                : "";
-        }
-        else
-        {
+            var stage = ordered[i];
+            if (stage.ReleaseDateValue == default)
+            {
+                stage.ReleaseDateError = "";
+                continue;
+            }
+
+            // Rule 1: must be on or after funding end date
+            if (endDate.HasValue && stage.ReleaseDateValue < endDate.Value)
+            {
+                stage.ReleaseDateError = $"Must be on or after {endDate.Value:dd MMM yyyy}";
+                continue;
+            }
+
+            // Rule 2: must be after the previous stage's date
+            if (i > 0)
+            {
+                var prev = ordered[i - 1];
+                if (prev.ReleaseDateValue != default && stage.ReleaseDateValue <= prev.ReleaseDateValue)
+                {
+                    stage.ReleaseDateError = $"Must be after Stage {prev.StageNumber} ({prev.ReleaseDateValue:dd MMM yyyy})";
+                    continue;
+                }
+            }
+
             stage.ReleaseDateError = "";
         }
 
