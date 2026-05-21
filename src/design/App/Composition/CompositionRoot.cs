@@ -72,6 +72,9 @@ public static class CompositionRoot
             var fileLogger = new LoggerConfiguration()
                 .Destructure.With<SensitiveDataRedactor>()
                 .MinimumLevel.Information()
+                .MinimumLevel.Override("System.Net.Http.HttpClient", Serilog.Events.LogEventLevel.Warning)
+                .MinimumLevel.Override("Angor.Shared.WalletOperations", Serilog.Events.LogEventLevel.Warning)
+                .MinimumLevel.Override("Angor.Shared.DerivationOperations", Serilog.Events.LogEventLevel.Warning)
                 .WriteTo.File(
                     logFilePath,
                     rollingInterval: Serilog.RollingInterval.Day,
