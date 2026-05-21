@@ -70,6 +70,8 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
     [Reactive] private EditProfileViewModel? selectedEditProject;
     [Reactive] private bool isLoading;
     [Reactive] private bool isInitialLoad = true;
+    /// <summary>Set after a project is deployed so the next tab activation reloads from DB.</summary>
+    public bool NeedsRefresh { get; set; }
     /// <summary>The create project wizard VM, injected via DI.</summary>
     public CreateProjectViewModel CreateProjectVm { get; }
 
@@ -245,6 +247,7 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
         });
         this.RaisePropertyChanged(nameof(HasProjects));
         this.RaisePropertyChanged(nameof(TotalRaised));
+        NeedsRefresh = true;
     }
 
     public void CloseCreateWizard()

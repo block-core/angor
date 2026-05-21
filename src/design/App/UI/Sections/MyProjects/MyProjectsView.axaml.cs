@@ -347,6 +347,16 @@ public partial class MyProjectsView : UserControl, ISectionView
         var shell = this.FindAncestorOfType<ShellView>();
         if (shell?.DataContext is ShellViewModel shellVm)
             TryConsumePendingLaunchWizard(shellVm);
+
+        if (DataContext is MyProjectsViewModel { NeedsRefresh: true } vm)
+        {
+            vm.NeedsRefresh = false;
+            ScheduleFounderProjectsLoad(force: true);
+        }
+        else
+        {
+            ScheduleFounderProjectsLoad(force: false);
+        }
     }
 
     public void OnBecameInactive() { }
