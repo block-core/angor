@@ -6,12 +6,12 @@ using Xunit;
 namespace App.Test.Uat;
 
 /// <summary>
-/// Per-process UAT test for the full project creation lifecycle with extended steps:
+/// Per-process UAT test for project creation flows:
 /// 1. Create wallet and fund
-/// 2. Deploy investment project
-/// 3. Upload images to Blossom server
-/// 4. Edit project profile (name, about, images, website) and save to Nostr
-/// 5. Fetch project profile and verify changes persisted
+/// 2. Deploy an Invest project (fixed stages, Nostr metadata)
+/// 3. Deploy a Fund project with monthly schedule
+/// 4. Deploy a Fund project with weekly schedule
+/// 5. Upload images to Blossom, edit project profile, verify via Nostr fetch
 /// </summary>
 public class CreateProjectTest
 {
@@ -56,10 +56,54 @@ public class CreateProjectTest
         createdProject.Success.Should().BeTrue(createdProject.Error);
         createdProject.ProjectType.Should().Be("investment");
         var projectId = createdProject.ProjectIdentifier!;
-        Log(null, $"Project deployed: {projectId}");
+        Log(null, $"Invest project deployed: {projectId}");
 
-        // ── Step 3: Upload images to Blossom ──
-        Log(null, "Step 3: Uploading banner image to Blossom...");
+        // ── Step 3: Deploy Fund project with monthly schedule ──
+        var monthlyName = $"Monthly Fund {runId}";
+        var todayDay = DateTime.UtcNow.Day;
+        Log(null, $"Step 3: Deploying monthly Fund project (payout day {todayDay})...");
+        var monthlyProject = await founderHost.Client.CreateFundProjectAsync(new CreateFundProjectRequest
+        {
+            ProjectName = monthlyName,
+            ProjectAbout = $"{TestName} run {runId}. Monthly/6 fund project.",
+            BannerUrl = bannerImageUrl,
+            ProfileUrl = profileImageUrl,
+            TargetAmountBtc = "1.0",
+            ThresholdAmountBtc = "0.01",
+            PenaltyDays = 0,
+            PayoutFrequency = "Monthly",
+            InstallmentCount = 6,
+            MonthlyPayoutDay = todayDay,
+            RunId = runId,
+        });
+        monthlyProject.Success.Should().BeTrue(monthlyProject.Error);
+        monthlyProject.ProjectType.Should().Be("fund");
+        Log(null, $"Monthly Fund project deployed: {monthlyProject.ProjectIdentifier}");
+
+        // ── Step 4: Deploy Fund project with weekly schedule ──
+        var weeklyName = $"Weekly Fund {runId}";
+        var todayDayOfWeek = DateTime.UtcNow.DayOfWeek.ToString();
+        Log(null, $"Step 4: Deploying weekly Fund project (payout day {todayDayOfWeek})...");
+        var weeklyProject = await founderHost.Client.CreateFundProjectAsync(new CreateFundProjectRequest
+        {
+            ProjectName = weeklyName,
+            ProjectAbout = $"{TestName} run {runId}. Weekly/3 fund project.",
+            BannerUrl = bannerImageUrl,
+            ProfileUrl = profileImageUrl,
+            TargetAmountBtc = "0.5",
+            ThresholdAmountBtc = "0.005",
+            PenaltyDays = 0,
+            PayoutFrequency = "Weekly",
+            InstallmentCount = 3,
+            PayoutDay = todayDayOfWeek,
+            RunId = runId,
+        });
+        weeklyProject.Success.Should().BeTrue(weeklyProject.Error);
+        weeklyProject.ProjectType.Should().Be("fund");
+        Log(null, $"Weekly Fund project deployed: {weeklyProject.ProjectIdentifier}");
+
+        // ── Step 5: Upload images to Blossom ──
+        Log(null, "Step 5: Uploading banner image to Blossom...");
         var bannerUpload = await founderHost.Client.UploadToBlossomAsync(new UploadToBlossomRequest
         {
             ProjectIdentifier = projectId,
@@ -81,12 +125,12 @@ public class CreateProjectTest
         profileUpload.UploadedUrl.Should().NotBeNullOrEmpty();
         Log(null, $"Profile uploaded to Blossom: {profileUpload.UploadedUrl}");
 
-        // ── Step 4: Edit project profile with new data and blossom URLs ──
+        // ── Step 6: Edit project profile with new data and blossom URLs ──
         var updatedName = $"Updated Project {runId}";
         var updatedAbout = $"Edited by UAT test {runId}. Verified blossom upload + nostr save roundtrip.";
         var updatedWebsite = $"https://test.angor.io/{runId}";
 
-        Log(null, "Step 4: Editing project profile...");
+        Log(null, "Step 6: Editing project profile...");
         var edit = await founderHost.Client.EditProjectProfileAsync(new EditProjectProfileRequest
         {
             ProjectIdentifier = projectId,
@@ -101,8 +145,8 @@ public class CreateProjectTest
         edit.Success.Should().BeTrue(edit.Error);
         Log(null, "Project profile saved to Nostr.");
 
-        // ── Step 5: Fetch profile and verify changes persisted ──
-        Log(null, "Step 5: Fetching project profile to verify...");
+        // ── Step 7: Fetch profile and verify changes persisted ──
+        Log(null, "Step 7: Fetching project profile to verify...");
 
         // Wait a moment for Nostr relay propagation
         await Task.Delay(TimeSpan.FromSeconds(10));
@@ -113,8 +157,6 @@ public class CreateProjectTest
         });
         fetched.Success.Should().BeTrue(fetched.Error);
         fetched.Name.Should().Be(updatedName, "Name should be updated after edit");
-        // DisplayName may be null due to Nostr.Client library not deserializing "display_name" JSON key
-        // fetched.DisplayName.Should().Be(updatedName, "DisplayName should be updated after edit");
         fetched.About.Should().Be(updatedAbout, "About should be updated after edit");
         fetched.Picture.Should().Be(profileUpload.UploadedUrl, "Picture should use blossom URL after edit");
         fetched.Banner.Should().Be(bannerUpload.UploadedUrl, "Banner should use blossom URL after edit");

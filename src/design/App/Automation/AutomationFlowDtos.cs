@@ -22,6 +22,9 @@ public static class AutomationFlowDtos
         [JsonPropertyName("walletId")]
         public string? WalletId { get; init; }
 
+        [JsonPropertyName("seedWords")]
+        public string? SeedWords { get; init; }
+
         [JsonPropertyName("error")]
         public string? Error { get; init; }
     }
@@ -347,6 +350,27 @@ public static class AutomationFlowDtos
 
         [JsonPropertyName("uploadedUrl")]
         public string? UploadedUrl { get; init; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; init; }
+    }
+
+    public sealed class ImportWalletRequest
+    {
+        [JsonPropertyName("seedWords")]
+        public string SeedWords { get; init; } = "";
+
+        [JsonPropertyName("profileName")]
+        public string ProfileName { get; init; } = "";
+    }
+
+    public sealed class ImportWalletResponse
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; init; }
+
+        [JsonPropertyName("walletId")]
+        public string? WalletId { get; init; }
 
         [JsonPropertyName("error")]
         public string? Error { get; init; }

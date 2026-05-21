@@ -303,6 +303,14 @@ public sealed class AutomationServer : IDisposable
                 return (200, result);
             }
 
+            // POST /flows/import-wallet
+            if (method == "POST" && path == "/flows/import-wallet")
+            {
+                var req = Deserialize<ImportWalletRequest>(body);
+                var result = await AutomationFlows.ImportWalletAsync(services, req);
+                return (200, result);
+            }
+
             // POST /flows/create-fund-project
             if (method == "POST" && path == "/flows/create-fund-project")
             {

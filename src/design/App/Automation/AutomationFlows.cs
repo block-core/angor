@@ -58,10 +58,11 @@ public static class AutomationFlows
             var hasWallet = await Dispatcher.UIThread.InvokeAsync(() =>
                 fundsVm.SeedGroups.Any() && fundsVm.SeedGroups.SelectMany(g => g.Wallets).Any());
 
+            string? seedWords = null;
             if (!hasWallet)
             {
                 Log(req.ProfileName, "Creating wallet via Generate flow...");
-                await CreateWalletViaGenerateAsync(window);
+                seedWords = await CreateWalletViaGenerateAsync(window);
             }
 
             var walletId = await Dispatcher.UIThread.InvokeAsync(() =>
@@ -79,11 +80,81 @@ public static class AutomationFlows
             {
                 Success = true,
                 WalletId = walletId,
+                SeedWords = seedWords,
             };
         }
         catch (Exception ex)
         {
             return new CreateWalletAndFundResponse { Success = false, Error = ex.Message };
+        }
+    }
+
+    public static async Task<ImportWalletResponse> ImportWalletAsync(
+        IServiceProvider services,
+        ImportWalletRequest req)
+    {
+        try
+        {
+            var window = await RequireWindowAsync();
+            await NavigateToAsync(window, "Funds");
+
+            var fundsVm = await Dispatcher.UIThread.InvokeAsync(() => GetFundsViewModel(window));
+            if (fundsVm == null)
+            {
+                return new ImportWalletResponse { Success = false, Error = "FundsViewModel not found" };
+            }
+
+            // Click Add Wallet button
+            var addWalletBtn = await Dispatcher.UIThread.InvokeAsync(() => FindAddWalletButton(window));
+            if (addWalletBtn == null)
+            {
+                return new ImportWalletResponse { Success = false, Error = "Add Wallet button not found" };
+            }
+
+            await Dispatcher.UIThread.InvokeAsync(() => ClickButton(addWalletBtn));
+            await Task.Delay(300);
+
+            // Click Import button
+            await ClickWalletCardButtonAsync(window, "BtnImport");
+            await Task.Delay(500);
+
+            // Type seed words into SeedPhraseInput
+            await TypeTextByNameAsync(window, "SeedPhraseInput", req.SeedWords);
+            await Task.Delay(200);
+
+            // Click Submit Import
+            await ClickWalletCardButtonAsync(window, "BtnSubmitImport");
+
+            // Wait for success panel
+            var successDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
+            while (DateTime.UtcNow < successDeadline)
+            {
+                var successVisible = await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    var panel = FindByAutomationId<Panel>(window, "CreateWalletSuccessPanel");
+                    return panel is { IsVisible: true };
+                });
+
+                if (successVisible) break;
+                await Task.Delay(300);
+            }
+
+            // Click Done
+            await ClickWalletCardButtonAsync(window, "BtnCreateWalletDone");
+            await Task.Delay(500);
+
+            var walletId = await Dispatcher.UIThread.InvokeAsync(() =>
+                fundsVm.SeedGroups.FirstOrDefault()?.Wallets?.FirstOrDefault()?.Id.Value);
+
+            return new ImportWalletResponse
+            {
+                Success = true,
+                WalletId = walletId,
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ImportWalletResponse { Success = false, Error = ex.Message };
         }
     }
 
@@ -1015,7 +1086,7 @@ public static class AutomationFlows
         await Task.Delay(500);
     }
 
-    private static async Task CreateWalletViaGenerateAsync(Window window)
+    private static async Task<string?> CreateWalletViaGenerateAsync(Window window)
     {
         var addWalletBtn = await Dispatcher.UIThread.InvokeAsync(() => FindAddWalletButton(window));
         if (addWalletBtn == null)
@@ -1033,10 +1104,12 @@ public static class AutomationFlows
         await ClickWalletCardButtonAsync(window, "BtnGenerate");
         await Task.Delay(500);
 
-        // Mark seed as downloaded (skips native file dialog) and click Continue
+        // Capture seed words and mark as downloaded (skips native file dialog)
+        string? seedWords = null;
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             var cwm = window.GetVisualDescendants().OfType<CreateWalletModal>().FirstOrDefault();
+            seedWords = cwm?.GeneratedSeedWords;
             cwm?.MarkSeedDownloaded();
             Dispatcher.UIThread.RunJobs();
         });
@@ -1062,6 +1135,8 @@ public static class AutomationFlows
         // Click Done to close the modal
         await ClickWalletCardButtonAsync(window, "BtnCreateWalletDone");
         await Task.Delay(500);
+
+        return seedWords;
     }
 
     private static async Task FundWalletViaFaucetAsync(Window window, FundsViewModel fundsVm, string walletId, string profileName)

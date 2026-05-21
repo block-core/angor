@@ -222,6 +222,13 @@ public sealed class TestAutomationClient : IDisposable
         return await PostAsync<CreateWalletAndFundResponse>("/flows/create-wallet-and-fund", request, ct);
     }
 
+    public async Task<ImportWalletResponse> ImportWalletAsync(
+        ImportWalletRequest request,
+        CancellationToken ct = default)
+    {
+        return await PostAsync<ImportWalletResponse>("/flows/import-wallet", request, ct);
+    }
+
     public async Task<ProjectCreatedResponse> CreateFundProjectAsync(
         CreateFundProjectRequest request,
         CancellationToken ct = default)
