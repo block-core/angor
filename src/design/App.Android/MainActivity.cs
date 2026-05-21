@@ -43,7 +43,7 @@ public class MainActivity : AvaloniaMainActivity
         }
     }
 
-    protected override void OnCreate(Android.OS.Bundle? savedInstanceState)
+    protected override void OnCreate(global::Android.OS.Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
         GetLogger()?.LogInformation("Lifecycle: OnCreate taskId={TaskId} intent={Intent}", TaskId, Intent?.Action);
