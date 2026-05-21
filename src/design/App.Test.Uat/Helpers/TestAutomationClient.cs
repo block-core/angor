@@ -222,6 +222,13 @@ public sealed class TestAutomationClient : IDisposable
         return await PostAsync<CreateWalletAndFundResponse>("/flows/create-wallet-and-fund", request, ct);
     }
 
+    public async Task<ImportWalletResponse> ImportWalletAsync(
+        ImportWalletRequest request,
+        CancellationToken ct = default)
+    {
+        return await PostAsync<ImportWalletResponse>("/flows/import-wallet", request, ct);
+    }
+
     public async Task<ProjectCreatedResponse> CreateFundProjectAsync(
         CreateFundProjectRequest request,
         CancellationToken ct = default)
@@ -297,6 +304,13 @@ public sealed class TestAutomationClient : IDisposable
         CancellationToken ct = default)
     {
         return await PostAsync<UploadToBlossomResponse>("/flows/upload-to-blossom", request, ct);
+    }
+
+    public async Task<CancelInvestmentResponse> CancelInvestmentAsync(
+        CancelInvestmentRequest request,
+        CancellationToken ct = default)
+    {
+        return await PostAsync<CancelInvestmentResponse>("/flows/cancel-investment", request, ct);
     }
 
     // ═══════════════════════════════════════════════════════════════════

@@ -58,10 +58,11 @@ public static class AutomationFlows
             var hasWallet = await Dispatcher.UIThread.InvokeAsync(() =>
                 fundsVm.SeedGroups.Any() && fundsVm.SeedGroups.SelectMany(g => g.Wallets).Any());
 
+            string? seedWords = null;
             if (!hasWallet)
             {
                 Log(req.ProfileName, "Creating wallet via Generate flow...");
-                await CreateWalletViaGenerateAsync(window);
+                seedWords = await CreateWalletViaGenerateAsync(window);
             }
 
             var walletId = await Dispatcher.UIThread.InvokeAsync(() =>
@@ -79,11 +80,81 @@ public static class AutomationFlows
             {
                 Success = true,
                 WalletId = walletId,
+                SeedWords = seedWords,
             };
         }
         catch (Exception ex)
         {
             return new CreateWalletAndFundResponse { Success = false, Error = ex.Message };
+        }
+    }
+
+    public static async Task<ImportWalletResponse> ImportWalletAsync(
+        IServiceProvider services,
+        ImportWalletRequest req)
+    {
+        try
+        {
+            var window = await RequireWindowAsync();
+            await NavigateToAsync(window, "Funds");
+
+            var fundsVm = await Dispatcher.UIThread.InvokeAsync(() => GetFundsViewModel(window));
+            if (fundsVm == null)
+            {
+                return new ImportWalletResponse { Success = false, Error = "FundsViewModel not found" };
+            }
+
+            // Click Add Wallet button
+            var addWalletBtn = await Dispatcher.UIThread.InvokeAsync(() => FindAddWalletButton(window));
+            if (addWalletBtn == null)
+            {
+                return new ImportWalletResponse { Success = false, Error = "Add Wallet button not found" };
+            }
+
+            await Dispatcher.UIThread.InvokeAsync(() => ClickButton(addWalletBtn));
+            await Task.Delay(300);
+
+            // Click Import button
+            await ClickWalletCardButtonAsync(window, "BtnImport");
+            await Task.Delay(500);
+
+            // Type seed words into SeedPhraseInput
+            await TypeTextByNameAsync(window, "SeedPhraseInput", req.SeedWords);
+            await Task.Delay(200);
+
+            // Click Submit Import
+            await ClickWalletCardButtonAsync(window, "BtnSubmitImport");
+
+            // Wait for success panel
+            var successDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
+            while (DateTime.UtcNow < successDeadline)
+            {
+                var successVisible = await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    var panel = FindByAutomationId<Panel>(window, "CreateWalletSuccessPanel");
+                    return panel is { IsVisible: true };
+                });
+
+                if (successVisible) break;
+                await Task.Delay(300);
+            }
+
+            // Click Done
+            await ClickWalletCardButtonAsync(window, "BtnCreateWalletDone");
+            await Task.Delay(500);
+
+            var walletId = await Dispatcher.UIThread.InvokeAsync(() =>
+                fundsVm.SeedGroups.FirstOrDefault()?.Wallets?.FirstOrDefault()?.Id.Value);
+
+            return new ImportWalletResponse
+            {
+                Success = true,
+                WalletId = walletId,
+            };
+        }
+        catch (Exception ex)
+        {
+            return new ImportWalletResponse { Success = false, Error = ex.Message };
         }
     }
 
@@ -122,13 +193,12 @@ public static class AutomationFlows
             await ClickByNameAsync(window, "NextStepButton");
 
             // Step 4: Target amount + approval threshold + penalty days
-            await TypeTextByNameAsync(window, "FundTargetAmountInput", "1.0");
+            await TypeTextByNameAsync(window, "FundTargetAmountInput", req.TargetAmountBtc);
             await TypeTextByNameAsync(window, "ApprovalThresholdInput", req.ThresholdAmountBtc);
-            // PenaltyDays has no UI input for fund type — set via VM (defaults to 0)
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 var wizardVm = myProjectsVm.CreateProjectVm;
-                wizardVm.PenaltyDays = 0;
+                wizardVm.PenaltyDays = req.PenaltyDays;
                 Dispatcher.UIThread.RunJobs();
             });
             await ClickByNameAsync(window, "NextStepButton");
@@ -138,17 +208,53 @@ public static class AutomationFlows
             await Task.Delay(200);
 
             // Step 5: Payout frequency + installments + day + generate
-            await ClickByNameAsync(window, "PayoutFreqWeekly");
-            await ClickByNameAsync(window, "Installment3");
-            await ClickByNameAsync(window, "Installment6");
+            var freqButton = req.PayoutFrequency == "Monthly" ? "PayoutFreqMonthly" : "PayoutFreqWeekly";
+            await ClickByNameAsync(window, freqButton);
 
-            // Select payout day via VM (ListBox selection is not easily clickable by Name)
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            // Select installment count (UI defaults to 3; click to toggle if different)
+            var installmentButton = req.InstallmentCount switch
             {
-                var wizardVm = myProjectsVm.CreateProjectVm;
-                wizardVm.WeeklyPayoutDay = req.PayoutDay;
-                Dispatcher.UIThread.RunJobs();
-            });
+                6 => "Installment6",
+                9 => "Installment9",
+                _ => "Installment3",
+            };
+            // Click Installment3 first to ensure a known state, then click the desired one
+            await ClickByNameAsync(window, "Installment3");
+            if (installmentButton != "Installment3")
+            {
+                await ClickByNameAsync(window, installmentButton);
+            }
+
+            // Select payout day via VM
+            if (req.PayoutFrequency == "Monthly")
+            {
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    var wizardVm = myProjectsVm.CreateProjectVm;
+                    wizardVm.MonthlyPayoutDate = req.MonthlyPayoutDay > 0 ? req.MonthlyPayoutDay : 1;
+                    Dispatcher.UIThread.RunJobs();
+                });
+            }
+            else
+            {
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    var wizardVm = myProjectsVm.CreateProjectVm;
+                    wizardVm.WeeklyPayoutDay = req.PayoutDay;
+                    Dispatcher.UIThread.RunJobs();
+                });
+            }
+
+            // Override start date if provided (debug mode: use past date to make stages claimable)
+            if (!string.IsNullOrEmpty(req.StartDate))
+            {
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    var wizardVm = myProjectsVm.CreateProjectVm;
+                    wizardVm.StartDate = req.StartDate;
+                    Dispatcher.UIThread.RunJobs();
+                });
+            }
 
             await ClickByNameAsync(window, "GeneratePayoutsButton");
             await ClickByNameAsync(window, "NextStepButton");
@@ -980,7 +1086,7 @@ public static class AutomationFlows
         await Task.Delay(500);
     }
 
-    private static async Task CreateWalletViaGenerateAsync(Window window)
+    private static async Task<string?> CreateWalletViaGenerateAsync(Window window)
     {
         var addWalletBtn = await Dispatcher.UIThread.InvokeAsync(() => FindAddWalletButton(window));
         if (addWalletBtn == null)
@@ -998,10 +1104,12 @@ public static class AutomationFlows
         await ClickWalletCardButtonAsync(window, "BtnGenerate");
         await Task.Delay(500);
 
-        // Mark seed as downloaded (skips native file dialog) and click Continue
+        // Capture seed words and mark as downloaded (skips native file dialog)
+        string? seedWords = null;
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
             var cwm = window.GetVisualDescendants().OfType<CreateWalletModal>().FirstOrDefault();
+            seedWords = cwm?.GeneratedSeedWords;
             cwm?.MarkSeedDownloaded();
             Dispatcher.UIThread.RunJobs();
         });
@@ -1027,6 +1135,8 @@ public static class AutomationFlows
         // Click Done to close the modal
         await ClickWalletCardButtonAsync(window, "BtnCreateWalletDone");
         await Task.Delay(500);
+
+        return seedWords;
     }
 
     private static async Task FundWalletViaFaucetAsync(Window window, FundsViewModel fundsVm, string walletId, string profileName)
@@ -1929,5 +2039,61 @@ public static class AutomationFlows
     private static void Log(string ctx, string msg)
     {
         Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss.fff}] [{ctx}] {msg}");
+    }
+
+    /// <summary>
+    /// Cancel an investment at Step 1 (before founder approval) or Step 2 (after approval, before confirm).
+    /// </summary>
+    public static async Task<CancelInvestmentResponse> CancelInvestmentAsync(
+        IServiceProvider services,
+        CancelInvestmentRequest req)
+    {
+        try
+        {
+            var window = await RequireWindowAsync();
+            await NavigateToAsync(window, "Funded");
+
+            var portfolioVm = services.GetRequiredService<PortfolioViewModel>();
+
+            // Determine the expected step based on cancelStage
+            var expectedStep = req.CancelStage == "afterApproval" ? 2 : 1;
+            var investment = await WaitForInvestmentAsync(portfolioVm, req.ProjectIdentifier, i => i.Step == expectedStep);
+            if (investment == null)
+            {
+                return new CancelInvestmentResponse { Success = false, Error = $"Investment at step {expectedStep} not found for {req.ProjectIdentifier}" };
+            }
+
+            // Click RefreshButton then ManageButton to open detail
+            await ClickByNameAsync(window, "RefreshButton");
+            await Task.Delay(1000);
+            await ClickManageButtonByProjectAsync(window, req.ProjectIdentifier);
+            await Task.Delay(500);
+
+            // Click the appropriate cancel button
+            var cancelButton = expectedStep == 1 ? "CancelInvestmentStep1Button" : "CancelInvestmentButton";
+            await ClickByNameAsync(window, cancelButton, TimeSpan.FromSeconds(10));
+
+            // Wait for investment to be removed (SelectedInvestment becomes null)
+            var deadline = DateTime.UtcNow + TimeSpan.FromMinutes(2);
+            while (DateTime.UtcNow < deadline)
+            {
+                var removed = await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    Dispatcher.UIThread.RunJobs();
+                    return portfolioVm.SelectedInvestment == null
+                        || !portfolioVm.Investments.Any(i =>
+                            string.Equals(i.ProjectIdentifier, req.ProjectIdentifier, StringComparison.Ordinal));
+                });
+
+                if (removed) break;
+                await Task.Delay(PollInterval);
+            }
+
+            return new CancelInvestmentResponse { Success = true };
+        }
+        catch (Exception ex)
+        {
+            return new CancelInvestmentResponse { Success = false, Error = ex.Message };
+        }
     }
 }
