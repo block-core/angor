@@ -21,8 +21,8 @@ angor-cli --mcp                   # MCP server mode (JSON-RPC over stdio, AI age
 | 2 — Wallet commands | **DONE** | 12 CLI commands + 12 MCP tools |
 | 3 — Project commands (read-only) | **DONE** | 6 CLI commands + 7 MCP tools |
 | 6 — MCP protocol layer | **DONE** | `--mcp` flag, `ModelContextProtocol` 1.3.0, stdio transport |
-| 4 — Founder commands | Pending | |
-| 5 — Investor commands | Pending | |
+| 4 — Founder commands | **DONE** | 11 CLI commands + 11 MCP tools |
+| 5 — Investor commands | **DONE** | 13 CLI commands + 13 MCP tools |
 | 7 — Lightning + config | Pending | |
 | 8 — Testing + polish | Pending | |
 
@@ -31,8 +31,8 @@ angor-cli --mcp                   # MCP server mode (JSON-RPC over stdio, AI age
 - **Project:** `src/cli/Angor.Cli/Angor.Cli.csproj` targeting `net10.0`
 - **DI:** Headless `CompositionRoot` mirroring `src/design/App/Composition/CompositionRoot.cs` — registers SDK wallet + funding services, LiteDB, Serilog file logging, platform-specific `ISecureKeyProvider` (DPAPI on Windows, Linux fallback on Linux/macOS). No UI dependencies.
 - **Security:** `HeadlessPasswordProvider` (env var `ANGOR_WALLET_PASSWORD` or masked console prompt in CLI mode), `HeadlessPassphraseProvider` (env var `ANGOR_WALLET_PASSPHRASE`), `HeadlessSeedwordsProvider` (delegates to SDK's built-in `SeedwordsProvider`).
-- **CLI commands:** `wallet` (12 subcommands) and `project` (6 subcommands) via `System.CommandLine`. All commands support `--json` for structured output.
-- **MCP tools:** `WalletTools` (12 tools) and `ProjectTools` (7 tools) using `[McpServerToolType]` / `[McpServerTool]` attributes. Tools are auto-discovered via `WithToolsFromAssembly()`.
+- **CLI commands:** `wallet` (12 subcommands), `project` (6 subcommands), `founder` (11 subcommands), and `investor` (13 subcommands) via `System.CommandLine`. All commands support `--json` for structured output.
+- **MCP tools:** `WalletTools` (12 tools), `ProjectTools` (7 tools), `FounderTools` (11 tools), and `InvestorTools` (13 tools) using `[McpServerToolType]` / `[McpServerTool]` attributes. Tools are auto-discovered via `WithToolsFromAssembly()`.
 - **Packages added to `Directory.Packages.props`:** `System.CommandLine` 2.0.0-beta4, `ModelContextProtocol` 1.3.0, `Microsoft.Extensions.Hosting` 9.0.10.
 
 ### What was NOT needed
@@ -80,15 +80,15 @@ src/
           WalletCommands.cs        ✅ 12 commands implemented
         Projects/
           ProjectCommands.cs       ✅ 6 commands implemented
-        Founder/                   ⬜ Phase 4
-        Investor/                  ⬜ Phase 5
+        Founder/                   ✅ Phase 4
+        Investor/                  ✅ Phase 5
         Lightning/                 ⬜ Phase 7
         Config/                    ⬜ Phase 7
       McpTools/                    MCP tool wrappers
         WalletTools.cs             ✅ 12 tools implemented
         ProjectTools.cs            ✅ 7 tools implemented
-        FounderTools.cs            ⬜ Phase 4
-        InvestorTools.cs           ⬜ Phase 5
+        FounderTools.cs            ✅ Phase 4
+        InvestorTools.cs           ✅ Phase 5
         LightningTools.cs          ⬜ Phase 7
         ConfigTools.cs             ⬜ Phase 7
     Angor.Cli.Tests/               ⬜ Phase 8
@@ -412,17 +412,18 @@ Expose read-only data as MCP resources:
 | 1 | Scaffolding + headless DI | 2-3 hours | ✅ Done |
 | 2 | Wallet commands | 2-3 hours | ✅ Done |
 | 3 | Project commands (read-only) | 1-2 hours | ✅ Done |
-| 4 | Founder commands | 3-4 hours | ⬜ Next |
-| 5 | Investor commands | 3-4 hours | ⬜ |
+| 4 | Founder commands | 3-4 hours | ✅ Done |
+| 5 | Investor commands | 3-4 hours | ✅ Done |
 | 6 | MCP protocol layer | 2-3 hours | ✅ Done |
 | 7 | Lightning + config | 1-2 hours | ⬜ |
 | 8 | Testing + polish | 2-3 hours | ⬜ |
 | 9 | AI coding skill | 1-2 hours | ⬜ |
 | **Total** | | **~18-27 hours (~2-3 days)** | **MVP done** |
 
-**MVP (Phases 1-3 + 6): COMPLETE.** Wallet management + project browsing via CLI and MCP. An AI agent can explore projects, manage wallets, and check balances.
+**MVP (Phases 1-3 + 6): COMPLETE.** Wallet management + project browsing via CLI and MCP.
+**Phases 4-5: COMPLETE.** Founder + investor operations via CLI and MCP. No SDK refactoring was needed — all operations were already available through `IFounderAppService`, `IInvestmentAppService`, and `IProjectAppService`.
 
-**Next up: Phase 4 (Founder commands)** — this is where SDK refactoring may be needed if founder flows have business logic in ViewModels.
+**Next up: Phase 7 (Lightning + config)** — lightning swap and network configuration commands.
 
 ---
 

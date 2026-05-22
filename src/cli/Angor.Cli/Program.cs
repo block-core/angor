@@ -2,6 +2,8 @@ using System.CommandLine;
 using System.Text.Json;
 using Angor.Cli.Commands.Wallet;
 using Angor.Cli.Commands.Projects;
+using Angor.Cli.Commands.Founder;
+using Angor.Cli.Commands.Investor;
 using Angor.Cli.Composition;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -38,6 +40,8 @@ public class Program
         // Register command groups
         rootCommand.AddCommand(WalletCommands.Build(serviceProvider, JsonOptions));
         rootCommand.AddCommand(ProjectCommands.Build(serviceProvider, JsonOptions));
+        rootCommand.AddCommand(FounderCommands.Build(serviceProvider, JsonOptions));
+        rootCommand.AddCommand(InvestorCommands.Build(serviceProvider, JsonOptions));
 
         return await rootCommand.InvokeAsync(args);
     }
