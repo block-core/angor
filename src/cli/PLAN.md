@@ -23,7 +23,7 @@ angor-cli --mcp                   # MCP server mode (JSON-RPC over stdio, AI age
 | 6 — MCP protocol layer | **DONE** | `--mcp` flag, `ModelContextProtocol` 1.3.0, stdio transport |
 | 4 — Founder commands | **DONE** | 11 CLI commands + 11 MCP tools |
 | 5 — Investor commands | **DONE** | 13 CLI commands + 13 MCP tools |
-| 7 — Lightning + config | Pending | |
+| 7 — Lightning + config | **DONE** | 2 lightning CLI/MCP + 3 config CLI/MCP |
 | 8 — Testing + polish | Pending | |
 
 ### What was built (MVP)
@@ -82,15 +82,15 @@ src/
           ProjectCommands.cs       ✅ 6 commands implemented
         Founder/                   ✅ Phase 4
         Investor/                  ✅ Phase 5
-        Lightning/                 ⬜ Phase 7
-        Config/                    ⬜ Phase 7
+        Lightning/                 ✅ Phase 7
+        Config/                    ✅ Phase 7
       McpTools/                    MCP tool wrappers
         WalletTools.cs             ✅ 12 tools implemented
         ProjectTools.cs            ✅ 7 tools implemented
         FounderTools.cs            ✅ Phase 4
         InvestorTools.cs           ✅ Phase 5
-        LightningTools.cs          ⬜ Phase 7
-        ConfigTools.cs             ⬜ Phase 7
+        LightningTools.cs          ✅ Phase 7
+        ConfigTools.cs             ✅ Phase 7
     Angor.Cli.Tests/               ⬜ Phase 8
       Angor.Cli.Tests.csproj
 ```
@@ -415,7 +415,7 @@ Expose read-only data as MCP resources:
 | 4 | Founder commands | 3-4 hours | ✅ Done |
 | 5 | Investor commands | 3-4 hours | ✅ Done |
 | 6 | MCP protocol layer | 2-3 hours | ✅ Done |
-| 7 | Lightning + config | 1-2 hours | ⬜ |
+| 7 | Lightning + config | 1-2 hours | ✅ Done |
 | 8 | Testing + polish | 2-3 hours | ⬜ |
 | 9 | AI coding skill | 1-2 hours | ⬜ |
 | **Total** | | **~18-27 hours (~2-3 days)** | **MVP done** |
@@ -423,7 +423,7 @@ Expose read-only data as MCP resources:
 **MVP (Phases 1-3 + 6): COMPLETE.** Wallet management + project browsing via CLI and MCP.
 **Phases 4-5: COMPLETE.** Founder + investor operations via CLI and MCP. No SDK refactoring was needed — all operations were already available through `IFounderAppService`, `IInvestmentAppService`, and `IProjectAppService`.
 
-**Next up: Phase 7 (Lightning + config)** — lightning swap and network configuration commands.
+**Next up: Phase 8 (Testing + polish)** — DI composition tests, command parsing tests, error handling, documentation.
 
 ---
 
