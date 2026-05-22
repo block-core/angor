@@ -7,6 +7,10 @@
         <Nullable>enable</Nullable>
         <RootNamespace>Angor.Cli</RootNamespace>
         <AssemblyName>angor-cli</AssemblyName>
+        <PublishSingleFile>true</PublishSingleFile>
+        <SelfContained>true</SelfContained>
+        <PublishTrimmed>false</PublishTrimmed>
+        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
     </PropertyGroup>
 
     <ItemGroup>
