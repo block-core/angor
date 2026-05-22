@@ -24,7 +24,8 @@ angor-cli --mcp                   # MCP server mode (JSON-RPC over stdio, AI age
 | 4 — Founder commands | **DONE** | 11 CLI commands + 11 MCP tools |
 | 5 — Investor commands | **DONE** | 13 CLI commands + 13 MCP tools |
 | 7 — Lightning + config | **DONE** | 2 lightning CLI/MCP + 3 config CLI/MCP |
-| 8 — Testing + polish | Pending | |
+| 8 — Testing + polish | **DONE** | 20 tests: DI composition, command parsing, MCP tool discovery |
+| 9 — AI coding skill | **DONE** | `SKILL-ANGOR-CLI.md` + AGENTS.md updated |
 
 ### What was built (MVP)
 
@@ -91,7 +92,7 @@ src/
         InvestorTools.cs           ✅ Phase 5
         LightningTools.cs          ✅ Phase 7
         ConfigTools.cs             ✅ Phase 7
-    Angor.Cli.Tests/               ⬜ Phase 8
+    Angor.Cli.Tests/               ✅ Phase 8
       Angor.Cli.Tests.csproj
 ```
 
@@ -416,14 +417,16 @@ Expose read-only data as MCP resources:
 | 5 | Investor commands | 3-4 hours | ✅ Done |
 | 6 | MCP protocol layer | 2-3 hours | ✅ Done |
 | 7 | Lightning + config | 1-2 hours | ✅ Done |
-| 8 | Testing + polish | 2-3 hours | ⬜ |
-| 9 | AI coding skill | 1-2 hours | ⬜ |
+| 8 | Testing + polish | 2-3 hours | ✅ Done |
+| 9 | AI coding skill | 1-2 hours | ✅ Done |
 | **Total** | | **~18-27 hours (~2-3 days)** | **MVP done** |
 
 **MVP (Phases 1-3 + 6): COMPLETE.** Wallet management + project browsing via CLI and MCP.
 **Phases 4-5: COMPLETE.** Founder + investor operations via CLI and MCP. No SDK refactoring was needed — all operations were already available through `IFounderAppService`, `IInvestmentAppService`, and `IProjectAppService`.
 
 **Next up: Phase 8 (Testing + polish)** — DI composition tests, command parsing tests, error handling, documentation.
+
+**ALL PHASES COMPLETE.** The CLI exposes 48 MCP tools and 44 CLI commands covering wallet, project, founder, investor, lightning, and config operations. 20 automated tests verify DI composition, command registration, and MCP tool discovery.
 
 ---
 

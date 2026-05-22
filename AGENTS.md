@@ -8,6 +8,7 @@ Angor is a Bitcoin investment platform with two frontends:
 - **Shared library** (.NET 8) in `src/shared/`
 - **SDK** (.NET 9) in `src/sdk/`
 - **App** (new Avalonia rewrite) in `src/design/`
+- **CLI / MCP server** (.NET 10) in `src/cli/`
 
 ## Repository Structure
 
@@ -17,6 +18,7 @@ src/
   sdk/             Angor.Sdk (net9.0), Angor.Sdk.Tests, Angor.Data.Documents, Angor.Data.Documents.LiteDb
   avalonia/        AngorApp, AngorApp.Model, AngorApp.Tests, AngorApp.Desktop, AngorApp.Android, AngorApp.iOS, AngorApp.Browser
   design/          App, App.Desktop, App.Test.Integration (new Avalonia rewrite)
+  cli/             Angor.Cli (net10.0 console app), Angor.Cli.Tests
   webapp/          Angor.Client (Blazor WASM, net8.0)
   Avalonia.sln     Main solution: avalonia + sdk + shared
   App.sln          New app solution: design + sdk + shared
@@ -42,6 +44,26 @@ dotnet build src/App.sln
 dotnet build src/avalonia/AngorApp.Desktop/AngorApp.Desktop.csproj
 dotnet build src/design/App.Desktop/App.Desktop.csproj
 ```
+
+### CLI / MCP Server
+
+The Angor CLI at `src/cli/` exposes the full SDK as both a command-line tool and an MCP server. See `src/cli/SKILL-ANGOR-CLI.md` for the complete command reference, MCP configuration, and workflow examples.
+
+```bash
+# Build CLI
+dotnet build src/cli/Angor.Cli/Angor.Cli.csproj
+
+# Run a command
+dotnet run --project src/cli/Angor.Cli -- wallet list
+
+# Start as MCP server
+dotnet run --project src/cli/Angor.Cli -- --mcp
+
+# Run CLI tests
+dotnet test src/cli/Angor.Cli.Tests/Angor.Cli.Tests.csproj
+```
+
+Use the CLI for **testing and validation** (e.g., checking wallet balances, browsing projects, verifying transaction flows). Use the SDK directly for **code changes** (adding new operations, fixing bugs in app services).
 
 ### Deploying to USB-connected Android device (src/design rewrite)
 
