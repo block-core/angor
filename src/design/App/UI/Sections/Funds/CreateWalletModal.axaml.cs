@@ -30,12 +30,36 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         AddHandler(Button.ClickEvent, OnButtonClick);
 
         _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<CreateWalletModal>();
+
+        StoredWalletList.SelectionChanged += OnStoredWalletSelected;
     }
 
     private FundsViewModel? Vm => DataContext as FundsViewModel;
 
     /// <summary>Generated seed words stored for wallet creation after backup confirmation.</summary>
     private string? _generatedSeedWords;
+
+    /// <summary>
+    /// Exposes the generated seed words for automation/test access.
+    /// Returns null if no seed words have been generated yet.
+    /// </summary>
+    internal string? GeneratedSeedWords => _generatedSeedWords;
+
+    /// <summary>
+    /// Marks seed as downloaded (skipping the native file dialog) so the
+    /// Continue button becomes enabled. Used by automation flows.
+    /// </summary>
+    internal void MarkSeedDownloaded()
+    {
+        _seedDownloaded = true;
+        var btn = this.FindControl<Button>("BtnContinueBackup");
+        if (btn != null)
+        {
+            btn.IsEnabled = true;
+            btn.BorderBrush = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#4B7C5A"));
+            btn.Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#4B7C5A"));
+        }
+    }
 
     /// <summary>
     /// Optional callback invoked whenever the modal is dismissed — success, cancel, or backdrop click.
@@ -154,6 +178,20 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         ImportPanel.IsVisible = step == "import";
         BackupPanel.IsVisible = step == "backup";
         SuccessPanel.IsVisible = step == "success";
+
+        if (step == "import")
+        {
+            // Load encrypted wallets from wallets.json and show the restore section
+            _ = LoadStoredWalletsAsync();
+            StoredWalletList.SelectedItem = null;
+        }
+    }
+
+    private async Task LoadStoredWalletsAsync()
+    {
+        if (Vm == null) return;
+        await Vm.LoadStoredWalletsAsync();
+        StoredWalletsSection.IsVisible = Vm.StoredWallets.Count > 0;
     }
 
     /// <summary>
@@ -191,6 +229,45 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
 
         var spinner = this.FindControl<StackPanel>("ImportBtnSpinner");
         if (spinner != null) spinner.IsVisible = isProcessing;
+    }
+
+    /// <summary>
+    /// Handles selection of a stored wallet — decrypts via secure storage and imports it.
+    /// </summary>
+    private async void OnStoredWalletSelected(object? sender, SelectionChangedEventArgs e)
+    {
+        if (StoredWalletList.SelectedItem is not StoredWalletEntry wallet) return;
+
+        _logger.LogInformation("Stored wallet selected for restore: {ShortId}", wallet.ShortId);
+        StoredWalletList.IsEnabled = false;
+        RestoreSpinnerPanel.IsVisible = true;
+
+        try
+        {
+            var (success, error) = await Vm!.RestoreStoredWalletAsync(wallet.Id);
+            if (success)
+            {
+                _walletCreated = true;
+                _logger.LogInformation("Wallet restored from backup: {ShortId}", wallet.ShortId);
+                ShowStep("success");
+            }
+            else
+            {
+                _logger.LogError("Failed to restore wallet {ShortId}: {Error}", wallet.ShortId, error);
+                ShellVm?.ShowToast($"Restore failed: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unhandled exception during wallet restore");
+            ShellVm?.ShowToast($"Restore failed: {ex.Message}");
+        }
+        finally
+        {
+            StoredWalletList.IsEnabled = true;
+            RestoreSpinnerPanel.IsVisible = false;
+            StoredWalletList.SelectedItem = null;
+        }
     }
 
     /// <summary>

@@ -38,6 +38,9 @@ public class BoltzWebSocketClient : IBoltzWebSocketClient, IAsyncDisposable
         };
     }
 
+    private const int MaxReconnectAttempts = 5;
+    private static readonly TimeSpan InitialReconnectDelay = TimeSpan.FromSeconds(1);
+
     public async Task<Result<BoltzSwapStatus>> MonitorSwapAsync(
         string swapId,
         TimeSpan? timeout = null,
@@ -48,31 +51,71 @@ public class BoltzWebSocketClient : IBoltzWebSocketClient, IAsyncDisposable
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
             cancellationToken, timeoutCts.Token);
 
-        try
-        {
-            _webSocket = new ClientWebSocket();
-            await _webSocket.ConnectAsync(new Uri(_webSocketUrl), linkedCts.Token);
+        var attempt = 0;
 
-            _logger.LogInformation("Connected to Boltz WebSocket at {Url}", _webSocketUrl);
+        while (!linkedCts.Token.IsCancellationRequested)
+        {
+            try
+            {
+                _webSocket?.Dispose();
+                _webSocket = new ClientWebSocket();
+                await _webSocket.ConnectAsync(new Uri(_webSocketUrl), linkedCts.Token);
 
-            await SubscribeToSwap(swapId, linkedCts.Token);
+                _logger.LogInformation(
+                    attempt == 0
+                        ? "Connected to Boltz WebSocket at {Url}"
+                        : "Reconnected to Boltz WebSocket at {Url} (attempt {Attempt})",
+                    _webSocketUrl, attempt);
 
-            return await ReceiveUpdatesUntilComplete(swapId, linkedCts.Token);
+                attempt = 0;
+
+                await SubscribeToSwap(swapId, linkedCts.Token);
+
+                var result = await ReceiveUpdatesUntilComplete(swapId, linkedCts.Token);
+                if (result.IsSuccess)
+                    return result;
+
+                // Connection ended unexpectedly — fall through to reconnect
+                throw new WebSocketException(result.Error);
+            }
+            catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested)
+            {
+                return Result.Failure<BoltzSwapStatus>(
+                    "Timeout waiting for swap completion. Please pay the Lightning invoice.");
+            }
+            catch (OperationCanceledException)
+            {
+                return Result.Failure<BoltzSwapStatus>("Monitoring was cancelled");
+            }
+            catch (Exception ex)
+            {
+                attempt++;
+
+                if (attempt > MaxReconnectAttempts)
+                {
+                    _logger.LogError(ex,
+                        "WebSocket error monitoring swap {SwapId} after {Attempts} reconnect attempts",
+                        swapId, MaxReconnectAttempts);
+                    return Result.Failure<BoltzSwapStatus>($"WebSocket error: {ex.Message}");
+                }
+
+                var delay = InitialReconnectDelay * Math.Pow(2, attempt - 1);
+                _logger.LogWarning(ex,
+                    "WebSocket disconnected for swap {SwapId}, reconnecting in {Delay}s (attempt {Attempt}/{Max})",
+                    swapId, delay.TotalSeconds, attempt, MaxReconnectAttempts);
+
+                try
+                {
+                    await Task.Delay(delay, linkedCts.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    return Result.Failure<BoltzSwapStatus>("Monitoring was cancelled");
+                }
+            }
         }
-        catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested)
-        {
-            return Result.Failure<BoltzSwapStatus>(
-                "Timeout waiting for swap completion. Please pay the Lightning invoice.");
-        }
-        catch (OperationCanceledException)
-        {
-            return Result.Failure<BoltzSwapStatus>("Monitoring was cancelled");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "WebSocket error monitoring swap {SwapId}", swapId);
-            return Result.Failure<BoltzSwapStatus>($"WebSocket error: {ex.Message}");
-        }
+
+        return Result.Failure<BoltzSwapStatus>("Monitoring was cancelled");
     }
 
     private async Task SubscribeToSwap(string swapId, CancellationToken cancellationToken)

@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
+using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using App.UI.Shared;
@@ -24,6 +25,11 @@ public partial class FindProjectsView : UserControl, ISectionView
     private Panel? _investPanel;
     private ScrollableView? _projectListScrollable;
     private ScrollViewer? _listScrollViewer;
+    private Grid? _headerGrid;
+    private TextBlock? _discoverProjectsTitle;
+    private Border? _searchContainer;
+    private TextBox? _searchBox;
+    private StackPanel? _searchErrorContainer;
 
     // Lazy-mounted drill-down children — materialised on first visibility
     // to avoid the ~1800-line XAML inflate cost on the initial tab switch.
@@ -48,6 +54,10 @@ public partial class FindProjectsView : UserControl, ISectionView
         _detailPanel = this.FindControl<Panel>("ProjectDetailPanel");
         _investPanel = this.FindControl<Panel>("InvestPagePanel");
         _projectListScrollable = this.FindControl<ScrollableView>("ProjectListPanel");
+        _headerGrid = this.FindControl<Grid>("FindProjectsHeaderGrid");
+        _discoverProjectsTitle = this.FindControl<TextBlock>("DiscoverProjectsTitle");
+        _searchContainer = this.FindControl<Border>("SearchContainer");
+        _searchErrorContainer = this.FindControl<StackPanel>("SearchErrorContainer");
 
         // Wire refresh button
         var refreshBtn = this.FindControl<Button>("RefreshProjectsButton");
@@ -62,7 +72,7 @@ public partial class FindProjectsView : UserControl, ISectionView
 
         // Wire search button and Enter key on search TextBox
         var searchBtn = this.FindControl<Button>("SearchButton");
-        var searchBox = this.FindControl<TextBox>("SearchTextBox");
+        _searchBox = this.FindControl<TextBox>("SearchTextBox");
         if (searchBtn != null)
         {
             searchBtn.Click += async (_, _) =>
@@ -71,9 +81,9 @@ public partial class FindProjectsView : UserControl, ISectionView
                     await fvm.SearchByProjectIdAsync();
             };
         }
-        if (searchBox != null)
+        if (_searchBox != null)
         {
-            searchBox.KeyDown += async (_, args) =>
+            _searchBox.KeyDown += async (_, args) =>
             {
                 if (args.Key == Key.Enter && DataContext is FindProjectsViewModel fvm)
                     await fvm.SearchByProjectIdAsync();
@@ -94,6 +104,7 @@ public partial class FindProjectsView : UserControl, ISectionView
         }
 
         // Listen for taps on ProjectCard elements to open project detail
+        AddHandler(PointerPressedEvent, OnPointerPressed, RoutingStrategies.Tunnel);
         AddHandler(InputElement.TappedEvent, OnCardTapped, RoutingStrategies.Bubble);
         var findMs = sw.ElapsedMilliseconds;
 
@@ -122,6 +133,63 @@ public partial class FindProjectsView : UserControl, ISectionView
             _projectListScrollable.ContentPadding = isCompact
                 ? new Thickness(16, 16, 16, 96)
                 : new Thickness(24);
+
+        if (_headerGrid == null || _searchContainer == null || _searchErrorContainer == null)
+            return;
+
+        if (isCompact)
+        {
+            if (_discoverProjectsTitle != null)
+                _discoverProjectsTitle.IsVisible = true;
+
+            _headerGrid.ColumnDefinitions[0].Width = GridLength.Star;
+            _headerGrid.ColumnDefinitions[1].Width = new GridLength(0);
+            _headerGrid.ColumnDefinitions[2].Width = GridLength.Auto;
+            _headerGrid.RowDefinitions[1].Height = GridLength.Auto;
+            _headerGrid.RowDefinitions[2].Height = GridLength.Auto;
+
+            Grid.SetRow(_searchContainer, 1);
+            Grid.SetColumn(_searchContainer, 0);
+            Grid.SetColumnSpan(_searchContainer, 3);
+            _searchContainer.Margin = new Thickness(0, 12, 0, 0);
+
+            Grid.SetRow(_searchErrorContainer, 2);
+            Grid.SetColumn(_searchErrorContainer, 0);
+            Grid.SetColumnSpan(_searchErrorContainer, 3);
+            _searchErrorContainer.Margin = new Thickness(14, 6, 14, 0);
+        }
+        else
+        {
+            if (_discoverProjectsTitle != null)
+                _discoverProjectsTitle.IsVisible = false;
+
+            _headerGrid.ColumnDefinitions[0].Width = GridLength.Auto;
+            _headerGrid.ColumnDefinitions[1].Width = GridLength.Star;
+            _headerGrid.ColumnDefinitions[2].Width = GridLength.Auto;
+            _headerGrid.RowDefinitions[1].Height = GridLength.Auto;
+            _headerGrid.RowDefinitions[2].Height = new GridLength(0);
+
+            Grid.SetRow(_searchContainer, 0);
+            Grid.SetColumn(_searchContainer, 1);
+            Grid.SetColumnSpan(_searchContainer, 1);
+            _searchContainer.Margin = new Thickness(0, 0, 16, 0);
+
+            Grid.SetRow(_searchErrorContainer, 1);
+            Grid.SetColumn(_searchErrorContainer, 1);
+            Grid.SetColumnSpan(_searchErrorContainer, 1);
+            _searchErrorContainer.Margin = new Thickness(2, 6, 0, 0);
+        }
+    }
+
+    private void OnPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (_searchBox == null || !_searchBox.IsKeyboardFocusWithin)
+            return;
+
+        if (e.Source is not Visual source || _searchContainer?.IsVisualAncestorOf(source) == true)
+            return;
+
+        Focus();
     }
 
     private void SubscribeToVisibility()

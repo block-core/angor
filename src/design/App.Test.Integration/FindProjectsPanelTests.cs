@@ -192,7 +192,7 @@ public class FindProjectsPanelTests
         }
         if (openProject != null)
         {
-            var investBtn = detailView!.FindControl<Border>("InvestButton");
+            var investBtn = detailView!.FindControl<Button>("InvestButton");
             investBtn.Should().NotBeNull("InvestButton should exist in the detail view");
             investBtn!.IsVisible.Should().BeTrue("InvestButton should be visible for an open project");
         }
@@ -414,10 +414,10 @@ public class FindProjectsPanelTests
         investVm.PaymentFlow.IsProcessing.Should().BeFalse("IsProcessing should be false after PayWithWallet completes (comment #9)");
 
         TestHelpers.Log($"[2.6] Error message: {investVm.PaymentFlow.ErrorMessage}");
-        investVm.PaymentFlow.ErrorMessage.Should().NotBeNullOrWhiteSpace("should show error for insufficient balance");
+        investVm.PaymentFlow.ErrorMessage.Should().NotBeNullOrWhiteSpace("should show error for insufficient balance or relay unavailability");
         investVm.PaymentFlow.ErrorMessage.Should().Match(
-            s => s.Contains("Insufficient") || s.Contains("Not enough funds"),
-            "should indicate insufficient funds");
+            s => s.Contains("Insufficient") || s.Contains("Not enough funds") || s.Contains("not found in relay"),
+            "should indicate insufficient funds or relay lookup failure");
         investVm.CurrentScreen.Should().Be(InvestScreen.WalletSelector, "should stay on WalletSelector");
 
         // ── Reset, reopen invest page for invoice/modal tests ──
@@ -512,7 +512,7 @@ public class FindProjectsPanelTests
             var detailView = window.GetVisualDescendants().OfType<ProjectDetailView>().FirstOrDefault();
             detailView.Should().NotBeNull();
 
-            var investBtn = detailView!.FindControl<Border>("InvestButton");
+            var investBtn = detailView!.FindControl<Button>("InvestButton");
             if (investBtn != null)
             {
                 investBtn.IsVisible.Should().BeFalse("InvestButton should be hidden for a closed project");

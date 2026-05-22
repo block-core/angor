@@ -76,19 +76,19 @@ public class NetworkConfiguration : INetworkConfiguration
         {
             return new List<SettingsUrl>
             {
-                new() { Name = string.Empty, Url = "wss://relay.angor.io", IsPrimary = true },
-                new() { Name = string.Empty, Url = "wss://relay2.angor.io", IsPrimary = true },
-                new() { Name = string.Empty, Url = "wss://relay.damus.io", IsPrimary = true },
-                new() { Name = string.Empty, Url = "wss://nos.lol", IsPrimary = true },
-                new() { Name = string.Empty, Url = "wss://nostr-01.yakihonne.com", IsPrimary = true },
-                new() { Name = string.Empty, Url = "wss://nostr-02.yakihonne.com", IsPrimary = true },
+                new() { Name = "wss://relay.angor.io", Url = "wss://relay.angor.io", IsPrimary = true },
+                new() { Name = "wss://relay2.angor.io", Url = "wss://relay2.angor.io", IsPrimary = true },
+                new() { Name = "wss://relay.damus.io", Url = "wss://relay.damus.io", IsPrimary = true },
+                new() { Name = "wss://nos.lol", Url = "wss://nos.lol", IsPrimary = true },
+                new() { Name = "wss://nostr-01.yakihonne.com", Url = "wss://nostr-01.yakihonne.com", IsPrimary = true },
+                new() { Name = "wss://nostr-02.yakihonne.com", Url = "wss://nostr-02.yakihonne.com", IsPrimary = true },
             };
         }
 
         return new List<SettingsUrl>
         {
-            new() { Name = string.Empty, Url = "wss://relay.angor.io", IsPrimary = true },
-            new() { Name = string.Empty, Url = "wss://relay2.angor.io", IsPrimary = true },
+            new() { Name = "wss://relay.angor.io", Url = "wss://relay.angor.io", IsPrimary = true },
+            new() { Name = "wss://relay2.angor.io", Url = "wss://relay2.angor.io", IsPrimary = true },
         };
     }
 
@@ -101,17 +101,17 @@ public class NetworkConfiguration : INetworkConfiguration
             {
                 return new List<SettingsUrl>
                 {
-                    new() { Name = string.Empty, Url = "https://liquid.angor.online", IsPrimary = true },
+                    new() { Name = "liquid.angor.online", Url = "https://liquid.angor.online", IsPrimary = true },
                 };
             }
 
             return new List<SettingsUrl>
             {
-                new() { Name = string.Empty, Url = "https://explorer.angor.io", IsPrimary = false },
-                new() { Name = string.Empty, Url = "https://fulcrum.angor.online", IsPrimary = true },
-                new() { Name = string.Empty, Url = "https://electrs.angor.online", IsPrimary = false },
-                new() { Name = string.Empty, Url = "https://cyphermunkhouse.angor.online", IsPrimary = false },
-                new() { Name = string.Empty, Url = "https://indexer.angor.fund", IsPrimary = false },
+                new() { Name = "explorer.angor.io", Url = "https://explorer.angor.io", IsPrimary = false },
+                new() { Name = "fulcrum.angor.online", Url = "https://fulcrum.angor.online", IsPrimary = true },
+                new() { Name = "electrs.angor.online", Url = "https://electrs.angor.online", IsPrimary = false },
+                new() { Name = "cyphermunkhouse.angor.online", Url = "https://cyphermunkhouse.angor.online", IsPrimary = false },
+                new() { Name = "indexer.angor.fund", Url = "https://indexer.angor.fund", IsPrimary = false },
             };
         }
 
@@ -119,9 +119,9 @@ public class NetworkConfiguration : INetworkConfiguration
         {
             return new List<SettingsUrl>
             {
-                new() { Name = string.Empty, Url = "https://test.explorer.angor.io", IsPrimary = false },
-                new() { Name = string.Empty, Url = "https://signet.angor.online", IsPrimary = true },
-                new() { Name = string.Empty, Url = "https://signet2.angor.online", IsPrimary = false },
+                new() { Name = "test.explorer.angor.io", Url = "https://test.explorer.angor.io", IsPrimary = false },
+                new() { Name = "signet.angor.online", Url = "https://signet.angor.online", IsPrimary = true },
+                new() { Name = "signet2.angor.online", Url = "https://signet2.angor.online", IsPrimary = false },
             };
         }
 

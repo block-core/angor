@@ -72,6 +72,9 @@ public static class CompositionRoot
             var fileLogger = new LoggerConfiguration()
                 .Destructure.With<SensitiveDataRedactor>()
                 .MinimumLevel.Information()
+                .MinimumLevel.Override("System.Net.Http.HttpClient", Serilog.Events.LogEventLevel.Warning)
+                .MinimumLevel.Override("Angor.Shared.WalletOperations", Serilog.Events.LogEventLevel.Warning)
+                .MinimumLevel.Override("Angor.Shared.DerivationOperations", Serilog.Events.LogEventLevel.Warning)
                 .WriteTo.File(
                     logFilePath,
                     rollingInterval: Serilog.RollingInterval.Day,
@@ -180,10 +183,12 @@ public static class CompositionRoot
                 sp.GetRequiredService<IWalletAppService>(),
                 sp.GetRequiredService<IInvestmentAppService>(),
                 sp.GetRequiredService<IBoltzSwapService>(),
+                sp.GetRequiredService<IBoltzSwapStorageService>(),
                 sp.GetRequiredService<PortfolioViewModel>(),
                 sp.GetRequiredService<ICurrencyService>(),
                 sp.GetRequiredService<IWalletContext>(),
                 sp.GetRequiredService<Func<BitcoinNetwork>>(),
+                sp.GetRequiredService<PrototypeSettings>(),
                 sp.GetRequiredService<ILoggerFactory>().CreateLogger<InvestPageViewModel>()));
 
         services.AddSingleton<Func<MyProjectItemViewModel, ManageProjectViewModel>>(sp =>

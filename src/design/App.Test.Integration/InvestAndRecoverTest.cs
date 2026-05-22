@@ -329,6 +329,8 @@ public class InvestAndRecoverTest
         portfolioVm.HasInvestments.Should().BeTrue();
 
         TestHelpers.Log("[STEP 7.1] Verifying no duplicate investments after SDK reload...");
+        // Wait for any in-progress load to finish before triggering our own
+        await TestHelpers.WaitForCondition(() => !portfolioVm.IsLoading, TimeSpan.FromSeconds(10));
         await portfolioVm.LoadInvestmentsFromSdkAsync();
         Dispatcher.UIThread.RunJobs();
 

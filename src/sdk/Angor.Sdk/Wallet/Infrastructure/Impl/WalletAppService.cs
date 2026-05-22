@@ -7,6 +7,7 @@ using Angor.Sdk.Wallet.Application;
 using Angor.Sdk.Wallet.Domain;
 using Angor.Sdk.Wallet.Infrastructure.History;
 using Angor.Sdk.Wallet.Infrastructure.Interfaces;
+using Angor.Sdk.Wallet.Operations;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Blockcore.NBitcoin.BIP39;
@@ -29,11 +30,12 @@ public class WalletAppService(
     IGenericDocumentCollection<InvestmentRecordsDocument> investmentRecords,
     IGenericDocumentCollection<InvestmentHandshake> investmentHandshakes,
     ISecureKeyProvider secureKeyProvider,
+    ISeedwordsProvider seedwordsProvider,
     ILogger<WalletAppService> logger)
     : IWalletAppService
 {
     //public static readonly WalletId SingleWalletId = new("8E3C5250-4E26-4A13-8075-0A189AEAF793");
-    private const string SingleWalletName = "<default>";
+    private const string SingleWalletName = "Angor Wallet";
 
     public Task<Result<IEnumerable<WalletMetadata>>> GetMetadatas()
     {
@@ -494,5 +496,34 @@ public class WalletAppService(
         {
             return Result.Failure<string>($"Error getting public key: {ex.Message}");
         }
+    }
+
+    public async Task<Result<string>> GetSeedWords(WalletId walletId)
+    {
+        var sensitiveDataResult = await sensitiveWalletDataProvider.RequestSensitiveData(walletId);
+        if (sensitiveDataResult.IsFailure)
+            return Result.Failure<string>(sensitiveDataResult.Error);
+
+        return Result.Success(sensitiveDataResult.Value.seed);
+    }
+
+    public async Task<Result<IEnumerable<GetStoredWallets.StoredWalletSummary>>> GetStoredWallets()
+    {
+        var result = await walletStore.GetAll();
+        return result.Map(wallets =>
+            wallets.Select(w => new GetStoredWallets.StoredWalletSummary(w.Id)));
+    }
+
+    public async Task<Result<WalletId>> RestoreStoredWallet(string walletId, string walletName, BitcoinNetwork network)
+    {
+        var sensitiveResult = await seedwordsProvider.GetSensitiveData(walletId);
+        if (sensitiveResult.IsFailure)
+            return Result.Failure<WalletId>(sensitiveResult.Error);
+
+        var (seedWords, passphrase) = sensitiveResult.Value;
+        if (string.IsNullOrWhiteSpace(seedWords))
+            return Result.Failure<WalletId>("Decrypted wallet contains no seed words.");
+
+        return await CreateWallet(walletName, seedWords, passphrase, network);
     }
 }

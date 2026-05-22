@@ -177,7 +177,7 @@ public class NotifyFounderOfCancellationTests
 
         _mockDerivationOperations
             .Setup(x => x.DeriveProjectNostrPrivateKeyAsync(It.IsAny<WalletWords>(), project.FounderKey))
-            .ReturnsAsync(new Key());
+            .ReturnsAsync(AngorKey.From(new Key()));
 
         _mockSerializer
             .Setup(x => x.Serialize(It.IsAny<CancellationNotification>()))
@@ -242,7 +242,7 @@ public class NotifyFounderOfCancellationTests
 
         _mockDerivationOperations
             .Setup(x => x.DeriveProjectNostrPrivateKeyAsync(It.IsAny<WalletWords>(), It.IsAny<string>()))
-            .ReturnsAsync(new Key());
+            .ReturnsAsync(AngorKey.From(new Key()));
     }
 
     private static Project CreateTestProject(ProjectId projectId)

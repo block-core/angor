@@ -49,7 +49,7 @@ public class BoltzSwapIntegrationTests : IDisposable
     private const string TestWalletWords = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
     private const string TestWalletPassphrase = "";
     private const string TestProjectId = "test-project-id";
-    private const string BoltzApiUrl = "https://boltz.thedude.cloud/";
+    private const string BoltzApiUrl = "https://test.boltz.angor.io/";
     private const bool UseV2Prefix = true;
 
     public BoltzSwapIntegrationTests(ITestOutputHelper output)
@@ -343,23 +343,22 @@ public class InMemoryBoltzSwapCollection : IGenericDocumentCollection<BoltzSwapD
     public Task<Result<bool>> ExistsAsync(string id) =>
         Task.FromResult(Result.Success(_documents.ContainsKey(id)));
 
-    public Task<Result<int>> InsertAsync(Expression<Func<BoltzSwapDocument, string>> getDocumentId, params BoltzSwapDocument[] entities)
+    public Task<Result<int>> InsertAsync(Func<BoltzSwapDocument, string> getDocumentId, params BoltzSwapDocument[] entities)
     {
-        var getId = getDocumentId.Compile();
-        foreach (var entity in entities) _documents[getId(entity)] = entity;
+        foreach (var entity in entities) _documents[getDocumentId(entity)] = entity;
         return Task.FromResult(Result.Success(entities.Length));
     }
 
-    public Task<Result<bool>> UpdateAsync(Expression<Func<BoltzSwapDocument, string>> getDocumentId, BoltzSwapDocument entity)
+    public Task<Result<bool>> UpdateAsync(Func<BoltzSwapDocument, string> getDocumentId, BoltzSwapDocument entity)
     {
-        var id = getDocumentId.Compile()(entity);
+        var id = getDocumentId(entity);
         if (_documents.ContainsKey(id)) { _documents[id] = entity; return Task.FromResult(Result.Success(true)); }
         return Task.FromResult(Result.Success(false));
     }
 
-    public Task<Result<bool>> UpsertAsync(Expression<Func<BoltzSwapDocument, string>> getDocumentId, BoltzSwapDocument entity)
+    public Task<Result<bool>> UpsertAsync(Func<BoltzSwapDocument, string> getDocumentId, BoltzSwapDocument entity)
     {
-        _documents[getDocumentId.Compile()(entity)] = entity;
+        _documents[getDocumentId(entity)] = entity;
         return Task.FromResult(Result.Success(true));
     }
 

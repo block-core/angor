@@ -5,6 +5,7 @@ using Angor.Sdk.Funding.Shared;
 using Angor.Data.Documents.Interfaces;
 using Angor.Shared;
 using Angor.Shared.Models;
+using Angor.Shared.Protocol;
 using Angor.Shared.Services;
 using Blockcore.NBitcoin;
 using Blockcore.NBitcoin.DataEncoders;
@@ -99,14 +100,14 @@ public static class CreateProjectInfo
                         }
 
                         projectInfo.EndDate = project.EndDate ?? throw new InvalidOperationException("End date is required for Invest projects");
-                        projectInfo.ExpiryDate = project.ExpiryDate ?? project.Stages.OrderByDescending(x => x.startDate).First().startDate.AddMonths(2).ToDateTime(TimeOnly.MinValue);
+                        projectInfo.ExpiryDate = project.ExpiryDate ?? project.Stages.OrderByDescending(x => x.startDate).First().startDate.AddMonths(2).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
                         projectInfo.PenaltyDays = project.PenaltyDays;
                         projectInfo.PenaltyThreshold = project.PenaltyThreshold;
                         projectInfo.TargetAmount = project.TargetAmount.Sats;
                         projectInfo.Stages = project.Stages.Select(stage => new Stage
                         {
                             AmountToRelease = stage.PercentageOfTotal,
-                            ReleaseDate = stage.startDate.ToDateTime(TimeOnly.MinValue),
+                            ReleaseDate = stage.startDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc),
                         }).ToList();
                         break;
                     }
@@ -132,6 +133,13 @@ public static class CreateProjectInfo
                 default:
                     tsc.SetResult(Result.Failure<string>("Unsupported project type"));
                     return await tsc.Task;
+            }
+
+            // Validate protocol-level constraints before publishing
+            var validationError = ProjectInfoValidator.Validate(projectInfo, networkConfiguration.GetDebugMode());
+            if (validationError != null)
+            {
+                return Result.Failure<string>($"Project validation failed: {validationError}");
             }
 
             var resultId = await relayService.AddProjectAsync(projectInfo, nostrKeyHex,

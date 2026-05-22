@@ -176,7 +176,7 @@ public class BuildUnfundedReleaseTransactionTests
 
         _mockDerivationOperations
             .Setup(x => x.DeriveInvestorPrivateKey(It.IsAny<WalletWords>(), It.IsAny<string>()))
-            .Returns(new Key());
+            .Returns(AngorKey.From(new Key()));
 
         // LookupReleaseSigs ends without finding signatures
         _mockSignService
@@ -196,7 +196,7 @@ public class BuildUnfundedReleaseTransactionTests
 
         _mockDerivationOperations
             .Setup(x => x.DeriveProjectNostrPrivateKeyAsync(It.IsAny<WalletWords>(), It.IsAny<string>()))
-            .ReturnsAsync(new Key());
+            .ReturnsAsync(AngorKey.From(new Key()));
 
         // Act
         var result = await _sut.Handle(request, CancellationToken.None);

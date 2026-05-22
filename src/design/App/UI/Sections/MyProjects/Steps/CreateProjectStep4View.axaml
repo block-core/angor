@@ -44,7 +44,8 @@
                                 <TextBlock Text="{Binding TargetAmountLabel}" FontSize="14" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" />
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <TextBox Text="{Binding TargetAmount, Mode=TwoWay}"
+                                    <TextBox Name="InvestTargetAmountInput"
+                                             Text="{Binding TargetAmount, Mode=TwoWay}"
                                              Watermark="0.00000000"
                                              FontSize="20" FontWeight="Bold"
                                              Padding="12,12,16,12" CornerRadius="8" />
@@ -176,7 +177,8 @@
                                 <TextBlock Text="{Binding GoalLabel}" FontSize="14" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" />
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <TextBox Text="{Binding TargetAmount, Mode=TwoWay}"
+                                    <TextBox Name="FundTargetAmountInput"
+                                             Text="{Binding TargetAmount, Mode=TwoWay}"
                                              Watermark="0.00000000"
                                              FontSize="20" FontWeight="Bold"
                                              Padding="12,12,16,12" CornerRadius="8" />
@@ -239,7 +241,8 @@
                             <TextBlock Text="Threshold" FontSize="14" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
                             <Grid ColumnDefinitions="*,Auto">
-                                <TextBox Text="{Binding ApprovalThreshold, Mode=TwoWay}"
+                                <TextBox Name="ApprovalThresholdInput"
+                                         Text="{Binding ApprovalThreshold, Mode=TwoWay}"
                                          Watermark="0.001"
                                          FontSize="20" FontWeight="Bold"
                                          Padding="12,12,16,12" CornerRadius="8" />

@@ -11,8 +11,8 @@ public partial class CreateProjectStep5View : UserControl
     private ListBox? _investFrequencyPresets;
 
     // ListBox controls — Step 5 (Fund/Subscription)
-    private Border? _payoutFreqMonthly;
-    private Border? _payoutFreqWeekly;
+    private Button? _payoutFreqMonthly;
+    private Button? _payoutFreqWeekly;
     private Border? _radioOuterMonthly;
     private Border? _radioOuterWeekly;
     private Ellipse? _radioDotMonthly;
@@ -22,10 +22,10 @@ public partial class CreateProjectStep5View : UserControl
     private ListBox? _monthlyDateGrid;
     private ListBox? _weeklyDayList;
 
-    // Installment multiselect borders
-    private Border? _installment3;
-    private Border? _installment6;
-    private Border? _installment9;
+    // Installment multiselect buttons
+    private Button? _installment3;
+    private Button? _installment6;
+    private Button? _installment9;
     private Border? _check3;
     private Border? _check6;
     private Border? _check9;
@@ -92,9 +92,9 @@ public partial class CreateProjectStep5View : UserControl
         // Resolve ListBox controls — Step 5 (Investment)
         _investFrequencyPresets = this.FindControl<ListBox>("InvestFrequencyPresets");
 
-        // Resolve payout frequency manual borders — Step 5 (Fund/Subscription)
-        _payoutFreqMonthly = this.FindControl<Border>("PayoutFreqMonthly");
-        _payoutFreqWeekly = this.FindControl<Border>("PayoutFreqWeekly");
+        // Resolve payout frequency buttons — Step 5 (Fund/Subscription)
+        _payoutFreqMonthly = this.FindControl<Button>("PayoutFreqMonthly");
+        _payoutFreqWeekly = this.FindControl<Button>("PayoutFreqWeekly");
         _radioOuterMonthly = this.FindControl<Border>("RadioOuterMonthly");
         _radioOuterWeekly = this.FindControl<Border>("RadioOuterWeekly");
         _radioDotMonthly = this.FindControl<Ellipse>("RadioDotMonthly");
@@ -104,10 +104,10 @@ public partial class CreateProjectStep5View : UserControl
         _monthlyDateGrid = this.FindControl<ListBox>("MonthlyDateGrid");
         _weeklyDayList = this.FindControl<ListBox>("WeeklyDayList");
 
-        // Resolve installment multiselect borders
-        _installment3 = this.FindControl<Border>("Installment3");
-        _installment6 = this.FindControl<Border>("Installment6");
-        _installment9 = this.FindControl<Border>("Installment9");
+        // Resolve installment multiselect buttons
+        _installment3 = this.FindControl<Button>("Installment3");
+        _installment6 = this.FindControl<Button>("Installment6");
+        _installment9 = this.FindControl<Button>("Installment9");
         _check3 = this.FindControl<Border>("Check3");
         _check6 = this.FindControl<Border>("Check6");
         _check9 = this.FindControl<Border>("Check9");
@@ -189,10 +189,10 @@ public partial class CreateProjectStep5View : UserControl
     /// Sets PayoutFrequency ("Monthly" or "Weekly") on the VM.
     /// Uses manual Border elements with radio indicator (like installments pattern).
     /// </summary>
-    private void WirePayoutFreqBorder(Border? border, string frequency)
+    private void WirePayoutFreqBorder(Button? button, string frequency)
     {
-        if (border == null) return;
-        border.PointerPressed += (_, _) =>
+        if (button == null) return;
+        button.Click += (_, _) =>
         {
             if (Vm != null)
             {
@@ -238,10 +238,10 @@ public partial class CreateProjectStep5View : UserControl
     /// Wire a single installment border for multiselect click toggling.
     /// Vue: toggleInstallmentCount() — toggle count in/out of installmentCounts array.
     /// </summary>
-    private void WireInstallmentBorder(Border? border, int count)
+    private void WireInstallmentBorder(Button? button, int count)
     {
-        if (border == null) return;
-        border.PointerPressed += (_, _) =>
+        if (button == null) return;
+        button.Click += (_, _) =>
         {
             Vm?.ToggleInstallmentCount(count);
             UpdateInstallmentVisuals();
@@ -260,7 +260,7 @@ public partial class CreateProjectStep5View : UserControl
         UpdateSingleInstallment(9, _installment9, _check9, _checkIcon9, _installmentText9);
     }
 
-    private void UpdateSingleInstallment(int count, Border? row, Border? checkBorder, Control? checkIcon, TextBlock? text)
+    private void UpdateSingleInstallment(int count, Button? row, Border? checkBorder, Control? checkIcon, TextBlock? text)
     {
         if (Vm == null) return;
         var isSelected = Vm.SelectedInstallmentCounts.Contains(count);

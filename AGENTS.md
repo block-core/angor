@@ -109,6 +109,58 @@ dotnet test --filter "DisplayName~GetProjectInvestmentsHandler_WhenProjectNotFou
 dotnet test --filter "ClassName=Angor.Sdk.Tests.Funding.Founder.FounderAppServiceTests"
 ```
 
+## UAT (End-to-End UI) Tests
+
+The `App.Test.Uat` project contains end-to-end tests that launch real `App.Desktop` processes with Avalonia windows, driven via an HTTP automation server. The automation server is compiled only in Debug builds (`#if DEBUG`).
+
+### How it works
+
+- Each test launches one or more `App.Desktop` child processes (one per user profile) with `ANGOR_TEST_API=1` env var
+- The automation server (`App/Automation/AutomationServer.cs`) starts an HTTP listener on a random port
+- Tests drive the UI via `TestAutomationClient` HTTP calls that click buttons, type text, set controls, and invoke composite flows
+- Tests run against **signet** (Bitcoin testnet) — they create real wallets, fund from faucet, and broadcast real transactions
+
+### Running UAT tests
+
+```bash
+# Build (must be Debug — automation server is excluded from Release)
+dotnet build src/design/App.Test.Uat/App.Test.Uat.csproj
+
+# Run all UAT tests (excluding long-running ones)
+dotnet test src/design/App.Test.Uat/App.Test.Uat.csproj --filter "FullyQualifiedName~CreateProjectTest|FullyQualifiedName~MultiFund|FullyQualifiedName~MultiInvest"
+
+# Run a single UAT test
+dotnet test src/design/App.Test.Uat/App.Test.Uat.csproj --filter "FullyQualifiedName~CreateProjectTest"
+```
+
+### Tests to skip
+
+- **BigFundTest, BigInvestTest** — too long for routine validation
+
+### Key files
+
+- `src/design/App/Automation/AutomationServer.cs` — HTTP server + routing
+- `src/design/App/Automation/AutomationFlows.cs` — composite flow handlers (click, type, set controls)
+- `src/design/App/Automation/AutomationDtos.cs`, `AutomationFlowDtos.cs` — request/response DTOs
+- `src/design/App.Test.Uat/Helpers/TestProcessHost.cs` — child process launcher (auto-detects Debug/Release from bin path)
+- `src/design/App.Test.Uat/Helpers/TestAutomationClient.cs` — HTTP client wrapper
+
+### Important notes
+
+- UAT tests **must** be built and run in Debug configuration (automation server is `#if DEBUG`)
+- Tests take 1–3 minutes each due to real Bitcoin transactions on signet
+- Always capture full test output to log files for failure investigation (see "Cross-Distro Docker Test Runners" section)
+- Transient failures may indicate race conditions — always preserve full assertion messages and stack traces
+
+### Test integrity (CRITICAL)
+
+The purpose of tests is to verify the app is working as intended after code changes. When a test fails:
+
+1. **Investigate the app first** — assume the app is broken, not the test
+2. **Never modify a test just to make it pass** — if a test fails after an app change, the failure is telling you something is wrong in the app code
+3. **Only change tests when the intended behavior has changed** — if a feature was deliberately redesigned, update the test to match the new expected behavior, but be explicit about why
+4. **Treat test changes with extra scrutiny** — modifying tests to mask failures defeats their entire purpose and introduces silent regressions
+
 ## Architecture Rules
 
 ### SDK Access Pattern (CRITICAL)
@@ -309,7 +361,6 @@ Transient test failures must be investigated — they may indicate race conditio
 
 ### Tests to skip
 
-- **BigFundTest, BigInvestTest** — too long for distro validation
 - **OneClickInvestLightning*Test, OneClickInvestOnChain*Test** — require ThunderHub/LND infrastructure
 
 ## Common Pitfalls

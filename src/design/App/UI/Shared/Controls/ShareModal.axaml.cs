@@ -1,9 +1,9 @@
 using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using Angor.Sdk.Wallet.Domain;
 using App.UI.Shared.Helpers;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,16 +27,21 @@ public partial class ShareModal : UserControl, IBackdropCloseable
     /// Parameterless constructor for XAML designer/loader.
     /// Not used at runtime — use the parameterized constructor instead.
     /// </summary>
-    public ShareModal() : this("Sample Project", "A sample project description")
+    public ShareModal() : this("angor1abc123", "Sample Project", "A sample project description")
     {
     }
 
-    public ShareModal(string projectName, string projectDescription, string? avatarUrl = null)
+    public ShareModal(string projectId, string projectName, string projectDescription, string? avatarUrl = null)
     {
         _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<ShareModal>();
         _projectName = projectName;
         _projectDescription = projectDescription;
-        _shareUrl = $"https://angor.io/project/{projectName.ToLowerInvariant().Replace(" ", "-")}";
+
+        var getNetwork = App.Services.GetRequiredService<Func<BitcoinNetwork>>();
+        var isTestnet = getNetwork() != BitcoinNetwork.Mainnet;
+        _shareUrl = isTestnet
+            ? $"https://angor.io/project/{projectId}?network=testnet"
+            : $"https://angor.io/project/{projectId}";
 
         InitializeComponent();
 
@@ -65,14 +70,14 @@ public partial class ShareModal : UserControl, IBackdropCloseable
         var copyBtn = this.FindControl<Button>("CopyButton");
         if (copyBtn != null) copyBtn.Click += OnCopyClick;
 
-        // Social buttons + email — PointerPressed on Borders
-        WireBorderClick("BtnTwitter", () => ShareOnPlatform("twitter"));
-        WireBorderClick("BtnFacebook", () => ShareOnPlatform("facebook"));
-        WireBorderClick("BtnLinkedIn", () => ShareOnPlatform("linkedin"));
-        WireBorderClick("BtnTelegram", () => ShareOnPlatform("telegram"));
-        WireBorderClick("BtnWhatsApp", () => ShareOnPlatform("whatsapp"));
-        WireBorderClick("BtnReddit", () => ShareOnPlatform("reddit"));
-        WireBorderClick("BtnEmail", () => ShareViaEmail());
+        // Social buttons + email — Click on Buttons
+        WireButtonClick("BtnTwitter", () => ShareOnPlatform("twitter"));
+        WireButtonClick("BtnFacebook", () => ShareOnPlatform("facebook"));
+        WireButtonClick("BtnLinkedIn", () => ShareOnPlatform("linkedin"));
+        WireButtonClick("BtnTelegram", () => ShareOnPlatform("telegram"));
+        WireButtonClick("BtnWhatsApp", () => ShareOnPlatform("whatsapp"));
+        WireButtonClick("BtnReddit", () => ShareOnPlatform("reddit"));
+        WireButtonClick("BtnEmail", () => ShareViaEmail());
     }
 
     private ShellViewModel? ShellVm =>
@@ -164,16 +169,12 @@ public partial class ShareModal : UserControl, IBackdropCloseable
         }
     }
 
-    private void WireBorderClick(string borderName, Action handler)
+    private void WireButtonClick(string buttonName, Action handler)
     {
-        var border = this.FindControl<Border>(borderName);
-        if (border != null)
+        var button = this.FindControl<Button>(buttonName);
+        if (button != null)
         {
-            border.PointerPressed += (_, e) =>
-            {
-                handler();
-                e.Handled = true;
-            };
+            button.Click += (_, _) => handler();
         }
     }
 }

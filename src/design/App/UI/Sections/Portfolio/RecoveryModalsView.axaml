@@ -279,11 +279,12 @@
                                    FontSize="18"
                                    Foreground="{DynamicResource TextMuted}"
                                    DockPanel.Dock="Left" Margin="0,0,8,0" />
-                            <Border Name="CopyClaimProjectIdBtn" Cursor="Hand"
+                            <Button Name="CopyClaimProjectIdBtn" Classes="Unstyled"
+                                    Cursor="Hand"
                                     DockPanel.Dock="Right" HorizontalAlignment="Right"
                                     Margin="8,0,0,0">
                                 <i:Icon Value="fa-solid fa-copy" FontSize="14" Foreground="{DynamicResource TextMuted}" />
-                            </Border>
+                            </Button>
                             <TextBlock Text="{Binding RecoveryProjectId}"
                                        FontSize="13"
                                        FontFamily="Cascadia Code,Consolas,monospace"

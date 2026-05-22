@@ -163,6 +163,7 @@ public class SignatureStore
 public partial class PrototypeSettings : ReactiveObject
 {
     private readonly IStore _store;
+    private readonly ILogger _logger;
     private const string SettingsKey = "prototype_settings.json";
     private CancellationTokenSource? saveSettingsCts;
 
@@ -181,10 +182,10 @@ public partial class PrototypeSettings : ReactiveObject
     [Reactive] private bool isDebugMode;
 
     /// <summary>
-    /// When true, the app uses the Dark theme; otherwise Light.
-    /// Persisted to disk so the choice survives restarts.
+    /// When set, the app uses the selected theme. When unset, Avalonia follows
+    /// the operating system appearance on macOS, Linux, Windows, Android, and iOS.
     /// </summary>
-    [Reactive] private bool isDarkTheme;
+    [Reactive] private bool? isDarkTheme;
 
     /// <summary>
     /// Persisted wallet ID for the currently selected wallet.
@@ -192,9 +193,15 @@ public partial class PrototypeSettings : ReactiveObject
     /// </summary>
     [Reactive] private string? selectedWalletId;
 
-    public PrototypeSettings(IStore store)
+    /// <summary>
+    /// Set of wallet IDs that were auto-created (e.g. 1-click invest) and have not been backed up yet.
+    /// </summary>
+    [Reactive] private HashSet<string> walletsNeedingBackup = new();
+
+    public PrototypeSettings(IStore store, ILogger<PrototypeSettings> logger)
     {
         _store = store;
+        _logger = logger;
 
         // Load persisted values asynchronously to avoid blocking the UI thread.
         // Default field values are used until loading completes.
@@ -211,20 +218,22 @@ public partial class PrototypeSettings : ReactiveObject
                     {
                         IsDebugMode = result.Value.IsDebugMode;
                         SelectedWalletId = result.Value.SelectedWalletId;
+                        WalletsNeedingBackup = result.Value.WalletsNeedingBackup ?? new HashSet<string>();
 
                         // Set IsDarkTheme last — its WhenAnyValue subscription
                         // applies the theme, so we want the other fields settled first.
-                        IsDarkTheme = result.Value.IsDarkTheme;
+                        IsDarkTheme = result.Value.HasThemeOverride
+                            ? result.Value.IsDarkTheme
+                            : null;
                     }
                 });
             });
 
-        // Apply persisted theme immediately (defaults to light until async load completes)
+        // Follow the operating system appearance until the user explicitly chooses
+        // a theme in the app.
         if (Application.Current != null)
         {
-            Application.Current.RequestedThemeVariant = isDarkTheme
-                ? Avalonia.Styling.ThemeVariant.Dark
-                : Avalonia.Styling.ThemeVariant.Light;
+            Application.Current.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Default;
         }
 
         // Apply theme whenever IsDarkTheme changes
@@ -237,16 +246,19 @@ public partial class PrototypeSettings : ReactiveObject
                     Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                     {
                         ShellService.PrepareForThemeChange(true);
-                        Application.Current.RequestedThemeVariant = dark
-                            ? Avalonia.Styling.ThemeVariant.Dark
-                            : Avalonia.Styling.ThemeVariant.Light;
+                        Application.Current.RequestedThemeVariant = dark switch
+                        {
+                            true => Avalonia.Styling.ThemeVariant.Dark,
+                            false => Avalonia.Styling.ThemeVariant.Light,
+                            null => Avalonia.Styling.ThemeVariant.Default,
+                        };
                         ShellService.PrepareForThemeChange(false);
                     }, Avalonia.Threading.DispatcherPriority.Render);
                 }
             });
 
         // Persist after visible state changes so disk I/O never competes with the theme flip.
-        this.WhenAnyValue(x => x.IsDebugMode, x => x.IsDarkTheme, x => x.SelectedWalletId)
+        this.WhenAnyValue(x => x.IsDebugMode, x => x.IsDarkTheme, x => x.SelectedWalletId, x => x.WalletsNeedingBackup)
             .Skip(1)
             .Throttle(TimeSpan.FromMilliseconds(250), RxSchedulers.TaskpoolScheduler)
             .Subscribe(_ => ScheduleSaveSettings());
@@ -259,8 +271,9 @@ public partial class PrototypeSettings : ReactiveObject
         saveSettingsCts = new CancellationTokenSource();
 
         bool currentDebugMode = IsDebugMode;
-        bool currentDarkTheme = IsDarkTheme;
+        bool? currentDarkTheme = IsDarkTheme;
         string? currentWalletId = SelectedWalletId;
+        HashSet<string> currentBackupSet = new(WalletsNeedingBackup);
         CancellationToken token = saveSettingsCts.Token;
 
         Task.Run(async () =>
@@ -268,23 +281,71 @@ public partial class PrototypeSettings : ReactiveObject
             Result saveResult = await _store.Save(SettingsKey, new PrototypeSettingsData
             {
                 IsDebugMode = currentDebugMode,
+                HasThemeOverride = currentDarkTheme.HasValue,
                 IsDarkTheme = currentDarkTheme,
                 SelectedWalletId = currentWalletId,
+                WalletsNeedingBackup = currentBackupSet,
             });
 
             if (!token.IsCancellationRequested && saveResult.IsFailure)
             {
-                var logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(PrototypeSettings));
-                logger.LogWarning("Failed to save settings: {Error}", saveResult.Error);
+                _logger.LogWarning("Failed to save settings: {Error}", saveResult.Error);
             }
         }, token);
     }
 
+    /// <summary>
+    /// Immediately persists the current settings to disk, bypassing the throttle.
+    /// Called from Android lifecycle handlers (OnStop) to ensure the selected wallet ID
+    /// is saved before the process is killed.
+    /// </summary>
+    public async Task FlushAsync()
+    {
+        // Cancel any pending throttled save to avoid a race
+        saveSettingsCts?.Cancel();
+        saveSettingsCts?.Dispose();
+        saveSettingsCts = null;
+
+        Result saveResult = await _store.Save(SettingsKey, new PrototypeSettingsData
+        {
+            IsDebugMode = IsDebugMode,
+            HasThemeOverride = IsDarkTheme.HasValue,
+            IsDarkTheme = IsDarkTheme,
+            SelectedWalletId = SelectedWalletId,
+            WalletsNeedingBackup = new HashSet<string>(WalletsNeedingBackup),
+        });
+
+        if (saveResult.IsFailure)
+        {
+            _logger.LogWarning("FlushAsync: Failed to save settings: {Error}", saveResult.Error);
+        }
+    }
+
+    /// <summary>Mark a wallet as needing backup (e.g. auto-created during 1-click invest).</summary>
+    public void MarkWalletNeedsBackup(string walletId)
+    {
+        var set = new HashSet<string>(WalletsNeedingBackup) { walletId };
+        WalletsNeedingBackup = set;
+    }
+
+    /// <summary>Clear the backup-needed flag for a wallet (after user backs up).</summary>
+    public void ClearWalletNeedsBackup(string walletId)
+    {
+        var set = new HashSet<string>(WalletsNeedingBackup);
+        set.Remove(walletId);
+        WalletsNeedingBackup = set;
+    }
+
+    /// <summary>Check if a wallet needs backup.</summary>
+    public bool DoesWalletNeedBackup(string walletId) => WalletsNeedingBackup.Contains(walletId);
+
     private class PrototypeSettingsData
     {
         public bool IsDebugMode { get; set; }
-        public bool IsDarkTheme { get; set; }
+        public bool HasThemeOverride { get; set; }
+        public bool? IsDarkTheme { get; set; }
         public string? SelectedWalletId { get; set; }
+        public HashSet<string>? WalletsNeedingBackup { get; set; }
     }
 }
 
@@ -442,6 +503,9 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
     /// <summary>Invested balance display string for the header. Updated from SDK GetTotalInvested.</summary>
     [Reactive] private string investedBalanceDisplay = "0.0000";
 
+    /// <summary>Whether to show the red backup warning banner in the header.</summary>
+    [Reactive] private bool showBackupWarning;
+
     /// <summary>Available balance display string for the header. Uses selected wallet balance.</summary>
     public string AvailableBalanceDisplay =>
         SelectedWallet != null
@@ -530,6 +594,7 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
                 this.RaisePropertyChanged(nameof(AvailableBalanceDisplay));
                 this.RaisePropertyChanged(nameof(SwitcherWallets));
                 _ = LoadTotalInvestedAsync(SelectedWallet);
+                RefreshBackupWarning();
             })
             .DisposeWith(_disposables);
 
@@ -649,6 +714,7 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
         this.RaisePropertyChanged(nameof(SelectedWalletName));
         this.RaisePropertyChanged(nameof(AvailableBalanceDisplay));
         _ = LoadTotalInvestedAsync(wallet);
+        RefreshBackupWarning();
     }
 
     /// <summary>
@@ -855,6 +921,8 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
         if (_viewCache.TryGetValue("My Projects", out var v) &&
             v is MyProjectsView { DataContext: MyProjectsViewModel mpVm })
         {
+            if (IsCreatingProject && mpVm.TryGoBackInCreateWizard())
+                return;
             if (IsCreatingProject)
                 mpVm.CloseCreateWizard();
             else if (IsEditProfileOpen)
@@ -914,7 +982,7 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
             fpVm.SelectedProject is not { } project)
             return;
 
-        ShowModal(new Shared.Controls.ShareModal(project.ProjectName, project.ShortDescription));
+        ShowModal(new Shared.Controls.ShareModal(project.ProjectId, project.ProjectName, project.ShortDescription));
     }
 
     /// <summary>
@@ -997,6 +1065,16 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
     /// <param name="message">Toast text (e.g. "Copied to clipboard").</param>
     /// <param name="durationMs">Auto-dismiss delay. If 0 or not specified, auto-scales based on message length
     /// (min 3s, +1s per 30 chars, max 10s). Vue: 2000-3000ms for copy, 5000ms for save.</param>
+    /// <summary>
+    /// Refresh the backup warning state based on the selected wallet.
+    /// Called after wallet selection changes or after backup is completed.
+    /// </summary>
+    public void RefreshBackupWarning()
+    {
+        var wallet = _walletContext.SelectedWallet;
+        ShowBackupWarning = wallet != null && _prototypeSettings.DoesWalletNeedBackup(wallet.Id.Value);
+    }
+
     public void ShowToast(string message, int durationMs = 0)
     {
         // Cancel any previous dismiss timer
@@ -1052,7 +1130,7 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
 
     public bool IsDarkThemeEnabled
     {
-        get => _prototypeSettings.IsDarkTheme;
+        get => _prototypeSettings.IsDarkTheme ?? Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
         set
         {
             _prototypeSettings.IsDarkTheme = value;
@@ -1292,29 +1370,69 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
     /// Optional <paramref name="onReuse"/> callback runs when returning an already-cached view
     /// (e.g. to reset sub-navigation state).
     /// </summary>
+    private bool _deferredViewReady;
+
     private object? GetOrCreateView(string key, Action<object>? onReuse = null)
     {
         if (_viewCache.TryGetValue(key, out var existing))
         {
-            var swReuse = Stopwatch.StartNew();
             onReuse?.Invoke(existing);
-            swReuse.Stop();
-            PerfLog("GetOrCreateView", $"key={key} cached=true onReuseMs={swReuse.ElapsedMilliseconds}");
-            return existing;
+            PerfLog("GetOrCreateView", $"key={key} cached=true");
+
+            // On the deferred re-evaluation, return the real view.
+            if (_deferredViewReady)
+            {
+                _deferredViewReady = false;
+                return existing;
+            }
+
+            // Defer swapping the cached view in so the tab highlight animates
+            // instantly without blocking on Avalonia's layout/measure pass.
+            _deferredViewReady = true;
+            Avalonia.Threading.Dispatcher.UIThread.Post(
+                () => this.RaisePropertyChanged(nameof(CurrentSectionContent)),
+                Avalonia.Threading.DispatcherPriority.Background);
+
+            return _loadingPlaceholder ??= CreateLoadingPlaceholder();
         }
 
-        var sw = Stopwatch.StartNew();
-        var view = _viewFactory(key);
-        sw.Stop();
-        PerfLog("GetOrCreateView", $"key={key} cached=false factoryMs={sw.ElapsedMilliseconds}");
-
-        if (view != null)
+        // Return a placeholder immediately and create the view on the
+        // next dispatcher frame so the UI doesn't freeze during DI + XAML inflate.
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
-            _viewCache[key] = view;
-            ViewPreWarmed?.Invoke(key, view);
-            AttachRenderTiming(key, view, sw.ElapsedMilliseconds);
-        }
-        return view;
+            if (!_viewCache.ContainsKey(key))
+            {
+                var sw = Stopwatch.StartNew();
+                var view = _viewFactory(key);
+                sw.Stop();
+                PerfLog("GetOrCreateView", $"key={key} cached=false factoryMs={sw.ElapsedMilliseconds}");
+
+                if (view != null)
+                {
+                    _viewCache[key] = view;
+                    ViewPreWarmed?.Invoke(key, view);
+                    AttachRenderTiming(key, view, sw.ElapsedMilliseconds);
+                }
+            }
+            _deferredViewReady = true;
+            this.RaisePropertyChanged(nameof(CurrentSectionContent));
+        }, Avalonia.Threading.DispatcherPriority.Background);
+
+        return _loadingPlaceholder ??= CreateLoadingPlaceholder();
+    }
+
+    private Avalonia.Controls.Control? _loadingPlaceholder;
+
+    private static Avalonia.Controls.Control CreateLoadingPlaceholder()
+    {
+        return new Avalonia.Controls.TextBlock
+        {
+            Text = "Loading…",
+            FontSize = 16,
+            Opacity = 0.5,
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
+        };
     }
 
     // ── Perf: programmatic tab switch for adb-driven benchmarks ──

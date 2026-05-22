@@ -31,6 +31,6 @@ public interface IWalletOperations
     /// <summary>Derive the compressed public key hex for a given HD path from wallet words.</summary>
     string DerivePublicKey(WalletWords walletWords, string hdPath);
 
-    /// <summary>Derive the private key hex for a given HD path from wallet words.</summary>
-    string DerivePrivateKey(WalletWords walletWords, string hdPath);
+    /// <summary>Derive the private key for a given HD path from wallet words.</summary>
+    AngorKey DerivePrivateKey(WalletWords walletWords, string hdPath);
 }

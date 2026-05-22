@@ -25,13 +25,13 @@ public partial class ProjectDetailView : UserControl
 
     // Cached FindControl results — avoid repeated tree walks
     private Button? _backBtn;
-    private Border? _investBtn;
-    private Border? _navCta;
+    private Button? _investBtn;
+    private Button? _navCta;
     private ScrollViewer? _scroller;
     private Border? _detailsContainer;
     private Border? _nostrContainer;
     private Border? _progressFill;
-    private Border? _shareBtn;
+    private Button? _shareBtn;
     private Border? _detailsHeader;
     private StackPanel? _detailsContent;
     private Control? _detailsChevron;
@@ -65,13 +65,13 @@ public partial class ProjectDetailView : UserControl
 
         // Cache all controls once
         _backBtn = this.FindControl<Button>("BackButton");
-        _investBtn = this.FindControl<Border>("InvestButton");
-        _navCta = this.FindControl<Border>("NavCtaButton");
+        _investBtn = this.FindControl<Button>("InvestButton");
+        _navCta = this.FindControl<Button>("NavCtaButton");
         _scroller = this.FindControl<ScrollViewer>("ContentScroller");
         _detailsContainer = this.FindControl<Border>("DetailsContainer");
         _nostrContainer = this.FindControl<Border>("NostrContainer");
         _progressFill = this.FindControl<Border>("ProgressFill");
-        _shareBtn = this.FindControl<Border>("ShareButton");
+        _shareBtn = this.FindControl<Button>("ShareButton");
         _detailsHeader = this.FindControl<Border>("DetailsHeader");
         _detailsContent = this.FindControl<StackPanel>("DetailsContent");
         _detailsChevron = this.FindControl<Control>("DetailsChevron");
@@ -88,15 +88,15 @@ public partial class ProjectDetailView : UserControl
 
         // Invest button — navigate to InvestPage
         if (_investBtn != null)
-            _investBtn.PointerPressed += OnInvestPressed;
+            _investBtn.Click += OnInvestClick;
 
         // Nav CTA button — same action as InvestButton
         if (_navCta != null)
-            _navCta.PointerPressed += OnInvestPressed;
+            _navCta.Click += OnInvestClick;
 
         // Share button — open share modal via shell
         if (_shareBtn != null)
-            _shareBtn.PointerPressed += OnSharePressed;
+            _shareBtn.Click += OnShareClick;
 
         // Scroll detection for nav CTA fade
         if (_scroller != null)
@@ -110,45 +110,42 @@ public partial class ProjectDetailView : UserControl
             _nostrContainer.PointerPressed += OnCollapsibleContainerPressed;
 
         // Copy buttons — Vue: copyToClipboard() on project ID, founder key, npub
-        var copyProjectIdBtn = this.FindControl<Border>("CopyProjectIdBtn");
+        var copyProjectIdBtn = this.FindControl<Button>("CopyProjectIdBtn");
         if (copyProjectIdBtn != null)
-            copyProjectIdBtn.PointerPressed += (_, ev) =>
+            copyProjectIdBtn.Click += (_, _) =>
             {
                 if (DataContext is ProjectItemViewModel vm)
                     ClipboardHelper.CopyToClipboard(this, vm.ProjectId);
-                ev.Handled = true;
             };
 
-        var copyFounderKeyBtn = this.FindControl<Border>("CopyFounderKeyBtn");
+        var copyFounderKeyBtn = this.FindControl<Button>("CopyFounderKeyBtn");
         if (copyFounderKeyBtn != null)
-            copyFounderKeyBtn.PointerPressed += (_, ev) =>
+            copyFounderKeyBtn.Click += (_, _) =>
             {
                 if (DataContext is ProjectItemViewModel vm)
                     ClipboardHelper.CopyToClipboard(this, vm.FounderKey);
-                ev.Handled = true;
             };
 
-        var copyNpubBtn = this.FindControl<Border>("CopyNpubBtn");
+        var copyNpubBtn = this.FindControl<Button>("CopyNpubBtn");
         if (copyNpubBtn != null)
-            copyNpubBtn.PointerPressed += (_, ev) =>
+            copyNpubBtn.Click += (_, _) =>
             {
                 if (DataContext is ProjectItemViewModel vm)
                     ClipboardHelper.CopyToClipboard(this, vm.NostrNpub);
-                ev.Handled = true;
             };
 
         // Set progress bar width after loaded
         Loaded += OnLoaded;
 
         // Explorer link — open project txid in block explorer
-        var explorerLink = this.FindControl<Border>("ExplorerLink");
+        var explorerLink = this.FindControl<Button>("ExplorerLink");
         if (explorerLink != null)
-            explorerLink.PointerPressed += OnExplorerLinkPressed;
+            explorerLink.Click += OnExplorerLinkClick;
 
         // View Project JSON button — show project info as formatted JSON
-        var viewJsonBtn = this.FindControl<Border>("ViewProjectJsonBtn");
+        var viewJsonBtn = this.FindControl<Button>("ViewProjectJsonBtn");
         if (viewJsonBtn != null)
-            viewJsonBtn.PointerPressed += OnViewProjectJsonPressed;
+            viewJsonBtn.Click += OnViewProjectJsonClick;
 
         // Cache responsive layout controls
         _topSectionGrid = this.FindControl<Grid>("TopSectionGrid");
@@ -409,7 +406,7 @@ public partial class ProjectDetailView : UserControl
         UpdateProgressBar();
     }
 
-    private void OnExplorerLinkPressed(object? sender, PointerPressedEventArgs e)
+    private void OnExplorerLinkClick(object? sender, RoutedEventArgs e)
     {
         if (DataContext is ProjectItemViewModel project && !string.IsNullOrEmpty(project.ProjectId))
         {
@@ -418,10 +415,9 @@ public partial class ProjectDetailView : UserControl
             var bitcoinAddress = derivation.ConvertAngorKeyToBitcoinAddress(project.ProjectId);
             ExplorerHelper.OpenAddress(networkService, bitcoinAddress);
         }
-        e.Handled = true;
     }
 
-    private void OnViewProjectJsonPressed(object? sender, PointerPressedEventArgs e)
+    private void OnViewProjectJsonClick(object? sender, RoutedEventArgs e)
     {
         if (DataContext is ProjectItemViewModel project && !string.IsNullOrEmpty(project.ProjectId))
         {
@@ -433,7 +429,6 @@ public partial class ProjectDetailView : UserControl
                 shellVm.ShowModal(modal);
             }
         }
-        e.Handled = true;
     }
 
     private void OnLoaded(object? sender, EventArgs e)
@@ -495,7 +490,7 @@ public partial class ProjectDetailView : UserControl
         }
     }
 
-    private void OnInvestPressed(object? sender, PointerPressedEventArgs e)
+    private void OnInvestClick(object? sender, RoutedEventArgs e)
     {
         var findProjectsView = this.FindLogicalAncestorOfType<FindProjectsView>();
         if (findProjectsView?.DataContext is FindProjectsViewModel vm)
@@ -504,16 +499,15 @@ public partial class ProjectDetailView : UserControl
         }
     }
 
-    private void OnSharePressed(object? sender, PointerPressedEventArgs e)
+    private void OnShareClick(object? sender, RoutedEventArgs e)
     {
         if (DataContext is ProjectItemViewModel project)
         {
             var shell = this.FindAncestorOfType<ShellView>();
             if (shell?.DataContext is ShellViewModel shellVm && !shellVm.IsModalOpen)
             {
-                var modal = new ShareModal(project.ProjectName, project.ShortDescription);
+                var modal = new ShareModal(project.ProjectId, project.ProjectName, project.ShortDescription);
                 shellVm.ShowModal(modal);
-                e.Handled = true;
             }
         }
     }

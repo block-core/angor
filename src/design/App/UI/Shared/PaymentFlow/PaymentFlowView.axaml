@@ -21,18 +21,18 @@
             <Setter Property="Background" Value="{DynamicResource DeployWalletSelectedBg}" />
             <Setter Property="BorderBrush" Value="{DynamicResource DeployWalletSelectedBorder}" />
         </Style>
-        <Style Selector="Border.NetworkTab">
+        <Style Selector="Button.NetworkTab /template/ Border">
             <Setter Property="BorderBrush" Value="{DynamicResource Border}" />
             <Setter Property="Background" Value="{DynamicResource DeployTabUnselectedBg}" />
         </Style>
-        <Style Selector="Border.NetworkTab.Selected">
+        <Style Selector="Button.NetworkTab.Selected /template/ Border">
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
             <Setter Property="Background" Value="{DynamicResource DeployTabSelectedBg}" />
         </Style>
-        <Style Selector="Border.NetworkTab > TextBlock">
+        <Style Selector="Button.NetworkTab TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource DeployTabUnselectedText}" />
         </Style>
-        <Style Selector="Border.NetworkTab.Selected > TextBlock">
+        <Style Selector="Button.NetworkTab.Selected TextBlock">
             <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
         </Style>
     </UserControl.Styles>
@@ -176,12 +176,14 @@
                         <ItemsControl ItemsSource="{Binding Wallets}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="services:WalletInfo">
-                                    <Border Name="WalletBorder" Classes="WalletCard"
+                                    <Button Name="WalletButton" Classes="Unstyled WalletCard"
                                             CornerRadius="8" Padding="16"
                                             Margin="0,0,0,8"
                                             BorderThickness="2"
                                             Classes.WalletSelected="{Binding IsSelected}"
-                                            Cursor="Hand">
+                                            Cursor="Hand"
+                                            HorizontalContentAlignment="Stretch"
+                                            CommandParameter="{Binding}">
                                         <Grid ColumnDefinitions="Auto,*,Auto">
                                             <Border Grid.Column="0" Width="40" Height="40"
                                                     CornerRadius="8"
@@ -215,7 +217,7 @@
                                                 </Viewbox>
                                             </StackPanel>
                                         </Grid>
-                                    </Border>
+                                    </Button>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
@@ -271,28 +273,32 @@
                 <!-- Network tabs -->
                 <Grid ColumnDefinitions="*,*,*" Margin="0,0,0,16">
                     <Grid.ColumnSpacing>8</Grid.ColumnSpacing>
-                    <Border Grid.Column="0" Name="OnChainTabBorder"
+                    <Button Grid.Column="0" Name="OnChainTabButton"
                             AutomationProperties.AutomationId="InvestOnChainTab"
-                            Classes="NetworkTab"
+                            Classes="Unstyled NetworkTab"
                             Classes.Selected="{Binding IsOnChainTab}"
-                            CornerRadius="12" Padding="12,8" BorderThickness="2" Cursor="Hand">
+                            CornerRadius="12" Padding="12,8" BorderThickness="2" Cursor="Hand"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
                         <TextBlock Text="On-Chain" FontSize="13" FontWeight="SemiBold"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-                    <Border Grid.Column="1" Name="LightningTabBorder"
+                    </Button>
+                    <Button Grid.Column="1" Name="LightningTabButton"
                             AutomationProperties.AutomationId="InvestLightningTab"
-                            Classes="NetworkTab"
+                            Classes="Unstyled NetworkTab"
                             Classes.Selected="{Binding IsLightningTab}"
-                            CornerRadius="12" Padding="12,8" BorderThickness="2" Cursor="Hand">
+                            CornerRadius="12" Padding="12,8" BorderThickness="2" Cursor="Hand"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
                         <TextBlock Text="Lightning" FontSize="13" FontWeight="SemiBold"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-                    <Border Grid.Column="2" Name="ImportTabBorder" Classes="NetworkTab"
+                    </Button>
+                    <Button Grid.Column="2" Name="ImportTabButton"
+                            Classes="Unstyled NetworkTab"
                             Classes.Selected="{Binding IsImportTab}"
-                            CornerRadius="12" Padding="12,8" BorderThickness="2" Cursor="Hand">
+                            CornerRadius="12" Padding="12,8" BorderThickness="2" Cursor="Hand"
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
                         <TextBlock Text="Import" FontSize="13" FontWeight="SemiBold"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
+                    </Button>
                 </Grid>
 
                 <!-- QR Code -->
@@ -380,17 +386,19 @@
                         BorderThickness="1"
                         BorderBrush="{DynamicResource DeployFeeBarBorder}"
                         Background="{DynamicResource DeployFeeBarBg}">
-                    <Panel>
-                        <StackPanel Spacing="2" VerticalAlignment="Center"
-                                    HorizontalAlignment="Left">
-                            <TextBlock Text="Amount Required"
+                    <StackPanel Spacing="8">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0"
+                                       Text="Amount Required"
                                        FontSize="12"
+                                       VerticalAlignment="Center"
                                        Foreground="{DynamicResource DeployFeeLabel}" />
-                            <TextBlock Text="{Binding AmountDisplay}"
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding AmountDisplay}"
                                        FontSize="20" FontWeight="Bold"
                                        Foreground="{DynamicResource DeployFeeValue}" />
-                        </StackPanel>
-                        <Border HorizontalAlignment="Right" VerticalAlignment="Center"
+                        </Grid>
+                        <Border HorizontalAlignment="Center"
                                 CornerRadius="12" Padding="12,6"
                                 BorderThickness="1"
                                 BorderBrush="{DynamicResource DeployFeePillBorder}"
@@ -398,7 +406,26 @@
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="11"
                                         Foreground="{DynamicResource DeployFeePillText}"
-                                        VerticalAlignment="Center" />
+                                        VerticalAlignment="Center"
+                                        RenderTransformOrigin="50%,50%">
+                                    <i:Icon.RenderTransform>
+                                        <RotateTransform />
+                                    </i:Icon.RenderTransform>
+                                    <i:Icon.Styles>
+                                        <Style Selector="i|Icon[IsVisible=True]">
+                                            <Style.Animations>
+                                                <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                    <KeyFrame Cue="0%">
+                                                        <Setter Property="RotateTransform.Angle" Value="0" />
+                                                    </KeyFrame>
+                                                    <KeyFrame Cue="100%">
+                                                        <Setter Property="RotateTransform.Angle" Value="360" />
+                                                    </KeyFrame>
+                                                </Animation>
+                                            </Style.Animations>
+                                        </Style>
+                                    </i:Icon.Styles>
+                                </i:Icon>
                                 <TextBlock Text="{Binding PaymentStatusText}"
                                            AutomationProperties.AutomationId="InvestPaymentStatus"
                                            FontSize="12" FontWeight="Medium"
@@ -406,7 +433,7 @@
                                            VerticalAlignment="Center" />
                             </StackPanel>
                         </Border>
-                    </Panel>
+                    </StackPanel>
                 </Border>
             </StackPanel>
         </Border>

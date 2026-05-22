@@ -130,6 +130,110 @@
                                Foreground="{DynamicResource TextMuted}"
                                TextWrapping="Wrap" />
 
+                    <!-- ── Restore from backup ── -->
+                    <!-- Shown when wallets.json contains encrypted wallets not yet in the app. -->
+                    <Border Name="StoredWalletsSection" IsVisible="False"
+                            Margin="0,8,0,0">
+                        <Expander Name="StoredWalletsExpander"
+                                  IsExpanded="False"
+                                  Background="Transparent">
+                            <Expander.Header>
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <i:Icon Value="fa-solid fa-key"
+                                           FontSize="13"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           VerticalAlignment="Center" />
+                                    <TextBlock Text="Restore from backup"
+                                               FontSize="13"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Expander.Header>
+
+                            <StackPanel Margin="0,8,0,0" Spacing="8">
+                                <Border Background="{DynamicResource CreateWalletInputBg}"
+                                        BorderBrush="{DynamicResource CreateWalletInputBorder}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Padding="4">
+                                    <ListBox Name="StoredWalletList"
+                                             ItemsSource="{Binding StoredWallets}"
+                                             SelectionMode="Single"
+                                             Background="Transparent"
+                                             BorderThickness="0"
+                                             MaxHeight="160">
+                                        <ListBox.ItemContainerTheme>
+                                            <ControlTheme TargetType="ListBoxItem">
+                                                <Setter Property="Background" Value="Transparent" />
+                                                <Setter Property="Padding" Value="0" />
+                                                <Setter Property="Template">
+                                                    <ControlTemplate>
+                                                        <ContentPresenter Content="{TemplateBinding Content}"
+                                                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                                          Padding="{TemplateBinding Padding}"
+                                                                          Background="{TemplateBinding Background}"
+                                                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                                                    </ControlTemplate>
+                                                </Setter>
+                                            </ControlTheme>
+                                        </ListBox.ItemContainerTheme>
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate x:DataType="funds:StoredWalletEntry">
+                                                <Border Padding="10,8"
+                                                        CornerRadius="6"
+                                                        Cursor="Hand"
+                                                        Background="Transparent">
+                                                    <Border.Styles>
+                                                        <Style Selector="Border:pointerover">
+                                                            <Setter Property="Background" Value="{DynamicResource DeployWalletItemBg}" />
+                                                        </Style>
+                                                    </Border.Styles>
+                                                    <Grid ColumnDefinitions="Auto,*">
+                                                        <Border Grid.Column="0" Width="32" Height="32"
+                                                                CornerRadius="6"
+                                                                Background="{DynamicResource DeployWalletIconBg}"
+                                                                VerticalAlignment="Center">
+                                                            <i:Icon Value="fa-solid fa-lock"
+                                                                   FontSize="16"
+                                                                   Foreground="#F59E0B" />
+                                                        </Border>
+                                                        <StackPanel Grid.Column="1" Spacing="1"
+                                                                    VerticalAlignment="Center"
+                                                                    Margin="10,0,0,0">
+                                                            <TextBlock Text="{Binding Name}"
+                                                                       FontSize="13" FontWeight="SemiBold"
+                                                                       Foreground="{DynamicResource TextStrong}" />
+                                                            <TextBlock Text="{Binding ShortId}"
+                                                                       FontSize="11"
+                                                                       Foreground="{DynamicResource TextMuted}" />
+                                                        </StackPanel>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+                                </Border>
+
+                                <!-- Restore spinner (shown while decrypting/importing) -->
+                                <StackPanel Name="RestoreSpinnerPanel" IsVisible="False"
+                                            Orientation="Horizontal" Spacing="10"
+                                            HorizontalAlignment="Center"
+                                            Margin="0,8,0,0">
+                                    <i:Icon Value="fa-solid fa-spinner"
+                                           FontSize="18"
+                                           Foreground="{DynamicResource PrimaryGreenBrush}"
+                                           VerticalAlignment="Center"
+                                           Classes="spin" />
+                                    <TextBlock Text="Restoring wallet..."
+                                               FontSize="13"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Expander>
+                    </Border>
+
                     <!-- Seed phrase textarea -->
                     <!-- Vue: rows=4, px-4 py-3, rounded-lg, bg-gray-50/bg-[#111], border-gray-200/border-[#333], focus:ring-[#4B7C5A] -->
                     <TextBox Name="SeedPhraseInput"
@@ -246,7 +350,7 @@
                             BorderThickness="1"
                             CornerRadius="8"
                             Padding="16">
-                        <TextBlock Name="SeedPhraseDisplay"
+                        <SelectableTextBlock Name="SeedPhraseDisplay"
                                    Text="abandon ability able about above absent absorb abstract absurd abuse access accident"
                                    FontSize="14"
                                    FontFamily="Cascadia Mono, Consolas, monospace"

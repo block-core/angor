@@ -13,6 +13,7 @@ using Angor.Shared.Integration.Lightning;
 using App.UI.Shared;
 using App.UI.Shared.PaymentFlow;
 using App.UI.Shared.Services;
+using App.UI.Shell;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -39,12 +40,14 @@ public partial class DeployFlowViewModel : ReactiveObject
     private readonly IWalletAppService _walletAppService;
     private readonly IInvestmentAppService _investmentAppService;
     private readonly IBoltzSwapService _boltzSwapService;
+    private readonly IBoltzSwapStorageService _swapStorageService;
     private readonly IProjectAppService _projectAppService;
     private readonly IFounderAppService _founderAppService;
     private readonly ICurrencyService _currencyService;
     private readonly IWalletContext _walletContext;
     private readonly Func<BitcoinNetwork> _getNetwork;
     private readonly ILogger<DeployFlowViewModel> _logger;
+    private readonly PrototypeSettings _prototypeSettings;
     private CancellationTokenSource? _invoiceMonitorCts;
 
     // ── State ──
@@ -90,21 +93,25 @@ public partial class DeployFlowViewModel : ReactiveObject
         IWalletAppService walletAppService,
         IInvestmentAppService investmentAppService,
         IBoltzSwapService boltzSwapService,
+        IBoltzSwapStorageService swapStorageService,
         IProjectAppService projectAppService,
         IFounderAppService founderAppService,
         ICurrencyService currencyService,
         IWalletContext walletContext,
         Func<BitcoinNetwork> getNetwork,
+        PrototypeSettings prototypeSettings,
         ILogger<DeployFlowViewModel> logger)
     {
         _walletAppService = walletAppService;
         _investmentAppService = investmentAppService;
         _boltzSwapService = boltzSwapService;
+        _swapStorageService = swapStorageService;
         _projectAppService = projectAppService;
         _founderAppService = founderAppService;
         _currencyService = currencyService;
         _walletContext = walletContext;
         _getNetwork = getNetwork;
+        _prototypeSettings = prototypeSettings;
         _logger = logger;
         // Initialize ReactiveCommands for async payment operations
         PayWithWalletCommand = ReactiveCommand.CreateFromTask(PayWithWalletAsync);
@@ -161,10 +168,12 @@ public partial class DeployFlowViewModel : ReactiveObject
             _walletAppService,
             _investmentAppService,
             _boltzSwapService,
+            _swapStorageService,
             _walletContext,
             _currencyService,
             _getNetwork,
             _logger,
+            _prototypeSettings,
             new PaymentFlowConfig
             {
                 AmountSats = deployFeeSats,

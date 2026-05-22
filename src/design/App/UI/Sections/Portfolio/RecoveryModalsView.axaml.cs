@@ -31,13 +31,12 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
 
         // Wire copy button for claim project ID
         // Vue: copyToClipboard(recoveryProjectId) in Claim Penalties modal
-        var copyClaimBtn = this.FindControl<Border>("CopyClaimProjectIdBtn");
+        var copyClaimBtn = this.FindControl<Button>("CopyClaimProjectIdBtn");
         if (copyClaimBtn != null)
-            copyClaimBtn.PointerPressed += (_, ev) =>
+            copyClaimBtn.Click += (_, _) =>
             {
                 if (DataContext is InvestmentViewModel vm)
                     ClipboardHelper.CopyToClipboard(this, vm.RecoveryProjectId);
-                ev.Handled = true;
             };
     }
 
@@ -144,15 +143,7 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
             var shellVm = GetShellVm();
             shellVm?.ShowModal(this);
 
-            var (success, error) = Vm.RecoveryActionKey switch
-            {
-                "recovery" => await portfolioVm.RecoverFundsAsync(Vm, feeRate.Value),
-                "belowThreshold" => await portfolioVm.ClaimEndOfProjectAsync(Vm, feeRate.Value),
-                "unfundedRelease" => await portfolioVm.ReleaseFundsAsync(Vm, feeRate.Value),
-                "endOfProject" => await portfolioVm.ClaimEndOfProjectAsync(Vm, feeRate.Value),
-                "penaltyRelease" => await portfolioVm.PenaltyReleaseFundsAsync(Vm, feeRate.Value),
-                _ => (false, (string?)"Unknown recovery action.")
-            };
+            var (success, error) = await portfolioVm.ExecuteRecoveryAsync(Vm, feeRate.Value);
             Vm.IsProcessing = false;
 
             if (success)
@@ -224,12 +215,7 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
             var shellVm = GetShellVm();
             shellVm?.ShowModal(this);
 
-            // Route based on action key: could be unfundedRelease or penaltyRelease
-            var (releaseSuccess, releaseError) = Vm.RecoveryActionKey switch
-            {
-                "penaltyRelease" => await portfolioVm.PenaltyReleaseFundsAsync(Vm, feeRate.Value),
-                _ => await portfolioVm.ReleaseFundsAsync(Vm, feeRate.Value)
-            };
+            var (releaseSuccess, releaseError) = await portfolioVm.ExecuteRecoveryAsync(Vm, feeRate.Value);
             Vm.IsProcessing = false;
 
             if (releaseSuccess)

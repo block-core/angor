@@ -28,8 +28,9 @@ public class WalletFactory(
         var accountInfo = walletOperations.BuildAccountInfoForWalletWords(walletWords);
         var walletId = new WalletId(accountInfo.walletId);
 
-        // Generate and persist a secure random key used for all wallet encryption
-        var encryptionKey = secureKeyProvider.GenerateKey();
+        // Reuse existing encryption key if present, otherwise generate a new one
+        var existingKey = await secureKeyProvider.Get(walletId);
+        var encryptionKey = existingKey.GetValueOrDefault(() => secureKeyProvider.GenerateKey());
         await secureKeyProvider.Save(walletId, encryptionKey);
         var descriptor = WalletDescriptorFactory.Create(seedwords, passphrase, network.ToNBitcoin());
         var wallet = new Domain.Wallet(walletId, descriptor);

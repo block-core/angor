@@ -8,10 +8,22 @@
 // Mode 2 - Manual (provide all details):
 //   node decrypt-log.mjs <nsec> <senderPubkeyHex> <blobUrl> [output.zip]
 
-import { nip04, nip19, getPublicKey } from 'nostr-tools';
+import { nip04, nip44, nip19, getPublicKey } from 'nostr-tools';
 import { Relay } from 'nostr-tools/relay';
 import { writeFileSync } from 'fs';
 import 'websocket-polyfill';
+
+// Decrypt content, auto-detecting NIP-04 vs NIP-44 format
+async function decryptContent(privateKeyHex, pubkey, content) {
+  if (content.includes('?iv=')) {
+    // NIP-04 format: base64?iv=base64
+    return await nip04.decrypt(privateKeyHex, pubkey, content);
+  }
+  // NIP-44 format: plain base64
+  const privKeyBytes = Buffer.from(privateKeyHex, 'hex');
+  const conversationKey = nip44.v2.utils.getConversationKey(privKeyBytes, pubkey);
+  return nip44.v2.decrypt(content, conversationKey);
+}
 
 const DEFAULT_RELAYS = [
   'wss://relay.angor.io',
@@ -90,8 +102,8 @@ if (args[0] === '--event') {
   const senderPubkey = event.pubkey;
   console.log(`Sender: ${senderPubkey}`);
 
-  // Decrypt the DM to get the message with blob URL
-  const dmContent = await nip04.decrypt(privateKeyHex, senderPubkey, event.content);
+  // Decrypt the DM to get the message with blob URL (NIP-44 or NIP-04)
+  const dmContent = await decryptContent(privateKeyHex, senderPubkey, event.content);
   console.log('DM content:');
   console.log(dmContent);
   console.log();
@@ -145,15 +157,24 @@ async function downloadAndDecrypt(privateKeyHex, senderPubkey, blobUrl, outputPa
   const blobContent = await response.text();
   console.log(`Downloaded ${blobContent.length} chars`);
 
-  if (!blobContent.includes('?iv=')) {
-    console.error('ERROR: Blob is not in NIP-04 format (expected base64?iv=base64)');
-    process.exit(1);
-  }
-
   console.log('Decrypting blob...');
 
   try {
-    const zipBase64 = await nip04.decrypt(privateKeyHex, senderPubkey, blobContent);
+    let zipBase64;
+
+    if (blobContent.includes('?iv=')) {
+      // Legacy NIP-04 single-chunk format
+      zipBase64 = await nip04.decrypt(privateKeyHex, senderPubkey, blobContent);
+    } else {
+      // NIP-44 v2 — may be multi-chunk (newline-separated)
+      const privKeyBytes = Buffer.from(privateKeyHex, 'hex');
+      const conversationKey = nip44.v2.utils.getConversationKey(privKeyBytes, senderPubkey);
+      const chunks = blobContent.trim().split('\n');
+      console.log(`Decrypting ${chunks.length} chunk(s)...`);
+      const decryptedChunks = chunks.map(chunk => nip44.v2.decrypt(chunk.trim(), conversationKey));
+      zipBase64 = decryptedChunks.join('');
+    }
+
     const zipBytes = Buffer.from(zipBase64, 'base64');
 
     if (zipBytes.length < 4 || zipBytes[0] !== 0x50 || zipBytes[1] !== 0x4B) {

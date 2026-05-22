@@ -22,29 +22,95 @@ public record DurationPresetItem(int Value, string Label);
 /// A stage in the project's release/payout schedule.
 /// Generated from the payout pattern selection.
 /// </summary>
-public class ProjectStageViewModel
+public partial class ProjectStageViewModel : ReactiveObject
 {
-    public int StageNumber { get; set; }
-    public string Percentage { get; set; } = "0%";
-    public string ReleaseDate { get; set; } = "";
-    public string AmountBtc { get; set; } = "0.00000000";
+    [Reactive] private int stageNumber;
+    [Reactive] private string percentage = "0%";
+    [Reactive] private string releaseDate = "";
+    [Reactive] private string amountBtc = "0.00000000";
 
     /// <summary>
     /// The actual typed release date used for deployment.
     /// This is the source of truth — <see cref="ReleaseDate"/> is only for display.
     /// </summary>
-    public DateOnly ReleaseDateValue { get; set; }
+    [Reactive] private DateOnly releaseDateValue;
 
     /// <summary>Label for this stage row — "Stage", "Monthly Payout", "Weekly Payout", "Payment", etc.</summary>
-    public string StageLabel { get; set; } = "Stage";
+    [Reactive] private string stageLabel = "Stage";
 
     /// <summary>
     /// Pre-formatted display text for the right side of the stage row.
     /// Investment: "8% (0.0800 BTC) released on 28th April 2026"
     /// Fund/Sub: "33% paid on 28th April 2026"
     /// </summary>
-    public string DisplayText { get; set; } = "";
-    public double PercentageValue { get; set; }
+    [Reactive] private string displayText = "";
+    [Reactive] private double percentageValue;
+
+    // ── Advanced Editor validation state ──
+    /// <summary>True when PercentageValue is 0 (stage has no allocation). Kept in sync by constructor subscription.</summary>
+    [Reactive] private bool hasPercentageError = true;
+
+    /// <summary>Non-empty when the release date is before the project's funding end date. Set by parent VM.</summary>
+    [Reactive] private string releaseDateError = "";
+
+    /// <summary>True when <see cref="ReleaseDateError"/> contains a message.</summary>
+    public bool HasDateError => !string.IsNullOrEmpty(ReleaseDateError);
+
+    public ProjectStageViewModel()
+    {
+        // Keep Percentage string and HasPercentageError in sync whenever PercentageValue changes.
+        // Skip(1) avoids the immediate false-positive error on construction (value is 0 before
+        // the object initializer has had a chance to set PercentageValue to the real value).
+        this.WhenAnyValue(x => x.PercentageValue)
+            .Skip(1)
+            .Subscribe(pct =>
+            {
+                Percentage = $"{pct:F0}%";
+                HasPercentageError = pct <= 0;
+                this.RaisePropertyChanged(nameof(PercentageDecimal));
+            });
+
+        // HasDateError is a computed string→bool, raise it whenever ReleaseDateError changes.
+        this.WhenAnyValue(x => x.ReleaseDateError)
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(HasDateError)));
+    }
+
+    /// <summary>
+    /// Decimal bridge for NumericUpDown (Avalonia Value is decimal?) — converts to/from PercentageValue (double).
+    /// This avoids a double→decimal? type-mismatch binding error at runtime.
+    /// </summary>
+    public decimal? PercentageDecimal
+    {
+        get => PercentageValue <= 0 ? null : (decimal)PercentageValue;
+        set
+        {
+            PercentageValue = (double)(value ?? 0);
+            this.RaisePropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// CalendarDatePicker bridge — converts between DateOnly (domain) and DateTime? (Avalonia control).
+    /// The source generator does NOT generate this — it is hand-written.
+    /// Setting this updates <see cref="ReleaseDateValue"/> (source of truth) and <see cref="ReleaseDate"/> (display string).
+    /// </summary>
+    public DateTime? ReleaseDateAsDateTime
+    {
+        get => ReleaseDateValue == default
+            ? null
+            : ReleaseDateValue.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        set
+        {
+            var incoming = value.HasValue
+                ? DateOnly.FromDateTime(value.Value)
+                : DateOnly.MinValue;
+            if (ReleaseDateValue == incoming) return;
+            ReleaseDateValue = incoming;
+            if (value.HasValue)
+                ReleaseDate = ReleaseDateValue.ToString("dd MMMM yyyy");
+            this.RaisePropertyChanged();
+        }
+    }
 }
 
 /// <summary>
@@ -153,6 +219,9 @@ public partial class CreateProjectViewModel : ReactiveObject
     private readonly IWalletContext _walletContext;
     private bool _isLoadingDraft;
 
+    /// <summary>Per-stage subscriptions for the Advanced Editor live-total and date validation.</summary>
+    private readonly Dictionary<ProjectStageViewModel, CompositeDisposable> _stageDisposables = new();
+
     /// <summary>
     /// True when debug mode is enabled AND on testnet.
     /// Controls visibility of the "Debug Prefill Data" button in Step 2.
@@ -260,7 +329,12 @@ public partial class CreateProjectViewModel : ReactiveObject
                 EndDateError = "";
                 this.RaisePropertyChanged(nameof(HasFormError));
                 this.RaisePropertyChanged(nameof(HasEndDateError));
+                // Revalidate all stage release dates against the new end date
+                UpdateAllStageDateErrors();
             });
+
+        // ── Advanced Editor: subscribe to Stages collection to enable live % total and date validation ──
+        Stages.CollectionChanged += OnStagesCollectionChanged;
 
         // ── Auto-save draft on any user input change (debounced) ──
         Observable.Merge(
@@ -608,6 +682,7 @@ public partial class CreateProjectViewModel : ReactiveObject
         this.RaisePropertyChanged(nameof(IsFund));
         this.RaisePropertyChanged(nameof(IsSubscription));
         this.RaisePropertyChanged(nameof(IsTypeSelected));
+        this.RaisePropertyChanged(nameof(IsAdvancedEditorVisible));
         this.RaisePropertyChanged(nameof(StepNames));
         this.RaisePropertyChanged(nameof(Step4Title));
         this.RaisePropertyChanged(nameof(Step5Title));
@@ -688,11 +763,17 @@ public partial class CreateProjectViewModel : ReactiveObject
                 $"Unknown project type '{ProjectType}'. Cannot deploy project with an unrecognized type.")
         };
 
-        // Parse dates
-        if (!DateTime.TryParse(StartDate, out var startDt))
+        // Parse dates — always specify UTC so ToUniversalTime() in the JSON serializer is a no-op.
+        // DateTime.TryParse on a date-only string (e.g. "2026-05-18") produces DateTimeKind.Unspecified,
+        // which ToUniversalTime() treats as local → subtracts UTC offset → off by 1 day for non-UTC users.
+        if (!DateTime.TryParse(StartDate, out var startDtRaw))
             throw new InvalidOperationException(
                 $"Invalid start date '{StartDate}'. Cannot deploy project without a valid start date.");
-        DateTime? endDt = DateTime.TryParse(EndDate, out var ed) ? ed : null;
+        var startDt = DateTime.SpecifyKind(startDtRaw, DateTimeKind.Utc);
+
+        DateTime? endDt = null;
+        if (DateTime.TryParse(EndDate, out var endDtRaw))
+            endDt = DateTime.SpecifyKind(endDtRaw, DateTimeKind.Utc);
 
         // Build stages from the wizard's generated Stages collection
         var stageDtos = Stages.Select((s, i) =>
@@ -850,7 +931,7 @@ public partial class CreateProjectViewModel : ReactiveObject
             Stages.Add(new ProjectStageViewModel
             {
                 StageNumber = i + 1,
-                Percentage = $"{pct}%",
+                PercentageValue = pct,
                 ReleaseDate = FormatReleaseDateOrdinal(releaseDate),
                 ReleaseDateValue = DateOnly.FromDateTime(releaseDate),
                 AmountBtc = btcAmount.ToString("F4"),
@@ -912,7 +993,7 @@ public partial class CreateProjectViewModel : ReactiveObject
             Stages.Add(new ProjectStageViewModel
             {
                 StageNumber = i + 1,
-                Percentage = $"{pct}%",
+                PercentageValue = pct,
                 ReleaseDate = FormatReleaseDateOrdinal(releaseDate),
                 ReleaseDateValue = DateOnly.FromDateTime(releaseDate),
                 AmountBtc = (targetBtc * pct / 100).ToString("F4"),
@@ -982,12 +1063,14 @@ public partial class CreateProjectViewModel : ReactiveObject
     public void AddStage()
     {
         var nextNum = Stages.Count + 1;
+        // Default percentage = whatever's left to reach 100, so the total badge stays clean
+        var usedPct = Stages.Sum(s => s.PercentageValue);
+        var defaultPct = Math.Max(0, 100 - usedPct);
+
         var stage = new ProjectStageViewModel
         {
             StageNumber = nextNum,
-            Percentage = "0%",
-            PercentageValue = 0,
-            ReleaseDate = "",
+            PercentageValue = defaultPct,
             ReleaseDateValue = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(nextNum)),
             StageLabel = IsInvestment ? "Stage" : "Payout",
             DisplayText = ""
@@ -1007,11 +1090,136 @@ public partial class CreateProjectViewModel : ReactiveObject
             Stages[i].StageNumber = i + 1;
         this.RaisePropertyChanged(nameof(HasStages));
         this.RaisePropertyChanged(nameof(ScheduleSummary));
+
+        if (Stages.Count == 0)
+            ShowGenerateForm = true;
     }
 
     public void ToggleAdvancedEditor()
     {
         IsAdvancedEditor = !IsAdvancedEditor;
+        this.RaisePropertyChanged(nameof(IsNotAdvancedEditor));
+        this.RaisePropertyChanged(nameof(AdvancedEditorButtonText));
+        this.RaisePropertyChanged(nameof(IsAdvancedEditorVisible));
+    }
+
+    /// <summary>
+    /// True when Advanced Editor should actually be shown — requires IsAdvancedEditor AND IsInvestment.
+    /// Fund/Subscription use their own payout schedule and don't support the advanced stage editor.
+    /// </summary>
+    public bool IsAdvancedEditorVisible => IsAdvancedEditor && IsInvestment;
+
+    // ── Advanced Editor: live % total ──
+
+    /// <summary>Sum of all stage PercentageValues. Updates live as the user edits stages.</summary>
+    public double AdvancedEditorTotalPct => Stages.Sum(s => s.PercentageValue);
+
+    /// <summary>True when stage percentages sum to 100 (within ±0.5 rounding tolerance).</summary>
+    public bool AdvancedEditorTotalIsComplete => Math.Abs(AdvancedEditorTotalPct - 100.0) < 0.5;
+
+    /// <summary>Inverse of <see cref="AdvancedEditorTotalIsComplete"/> — used for AXAML IsVisible.</summary>
+    public bool AdvancedEditorTotalIsIncomplete => !AdvancedEditorTotalIsComplete;
+
+    /// <summary>
+    /// Human-readable total % label shown below the stage list.
+    /// E.g. "Total: 75% — needs 25% more" or "Total: 100% ✓"
+    /// </summary>
+    public string AdvancedEditorTotalLabel =>
+        AdvancedEditorTotalIsComplete
+            ? "Total: 100% ✓"
+            : $"Total: {AdvancedEditorTotalPct:F0}%  —  needs {Math.Max(0, 100 - AdvancedEditorTotalPct):F0}% more";
+
+    /// <summary>True when at least one stage has a date validation error — drives the guidelines banner.</summary>
+    public bool HasAnyDateError => Stages.Any(s => s.HasDateError);
+
+    private void OnStagesCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
+        {
+            // Clear() fires Reset — dispose all tracked subscriptions
+            foreach (var d in _stageDisposables.Values) d.Dispose();
+            _stageDisposables.Clear();
+        }
+        else
+        {
+            if (e.NewItems != null)
+                foreach (ProjectStageViewModel stage in e.NewItems)
+                    SubscribeToStage(stage);
+            if (e.OldItems != null)
+                foreach (ProjectStageViewModel stage in e.OldItems)
+                    UnsubscribeFromStage(stage);
+        }
+        RaiseAdvancedEditorTotals();
+    }
+
+    private void SubscribeToStage(ProjectStageViewModel stage)
+    {
+        var d = new CompositeDisposable();
+        stage.WhenAnyValue(x => x.PercentageValue)
+            .Subscribe(_ => RaiseAdvancedEditorTotals())
+            .DisposeWith(d);
+        stage.WhenAnyValue(x => x.ReleaseDateValue)
+            .Subscribe(_ => UpdateAllStageDateErrors())
+            .DisposeWith(d);
+        UpdateAllStageDateErrors(); // validate immediately on add
+        _stageDisposables[stage] = d;
+    }
+
+    private void UnsubscribeFromStage(ProjectStageViewModel stage)
+    {
+        if (_stageDisposables.TryGetValue(stage, out var d))
+        {
+            d.Dispose();
+            _stageDisposables.Remove(stage);
+        }
+    }
+
+    private void UpdateAllStageDateErrors()
+    {
+        var ordered = Stages.OrderBy(s => s.StageNumber).ToList();
+        DateOnly? endDate = InvestEndDate.HasValue ? DateOnly.FromDateTime(InvestEndDate.Value) : null;
+
+        for (int i = 0; i < ordered.Count; i++)
+        {
+            var stage = ordered[i];
+            if (stage.ReleaseDateValue == default)
+            {
+                stage.ReleaseDateError = "";
+                continue;
+            }
+
+            // Rule 1: must be on or after funding end date
+            if (endDate.HasValue && stage.ReleaseDateValue < endDate.Value)
+            {
+                stage.ReleaseDateError = $"Must be on or after {endDate.Value:dd MMM yyyy}";
+                continue;
+            }
+
+            // Rule 2: must be after the previous stage's date
+            if (i > 0)
+            {
+                var prev = ordered[i - 1];
+                if (prev.ReleaseDateValue != default && stage.ReleaseDateValue <= prev.ReleaseDateValue)
+                {
+                    stage.ReleaseDateError = $"Must be after Stage {prev.StageNumber} ({prev.ReleaseDateValue:dd MMM yyyy})";
+                    continue;
+                }
+            }
+
+            stage.ReleaseDateError = "";
+        }
+
+        // Refresh the banner that shows when any stage has a date error
+        this.RaisePropertyChanged(nameof(HasAnyDateError));
+    }
+
+    private void RaiseAdvancedEditorTotals()
+    {
+        this.RaisePropertyChanged(nameof(AdvancedEditorTotalPct));
+        this.RaisePropertyChanged(nameof(AdvancedEditorTotalIsComplete));
+        this.RaisePropertyChanged(nameof(AdvancedEditorTotalIsIncomplete));
+        this.RaisePropertyChanged(nameof(AdvancedEditorTotalLabel));
+        this.RaisePropertyChanged(nameof(HasAnyDateError));
     }
 
     /// <summary>Re-show the generate form to regenerate stages (without clearing existing ones first).</summary>
@@ -1123,7 +1331,7 @@ public partial class CreateProjectViewModel : ReactiveObject
             Stages.Add(new ProjectStageViewModel
             {
                 StageNumber = i + 1,
-                Percentage = $"{pct}%",
+                PercentageValue = pct,
                 ReleaseDate = FormatReleaseDateOrdinal(releaseDate),
                 ReleaseDateValue = DateOnly.FromDateTime(releaseDate),
                 AmountBtc = (targetBtc * pct / 100).ToString("F4"),
@@ -1484,7 +1692,7 @@ public partial class CreateProjectViewModel : ReactiveObject
         Stages.Add(new ProjectStageViewModel
         {
             StageNumber = 1,
-            Percentage = "10%",
+            PercentageValue = 10,
             ReleaseDate = FormatReleaseDateOrdinal(today),
             ReleaseDateValue = DateOnly.FromDateTime(today),
             AmountBtc = (targetBtc * 0.10).ToString("F4"),
@@ -1494,7 +1702,7 @@ public partial class CreateProjectViewModel : ReactiveObject
         Stages.Add(new ProjectStageViewModel
         {
             StageNumber = 2,
-            Percentage = "30%",
+            PercentageValue = 30,
             ReleaseDate = FormatReleaseDateOrdinal(stage2Date),
             ReleaseDateValue = DateOnly.FromDateTime(stage2Date),
             AmountBtc = (targetBtc * 0.30).ToString("F4"),
@@ -1504,7 +1712,7 @@ public partial class CreateProjectViewModel : ReactiveObject
         Stages.Add(new ProjectStageViewModel
         {
             StageNumber = 3,
-            Percentage = "60%",
+            PercentageValue = 60,
             ReleaseDate = FormatReleaseDateOrdinal(stage3Date),
             ReleaseDateValue = DateOnly.FromDateTime(stage3Date),
             AmountBtc = (targetBtc * 0.60).ToString("F4"),

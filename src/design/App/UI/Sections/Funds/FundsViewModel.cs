@@ -94,6 +94,62 @@ public partial class FundsViewModel : ReactiveObject, IDisposable
     }
 
     /// <summary>
+    /// Encrypted wallets read from wallets.json — shown in the import step dropdown
+    /// so the user can restore a backup instead of typing seed words.
+    /// </summary>
+    public ObservableCollection<StoredWalletEntry> StoredWallets { get; } = new();
+
+    /// <summary>
+    /// Load encrypted wallet entries from wallets.json via <see cref="IWalletAppService"/>.
+    /// Called each time the import step is shown.
+    /// </summary>
+    public async Task LoadStoredWalletsAsync()
+    {
+        StoredWallets.Clear();
+
+        var result = await _walletAppService.GetStoredWallets();
+        if (result.IsFailure)
+        {
+            _logger.LogWarning("Failed to load stored wallets: {Error}", result.Error);
+            return;
+        }
+
+        // Filter out wallets already loaded in the app (LiteDB)
+        var existingIds = _walletContext.Wallets.Select(w => w.Id.Value).ToHashSet();
+
+        var index = 1;
+        foreach (var sw in result.Value)
+        {
+            if (existingIds.Contains(sw.Id)) continue;
+
+            StoredWallets.Add(new StoredWalletEntry(sw.Id, $"Wallet {index}", sw.Id[..8].ToUpperInvariant()));
+            index++;
+        }
+
+        _logger.LogInformation("Loaded {Count} restorable wallet(s) from wallets.json", StoredWallets.Count);
+    }
+
+    /// <summary>
+    /// Restore a wallet from the encrypted store using secure storage for decryption.
+    /// </summary>
+    public async Task<(bool Success, string? Error)> RestoreStoredWalletAsync(string walletId)
+    {
+        _logger.LogInformation("Restoring wallet {WalletId} from backup...", walletId[..8]);
+
+        var result = await Task.Run(() => _walletAppService.RestoreStoredWallet(
+            walletId,
+            DefaultWalletName,
+            _getNetwork()));
+
+        if (result.IsFailure)
+            return (false, result.Error);
+
+        _logger.LogInformation("Wallet {WalletId} restored successfully", walletId[..8]);
+        await _walletContext.ReloadAsync();
+        return (true, null);
+    }
+
+    /// <summary>
     /// Get cached AccountBalanceInfo for a wallet (used by WalletDetailModal for real UTXOs).
     /// </summary>
     public AccountBalanceInfo? GetAccountBalanceInfo(string walletId)
@@ -384,3 +440,8 @@ public partial class FundsViewModel : ReactiveObject, IDisposable
 
     public void Dispose() => _disposables.Dispose();
 }
+
+/// <summary>
+/// Represents an encrypted wallet entry from wallets.json available for restore.
+/// </summary>
+public record StoredWalletEntry(string Id, string Name, string ShortId);

@@ -74,29 +74,8 @@ public partial class HomeView : UserControl, ISectionView
         // keeps responding to IsCompact changes after being detached and re-attached
         // by the ShellView ContentControl swap during tab navigation.
 
-        // ── Mobile perf: defer the second card (below the fold in stacked
-        // layout) so first paint only inflates one Viewbox+Path SVG icon
-        // instead of two. GetFunded card arrives on ApplicationIdle — the
-        // user needs to scroll to see it anyway. Desktop renders both cards
-        // synchronously side-by-side.
-        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
-        {
-            if (_homeGrid != null && _getFundedCard != null)
-            {
-                var idx = _homeGrid.Children.IndexOf(_getFundedCard);
-                if (idx >= 0)
-                {
-                    _homeGrid.Children.RemoveAt(idx);
-                    var gridRef = _homeGrid;
-                    var cardRef = _getFundedCard;
-                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                    {
-                        var safeIdx = Math.Min(idx, gridRef.Children.Count);
-                        gridRef.Children.Insert(safeIdx, cardRef);
-                    }, Avalonia.Threading.DispatcherPriority.ApplicationIdle);
-                }
-            }
-        }
+        // Keep both cards in the visual tree on startup. Deferring the second
+        // card on mobile made first launch flaky when ApplicationIdle was delayed.
     }
 
     private void ApplyResponsiveLayout(bool isCompact)

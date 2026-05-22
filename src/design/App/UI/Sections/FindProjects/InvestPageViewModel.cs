@@ -14,6 +14,7 @@ using App.UI.Shared;
 using App.UI.Shared.PaymentFlow;
 using ProjectType = App.UI.Shared.ProjectType;
 using App.UI.Shared.Services;
+using App.UI.Shell;
 using Microsoft.Extensions.Logging;
 using MonitorOp = Angor.Sdk.Funding.Investor.Operations.MonitorAddressForFunds;
 
@@ -111,11 +112,13 @@ public partial class InvestPageViewModel : ReactiveObject, IDisposable
     private readonly IWalletAppService _walletAppService;
     private readonly IInvestmentAppService _investmentAppService;
     private readonly IBoltzSwapService _boltzSwapService;
+    private readonly IBoltzSwapStorageService _swapStorageService;
     private readonly PortfolioViewModel _portfolioVm;
     private readonly ICurrencyService _currencyService;
     private readonly IWalletContext _walletContext;
     private readonly Func<BitcoinNetwork> _getNetwork;
     private readonly ILogger<InvestPageViewModel> _logger;
+    private readonly PrototypeSettings _prototypeSettings;
     private readonly CompositeDisposable _disposables = new();
     // ── Project Reference ──
     public ProjectItemViewModel Project { get; }
@@ -247,20 +250,24 @@ public partial class InvestPageViewModel : ReactiveObject, IDisposable
         IWalletAppService walletAppService,
         IInvestmentAppService investmentAppService,
         IBoltzSwapService boltzSwapService,
+        IBoltzSwapStorageService swapStorageService,
         PortfolioViewModel portfolioVm,
         ICurrencyService currencyService,
         IWalletContext walletContext,
         Func<BitcoinNetwork> getNetwork,
+        PrototypeSettings prototypeSettings,
         ILogger<InvestPageViewModel> logger)
     {
         Project = project;
         _walletAppService = walletAppService;
         _investmentAppService = investmentAppService;
         _boltzSwapService = boltzSwapService;
+        _swapStorageService = swapStorageService;
         _portfolioVm = portfolioVm;
         _currencyService = currencyService;
         _walletContext = walletContext;
         _getNetwork = getNetwork;
+        _prototypeSettings = prototypeSettings;
         _logger = logger;
 
         _logger.LogInformation("InvestPageViewModel created for project '{ProjectName}' (ID: {ProjectId}, Type: {ProjectType})",
@@ -714,10 +721,12 @@ public partial class InvestPageViewModel : ReactiveObject, IDisposable
             _walletAppService,
             _investmentAppService,
             _boltzSwapService,
+            _swapStorageService,
             _walletContext,
             _currencyService,
             _getNetwork,
             _logger,
+            _prototypeSettings,
             config);
     }
 

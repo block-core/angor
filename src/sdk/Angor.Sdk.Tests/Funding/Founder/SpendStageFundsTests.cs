@@ -74,7 +74,7 @@ public class SpendStageFundsTests
         var request = new SpendStageFunds.SpendStageFundsRequest(
             new WalletId("wallet-1"),
             new ProjectId("project-1"),
-            new FeeEstimation { Confirmations = 1, FeeRate = 10 },
+            new FeeEstimation { Confirmations = 1, FeeRate = 10_000 },
             toSpend);
 
         // Act
@@ -231,7 +231,7 @@ public class SpendStageFundsTests
                 It.IsAny<IEnumerable<string>>(),
                 It.IsAny<int>(),
                 It.IsAny<Blockcore.Consensus.ScriptInfo.Script>(),
-                It.IsAny<string>(),
+                It.IsAny<AngorKey>(),
                 It.IsAny<FeeEstimation>()))
             .Returns(new Angor.Shared.Models.TransactionInfo
             {
@@ -258,7 +258,7 @@ public class SpendStageFundsTests
         return new SpendStageFunds.SpendStageFundsRequest(
             new WalletId("wallet-1"),
             new ProjectId("project-1"),
-            new FeeEstimation { Confirmations = 1, FeeRate = 10 },
+            new FeeEstimation { Confirmations = 1, FeeRate = 10_000 },
             toSpend);
     }
 
@@ -322,6 +322,6 @@ public class SpendStageFundsTests
 
         _mockDerivationOperations
             .Setup(x => x.DeriveFounderPrivateKey(It.IsAny<WalletWords>(), It.IsAny<int>()))
-            .Returns(new Key());
+            .Returns(AngorKey.From(new Key()));
     }
 }

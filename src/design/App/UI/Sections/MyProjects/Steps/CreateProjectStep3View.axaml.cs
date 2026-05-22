@@ -321,8 +321,9 @@ public partial class CreateProjectStep3View : UserControl
             var selectedWallet = walletContext.SelectedWallet;
             if (selectedWallet == null)
             {
-                _logger.LogWarning("No wallet selected for Blossom auth");
-                return null;
+                _logger.LogWarning(
+                    "No wallet selected for Blossom auth, using an ephemeral key for this upload only");
+                return BlossomAuthKeyHelper.CreateEphemeralPrivateKeyHex();
             }
 
             var seedwordsProvider = App.Services.GetRequiredService<ISeedwordsProvider>();

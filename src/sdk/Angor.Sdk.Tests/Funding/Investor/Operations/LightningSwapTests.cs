@@ -65,7 +65,7 @@ public class CreateLightningSwapTests
             .ReturnsAsync(Result.Success(expectedSwap));
 
         _mockSwapStorageService
-            .Setup(x => x.SaveSwapAsync(It.IsAny<BoltzSubmarineSwap>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(x => x.SaveSwapAsync(It.IsAny<BoltzSubmarineSwap>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long>()))
             .ReturnsAsync(Result.Success());
 
         var request = new CreateLightningSwap.CreateLightningSwapRequest(
@@ -143,7 +143,7 @@ public class CreateLightningSwapTests
             .ReturnsAsync(Result.Success(expectedSwap));
 
         _mockSwapStorageService
-            .Setup(x => x.SaveSwapAsync(It.IsAny<BoltzSubmarineSwap>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(x => x.SaveSwapAsync(It.IsAny<BoltzSubmarineSwap>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long>()))
             .ReturnsAsync(Result.Success());
 
         var request = new CreateLightningSwap.CreateLightningSwapRequest(
@@ -190,7 +190,7 @@ public class CreateLightningSwapTests
             .ReturnsAsync(Result.Success(expectedSwap));
 
         _mockSwapStorageService
-            .Setup(x => x.SaveSwapAsync(It.IsAny<BoltzSubmarineSwap>(), It.IsAny<string>(), It.IsAny<string>()))
+            .Setup(x => x.SaveSwapAsync(It.IsAny<BoltzSubmarineSwap>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long>()))
             .ReturnsAsync(Result.Success());
 
         var request = new CreateLightningSwap.CreateLightningSwapRequest(

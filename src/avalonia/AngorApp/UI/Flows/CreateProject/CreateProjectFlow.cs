@@ -194,7 +194,7 @@ namespace AngorApp.UI.Flows.CreateProject
             project.PenaltyDays = 0;
 
             project.PayoutFrequency = PayoutFrequency.Monthly;
-            project.MonthlyPayoutDate = DateTime.Now.Day;
+            project.MonthlyPayoutDate = DateTime.UtcNow.Day;
 
             // Pick reasonable default installment patterns (3-month and 6-month).
             project.SelectedInstallments.SelectionModel.Clear();
@@ -210,14 +210,14 @@ namespace AngorApp.UI.Flows.CreateProject
             project.Website = "https://angor.io";
             project.TargetAmount = AmountUI.FromBtc(0.01);
             project.PenaltyDays = 0;
-            project.StartDate = DateTime.Now.Date;
-            project.FundingEndDate = DateTime.Now.Date;
-            project.ExpiryDate = DateTime.Now.Date.AddDays(31);
+            project.StartDate = DateTime.UtcNow.Date;
+            project.FundingEndDate = DateTime.UtcNow.Date;
+            project.ExpiryDate = DateTime.UtcNow.Date.AddDays(31);
 
             // Add stages with dates matching the funding end date for immediate release
-            project.CreateAndAddStage(0.10m, DateTime.Now.Date);
-            project.CreateAndAddStage(0.30m, DateTime.Now.Date);
-            project.CreateAndAddStage(0.60m, DateTime.Now.Date);
+            project.CreateAndAddStage(0.10m, DateTime.UtcNow.Date);
+            project.CreateAndAddStage(0.30m, DateTime.UtcNow.Date);
+            project.CreateAndAddStage(0.60m, DateTime.UtcNow.Date);
         }
 
         private async Task<Result<ProjectSeedDto>> GetProjectSeed(WalletId walletId)

@@ -55,7 +55,7 @@ public static class ReleaseFunds
             
             foreach (var payload in decryptResult.Value)
             {
-                var result = await PerformReleaseSignature(payload, nostrPrivateKeyHex, Encoders.Hex.EncodeData(key.ToBytes()), projectResult.Value.ToProjectInfo());
+                var result = await PerformReleaseSignature(payload, nostrPrivateKeyHex, key, projectResult.Value.ToProjectInfo());
                 
                 if (result.IsFailure)
                     failedSignatures.AppendLine(result.Error);;
@@ -144,12 +144,12 @@ public static class ReleaseFunds
             return Result.Success(list);
         }
 
-        private async Task<Result> PerformReleaseSignature(Payload payload, string nostrFounderPrivateKeyHex, string founderRecoveryPrivateKeyHex, ProjectInfo projectInfo)
+        private async Task<Result> PerformReleaseSignature(Payload payload, string nostrFounderPrivateKeyHex, AngorKey founderRecoveryPrivateKey, ProjectInfo projectInfo)
         {
             try
             {
                 var signatureInfo = CreateReleaseSignatures(payload.SignRecoveryRequest.InvestmentTransactionHex,
-                    projectInfo, founderRecoveryPrivateKeyHex,
+                    projectInfo, founderRecoveryPrivateKey,
                     payload.SignRecoveryRequest.UnfundedReleaseAddress ?? payload.SignRecoveryRequest.UnfundedReleaseKey);
 
                 var sigJson = serializer.Serialize(signatureInfo);
@@ -169,7 +169,7 @@ public static class ReleaseFunds
             }
         }
 
-        private SignatureInfo CreateReleaseSignatures(string transactionHex, ProjectInfo info, string founderSigningPrivateKey, string investorReleaseAddress)
+        private SignatureInfo CreateReleaseSignatures(string transactionHex, ProjectInfo info, AngorKey founderSigningPrivateKey, string investorReleaseAddress)
     {
         var investorTrx = networkConfiguration.GetNetwork().CreateTransaction(transactionHex);
 

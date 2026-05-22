@@ -5,33 +5,51 @@ namespace App.UI.Sections.MyProjects.Steps;
 
 public partial class CreateProjectStep1View : UserControl
 {
-    // Type card elements — each card has: border, radio check indicator
-    private Border[] _typeCards = [];
+    // Type card elements — each card has: button, radio check indicator
+    private Button[] _typeCards = [];
     private Viewbox[] _radioChecks = [];
     private string? _selectedType;
 
     public CreateProjectStep1View()
     {
         InitializeComponent();
+        AddHandler(Button.ClickEvent, OnButtonClick);
     }
 
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
         ResolveNamedElements();
-        // Apply initial unselected styles so cards don't flash with XAML defaults
         ApplyTypeCardStyles();
     }
 
     private CreateProjectViewModel? Vm => DataContext as CreateProjectViewModel;
 
+    private void OnButtonClick(object? sender, RoutedEventArgs e)
+    {
+        if (e.Source is not Button btn) return;
+
+        var typeNames = new Dictionary<string, string>
+        {
+            ["TypeInvestCard"] = "investment",
+            ["TypeFundCard"] = "fund",
+            ["TypeSubscriptionCard"] = "subscription",
+        };
+
+        if (btn.Name != null && typeNames.TryGetValue(btn.Name, out var typeName))
+        {
+            Vm?.SelectProjectType(typeName);
+            HighlightTypeCard(typeName);
+        }
+    }
+
     private void ResolveNamedElements()
     {
         _typeCards =
         [
-            this.FindControl<Border>("TypeInvestCard")!,
-            this.FindControl<Border>("TypeFundCard")!,
-            this.FindControl<Border>("TypeSubscriptionCard")!,
+            this.FindControl<Button>("TypeInvestCard")!,
+            this.FindControl<Button>("TypeFundCard")!,
+            this.FindControl<Button>("TypeSubscriptionCard")!,
         ];
         _radioChecks =
         [
@@ -39,18 +57,6 @@ public partial class CreateProjectStep1View : UserControl
             this.FindControl<Viewbox>("RadioCheckFund")!,
             this.FindControl<Viewbox>("RadioCheckSub")!,
         ];
-
-        // Wire up PointerPressed on type cards (Border, not Button)
-        var typeNames = new[] { "investment", "fund", "subscription" };
-        for (int i = 0; i < _typeCards.Length; i++)
-        {
-            var typeName = typeNames[i];
-            _typeCards[i].PointerPressed += (_, _) =>
-            {
-                Vm?.SelectProjectType(typeName);
-                HighlightTypeCard(typeName);
-            };
-        }
     }
 
     #region Type Cards

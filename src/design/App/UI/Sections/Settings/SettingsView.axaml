@@ -40,18 +40,22 @@
 
         <!-- Settings default-toggle checkbox: unchecked state -->
         <!-- Vue: 24x24, border 2px #e5e7eb / dark #404040, bg white / dark #2a2a2a, border-radius 4px -->
-        <Style Selector="Border.SettingsCheckbox">
+        <Style Selector="Button.SettingsCheckbox /template/ Border">
             <Setter Property="Background" Value="{DynamicResource SettingsCheckboxBg}" />
             <Setter Property="BorderBrush" Value="{DynamicResource SettingsCheckboxBorder}" />
         </Style>
         <!-- Vue: active → bg #4B7C5A, border #4B7C5A (same in both themes) -->
-        <Style Selector="Border.SettingsCheckbox.SettingsCheckboxChecked">
+        <Style Selector="Button.SettingsCheckbox.SettingsCheckboxChecked /template/ Border">
             <Setter Property="Background" Value="{DynamicResource PrimaryGreenBrush}" />
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
         </Style>
         <!-- Vue: hover → border-color #4B7C5A -->
-        <Style Selector="Border.SettingsCheckbox:pointerover">
+        <Style Selector="Button.SettingsCheckbox:pointerover /template/ Border">
             <Setter Property="BorderBrush" Value="{DynamicResource PrimaryGreenBrush}" />
+        </Style>
+        <Style Selector="CheckBox.NetworkConfirmCheckbox /template/ Border#NormalRectangle">
+            <Setter Property="BorderBrush" Value="{DynamicResource StrokeSubtle}" />
+            <Setter Property="BorderThickness" Value="2" />
         </Style>
     </UserControl.Styles>
 
@@ -284,8 +288,8 @@
                                                                Foreground="#EF4444" />
                                                     </Button>
                                                     <!-- Default toggle -->
-                                                    <Border DockPanel.Dock="Right"
-                                                            Classes="SettingsCheckbox"
+                                                    <Button DockPanel.Dock="Right"
+                                                            Classes="Unstyled SettingsCheckbox"
                                                             Classes.SettingsCheckboxChecked="{Binding IsDefault}"
                                                             Margin="12,0"
                                                             Width="24" Height="24"
@@ -293,7 +297,7 @@
                                                             BorderThickness="2"
                                                             VerticalAlignment="Center"
                                                             Cursor="Hand"
-                                                            PointerPressed="OnToggleDefaultIndexer">
+                                                            Click="OnToggleDefaultIndexerClick">
                                                         <Path Data="{StaticResource Checkmark}"
                                                               Stroke="White"
                                                               StrokeThickness="2"
@@ -303,7 +307,7 @@
                                                               IsVisible="{Binding IsDefault}"
                                                               HorizontalAlignment="Center"
                                                               VerticalAlignment="Center" />
-                                                    </Border>
+                                                    </Button>
                                                     <!-- Status badge -->
                                                     <Border DockPanel.Dock="Right"
                                                             Margin="12,0"
@@ -523,29 +527,71 @@
                         </Border>
                         <Border Padding="24">
                             <StackPanel Spacing="20">
-                                <TextBlock Text="Download a backup of your account (seed) so you never lose access."
+                                <TextBlock Text="Your wallet seed phrase is the only way to recover your funds. Keep it safe and never share it with anyone."
                                            FontSize="14"
                                            Foreground="{DynamicResource TextMuted}"
                                            TextWrapping="Wrap" />
-                                <!-- Vue: green gradient action button -->
-                                <Button HorizontalAlignment="Left"
-                                        Classes="MobileAction"
-                                        Padding="20,14"
-                                        Background="{DynamicResource GreenGradient}"
-                                        Foreground="White"
-                                        BorderThickness="0"
+
+                                <!-- Seed phrase display (visible after reveal) -->
+                                <Border IsVisible="{Binding SeedWordsVisible}"
+                                        Background="{DynamicResource CreateWalletSeedBg}"
+                                        BorderBrush="{DynamicResource CreateWalletSeedBorder}"
+                                        BorderThickness="1"
                                         CornerRadius="8"
-                                        FontWeight="SemiBold"
-                                        FontSize="14"
-                                        IsEnabled="False"
-                                        Opacity="0.5">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <i:Icon Value="fa-solid fa-key"
-                                               FontSize="16"
-                                               Foreground="White" />
-                                        <TextBlock Text="Download Backup (Coming Soon)" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Button>
+                                        Padding="16">
+                                    <SelectableTextBlock Text="{Binding SeedWords}"
+                                               FontSize="14"
+                                               FontFamily="Cascadia Mono, Consolas, monospace"
+                                               Foreground="{DynamicResource CreateWalletSeedText}"
+                                               TextWrapping="Wrap"
+                                               TextAlignment="Center" />
+                                </Border>
+
+                                <StackPanel Spacing="12">
+                                    <!-- Show/Hide Seed Words button -->
+                                    <Button Name="BtnRevealSeed"
+                                            Click="OnRevealSeedClick"
+                                            HorizontalAlignment="Left"
+                                            Classes="MobileAction"
+                                            Padding="20,14"
+                                            Background="{DynamicResource CreateWalletAmberBtnBg}"
+                                            Foreground="White"
+                                            BorderThickness="0"
+                                            CornerRadius="8"
+                                            FontWeight="SemiBold"
+                                            FontSize="14"
+                                            Cursor="Hand">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <i:Icon Value="fa-solid fa-eye"
+                                                   FontSize="16"
+                                                   Foreground="White" />
+                                            <TextBlock Name="RevealSeedText" Text="Show Seed Words"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+
+                                    <!-- Download Seed button (visible after reveal) -->
+                                    <Button Name="BtnDownloadBackup"
+                                            Click="OnDownloadBackupClick"
+                                            IsVisible="{Binding SeedWordsVisible}"
+                                            HorizontalAlignment="Left"
+                                            Classes="MobileAction"
+                                            Padding="20,14"
+                                            Background="{DynamicResource GreenGradient}"
+                                            Foreground="White"
+                                            BorderThickness="0"
+                                            CornerRadius="8"
+                                            FontWeight="SemiBold"
+                                            FontSize="14"
+                                            Cursor="Hand">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <i:Icon Value="fa-solid fa-download"
+                                                   FontSize="16"
+                                                   Foreground="White" />
+                                            <TextBlock Text="Download Seed" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -761,9 +807,10 @@
                     </Transitions>
                 </Border.Transitions>
 
-                <StackPanel>
+                <Grid RowDefinitions="Auto,*,Auto">
                     <!-- Modal header: Vue .modal-header -->
                     <Border Name="NetworkModalHeader"
+                            Grid.Row="0"
                             BorderBrush="{DynamicResource Stroke}"
                             BorderThickness="0,0,0,1"
                             Padding="24">
@@ -790,8 +837,9 @@
                     </Border>
 
                     <!-- Modal content -->
-                    <Border Name="NetworkModalBody" Padding="24">
-                        <StackPanel Name="NetworkModalBodyStack" Spacing="20">
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <Border Name="NetworkModalBody" Padding="24">
+                            <StackPanel Name="NetworkModalBodyStack" Spacing="20">
                             <!-- Warning banner: Vue .network-warning-container -->
                             <Border Background="{DynamicResource NetworkWarningBg}"
                                     BorderBrush="{DynamicResource NetworkWarningBorder}"
@@ -924,7 +972,8 @@
 
                             <!-- Confirmation checkbox: Vue .network-confirmation-checkbox -->
                             <DockPanel Name="NetworkConfirmationRow">
-                                <CheckBox IsChecked="{Binding NetworkChangeConfirmed, Mode=TwoWay}"
+                                <CheckBox Classes="NetworkConfirmCheckbox"
+                                          IsChecked="{Binding NetworkChangeConfirmed, Mode=TwoWay}"
                                           DockPanel.Dock="Left"
                                           Margin="0,0,12,0"
                                           VerticalAlignment="Top" />
@@ -935,11 +984,13 @@
                                            LineHeight="21"
                                            VerticalAlignment="Top" />
                             </DockPanel>
-                        </StackPanel>
-                    </Border>
+                            </StackPanel>
+                        </Border>
+                    </ScrollViewer>
 
                     <!-- Modal footer: Vue .modal-footer -->
                     <Border Name="NetworkModalFooter"
+                            Grid.Row="2"
                             BorderBrush="{DynamicResource Stroke}"
                             BorderThickness="0,1,0,0"
                             Padding="24,20">
@@ -980,7 +1031,7 @@
                             </Button>
                         </StackPanel>
                     </Border>
-                </StackPanel>
+                </Grid>
             </Border>
         </Border>
 
