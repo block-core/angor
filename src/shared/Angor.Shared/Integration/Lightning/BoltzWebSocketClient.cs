@@ -71,7 +71,12 @@ public class BoltzWebSocketClient : IBoltzWebSocketClient, IAsyncDisposable
 
                 await SubscribeToSwap(swapId, linkedCts.Token);
 
-                return await ReceiveUpdatesUntilComplete(swapId, linkedCts.Token);
+                var result = await ReceiveUpdatesUntilComplete(swapId, linkedCts.Token);
+                if (result.IsSuccess)
+                    return result;
+
+                // Connection ended unexpectedly — fall through to reconnect
+                throw new WebSocketException(result.Error);
             }
             catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested)
             {
@@ -176,7 +181,7 @@ public class BoltzWebSocketClient : IBoltzWebSocketClient, IAsyncDisposable
             }
         }
 
-        throw new WebSocketException("WebSocket connection ended unexpectedly");
+        return Result.Failure<BoltzSwapStatus>("WebSocket connection ended unexpectedly");
     }
 
     private BoltzSwapStatus? ProcessMessage(string swapId, string message)
