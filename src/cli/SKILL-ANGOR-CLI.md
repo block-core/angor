@@ -1,5 +1,7 @@
 # Angor CLI / MCP Server — AI Agent Skill
 
+> **WARNING: EXPERIMENTAL** — This CLI and MCP server are experimental. Commands and tools may change, break, or produce unexpected results without notice. Do not rely on this for production workflows.
+
 ## What This Is
 
 The Angor CLI is a headless .NET console app at `src/cli/Angor.Cli/` that exposes the full Angor SDK as both a command-line tool and an MCP (Model Context Protocol) server. Use it to manage wallets, browse projects, invest, recover funds, and more — all without a GUI.
