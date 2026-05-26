@@ -135,6 +135,20 @@ public class MainActivity : AvaloniaMainActivity
         GetLogger()?.LogInformation("Lifecycle: OnNewIntent action={Action} flags={Flags}", intent?.Action, intent?.Flags);
     }
 
+    public override bool DispatchKeyEvent(KeyEvent? e)
+    {
+        if (e?.KeyCode == Keycode.Back)
+        {
+            if (e.Action == KeyEventActions.Down && CanHandleShellBack())
+                return true;
+
+            if (e.Action == KeyEventActions.Up && TryHandleShellBack())
+                return true;
+        }
+
+        return base.DispatchKeyEvent(e);
+    }
+
     public override void OnBackPressed()
     {
         if (_handlingPlatformBack)
@@ -143,14 +157,28 @@ public class MainActivity : AvaloniaMainActivity
             return;
         }
 
-        Dispatcher.UIThread.Post(() =>
-        {
-            if (ShellService.TryHandlePlatformBack()) return;
+        if (TryHandleShellBack())
+            return;
 
-            _handlingPlatformBack = true;
-            OnBackPressed();
-            _handlingPlatformBack = false;
-        });
+        _handlingPlatformBack = true;
+        base.OnBackPressed();
+        _handlingPlatformBack = false;
+    }
+
+    private static bool CanHandleShellBack()
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+            return ShellService.CanHandlePlatformBack();
+
+        return Dispatcher.UIThread.InvokeAsync(ShellService.CanHandlePlatformBack).GetAwaiter().GetResult();
+    }
+
+    private static bool TryHandleShellBack()
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+            return ShellService.TryHandlePlatformBack();
+
+        return Dispatcher.UIThread.InvokeAsync(ShellService.TryHandlePlatformBack).GetAwaiter().GetResult();
     }
 }
 
