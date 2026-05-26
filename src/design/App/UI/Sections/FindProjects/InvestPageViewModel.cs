@@ -715,6 +715,7 @@ public partial class InvestPageViewModel : ReactiveObject, IDisposable
                 await InvestAfterPaymentAsync(walletId, fundingAddress, amount),
             OnPayWithWallet = async (walletId, amount, feeRate) =>
                 await InvestWithWalletAsync(walletId, amount, feeRate),
+            SkipWalletSelectorWhenNoWalletCanPay = true,
         };
 
         return new PaymentFlowViewModel(
