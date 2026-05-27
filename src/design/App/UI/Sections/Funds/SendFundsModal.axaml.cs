@@ -4,6 +4,7 @@ using Avalonia.VisualTree;
 using Angor.Shared.Services;
 using App.UI.Shared;
 using App.UI.Shared.Helpers;
+using App.UI.Shared.Services;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -27,6 +28,12 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
 
     private ICurrencyService CurrencyService =>
         App.Services.GetRequiredService<ICurrencyService>();
+
+    private IBrantaSendValidationService BrantaValidationService =>
+        App.Services.GetRequiredService<IBrantaSendValidationService>();
+
+    private PrototypeSettings PrototypeSettings =>
+        App.Services.GetRequiredService<PrototypeSettings>();
 
     public SendFundsModal()
     {
@@ -122,6 +129,8 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         var shellVm = GetShellVm();
         if (shellVm == null) return;
 
+        if (!await ValidateBrantaAsync()) return;
+
         // Show fee popup (replaces send modal as shell modal content)
         var feeRate = await FeeSelectionPopup.ShowAsync(shellVm);
 
@@ -135,6 +144,25 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         // Re-show the send modal for the send operation
         shellVm.ShowModal(this);
         await SendAsync(feeRate.Value);
+    }
+
+    private async Task<bool> ValidateBrantaAsync()
+    {
+        if (!PrototypeSettings.IsBrantaSendValidationEnabled)
+        {
+            return true;
+        }
+
+        var destination = AddressInput.Text?.Trim() ?? "";
+        var validation = await BrantaValidationService.ValidateAsync(destination);
+        if (validation.IsValid)
+        {
+            return true;
+        }
+
+        AddressError.Text = validation.ErrorMessage ?? "Address failed Branta validation";
+        AddressError.IsVisible = true;
+        return false;
     }
 
     private async Task SendAsync(long feeRate)

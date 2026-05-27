@@ -133,6 +133,16 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
         }
     }
 
+    public bool IsBrantaSendValidationEnabled
+    {
+        get => _prototypeSettings.IsBrantaSendValidationEnabled;
+        set
+        {
+            _prototypeSettings.IsBrantaSendValidationEnabled = value;
+            this.RaisePropertyChanged();
+        }
+    }
+
     public SettingsViewModel(
         INetworkService networkService,
         INetworkConfiguration networkConfig,

@@ -156,6 +156,7 @@ public static class CompositionRoot
         services.AddSingleton(ResolveFaucetOptions());
         services.AddSingleton<IFaucetService, HttpFaucetService>();
         services.AddSingleton<BlossomUploadService>();
+        services.AddSingleton<IBrantaSendValidationService, BrantaSendValidationService>();
         services.AddSingleton<ILogExportService, LogExportService>();
 
         // ── Shared singletons (replaces SharedViewModels static class) ──
