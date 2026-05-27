@@ -6,6 +6,7 @@ using Angor.Sdk.Funding.Founder.Domain;
 using Angor.Sdk.Funding.Founder.Dtos;
 using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
+using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Models;
 using ModelContextProtocol.Server;
@@ -138,6 +139,51 @@ public class FounderTools(IFounderAppService founderService, IProjectAppService 
     {
         var result = await founderService.GetMoonshotProject(
             new GetMoonshotProject.GetMoonshotProjectRequest(eventId));
+        return result.IsSuccess
+            ? JsonSerializer.Serialize(result.Value, JsonOptions)
+            : $"Error: {result.Error}";
+    }
+
+    [McpServerTool, Description("Create a Nostr profile for a new project. Provide project data as JSON string with fields: projectName, description, avatarUri, bannerUri, sats, startDate, targetAmount, penaltyDays, stages (array of {startDate, percentageOfTotal}), projectType (0=Invest, 1=Fund). Returns the profile event ID.")]
+    public async Task<string> FounderCreateProfile(string walletId, string founderKey, string recoveryKey,
+        string nostrPubKey, string projectIdentifier, string projectDataJson)
+    {
+        var project = JsonSerializer.Deserialize<CreateProjectDto>(projectDataJson, JsonOptions);
+        if (project is null)
+            return "Error: Failed to deserialize project data JSON.";
+
+        var seed = new ProjectSeedDto(founderKey, recoveryKey, nostrPubKey, projectIdentifier);
+        var result = await projectService.CreateProjectProfile(new WalletId(walletId), seed, project);
+        return result.IsSuccess
+            ? JsonSerializer.Serialize(new { eventId = result.Value.EventId }, JsonOptions)
+            : $"Error: {result.Error}";
+    }
+
+    [McpServerTool, Description("Publish project info (stages, metadata) to Nostr. Use the same project data JSON as create-profile. Returns the info event ID needed for create-project.")]
+    public async Task<string> FounderCreateInfo(string walletId, string founderKey, string recoveryKey,
+        string nostrPubKey, string projectIdentifier, string projectDataJson)
+    {
+        var project = JsonSerializer.Deserialize<CreateProjectDto>(projectDataJson, JsonOptions);
+        if (project is null)
+            return "Error: Failed to deserialize project data JSON.";
+
+        var seed = new ProjectSeedDto(founderKey, recoveryKey, nostrPubKey, projectIdentifier);
+        var result = await projectService.CreateProjectInfo(new WalletId(walletId), project, seed);
+        return result.IsSuccess
+            ? JsonSerializer.Serialize(new { eventId = result.Value.EventId }, JsonOptions)
+            : $"Error: {result.Error}";
+    }
+
+    [McpServerTool, Description("Create the on-chain Bitcoin project transaction. Requires the info event ID from FounderCreateInfo. Use the same project data JSON. Returns a transaction draft with txId and fee.")]
+    public async Task<string> FounderCreateProject(string walletId, long feeSats, string infoEventId,
+        string founderKey, string recoveryKey, string nostrPubKey, string projectIdentifier, string projectDataJson)
+    {
+        var project = JsonSerializer.Deserialize<CreateProjectDto>(projectDataJson, JsonOptions);
+        if (project is null)
+            return "Error: Failed to deserialize project data JSON.";
+
+        var seed = new ProjectSeedDto(founderKey, recoveryKey, nostrPubKey, projectIdentifier);
+        var result = await projectService.CreateProject(new WalletId(walletId), feeSats, project, infoEventId, seed);
         return result.IsSuccess
             ? JsonSerializer.Serialize(result.Value, JsonOptions)
             : $"Error: {result.Error}";

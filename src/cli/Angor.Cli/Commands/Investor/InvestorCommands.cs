@@ -29,6 +29,9 @@ public static class InvestorCommands
         cmd.AddCommand(BuildCheckSignaturesCommand(investorService, jsonOptions));
         cmd.AddCommand(BuildSubmitTxCommand(investorService, jsonOptions));
         cmd.AddCommand(BuildGetNsecCommand(investorService, jsonOptions));
+        cmd.AddCommand(BuildNotifyFounderCommand(services, jsonOptions));
+        cmd.AddCommand(BuildGetInvestorKeyCommand(services, jsonOptions));
+        cmd.AddCommand(BuildRegisterInvestmentCommand(services, jsonOptions));
 
         return cmd;
     }
@@ -39,13 +42,15 @@ public static class InvestorCommands
         var projectIdOption = new Option<string>("--project-id", "Project ID") { IsRequired = true };
         var amountOption = new Option<long>("--amount", "Amount to invest in sats") { IsRequired = true };
         var feeRateOption = new Option<long>("--fee-rate", "Fee rate in sat/vB") { IsRequired = true };
+        var patternIdOption = new Option<byte?>("--pattern-id", "Pattern ID for Fund/Subscribe projects (0-255)");
 
-        var cmd = new Command("build-draft", "Build an investment transaction draft") { walletIdOption, projectIdOption, amountOption, feeRateOption };
-        cmd.SetHandler(async (string walletId, string projectId, long amount, long feeRate) =>
+        var cmd = new Command("build-draft", "Build an investment transaction draft") { walletIdOption, projectIdOption, amountOption, feeRateOption, patternIdOption };
+        cmd.SetHandler(async (string walletId, string projectId, long amount, long feeRate, byte? patternId) =>
         {
             var result = await investorService.BuildInvestmentDraft(
                 new BuildInvestmentDraft.BuildInvestmentDraftRequest(
-                    new WalletId(walletId), new ProjectId(projectId), new Amount(amount), new DomainFeerate(feeRate)));
+                    new WalletId(walletId), new ProjectId(projectId), new Amount(amount), new DomainFeerate(feeRate),
+                    PatternId: patternId));
 
             if (result.IsFailure)
             {
@@ -54,7 +59,7 @@ public static class InvestorCommands
             }
 
             Console.WriteLine(JsonSerializer.Serialize(result.Value, jsonOptions));
-        }, walletIdOption, projectIdOption, amountOption, feeRateOption);
+        }, walletIdOption, projectIdOption, amountOption, feeRateOption, patternIdOption);
         return cmd;
     }
 
@@ -305,16 +310,40 @@ public static class InvestorCommands
         var feeOption = new Option<long>("--fee", "Transaction fee in sats") { IsRequired = true };
         var walletIdOption = new Option<string?>("--wallet-id", "Wallet ID (optional)");
         var projectIdOption = new Option<string?>("--project-id", "Project ID (optional)");
+        var investorKeyOption = new Option<string?>("--investor-key", "Investor public key (required for investment txs to notify founder via Nostr)");
+        var amountOption = new Option<long?>("--amount", "Investment amount in sats (for investment txs)");
 
-        var cmd = new Command("submit-tx", "Submit a signed investor transaction") { txHexOption, txIdOption, feeOption, walletIdOption, projectIdOption };
-        cmd.SetHandler(async (string txHex, string txId, long fee, string? walletId, string? projectId) =>
+        var cmd = new Command("submit-tx", "Submit a signed investor transaction") { txHexOption, txIdOption, feeOption, walletIdOption, projectIdOption, investorKeyOption, amountOption };
+        cmd.SetHandler(async context =>
         {
-            var draft = new TransactionDraft
+            var txHex = context.ParseResult.GetValueForOption(txHexOption)!;
+            var txId = context.ParseResult.GetValueForOption(txIdOption)!;
+            var fee = context.ParseResult.GetValueForOption(feeOption);
+            var walletId = context.ParseResult.GetValueForOption(walletIdOption);
+            var projectId = context.ParseResult.GetValueForOption(projectIdOption);
+            var investorKey = context.ParseResult.GetValueForOption(investorKeyOption);
+            var amount = context.ParseResult.GetValueForOption(amountOption);
+
+            TransactionDraft draft;
+            if (!string.IsNullOrEmpty(investorKey))
             {
-                SignedTxHex = txHex,
-                TransactionId = txId,
-                TransactionFee = new Amount(fee)
-            };
+                draft = new Angor.Sdk.Funding.Shared.TransactionDrafts.InvestmentDraft(investorKey)
+                {
+                    SignedTxHex = txHex,
+                    TransactionId = txId,
+                    TransactionFee = new Amount(fee),
+                    InvestedAmount = new Amount(amount ?? 0)
+                };
+            }
+            else
+            {
+                draft = new TransactionDraft
+                {
+                    SignedTxHex = txHex,
+                    TransactionId = txId,
+                    TransactionFee = new Amount(fee)
+                };
+            }
 
             var result = await investorService.SubmitTransactionFromDraft(
                 new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(
@@ -327,7 +356,7 @@ public static class InvestorCommands
             }
 
             Console.WriteLine($"Transaction published: {result.Value.TransactionId}");
-        }, txHexOption, txIdOption, feeOption, walletIdOption, projectIdOption);
+        });
         return cmd;
     }
 
@@ -350,6 +379,127 @@ public static class InvestorCommands
 
             Console.WriteLine(result.Value.Nsec);
         }, walletIdOption, founderKeyOption);
+        return cmd;
+    }
+
+    private static Command BuildNotifyFounderCommand(IServiceProvider services, JsonSerializerOptions jsonOptions)
+    {
+        var mediator = services.GetRequiredService<MediatR.IMediator>();
+        var walletIdOption = new Option<string>("--wallet-id", "Wallet ID") { IsRequired = true };
+        var projectIdOption = new Option<string>("--project-id", "Project ID") { IsRequired = true };
+        var txIdOption = new Option<string>("--tx-id", "Transaction ID") { IsRequired = true };
+        var investorKeyOption = new Option<string>("--investor-key", "Investor public key") { IsRequired = true };
+
+        var cmd = new Command("notify-founder", "Send Nostr notification to founder about an investment (use when submit-tx was done without --investor-key)")
+        {
+            walletIdOption, projectIdOption, txIdOption, investorKeyOption
+        };
+        cmd.SetHandler(async (string walletId, string projectId, string txId, string investorKey) =>
+        {
+            var draft = new Angor.Sdk.Funding.Shared.TransactionDrafts.InvestmentDraft(investorKey)
+            {
+                TransactionId = txId,
+                SignedTxHex = "N/A", // Not needed for notification
+                TransactionFee = new Amount(0)
+            };
+
+            var result = await mediator.Send(
+                new NotifyFounderOfInvestment.NotifyFounderOfInvestmentRequest(
+                    new WalletId(walletId), new ProjectId(projectId), draft));
+
+            if (result.IsFailure)
+            {
+                Console.Error.WriteLine($"Error: {result.Error}");
+                return;
+            }
+
+            Console.WriteLine(JsonSerializer.Serialize(new
+            {
+                eventId = result.Value.EventId,
+                eventTime = result.Value.EventTime
+            }, jsonOptions));
+        }, walletIdOption, projectIdOption, txIdOption, investorKeyOption);
+        return cmd;
+    }
+
+    private static Command BuildGetInvestorKeyCommand(IServiceProvider services, JsonSerializerOptions jsonOptions)
+    {
+        var seedwordsProvider = services.GetRequiredService<Angor.Sdk.Common.ISeedwordsProvider>();
+        var derivationOperations = services.GetRequiredService<Angor.Shared.IDerivationOperations>();
+        var projectService = services.GetRequiredService<Angor.Sdk.Funding.Services.IProjectService>();
+
+        var walletIdOption = new Option<string>("--wallet-id", "Wallet ID") { IsRequired = true };
+        var projectIdOption = new Option<string>("--project-id", "Project ID") { IsRequired = true };
+
+        var cmd = new Command("get-investor-key", "Derive the investor public key for a wallet+project pair")
+        {
+            walletIdOption, projectIdOption
+        };
+        cmd.SetHandler(async (string walletId, string projectId) =>
+        {
+            var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(walletId);
+            if (sensitiveDataResult.IsFailure)
+            {
+                Console.Error.WriteLine($"Error: {sensitiveDataResult.Error}");
+                return;
+            }
+
+            var walletWords = sensitiveDataResult.Value.ToWalletWords();
+            var projectResult = await projectService.GetAsync(new ProjectId(projectId));
+            if (projectResult.IsFailure)
+            {
+                Console.Error.WriteLine($"Error: {projectResult.Error}");
+                return;
+            }
+
+            var investorKey = derivationOperations.DeriveInvestorKey(walletWords, projectResult.Value.FounderKey);
+            Console.WriteLine(investorKey);
+        }, walletIdOption, projectIdOption);
+        return cmd;
+    }
+
+    private static Command BuildRegisterInvestmentCommand(IServiceProvider services, JsonSerializerOptions jsonOptions)
+    {
+        var portfolioService = services.GetRequiredService<Angor.Sdk.Funding.Investor.Domain.IPortfolioService>();
+
+        var walletIdOption = new Option<string>("--wallet-id", "Wallet ID") { IsRequired = true };
+        var projectIdOption = new Option<string>("--project-id", "Project ID") { IsRequired = true };
+        var txIdOption = new Option<string>("--tx-id", "Investment transaction ID") { IsRequired = true };
+        var txHexOption = new Option<string?>("--tx-hex", "Investment transaction hex (optional)");
+        var investorKeyOption = new Option<string>("--investor-key", "Investor public key") { IsRequired = true };
+        var amountOption = new Option<long>("--amount", "Invested amount in sats") { IsRequired = true };
+
+        var cmd = new Command("register-investment", "Register an existing investment in the local portfolio (for recovery/release flows)")
+        {
+            walletIdOption, projectIdOption, txIdOption, txHexOption, investorKeyOption, amountOption
+        };
+        cmd.SetHandler(async context =>
+        {
+            var walletId = context.ParseResult.GetValueForOption(walletIdOption)!;
+            var projectId = context.ParseResult.GetValueForOption(projectIdOption)!;
+            var txId = context.ParseResult.GetValueForOption(txIdOption)!;
+            var txHex = context.ParseResult.GetValueForOption(txHexOption);
+            var investorKey = context.ParseResult.GetValueForOption(investorKeyOption)!;
+            var amount = context.ParseResult.GetValueForOption(amountOption);
+
+            var record = new Angor.Sdk.Funding.Investor.Domain.InvestmentRecord
+            {
+                ProjectIdentifier = projectId,
+                InvestmentTransactionHash = txId,
+                InvestmentTransactionHex = txHex,
+                InvestorPubKey = investorKey,
+                InvestedAmountSats = amount
+            };
+
+            var result = await portfolioService.AddOrUpdate(walletId, record);
+            if (result.IsFailure)
+            {
+                Console.Error.WriteLine($"Error: {result.Error}");
+                return;
+            }
+
+            Console.WriteLine($"Investment registered for project {projectId}");
+        });
         return cmd;
     }
 }
