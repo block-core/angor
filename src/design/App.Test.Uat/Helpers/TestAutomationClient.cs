@@ -341,6 +341,27 @@ public sealed class TestAutomationClient : IDisposable
         return await PostAsync<WaitForDeployPaymentResponse>("/flows/wait-for-deploy-payment", request, ct);
     }
 
+    public async Task<SendFundsResponse> SendFundsAsync(
+        SendFundsRequest request,
+        CancellationToken ct = default)
+    {
+        return await PostAsync<SendFundsResponse>("/flows/send-funds", request, ct);
+    }
+
+    public async Task<GetReceiveAddressResponse> GetReceiveAddressAsync(
+        GetReceiveAddressRequest request,
+        CancellationToken ct = default)
+    {
+        return await PostAsync<GetReceiveAddressResponse>("/flows/get-receive-address", request, ct);
+    }
+
+    public async Task<GetBalanceResponse> GetBalanceAsync(
+        GetBalanceRequest request,
+        CancellationToken ct = default)
+    {
+        return await PostAsync<GetBalanceResponse>("/flows/get-balance", request, ct);
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // HTTP Helpers
     // ═══════════════════════════════════════════════════════════════════
