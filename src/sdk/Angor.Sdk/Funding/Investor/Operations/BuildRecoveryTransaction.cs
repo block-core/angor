@@ -61,6 +61,15 @@ public static class BuildRecoveryTransaction
 
             var investmentTransaction = networkConfiguration.GetNetwork().CreateTransaction(investment.InvestmentTransactionHex);
 
+            // Direct investments (below threshold) skip the founder approval handshake,
+            // so there are no recovery signatures available. Recovery requires founder signatures
+            // that are only generated during the approval flow.
+            // Direct investments can use end-of-project claim after the project expires instead.
+            if (investment.RequestEventTime is null || investment.RequestEventId is null)
+                return Result.Failure<BuildRecoveryTransactionResponse>(
+                    "Recovery is not available for direct investments (below threshold). " +
+                    "Use end-of-project claim after the project expires, or ask the founder to release funds.");
+
             var signatureLookup = await LookupFounderSignatures(request.WalletId.Value, project.Value, investment.RequestEventTime.Value, investment.RequestEventId,
               investmentTransaction);
 
