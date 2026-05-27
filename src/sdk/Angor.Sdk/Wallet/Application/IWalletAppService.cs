@@ -36,4 +36,7 @@ public interface IWalletAppService
 
     /// <summary>Restore a wallet from the encrypted store using secure storage for decryption.</summary>
     Task<Result<WalletId>> RestoreStoredWallet(string walletId, string walletName, BitcoinNetwork network);
+
+    /// <summary>Delete encrypted recovery wallet backups and optionally delete the wallet store file itself.</summary>
+    Task<Result> DeleteRecoveryWalletFilesAsync(bool deleteWalletFile);
 }

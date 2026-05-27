@@ -13,4 +13,11 @@ public class WalletStore(IStore store) : IWalletStore
         .OnFailureCompensate(_ => new List<EncryptedWallet>());
 
     public Task<Result> SaveAll(IEnumerable<EncryptedWallet> wallets) => store.Save(WalletsFile, wallets.ToList());
+
+    public Task<Result> ClearAll(bool deleteWalletFile)
+    {
+        return deleteWalletFile
+            ? store.Delete(WalletsFile)
+            : SaveAll(Array.Empty<EncryptedWallet>());
+    }
 }

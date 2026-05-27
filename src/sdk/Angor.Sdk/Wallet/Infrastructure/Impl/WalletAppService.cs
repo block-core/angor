@@ -526,4 +526,20 @@ public class WalletAppService(
 
         return await CreateWallet(walletName, seedWords, passphrase, network);
     }
+
+    public async Task<Result> DeleteRecoveryWalletFilesAsync(bool deleteWalletFile)
+    {
+        var walletsResult = await walletStore.GetAll();
+        if (walletsResult.IsFailure)
+            return Result.Failure(walletsResult.Error);
+
+        foreach (var wallet in walletsResult.Value)
+        {
+            var walletId = new WalletId(wallet.Id);
+            sensitiveWalletDataProvider.RemoveSensitiveData(walletId);
+            await secureKeyProvider.Remove(walletId);
+        }
+
+        return await walletStore.ClearAll(deleteWalletFile);
+    }
 }
