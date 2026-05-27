@@ -194,11 +194,6 @@ public partial class PrototypeSettings : ReactiveObject
     [Reactive] private string? selectedWalletId;
 
     /// <summary>
-    /// Enables Branta recipient validation before wallet sends.
-    /// </summary>
-    [Reactive] private bool isBrantaSendValidationEnabled;
-
-    /// <summary>
     /// Set of wallet IDs that were auto-created (e.g. 1-click invest) and have not been backed up yet.
     /// </summary>
     [Reactive] private HashSet<string> walletsNeedingBackup = new();
@@ -224,7 +219,6 @@ public partial class PrototypeSettings : ReactiveObject
                         IsDebugMode = result.Value.IsDebugMode;
                         SelectedWalletId = result.Value.SelectedWalletId;
                         WalletsNeedingBackup = result.Value.WalletsNeedingBackup ?? new HashSet<string>();
-                        IsBrantaSendValidationEnabled = result.Value.IsBrantaSendValidationEnabled;
 
                         // Set IsDarkTheme last — its WhenAnyValue subscription
                         // applies the theme, so we want the other fields settled first.
@@ -264,7 +258,7 @@ public partial class PrototypeSettings : ReactiveObject
             });
 
         // Persist after visible state changes so disk I/O never competes with the theme flip.
-        this.WhenAnyValue(x => x.IsDebugMode, x => x.IsDarkTheme, x => x.SelectedWalletId, x => x.WalletsNeedingBackup, x => x.IsBrantaSendValidationEnabled)
+        this.WhenAnyValue(x => x.IsDebugMode, x => x.IsDarkTheme, x => x.SelectedWalletId, x => x.WalletsNeedingBackup)
             .Skip(1)
             .Throttle(TimeSpan.FromMilliseconds(250), RxSchedulers.TaskpoolScheduler)
             .Subscribe(_ => ScheduleSaveSettings());
@@ -280,7 +274,6 @@ public partial class PrototypeSettings : ReactiveObject
         bool? currentDarkTheme = IsDarkTheme;
         string? currentWalletId = SelectedWalletId;
         HashSet<string> currentBackupSet = new(WalletsNeedingBackup);
-        bool currentBrantaSendValidationEnabled = IsBrantaSendValidationEnabled;
         CancellationToken token = saveSettingsCts.Token;
 
         Task.Run(async () =>
@@ -291,8 +284,7 @@ public partial class PrototypeSettings : ReactiveObject
                 HasThemeOverride = currentDarkTheme.HasValue,
                 IsDarkTheme = currentDarkTheme,
                 SelectedWalletId = currentWalletId,
-                WalletsNeedingBackup = currentBackupSet,
-                IsBrantaSendValidationEnabled = currentBrantaSendValidationEnabled
+                WalletsNeedingBackup = currentBackupSet
             });
 
             if (!token.IsCancellationRequested && saveResult.IsFailure)
@@ -320,8 +312,7 @@ public partial class PrototypeSettings : ReactiveObject
             HasThemeOverride = IsDarkTheme.HasValue,
             IsDarkTheme = IsDarkTheme,
             SelectedWalletId = SelectedWalletId,
-            WalletsNeedingBackup = new HashSet<string>(WalletsNeedingBackup),
-            IsBrantaSendValidationEnabled = IsBrantaSendValidationEnabled
+            WalletsNeedingBackup = new HashSet<string>(WalletsNeedingBackup)
         });
 
         if (saveResult.IsFailure)
@@ -355,7 +346,6 @@ public partial class PrototypeSettings : ReactiveObject
         public bool? IsDarkTheme { get; set; }
         public string? SelectedWalletId { get; set; }
         public HashSet<string>? WalletsNeedingBackup { get; set; }
-        public bool IsBrantaSendValidationEnabled { get; set; }
     }
 }
 

@@ -32,9 +32,6 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
     private IBrantaSendValidationService BrantaValidationService =>
         App.Services.GetRequiredService<IBrantaSendValidationService>();
 
-    private PrototypeSettings PrototypeSettings =>
-        App.Services.GetRequiredService<PrototypeSettings>();
-
     public SendFundsModal()
     {
         InitializeComponent();
@@ -148,7 +145,7 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
 
     private async Task<bool> ValidateBrantaAsync()
     {
-        if (!PrototypeSettings.IsBrantaSendValidationEnabled)
+        if (BrantaValidationToggle.IsChecked != true)
         {
             return true;
         }

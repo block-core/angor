@@ -164,6 +164,16 @@
                         <!-- Fee rate is selected via the reusable FeeSelectionPopup
                              when the user clicks Send -->
 
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <CheckBox Name="BrantaValidationToggle"
+                                      IsChecked="False"
+                                      VerticalAlignment="Center" />
+                            <TextBlock Text="Run Branta validation before sending"
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMuted}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+
                         <!-- Action buttons: Cancel + Send -->
                         <Grid ColumnDefinitions="*,8,*" Margin="0,4,0,0">
                             <Button Name="BtnCancel" Grid.Column="0"

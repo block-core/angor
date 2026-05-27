@@ -645,52 +645,7 @@
                     </StackPanel>
                 </Border>
 
-                <!-- ═══ 8. Branta Send Validation ═══ -->
-                <Border Background="{DynamicResource CardSurface}"
-                        BorderBrush="{DynamicResource Stroke}"
-                        BorderThickness="1"
-                        CornerRadius="16"
-                        ClipToBounds="True"
-                        BoxShadow="{DynamicResource ItemShadow}">
-                    <StackPanel>
-                        <Border BorderBrush="{DynamicResource Stroke}"
-                                BorderThickness="0,0,0,1"
-                                Padding="24,20">
-                            <StackPanel Orientation="Horizontal" Spacing="12">
-                                <i:Icon Value="fa-solid fa-shield-halved"
-                                       FontSize="20"
-                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
-                                <TextBlock Text="Branta Validation"
-                                           FontSize="18"
-                                           FontWeight="Bold"
-                                           Foreground="{DynamicResource TextStrong}"
-                                           VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Border>
-                        <Border Padding="24">
-                            <DockPanel>
-                                <ToggleSwitch DockPanel.Dock="Right"
-                                              IsChecked="{Binding IsBrantaSendValidationEnabled, Mode=TwoWay}"
-                                              VerticalAlignment="Center"
-                                              Margin="16,0,0,0"
-                                              OnContent="Enabled"
-                                              OffContent="Disabled" />
-                                <StackPanel Spacing="4" VerticalAlignment="Center">
-                                    <TextBlock Text="Validate sends with Branta"
-                                               FontSize="14"
-                                               FontWeight="Medium"
-                                               Foreground="{DynamicResource TextStrong}" />
-                                    <TextBlock Text="When enabled, the wallet validates the recipient against Branta before sending funds."
-                                               FontSize="13"
-                                               Foreground="{DynamicResource TextMuted}"
-                                               TextWrapping="Wrap" />
-                                </StackPanel>
-                            </DockPanel>
-                        </Border>
-                    </StackPanel>
-                </Border>
-
-                <!-- ═══ 9. Export Logs ═══ -->
+                <!-- ═══ 8. Export Logs ═══ -->
                 <Border Background="{DynamicResource CardSurface}"
                         BorderBrush="{DynamicResource Stroke}"
                         BorderThickness="1"
