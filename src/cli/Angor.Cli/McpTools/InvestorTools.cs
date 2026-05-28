@@ -17,12 +17,13 @@ public class InvestorTools(IInvestmentAppService investorService)
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    [McpServerTool, Description("Build an investment transaction draft for a project")]
-    public async Task<string> InvestorBuildDraft(string walletId, string projectId, long amountSats, long feeRateSatPerVb)
+    [McpServerTool, Description("Build an investment transaction draft for a project. For Fund/Subscribe projects, patternId is required (byte 0-255).")]
+    public async Task<string> InvestorBuildDraft(string walletId, string projectId, long amountSats, long feeRateSatPerVb, byte? patternId = null)
     {
         var result = await investorService.BuildInvestmentDraft(
             new BuildInvestmentDraft.BuildInvestmentDraftRequest(
-                new WalletId(walletId), new ProjectId(projectId), new Amount(amountSats), new DomainFeerate(feeRateSatPerVb)));
+                new WalletId(walletId), new ProjectId(projectId), new Amount(amountSats), new DomainFeerate(feeRateSatPerVb),
+                PatternId: patternId));
         return result.IsSuccess
             ? JsonSerializer.Serialize(result.Value, JsonOptions)
             : $"Error: {result.Error}";
@@ -200,16 +201,30 @@ public class InvestorTools(IInvestmentAppService investorService)
             : $"Error: {result.Error}";
     }
 
-    [McpServerTool, Description("Submit a signed investor transaction to the network")]
+    [McpServerTool, Description("Submit a signed investor transaction to the network. For investment transactions, provide investorKey and amountSats to enable Nostr founder notification.")]
     public async Task<string> InvestorSubmitTx(string signedTxHex, string transactionId, long feeSats,
-        string? walletId = null, string? projectId = null)
+        string? walletId = null, string? projectId = null, string? investorKey = null, long? amountSats = null)
     {
-        var draft = new TransactionDraft
+        TransactionDraft draft;
+        if (!string.IsNullOrEmpty(investorKey))
         {
-            SignedTxHex = signedTxHex,
-            TransactionId = transactionId,
-            TransactionFee = new Amount(feeSats)
-        };
+            draft = new Angor.Sdk.Funding.Shared.TransactionDrafts.InvestmentDraft(investorKey)
+            {
+                SignedTxHex = signedTxHex,
+                TransactionId = transactionId,
+                TransactionFee = new Amount(feeSats),
+                InvestedAmount = new Amount(amountSats ?? 0)
+            };
+        }
+        else
+        {
+            draft = new TransactionDraft
+            {
+                SignedTxHex = signedTxHex,
+                TransactionId = transactionId,
+                TransactionFee = new Amount(feeSats)
+            };
+        }
 
         var result = await investorService.SubmitTransactionFromDraft(
             new PublishAndStoreInvestorTransaction.PublishAndStoreInvestorTransactionRequest(

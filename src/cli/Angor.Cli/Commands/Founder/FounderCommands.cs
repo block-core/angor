@@ -8,6 +8,7 @@ using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Shared;
+using Angor.Shared;
 using Angor.Shared.Models;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -33,6 +34,9 @@ public static class FounderCommands
         cmd.AddCommand(BuildSpendStageCommand(founderService, jsonOptions));
         cmd.AddCommand(BuildSubmitTxCommand(founderService, jsonOptions));
         cmd.AddCommand(BuildMoonshotCommand(founderService, jsonOptions));
+        cmd.AddCommand(BuildCreateProfileCommand(projectService, jsonOptions));
+        cmd.AddCommand(BuildCreateInfoCommand(projectService, jsonOptions));
+        cmd.AddCommand(BuildCreateProjectCommand(projectService, jsonOptions));
 
         return cmd;
     }
@@ -269,16 +273,16 @@ public static class FounderCommands
         var projectIdOption = new Option<string>("--project-id", "Project ID") { IsRequired = true };
         var feeRateOption = new Option<long>("--fee-rate", "Fee rate in sat/vB") { IsRequired = true };
         var stageIdOption = new Option<int>("--stage-id", "Stage ID to spend") { IsRequired = true };
-        var addressOption = new Option<string>("--address", "Investor address") { IsRequired = true };
+        var addressOption = new Option<string[]>("--address", "Investor address(es)") { IsRequired = true, AllowMultipleArgumentsPerToken = true };
 
         var cmd = new Command("spend-stage", "Spend funds from a project stage")
         {
             walletIdOption, projectIdOption, feeRateOption, stageIdOption, addressOption
         };
-        cmd.SetHandler(async (string walletId, string projectId, long feeRate, int stageId, string address) =>
+        cmd.SetHandler(async (string walletId, string projectId, long feeRate, int stageId, string[] addresses) =>
         {
             var fee = new FeeEstimation { FeeRate = feeRate * 1000, Confirmations = 1 };
-            var toSpend = new[] { new SpendTransactionDto { InvestorAddress = address, StageId = stageId } };
+            var toSpend = addresses.Select(a => new SpendTransactionDto { InvestorAddress = a, StageId = stageId }).ToArray();
 
             var result = await founderService.SpendStageFunds(
                 new SpendStageFunds.SpendStageFundsRequest(new WalletId(walletId), new ProjectId(projectId), fee, toSpend));
@@ -291,6 +295,7 @@ public static class FounderCommands
 
             Console.WriteLine($"Transaction draft created: {result.Value.TransactionDraft.TransactionId}");
             Console.WriteLine($"Fee: {result.Value.TransactionDraft.TransactionFee} sats");
+            Console.WriteLine($"Transaction Hex: {result.Value.TransactionDraft.SignedTxHex}");
         }, walletIdOption, projectIdOption, feeRateOption, stageIdOption, addressOption);
         return cmd;
     }
@@ -343,6 +348,132 @@ public static class FounderCommands
 
             Console.WriteLine(JsonSerializer.Serialize(result.Value, jsonOptions));
         }, eventIdOption);
+        return cmd;
+    }
+
+    private static Command BuildCreateProfileCommand(IProjectAppService projectService, JsonSerializerOptions jsonOptions)
+    {
+        var walletIdOption = new Option<string>("--wallet-id", "Wallet ID") { IsRequired = true };
+        var inputFileOption = new Option<string>("--input-file", "Path to JSON file with project data (CreateProjectDto)") { IsRequired = true };
+        var founderKeyOption = new Option<string>("--founder-key", "Founder key from create-keys") { IsRequired = true };
+        var recoveryKeyOption = new Option<string>("--recovery-key", "Recovery key from create-keys") { IsRequired = true };
+        var nostrPubKeyOption = new Option<string>("--nostr-pubkey", "Nostr public key from create-keys") { IsRequired = true };
+        var projectIdOption = new Option<string>("--project-id", "Project identifier from create-keys") { IsRequired = true };
+
+        var cmd = new Command("create-profile", "Create the Nostr profile for a new project")
+        {
+            walletIdOption, inputFileOption, founderKeyOption, recoveryKeyOption, nostrPubKeyOption, projectIdOption
+        };
+        cmd.SetHandler(async (string walletId, string inputFile, string founderKey, string recoveryKey, string nostrPubKey, string projectId) =>
+        {
+            var json = await File.ReadAllTextAsync(inputFile);
+            var project = JsonSerializer.Deserialize<CreateProjectDto>(json, jsonOptions);
+            if (project is null)
+            {
+                Console.Error.WriteLine("Error: Failed to deserialize project data from input file.");
+                return;
+            }
+
+            var seed = new ProjectSeedDto(founderKey, recoveryKey, nostrPubKey, projectId);
+            var result = await projectService.CreateProjectProfile(new WalletId(walletId), seed, project);
+
+            if (result.IsFailure)
+            {
+                Console.Error.WriteLine($"Error: {result.Error}");
+                return;
+            }
+
+            Console.WriteLine($"Profile created. Event ID: {result.Value.EventId}");
+        }, walletIdOption, inputFileOption, founderKeyOption, recoveryKeyOption, nostrPubKeyOption, projectIdOption);
+        return cmd;
+    }
+
+    private static Command BuildCreateInfoCommand(IProjectAppService projectService, JsonSerializerOptions jsonOptions)
+    {
+        var walletIdOption = new Option<string>("--wallet-id", "Wallet ID") { IsRequired = true };
+        var inputFileOption = new Option<string>("--input-file", "Path to JSON file with project data (CreateProjectDto)") { IsRequired = true };
+        var founderKeyOption = new Option<string>("--founder-key", "Founder key") { IsRequired = true };
+        var recoveryKeyOption = new Option<string>("--recovery-key", "Recovery key") { IsRequired = true };
+        var nostrPubKeyOption = new Option<string>("--nostr-pubkey", "Nostr public key") { IsRequired = true };
+        var projectIdOption = new Option<string>("--project-id", "Project identifier") { IsRequired = true };
+
+        var cmd = new Command("create-info", "Publish project info (stages, metadata) to Nostr")
+        {
+            walletIdOption, inputFileOption, founderKeyOption, recoveryKeyOption, nostrPubKeyOption, projectIdOption
+        };
+        cmd.SetHandler(async (string walletId, string inputFile, string founderKey, string recoveryKey, string nostrPubKey, string projectId) =>
+        {
+            var json = await File.ReadAllTextAsync(inputFile);
+            var project = JsonSerializer.Deserialize<CreateProjectDto>(json, jsonOptions);
+            if (project is null)
+            {
+                Console.Error.WriteLine("Error: Failed to deserialize project data from input file.");
+                return;
+            }
+
+            var seed = new ProjectSeedDto(founderKey, recoveryKey, nostrPubKey, projectId);
+            var result = await projectService.CreateProjectInfo(new WalletId(walletId), project, seed);
+
+            if (result.IsFailure)
+            {
+                Console.Error.WriteLine($"Error: {result.Error}");
+                return;
+            }
+
+            Console.WriteLine($"Project info published. Event ID: {result.Value.EventId}");
+        }, walletIdOption, inputFileOption, founderKeyOption, recoveryKeyOption, nostrPubKeyOption, projectIdOption);
+        return cmd;
+    }
+
+    private static Command BuildCreateProjectCommand(IProjectAppService projectService, JsonSerializerOptions jsonOptions)
+    {
+        var walletIdOption = new Option<string>("--wallet-id", "Wallet ID") { IsRequired = true };
+        var inputFileOption = new Option<string>("--input-file", "Path to JSON file with project data (CreateProjectDto)") { IsRequired = true };
+        var feeOption = new Option<long>("--fee", "Selected fee in sats") { IsRequired = true };
+        var infoEventIdOption = new Option<string>("--info-event-id", "Project info event ID from create-info") { IsRequired = true };
+        var founderKeyOption = new Option<string>("--founder-key", "Founder key") { IsRequired = true };
+        var recoveryKeyOption = new Option<string>("--recovery-key", "Recovery key") { IsRequired = true };
+        var nostrPubKeyOption = new Option<string>("--nostr-pubkey", "Nostr public key") { IsRequired = true };
+        var projectIdOption = new Option<string>("--project-id", "Project identifier") { IsRequired = true };
+
+        var cmd = new Command("create-project", "Create the on-chain Bitcoin project transaction")
+        {
+            walletIdOption, inputFileOption, feeOption, infoEventIdOption,
+            founderKeyOption, recoveryKeyOption, nostrPubKeyOption, projectIdOption
+        };
+        cmd.SetHandler(async context =>
+        {
+            var walletId = context.ParseResult.GetValueForOption(walletIdOption)!;
+            var inputFile = context.ParseResult.GetValueForOption(inputFileOption)!;
+            var fee = context.ParseResult.GetValueForOption(feeOption);
+            var infoEventId = context.ParseResult.GetValueForOption(infoEventIdOption)!;
+            var founderKey = context.ParseResult.GetValueForOption(founderKeyOption)!;
+            var recoveryKey = context.ParseResult.GetValueForOption(recoveryKeyOption)!;
+            var nostrPubKey = context.ParseResult.GetValueForOption(nostrPubKeyOption)!;
+            var projectId = context.ParseResult.GetValueForOption(projectIdOption)!;
+
+            var json = await File.ReadAllTextAsync(inputFile);
+            var project = JsonSerializer.Deserialize<CreateProjectDto>(json, jsonOptions);
+            if (project is null)
+            {
+                Console.Error.WriteLine("Error: Failed to deserialize project data from input file.");
+                return;
+            }
+
+            var seed = new ProjectSeedDto(founderKey, recoveryKey, nostrPubKey, projectId);
+            var result = await projectService.CreateProject(new WalletId(walletId), fee, project, infoEventId, seed);
+
+            if (result.IsFailure)
+            {
+                Console.Error.WriteLine($"Error: {result.Error}");
+                return;
+            }
+
+            Console.WriteLine($"Project created on-chain.");
+            Console.WriteLine($"Transaction ID: {result.Value.TransactionDraft.TransactionId}");
+            Console.WriteLine($"Transaction Hex: {result.Value.TransactionDraft.SignedTxHex}");
+            Console.WriteLine($"Fee: {result.Value.TransactionDraft.TransactionFee} sats");
+        });
         return cmd;
     }
 }

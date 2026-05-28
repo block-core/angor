@@ -18,6 +18,8 @@ public static class ConfigCommands
         cmd.AddCommand(BuildShowCommand(networkConfig, networkService, jsonOptions));
         cmd.AddCommand(BuildGetNetworkCommand(networkConfig));
         cmd.AddCommand(BuildSetNetworkCommand(networkService));
+        cmd.AddCommand(BuildGetDebugModeCommand(networkConfig));
+        cmd.AddCommand(BuildSetDebugModeCommand(networkConfig));
 
         return cmd;
     }
@@ -87,6 +89,29 @@ public static class ConfigCommands
             Console.WriteLine($"Network set to: {network}");
             Console.WriteLine("Restart the CLI for the change to take effect.");
         }, networkArg);
+        return cmd;
+    }
+
+    private static Command BuildGetDebugModeCommand(INetworkConfiguration networkConfig)
+    {
+        var cmd = new Command("get-debug-mode", "Show current debug mode status");
+        cmd.SetHandler(() =>
+        {
+            Console.WriteLine($"Debug mode: {(networkConfig.GetDebugMode() ? "enabled" : "disabled")}");
+        });
+        return cmd;
+    }
+
+    private static Command BuildSetDebugModeCommand(INetworkConfiguration networkConfig)
+    {
+        var enabledArg = new Argument<bool>("enabled", "true to enable, false to disable");
+
+        var cmd = new Command("set-debug-mode", "Enable or disable debug mode (testnet only: stages immediately claimable)") { enabledArg };
+        cmd.SetHandler((bool enabled) =>
+        {
+            networkConfig.SetDebugMode(enabled);
+            Console.WriteLine($"Debug mode {(enabled ? "enabled" : "disabled")}.");
+        }, enabledArg);
         return cmd;
     }
 }

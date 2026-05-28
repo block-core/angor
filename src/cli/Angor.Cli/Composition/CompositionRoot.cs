@@ -83,7 +83,6 @@ public static class CompositionRoot
 
         // Security — headless implementations
         services.AddSingleton<IPassphraseProvider>(new HeadlessPassphraseProvider());
-        services.AddSingleton<IPasswordProvider>(new HeadlessPasswordProvider(isMcpMode));
         services.AddSingleton<IWalletSecurityContext, WalletSecurityContext>();
         services.AddSingleton<IWalletEncryption, AesWalletEncryption>();
 
@@ -96,6 +95,10 @@ public static class CompositionRoot
             services.AddSingleton<ISecureKeyProvider, LinuxSecureKeyProvider>(); // Fallback for macOS
         else
             throw new PlatformNotSupportedException("No ISecureKeyProvider implementation available for this platform.");
+
+        // Password provider needs ISecureKeyProvider, so register after it
+        services.AddSingleton<IPasswordProvider>(sp =>
+            new HeadlessPasswordProvider(isMcpMode, sp.GetRequiredService<ISecureKeyProvider>()));
 
         // Register SDK services
         WalletContextServices.Register(services, serilogLogger, network);
