@@ -102,10 +102,50 @@
                                      Padding="12,10"
                                      FontSize="14"
                                      Foreground="{DynamicResource TextStrong}" />
+                            <!-- Per-payment opt-in for plain on-chain address verification -->
+                            <CheckBox Name="BrantaOnChainToggle"
+                                      Content="Verify on-chain address"
+                                      FontSize="12"
+                                      Foreground="{DynamicResource TextMuted}"
+                                      Margin="0,4,0,0" />
                             <!-- Address validation error -->
                             <TextBlock Name="AddressError" FontSize="13"
                                        Foreground="{DynamicResource ErrorFieldText}"
                                        IsVisible="False" Margin="0,2,0,0" />
+
+                            <!-- Branta destination verification — shown when a verified record is found -->
+                            <Border Name="BrantaVerificationPanel"
+                                    IsVisible="False"
+                                    Background="{DynamicResource RecoveryInfoCardBg}"
+                                    BorderBrush="{DynamicResource RecoveryInfoCardBorder}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="10,8"
+                                    Margin="0,4,0,0"
+                                    Cursor="Hand"
+                                    PointerPressed="OnBrantaCardPressed">
+                                <Grid ColumnDefinitions="Auto,*">
+                                    <Panel Grid.Column="0" Width="28" Height="28" Margin="0,0,10,0">
+                                        <i:Icon Name="BrantaShieldIcon"
+                                                Value="fa-solid fa-shield-halved"
+                                                FontSize="20"
+                                                Foreground="{DynamicResource PrimaryGreenBrush}"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center" />
+                                        <Image Name="BrantaLogo" IsVisible="False"
+                                               Width="28" Height="28" Stretch="Uniform" />
+                                    </Panel>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                        <TextBlock Name="BrantaPlatformName"
+                                                   FontSize="11" FontWeight="Medium"
+                                                   Foreground="{DynamicResource TextMuted}" />
+                                        <TextBlock Name="BrantaDescription"
+                                                   FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextStrong}"
+                                                   IsVisible="False" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
                         </StackPanel>
 
                         <!-- Amount -->

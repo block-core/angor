@@ -15,6 +15,7 @@
         <PackageReference Include="Avalonia.Themes.Fluent" />
         <PackageReference Include="Avalonia.Fonts.Inter" />
         <PackageReference Include="Avalonia.Labs.Panels" />
+        <PackageReference Include="Branta" />
         <!-- ReactiveUI -->
         <PackageReference Include="ReactiveUI.Avalonia" />
         <PackageReference Include="ReactiveUI.SourceGenerators" />
