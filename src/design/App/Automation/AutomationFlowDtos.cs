@@ -528,6 +528,75 @@ public static class AutomationFlowDtos
         public string? Error { get; init; }
     }
 
+    public sealed class SendFundsRequest
+    {
+        [JsonPropertyName("walletId")]
+        public string WalletId { get; init; } = "";
+
+        [JsonPropertyName("destinationAddress")]
+        public string DestinationAddress { get; init; } = "";
+
+        [JsonPropertyName("amountBtc")]
+        public double AmountBtc { get; init; }
+
+        [JsonPropertyName("feeRateSatsPerVByte")]
+        public long FeeRateSatsPerVByte { get; init; } = 1;
+    }
+
+    public sealed class SendFundsResponse
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; init; }
+
+        [JsonPropertyName("txId")]
+        public string? TxId { get; init; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; init; }
+    }
+
+    public sealed class GetReceiveAddressRequest
+    {
+        [JsonPropertyName("walletId")]
+        public string WalletId { get; init; } = "";
+    }
+
+    public sealed class GetReceiveAddressResponse
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; init; }
+
+        [JsonPropertyName("address")]
+        public string? Address { get; init; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; init; }
+    }
+
+    public sealed class GetBalanceRequest
+    {
+        [JsonPropertyName("walletId")]
+        public string WalletId { get; init; } = "";
+
+        /// <summary>
+        /// If true, refreshes wallet balance from the indexer before returning.
+        /// </summary>
+        [JsonPropertyName("refresh")]
+        public bool Refresh { get; init; }
+    }
+
+    public sealed class GetBalanceResponse
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; init; }
+
+        [JsonPropertyName("totalBalance")]
+        public string? TotalBalance { get; init; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; init; }
+    }
+
     public sealed class ImportWalletRequest
     {
         [JsonPropertyName("seedWords")]

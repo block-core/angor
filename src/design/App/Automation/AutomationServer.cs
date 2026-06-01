@@ -439,6 +439,30 @@ public sealed class AutomationServer : IDisposable
                 return (200, result);
             }
 
+            // POST /flows/send-funds
+            if (method == "POST" && path == "/flows/send-funds")
+            {
+                var req = Deserialize<SendFundsRequest>(body);
+                var result = await AutomationFlows.SendFundsAsync(services, req);
+                return (200, result);
+            }
+
+            // POST /flows/get-receive-address
+            if (method == "POST" && path == "/flows/get-receive-address")
+            {
+                var req = Deserialize<GetReceiveAddressRequest>(body);
+                var result = await AutomationFlows.GetReceiveAddressAsync(services, req);
+                return (200, result);
+            }
+
+            // POST /flows/get-balance
+            if (method == "POST" && path == "/flows/get-balance")
+            {
+                var req = Deserialize<GetBalanceRequest>(body);
+                var result = await AutomationFlows.GetBalanceAsync(services, req);
+                return (200, result);
+            }
+
             return (404, new ActionResponse { Success = false, Error = $"Unknown route: {method} {path}" });
         }
         catch (Exception ex)

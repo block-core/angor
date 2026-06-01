@@ -2036,6 +2036,192 @@ public static class AutomationFlows
         throw new TimeoutException($"PART_EditButton for project '{project.ProjectIdentifier}' not found within timeout");
     }
 
+    /// <summary>
+    /// Send funds from a wallet to a destination address programmatically via FundsViewModel.SendAsync.
+    /// </summary>
+    public static async Task<SendFundsResponse> SendFundsAsync(
+        IServiceProvider services,
+        SendFundsRequest req)
+    {
+        try
+        {
+            var window = await RequireWindowAsync();
+            await NavigateToAsync(window, "Funds");
+
+            // Click the Send button on the wallet card to open the SendFundsModal
+            await ClickWalletCardButtonAsync(window, "WalletCardBtnSend");
+            await Task.Delay(500);
+
+            // Type the destination address into the SendAddressInput
+            await TypeTextByNameAsync(window, "SendAddressInput",  req.DestinationAddress);
+
+            // Type the amount into the SendAmountInput
+            var amountStr = req.AmountBtc.ToString("F8", CultureInfo.InvariantCulture);
+            await TypeTextByNameAsync(window, "SendAmountInput", amountStr);
+
+            // Click the Send button (BtnSendConfirm) to trigger fee selection popup
+            await ClickByNameAsync(window, "BtnSendConfirm");
+            await Task.Delay(500);
+
+            // Click Economy fee in the FeeSelectionPopup, then Confirm
+            await ClickByNameAsync(window, "FeeEconomy", TimeSpan.FromSeconds(10));
+            await Task.Delay(200);
+            await ClickByNameAsync(window, "ConfirmButton", TimeSpan.FromSeconds(5));
+            await Task.Delay(500);
+
+            // Wait for the success panel to appear
+            var deadline = DateTime.UtcNow + TxTimeout;
+            string? txId = null;
+            while (DateTime.UtcNow < deadline)
+            {
+                txId = await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    Dispatcher.UIThread.RunJobs();
+                    var successPanel = FindByName<StackPanel>(window, "SuccessPanel");
+                    if (successPanel == null || !successPanel.IsVisible) return null;
+
+                    var txidBlock = FindByAutomationId<TextBlock>(window, "SummaryTxid");
+                    return txidBlock?.Text;
+                });
+
+                if (!string.IsNullOrEmpty(txId))
+                {
+                    break;
+                }
+
+                // Check for error
+                var error = await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    var errorBlock = FindByName<TextBlock>(window, "AmountError");
+                    return errorBlock is { IsVisible: true } ? errorBlock.Text : null;
+                });
+
+                if (!string.IsNullOrEmpty(error))
+                {
+                    // Close the modal
+                    await ClickByNameAsync(window, "BtnCancel");
+                    return new SendFundsResponse { Success = false, Error = error };
+                }
+
+                await Task.Delay(500);
+            }
+
+            if (string.IsNullOrEmpty(txId))
+            {
+                return new SendFundsResponse { Success = false, Error = "Send did not complete within timeout" };
+            }
+
+            // Click Done to close the success screen
+            await ClickByNameAsync(window, "BtnDone");
+            await Task.Delay(300);
+
+            return new SendFundsResponse { Success = true, TxId = txId };
+        }
+        catch (Exception ex)
+        {
+            return new SendFundsResponse { Success = false, Error = ex.Message };
+        }
+    }
+
+    /// <summary>
+    /// Get the next receive address for a wallet by opening the ReceiveFundsModal
+    /// and reading the address from the UI.
+    /// </summary>
+    public static async Task<GetReceiveAddressResponse> GetReceiveAddressAsync(
+        IServiceProvider services,
+        GetReceiveAddressRequest req)
+    {
+        try
+        {
+            var window = await RequireWindowAsync();
+            await NavigateToAsync(window, "Funds");
+
+            // Click the Receive button on the wallet card to open the ReceiveFundsModal
+            await ClickWalletCardButtonAsync(window, "WalletCardBtnReceive");
+            await Task.Delay(500);
+
+            // Wait for the address to be loaded into the ReceiveAddressText control
+            var deadline = DateTime.UtcNow + UiTimeout;
+            string? address = null;
+            while (DateTime.UtcNow < deadline)
+            {
+                address = await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    Dispatcher.UIThread.RunJobs();
+                    var addressBlock = FindByAutomationId<TextBlock>(window, "ReceiveAddressText");
+                    var text = addressBlock?.Text;
+                    // Ignore placeholder/loading text
+                    if (string.IsNullOrEmpty(text) || text == "Loading..." || text == "Failed to load address")
+                        return null;
+                    return text;
+                });
+
+                if (!string.IsNullOrEmpty(address))
+                {
+                    break;
+                }
+
+                await Task.Delay(200);
+            }
+
+            // Close the receive modal
+            await ClickByNameAsync(window, "BtnDone");
+            await Task.Delay(300);
+
+            if (string.IsNullOrEmpty(address))
+            {
+                return new GetReceiveAddressResponse { Success = false, Error = "Receive address did not load within timeout" };
+            }
+
+            return new GetReceiveAddressResponse { Success = true, Address = address };
+        }
+        catch (Exception ex)
+        {
+            return new GetReceiveAddressResponse { Success = false, Error = ex.Message };
+        }
+    }
+
+    /// <summary>
+    /// Get the total balance by reading from the UI balance display.
+    /// Optionally refreshes the wallet balance first via the Refresh button.
+    /// </summary>
+    public static async Task<GetBalanceResponse> GetBalanceAsync(
+        IServiceProvider services,
+        GetBalanceRequest req)
+    {
+        try
+        {
+            var window = await RequireWindowAsync();
+            await NavigateToAsync(window, "Funds");
+
+            if (req.Refresh)
+            {
+                // Click the Refresh button on the wallet card and wait for the async refresh
+                await ClickWalletCardButtonAsync(window, "WalletCardBtnRefresh");
+                await Task.Delay(3000);
+            }
+
+            // Read the total balance from the FundsTotalBalanceText UI control
+            var totalBalance = await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                Dispatcher.UIThread.RunJobs();
+                var balanceText = FindByAutomationId<TextBlock>(window, "FundsTotalBalanceText");
+                return balanceText?.Text;
+            });
+
+            if (string.IsNullOrEmpty(totalBalance))
+            {
+                return new GetBalanceResponse { Success = false, Error = "Balance text not found in UI" };
+            }
+
+            return new GetBalanceResponse { Success = true, TotalBalance = totalBalance };
+        }
+        catch (Exception ex)
+        {
+            return new GetBalanceResponse { Success = false, Error = ex.Message };
+        }
+    }
+
     private static void Log(string ctx, string msg)
     {
         Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss.fff}] [{ctx}] {msg}");
