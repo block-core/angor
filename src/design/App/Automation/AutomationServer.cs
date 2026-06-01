@@ -276,7 +276,17 @@ public sealed class AutomationServer : IDisposable
             // POST /wipe
             if (method == "POST" && path == "/wipe")
             {
-                var result = await Dispatcher.UIThread.InvokeAsync(() => WipeData());
+                bool deleteRecoveryWalletFiles = false;
+                if (!string.IsNullOrWhiteSpace(body))
+                {
+                    try
+                    {
+                        var req = Deserialize<WipeDataRequest>(body);
+                        deleteRecoveryWalletFiles = req.DeleteRecoveryWalletFiles;
+                    }
+                    catch { /* body is optional, ignore parse errors */ }
+                }
+                var result = await Dispatcher.UIThread.InvokeAsync(() => WipeData(deleteRecoveryWalletFiles));
                 return (200, result);
             }
 
@@ -284,6 +294,21 @@ public sealed class AutomationServer : IDisposable
             if (method == "POST" && path == "/debug-mode")
             {
                 var result = await Dispatcher.UIThread.InvokeAsync(() => EnableDebugMode());
+                return (200, result);
+            }
+
+            // POST /switch-network
+            if (method == "POST" && path == "/switch-network")
+            {
+                var req = Deserialize<SwitchNetworkRequest>(body);
+                var result = await SwitchNetwork(req.Network);
+                return (200, result);
+            }
+
+            // GET /stored-wallets-count
+            if (method == "GET" && path == "/stored-wallets-count")
+            {
+                var result = await GetStoredWalletsCount();
                 return (200, result);
             }
 
@@ -651,7 +676,7 @@ public sealed class AutomationServer : IDisposable
         }
     }
 
-    private ActionResponse WipeData()
+    private ActionResponse WipeData(bool deleteRecoveryWalletFiles = false)
     {
         var window = GetMainWindow();
         if (window == null)
@@ -674,6 +699,7 @@ public sealed class AutomationServer : IDisposable
             return new ActionResponse { Success = false, Error = "SettingsViewModel not found" };
         }
 
+        settingsVm.DeleteRecoveryWalletFiles = deleteRecoveryWalletFiles;
         settingsVm.ConfirmWipeData();
         Dispatcher.UIThread.RunJobs();
         return new ActionResponse { Success = true };
@@ -690,6 +716,40 @@ public sealed class AutomationServer : IDisposable
         settingsVm.IsDebugMode = true;
         Dispatcher.UIThread.RunJobs();
         return new ActionResponse { Success = true };
+    }
+
+    private async Task<ActionResponse> SwitchNetwork(string network)
+    {
+        var settingsVm = await Dispatcher.UIThread.InvokeAsync(
+            () => services.GetService<UI.Sections.Settings.SettingsViewModel>());
+        if (settingsVm == null)
+        {
+            return new ActionResponse { Success = false, Error = "SettingsViewModel not found" };
+        }
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            settingsVm.SelectNetworkOption(network);
+            settingsVm.NetworkChangeConfirmed = true;
+        });
+
+        await settingsVm.ConfirmNetworkSwitchAsync();
+        await Task.Delay(2000); // allow wallet rebuild
+        return new ActionResponse { Success = true };
+    }
+
+    private async Task<ValueResponse> GetStoredWalletsCount()
+    {
+        var fundsVm = await Dispatcher.UIThread.InvokeAsync(
+            () => services.GetService<UI.Sections.Funds.FundsViewModel>());
+        if (fundsVm == null)
+        {
+            return new ValueResponse { Error = "FundsViewModel not found" };
+        }
+
+        await fundsVm.LoadStoredWalletsAsync();
+        var count = fundsVm.StoredWallets.Count;
+        return new ValueResponse { Value = count };
     }
 
     private async Task<ControlInfo> WaitForControl(WaitForControlRequest req)
