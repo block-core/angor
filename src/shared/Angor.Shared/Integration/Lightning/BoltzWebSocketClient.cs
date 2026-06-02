@@ -13,29 +13,41 @@ namespace Angor.Shared.Integration.Lightning;
 /// </summary>
 public class BoltzWebSocketClient : IBoltzWebSocketClient, IAsyncDisposable
 {
-    private readonly string _webSocketUrl;
+    private readonly BoltzConfiguration _configuration;
+    private readonly INetworkConfiguration _networkConfiguration;
     private readonly ILogger<BoltzWebSocketClient> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
     private ClientWebSocket? _webSocket;
 
     public BoltzWebSocketClient(
         BoltzConfiguration configuration,
+        INetworkConfiguration networkConfiguration,
         ILogger<BoltzWebSocketClient> logger)
     {
-        var baseUrl = configuration.BaseUrl
-            .Replace("https://", "wss://")
-            .Replace("http://", "ws://")
-            .TrimEnd('/');
-
-        var wsPath = configuration.UseV2Prefix ? "/v2/ws" : "/ws";
-        _webSocketUrl = $"{baseUrl}{wsPath}";
-
+        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        _networkConfiguration = networkConfiguration ?? throw new ArgumentNullException(nameof(networkConfiguration));
         _logger = logger;
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
+    }
+
+    /// <summary>
+    /// Resolves the WebSocket URL from the current Boltz base URL.
+    /// Called on every connect so a runtime network switch (mainnet ↔ signet)
+    /// is honoured without rebuilding the client.
+    /// </summary>
+    private string ResolveWebSocketUrl()
+    {
+        var baseUrl = _configuration.ResolveBaseUrl(_networkConfiguration)
+            .Replace("https://", "wss://")
+            .Replace("http://", "ws://")
+            .TrimEnd('/');
+
+        var wsPath = _configuration.UseV2Prefix ? "/v2/ws" : "/ws";
+        return $"{baseUrl}{wsPath}";
     }
 
     private const int MaxReconnectAttempts = 5;
@@ -59,13 +71,14 @@ public class BoltzWebSocketClient : IBoltzWebSocketClient, IAsyncDisposable
             {
                 _webSocket?.Dispose();
                 _webSocket = new ClientWebSocket();
-                await _webSocket.ConnectAsync(new Uri(_webSocketUrl), linkedCts.Token);
+                var webSocketUrl = ResolveWebSocketUrl();
+                await _webSocket.ConnectAsync(new Uri(webSocketUrl), linkedCts.Token);
 
                 _logger.LogInformation(
                     attempt == 0
                         ? "Connected to Boltz WebSocket at {Url}"
                         : "Reconnected to Boltz WebSocket at {Url} (attempt {Attempt})",
-                    _webSocketUrl, attempt);
+                    webSocketUrl, attempt);
 
                 attempt = 0;
 

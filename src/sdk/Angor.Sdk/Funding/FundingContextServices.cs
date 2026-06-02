@@ -71,11 +71,14 @@ public static class FundingContextServices
         services.TryAddSingleton<IAddressPollingService, AddressPollingService>();
         services.TryAddSingleton<IMempoolMonitoringService, MempoolMonitoringService>();
         
-        // Lightning Network / Boltz submarine swap services
-        // Using testnet by default for development
+        // Lightning Network / Boltz submarine swap services.
+        // BoltzConfiguration carries only an optional URL override (for the BOLTZ_API_URL
+        // env var or integration tests); when unset, BoltzSwapService / BoltzWebSocketClient
+        // resolve the URL from INetworkConfiguration on each call, so a runtime network
+        // switch (mainnet ↔ signet) is honoured without rebuilding the container.
         services.TryAddSingleton<BoltzConfiguration>(_ => new BoltzConfiguration
         {
-            BaseUrl = Environment.GetEnvironmentVariable("BOLTZ_API_URL") ?? BoltzConfiguration.TestnetUrl,
+            OverrideBaseUrl = Environment.GetEnvironmentVariable("BOLTZ_API_URL"),
             TimeoutSeconds = 30,
             UseV2Prefix = true
         });

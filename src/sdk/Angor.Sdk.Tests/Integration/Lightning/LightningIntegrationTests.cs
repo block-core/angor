@@ -87,7 +87,7 @@ public class BoltzSwapIntegrationTests : IDisposable
 
         var boltzConfig = new BoltzConfiguration
         {
-            BaseUrl = BoltzApiUrl,
+            OverrideBaseUrl = BoltzApiUrl,
             UseV2Prefix = UseV2Prefix,
             TimeoutSeconds = 60
         };
@@ -107,6 +107,7 @@ public class BoltzSwapIntegrationTests : IDisposable
 
         _boltzWebSocketClient = new BoltzWebSocketClient(
             boltzConfig,
+            _networkConfiguration,
             new NullLogger<BoltzWebSocketClient>());
 
         var inMemoryCollection = new InMemoryBoltzSwapCollection();
