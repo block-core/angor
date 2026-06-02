@@ -41,4 +41,17 @@ public class ConfigTools(INetworkConfiguration networkConfig, INetworkService ne
         networkService.CheckAndSetNetwork(string.Empty, network);
         return $"Network set to: {network}. Restart for the change to take effect.";
     }
+
+    [McpServerTool, Description("Get current debug mode status. When debug mode is enabled on testnet, investment windows are always open and stages are immediately claimable.")]
+    public string ConfigGetDebugMode()
+    {
+        return JsonSerializer.Serialize(new { debugMode = networkConfig.GetDebugMode() }, JsonOptions);
+    }
+
+    [McpServerTool, Description("Enable or disable debug mode. When enabled on testnet, investment windows are always open and stages are immediately claimable. Takes effect immediately.")]
+    public string ConfigSetDebugMode(bool enabled)
+    {
+        networkConfig.SetDebugMode(enabled);
+        return $"Debug mode {(enabled ? "enabled" : "disabled")}.";
+    }
 }
