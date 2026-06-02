@@ -23,7 +23,6 @@ public partial class SettingsView : UserControl, ISectionView
     private Border? _networkModalBody;
     private Border? _networkModalFooter;
     private StackPanel? _networkModalActions;
-    private Button? _networkCancelButton;
     private Button? _networkConfirmButton;
 
     /// <summary>Design-time only.</summary>
@@ -146,7 +145,6 @@ public partial class SettingsView : UserControl, ISectionView
         _networkModalBody = this.FindControl<Border>("NetworkModalBody");
         _networkModalFooter = this.FindControl<Border>("NetworkModalFooter");
         _networkModalActions = this.FindControl<StackPanel>("NetworkModalActions");
-        _networkCancelButton = this.FindControl<Button>("NetworkCancelButton");
         _networkConfirmButton = this.FindControl<Button>("NetworkConfirmButton");
     }
 
@@ -179,10 +177,6 @@ public partial class SettingsView : UserControl, ISectionView
                 : Avalonia.Layout.HorizontalAlignment.Right;
         }
 
-        if (_networkCancelButton != null)
-            _networkCancelButton.HorizontalAlignment = isCompact
-                ? Avalonia.Layout.HorizontalAlignment.Stretch
-                : Avalonia.Layout.HorizontalAlignment.Left;
         if (_networkConfirmButton != null)
             _networkConfirmButton.HorizontalAlignment = isCompact
                 ? Avalonia.Layout.HorizontalAlignment.Stretch
