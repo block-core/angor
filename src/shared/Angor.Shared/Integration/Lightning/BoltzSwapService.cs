@@ -20,7 +20,6 @@ public class BoltzSwapService : IBoltzSwapService
     private readonly INetworkConfiguration _networkConfiguration;
     private readonly ILogger<BoltzSwapService> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
-    private readonly string _apiPrefix;
 
     public BoltzSwapService(
         HttpClient httpClient,
@@ -33,9 +32,10 @@ public class BoltzSwapService : IBoltzSwapService
         _networkConfiguration = networkConfiguration ?? throw new ArgumentNullException(nameof(networkConfiguration));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        _httpClient.BaseAddress = new Uri(_configuration.BaseUrl);
+        // BaseAddress is intentionally not set: it captures the URL at construction time
+        // and singleton HttpClient/BoltzSwapService instances would never see a runtime
+        // network switch. Each request resolves the base URL via BuildUri().
         _httpClient.Timeout = TimeSpan.FromSeconds(_configuration.TimeoutSeconds);
-        _apiPrefix = _configuration.ApiPrefix;
 
         _jsonOptions = new JsonSerializerOptions
         {
@@ -44,6 +44,17 @@ public class BoltzSwapService : IBoltzSwapService
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
         };
+    }
+
+    /// <summary>
+    /// Builds an absolute URI for the given relative API path, resolving the base URL
+    /// from <see cref="INetworkConfiguration"/> on every call so a runtime network switch
+    /// (mainnet ↔ signet) is honoured without rebuilding the DI container.
+    /// </summary>
+    private Uri BuildUri(string relativePath)
+    {
+        var baseUrl = _configuration.ResolveBaseUrl(_networkConfiguration);
+        return new Uri(new Uri(baseUrl), $"{_configuration.ApiPrefix}{relativePath}");
     }
 
     /// <summary>
@@ -101,7 +112,7 @@ public class BoltzSwapService : IBoltzSwapService
 
             var content = new StringContent(requestJson, System.Text.Encoding.UTF8);
             content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
-            var response = await _httpClient.PostAsync($"{_apiPrefix}swap/reverse", content);
+            var response = await _httpClient.PostAsync(BuildUri("swap/reverse"), content);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -170,7 +181,7 @@ public class BoltzSwapService : IBoltzSwapService
         {
             _logger.LogDebug("Getting swap status for {SwapId}", swapId);
 
-            var response = await _httpClient.GetAsync($"{_apiPrefix}swap/{swapId}");
+            var response = await _httpClient.GetAsync(BuildUri($"swap/{swapId}"));
 
             if (!response.IsSuccessStatusCode)
             {
@@ -212,7 +223,7 @@ public class BoltzSwapService : IBoltzSwapService
         {
             _logger.LogDebug("Getting swap details for {SwapId}", swapId);
 
-            var response = await _httpClient.GetAsync($"{_apiPrefix}swap/reverse/{swapId}");
+            var response = await _httpClient.GetAsync(BuildUri($"swap/reverse/{swapId}"));
 
             if (!response.IsSuccessStatusCode)
             {
@@ -270,7 +281,7 @@ public class BoltzSwapService : IBoltzSwapService
                 PubNonce = pubNonce
             };
 
-            var response = await _httpClient.PostAsJsonAsync($"{_apiPrefix}swap/reverse/{swapId}/claim", request, _jsonOptions);
+            var response = await _httpClient.PostAsJsonAsync(BuildUri($"swap/reverse/{swapId}/claim"), request, _jsonOptions);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -309,7 +320,7 @@ public class BoltzSwapService : IBoltzSwapService
             _logger.LogInformation("Broadcasting transaction via Boltz API");
 
             var request = new BroadcastRequest { Hex = transactionHex };
-            var response = await _httpClient.PostAsJsonAsync($"{_apiPrefix}chain/BTC/transaction", request, _jsonOptions);
+            var response = await _httpClient.PostAsJsonAsync(BuildUri("chain/BTC/transaction"), request, _jsonOptions);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -340,7 +351,7 @@ public class BoltzSwapService : IBoltzSwapService
         {
             _logger.LogDebug("Fetching reverse swap fee information from Boltz");
 
-            var response = await _httpClient.GetAsync($"{_apiPrefix}swap/reverse");
+            var response = await _httpClient.GetAsync(BuildUri("swap/reverse"));
 
             if (!response.IsSuccessStatusCode)
             {

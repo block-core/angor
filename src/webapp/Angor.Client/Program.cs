@@ -79,10 +79,11 @@ builder.Services.AddScoped<IMessageService, MessageService>();
 
 builder.Services.AddScoped<IBoltzSwapStorageService, BoltzSwapStorageService>();
 
-// Lightning Network / Boltz submarine swap services
+// Lightning Network / Boltz submarine swap services.
+// No OverrideBaseUrl: the Boltz services resolve mainnet vs. signet from
+// INetworkConfiguration on every call.
 builder.Services.AddSingleton<BoltzConfiguration>(_ => new BoltzConfiguration
 {
-    BaseUrl = BoltzConfiguration.TestnetUrl,
     TimeoutSeconds = 30,
     UseV2Prefix = true
 });
