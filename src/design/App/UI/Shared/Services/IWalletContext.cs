@@ -29,4 +29,8 @@ public interface IWalletContext
 
     /// <summary>Delete all wallets and clear state. Used by Settings wipe data.</summary>
     Task DeleteAllAsync();
+
+    /// <summary>Clear in-memory wallet state without modifying the recovery file (wallets.json).
+    /// Used during standard wipe to preserve recovery data.</summary>
+    void ClearInMemoryState();
 }

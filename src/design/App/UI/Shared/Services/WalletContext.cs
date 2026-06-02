@@ -186,4 +186,12 @@ public class WalletContext : IWalletContext
             _logger.LogError(ex, "WalletContext.DeleteAllAsync failed");
         }
     }
+
+    public void ClearInMemoryState()
+    {
+        _wallets.Clear();
+        SelectedWallet = null;
+        _walletsUpdated.OnNext(Unit.Default);
+        _logger.LogInformation("WalletContext.ClearInMemoryState completed — recovery file preserved");
+    }
 }

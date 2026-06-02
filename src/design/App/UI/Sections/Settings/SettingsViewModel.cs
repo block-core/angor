@@ -480,10 +480,11 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
             _signatureStore.Clear();
             _portfolioViewModel.ResetAfterDataWipe();
 
-            // Delete all wallets and clear wallet context state
-            await _walletContext.DeleteAllAsync();
+            // Clear wallet state. Standard wipe preserves wallets.json (recovery file)
+            // so users can restore wallets later. Only purge deletes the recovery file.
             if (DeleteRecoveryWalletFiles)
             {
+                await _walletContext.DeleteAllAsync();
                 var deleteRecoveryWalletFilesResult = await _walletAppService.DeleteRecoveryWalletFilesAsync(deleteWalletFile: true);
                 if (deleteRecoveryWalletFilesResult.IsFailure)
                 {
@@ -491,6 +492,12 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
                     ToastRequested?.Invoke("Wipe data failed while deleting encrypted wallet backups. Please try again.");
                     return;
                 }
+            }
+            else
+            {
+                // Clear in-memory state only — do NOT call DeleteWallet which removes
+                // entries from wallets.json. The recovery file must survive standard wipe.
+                _walletContext.ClearInMemoryState();
             }
 
             _shellViewModel.ResetAfterDataWipe();

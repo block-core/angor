@@ -58,23 +58,35 @@ public static class AutomationFlows
             var hasWallet = await Dispatcher.UIThread.InvokeAsync(() =>
                 fundsVm.SeedGroups.Any() && fundsVm.SeedGroups.SelectMany(g => g.Wallets).Any());
 
+            // Collect existing wallet IDs before creation so we can identify the new one
+            var existingIds = await Dispatcher.UIThread.InvokeAsync(() =>
+                fundsVm.SeedGroups.SelectMany(g => g.Wallets).Select(w => w.Id.Value).ToHashSet());
+
             string? seedWords = null;
-            if (!hasWallet)
+            if (!hasWallet || req.ForceCreate)
             {
                 Log(req.ProfileName, "Creating wallet via Generate flow...");
                 seedWords = await CreateWalletViaGenerateAsync(window);
             }
 
             var walletId = await Dispatcher.UIThread.InvokeAsync(() =>
-                fundsVm.SeedGroups.FirstOrDefault()?.Wallets?.FirstOrDefault()?.Id.Value);
+            {
+                var allWallets = fundsVm.SeedGroups.SelectMany(g => g.Wallets).ToList();
+                // Return the newly created wallet (not in existing set), or the first one
+                var newWallet = allWallets.FirstOrDefault(w => !existingIds.Contains(w.Id.Value));
+                return (newWallet ?? allWallets.FirstOrDefault())?.Id.Value;
+            });
 
             if (string.IsNullOrWhiteSpace(walletId))
             {
                 return new CreateWalletAndFundResponse { Success = false, Error = "Wallet id not found after wallet creation" };
             }
 
-            Log(req.ProfileName, "Funding wallet via faucet...");
-            await FundWalletViaFaucetAsync(window, fundsVm, walletId, req.ProfileName);
+            if (!req.SkipFunding)
+            {
+                Log(req.ProfileName, "Funding wallet via faucet...");
+                await FundWalletViaFaucetAsync(window, fundsVm, walletId, req.ProfileName);
+            }
 
             return new CreateWalletAndFundResponse
             {

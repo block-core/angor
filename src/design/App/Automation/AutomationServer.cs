@@ -336,6 +336,14 @@ public sealed class AutomationServer : IDisposable
                 return (200, result);
             }
 
+            // POST /flows/recover-stored-wallet
+            if (method == "POST" && path == "/flows/recover-stored-wallet")
+            {
+                var req = Deserialize<RecoverStoredWalletRequest>(body);
+                var result = await RecoverStoredWallet(req.WalletId);
+                return (200, result);
+            }
+
             // POST /flows/create-fund-project
             if (method == "POST" && path == "/flows/create-fund-project")
             {
@@ -740,16 +748,40 @@ public sealed class AutomationServer : IDisposable
 
     private async Task<ValueResponse> GetStoredWalletsCount()
     {
+        // Read directly from wallets.json via SDK — no filtering by loaded wallets.
+        // This gives the true count of recovery wallet entries in the file.
+        var walletAppService = services.GetService<Angor.Sdk.Wallet.Application.IWalletAppService>();
+        if (walletAppService == null)
+        {
+            return new ValueResponse { Error = "IWalletAppService not found" };
+        }
+
+        var result = await walletAppService.GetStoredWallets();
+        if (result.IsFailure)
+        {
+            return new ValueResponse { Value = 0 };
+        }
+
+        var count = result.Value.Count();
+        return new ValueResponse { Value = count };
+    }
+
+    private async Task<RecoverStoredWalletResponse> RecoverStoredWallet(string walletId)
+    {
         var fundsVm = await Dispatcher.UIThread.InvokeAsync(
             () => services.GetService<UI.Sections.Funds.FundsViewModel>());
         if (fundsVm == null)
         {
-            return new ValueResponse { Error = "FundsViewModel not found" };
+            return new RecoverStoredWalletResponse { Success = false, Error = "FundsViewModel not found" };
         }
 
-        await fundsVm.LoadStoredWalletsAsync();
-        var count = fundsVm.StoredWallets.Count;
-        return new ValueResponse { Value = count };
+        var (success, error) = await fundsVm.RestoreStoredWalletAsync(walletId);
+        if (!success)
+        {
+            return new RecoverStoredWalletResponse { Success = false, Error = error ?? "Restore failed" };
+        }
+
+        return new RecoverStoredWalletResponse { Success = true, WalletId = walletId };
     }
 
     private async Task<ControlInfo> WaitForControl(WaitForControlRequest req)
