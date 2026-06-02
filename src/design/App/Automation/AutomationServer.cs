@@ -340,7 +340,7 @@ public sealed class AutomationServer : IDisposable
             if (method == "POST" && path == "/flows/recover-stored-wallet")
             {
                 var req = Deserialize<RecoverStoredWalletRequest>(body);
-                var result = await RecoverStoredWallet(req.WalletId);
+                var result = await AutomationFlows.RecoverStoredWalletAsync(services, req);
                 return (200, result);
             }
 
@@ -764,24 +764,6 @@ public sealed class AutomationServer : IDisposable
 
         var count = result.Value.Count();
         return new ValueResponse { Value = count };
-    }
-
-    private async Task<RecoverStoredWalletResponse> RecoverStoredWallet(string walletId)
-    {
-        var fundsVm = await Dispatcher.UIThread.InvokeAsync(
-            () => services.GetService<UI.Sections.Funds.FundsViewModel>());
-        if (fundsVm == null)
-        {
-            return new RecoverStoredWalletResponse { Success = false, Error = "FundsViewModel not found" };
-        }
-
-        var (success, error) = await fundsVm.RestoreStoredWalletAsync(walletId);
-        if (!success)
-        {
-            return new RecoverStoredWalletResponse { Success = false, Error = error ?? "Restore failed" };
-        }
-
-        return new RecoverStoredWalletResponse { Success = true, WalletId = walletId };
     }
 
     private async Task<ControlInfo> WaitForControl(WaitForControlRequest req)

@@ -170,6 +170,89 @@ public static class AutomationFlows
         }
     }
 
+    /// <summary>
+    /// UI-driven flow: Add Wallet → Import → expand "Restore from backup" → select wallet → wait for success → Done.
+    /// </summary>
+    public static async Task<RecoverStoredWalletResponse> RecoverStoredWalletAsync(
+        IServiceProvider services,
+        RecoverStoredWalletRequest req)
+    {
+        try
+        {
+            var window = await RequireWindowAsync();
+            await NavigateToAsync(window, "Funds");
+
+            // Click Add Wallet button
+            var addWalletBtn = await Dispatcher.UIThread.InvokeAsync(() => FindAddWalletButton(window));
+            if (addWalletBtn == null)
+            {
+                return new RecoverStoredWalletResponse { Success = false, Error = "Add Wallet button not found" };
+            }
+
+            await Dispatcher.UIThread.InvokeAsync(() => ClickButton(addWalletBtn));
+            await Task.Delay(300);
+
+            // Click Import button to show the import panel (triggers stored wallet loading)
+            await ClickWalletCardButtonAsync(window, "BtnImport");
+            await Task.Delay(500);
+
+            // Expand the "Restore from backup" expander and select the target wallet
+            var selected = await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var cwm = window.GetVisualDescendants().OfType<CreateWalletModal>().FirstOrDefault();
+                if (cwm == null) return false;
+
+                var expander = cwm.FindControl<Expander>("StoredWalletsExpander");
+                if (expander == null) return false;
+                expander.IsExpanded = true;
+
+                var listBox = cwm.FindControl<ListBox>("StoredWalletList");
+                if (listBox == null) return false;
+
+                // Find the stored wallet entry matching the requested wallet ID
+                var match = listBox.Items.OfType<StoredWalletEntry>()
+                    .FirstOrDefault(e => e.Id == req.WalletId);
+                if (match == null) return false;
+
+                listBox.SelectedItem = match;
+                return true;
+            });
+
+            if (!selected)
+            {
+                return new RecoverStoredWalletResponse
+                {
+                    Success = false,
+                    Error = $"Stored wallet '{req.WalletId}' not found in restore list"
+                };
+            }
+
+            // Wait for success panel (restore decrypts + imports via SDK)
+            var successDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(30);
+            while (DateTime.UtcNow < successDeadline)
+            {
+                var successVisible = await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    var panel = FindByAutomationId<Panel>(window, "CreateWalletSuccessPanel");
+                    return panel is { IsVisible: true };
+                });
+
+                if (successVisible) break;
+                await Task.Delay(300);
+            }
+
+            // Click Done to close the modal
+            await ClickWalletCardButtonAsync(window, "BtnCreateWalletDone");
+            await Task.Delay(500);
+
+            return new RecoverStoredWalletResponse { Success = true, WalletId = req.WalletId };
+        }
+        catch (Exception ex)
+        {
+            return new RecoverStoredWalletResponse { Success = false, Error = ex.Message };
+        }
+    }
+
     public static async Task<ProjectCreatedResponse> CreateFundProjectAsync(
         IServiceProvider services,
         CreateFundProjectRequest req)
