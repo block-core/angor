@@ -202,6 +202,17 @@ public sealed class TestAutomationClient : IDisposable
         await Task.Delay(500, ct);
     }
 
+    public async Task WipeDataWithRecoveryPurgeAsync(CancellationToken ct = default)
+    {
+        var result = await PostAsync<ActionResponse>("/wipe", new { deleteRecoveryWalletFiles = true }, ct);
+        if (!result.Success)
+        {
+            throw new InvalidOperationException($"WipeData with recovery purge failed: {result.Error}");
+        }
+
+        await Task.Delay(500, ct);
+    }
+
     public async Task EnableDebugModeAsync(CancellationToken ct = default)
     {
         var result = await PostAsync<ActionResponse>("/debug-mode", (object?)null, ct);
@@ -209,6 +220,38 @@ public sealed class TestAutomationClient : IDisposable
         {
             throw new InvalidOperationException($"EnableDebugMode failed: {result.Error}");
         }
+    }
+
+    public async Task SwitchNetworkAsync(string network, CancellationToken ct = default)
+    {
+        var result = await PostAsync<ActionResponse>("/switch-network", new { network }, ct);
+        if (!result.Success)
+        {
+            throw new InvalidOperationException($"SwitchNetwork to '{network}' failed: {result.Error}");
+        }
+
+        await Task.Delay(2000, ct);
+    }
+
+    public async Task<int> GetStoredWalletsCountAsync(CancellationToken ct = default)
+    {
+        var result = await GetAsync<ValueResponse>("/stored-wallets-count", ct);
+        if (result.Error != null)
+        {
+            throw new InvalidOperationException($"GetStoredWalletsCount failed: {result.Error}");
+        }
+
+        if (result.Value is System.Text.Json.JsonElement jsonElement)
+        {
+            return jsonElement.GetInt32();
+        }
+
+        return Convert.ToInt32(result.Value);
+    }
+
+    public async Task<string?> GetTotalBalanceAsync(CancellationToken ct = default)
+    {
+        return await GetVmPropertyAsync("FundsViewModel", "TotalBalance", ct);
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -227,6 +270,13 @@ public sealed class TestAutomationClient : IDisposable
         CancellationToken ct = default)
     {
         return await PostAsync<ImportWalletResponse>("/flows/import-wallet", request, ct);
+    }
+
+    public async Task<RecoverStoredWalletResponse> RecoverStoredWalletAsync(
+        RecoverStoredWalletRequest request,
+        CancellationToken ct = default)
+    {
+        return await PostAsync<RecoverStoredWalletResponse>("/flows/recover-stored-wallet", request, ct);
     }
 
     public async Task<ProjectCreatedResponse> CreateFundProjectAsync(

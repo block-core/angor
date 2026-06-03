@@ -103,6 +103,18 @@ public static class AutomationDtos
         public bool Visible { get; init; } = true;
     }
 
+    public sealed class WipeDataRequest
+    {
+        [JsonPropertyName("deleteRecoveryWalletFiles")]
+        public bool DeleteRecoveryWalletFiles { get; init; }
+    }
+
+    public sealed class SwitchNetworkRequest
+    {
+        [JsonPropertyName("network")]
+        public string Network { get; init; } = "";
+    }
+
     public sealed class ActionResponse
     {
         [JsonPropertyName("success")]

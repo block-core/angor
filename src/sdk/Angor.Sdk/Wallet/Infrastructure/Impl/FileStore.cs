@@ -46,6 +46,18 @@ public class FileStore : IStore
             );
     }
 
+    public Task<Result> Delete(string key)
+    {
+        return Task.FromResult(Result.Try(() =>
+        {
+            var filePath = Path.Combine(appDataPath, key);
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+        }));
+    }
+
     private static void CreateFile(string path)
     {
         if (File.Exists(path))

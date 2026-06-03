@@ -17,4 +17,10 @@ public class InMemoryStore : IStore
     {
         return dict.TryFind(key).ToResult("Key not found").Map(o => (T)o);
     }
+
+    public Task<Result> Delete(string key)
+    {
+        dict.Remove(key);
+        return Task.FromResult(Result.Success());
+    }
 }

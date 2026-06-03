@@ -1090,6 +1090,24 @@
                                        Foreground="{DynamicResource TextMuted}"
                                        TextWrapping="Wrap"
                                        LineHeight="22" />
+                            <DockPanel>
+                                <CheckBox Classes="NetworkConfirmCheckbox"
+                                          IsChecked="{Binding DeleteRecoveryWalletFiles, Mode=TwoWay}"
+                                          DockPanel.Dock="Left"
+                                          Margin="0,0,12,0"
+                                          VerticalAlignment="Top" />
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="Delete recovery wallet files"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextStrong}" />
+                                    <TextBlock Text="This will delete the encrypted wallet backups from the system."
+                                               FontSize="13"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               TextWrapping="Wrap"
+                                               LineHeight="20" />
+                                </StackPanel>
+                            </DockPanel>
                             <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
                                 <Button Classes="MobileAction" Padding="20,10"
                                         Background="{DynamicResource ModalCancelBg}"

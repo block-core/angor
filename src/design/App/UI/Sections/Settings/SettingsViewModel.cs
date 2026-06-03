@@ -92,6 +92,7 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
 
     // Wipe data modal
     [Reactive] private bool isWipeDataModalOpen;
+    [Reactive] private bool deleteRecoveryWalletFiles;
 
     // Debug mode (testnet only)
     [Reactive] private bool isTestnet;
@@ -442,8 +443,17 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
     }
 
     // Wipe data
-    public void OpenWipeDataModal() => IsWipeDataModalOpen = true;
-    public void CloseWipeDataModal() => IsWipeDataModalOpen = false;
+    public void OpenWipeDataModal()
+    {
+        DeleteRecoveryWalletFiles = false;
+        IsWipeDataModalOpen = true;
+    }
+
+    public void CloseWipeDataModal()
+    {
+        DeleteRecoveryWalletFiles = false;
+        IsWipeDataModalOpen = false;
+    }
 
     public async void ConfirmWipeData()
     {
@@ -470,8 +480,25 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
             _signatureStore.Clear();
             _portfolioViewModel.ResetAfterDataWipe();
 
-            // Delete all wallets and clear wallet context state
-            await _walletContext.DeleteAllAsync();
+            // Clear wallet state. Standard wipe preserves wallets.json (recovery file)
+            // so users can restore wallets later. Only purge deletes the recovery file.
+            if (DeleteRecoveryWalletFiles)
+            {
+                await _walletContext.DeleteAllAsync();
+                var deleteRecoveryWalletFilesResult = await _walletAppService.DeleteRecoveryWalletFilesAsync(deleteWalletFile: true);
+                if (deleteRecoveryWalletFilesResult.IsFailure)
+                {
+                    _logger.LogError("Failed to delete encrypted wallet recovery backups during wipe: {Error}", deleteRecoveryWalletFilesResult.Error);
+                    ToastRequested?.Invoke("Wipe data failed while deleting encrypted wallet backups. Please try again.");
+                    return;
+                }
+            }
+            else
+            {
+                // Clear in-memory state only — do NOT call DeleteWallet which removes
+                // entries from wallets.json. The recovery file must survive standard wipe.
+                _walletContext.ClearInMemoryState();
+            }
 
             _shellViewModel.ResetAfterDataWipe();
             _logger.LogInformation("Wipe data completed — live shell state reset");

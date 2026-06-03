@@ -7,4 +7,5 @@ public interface IWalletStore
 {
     Task<Result<IEnumerable<EncryptedWallet>>> GetAll();
     Task<Result> SaveAll(IEnumerable<EncryptedWallet> wallets);
+    Task<Result> ClearAll(bool deleteWalletFile);
 }

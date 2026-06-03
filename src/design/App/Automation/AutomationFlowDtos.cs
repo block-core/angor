@@ -12,6 +12,20 @@ public static class AutomationFlowDtos
     {
         [JsonPropertyName("profileName")]
         public string ProfileName { get; init; } = "";
+
+        /// <summary>
+        /// When true, always create a new wallet even if one already exists.
+        /// When false (default), skip creation if a wallet exists.
+        /// </summary>
+        [JsonPropertyName("forceCreate")]
+        public bool ForceCreate { get; init; }
+
+        /// <summary>
+        /// When true, skip the faucet funding step. Useful for tests that
+        /// only need wallets in the recovery file without balances.
+        /// </summary>
+        [JsonPropertyName("skipFunding")]
+        public bool SkipFunding { get; init; }
     }
 
     public sealed class CreateWalletAndFundResponse
@@ -607,6 +621,27 @@ public static class AutomationFlowDtos
     }
 
     public sealed class ImportWalletResponse
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; init; }
+
+        [JsonPropertyName("walletId")]
+        public string? WalletId { get; init; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; init; }
+    }
+
+    public sealed class RecoverStoredWalletRequest
+    {
+        /// <summary>
+        /// The wallet ID to recover from the encrypted wallet store (wallets.json).
+        /// </summary>
+        [JsonPropertyName("walletId")]
+        public string WalletId { get; init; } = "";
+    }
+
+    public sealed class RecoverStoredWalletResponse
     {
         [JsonPropertyName("success")]
         public bool Success { get; init; }
