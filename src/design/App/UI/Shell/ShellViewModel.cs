@@ -940,12 +940,35 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
     /// the same in-app back actions used by the mobile floating back bars.
     /// Returns false when the app is already at a root screen so Android may exit.
     /// </summary>
-    public bool TryHandlePlatformBack()
+    public bool CanHandlePlatformBack()
     {
         SyncDetailStateFromCachedViews();
 
+        return IsModalOpen
+               || IsInvestPageOpen
+               || IsProjectDetailOpen
+               || IsInvestmentDetailOpen
+               || IsCreatingProject
+               || IsManageFundsOpen
+               || IsEditProfileOpen;
+    }
+
+    /// <summary>
+    /// Handles platform back requests (Android physical/system back) by routing to
+    /// the same in-app back actions used by the mobile floating back bars.
+    /// Returns false when the app is already at a root screen so Android may exit.
+    /// </summary>
+    public bool TryHandlePlatformBack()
+    {
+        if (!CanHandlePlatformBack())
+            return false;
+
         if (IsModalOpen)
         {
+            if (ModalContent is IBackdropCloseable closeable)
+            {
+                closeable.OnBackdropCloseRequested();
+            }
             HideModal();
             return true;
         }

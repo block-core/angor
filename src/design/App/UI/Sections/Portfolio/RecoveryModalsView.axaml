@@ -57,7 +57,7 @@
                     <Panel>
                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
                             <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="20"
-                                    Foreground="{DynamicResource TextMuted}" />
+                                    Foreground="{DynamicResource PrimaryGreenBrush}" />
                             <TextBlock Text="Recovery" FontSize="24" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
                         </StackPanel>
@@ -73,28 +73,36 @@
                         CornerRadius="0,0,15,15"
                         BorderBrush="{DynamicResource ModalHeaderBorder}"
                         Background="{DynamicResource RecoveryModalBg}">
-                    <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+                    <Grid ColumnDefinitions="*,12,*" HorizontalAlignment="Stretch">
                         <!-- Cancel -->
-                        <Button Name="CancelRecoveryModal" Classes="ModalBtn MobileAction" Cursor="Hand">
-                            <Border CornerRadius="8" Padding="24,12"
+                        <Button Name="CancelRecoveryModal" Grid.Column="0" Classes="ModalBtn MobileAction" Cursor="Hand"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                            <Border CornerRadius="8" Padding="24,12" HorizontalAlignment="Stretch"
                                     Background="{DynamicResource ModalCancelBg}">
                                 <TextBlock Text="Cancel" FontSize="14" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource ModalCancelFg}" />
+                                           Foreground="{DynamicResource ModalCancelFg}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           TextAlignment="Center" />
                             </Border>
                         </Button>
                         <!-- Confirm -->
-                        <Button Name="ConfirmRecoveryModal" Classes="ModalBtn MobileAction" Cursor="Hand">
-                            <Border CornerRadius="8" Padding="24,12"
+                        <Button Name="ConfirmRecoveryModal" Grid.Column="2" Classes="ModalBtn MobileAction" Cursor="Hand"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                            <Border CornerRadius="8" Padding="24,12" HorizontalAlignment="Stretch"
                                     ClipToBounds="True"
                                     Background="{DynamicResource GreenGradient}">
                                 <Panel>
                                     <TextBlock Text="Confirm" FontSize="14" FontWeight="SemiBold"
                                                Foreground="White"
                                                IsVisible="{Binding !IsProcessing}"
-                                               HorizontalAlignment="Center" />
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               TextAlignment="Center" />
                                     <StackPanel Orientation="Horizontal" Spacing="8"
                                                 IsVisible="{Binding IsProcessing}"
-                                                HorizontalAlignment="Center">
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center">
                                         <i:Icon Value="fa-solid fa-spinner" FontSize="14" Foreground="White"
                                                 RenderTransformOrigin="50%,50%">
                                             <i:Icon.RenderTransform>
@@ -121,7 +129,7 @@
                                 </Panel>
                             </Border>
                         </Button>
-                    </StackPanel>
+                    </Grid>
                 </Border>
 
                 <!-- ── Scrollable Content ── -->
@@ -427,26 +435,34 @@
                         CornerRadius="0,0,15,15"
                         BorderBrush="{DynamicResource ModalHeaderBorder}"
                         Background="{DynamicResource RecoveryModalBg}">
-                    <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
-                        <Button Name="CancelReleaseModal" Classes="ModalBtn MobileAction" Cursor="Hand">
-                            <Border CornerRadius="8" Padding="24,12"
+                    <Grid ColumnDefinitions="*,12,*" HorizontalAlignment="Stretch">
+                        <Button Name="CancelReleaseModal" Grid.Column="0" Classes="ModalBtn MobileAction" Cursor="Hand"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                            <Border CornerRadius="8" Padding="24,12" HorizontalAlignment="Stretch"
                                     Background="{DynamicResource ModalCancelBg}">
                                 <TextBlock Text="Cancel" FontSize="14" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource ModalCancelFg}" />
+                                           Foreground="{DynamicResource ModalCancelFg}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           TextAlignment="Center" />
                             </Border>
                         </Button>
-                        <Button Name="ConfirmReleaseModal" Classes="ModalBtn MobileAction" Cursor="Hand">
-                            <Border CornerRadius="8" Padding="24,12"
+                        <Button Name="ConfirmReleaseModal" Grid.Column="2" Classes="ModalBtn MobileAction" Cursor="Hand"
+                                HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                            <Border CornerRadius="8" Padding="24,12" HorizontalAlignment="Stretch"
                                     ClipToBounds="True"
                                     Background="{DynamicResource GreenGradient}">
                                 <Panel>
                                     <TextBlock Text="Confirm" FontSize="14" FontWeight="SemiBold"
                                                Foreground="White"
                                                IsVisible="{Binding !IsProcessing}"
-                                               HorizontalAlignment="Center" />
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               TextAlignment="Center" />
                                     <StackPanel Orientation="Horizontal" Spacing="8"
                                                 IsVisible="{Binding IsProcessing}"
-                                                HorizontalAlignment="Center">
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center">
                                         <i:Icon Value="fa-solid fa-spinner" FontSize="14" Foreground="White"
                                                 RenderTransformOrigin="50%,50%">
                                             <i:Icon.RenderTransform>
@@ -473,7 +489,7 @@
                                 </Panel>
                             </Border>
                         </Button>
-                    </StackPanel>
+                    </Grid>
                 </Border>
 
                 <!-- ── Scrollable Content ── -->

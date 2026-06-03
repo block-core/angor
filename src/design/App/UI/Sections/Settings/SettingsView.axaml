@@ -317,7 +317,8 @@
                                                             x:Name="StatusBadge">
                                                         <TextBlock Text="{Binding Status}"
                                                                    FontSize="12"
-                                                                   FontWeight="SemiBold" />
+                                                                   FontWeight="SemiBold"
+                                                                   TextWrapping="NoWrap" />
                                                     </Border>
                                                     <!-- Link URL -->
                                                     <TextBlock Text="{Binding Url}"
@@ -325,6 +326,7 @@
                                                                FontWeight="Medium"
                                                                Foreground="{DynamicResource SettingsLinkFg}"
                                                                VerticalAlignment="Center"
+                                                               TextWrapping="NoWrap"
                                                                TextTrimming="CharacterEllipsis" />
                                                 </DockPanel>
                                             </Border>
@@ -416,7 +418,8 @@
                                                             x:Name="RelayStatusBadge">
                                                         <TextBlock Text="{Binding Status}"
                                                                    FontSize="12"
-                                                                   FontWeight="SemiBold" />
+                                                                   FontWeight="SemiBold"
+                                                                   TextWrapping="NoWrap" />
                                                     </Border>
                                                     <!-- Name -->
                                                     <TextBlock DockPanel.Dock="Right"
@@ -424,13 +427,17 @@
                                                                FontSize="14"
                                                                Foreground="{DynamicResource TextMuted}"
                                                                Margin="12,0"
-                                                               VerticalAlignment="Center" />
+                                                               VerticalAlignment="Center"
+                                                               TextWrapping="NoWrap"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               MaxWidth="130" />
                                                     <!-- Link URL -->
                                                     <TextBlock Text="{Binding Url}"
                                                                FontSize="14"
                                                                FontWeight="Medium"
                                                                Foreground="{DynamicResource SettingsLinkFg}"
                                                                VerticalAlignment="Center"
+                                                               TextWrapping="NoWrap"
                                                                TextTrimming="CharacterEllipsis" />
                                                 </DockPanel>
                                             </Border>
@@ -970,7 +977,18 @@
                                 </Button>
                             </StackPanel>
 
-                            <!-- Confirmation checkbox: Vue .network-confirmation-checkbox -->
+                            </StackPanel>
+                        </Border>
+                    </ScrollViewer>
+
+                    <!-- Modal footer: Vue .modal-footer -->
+                    <Border Name="NetworkModalFooter"
+                            Grid.Row="2"
+                            BorderBrush="{DynamicResource Stroke}"
+                            BorderThickness="0,1,0,0"
+                            Padding="24,20">
+                        <StackPanel Spacing="16">
+                            <!-- Confirmation checkbox stays visible with the fixed footer actions. -->
                             <DockPanel Name="NetworkConfirmationRow">
                                 <CheckBox Classes="NetworkConfirmCheckbox"
                                           IsChecked="{Binding NetworkChangeConfirmed, Mode=TwoWay}"
@@ -984,28 +1002,8 @@
                                            LineHeight="21"
                                            VerticalAlignment="Top" />
                             </DockPanel>
-                            </StackPanel>
-                        </Border>
-                    </ScrollViewer>
 
-                    <!-- Modal footer: Vue .modal-footer -->
-                    <Border Name="NetworkModalFooter"
-                            Grid.Row="2"
-                            BorderBrush="{DynamicResource Stroke}"
-                            BorderThickness="0,1,0,0"
-                            Padding="24,20">
-                        <StackPanel Name="NetworkModalActions" Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
-                            <Button Name="NetworkCancelButton"
-                                    Classes="MobileAction"
-                                    Padding="20,10"
-                                    Background="{DynamicResource ModalCancelBg}"
-                                    Foreground="{DynamicResource ModalCancelFg}"
-                                    BorderThickness="0"
-                                    CornerRadius="8"
-                                    FontWeight="SemiBold"
-                                    FontSize="14"
-                                    Click="OnCloseNetworkModal"
-                                    Content="Cancel" />
+                            <StackPanel Name="NetworkModalActions" Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
                             <Button Name="NetworkConfirmButton"
                                     Classes="MobileAction"
                                     Padding="20,10"
@@ -1029,6 +1027,7 @@
                                                IsVisible="{Binding !IsSwitchingNetwork}" />
                                 </StackPanel>
                             </Button>
+                            </StackPanel>
                         </StackPanel>
                     </Border>
                 </Grid>

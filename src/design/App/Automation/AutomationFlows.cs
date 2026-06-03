@@ -2456,14 +2456,17 @@ public static class AutomationFlows
             await ClickByNameAsync(window, "SubmitButton");
             await Task.Delay(500);
 
-            // Click "Pay invoice instead" button
-            await ClickByNameAsync(window, "PayInvoiceInsteadButton", TimeSpan.FromSeconds(15));
-            await Task.Delay(1000);
-
             var pf = await Dispatcher.UIThread.InvokeAsync(() => investVm.PaymentFlow);
             if (pf == null)
             {
                 return new InvestViaInvoiceResponse { Success = false, Error = "PaymentFlow not available" };
+            }
+
+            // If no wallet can pay directly, the flow now opens the invoice screen immediately.
+            if (pf.CurrentScreen != global::App.UI.Shared.PaymentFlow.PaymentFlowScreen.Invoice)
+            {
+                await ClickByNameAsync(window, "PayInvoiceInsteadButton", TimeSpan.FromSeconds(15));
+                await Task.Delay(1000);
             }
 
             // Wait for on-chain address to be generated (both tabs need it)

@@ -50,4 +50,10 @@ public record PaymentFlowConfig
     /// Null = hide the "Pay with Wallet" button (invoice-only flow).
     /// </summary>
     public Func<WalletId, long, long, Task<Result>>? OnPayWithWallet { get; init; }
+
+    /// <summary>
+    /// If true, starts directly on the invoice screen when no wallet has enough available
+    /// balance for a direct wallet payment.
+    /// </summary>
+    public bool SkipWalletSelectorWhenNoWalletCanPay { get; init; }
 }

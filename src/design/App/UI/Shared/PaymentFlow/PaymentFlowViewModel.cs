@@ -227,7 +227,12 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
                 this.RaisePropertyChanged(nameof(QrCodeContent));
             }).DisposeWith(_disposables);
 
-        SelectWallet(_walletContext.SelectedWallet ?? Wallets.FirstOrDefault());
+        SelectWallet(GetInitialWalletSelection());
+
+        if (ShouldStartWithInvoice())
+        {
+            ShowInvoice();
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -245,6 +250,31 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
 
         wallet.IsSelected = true;
         SelectedWallet = wallet;
+    }
+
+    private WalletInfo? GetInitialWalletSelection()
+    {
+        WalletInfo? selectedWallet = _walletContext.SelectedWallet;
+
+        if (!_config.SkipWalletSelectorWhenNoWalletCanPay)
+            return selectedWallet ?? Wallets.FirstOrDefault();
+
+        if (selectedWallet != null && CanWalletPay(selectedWallet))
+            return selectedWallet;
+
+        return Wallets.FirstOrDefault(CanWalletPay) ?? selectedWallet ?? Wallets.FirstOrDefault();
+    }
+
+    private bool ShouldStartWithInvoice()
+    {
+        return _config.SkipWalletSelectorWhenNoWalletCanPay
+            && _config.OnPayWithWallet != null
+            && !Wallets.Any(CanWalletPay);
+    }
+
+    private bool CanWalletPay(WalletInfo wallet)
+    {
+        return wallet.AvailableSats >= _config.AmountSats;
     }
 
     // ═══════════════════════════════════════════════════════════════════

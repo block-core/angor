@@ -48,6 +48,12 @@ public static class ShellService
     /// <summary>
     /// Route platform back requests through the shell navigation stack.
     /// </summary>
+    public static bool CanHandlePlatformBack()
+        => _vm?.CanHandlePlatformBack() ?? false;
+
+    /// <summary>
+    /// Route platform back requests through the shell navigation stack.
+    /// </summary>
     public static bool TryHandlePlatformBack()
         => _vm?.TryHandlePlatformBack() ?? false;
 }
