@@ -319,7 +319,7 @@
                             Name="QrCodePlaceholder">
                         <Panel>
                             <Image Width="192" Height="192" Stretch="UniformToFill"
-                                   Source="{Binding QrCodeContent, Converter={x:Static shared:QRCodeConverter.Instance}}"
+                                   Source="{Binding QrCodeImage}"
                                    IsVisible="{Binding QrCodeContent, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8"
                                         IsVisible="{Binding QrCodeContent, Converter={x:Static StringConverters.IsNullOrEmpty}}">

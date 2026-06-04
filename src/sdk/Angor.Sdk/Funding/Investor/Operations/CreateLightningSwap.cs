@@ -77,26 +77,44 @@ public static class CreateLightningSwap
                     "Total on-chain amount needed: {Total} sats (amount: {Amount} + angorFee: {AngorFee} + spendTxFee: {SpendTxFee} [{SpendVbytes} vB] + claimTxFee: {ClaimTxFee} [{ClaimVbytes} vB] @ {FeeRate} sat/vb, {Stages} stages)",
                     totalOnChainNeeded, investmentAmount, angorFee, estimatedSpendingTxFee, estimatedSpendingTxVbytes, estimatedClaimTxFee, EstimatedClaimTxVbytes, request.EstimatedFeeRateSatsPerVbyte, request.StageCount);
 
-                // Step 2: Ensure the amount meets Boltz minimum. If below, bump up —
-                // the excess stays in the wallet as change after the spending transaction.
+                // Step 2: Fetch fees once and reuse for both min-amount check and invoice calculation.
+                // Previously this called GetReverseSwapFeesAsync twice (once here, once inside
+                // CalculateInvoiceAmountAsync), adding an extra round-trip on mobile networks.
                 var feesResult = await boltzSwapService.GetReverseSwapFeesAsync();
-                if (feesResult.IsSuccess && totalOnChainNeeded < feesResult.Value.MinAmount)
+                if (feesResult.IsFailure)
+                {
+                    logger.LogError("Failed to get swap fees: {Error}", feesResult.Error);
+                    return Result.Failure<CreateLightningSwapResponse>(feesResult.Error);
+                }
+
+                var fees = feesResult.Value;
+
+                if (totalOnChainNeeded < fees.MinAmount)
                 {
                     logger.LogInformation(
                         "Amount {Total} sats is below Boltz minimum {Min} sats — bumping up",
-                        totalOnChainNeeded, feesResult.Value.MinAmount);
-                    totalOnChainNeeded = feesResult.Value.MinAmount;
+                        totalOnChainNeeded, fees.MinAmount);
+                    totalOnChainNeeded = fees.MinAmount;
                 }
 
-                // Step 3: Calculate the invoice amount (accounts for Boltz fees)
-                var invoiceAmountResult = await boltzSwapService.CalculateInvoiceAmountAsync(totalOnChainNeeded);
-                if (invoiceAmountResult.IsFailure)
+                // Step 3: Calculate the invoice amount using the already-fetched fees
+                var invoiceAmount = fees.CalculateInvoiceAmount(totalOnChainNeeded);
+
+                if (invoiceAmount < fees.MinAmount)
                 {
-                    logger.LogError("Failed to calculate invoice amount: {Error}", invoiceAmountResult.Error);
-                    return Result.Failure<CreateLightningSwapResponse>(invoiceAmountResult.Error);
+                    logger.LogError("Invoice amount {Amount} sats is below minimum {Min} sats",
+                        invoiceAmount, fees.MinAmount);
+                    return Result.Failure<CreateLightningSwapResponse>(
+                        $"Invoice amount {invoiceAmount} sats is below minimum {fees.MinAmount} sats");
+                }
+                if (invoiceAmount > fees.MaxAmount)
+                {
+                    logger.LogError("Invoice amount {Amount} sats exceeds maximum {Max} sats",
+                        invoiceAmount, fees.MaxAmount);
+                    return Result.Failure<CreateLightningSwapResponse>(
+                        $"Invoice amount {invoiceAmount} sats exceeds maximum {fees.MaxAmount} sats");
                 }
 
-                var invoiceAmount = invoiceAmountResult.Value;
                 var boltzFees = invoiceAmount - totalOnChainNeeded;
 
                 logger.LogInformation(

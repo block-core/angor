@@ -21,6 +21,14 @@ public class BoltzSwapService : IBoltzSwapService
     private readonly ILogger<BoltzSwapService> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
 
+    // Short-lived cache for fee lookups. During a single Lightning swap flow
+    // GetReverseSwapFeesAsync is called up to 3 times in quick succession
+    // (constructor prefetch, handler min-amount check, CalculateInvoiceAmountAsync).
+    // A 30-second TTL collapses those into a single HTTP round-trip.
+    private BoltzSwapFees? _cachedFees;
+    private DateTime _feesCachedAt;
+    private static readonly TimeSpan FeesCacheTtl = TimeSpan.FromSeconds(30);
+
     public BoltzSwapService(
         HttpClient httpClient,
         BoltzConfiguration configuration,
@@ -347,6 +355,14 @@ public class BoltzSwapService : IBoltzSwapService
 
     public async Task<Result<BoltzSwapFees>> GetReverseSwapFeesAsync()
     {
+        // Return cached result if still fresh
+        if (_cachedFees != null && DateTime.UtcNow - _feesCachedAt < FeesCacheTtl)
+        {
+            _logger.LogDebug("Returning cached reverse swap fees ({Age:F1}s old)",
+                (DateTime.UtcNow - _feesCachedAt).TotalSeconds);
+            return Result.Success(_cachedFees);
+        }
+
         try
         {
             _logger.LogDebug("Fetching reverse swap fee information from Boltz");
@@ -383,6 +399,9 @@ public class BoltzSwapService : IBoltzSwapService
             _logger.LogDebug(
                 "Reverse swap fees: {Percentage}% + {MinerFees} sats, limits: {Min}-{Max}",
                 fees.Percentage, fees.MinerFees, fees.MinAmount, fees.MaxAmount);
+
+            _cachedFees = fees;
+            _feesCachedAt = DateTime.UtcNow;
 
             return Result.Success(fees);
         }

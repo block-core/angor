@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Reactive;
 using System.Threading;
 using Angor.Sdk.Common;
@@ -11,8 +12,10 @@ using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Wallet.Domain;
 using App.UI.Shared.Services;
 using App.UI.Shell;
+using Avalonia.Media.Imaging;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
+using QRCoder;
 using ReactiveUI;
 using MonitorOp = Angor.Sdk.Funding.Investor.Operations.MonitorAddressForFunds;
 
@@ -68,6 +71,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
     [Reactive] private bool isGeneratingLightningInvoice;
     [Reactive] private string? errorMessage;
     [Reactive] private long selectedFeeRate;
+    [Reactive] private Bitmap? qrCodeImage;
 
     // ── Derived visibility ──
     public bool IsWalletSelector => CurrentScreen == PaymentFlowScreen.WalletSelector;
@@ -226,6 +230,21 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
                 this.RaisePropertyChanged(nameof(InvoiceString));
                 this.RaisePropertyChanged(nameof(QrCodeContent));
             }).DisposeWith(_disposables);
+
+        // Generate QR code on background thread to avoid blocking the UI,
+        // especially on mobile where large lightning invoices (~270 chars)
+        // produce complex QR codes that take hundreds of ms to generate.
+        this.WhenAnyValue(x => x.QrCodeContent)
+            .ObserveOn(RxApp.TaskpoolScheduler)
+            .Select(GenerateQrBitmap)
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(image =>
+            {
+                var old = QrCodeImage;
+                QrCodeImage = image;
+                old?.Dispose();
+            })
+            .DisposeWith(_disposables);
 
         SelectWallet(GetInitialWalletSelection());
 
@@ -894,4 +913,22 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
     }
 
     public void Dispose() => _disposables.Dispose();
+
+    /// <summary>
+    /// Generates a QR code bitmap from a string. CPU-intensive for long inputs
+    /// (e.g. lightning invoices) — always call from a background thread.
+    /// </summary>
+    private static Bitmap? GenerateQrBitmap(string? content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+            return null;
+
+        var qrGenerator = new QRCodeGenerator();
+        var qrCodeData = qrGenerator.CreateQrCode(content, QRCodeGenerator.ECCLevel.Q);
+        var qrCode = new PngByteQRCode(qrCodeData);
+        // 10 px/module is plenty for a 192x192 display area and keeps the bitmap small
+        var pngBytes = qrCode.GetGraphic(10);
+        var stream = new MemoryStream(pngBytes);
+        return new Bitmap(stream);
+    }
 }
