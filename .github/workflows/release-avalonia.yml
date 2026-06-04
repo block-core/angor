@@ -20,6 +20,7 @@ env:
   APP_ID: 'io.blockcore.angor'
   VENDOR: 'Blockcore'
   CLI_PROJECT: 'src/cli/Angor.Cli/Angor.Cli.csproj'
+  NUGET_CERT_REVOCATION_MODE: offline
 
 jobs:
   # Extract version from tag or input
