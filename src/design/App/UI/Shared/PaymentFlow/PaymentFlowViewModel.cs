@@ -54,6 +54,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
     private readonly PrototypeSettings _prototypeSettings;
     private readonly CompositeDisposable _disposables = new();
     private CancellationTokenSource? _monitorCts;
+    private TaskCompletionSource<string> _addressReadyTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     // ── State ──
     [Reactive] private PaymentFlowScreen currentScreen = PaymentFlowScreen.WalletSelector;
@@ -331,6 +332,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         ErrorMessage = null;
         IsProcessing = true;
         PaymentStatusText = "Generating invoice address...";
+        _addressReadyTcs = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
         GenerateReceiveAddressCommand.Execute().Subscribe();
     }
 
@@ -344,6 +346,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             {
                 ErrorMessage = createResult.Error;
                 IsProcessing = false;
+                _addressReadyTcs.TrySetCanceled();
                 return;
             }
             wallet = Wallets.FirstOrDefault();
@@ -351,6 +354,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             {
                 ErrorMessage = "Wallet was created but not found after reload.";
                 IsProcessing = false;
+                _addressReadyTcs.TrySetCanceled();
                 return;
             }
         }
@@ -358,6 +362,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         {
             ErrorMessage = "Wallet has no ID.";
             IsProcessing = false;
+            _addressReadyTcs.TrySetCanceled();
             return;
         }
 
@@ -380,6 +385,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             _logger.LogWarning(ex, "RefreshAllBalancesAsync failed");
             ErrorMessage = $"Refresh wallet failed: {ex.Message}";
             IsProcessing = false;
+            _addressReadyTcs.TrySetCanceled();
             return;
         }
 
@@ -394,6 +400,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             _logger.LogError(ex, "GetNextReceiveAddress threw");
             ErrorMessage = $"GetNextReceiveAddress threw: {ex.GetType().Name}: {ex.Message}";
             IsProcessing = false;
+            _addressReadyTcs.TrySetCanceled();
             return;
         }
         if (addressResult.IsFailure)
@@ -401,13 +408,25 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             _logger.LogError("GetNextReceiveAddress failed: {Error}", addressResult.Error);
             ErrorMessage = $"GetNextReceiveAddress failed: {addressResult.Error}";
             IsProcessing = false;
+            _addressReadyTcs.TrySetCanceled();
             return;
         }
 
         OnChainAddress = addressResult.Value.Value;
+        _addressReadyTcs.TrySetResult(OnChainAddress);
         _logger.LogInformation("Receive address generated: {Address}", OnChainAddress);
 
-        PayToOnChainAddress();
+        // Only start on-chain monitoring if the user is still on the OnChain tab;
+        // if they switched to Lightning while the address was being generated,
+        // the Lightning flow will pick up the address via _addressReadyTcs.
+        if (SelectedNetworkTab == NetworkTab.OnChain)
+        {
+            PayToOnChainAddress();
+        }
+        else
+        {
+            IsProcessing = false;
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -512,6 +531,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
 
         // Restore UI state
         OnChainAddress = swap.Address;
+        _addressReadyTcs.TrySetResult(OnChainAddress);
         LightningInvoice = swap.Invoice;
         LightningSwapId = swap.SwapId;
         SelectedNetworkTab = NetworkTab.Lightning;
@@ -721,9 +741,37 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
     private async Task PayViaLightningAsync()
     {
         var wallet = Wallets.FirstOrDefault();
-        if (wallet?.Id is null || string.IsNullOrEmpty(OnChainAddress))
+        if (wallet?.Id is null)
         {
-            ErrorMessage = "Wallet or receive address not ready.";
+            ErrorMessage = "Wallet not ready.";
+            IsProcessing = false;
+            IsGeneratingLightningInvoice = false;
+            return;
+        }
+
+        // Wait for the on-chain address if it's still being generated.
+        // This avoids a race where the user switches to the Lightning tab
+        // before GenerateReceiveAddressAsync has finished producing the address.
+        if (string.IsNullOrEmpty(OnChainAddress))
+        {
+            PaymentStatusText = "Waiting for receive address...";
+            try
+            {
+                await _addressReadyTcs.Task.WaitAsync(TimeSpan.FromSeconds(30));
+            }
+            catch (Exception)
+            {
+                ErrorMessage = ErrorMessage ?? "Receive address not available. Please try again.";
+                IsProcessing = false;
+                IsGeneratingLightningInvoice = false;
+                return;
+            }
+        }
+
+        // Bail out if the user switched away from Lightning while waiting for the address
+        if (SelectedNetworkTab != NetworkTab.Lightning)
+        {
+            IsProcessing = false;
             IsGeneratingLightningInvoice = false;
             return;
         }
