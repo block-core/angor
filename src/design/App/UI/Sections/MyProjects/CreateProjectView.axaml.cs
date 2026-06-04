@@ -31,6 +31,7 @@ public partial class CreateProjectView : UserControl
     private Border? _navFooter;
     private StackPanel? _stepContentPanel;
     private Border? _strokeOverlay;
+    private ScrollViewer? _stepScrollViewer;
 
     private IDisposable? _deploySubscription;
     private IDisposable? _stepSubscription;
@@ -56,6 +57,7 @@ public partial class CreateProjectView : UserControl
         _navFooter = this.FindControl<Border>("NavFooter");
         _stepContentPanel = this.FindControl<StackPanel>("StepContentPanel");
         _strokeOverlay = this.FindControl<Border>("StrokeOverlay");
+        _stepScrollViewer = this.FindControl<ScrollViewer>("StepScrollViewer");
 
         // Cache progress bar segments
         _progressSegments =
@@ -95,6 +97,7 @@ public partial class CreateProjectView : UserControl
                 {
                     UpdateStepper();
                     UpdateMobileHeader();
+                    ScrollContentToTop();
                 });
 
             _typeSubscription = vm.WhenAnyValue(x => x.ProjectType)
@@ -340,6 +343,22 @@ public partial class CreateProjectView : UserControl
 
     private CreateProjectViewModel? Vm => DataContext as CreateProjectViewModel;
 
+    /// <summary>
+    /// Reset the wizard's scrollable step content to the top whenever the user
+    /// changes step. Step content is reused across steps (visibility toggles),
+    /// so without this the previous step's scroll offset persists.
+    /// Posted at Loaded priority so it runs after the new step's content has
+    /// laid out and the ScrollViewer has its updated Extent.
+    /// </summary>
+    private void ScrollContentToTop()
+    {
+        if (_stepScrollViewer == null) return;
+
+        Avalonia.Threading.Dispatcher.UIThread.Post(
+            () => _stepScrollViewer?.ScrollToHome(),
+            Avalonia.Threading.DispatcherPriority.Loaded);
+    }
+
     private void OnButtonClick(object? sender, RoutedEventArgs e)
     {
         if (e.Source is not Button btn) return;
@@ -488,6 +507,7 @@ public partial class CreateProjectView : UserControl
         // Reset stepper
         UpdateStepper();
         UpdateMobileHeader();
+        ScrollContentToTop();
 
         // Delegate to child step UCs
         this.FindControl<CreateProjectStep1View>("Step1View")?.ResetVisualState();
