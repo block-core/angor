@@ -21,26 +21,16 @@ public partial class CreateProjectStep3View : UserControl
     private readonly ILogger<CreateProjectStep3View> _logger;
     private readonly BlossomUploadService _blossomService;
 
-    // Stored bytes from Browse for upload
-    private byte[]? _bannerFileBytes;
-    private string _bannerContentType = "image/jpeg";
-    private byte[]? _profileFileBytes;
-    private string _profileContentType = "image/jpeg";
-
     private IDisposable? _bannerUrlSub;
     private IDisposable? _profileUrlSub;
 
     // Cached control references
-    private TextBlock? _bannerFileNameText;
     private TextBlock? _bannerStatusText;
-    private TextBlock? _profileFileNameText;
     private TextBlock? _profileStatusText;
     private TextBox? _bannerBlossomServerTextBox;
     private TextBox? _profileBlossomServerTextBox;
     private Button? _bannerUploadBtn;
     private Button? _profileUploadBtn;
-    private Avalonia.Controls.Shapes.Path? _bannerUploadIcon;
-    private Avalonia.Controls.Shapes.Path? _profileUploadIcon;
 
     public CreateProjectStep3View()
     {
@@ -53,29 +43,22 @@ public partial class CreateProjectStep3View : UserControl
     {
         base.OnLoaded(e);
 
-        _bannerFileNameText = this.FindControl<TextBlock>("BannerFileNameText");
         _bannerStatusText = this.FindControl<TextBlock>("BannerStatusText");
-        _profileFileNameText = this.FindControl<TextBlock>("ProfileFileNameText");
         _profileStatusText = this.FindControl<TextBlock>("ProfileStatusText");
         _bannerBlossomServerTextBox = this.FindControl<TextBox>("BannerBlossomServerTextBox");
         _profileBlossomServerTextBox = this.FindControl<TextBox>("ProfileBlossomServerTextBox");
         _bannerUploadBtn = this.FindControl<Button>("BannerUploadBtn");
         _profileUploadBtn = this.FindControl<Button>("ProfileUploadBtn");
 
-        // Wire browse buttons
-        var bannerBrowseBtn = this.FindControl<Button>("BannerBrowseBtn");
-        if (bannerBrowseBtn != null)
-            bannerBrowseBtn.Click += (_, _) => _ = BrowseFileAsync(true);
-
-        var profileBrowseBtn = this.FindControl<Button>("ProfileBrowseBtn");
-        if (profileBrowseBtn != null)
-            profileBrowseBtn.Click += (_, _) => _ = BrowseFileAsync(false);
-
-        // Wire upload buttons
+        // Wire combined pick-and-upload buttons
         if (_bannerUploadBtn != null)
-            _bannerUploadBtn.Click += (_, _) => _ = UploadToBlossomAsync(true);
+            _bannerUploadBtn.Click += (_, _) => _ = PickAndUploadAsync(true);
         if (_profileUploadBtn != null)
-            _profileUploadBtn.Click += (_, _) => _ = UploadToBlossomAsync(false);
+            _profileUploadBtn.Click += (_, _) => _ = PickAndUploadAsync(false);
+
+        // Wire preview click-targets (banner panel + avatar circle) — same Pick & Upload flow
+        WirePreviewClickTarget("BannerPreviewClickTarget", "BannerPreviewOverlay", isBanner: true);
+        WirePreviewClickTarget("AvatarPreviewClickTarget", "AvatarPreviewOverlay", isBanner: false);
 
         // Watch ViewModel URL changes to update the preview
         if (DataContext is CreateProjectViewModel vm)
@@ -134,13 +117,50 @@ public partial class CreateProjectStep3View : UserControl
 
     #endregion
 
-    #region File Browse
+    #region Preview click-targets
 
-    private async Task BrowseFileAsync(bool isBanner)
+    private void WirePreviewClickTarget(string targetName, string overlayName, bool isBanner)
+    {
+        var target = this.FindControl<Control>(targetName);
+        var overlay = this.FindControl<Border>(overlayName);
+        if (target == null) return;
+
+        target.PointerPressed += (_, e) =>
+        {
+            if (e.GetCurrentPoint(target).Properties.IsLeftButtonPressed)
+                _ = PickAndUploadAsync(isBanner);
+        };
+
+        if (overlay != null)
+        {
+            target.PointerEntered += (_, _) => overlay.IsVisible = true;
+            target.PointerExited += (_, _) => overlay.IsVisible = false;
+        }
+    }
+
+    #endregion
+
+    #region Pick & Upload
+
+    private async Task PickAndUploadAsync(bool isBanner)
     {
         var topLevel = TopLevel.GetTopLevel(this);
         if (topLevel == null) return;
 
+        var serverUrl = isBanner
+            ? _bannerBlossomServerTextBox?.Text?.Trim()
+            : _profileBlossomServerTextBox?.Text?.Trim();
+
+        if (string.IsNullOrWhiteSpace(serverUrl) || !Uri.TryCreate(serverUrl, UriKind.Absolute, out _))
+        {
+            SetStatus(isBanner, "Please enter a valid Blossom server URL.", isError: true);
+            return;
+        }
+
+        // Step 1 — file picker
+        byte[] fileBytes;
+        string contentType;
+        string fileName;
         try
         {
             var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
@@ -157,81 +177,41 @@ public partial class CreateProjectStep3View : UserControl
                 }
             });
 
-            if (files.Count == 0) return;
+            if (files.Count == 0) return; // user cancelled — no error
 
             var file = files[0];
             await using var stream = await file.OpenReadAsync();
             using var ms = new MemoryStream();
             await stream.CopyToAsync(ms);
 
-            var bytes = ms.ToArray();
+            fileBytes = ms.ToArray();
+            fileName = file.Name;
             var ext = Path.GetExtension(file.Name).ToLowerInvariant();
-            var contentType = ext switch
+            contentType = ext switch
             {
                 ".png" => "image/png",
                 ".gif" => "image/gif",
                 ".webp" => "image/webp",
                 _ => "image/jpeg"
             };
-
-            if (isBanner)
-            {
-                _bannerFileBytes = bytes;
-                _bannerContentType = contentType;
-                if (_bannerFileNameText != null)
-                    _bannerFileNameText.Text = $"{file.Name} ({bytes.Length / 1024} KB)";
-                SetStatus(true, $"Ready to upload: {file.Name}", isError: false);
-            }
-            else
-            {
-                _profileFileBytes = bytes;
-                _profileContentType = contentType;
-                if (_profileFileNameText != null)
-                    _profileFileNameText.Text = $"{file.Name} ({bytes.Length / 1024} KB)";
-                SetStatus(false, $"Ready to upload: {file.Name}", isError: false);
-            }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "File browse failed");
-        }
-    }
-
-    #endregion
-
-    #region Blossom Upload
-
-    private async Task UploadToBlossomAsync(bool isBanner)
-    {
-        var fileBytes = isBanner ? _bannerFileBytes : _profileFileBytes;
-        var contentType = isBanner ? _bannerContentType : _profileContentType;
-        var serverUrl = isBanner
-            ? _bannerBlossomServerTextBox?.Text?.Trim()
-            : _profileBlossomServerTextBox?.Text?.Trim();
-
-        if (fileBytes == null || fileBytes.Length == 0)
-        {
-            SetStatus(isBanner, "Please browse and select a file first.", isError: true);
+            _logger.LogWarning(ex, "File pick failed");
+            SetStatus(isBanner, $"Could not read file: {ex.Message}", isError: true);
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(serverUrl) || !Uri.TryCreate(serverUrl, UriKind.Absolute, out _))
-        {
-            SetStatus(isBanner, "Please enter a valid Blossom server URL.", isError: true);
-            return;
-        }
-
+        // Step 2 — upload
         SetUploadInProgress(isBanner, true);
-        SetStatus(isBanner, $"Uploading to {serverUrl}…", isError: false);
+        SetStatus(isBanner, $"Uploading {fileName} to {serverUrl}…", isError: false);
 
         try
         {
-            // Get the Nostr private key for BUD-02 auth from the selected wallet
             var nostrKeyHex = await GetNostrPrivateKeyHexAsync();
             if (nostrKeyHex == null)
             {
                 SetStatus(isBanner, "No wallet selected or unable to access wallet keys.", isError: true);
-                SetUploadInProgress(isBanner, false);
                 return;
             }
 
@@ -252,23 +232,11 @@ public partial class CreateProjectStep3View : UserControl
                     vm.ProfileUrl = result.Value;
             }
 
-            SetStatus(isBanner, "Upload successful!", isError: false);
-
-            // Clear stored bytes after a successful upload
-            if (isBanner)
-            {
-                _bannerFileBytes = null;
-                if (_bannerFileNameText != null) _bannerFileNameText.Text = "No file selected";
-            }
-            else
-            {
-                _profileFileBytes = null;
-                if (_profileFileNameText != null) _profileFileNameText.Text = "No file selected";
-            }
+            SetStatus(isBanner, $"Uploaded {fileName} — click again to replace.", isError: false);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "UploadToBlossomAsync failed");
+            _logger.LogError(ex, "PickAndUploadAsync failed");
             SetStatus(isBanner, $"Upload error: {ex.Message}", isError: true);
         }
         finally
@@ -357,11 +325,6 @@ public partial class CreateProjectStep3View : UserControl
     /// </summary>
     public void ResetVisualState()
     {
-        _bannerFileBytes = null;
-        _profileFileBytes = null;
-
-        if (_bannerFileNameText != null) _bannerFileNameText.Text = "No file selected";
-        if (_profileFileNameText != null) _profileFileNameText.Text = "No file selected";
         if (_bannerStatusText != null) _bannerStatusText.IsVisible = false;
         if (_profileStatusText != null) _profileStatusText.IsVisible = false;
 
