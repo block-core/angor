@@ -269,7 +269,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
     {
         return _config.SkipWalletSelectorWhenNoWalletCanPay
             && _config.OnPayWithWallet != null
-            && !Wallets.Any(CanWalletPay);
+            && Wallets.All(w => w.AvailableSats <= 0);
     }
 
     private bool CanWalletPay(WalletInfo wallet)
