@@ -523,9 +523,40 @@ public static class AutomationFlows
             // Wait for payment flow modal to appear (SubmitButton triggers shell modal)
             await Task.Delay(500);
 
+            // Wait for PaymentFlow VM to be created
+            var pfDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+            while (DateTime.UtcNow < pfDeadline)
+            {
+                var ready = await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    Dispatcher.UIThread.RunJobs();
+                    return investVm.PaymentFlow != null;
+                });
+                if (ready) break;
+                await Task.Delay(200);
+            }
+
             var maxPayAttempts = 3;
             for (var payAttempt = 1; payAttempt <= maxPayAttempts; payAttempt++)
             {
+                // If SkipWalletSelectorWhenNoWalletCanPay jumped to Invoice, switch back to WalletSelector
+                var wasOnInvoice = await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    Dispatcher.UIThread.RunJobs();
+                    if (investVm.PaymentFlow?.CurrentScreen == PaymentFlowScreen.Invoice)
+                    {
+                        investVm.PaymentFlow.CurrentScreen = PaymentFlowScreen.WalletSelector;
+                        return true;
+                    }
+                    return false;
+                });
+
+                if (wasOnInvoice)
+                {
+                    // Allow UI to re-render the wallet selector controls
+                    await Task.Delay(500);
+                }
+
                 // Click the first WalletButton in the payment flow, then PayWithWalletButton + ConfirmButton
                 await ClickFirstWalletButtonAsync(window);
                 await ClickWithConfirmRetryAsync(window, "PayWithWalletButton");
@@ -1658,13 +1689,16 @@ public static class AutomationFlows
 
     /// <summary>
     /// Click the first visible WalletButton in the payment flow modal.
+    /// If the wallet selector was skipped (e.g. SkipWalletSelectorWhenNoWalletCanPay auto-selected
+    /// a wallet or jumped to invoice), returns without clicking — the caller should proceed
+    /// directly to PayWithWalletButton or invoice handling.
     /// </summary>
     private static async Task ClickFirstWalletButtonAsync(Window window)
     {
         var deadline = DateTime.UtcNow + UiTimeout;
         while (DateTime.UtcNow < deadline)
         {
-            var (clicked, debugInfo) = await Dispatcher.UIThread.InvokeAsync(() =>
+            var (clicked, skipped, debugInfo) = await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 var allButtons = window.GetVisualDescendants().OfType<Button>().ToList();
                 var walletBtns = allButtons.Where(b => b.Name == "WalletButton").ToList();
@@ -1672,14 +1706,28 @@ public static class AutomationFlows
                 var info = $"totalButtons={allButtons.Count}, namedWallet={walletBtns.Count}, visibleWallet={visibleWalletBtns.Count}";
 
                 var walletBtn = visibleWalletBtns.FirstOrDefault();
-                if (walletBtn == null) return (false, info);
-                ClickButton(walletBtn);
-                return (true, info);
+                if (walletBtn != null)
+                {
+                    ClickButton(walletBtn);
+                    return (true, false, info);
+                }
+
+                // If PayWithWalletButton is already visible, the wallet was auto-selected — skip
+                var payBtn = allButtons.FirstOrDefault(b => b.Name == "PayWithWalletButton" && b.IsVisible);
+                if (payBtn != null)
+                    return (false, true, info);
+
+                return (false, false, info);
             });
 
             if (clicked)
             {
                 await Task.Delay(200);
+                return;
+            }
+
+            if (skipped)
+            {
                 return;
             }
 

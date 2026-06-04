@@ -202,19 +202,27 @@
                                                            FontSize="13"
                                                            Foreground="{DynamicResource TextMuted}" />
                                             </StackPanel>
-                                            <StackPanel Grid.Column="2" Orientation="Horizontal"
-                                                        Spacing="8" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Balance}"
-                                                           FontSize="14" FontWeight="SemiBold"
-                                                           Foreground="{DynamicResource TextStrong}"
-                                                           VerticalAlignment="Center" />
-                                                <Viewbox Width="20" Height="20"
-                                                         IsVisible="{Binding IsSelected}"
-                                                         VerticalAlignment="Center">
-                                                    <Path Data="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                          Fill="{DynamicResource PrimaryGreenBrush}"
-                                                          Width="20" Height="20" Stretch="Uniform" />
-                                                </Viewbox>
+                                            <StackPanel Grid.Column="2" Spacing="2"
+                                                        VerticalAlignment="Center"
+                                                        HorizontalAlignment="Right">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <TextBlock Text="{Binding Balance}"
+                                                               FontSize="14" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource TextStrong}"
+                                                               VerticalAlignment="Center" />
+                                                    <Viewbox Width="20" Height="20"
+                                                             IsVisible="{Binding IsSelected}"
+                                                             VerticalAlignment="Center">
+                                                        <Path Data="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                                              Fill="{DynamicResource PrimaryGreenBrush}"
+                                                              Width="20" Height="20" Stretch="Uniform" />
+                                                    </Viewbox>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding PendingBalance, StringFormat='Pending: {0}'}"
+                                                           IsVisible="{Binding HasPendingBalance}"
+                                                           FontSize="11"
+                                                           Foreground="#f59e0b"
+                                                           HorizontalAlignment="Right" />
                                             </StackPanel>
                                         </Grid>
                                     </Button>
