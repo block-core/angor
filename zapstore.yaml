@@ -1,0 +1,28 @@
+repository: https://github.com/block-core/angor
+release_source: https://github.com/block-core/angor
+name: Angor
+summary: Decentralized Bitcoin funding for founders and investors
+description: |
+  Angor is a fully decentralized P2P funding protocol on Bitcoin.
+
+  Founders raise capital in predetermined stages secured by Taproot
+  time-lock contracts; investors retain control and can recover any
+  unspent funds at any time. Project metadata flows over Nostr, so
+  no central server holds the listing.
+
+  Features:
+  - Stage-based fund release via Bitcoin Taproot
+  - Investor-side recovery of unspent funds
+  - Nostr-native project discovery and messaging
+  - Self-custodial wallet, no account required
+tags:
+  - bitcoin
+  - nostr
+  - finance
+  - crowdfunding
+license: MIT
+website: https://angor.io
+icon: ./src/design/App.Android/Resources/drawable/icon.png
+match: ".*\\.apk$"
+metadata_sources:
+  - github

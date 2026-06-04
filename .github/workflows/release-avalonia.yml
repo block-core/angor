@@ -17,7 +17,7 @@ env:
   DESKTOP_PROJECT: 'src/design/App.Desktop/App.Desktop.csproj'
   ANDROID_PROJECT: 'src/design/App.Android/App.Android.csproj'
   APP_NAME: 'Angor'
-  APP_ID: 'io.blockcore.angor'
+  APP_ID: 'io.angor.app'
   VENDOR: 'Blockcore'
   CLI_PROJECT: 'src/cli/Angor.Cli/Angor.Cli.csproj'
 
@@ -391,3 +391,40 @@ jobs:
             artifacts/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Publish the signed Android APK to ZapStore (Nostr-based app store).
+  # Only stable tags (no `-` suffix) ship; prereleases are skipped.
+  # Requires repo secret ZAPSTORE_BUNKER_URL (NIP-46 bunker:// URL).
+  # If the secret is unset the job runs but cleanly no-ops.
+  publish-zapstore:
+    runs-on: ubuntu-latest
+    needs: [prepare, release]
+    if: ${{ !contains(needs.prepare.outputs.version, '-') }}
+    env:
+      HAS_BUNKER: ${{ secrets.ZAPSTORE_BUNKER_URL != '' }}
+    steps:
+      - name: Skip if bunker not configured
+        if: env.HAS_BUNKER != 'true'
+        run: |
+          echo "ZAPSTORE_BUNKER_URL secret not set — skipping ZapStore publish."
+          echo "To enable, set the secret to a NIP-46 bunker:// URL."
+
+      - uses: actions/checkout@v4
+        if: env.HAS_BUNKER == 'true'
+
+      - name: Install zsp
+        if: env.HAS_BUNKER == 'true'
+        run: |
+          ZSP_VERSION=$(curl -fsSL https://api.github.com/repos/zapstore/zsp/releases/latest | jq -r .tag_name)
+          curl -fsSL -o zsp.tar.gz \
+            "https://github.com/zapstore/zsp/releases/download/${ZSP_VERSION}/zsp-linux-amd64.tar.gz"
+          tar -xzf zsp.tar.gz
+          sudo install zsp /usr/local/bin/zsp
+          zsp --version
+
+      - name: Publish to ZapStore
+        if: env.HAS_BUNKER == 'true'
+        env:
+          SIGN_WITH: ${{ secrets.ZAPSTORE_BUNKER_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: zsp publish -y zapstore.yaml
