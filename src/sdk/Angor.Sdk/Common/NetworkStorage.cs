@@ -40,7 +40,7 @@ public class NetworkStorage(IStore store) : INetworkStorage
 
     public string GetNetwork() => Load()
         .Map(d => d.Network)
-        .OnFailureCompensate(_ => "Angornet")
+        .OnFailureCompensate(_ => "Mainnet")
         .Value;
 
     private Result<SettingsData> Load()
@@ -66,7 +66,7 @@ public class NetworkStorage(IStore store) : INetworkStorage
 
     private class SettingsData
     {
-        public string Network { get; set; } = "Angornet";
+        public string Network { get; set; } = "Mainnet";
         public List<SettingsUrl> Explorers { get; set; } = new();
         public List<SettingsUrl> Indexers { get; set; } = new();
         public List<SettingsUrl> Relays { get; set; } = new();
