@@ -10,6 +10,7 @@ env:
   DOTNET_VERSION: '10.0.x'
   SOLUTION_PATH: 'src/App.sln'
   SRC_DIR: 'src'
+  NUGET_CERT_REVOCATION_MODE: offline
 
 jobs:
   build-and-test:
