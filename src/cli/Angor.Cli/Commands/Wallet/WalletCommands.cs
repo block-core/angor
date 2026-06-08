@@ -62,7 +62,7 @@ public static class WalletCommands
     private static Command BuildCreateCommand(IWalletAppService walletService, JsonSerializerOptions jsonOptions)
     {
         var nameOption = new Option<string>("--name", "Wallet name") { IsRequired = true };
-        var networkOption = new Option<string>("--network", () => "testnet", "Network (testnet or mainnet)");
+        var networkOption = new Option<string>("--network", () => "mainnet", "Network (testnet or mainnet)");
         var seedOption = new Option<string?>("--seed", "BIP39 seed words (space-separated). Omit to generate.");
 
         var cmd = new Command("create", "Create a new wallet") { nameOption, networkOption, seedOption };
