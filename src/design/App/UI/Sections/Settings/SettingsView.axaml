@@ -150,12 +150,11 @@
                                               Classes="Widget"
                                               IsChecked="{Binding IsDarkThemeEnabled, Mode=TwoWay}"
                                               VerticalAlignment="Center">
-                                    <ToggleButton.Content>
-                                        <i:Icon Value="fa-solid fa-sun"
-                                                FontSize="16"
-                                                Foreground="{DynamicResource TextMuted}" />
-                                    </ToggleButton.Content>
-                                </ToggleButton>
+                                     <ToggleButton.Content>
+                                         <i:Icon Value="fa-solid fa-sun"
+                                                FontSize="16" />
+                                     </ToggleButton.Content>
+                                 </ToggleButton>
                                 <StackPanel Spacing="4" VerticalAlignment="Center">
                                     <TextBlock Text="Dark Mode"
                                                FontSize="14"

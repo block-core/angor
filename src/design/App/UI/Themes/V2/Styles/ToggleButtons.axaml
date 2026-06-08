@@ -17,6 +17,10 @@
         <Setter Property="Padding" Value="0" />
         <Setter Property="Background" Value="{DynamicResource Surface}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+    </Style>
+    <Style Selector="ToggleButton.Widget i|Icon">
+        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
     </Style>
 
     <Design.PreviewWith>

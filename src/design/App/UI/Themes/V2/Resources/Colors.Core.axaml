@@ -48,6 +48,8 @@
             <Color x:Key="Stroke">#19000000</Color>
             <Color x:Key="TextMuted">#6B7280</Color>           <!-- = Labels -->
             <Color x:Key="TextStrong">#0A0A0A</Color>          <!-- ≈ PrimaryBlackHover -->
+            <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource TextMuted}" />
+            <SolidColorBrush x:Key="TextStrongBrush" Color="{StaticResource TextStrong}" />
             <Color x:Key="Brand">#2D5A3D</Color>               <!-- = PrimaryGreenDark -->
             <Color x:Key="Highlight">#2D5A3D</Color>           <!-- = PrimaryGreenDark -->
             <Color x:Key="BitcoinAccent">#F7931A</Color>       <!-- = BitcoinOrange -->
@@ -232,6 +234,8 @@
             <Color x:Key="Stroke">#19FFFFFF</Color>
             <Color x:Key="TextMuted">#A0A0A0</Color>
             <Color x:Key="TextStrong">#FAFAFA</Color>          <!-- = BodyText (Dark) -->
+            <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource TextMuted}" />
+            <SolidColorBrush x:Key="TextStrongBrush" Color="{StaticResource TextStrong}" />
             <Color x:Key="Brand">#5FAF78</Color>
             <Color x:Key="Highlight">#E5E8E1</Color>
             <Color x:Key="BitcoinAccent">#F7931A</Color>       <!-- = BitcoinOrange -->

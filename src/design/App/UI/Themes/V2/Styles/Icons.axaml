@@ -7,7 +7,7 @@
 
     <!-- Defaults: all i:Icon elements in UserControls get TextMuted color -->
     <Style Selector=":is(UserControl) i|Icon">
-        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
     </Style>
 
     <!-- Sizes -->
@@ -26,7 +26,7 @@
         <Setter Property="Foreground" Value="White" />
     </Style>
     <Style Selector="i|Icon.Icon-Fill-Muted">
-        <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
     </Style>
     <Style Selector="i|Icon.Icon-Fill-Green">
         <Setter Property="Foreground" Value="{DynamicResource Brand}" />

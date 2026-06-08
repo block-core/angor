@@ -81,13 +81,13 @@
                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                         <Viewbox Width="10" Height="16">
                             <Path Data="{StaticResource ChevronLeftThick}"
-                                  Fill="{DynamicResource TextStrong}"
+                                  Fill="{DynamicResource TextStrongBrush}"
                                   Width="320" Height="512" Stretch="Uniform" />
                         </Viewbox>
                         <TextBlock Text="Back"
                                    FontSize="14"
                                    FontWeight="Medium"
-                                   Foreground="{DynamicResource TextStrong}"
+                                   Foreground="{DynamicResource TextStrongBrush}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
@@ -113,17 +113,17 @@
                                     IsVisible="{Binding !IsProcessing}">
                             <i:Icon Value="fa-solid fa-arrows-rotate"
                                    FontSize="14"
-                                   Foreground="{DynamicResource TextStrong}" />
+                                   Foreground="{DynamicResource TextStrongBrush}" />
                             <TextBlock Text="Refresh"
                                        FontSize="14"
                                        FontWeight="Medium"
-                                       Foreground="{DynamicResource TextStrong}"
+                                       Foreground="{DynamicResource TextStrongBrush}"
                                        VerticalAlignment="Center" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
                                     IsVisible="{Binding IsProcessing}">
                             <i:Icon Value="fa-solid fa-spinner" FontSize="14"
-                                    Foreground="{DynamicResource TextStrong}"
+                                    Foreground="{DynamicResource TextStrongBrush}"
                                     RenderTransformOrigin="50%,50%">
                                 <i:Icon.RenderTransform>
                                     <RotateTransform />
@@ -144,7 +144,7 @@
                                 </i:Icon.Styles>
                             </i:Icon>
                             <TextBlock Text="Refresh" FontSize="14" FontWeight="Medium"
-                                       Foreground="{DynamicResource TextStrong}"
+                                       Foreground="{DynamicResource TextStrongBrush}"
                                        VerticalAlignment="Center" />
                         </StackPanel>
                     </Panel>
@@ -240,13 +240,13 @@
                                     <TextBlock Text="2"
                                                FontSize="14"
                                                FontWeight="Bold"
-                                               Foreground="{DynamicResource TextMuted}"
+                                               Foreground="{DynamicResource TextMutedBrush}"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center" />
                                 </Border>
                                 <TextBlock FontSize="14"
                                            FontWeight="Medium"
-                                           Foreground="{DynamicResource TextMuted}"
+                                           Foreground="{DynamicResource TextMutedBrush}"
                                            VerticalAlignment="Center">
                                     <Run Text="Preview " /><Run Text="{Binding AmountNoun, Mode=OneWay}" />
                                 </TextBlock>
@@ -306,14 +306,14 @@
                                     <TextBlock Text="3"
                                                FontSize="14"
                                                FontWeight="Bold"
-                                               Foreground="{DynamicResource TextMuted}"
+                                               Foreground="{DynamicResource TextMutedBrush}"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center" />
                                 </Border>
                                 <TextBlock Text="Funds Transferred"
                                            FontSize="14"
                                            FontWeight="Medium"
-                                           Foreground="{DynamicResource TextMuted}"
+                                           Foreground="{DynamicResource TextMutedBrush}"
                                            VerticalAlignment="Center" />
                             </StackPanel>
                         </Border>
@@ -358,7 +358,7 @@
                                     Background="{DynamicResource SurfaceLow}"
                                     IsVisible="{Binding IsStep1}">
                                 <TextBlock Text="1" FontSize="14" FontWeight="Bold"
-                                           Foreground="{DynamicResource TextMuted}"
+                                           Foreground="{DynamicResource TextMutedBrush}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                         </Panel>
@@ -389,12 +389,12 @@
                                     Background="{DynamicResource SurfaceLow}"
                                     IsVisible="{Binding IsStep1}">
                                 <TextBlock Text="2" FontSize="14" FontWeight="Bold"
-                                           Foreground="{DynamicResource TextMuted}"
+                                           Foreground="{DynamicResource TextMutedBrush}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                         </Panel>
                         <TextBlock FontSize="14" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextMuted}"
+                                   Foreground="{DynamicResource TextMutedBrush}"
                                    VerticalAlignment="Center">
                             <Run Text="Preview " /><Run Text="{Binding AmountNoun, Mode=OneWay}" />
                         </TextBlock>
@@ -421,13 +421,13 @@
                                     Background="{DynamicResource SurfaceLow}"
                                     IsVisible="{Binding !IsStep3}">
                                 <TextBlock Text="3" FontSize="14" FontWeight="Bold"
-                                           Foreground="{DynamicResource TextMuted}"
+                                           Foreground="{DynamicResource TextMutedBrush}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                         </Panel>
                         <TextBlock Text="Funds Transferred"
                                    FontSize="14" FontWeight="SemiBold"
-                                   Foreground="{DynamicResource TextMuted}"
+                                   Foreground="{DynamicResource TextMutedBrush}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
                 </Border>
@@ -483,11 +483,11 @@
                             <TextBlock Text="{Binding ProjectName}"
                                        FontSize="24"
                                        FontWeight="Bold"
-                                       Foreground="{DynamicResource TextStrong}" />
+                                       Foreground="{DynamicResource TextStrongBrush}" />
                             <!-- Description — Vue: .project-description-compact 15px, color:#666 dark:#a0a0a0 -->
                             <TextBlock Text="{Binding ShortDescription}"
                                        FontSize="15"
-                                       Foreground="{DynamicResource TextMuted}"
+                                       Foreground="{DynamicResource TextMutedBrush}"
                                        TextWrapping="Wrap"
                                        MaxLines="3" />
                         </StackPanel>
@@ -1013,11 +1013,11 @@
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <i:Icon Value="fa-brands fa-bitcoin"
                                FontSize="22"
-                               Foreground="{DynamicResource TextMuted}"
+                               Foreground="{DynamicResource TextMutedBrush}"
                                VerticalAlignment="Center" />
                         <TextBlock FontSize="20"
                                    FontWeight="Bold"
-                                   Foreground="{DynamicResource TextStrong}"
+                                   Foreground="{DynamicResource TextStrongBrush}"
                                    VerticalAlignment="Center">
                             <Run Text="{Binding AmountNoun, Mode=OneWay}" /><Run Text=" Information" />
                         </TextBlock>
@@ -1036,19 +1036,19 @@
                             <StackPanel Spacing="8">
                                 <DockPanel>
                                     <TextBlock FontSize="13" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource TextMuted}"
+                                               Foreground="{DynamicResource TextMutedBrush}"
                                                DockPanel.Dock="Left" VerticalAlignment="Center">
                                         <Run Text="{Binding AmountNoun, Mode=OneWay}" /><Run Text=" Start Date" />
                                     </TextBlock>
-                                    <i:Icon Value="fa-solid fa-calendar"
-                                           FontSize="16"
-                                           Foreground="{DynamicResource TextMuted}"
-                                           HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                     <i:Icon Value="fa-solid fa-calendar"
+                                            FontSize="16"
+                                            Foreground="{DynamicResource TextMutedBrush}"
+                                            HorizontalAlignment="Right" VerticalAlignment="Center" />
                                 </DockPanel>
                                 <TextBlock Text="{Binding StartDate}"
                                            FontSize="18"
                                            FontWeight="Bold"
-                                           Foreground="{DynamicResource TextStrong}" />
+                                           Foreground="{DynamicResource TextStrongBrush}" />
                             </StackPanel>
                         </Border>
 
@@ -1063,19 +1063,19 @@
                             <StackPanel Spacing="8">
                                 <DockPanel>
                                     <TextBlock FontSize="13" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource TextMuted}"
+                                               Foreground="{DynamicResource TextMutedBrush}"
                                                DockPanel.Dock="Left" VerticalAlignment="Center">
                                         <Run Text="{Binding AmountNoun, Mode=OneWay}" /><Run Text=" End Date" />
                                     </TextBlock>
-                                    <i:Icon Value="fa-solid fa-calendar"
-                                           FontSize="16"
-                                           Foreground="{DynamicResource TextMuted}"
-                                           HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                     <i:Icon Value="fa-solid fa-calendar"
+                                            FontSize="16"
+                                            Foreground="{DynamicResource TextMutedBrush}"
+                                            HorizontalAlignment="Right" VerticalAlignment="Center" />
                                 </DockPanel>
                                 <TextBlock Text="{Binding EndDate}"
                                            FontSize="18"
                                            FontWeight="Bold"
-                                           Foreground="{DynamicResource TextStrong}" />
+                                           Foreground="{DynamicResource TextStrongBrush}" />
                             </StackPanel>
                         </Border>
 
@@ -1091,17 +1091,17 @@
                                 <DockPanel>
                                     <TextBlock Text="Transaction Date"
                                                FontSize="13" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource TextMuted}"
+                                               Foreground="{DynamicResource TextMutedBrush}"
                                                DockPanel.Dock="Left" VerticalAlignment="Center" />
-                                    <i:Icon Value="fa-solid fa-clock"
-                                           FontSize="16"
-                                           Foreground="{DynamicResource TextMuted}"
-                                           HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                     <i:Icon Value="fa-solid fa-clock"
+                                            FontSize="16"
+                                            Foreground="{DynamicResource TextMutedBrush}"
+                                            HorizontalAlignment="Right" VerticalAlignment="Center" />
                                 </DockPanel>
                                 <TextBlock Text="{Binding TransactionDate}"
                                            FontSize="18"
                                            FontWeight="Bold"
-                                           Foreground="{DynamicResource TextStrong}" />
+                                           Foreground="{DynamicResource TextStrongBrush}" />
                             </StackPanel>
                         </Border>
 
@@ -1116,14 +1116,14 @@
                             <StackPanel Spacing="8">
                                 <DockPanel>
                                     <TextBlock FontSize="13" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource TextMuted}"
+                                               Foreground="{DynamicResource TextMutedBrush}"
                                                DockPanel.Dock="Left" VerticalAlignment="Center">
                                         <Run Text="{Binding AmountNoun, Mode=OneWay}" /><Run Text=" Status" />
                                     </TextBlock>
-                                    <i:Icon Value="fa-regular fa-circle-check"
-                                           FontSize="16"
-                                           Foreground="{DynamicResource TextMuted}"
-                                           HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                     <i:Icon Value="fa-regular fa-circle-check"
+                                            FontSize="16"
+                                            Foreground="{DynamicResource TextMutedBrush}"
+                                            HorizontalAlignment="Right" VerticalAlignment="Center" />
                                 </DockPanel>
                                 <!-- Status value — green if Approved, orange if Pending -->
                                 <TextBlock Text="{Binding ApprovalStatus}"
@@ -1153,7 +1153,7 @@
                         <StackPanel Orientation="Horizontal" Spacing="12" DockPanel.Dock="Left">
                             <Viewbox Width="24" Height="24" VerticalAlignment="Center">
                                 <Path Data="{StaticResource NavIconDocument}"
-                                      Stroke="{DynamicResource TextMuted}"
+                                      Stroke="{DynamicResource TextMutedBrush}"
                                       StrokeThickness="1.5"
                                       StrokeLineCap="Round"
                                       StrokeJoin="Round"
@@ -1162,7 +1162,7 @@
                             <TextBlock Text="{Binding ScheduleTitle}"
                                        FontSize="20"
                                        FontWeight="Bold"
-                                       Foreground="{DynamicResource TextStrong}"
+                                       Foreground="{DynamicResource TextStrongBrush}"
                                        VerticalAlignment="Center" />
                         </StackPanel>
                         <!-- Recover Funds button — Vue: .recover-funds-button-light bg:#F7931A -->
@@ -1196,27 +1196,27 @@
                                        Text="{Binding StageLabel}"
                                        FontSize="13"
                                        FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextMuted}" />
+                                       Foreground="{DynamicResource TextMutedBrush}" />
                             <TextBlock Grid.Column="1"
                                        Text="Stage %"
                                        FontSize="13"
                                        FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextMuted}" />
+                                       Foreground="{DynamicResource TextMutedBrush}" />
                             <TextBlock Grid.Column="2"
                                        Text="Release Date"
                                        FontSize="13"
                                        FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextMuted}" />
+                                       Foreground="{DynamicResource TextMutedBrush}" />
                             <TextBlock Grid.Column="3"
                                        Text="Status"
                                        FontSize="13"
                                        FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextMuted}" />
+                                       Foreground="{DynamicResource TextMutedBrush}" />
                             <TextBlock Grid.Column="4"
                                        Text="Amount"
                                        FontSize="13"
                                        FontWeight="SemiBold"
-                                       Foreground="{DynamicResource TextMuted}"
+                                       Foreground="{DynamicResource TextMutedBrush}"
                                        HorizontalAlignment="Right" />
                         </Grid>
                     </Border>
@@ -1235,7 +1235,7 @@
                                                    FontSize="14"
                                                    FontWeight="SemiBold"
                                                    VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource TextStrong}">
+                                                   Foreground="{DynamicResource TextStrongBrush}">
                                             <Run Text="{Binding StagePrefix, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding StageNumber, Mode=OneWay}" />
                                         </TextBlock>
 
@@ -1244,14 +1244,14 @@
                                                    Text="{Binding Percentage}"
                                                    FontSize="14"
                                                    VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource TextStrong}" />
+                                                   Foreground="{DynamicResource TextStrongBrush}" />
 
                                         <!-- Release Date -->
                                         <TextBlock Grid.Column="2"
                                                    Text="{Binding ReleaseDate}"
                                                    FontSize="14"
                                                    VerticalAlignment="Center"
-                                                   Foreground="{DynamicResource TextStrong}" />
+                                                   Foreground="{DynamicResource TextStrongBrush}" />
 
                                         <!-- Status Badge — per-status colors -->
                                         <!-- Vue: .status-badge padding:6px 14px, border-radius:16px, font-size:12px, font-weight:600, border:1px -->
@@ -1341,7 +1341,7 @@
                                         <!-- Row 1: Stage number + Status badge -->
                                         <DockPanel>
                                             <TextBlock FontSize="15" FontWeight="SemiBold"
-                                                       Foreground="{DynamicResource TextStrong}"
+                                                       Foreground="{DynamicResource TextStrongBrush}"
                                                        VerticalAlignment="Center">
                                                 <Run Text="{Binding StagePrefix, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding StageNumber, Mode=OneWay}" />
                                             </TextBlock>
@@ -1382,10 +1382,10 @@
                                         </DockPanel>
                                         <!-- Row 2: Percentage + Release Date -->
                                         <DockPanel>
-                                            <TextBlock FontSize="12" Foreground="{DynamicResource TextMuted}">
+                                            <TextBlock FontSize="12" Foreground="{DynamicResource TextMutedBrush}">
                                                 <Run Text="Stage: " /><Run Text="{Binding Percentage, Mode=OneWay}" />
                                             </TextBlock>
-                                            <TextBlock FontSize="12" Foreground="{DynamicResource TextMuted}"
+                                            <TextBlock FontSize="12" Foreground="{DynamicResource TextMutedBrush}"
                                                        HorizontalAlignment="Right"
                                                        Text="{Binding ReleaseDate}" />
                                         </DockPanel>

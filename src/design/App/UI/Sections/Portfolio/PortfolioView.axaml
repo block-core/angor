@@ -423,8 +423,8 @@
                                         <StackPanel Spacing="12" Margin="20,48,20,20">
 
                                             <!-- Type + Status pills — using shared Pill style classes -->
-                                            <!-- Vue: .investment-pills gap:8px -->
-                                            <WrapPanel>
+                                            <!-- 4px horizontal gap between pills; 4px vertical when they wrap to a new line -->
+                                            <WrapPanel ItemSpacing="4" LineSpacing="4">
                                                 <!-- Type pill: Investment (blue), Funding (amber), Subscription (pink) -->
                                                 <ContentControl Classes="Pill Blue"
                                                                 Content="{Binding TypeLabel}"

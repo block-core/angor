@@ -172,7 +172,7 @@
                     </Button>
                     <ToggleButton Classes="Widget" IsChecked="{Binding IsDarkThemeEnabled, Mode=TwoWay}">
                         <ToggleButton.Content>
-                            <i:Icon Value="fa-solid fa-sun" FontSize="16" Foreground="{DynamicResource TextMuted}" />
+                            <i:Icon Value="fa-solid fa-sun" FontSize="16" />
                         </ToggleButton.Content>
                     </ToggleButton>
                     <Button Classes="Widget" Name="SettingsButton" Click="OnSettingsClick"

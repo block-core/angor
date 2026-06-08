@@ -20,6 +20,9 @@ public partial class ProjectDetailView : UserControl
 {
     private bool _detailsExpanded = false;
     private bool _nostrExpanded = false;
+    private bool _faqExpanded;
+    private bool _membersExpanded;
+    private bool _mediaExpanded;
     private bool _navCtaVisible;
     private IDisposable? _layoutSubscription;
 
@@ -38,6 +41,18 @@ public partial class ProjectDetailView : UserControl
     private Border? _nostrHeader;
     private StackPanel? _nostrContent;
     private Control? _nostrChevron;
+    private Border? _faqContainer;
+    private Border? _faqHeader;
+    private StackPanel? _faqContent;
+    private Control? _faqChevron;
+    private Border? _membersContainer;
+    private Border? _membersHeader;
+    private StackPanel? _membersContent;
+    private Control? _membersChevron;
+    private Border? _mediaContainer;
+    private Border? _mediaHeader;
+    private StackPanel? _mediaContent;
+    private Control? _mediaChevron;
 
     // Responsive layout controls
     private Grid? _topSectionGrid;
@@ -78,6 +93,18 @@ public partial class ProjectDetailView : UserControl
         _nostrHeader = this.FindControl<Border>("NostrHeader");
         _nostrContent = this.FindControl<StackPanel>("NostrContent");
         _nostrChevron = this.FindControl<Control>("NostrChevron");
+        _faqContainer = this.FindControl<Border>("FaqContainer");
+        _faqHeader = this.FindControl<Border>("FaqHeader");
+        _faqContent = this.FindControl<StackPanel>("FaqContent");
+        _faqChevron = this.FindControl<Control>("FaqChevron");
+        _membersContainer = this.FindControl<Border>("MembersContainer");
+        _membersHeader = this.FindControl<Border>("MembersHeader");
+        _membersContent = this.FindControl<StackPanel>("MembersContent");
+        _membersChevron = this.FindControl<Control>("MembersChevron");
+        _mediaContainer = this.FindControl<Border>("MediaContainer");
+        _mediaHeader = this.FindControl<Border>("MediaHeader");
+        _mediaContent = this.FindControl<StackPanel>("MediaContent");
+        _mediaChevron = this.FindControl<Control>("MediaChevron");
 
         // Back button
         if (_backBtn != null)
@@ -108,6 +135,15 @@ public partial class ProjectDetailView : UserControl
 
         if (_nostrContainer != null)
             _nostrContainer.PointerPressed += OnCollapsibleContainerPressed;
+
+        if (_faqContainer != null)
+            _faqContainer.PointerPressed += OnCollapsibleContainerPressed;
+
+        if (_membersContainer != null)
+            _membersContainer.PointerPressed += OnCollapsibleContainerPressed;
+
+        if (_mediaContainer != null)
+            _mediaContainer.PointerPressed += OnCollapsibleContainerPressed;
 
         // Copy buttons — Vue: copyToClipboard() on project ID, founder key, npub
         var copyProjectIdBtn = this.FindControl<Button>("CopyProjectIdBtn");
@@ -398,6 +434,7 @@ public partial class ProjectDetailView : UserControl
     {
         _scroller?.ScrollToHome();
         _navCtaVisible = false;
+        ResetProfileAccordions();
         if (_navCta != null)
         {
             _navCta.Opacity = 0;
@@ -522,6 +559,27 @@ public partial class ProjectDetailView : UserControl
             ToggleCollapsible(ref _detailsExpanded, _detailsContainer, _detailsHeader, _detailsContent, _detailsChevron, e);
         else if (sender == _nostrContainer)
             ToggleCollapsible(ref _nostrExpanded, _nostrContainer, _nostrHeader, _nostrContent, _nostrChevron, e);
+        else if (sender == _faqContainer)
+            ToggleCollapsible(ref _faqExpanded, _faqContainer, _faqHeader, _faqContent, _faqChevron, e);
+        else if (sender == _membersContainer)
+            ToggleCollapsible(ref _membersExpanded, _membersContainer, _membersHeader, _membersContent, _membersChevron, e);
+        else if (sender == _mediaContainer)
+            ToggleCollapsible(ref _mediaExpanded, _mediaContainer, _mediaHeader, _mediaContent, _mediaChevron, e);
+    }
+
+    private void ResetProfileAccordions()
+    {
+        ResetCollapsible(ref _faqExpanded, _faqContainer, _faqContent, _faqChevron);
+        ResetCollapsible(ref _membersExpanded, _membersContainer, _membersContent, _membersChevron);
+        ResetCollapsible(ref _mediaExpanded, _mediaContainer, _mediaContent, _mediaChevron);
+    }
+
+    private static void ResetCollapsible(ref bool expanded, Border? container, StackPanel? content, Control? chevron)
+    {
+        expanded = false;
+        if (content != null) content.IsVisible = false;
+        chevron?.Classes.Set("ChevronExpanded", false);
+        if (container != null) container.Cursor = new Cursor(StandardCursorType.Hand);
     }
 
     /// <summary>

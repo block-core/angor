@@ -129,7 +129,10 @@
 
                                 <!-- Status pill — always green -->
                                 <ContentControl Classes="Pill Green"
-                                                Content="{TemplateBinding Status}" />
+                                                 Content="{TemplateBinding Status}" />
+                                <ContentControl Classes="Pill Blue"
+                                                Content="Invested"
+                                                IsVisible="{TemplateBinding HasInvested}" />
                             </StackPanel>
 
                             <!-- 2. Title — Vue: 18px, font-weight 700, single line -->
