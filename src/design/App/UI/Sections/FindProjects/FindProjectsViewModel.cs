@@ -19,6 +19,20 @@ using Microsoft.Extensions.Logging;
 
 namespace App.UI.Sections.FindProjects;
 
+public class ProjectFaqItemViewModel
+{
+    public string Question { get; set; } = "";
+    public string Answer { get; set; } = "";
+}
+
+public class ProjectMediaItemViewModel
+{
+    public string Url { get; set; } = "";
+    public string Type { get; set; } = "image";
+    public bool IsVideo => Type.Equals("video", StringComparison.OrdinalIgnoreCase);
+    public string DisplayType => IsVideo ? "Video" : "Image";
+}
+
 /// <summary>
 /// Project data model for the UI. When SDK data is available, mapped from ProjectDto.
 /// </summary>
@@ -31,6 +45,64 @@ public class ProjectItemViewModel : INotifyPropertyChanged
     public string ProjectName { get; set; } = "";
     public string ShortDescription { get; set; } = "";
     public string Description { get; set; } = "";
+
+    private string _profileDescription = "";
+    public string ProfileDescription
+    {
+        get => _profileDescription;
+        set
+        {
+            _profileDescription = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(DisplayDescription));
+            OnPropertyChanged(nameof(HasDisplayDescription));
+        }
+    }
+
+    public string DisplayDescription => !string.IsNullOrWhiteSpace(ProfileDescription)
+        ? ProfileDescription
+        : Description;
+
+    public bool HasDisplayDescription => !string.IsNullOrWhiteSpace(DisplayDescription);
+
+    private bool _isProfileLoading;
+    public bool IsProfileLoading
+    {
+        get => _isProfileLoading;
+        set
+        {
+            _isProfileLoading = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(ShowProfileAccordions));
+        }
+    }
+
+    private bool _profileLoaded;
+    public bool ProfileLoaded
+    {
+        get => _profileLoaded;
+        set
+        {
+            _profileLoaded = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(ShowProfileAccordions));
+            OnPropertyChanged(nameof(ShowFaqEmptyState));
+            OnPropertyChanged(nameof(ShowMembersEmptyState));
+            OnPropertyChanged(nameof(ShowMediaEmptyState));
+        }
+    }
+
+    public ObservableCollection<ProjectFaqItemViewModel> FaqItems { get; } = new();
+    public ObservableCollection<string> MemberPubkeys { get; } = new();
+    public ObservableCollection<ProjectMediaItemViewModel> MediaItems { get; } = new();
+
+    public bool HasFaqItems => FaqItems.Count > 0;
+    public bool HasMemberPubkeys => MemberPubkeys.Count > 0;
+    public bool HasMediaItems => MediaItems.Count > 0;
+    public bool ShowProfileAccordions => IsProfileLoading || ProfileLoaded;
+    public bool ShowFaqEmptyState => ProfileLoaded && !HasFaqItems;
+    public bool ShowMembersEmptyState => ProfileLoaded && !HasMemberPubkeys;
+    public bool ShowMediaEmptyState => ProfileLoaded && !HasMediaItems;
 
     private int _investorCount;
     public int InvestorCount
@@ -144,6 +216,60 @@ public class ProjectItemViewModel : INotifyPropertyChanged
 
     /// <summary>True when the project is open AND the current user has NOT already invested.</summary>
     public bool IsOpenAndNotInvested => IsOpen && !HasInvested;
+
+    public void ApplyProfileData(FetchProjectProfileData.FetchProjectProfileDataResponse data)
+    {
+        ProfileDescription = !string.IsNullOrWhiteSpace(data.ProjectContent)
+            ? data.ProjectContent!
+            : data.Metadata?.About ?? "";
+
+        FaqItems.Clear();
+        if (data.FaqItems != null)
+        {
+            foreach (FaqItem item in data.FaqItems)
+            {
+                if (string.IsNullOrWhiteSpace(item.Question) && string.IsNullOrWhiteSpace(item.Answer))
+                    continue;
+
+                FaqItems.Add(new ProjectFaqItemViewModel
+                {
+                    Question = item.Question ?? "",
+                    Answer = item.Answer ?? ""
+                });
+            }
+        }
+
+        MemberPubkeys.Clear();
+        if (data.MemberPubkeys != null)
+        {
+            foreach (string member in data.MemberPubkeys.Where(m => !string.IsNullOrWhiteSpace(m)))
+                MemberPubkeys.Add(member);
+        }
+
+        MediaItems.Clear();
+        if (data.MediaItems != null)
+        {
+            foreach (MediaItem item in data.MediaItems)
+            {
+                if (string.IsNullOrWhiteSpace(item.Url))
+                    continue;
+
+                MediaItems.Add(new ProjectMediaItemViewModel
+                {
+                    Url = item.Url ?? "",
+                    Type = string.IsNullOrWhiteSpace(item.Type) ? "image" : item.Type!
+                });
+            }
+        }
+
+        ProfileLoaded = true;
+        OnPropertyChanged(nameof(HasFaqItems));
+        OnPropertyChanged(nameof(HasMemberPubkeys));
+        OnPropertyChanged(nameof(HasMediaItems));
+        OnPropertyChanged(nameof(ShowFaqEmptyState));
+        OnPropertyChanged(nameof(ShowMembersEmptyState));
+        OnPropertyChanged(nameof(ShowMediaEmptyState));
+    }
 
     /// <summary>Currency symbol for display (e.g. "BTC", "TBTC")</summary>
     public string CurrencySymbol { get; set; } = "BTC";
@@ -385,6 +511,7 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable
     {
         _logger.LogInformation("Opening project detail: '{ProjectName}' (ID: {ProjectId})", project.ProjectName, project.ProjectId);
         SelectedProject = project;
+        _ = LoadProfileDataAsync(project);
     }
 
     public void CloseProjectDetail()
@@ -408,6 +535,40 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable
     }
 
     public ObservableCollection<ProjectItemViewModel> Projects { get; } = new();
+
+    private async Task LoadProfileDataAsync(ProjectItemViewModel project)
+    {
+        if (string.IsNullOrWhiteSpace(project.ProjectId) || project.ProfileLoaded || project.IsProfileLoading)
+            return;
+
+        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => project.IsProfileLoading = true);
+
+        try
+        {
+            Result<FetchProjectProfileData.FetchProjectProfileDataResponse> result =
+                await _projectAppService.FetchProjectProfileData(new ProjectId(project.ProjectId));
+
+            if (result.IsFailure)
+            {
+                _logger.LogDebug("Failed to load profile data for project {ProjectId}: {Error}",
+                    project.ProjectId, result.Error);
+                return;
+            }
+
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                project.ApplyProfileData(result.Value);
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Error loading profile data for project {ProjectId}", project.ProjectId);
+        }
+        finally
+        {
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => project.IsProfileLoading = false);
+        }
+    }
 
     public FindProjectsViewModel(
         IProjectAppService projectAppService,

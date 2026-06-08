@@ -427,6 +427,37 @@
             </Grid>
 
             <!-- ═══════════════════════════════════════ -->
+            <!-- PROJECT DESCRIPTION CARD                -->
+            <!-- Loaded from the project profile content  -->
+            <!-- ═══════════════════════════════════════ -->
+            <Border Background="{DynamicResource Surface}"
+                    BorderBrush="{DynamicResource Stroke}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    Padding="24"
+                    BoxShadow="{DynamicResource ItemShadow}"
+                    IsVisible="{Binding HasDisplayDescription}">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <i:Icon Value="fa-solid fa-align-left"
+                                FontSize="22"
+                                Foreground="{DynamicResource TextStrong}"
+                                VerticalAlignment="Center" />
+                        <TextBlock Text="Project Description"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource TextStrong}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding DisplayDescription}"
+                               FontSize="15"
+                               LineHeight="23"
+                               Foreground="{DynamicResource TextMuted}"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <!-- ═══════════════════════════════════════ -->
             <!-- PROJECT STATISTICS CARD                  -->
             <!-- Vue: stats-detail-card, orange gradient  -->
             <!-- ═══════════════════════════════════════ -->
@@ -763,6 +794,232 @@
                             </StackPanel>
                         </Border>
                     </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ═══════════════════════════════════════ -->
+            <!-- FAQ (collapsible)                        -->
+            <!-- Project profile data from Nostr relays   -->
+            <!-- ═══════════════════════════════════════ -->
+            <Border Name="FaqContainer"
+                    Background="{DynamicResource Surface}"
+                    BorderBrush="{DynamicResource Stroke}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    Padding="24"
+                    BoxShadow="{DynamicResource ItemShadow}"
+                    Cursor="Hand"
+                    IsVisible="{Binding ShowProfileAccordions}">
+                <StackPanel Spacing="0">
+                    <Border Name="FaqHeader" Cursor="Hand" Background="Transparent" Padding="0,4">
+                        <DockPanel>
+                            <i:Icon Value="fa-solid fa-circle-question"
+                                   FontSize="24"
+                                   Foreground="{DynamicResource TextStrong}"
+                                   DockPanel.Dock="Left" Margin="0,0,12,0" />
+                            <Border Name="FaqChevron"
+                                    Classes="CollapsibleChevron"
+                                    DockPanel.Dock="Right" HorizontalAlignment="Right"
+                                    VerticalAlignment="Center">
+                                <i:Icon Value="fa-solid fa-chevron-down"
+                                       FontSize="16"
+                                       Foreground="{DynamicResource TextMuted}" />
+                            </Border>
+                            <TextBlock Text="FAQ"
+                                       FontSize="20" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}"
+                                       VerticalAlignment="Center" />
+                        </DockPanel>
+                    </Border>
+
+                    <StackPanel Name="FaqContent" IsVisible="False" Spacing="12" Margin="0,20,0,0">
+                        <TextBlock Text="Loading FAQ..."
+                                   FontSize="14"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   IsVisible="{Binding IsProfileLoading}" />
+                        <TextBlock Text="No FAQ items have been added for this project yet."
+                                   FontSize="14"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   IsVisible="{Binding ShowFaqEmptyState}" />
+                        <ItemsControl ItemsSource="{Binding FaqItems}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="fp:ProjectFaqItemViewModel">
+                                    <Border Background="{DynamicResource SurfaceMedium}"
+                                            BorderBrush="{DynamicResource Stroke}"
+                                            BorderThickness="1"
+                                            CornerRadius="12"
+                                            Padding="16"
+                                            Margin="0,0,0,12">
+                                        <StackPanel Spacing="8">
+                                            <TextBlock Text="{Binding Question}"
+                                                       FontSize="15"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextStrong}"
+                                                       TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding Answer}"
+                                                       FontSize="14"
+                                                       LineHeight="21"
+                                                       Foreground="{DynamicResource TextMuted}"
+                                                       TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- ═══════════════════════════════════════ -->
+            <!-- MEMBERS (collapsible)                    -->
+            <!-- ═══════════════════════════════════════ -->
+            <Border Name="MembersContainer"
+                    Background="{DynamicResource Surface}"
+                    BorderBrush="{DynamicResource Stroke}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    Padding="24"
+                    BoxShadow="{DynamicResource ItemShadow}"
+                    Cursor="Hand"
+                    IsVisible="{Binding ShowProfileAccordions}">
+                <StackPanel Spacing="0">
+                    <Border Name="MembersHeader" Cursor="Hand" Background="Transparent" Padding="0,4">
+                        <DockPanel>
+                            <i:Icon Value="fa-solid fa-users"
+                                   FontSize="24"
+                                   Foreground="{DynamicResource TextStrong}"
+                                   DockPanel.Dock="Left" Margin="0,0,12,0" />
+                            <Border Name="MembersChevron"
+                                    Classes="CollapsibleChevron"
+                                    DockPanel.Dock="Right" HorizontalAlignment="Right"
+                                    VerticalAlignment="Center">
+                                <i:Icon Value="fa-solid fa-chevron-down"
+                                       FontSize="16"
+                                       Foreground="{DynamicResource TextMuted}" />
+                            </Border>
+                            <TextBlock Text="Members"
+                                       FontSize="20" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}"
+                                       VerticalAlignment="Center" />
+                        </DockPanel>
+                    </Border>
+
+                    <StackPanel Name="MembersContent" IsVisible="False" Spacing="12" Margin="0,20,0,0">
+                        <TextBlock Text="Loading members..."
+                                   FontSize="14"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   IsVisible="{Binding IsProfileLoading}" />
+                        <TextBlock Text="No members have been added for this project yet."
+                                   FontSize="14"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   IsVisible="{Binding ShowMembersEmptyState}" />
+                        <ItemsControl ItemsSource="{Binding MemberPubkeys}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{DynamicResource SurfaceMedium}"
+                                            BorderBrush="{DynamicResource Stroke}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="12,10"
+                                            Margin="0,0,0,8">
+                                        <DockPanel>
+                                            <i:Icon Value="fa-solid fa-user"
+                                                   FontSize="16"
+                                                   Foreground="{DynamicResource TextMuted}"
+                                                   DockPanel.Dock="Left"
+                                                   Margin="0,0,8,0" />
+                                            <TextBlock Text="{Binding}"
+                                                       FontSize="13"
+                                                       FontFamily="Cascadia Code,Consolas,monospace"
+                                                       Foreground="{DynamicResource TextStrong}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center" />
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- ═══════════════════════════════════════ -->
+            <!-- MEDIA (collapsible)                      -->
+            <!-- ═══════════════════════════════════════ -->
+            <Border Name="MediaContainer"
+                    Background="{DynamicResource Surface}"
+                    BorderBrush="{DynamicResource Stroke}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    Padding="24"
+                    BoxShadow="{DynamicResource ItemShadow}"
+                    Cursor="Hand"
+                    IsVisible="{Binding ShowProfileAccordions}">
+                <StackPanel Spacing="0">
+                    <Border Name="MediaHeader" Cursor="Hand" Background="Transparent" Padding="0,4">
+                        <DockPanel>
+                            <i:Icon Value="fa-solid fa-photo-film"
+                                   FontSize="24"
+                                   Foreground="{DynamicResource TextStrong}"
+                                   DockPanel.Dock="Left" Margin="0,0,12,0" />
+                            <Border Name="MediaChevron"
+                                    Classes="CollapsibleChevron"
+                                    DockPanel.Dock="Right" HorizontalAlignment="Right"
+                                    VerticalAlignment="Center">
+                                <i:Icon Value="fa-solid fa-chevron-down"
+                                       FontSize="16"
+                                       Foreground="{DynamicResource TextMuted}" />
+                            </Border>
+                            <TextBlock Text="Media"
+                                       FontSize="20" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}"
+                                       VerticalAlignment="Center" />
+                        </DockPanel>
+                    </Border>
+
+                    <StackPanel Name="MediaContent" IsVisible="False" Spacing="12" Margin="0,20,0,0">
+                        <TextBlock Text="Loading media..."
+                                   FontSize="14"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   IsVisible="{Binding IsProfileLoading}" />
+                        <TextBlock Text="No media has been added for this project yet."
+                                   FontSize="14"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   IsVisible="{Binding ShowMediaEmptyState}" />
+                        <ItemsControl ItemsSource="{Binding MediaItems}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="fp:ProjectMediaItemViewModel">
+                                    <Border Background="{DynamicResource SurfaceMedium}"
+                                            BorderBrush="{DynamicResource Stroke}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="12,10"
+                                            Margin="0,0,0,8">
+                                        <DockPanel>
+                                            <Border DockPanel.Dock="Left"
+                                                    Background="{DynamicResource SurfaceLow}"
+                                                    BorderBrush="{DynamicResource Stroke}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="6"
+                                                    Padding="8,4"
+                                                    Margin="0,0,10,0">
+                                                <TextBlock Text="{Binding DisplayType}"
+                                                           FontSize="12"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource TextMuted}" />
+                                            </Border>
+                                            <TextBlock Text="{Binding Url}"
+                                                       FontSize="13"
+                                                       Foreground="{DynamicResource Brand}"
+                                                       TextDecorations="Underline"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center" />
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
                 </StackPanel>
             </Border>
 
