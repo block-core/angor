@@ -83,6 +83,9 @@ public class ProjectCard : TemplatedControl
     public static readonly StyledProperty<string?> StatusProperty =
         AvaloniaProperty.Register<ProjectCard, string?>(nameof(Status), "Open");
 
+    public static readonly StyledProperty<bool> HasInvestedProperty =
+        AvaloniaProperty.Register<ProjectCard, bool>(nameof(HasInvested));
+
     /// <summary>
     /// When true, shows "Manage Project" + Share buttons at the bottom of the card.
     /// Vue: showManageFunds prop on ProjectCard — only set on My Projects page.
@@ -186,6 +189,12 @@ public class ProjectCard : TemplatedControl
     {
         get => GetValue(StatusProperty);
         set => SetValue(StatusProperty, value);
+    }
+
+    public bool HasInvested
+    {
+        get => GetValue(HasInvestedProperty);
+        set => SetValue(HasInvestedProperty, value);
     }
 
     public bool ShowManageFunds

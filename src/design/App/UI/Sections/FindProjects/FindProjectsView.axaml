@@ -272,6 +272,7 @@
                                 Progress="{Binding Progress}"
                                 ProjectType="{Binding ProjectType}"
                                 Status="{Binding Status}"
+                                HasInvested="{Binding HasInvested}"
                                 Banner="{Binding BannerUrl}"
                                 Avatar="{Binding AvatarUrl}"
                                 CurrencySymbol="{Binding $parent[UserControl].DataContext.CurrencySymbol}" />

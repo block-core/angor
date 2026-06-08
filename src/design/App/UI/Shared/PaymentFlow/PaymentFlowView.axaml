@@ -13,11 +13,11 @@
     <!-- Reusable payment flow modals: Wallet Selector → Invoice/QR → Success.
          DataContext = PaymentFlowViewModel (set by the hosting view). -->
     <UserControl.Styles>
-        <Style Selector="Border.WalletCard">
+        <Style Selector="Button.WalletCard">
             <Setter Property="Background" Value="{DynamicResource DeployWalletItemBg}" />
             <Setter Property="BorderBrush" Value="{DynamicResource DeployWalletItemBorder}" />
         </Style>
-        <Style Selector="Border.WalletCard.WalletSelected">
+        <Style Selector="Button.WalletCard.WalletSelected">
             <Setter Property="Background" Value="{DynamicResource DeployWalletSelectedBg}" />
             <Setter Property="BorderBrush" Value="{DynamicResource DeployWalletSelectedBorder}" />
         </Style>
