@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
@@ -58,6 +59,7 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
     private readonly ICurrencyService _currencyService;
     private readonly ILogger<MyProjectsViewModel> _logger;
     private readonly CompositeDisposable _disposables = new();
+    private int _loadGeneration;
 
     /// <summary>Raised when the VM wants to show a transient toast notification.</summary>
     public event Action<string>? ToastRequested;
@@ -120,6 +122,7 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
         if (IsLoading) return;
 
         IsLoading = true;
+        int myGeneration = _loadGeneration;
 
         try
         {
@@ -164,6 +167,9 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
                 return projects;
             });
 
+            if (myGeneration != _loadGeneration)
+                return;
+
             Projects.Clear();
             foreach (var project in loadedProjects)
                 Projects.Add(project);
@@ -177,8 +183,11 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
         }
         finally
         {
-            IsLoading = false;
-            IsInitialLoad = false;
+            if (myGeneration == _loadGeneration)
+            {
+                IsLoading = false;
+                IsInitialLoad = false;
+            }
         }
     }
 
@@ -289,6 +298,8 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
         CloseManageProject();
         CancelCreateWizard();
         SelectedEditProject = null;
+        Interlocked.Increment(ref _loadGeneration);
+        IsLoading = false;
         ClearProjects();
     }
 
