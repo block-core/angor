@@ -415,10 +415,12 @@ jobs:
       - name: Install zsp
         if: env.HAS_BUNKER == 'true'
         run: |
+          # zsp releases ship raw binaries (no tarball) named zsp-<version>-linux-amd64.
           ZSP_VERSION=$(curl -fsSL https://api.github.com/repos/zapstore/zsp/releases/latest | jq -r .tag_name)
-          curl -fsSL -o zsp.tar.gz \
-            "https://github.com/zapstore/zsp/releases/download/${ZSP_VERSION}/zsp-linux-amd64.tar.gz"
-          tar -xzf zsp.tar.gz
+          ZSP_VERSION_NUM="${ZSP_VERSION#v}"
+          curl -fsSL -o zsp \
+            "https://github.com/zapstore/zsp/releases/download/${ZSP_VERSION}/zsp-${ZSP_VERSION_NUM}-linux-amd64"
+          chmod +x zsp
           sudo install zsp /usr/local/bin/zsp
           zsp --version
 
