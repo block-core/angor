@@ -375,4 +375,31 @@ public partial class SettingsView : UserControl, ISectionView
 
     private void OnModalContentPressed(object? sender, PointerPressedEventArgs e) =>
         e.Handled = true; // Prevent backdrop close when clicking modal content
+
+    // ── Cloud Backup (passphrase-entry modal is a follow-up; for now Enable opens a TopLevel dialog) ──
+    private async void OnEnableCloudBackupClick(object? sender, RoutedEventArgs e)
+    {
+        if (Vm == null) return;
+        // Minimal first-pass: open the enable-backup modal (XAML for the modal still to be added).
+        // The ViewModel.ConfirmEnableBackupAsync covers the validation + crypto + relay/Blossom calls.
+        Vm.OpenEnableBackupModal();
+    }
+
+    private async void OnVerifyCloudBackupClick(object? sender, RoutedEventArgs e)
+    {
+        try { if (Vm != null) await Vm.VerifyBackupHealthAsync(); }
+        catch (Exception ex) { _logger.LogWarning(ex, "OnVerifyCloudBackupClick failed"); }
+    }
+
+    private async void OnRefreshCloudBackupClick(object? sender, RoutedEventArgs e)
+    {
+        if (Vm == null) return;
+        Vm.OpenRefreshBackupModal();
+    }
+
+    private async void OnDisableCloudBackupClick(object? sender, RoutedEventArgs e)
+    {
+        try { if (Vm != null) await Vm.DisableBackupAsync(); }
+        catch (Exception ex) { _logger.LogWarning(ex, "OnDisableCloudBackupClick failed"); }
+    }
 }

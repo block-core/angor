@@ -240,6 +240,18 @@ public class NetworkConfiguration : INetworkConfiguration
             new SettingsUrl { Name = "nostria (Blossom)", Url = "https://mibo.eu.nostria.app", IsPrimary = false },
         };
     }
+
+    public List<SettingsUrl> GetDefaultBackupServerUrls()
+    {
+        return new List<SettingsUrl>
+        {
+            new SettingsUrl { Name = "Angor Blossom", Url = "https://blossom.angor.io", IsPrimary = true },
+            new SettingsUrl { Name = "nostr.build", Url = "https://nostr.build", IsPrimary = false },
+            new SettingsUrl { Name = "blossom.primal.net", Url = "https://blossom.primal.net", IsPrimary = false },
+            new SettingsUrl { Name = "nostria (Blossom)", Url = "https://mibo.eu.nostria.app", IsPrimary = false },
+        };
+    }
+
     public Dictionary<string, bool> GetDefaultFeatureFlags(string network)
     {
         return network switch
