@@ -429,4 +429,5 @@ jobs:
         env:
           SIGN_WITH: ${{ secrets.ZAPSTORE_BUNKER_URL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: zsp publish -y zapstore.yaml
+        # -q implies auto-yes; the -y flag the docs mention isn't shipped in zsp v0.4.10.
+        run: zsp publish -q zapstore.yaml
