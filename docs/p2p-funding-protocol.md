@@ -233,7 +233,7 @@ An example of the data published to Nostr event kind 3030 `NIP3030 Decentralized
 }
 ```
 
-Additional information can be found in [NIP-3030](nip-3030.md)
+Additional information can be found in [NIP-3030](nip-3030-crowdfunding.md)
 
 #### Dynamic stage patterns
 
@@ -758,8 +758,8 @@ TBD
 
 ## References
 
-- [BCIP-0006: Angor Nostr Communication Protocol](bcip-0006.md)
-- [NIP-3030: Decentralized Crowdfunding](nip-3030.md)
+- [Angor Nostr Communication Protocol](nostr-communication-protocol.md)
+- [NIP-3030: Decentralized Crowdfunding](nip-3030-crowdfunding.md)
 - [Angor Reference Implementation](https://github.com/block-core/angor)
 - [BIP-341: Taproot](https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki)
 - [BIP-340: Schnorr Signatures](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki)

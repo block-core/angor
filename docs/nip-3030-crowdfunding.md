@@ -242,10 +242,10 @@ Implementations SHOULD support decrypting NIP-04 messages for backward compatibi
 
 Reply messages include an `e` tag referencing the original request event.
 
-See [BCIP-0006](bcip-0006.md) for full message format specifications.
+See [Nostr Communication Protocol](nostr-communication-protocol.md) for full message format specifications.
 
 ## Additional
 
-The full P2P Funding Protocol can be found at [BCIP-0005](bcip-0005.md).
+The full P2P Funding Protocol can be found at [P2P Funding Protocol](p2p-funding-protocol.md).
 
-The full Nostr communication protocol specification can be found at [BCIP-0006](bcip-0006.md).
+The full Nostr communication protocol specification can be found at [Nostr Communication Protocol](nostr-communication-protocol.md).

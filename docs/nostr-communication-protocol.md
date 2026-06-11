@@ -11,7 +11,7 @@ Created: 2025-06-09
 
 ## Abstract
 
-This document specifies the Nostr event kinds, tags, and message formats used by the Angor P2P Funding Protocol ([BCIP-0005](bcip-0005.md)) for decentralized communication between founders and investors. The protocol uses Nostr for project discovery, metadata publication, and the interactive investment handshake. It defines a custom event kind `3030` for project creation, leverages NIP-01 profiles and NIP-78 application-specific data for project metadata, and uses NIP-44 encrypted direct messages for the investment signature exchange.
+This document specifies the Nostr event kinds, tags, and message formats used by the Angor P2P Funding Protocol ([P2P Funding Protocol](p2p-funding-protocol.md)) for decentralized communication between founders and investors. The protocol uses Nostr for project discovery, metadata publication, and the interactive investment handshake. It defines a custom event kind `3030` for project creation, leverages NIP-01 profiles and NIP-78 application-specific data for project metadata, and uses NIP-44 encrypted direct messages for the investment signature exchange.
 
 ## Motivation
 
@@ -243,7 +243,7 @@ Version 2 adds support for multiple project types, dynamic stages, and penalty t
 
 ### Event `30078`: Project metadata (NIP-78)
 
-Project metadata beyond the core `ProjectInfo` is stored in NIP-78 application-specific data events (`kind: 30078`). Each metadata category is a separate replaceable event, keyed by the `d` tag. These events are published under the project's Nostr identity (derived from the founder key via [BCIP-0005](bcip-0005.md) key derivation).
+Project metadata beyond the core `ProjectInfo` is stored in NIP-78 application-specific data events (`kind: 30078`). Each metadata category is a separate replaceable event, keyed by the `d` tag. These events are published under the project's Nostr identity (derived from the founder key via [P2P Funding Protocol](p2p-funding-protocol.md) key derivation).
 
 | d-tag | Content format | Description |
 |-------|----------------|-------------|
@@ -516,11 +516,11 @@ Message type dispatch is done client-side by inspecting the `subject` tag value.
 
 For Fund projects with a penalty threshold, when an investment amount is at or below the threshold, the investor does not need recovery signatures. In this case the investor skips the `Investment offer` / `Re:Investment offer` exchange and directly broadcasts the transaction, then sends only an `Investment completed` notification.
 
-See [BCIP-0005](bcip-0005.md) for the full penalty threshold specification.
+See [P2P Funding Protocol](p2p-funding-protocol.md) for the full penalty threshold specification.
 
 ## References
 
-- [BCIP-0005: Angor - P2P Funding Protocol](bcip-0005.md)
+- [Angor - P2P Funding Protocol](p2p-funding-protocol.md)
 - [NIP-01: Basic protocol flow description](https://github.com/nostr-protocol/nips/blob/master/01.md)
 - [NIP-04: Encrypted Direct Message](https://github.com/nostr-protocol/nips/blob/master/04.md)
 - [NIP-44: Versioned Encryption](https://github.com/nostr-protocol/nips/blob/master/44.md)
