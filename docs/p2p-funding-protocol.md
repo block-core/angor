@@ -1,7 +1,6 @@
-# BCIP-0005 : Angor - P2P Funding Protocol
+# Angor - P2P Funding Protocol
 
 ```
-Number:  BCIP-0005
 Title:   Angor - P2P Funding Protocol
 Type:    Protocol
 Status:  Draft
