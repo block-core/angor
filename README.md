@@ -18,7 +18,9 @@ Angor is a Bitcoin funding protocol with two unique features:
 2. Bitcoin is released to the founders in **predetermined stages** via so-called time-lock contracts, allowing investors to **recover unspent funds at any time**. This framework provides investors with greater control, mitigates financial risk, and incentivizes founders to showcase tangible progress between stages.
 
 For more details:
-* Specifications: [bcip-0005](https://github.com/block-core/bcips/blob/main/bcip-0005.md)
+* [P2P Funding Protocol](docs/p2p-funding-protocol.md) — project types, stages, taproot scripts, transaction structure, investment flows
+* [Nostr Communication Protocol](docs/nostr-communication-protocol.md) — kind 3030, NIP-78 metadata, encrypted DM investment handshake
+* [NIP-3030: Decentralized Crowdfunding](docs/nip-3030-crowdfunding.md) — Nostr event format and investment messaging summary
 * FAQ: [https://angor.io/faq](https://angor.io/#FAQ)
   
 ## How to Use Angor?
