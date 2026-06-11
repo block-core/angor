@@ -1,6 +1,7 @@
 
 <p align="center">
-    <img src="https://github.com/user-attachments/assets/fe8c48ab-3479-4312-8e09-7dedce6850f5" height="100" alt="Angor" />
+    <img  height="100" alt="Angor" src="https://github.com/user-attachments/assets/6e20b391-e067-4617-aa38-38aa42cdcd91" />
+    <img-old src="https://github.com/user-attachments/assets/6e20b391-e067-4617-aa38-38aa42cdcd91" height="100" alt="Angor" />
 </p>
 
 <h3 align="center">
