@@ -1,7 +1,6 @@
-# BCIP-0006 : Angor Nostr Communication Protocol
+# Angor Nostr Communication Protocol
 
 ```
-Number:  BCIP-0006
 Title:   Angor Nostr Communication Protocol
 Type:    Protocol
 Status:  Draft
