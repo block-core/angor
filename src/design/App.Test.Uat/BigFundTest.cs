@@ -67,6 +67,7 @@ public class BigFundTest
             ThresholdAmountBtc = "0.01",
             PayoutDay = payoutDay,
             RunId = runId,
+            InstallmentCount = 6,
         });
         createdProject.Success.Should().BeTrue(createdProject.Error);
 
