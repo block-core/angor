@@ -99,6 +99,16 @@ jobs:
             --appId ${{ env.APP_ID }} `
             --version ${{ needs.prepare.outputs.version }} `
             --vendor "${{ env.VENDOR }}"
+
+      - name: Create Windows x64 Portable
+        run: |
+          dotnet publish ${{ env.DESKTOP_PROJECT }} -c Release -r win-x64 --self-contained -p:Version=${{ needs.prepare.outputs.version }} -o publish-win-x64
+          Copy-Item publish-win-x64/Angor2.exe artifacts/Angor-${{ needs.prepare.outputs.version }}-win-x64-Portable.exe
+
+      - name: Create Windows arm64 Portable
+        run: |
+          dotnet publish ${{ env.DESKTOP_PROJECT }} -c Release -r win-arm64 --self-contained -p:Version=${{ needs.prepare.outputs.version }} -o publish-win-arm64
+          Copy-Item publish-win-arm64/Angor2.exe artifacts/Angor-${{ needs.prepare.outputs.version }}-win-arm64-Portable.exe
       
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
