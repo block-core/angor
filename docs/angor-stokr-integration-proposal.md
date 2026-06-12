@@ -49,7 +49,7 @@ Angor is a decentralized peer-to-peer funding protocol built on Bitcoin. It allo
 2. **An investor commits Bitcoin** by constructing a special Bitcoin transaction. This transaction creates one Taproot output per stage, each containing multiple spending paths:
    - **Founder claim**: the founder can spend the output after the stage's timelock expires (using `OP_CHECKLOCKTIMEVERIFY` and the founder's key).
    - **Penalty recovery**: the investor can recover funds at any time by publishing a pre-signed recovery transaction, but must wait through a penalty timelock.
-   - **Penalty-free recovery**: if enough lead investors have already recovered (revealing their hashlock secrets), regular investors can recover immediately using those secrets.
+   - **Founder release**: the founder can sign a transaction releasing the remaining funds back to the investor without penalty.
    - **End-of-project recovery**: after the project's expiry date, the investor can reclaim any unclaimed funds.
 
 3. **As each stage's timelock expires**, the founder claims the Bitcoin for that stage. Investors who are unhappy with the project's progress can recover their remaining funds before later stages unlock.
@@ -73,7 +73,7 @@ A founder creates a project with 10 stages, each releasing 10% of the investment
 | ...   | ...      | ...     | ...                |
 | 10    | Month 10 | 0.5 BTC | 100%               |
 
-After month 1, the founder claims 0.5 BTC. If the investor loses confidence at month 3, they can recover the remaining 3.5 BTC (stages 4-10) -- either with a penalty wait or, if lead investors have exited, immediately.
+After month 1, the founder claims 0.5 BTC. If the investor loses confidence at month 3, they can recover the remaining 3.5 BTC (stages 4-10) either with a penalty wait or via a founder-signed release.
 
 ## 4. The Integration: Staged Bitcoin Payment with Progressive Share Release
 
