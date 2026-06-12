@@ -262,6 +262,8 @@ The three share release models described in Section 5 form a natural progression
 
 5. **Multi-investor stages**: In Angor, a single stage may have contributions from many investors. The founder claims all of them at once. The share release mechanism needs to handle per-investor allocations correctly when the founder does a single stage claim.
 
+6. **Minimum investment threshold**: STOKR's current offerings typically require a minimum investment of ~100,000 USD. Given that Angor's staged locking mechanism provides built-in investor protection (investors can recover uncommitted funds at any time), could this minimum be reduced? The protocol-level safeguards may satisfy some of the risk concerns that the high minimum is designed to address.
+
 ## 9. Next Steps
 
 1. **Share this document with STOKR** for initial feedback on the concept and legal feasibility.
