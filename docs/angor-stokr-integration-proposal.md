@@ -79,7 +79,7 @@ After month 1, the founder claims 0.5 BTC. If the investor loses confidence at m
 
 ### The Problem Each System Solves Alone
 
-**STOKR alone**: An investor buys tokenized securities by sending Bitcoin (or fiat) to the SPV. The payment is a one-time transfer. Once the Bitcoin is sent, the investor has no mechanism to recover it if the project underperforms. The investor's only protection is the legal structure and STOKR's regulatory oversight.
+**STOKR alone**: An investor buys tokenized securities by sending Bitcoin (or fiat) to the SPV. The payment is a one-time transfer. Once the Bitcoin is sent, the investor has no mechanism to recover it if the project underperforms. The investor's only protection is the legal structure and STOKR's regulatory oversight. Additionally, once Bitcoin is transferred to the SPV, it is exposed to custodial risks -- key loss, hacks, or mismanagement by the entity holding the funds.
 
 **Angor alone**: An investor locks Bitcoin into time-locked contracts that protect them from founder fraud or underperformance. But there is no regulated security issued in return -- the investment is purely a Bitcoin-native commitment with no legal recognition as a securities purchase.
 
