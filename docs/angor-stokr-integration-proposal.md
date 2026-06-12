@@ -52,7 +52,7 @@ Angor is a decentralized peer-to-peer funding protocol built on Bitcoin. It allo
    - **Founder release**: the founder can sign a transaction releasing the remaining funds back to the investor without penalty.
    - **End-of-project recovery**: after the project's expiry date, the investor can reclaim any unclaimed funds.
 
-3. **As each stage's timelock expires**, the founder claims the Bitcoin for that stage. Investors who are unhappy with the project's progress can recover their remaining funds before later stages unlock.
+3. **As each stage's timelock expires**, the founder claims the Bitcoin for that stage. Investors who are unhappy with the project's progress can recover their remaining funds before later stages unlock, forfeiting the share tokens allocated to the recovered stages.
 
 ### Key properties
 
