@@ -218,6 +218,13 @@ public partial class FundsViewModel : ReactiveObject, IDisposable
         }
     }
 
+    public void RefreshNetworkState()
+    {
+        this.RaisePropertyChanged(nameof(IsTestnet));
+        this.RaisePropertyChanged(nameof(DefaultWalletName));
+        this.RaisePropertyChanged(nameof(CurrencySymbol));
+    }
+
     /// <summary>
     /// Create a new wallet using the SDK.
     /// Generates random seed words, creates wallet with encryption key.

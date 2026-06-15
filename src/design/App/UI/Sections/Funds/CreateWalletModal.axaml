@@ -400,10 +400,10 @@
                                 <TextBlock Name="ContinueText" Text="Continue" HorizontalAlignment="Center" />
                                 <StackPanel Name="ContinueBtnSpinner" Orientation="Horizontal" Spacing="8"
                                             HorizontalAlignment="Center" IsVisible="False">
+                                    <TextBlock Text="Creating wallet" VerticalAlignment="Center" />
                                     <i:Icon Name="ContinueSpinner" Value="fa-solid fa-spinner" FontSize="14"
                                             Foreground="White" VerticalAlignment="Center"
                                             Classes="spin" />
-                                    <TextBlock Text="Creating..." VerticalAlignment="Center" />
                                 </StackPanel>
                             </Panel>
                         </Button>
