@@ -117,6 +117,7 @@ public static class CreateProjectInfo
                         projectInfo.ExpiryDate = project.StartDate.AddMonths(6);
                         projectInfo.PenaltyDays = project.PenaltyDays;
                         projectInfo.PenaltyThreshold = project.PenaltyThreshold;
+                        projectInfo.TargetAmount = project.TargetAmount.Sats;
                         projectInfo.DynamicStagePatterns = project.SelectedPatterns ?? throw new InvalidOperationException("Selected patterns are required for Fund projects");
                         projectInfo.Stages = new List<Stage>();
                         break;

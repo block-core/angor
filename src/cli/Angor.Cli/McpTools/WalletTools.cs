@@ -27,7 +27,7 @@ public class WalletTools(IWalletAppService walletService)
     }
 
     [McpServerTool, Description("Create a new wallet. Returns the wallet ID.")]
-    public async Task<string> WalletCreate(string name, string network = "testnet", string? seedWords = null)
+    public async Task<string> WalletCreate(string name, string network = "mainnet", string? seedWords = null)
     {
         var bitcoinNetwork = network.Equals("mainnet", StringComparison.OrdinalIgnoreCase)
             ? BitcoinNetwork.Mainnet

@@ -290,9 +290,11 @@ public static class AutomationFlows
             // Step 4: Target amount + approval threshold + penalty days
             await TypeTextByNameAsync(window, "FundTargetAmountInput", req.TargetAmountBtc);
             await TypeTextByNameAsync(window, "ApprovalThresholdInput", req.ThresholdAmountBtc);
+            // Also set VM properties directly to guard against binding race conditions
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 var wizardVm = myProjectsVm.CreateProjectVm;
+                wizardVm.TargetAmount = req.TargetAmountBtc;
                 wizardVm.PenaltyDays = req.PenaltyDays;
                 Dispatcher.UIThread.RunJobs();
             });
@@ -399,6 +401,13 @@ public static class AutomationFlows
             // Step 4: Target amount + invest end date (set via CalendarDatePicker control)
             await TypeTextByNameAsync(window, "InvestTargetAmountInput", "1.0");
             await SetCalendarDateByNameAsync(window, "InvestEndDatePicker", DateTime.UtcNow.AddMonths(3));
+            // Also set VM property directly to guard against binding race conditions
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var wizardVm = myProjectsVm.CreateProjectVm;
+                wizardVm.TargetAmount = "1.0";
+                Dispatcher.UIThread.RunJobs();
+            });
             await ClickByNameAsync(window, "NextStepButton");
 
             // Step 5 interstitial: Dismiss welcome
@@ -2648,6 +2657,7 @@ public static class AutomationFlows
                 await Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     var wizardVm = myProjectsVm.CreateProjectVm;
+                    wizardVm.TargetAmount = req.TargetAmountBtc;
                     wizardVm.PenaltyDays = req.PenaltyDays;
                     Dispatcher.UIThread.RunJobs();
                 });
@@ -2725,6 +2735,12 @@ public static class AutomationFlows
                 // Step 4: Target amount + invest end date
                 await TypeTextByNameAsync(window, "InvestTargetAmountInput", "1.0");
                 await SetCalendarDateByNameAsync(window, "InvestEndDatePicker", DateTime.UtcNow.AddMonths(3));
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    var wizardVm = myProjectsVm.CreateProjectVm;
+                    wizardVm.TargetAmount = "1.0";
+                    Dispatcher.UIThread.RunJobs();
+                });
                 await ClickByNameAsync(window, "NextStepButton");
 
                 // Step 5 interstitial: Dismiss welcome
