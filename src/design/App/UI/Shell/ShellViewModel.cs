@@ -7,6 +7,7 @@ using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Wallet.Application;
 using Angor.Sdk.Wallet.Domain;
 using App.UI.Sections.FindProjects;
+using App.UI.Sections.Funds;
 using App.UI.Sections.MyProjects;
 using App.UI.Sections.Portfolio;
 using App.UI.Shared;
@@ -1230,6 +1231,12 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
             && findProjectsView is FindProjectsView { DataContext: FindProjectsViewModel findProjectsVm })
         {
             findProjectsVm.ResetAfterNetworkSwitch();
+        }
+
+        if (_viewCache.TryGetValue("Funds", out object? fundsView)
+            && fundsView is FundsView { DataContext: FundsViewModel fundsVm })
+        {
+            fundsVm.RefreshNetworkState();
         }
 
         if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())

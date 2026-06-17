@@ -403,6 +403,11 @@ public partial class FundsView : UserControl, ISectionView
         // WalletContext is already reloaded at startup and after wallet create/import/delete.
         // Reloading on every mobile tab activation forces collection rebuild + wallet card
         // layout before the tab can paint, which showed up as ~250ms on Android.
+        if (DataContext is FundsViewModel viewModel)
+        {
+            viewModel.RefreshNetworkState();
+        }
+
         InvalidateVisual();
     }
 
