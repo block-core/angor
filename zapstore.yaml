@@ -1,5 +1,6 @@
 repository: https://github.com/block-core/angor
 release_source: https://github.com/block-core/angor
+pubkey: npub1t608h6fkpg67k8rnnxnfrv0ftrayyk2mqm303fccsmjqf336c04qd3qrje
 name: Angor
 summary: Decentralized Bitcoin funding for founders and investors
 description: |
