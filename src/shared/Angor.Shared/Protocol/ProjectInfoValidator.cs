@@ -30,6 +30,9 @@ public static class ProjectInfoValidator
         error = ValidateStageAmounts(projectInfo);
         if (error != null) return error;
 
+        error = ValidateEndDate(projectInfo, isDebugMode);
+        if (error != null) return error;
+
         error = ValidateExpiryDate(projectInfo);
         if (error != null) return error;
 
@@ -125,6 +128,36 @@ public static class ProjectInfoValidator
             return $"Stage with {minStagePercent}% allocation would produce an output of ~{estimatedMinStageAmount} sats " +
                    $"at the target amount, which is below the dust threshold of {ProtocolConstants.DustThresholdSats} sats. " +
                    $"Increase the target amount or adjust stage percentages.";
+
+        return null;
+    }
+
+    /// <summary>
+    /// Validates that the funding end date (end of the fundraising window) is before
+    /// the first stage release date for Invest projects. The fundraising window must
+    /// close before the first release so investors have time to participate before
+    /// any funds are released to the founder.
+    /// In debug mode, this check is skipped so founders can test immediate spending
+    /// with the first stage on the same day as the end date.
+    /// </summary>
+    public static string? ValidateEndDate(ProjectInfo projectInfo, bool isDebugMode = false)
+    {
+        if (isDebugMode)
+            return null;
+
+        if (projectInfo.ProjectType != ProjectType.Invest)
+            return null;
+
+        if (projectInfo.EndDate == default || projectInfo.EndDate == DateTime.MinValue)
+            return null;
+
+        if (projectInfo.Stages == null || projectInfo.Stages.Count == 0)
+            return null;
+
+        var firstStageDate = projectInfo.Stages.Min(s => s.ReleaseDate);
+        if (projectInfo.EndDate >= firstStageDate)
+            return $"Funding end date ({projectInfo.EndDate:yyyy-MM-dd}) must be before the first stage release date " +
+                   $"({firstStageDate:yyyy-MM-dd}). The fundraising window must close before any funds are released.";
 
         return null;
     }

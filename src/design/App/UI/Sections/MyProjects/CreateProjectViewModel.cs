@@ -651,6 +651,15 @@ public partial class CreateProjectViewModel : ReactiveObject
                     RaiseErrorProperties();
                     return;
                 }
+
+                if (HasAnyDateError)
+                {
+                    FormError = "Please fix the stage date errors before proceeding. " +
+                                "Each stage release date must be after the funding end date.";
+                    StagesError = FormError;
+                    RaiseErrorProperties();
+                    return;
+                }
                 break;
         }
 
