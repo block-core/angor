@@ -924,7 +924,11 @@ public partial class CreateProjectViewModel : ReactiveObject
         };
 
         var stageCount = Math.Max(1, durationDays / frequencyDays);
-        var baseDate = DateTime.TryParse(StartDate, out var sd) ? sd : DateTime.UtcNow;
+        // Stages must start after the funding end date so the fundraising window
+        // closes before any funds are released. Fall back to start date if no end date set.
+        var baseDate = InvestEndDate.HasValue
+            ? InvestEndDate.Value
+            : DateTime.TryParse(StartDate, out var sd) ? sd : DateTime.UtcNow;
         var targetBtc = double.TryParse(TargetAmount, out var t) ? t : 1.0;
         var percentPerStage = 100.0 / stageCount;
 
