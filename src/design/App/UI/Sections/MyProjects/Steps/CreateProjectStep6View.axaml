@@ -111,8 +111,8 @@
                                    Foreground="{DynamicResource TextStrong}" FontWeight="Bold"
                                    HorizontalAlignment="Right" />
                     </Grid>
-                    <!-- Penalty Days (investment only) -->
-                    <Grid ColumnDefinitions="140,*" IsVisible="{Binding IsInvestment}">
+                    <!-- Penalty Days (investment and fund) -->
+                    <Grid ColumnDefinitions="140,*" IsVisible="{Binding !IsSubscription}">
                         <TextBlock Text="Penalty Days" FontSize="14"
                                    Foreground="{DynamicResource BitcoinAccent}" />
                         <TextBlock Grid.Column="1" FontSize="14"
