@@ -20,6 +20,11 @@
         <TrimmerRootAssembly Include="Angor.Data.Documents" />
         <TrimmerRootAssembly Include="Angor.Data.Documents.LiteDb" />
         <TrimmerRootAssembly Include="LiteDB" />
+        <!-- Websocket.Client embeds LibLog, which reflects over Serilog to wire up
+             its internal logging. Without rooting both, trimming removes the methods
+             LibLog reflects on and the app logs an ArgumentNullException at startup. -->
+        <TrimmerRootAssembly Include="Websocket.Client" />
+        <TrimmerRootAssembly Include="Serilog" />
     </ItemGroup>
     
     <PropertyGroup>
