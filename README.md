@@ -39,6 +39,18 @@ You can access Angor online at [https://angor.io/](https://angor.io/), or downlo
 | macOS | `.dmg` disk image (x64, arm64) |
 | Android | `.apk` (unsigned, sideload) |
 
+#### macOS first launch
+
+The macOS builds are ad-hoc signed but not yet notarized by Apple, so on first launch Gatekeeper shows an "unidentified developer" warning. To open the app:
+
+- **Right-click** (or Control-click) `Angor.app` in `/Applications` → **Open** → **Open** in the dialog. macOS remembers the choice after that.
+
+If macOS reports the app as **"damaged and can't be opened"** (an older download, or if the right-click step doesn't appear), clear the download quarantine flag, then open normally:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Angor.app
+```
+
 ## Releasing
 
 To create a new release:
