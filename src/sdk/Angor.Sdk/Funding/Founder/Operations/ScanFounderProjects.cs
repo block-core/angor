@@ -5,6 +5,7 @@ using Angor.Sdk.Funding.Shared;
 using Angor.Data.Documents.Interfaces;
 using CSharpFunctionalExtensions;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Dtos;
 
@@ -25,7 +26,8 @@ public static class ScanFounderProjects
     public class ScanFounderProjectsHandler(
         IProjectService projectService,
         IFounderProjectsService founderProjectsService,
-        IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection) : IRequestHandler<ScanFounderProjectsRequest, Result<ScanFounderProjectsResponse>>
+        IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection,
+        ILogger<ScanFounderProjectsHandler> logger) : IRequestHandler<ScanFounderProjectsRequest, Result<ScanFounderProjectsResponse>>
     {
         public async Task<Result<ScanFounderProjectsResponse>> Handle(ScanFounderProjectsRequest request, CancellationToken cancellationToken)
         {
@@ -51,6 +53,7 @@ public static class ScanFounderProjects
 
             // Step 4: Query the indexer/Nostr for the unknown keys to see if they exist on-chain
             var newRecords = new List<FounderProjectRecord>();
+            string? scanError = null;
             if (unknownIds.Length > 0)
             {
                 var scanResult = await projectService.GetAllAsync(unknownIds);
@@ -64,7 +67,13 @@ public static class ScanFounderProjects
                         });
                     }
                 }
-                // If scan fails, we still return whatever we have locally — don't fail the whole operation
+                else
+                {
+                    scanError = scanResult.Error;
+                    logger.LogWarning(
+                        "Failed to discover projects from relay for wallet {WalletId}: {Error}",
+                        request.WalletId.Value, scanResult.Error);
+                }
             }
 
             // Step 5: Persist any newly discovered projects
@@ -80,7 +89,13 @@ public static class ScanFounderProjects
                 : Array.Empty<ProjectId>();
 
             if (allKnownIds.Length == 0)
+            {
+                // No local projects either — propagate the scan error if there was one
+                if (scanError != null)
+                    return Result.Failure<ScanFounderProjectsResponse>(scanError);
+
                 return Result.Success(new ScanFounderProjectsResponse(Enumerable.Empty<ProjectDto>()));
+            }
 
             var projects = await projectService.GetAllAsync(allKnownIds);
 

@@ -39,7 +39,7 @@ namespace Angor.Shared.Services
         public void LookupProjectsInfoByEventIds<T>(Action<T> responseDataAction, Action? OnEndOfStreamAction,
             params string[] nostrEventIds)
         {
-            const string subscriptionName = "ProjectInfoLookups";
+            var subscriptionName = Guid.NewGuid().ToString().Replace("-", "");
 
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
 

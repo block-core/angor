@@ -8,6 +8,7 @@ using Angor.Data.Documents.Interfaces;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Angor.Sdk.Tests.Funding.Founder;
@@ -28,7 +29,8 @@ public class ScanFounderProjectsTests
         _sut = new ScanFounderProjects.ScanFounderProjectsHandler(
             _mockProjectService.Object,
             _mockFounderProjectsService.Object,
-            _mockDerivedKeysCollection.Object);
+            _mockDerivedKeysCollection.Object,
+            Mock.Of<ILogger<ScanFounderProjects.ScanFounderProjectsHandler>>());
     }
 
     [Fact]

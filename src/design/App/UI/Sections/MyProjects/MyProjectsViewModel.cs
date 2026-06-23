@@ -207,8 +207,9 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
         try
         {
             var wallets = _walletContext.Wallets.ToList();
-            await Task.Run(async () =>
+            var errors = await Task.Run(async () =>
             {
+                var scanErrors = new List<string>();
                 foreach (var wallet in wallets)
                 {
                     // ScanFounderProjects checks all 15 derived key slots,
@@ -218,9 +219,16 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
                     {
                         _logger.LogError("ScanFounderProjects failed for wallet {WalletId}: {Error}",
                             wallet.Id.Value, result.Error);
+                        scanErrors.Add(result.Error);
                     }
                 }
+                return scanErrors;
             });
+
+            foreach (var error in errors)
+            {
+                ToastRequested?.Invoke($"Scan failed: {error}");
+            }
         }
         catch (Exception ex)
         {
