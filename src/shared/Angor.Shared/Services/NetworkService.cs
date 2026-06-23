@@ -1,9 +1,8 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
-using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
 
 namespace Angor.Shared.Services
@@ -39,26 +38,26 @@ namespace Angor.Shared.Services
                 // if the network is specified in storage
                 // we create set it in the configuration
 
-                _networkConfiguration.SetNetwork(AngorNetworksSelector.NetworkByName(networkName));
+                _networkConfiguration.SetNetwork(AngorNetwork.FromName(networkName));
             }
             else
             {
                 // no network found ether this is a first
                 // time user visits the site or the network was wiped
 
-                Network network = null;
+                AngorNetwork network;
 
                 if (setNetwork != null)
                 {
-                    network = AngorNetworksSelector.NetworkByName(setNetwork);
+                    network = AngorNetwork.FromName(setNetwork);
                 } 
                 else if (url.Contains("test") || url.Contains("debug") || url.Contains("localhost"))
                 {
-                    network = new Angornet();
+                    network = AngorNetwork.Angornet();
                 }
                 else
                 {
-                    network = new BitcoinMain();
+                    network = AngorNetwork.Main();
                 }
 
                 _networkStorage.SetNetwork(network.Name);
@@ -134,37 +133,6 @@ namespace Angor.Shared.Services
                     }
                 }
             }
-
-            //foreach (var explorerUrl in settings.Explorers)
-            //{
-            //    if (force || (DateTime.UtcNow - explorerUrl.LastCheck).Minutes > 10)
-            //    {
-            //        explorerUrl.LastCheck = DateTime.UtcNow;
-
-            //        try
-            //        {
-            //            var uri = new Uri(explorerUrl.Url);
-                        
-            //             var heartbeatUrl = new Uri(uri, "api/stats/heartbeat").ToString();
-            //             var response = await _httpClient.GetAsync(heartbeatUrl);
-
-            //            if (response.IsSuccessStatusCode)
-            //            {
-            //                explorerUrl.Status = UrlStatus.Online;
-            //            }
-            //            else
-            //            {
-            //                _logger.LogError($"Failed to check explorer status url = {explorerUrl.Url}, StatusCode = {response.StatusCode}");
-            //            }
-            //            OnStatusChanged?.Invoke();
-            //        }
-            //        catch (Exception ex)
-            //        {
-            //            explorerUrl.Status = UrlStatus.Offline;
-            //            _logger.LogError(ex, $"Failed to check explorer status url = {explorerUrl.Url}");
-            //        }
-            //    }
-            //}
 
             var nostrHeaderMediaType = new MediaTypeWithQualityHeaderValue("application/nostr+json");
             var client = _clientFactory.CreateClient();

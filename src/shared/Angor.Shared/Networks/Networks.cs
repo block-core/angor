@@ -1,74 +1,19 @@
-﻿using Blockcore.Networks;
+namespace Angor.Shared.Networks;
 
-namespace Angor.Shared.Networks
+public static class Networks
 {
-    public static class Networks
-    {
-        public static AngorNetworksSelector Bitcoin
-        {
-            get
-            {
-                return new AngorNetworksSelector(
-                    () => new BitcoinMain(),
-                    () => new BitcoinTest(), 
-                    () => null,
-                    () => new BitcoinTest4(), 
-                    () => new BitcoinSignet(),
-                    () => new Angornet(),
-                    () => null,
-                    () => new LiquidMain());
-            }
-        }
-    }
+    public static AngorNetworksSelector Bitcoin => new();
+}
 
-    public class AngorNetworksSelector
-    {
-        public AngorNetworksSelector(
-            Func<Network> mainnet, 
-            Func<Network> testnet, 
-            Func<Network> regtest, 
-            Func<Network> testnet4, 
-            Func<Network> signet, 
-            Func<Network> angornet, 
-            Func<Network> mutinynet, 
-            Func<Network> liquidnet)
-        {
-            this.Mainnet = mainnet;
-            this.Testnet = testnet;
-            this.Regtest = regtest;
-            this.AngorNet = angornet;
-            this.LiquidNet = liquidnet;
-            this.MutinyNet = mutinynet;
-            this.SigNet = signet;
-            this.Testnet4 = testnet4;
-        }
+public class AngorNetworksSelector
+{
+    public Func<AngorNetwork> Mainnet { get; } = AngorNetwork.Main;
+    public Func<AngorNetwork> Testnet { get; } = AngorNetwork.Testnet;
+    public Func<AngorNetwork> Testnet4 { get; } = AngorNetwork.Testnet4;
+    public Func<AngorNetwork> Regtest { get; } = AngorNetwork.Regtest;
+    public Func<AngorNetwork> AngorNet { get; } = AngorNetwork.Angornet;
+    public Func<AngorNetwork> SigNet { get; } = AngorNetwork.Signet;
+    public Func<AngorNetwork> LiquidNet { get; } = AngorNetwork.Liquid;
 
-        public Func<Network> Mainnet { get; }
-
-        public Func<Network> Testnet { get; }
-
-        public Func<Network> Testnet4 { get; }
-
-        public Func<Network> Regtest { get; }
-
-        public Func<Network> AngorNet { get; }
-
-        public Func<Network> SigNet { get; }
-
-        public Func<Network> MutinyNet { get; }
-
-        public Func<Network> LiquidNet { get; }
-
-
-        public static Network NetworkByName(string networkName)
-        {
-            return networkName switch
-            {
-                "Angornet" => new Angornet(),
-                "Main" => new BitcoinMain(),
-                "Liquid" => new LiquidMain(),
-                _ => new BitcoinMain() // Default fallback
-            };
-        }
-    }
+    public static AngorNetwork NetworkByName(string networkName) => AngorNetwork.FromName(networkName);
 }

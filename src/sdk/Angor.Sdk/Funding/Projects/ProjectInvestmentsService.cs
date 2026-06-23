@@ -6,7 +6,7 @@ using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
 using Angor.Shared.Utilities;
-using Blockcore.Consensus.TransactionInfo;
+using NBitcoin;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 
@@ -216,7 +216,7 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
         {
             Trxid = investmentTransaction.GetHash().ToString(),
             Outputindex = (int)txOut.N,
-            OutputAddress = txOut.TxOut.ScriptPubKey.WitHash.GetAddress(network).ToString(),
+            OutputAddress = txOut.TxOut.ScriptPubKey.WitHash.GetAddress(network.BitcoinNetwork).ToString(),
             Amount = txOut.TxOut.Value.Satoshi
         };
 
@@ -347,8 +347,8 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
                             var correspondingOutput = spentInfo.Outputs.FirstOrDefault(o => o.Index == stageIndex);
                             var hasPenaltyTimelock = correspondingOutput != null
                                 && !string.IsNullOrEmpty(correspondingOutput.ScriptPubKey)
-                                && NBitcoin.Script.FromHex(correspondingOutput.ScriptPubKey)
-                                    .IsScriptType(NBitcoin.ScriptType.P2WSH);
+                                && Script.FromHex(correspondingOutput.ScriptPubKey)
+                                    .IsScriptType(ScriptType.P2WSH);
 
                             logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: InvestorWithPenalty, correspondingOutput.Index={OutputIndex}, hasPenaltyTimelock={HasPenalty}", 
                                 stageIndex, correspondingOutput?.Index, hasPenaltyTimelock);

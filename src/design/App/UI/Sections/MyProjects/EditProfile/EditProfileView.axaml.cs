@@ -12,7 +12,7 @@ using Avalonia.VisualTree;
 using App.UI.Shared;
 using App.UI.Shell;
 using App.UI.Shared.Services;
-using Blockcore.NBitcoin;
+using NBitcoin;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;

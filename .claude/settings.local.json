@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone:*)",
+      "Bash(gh pr *)",
+      "Bash(git fetch *)",
+      "Bash(grep -n *)",
+      "Bash(dotnet build *)",
+      "Bash(dotnet test *)",
+      "Bash(git pull *)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\David.THEDRAGON\\\\Angor\" -Recurse -Directory | Where-Object { $_.Name -match \"Protocol|Shared\" } | Select-Object -ExpandProperty FullName)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\David.THEDRAGON\\\\Angor\\\\src\" -Recurse -Filter \"*.cs\")",
+      "Bash(Select-String \"NostrEncryptionNip44|DeriveConversationKeyNip44\")",
+      "Bash(Select-Object -First 20)"
+    ]
+  }
+}

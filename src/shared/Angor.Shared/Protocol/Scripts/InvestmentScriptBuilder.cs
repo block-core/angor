@@ -1,7 +1,6 @@
 using Angor.Shared.Models;
 using Angor.Shared.Utilities;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.NBitcoin;
+using NBitcoin;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -31,7 +30,7 @@ public class InvestmentScriptBuilder : IInvestmentScriptBuilder
 
         return new(new List<Op>
         {
-            Op.GetPushOp(new NBitcoin.PubKey(investorKey).ToBytes()),
+            Op.GetPushOp(new PubKey(investorKey).ToBytes()),
             OpcodeType.OP_CHECKSIGVERIFY,
             Op.GetPushOp((uint)sequence),
             OpcodeType.OP_CHECKSEQUENCEVERIFY

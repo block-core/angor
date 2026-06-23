@@ -4,18 +4,11 @@ using Angor.Shared.Networks;
 using Angor.Shared.Protocol;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Test.DataBuilders;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using NBitcoin;
-using Hashes = Blockcore.NBitcoin.Crypto.Hashes;
-using Key = Blockcore.NBitcoin.Key;
-using Mnemonic = Blockcore.NBitcoin.BIP39.Mnemonic;
-using Money = Blockcore.NBitcoin.Money;
-using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
-using WordCount = Blockcore.NBitcoin.BIP39.WordCount;
-using Wordlist = Blockcore.NBitcoin.BIP39.Wordlist;
+using NBitcoin.Crypto;
+using NBitcoin.DataEncoders;
 
 namespace Angor.Test.Protocol;
 
@@ -37,13 +30,13 @@ public class FounderTransactionActionTest : AngorTestData
                 var network = Networks.Bitcoin.Testnet();
 
                 // create a fake inputTrx
-                var fakeInputTrx = network.Consensus.ConsensusFactory.CreateTransaction();
+                var fakeInputTrx = network.CreateTransaction();
                 var fakeInputKey = new Key();
-                var fakeTxout = fakeInputTrx.AddOutput(Money.Parse("20.2"), fakeInputKey.ScriptPubKey);
+                fakeInputTrx.Outputs.Add(Money.Parse("20.2"), fakeInputKey.PubKey.ScriptPubKey);
 
                 var keys = new List<Key> { fakeInputKey };
 
-                var coins = keys.Select(key => new Blockcore.NBitcoin.Coin(fakeInputTrx, fakeTxout)).ToList();
+                var coins = keys.Select(key => fakeInputTrx.Outputs.AsCoins().First()).ToList();
 
                 return (coins, keys);
             });
@@ -65,8 +58,8 @@ public class FounderTransactionActionTest : AngorTestData
         InvestorContext seederContext = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
 
         seederContext.InvestorKey = Encoders.Hex.EncodeData(seederKey.PubKey.ToBytes());
-        seederContext.ChangeAddress = seederChangeKey.PubKey.GetSegwitAddress(network).ToString();
-        seederContext.InvestorSecretHash = Hashes.Hash256(seederSecret.ToBytes()).ToString();
+        seederContext.ChangeAddress = seederChangeKey.PubKey.GetAddress(ScriptPubKeyType.Segwit, network.BitcoinNetwork).ToString();
+        seederContext.InvestorSecretHash = Hashes.DoubleSHA256(seederSecret.ToBytes()).ToString();
 
         projectInvestmentInfo.ProjectSeeders.SecretHashes.Add(seederContext.InvestorSecretHash);
 
@@ -85,7 +78,7 @@ public class FounderTransactionActionTest : AngorTestData
         InvestorContext context = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
 
         context.InvestorKey = Encoders.Hex.EncodeData(seederKey.PubKey.ToBytes());
-        context.ChangeAddress = seederChangeKey.PubKey.GetSegwitAddress(network).ToString();
+        context.ChangeAddress = seederChangeKey.PubKey.GetAddress(ScriptPubKeyType.Segwit, network.BitcoinNetwork).ToString();
 
         return operations.CreateInvestmentTransaction(network, context, projectInvestmentInfo.TargetAmount);
     }
@@ -104,8 +97,8 @@ public class FounderTransactionActionTest : AngorTestData
         var investmentTrxHex = "01000008000500c06e31d910010016001416623eb694e4db75d29e5a1cdf7c278b92cc40e10000000000000000236a21038a8157a3a5c6acb0e8b52798e5ed04bc7fc10226b6ab771ec4ffdb43b2ca909400e057eb481b0000225120dc7dea05eee77059b9a3752e364d8347f5021f92f4031888be106848c5b859e40060b7986c8800002251207d3252a2f7778d5fc18b7186ecbf091ce7951878ded82d4136c4a0991ae9f04c00805fad236d00002251207ac912655a09ff2231a6675dd9c796692ceb51733edd78031f965d94e938d10100000000";
         var recoveryTrxHex = "0100000003e3bc520467543c1c47d51c70fa06178892306b1431f7e6770ddde2330f3887460200000000ffffffffe3bc520467543c1c47d51c70fa06178892306b1431f7e6770ddde2330f3887460300000000ffffffffe3bc520467543c1c47d51c70fa06178892306b1431f7e6770ddde2330f3887460400000000ffffffff0300e057eb481b0000220020428faca0638007b13911825a7845cd7a8bc682e58688b89396afc45cf69d98180060b7986c880000220020428faca0638007b13911825a7845cd7a8bc682e58688b89396afc45cf69d981800805fad236d0000220020428faca0638007b13911825a7845cd7a8bc682e58688b89396afc45cf69d981800000000";
         var recoveryTransaction = Networks.Bitcoin.Testnet().CreateTransaction(recoveryTrxHex);
-        var key = new NBitcoin.Key(founderRecoveryPrivateKey.ToBytes());
-        var expectedHashes = new List<NBitcoin.uint256>()
+        var key = new Key(founderRecoveryPrivateKey.ToBytes());
+        var expectedHashes = new List<uint256>()
         {
             new(Encoders.Hex.DecodeData("bc319cc189ac8ef54e2c3b0051bccf77db0d9dec9c39142ac011e98a4f3b4610")),
             new(Encoders.Hex.DecodeData("0d0735181252e9fb4b28644c8d9b0131aa7d9d65c374e406309783548623a82a")),
@@ -222,7 +215,7 @@ public class FounderTransactionActionTest : AngorTestData
         //var investorKey = _derivationOperations.DeriveInvestorKey(words, projectInvestmentInfo.FounderKey);
         //var build_investmentTransaction = _investorTransactionActions.CreateInvestmentTransaction(projectInvestmentInfo, investorKey, Money.Coins(projectInvestmentInfo.TargetAmount).Satoshi);
         //var build_recoveryTransaction = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(projectInvestmentInfo, build_investmentTransaction);
-        //var build_founderSignatures = _sut.SignInvestorRecoveryTransactions(projectInvestmentInfo, build_investmentTransaction.ToHex(), build_recoveryTransaction, Encoders.Hex.EncodeData(founderRecoveryPrivateKey.ToBytes()));
+        //var build_founderSignatures = _sut.SignInvestorRecoveryTransactions(projectInvestmentInfo, build_investmentTransaction.ToHex(), build_recoveryTransaction, founderRecoveryPrivateKey);
         //var build_investmentTransactionHex = build_investmentTransaction.ToHex();
         //var build_recoveryTransactionHex = build_recoveryTransaction.ToHex();
 

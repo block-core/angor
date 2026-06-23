@@ -1,5 +1,5 @@
-﻿@using Angor.Shared
-@using Blockcore.Networks
+@using Angor.Shared
+@using Angor.Shared.Networks
 @inject INetworkConfiguration NetworkConfiguration
 
 <div class="balance-display @(IsCompact ? "compact" : "")" title="@GetTooltip()">
@@ -20,7 +20,7 @@
     [Parameter] public bool ShowFiatInline { get; set; } = false;
     [Parameter] public bool IsCompact { get; set; } = false;
 
-    private Network _network;
+    private AngorNetwork _network;
 
     protected override void OnInitialized()
     {

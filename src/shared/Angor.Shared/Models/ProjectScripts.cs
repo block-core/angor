@@ -1,4 +1,4 @@
-using Blockcore.Consensus.ScriptInfo;
+using NBitcoin;
 
 namespace Angor.Shared.Models;
 

@@ -2,8 +2,8 @@ using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Test.DataBuilders;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.Crypto;
+using NBitcoin;
+using NBitcoin.Crypto;
 
 namespace Angor.Test;
 
@@ -29,7 +29,7 @@ public class TaprootOutputKeyTests
             funderKey.PubKey.ToHex(),
             funderRecoveryKey.PubKey.ToHex(),
             investorKey.PubKey.ToHex(),
-            Hashes.Hash256(secret.ToBytes()).ToString(),
+            Hashes.DoubleSHA256(secret.ToBytes()).ToString(),
             DateTime.UtcNow,
             DateTime.UtcNow.AddDays(365),
             seeders);

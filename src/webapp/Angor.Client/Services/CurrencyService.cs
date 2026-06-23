@@ -1,7 +1,7 @@
 using System.Globalization;
 using Angor.Client.Storage;
 using Angor.Shared;
-using Blockcore.NBitcoin;
+using NBitcoin;
 
 namespace Angor.Client.Services;
 
@@ -47,8 +47,8 @@ public class CurrencyService : ICurrencyService
             return new List<string> { "No balances provided" };
         }
 
-        // Check if the current network is Bitcoin (BTC)
-        if (!_networkConfiguration.GetNetwork().CoinTicker.Equals("BTC", StringComparison.OrdinalIgnoreCase))
+        // Check if the current network is Bitcoin (BTC) mainnet
+        if (_networkConfiguration.GetNetwork().Name != "Main")
         {
             return GenerateEmptyStringList(satBalances.Length);
         }

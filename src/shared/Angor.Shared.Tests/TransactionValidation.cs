@@ -1,14 +1,12 @@
-using Angor.Shared;
 using Angor.Shared.Networks;
 using NBitcoin;
-using Coin = Blockcore.NBitcoin.Coin;
-using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
+using NBitcoin.Policy;
 
 namespace Angor.Test;
 
 public class TransactionValidation
 {
-    static NBitcoin.Network nbitcoinNetwork = NetworkMapper.Map(Networks.Bitcoin.Testnet());
+    static Network nbitcoinNetwork = Networks.Bitcoin.Testnet().BitcoinNetwork;
     
     public static void ThanTheTransactionHasNoErrors(Transaction trx, IEnumerable<Coin>? coins = null)
     {
@@ -16,13 +14,10 @@ public class TransactionValidation
 
         if (coins != null)
         {
-            builder.AddCoins(coins.Select(_ => new NBitcoin.Coin(new uint256(_.Outpoint.Hash.ToBytes()), _.Outpoint.N,
-                new Money(_.Amount.Satoshi), new Script(_.ScriptPubKey.ToBytes()))));    
+            builder.AddCoins(coins);    
         }
         
-        var nBitcoinTrx = NBitcoin.Transaction.Parse(trx.ToHex(), nbitcoinNetwork);
-        
-        Assert.True(builder.Verify(nBitcoinTrx, out NBitcoin.Policy.TransactionPolicyError[] errors),
+        Assert.True(builder.Verify(trx, out TransactionPolicyError[] errors),
             userMessage: errors.Select(_ => _.ToString()).Aggregate("", (x, y) => x + "," + y));
     }
 }

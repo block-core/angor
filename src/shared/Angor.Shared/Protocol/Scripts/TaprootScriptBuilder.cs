@@ -1,23 +1,22 @@
 using System.Text;
 using Angor.Shared.Models;
-using Blockcore.NBitcoin;
+using Angor.Shared.Networks;
 using NBitcoin;
 using NBitcoin.Crypto;
-using Script = Blockcore.Consensus.ScriptInfo.Script;
 
 namespace Angor.Shared.Protocol.Scripts;
 
 public class TaprootScriptBuilder : ITaprootScriptBuilder
 {
-    public Script CreateStage(Blockcore.Networks.Network network, ProjectScripts scripts)
+    public Script CreateStage(AngorNetwork network, ProjectScripts scripts)
     {
         var treeInfo = BuildTaprootSpendInfo(scripts);
 
         // Bypass treeInfo.OutputPubKey which is computed by NBitcoin's buggy
         // ComputeTapTweak on .NET 10 ARM64. Recompute the output key ourselves.
         var outputKeyBytes = TaprootKeyHelper.GetTaprootOutputKeyBytes(treeInfo.InternalPubKey, treeInfo.MerkleRoot);
-        var taprootPubKey = new NBitcoin.TaprootPubKey(outputKeyBytes);
-        var address = taprootPubKey.GetAddress(NetworkMapper.Map(network));
+        var taprootPubKey = new TaprootPubKey(outputKeyBytes);
+        var address = taprootPubKey.GetAddress(network.BitcoinNetwork);
         var scriptBytes = address.ScriptPubKey.ToBytes();
 
         return new Script(scriptBytes);
@@ -29,20 +28,20 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
 
         var script = scriptSelector(scripts);
 
-        ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(script.ToBytes()).ToTapScript(TapLeafVersion.C0));
+        ControlBlock controlBlock = treeInfo.GetControlBlock(script.ToTapScript(TapLeafVersion.C0));
 
         return new Script(controlBlock.ToBytes());
     }
 
-    public (Script controlBlock, Script execute, Script[] secrets) CreateControlSeederSecrets(ProjectScripts scripts, int threshold, Blockcore.NBitcoin.Key[] secrets)
+    public (Script controlBlock, Script execute, Script[] secrets) CreateControlSeederSecrets(ProjectScripts scripts, int threshold, Key[] secrets)
     {
         var treeInfo = BuildTaprootSpendInfo(scripts);
 
-        var scriptWeights = BuildTaprootScripts(scripts).Skip(3).Select(s => new Script(s.Item2.ToBytes()));
+        var scriptWeights = BuildTaprootScripts(scripts).Skip(3).Select(s => s.Item2);
 
         // find the spending script for the current secret hash combination
 
-        var hashesOfSecrets = secrets.Select(secret => (Blockcore.NBitcoin.Crypto.Hashes.Hash256(secret.ToBytes()), new Script(secret.ToBytes()))).ToList();
+        var hashesOfSecrets = secrets.Select(secret => (Hashes.DoubleSHA256(secret.ToBytes()), new Script(secret.ToBytes()))).ToList();
 
         Script execute = null;
         List<Script> secretHashes = new List<Script>();
@@ -57,7 +56,7 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
             {
                 if (op.PushData != null && op.PushData.Length == 32)
                 {
-                    var comp = new Blockcore.NBitcoin.uint256(op.PushData);
+                    var comp = new uint256(op.PushData);
 
                     foreach (var hash in hashesOfSecrets)
                     {
@@ -82,7 +81,7 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
             throw new Exception("no secret found that matches the given scripts");
         }
 
-        ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(execute.ToBytes()).ToTapScript(TapLeafVersion.C0));
+        ControlBlock controlBlock = treeInfo.GetControlBlock(execute.ToTapScript(TapLeafVersion.C0));
 
         return (new Script(controlBlock.ToBytes()), execute, secretHashes.ToArray());
     }
@@ -103,18 +102,18 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
         return treeInfo;
     }
 
-    private static List<(uint, NBitcoin.Script)> BuildTaprootScripts(ProjectScripts scripts)
+    private static List<(uint, Script)> BuildTaprootScripts(ProjectScripts scripts)
     {
-        var scriptWeights = new List<(uint, NBitcoin.Script)>()
+        var scriptWeights = new List<(uint, Script)>()
         {
-            (70u, new NBitcoin.Script (scripts.Founder.ToBytes())),
-            (40u, new NBitcoin.Script (scripts.Recover.ToBytes())),
-            (1u, new NBitcoin.Script (scripts.EndOfProject.ToBytes()))
+            (70u, scripts.Founder),
+            (40u, scripts.Recover),
+            (1u, scripts.EndOfProject)
         };
 
         foreach (var scriptsSeeder in scripts.Seeders)
         {
-            scriptWeights.Add((10u, new NBitcoin.Script(scriptsSeeder.ToBytes())));
+            scriptWeights.Add((10u, scriptsSeeder));
         }
 
         return scriptWeights;
