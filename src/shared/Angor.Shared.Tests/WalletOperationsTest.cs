@@ -101,18 +101,41 @@ public class WalletOperationsTest : AngorTestData
 
         AccountInfo accountInfo = _sut.BuildAccountInfoForWalletWords(words);
 
-        AddCoins(accountInfo, 2, 1000);
+        AddCoins(accountInfo, 6, 500000000);
 
         var network = _networkConfiguration.Object.GetNetwork();
 
         var changeAddress = new Key().PubKey.GetAddress(ScriptPubKeyType.Segwit, network.BitcoinNetwork).ToString();
 
-        // to generate the hex for recoveryTransactionHex and investmentTransactionHex run the test method
-        // InvestmentIntegrationsTests.SpendInvestorRecoveryTest and take the hex of investmentTransaction and signedRecoveryTransaction
-        var recoveryTransactionHex = "01000000000103f65356f239b78188c6910500a59c7fd5acb8883b95bf5b27613d66b5d0ef3cb50200000000fffffffff65356f239b78188c6910500a59c7fd5acb8883b95bf5b27613d66b5d0ef3cb50300000000fffffffff65356f239b78188c6910500a59c7fd5acb8883b95bf5b27613d66b5d0ef3cb50400000000ffffffff03c0c62d000000000022002076e16f4355a210157c87efa95f08797caab991e44c2e2cd365e9b3832b1e9936c0c62d000000000022002076e16f4355a210157c87efa95f08797caab991e44c2e2cd365e9b3832b1e9936c0c62d000000000022002076e16f4355a210157c87efa95f08797caab991e44c2e2cd365e9b3832b1e99360441ab1f2ba7fc385fbc7fd3dceefa066e41b70fbd8366d8eb72e14100159bd4a67ef7422575d4f1ee49f9da87ea6adb9786a86beb5219abc67fbfd08d0afd4e867f834181f208d0c136be992efbfbf32aa102cc8b63e2326f52c500bda0587efa2cac710bc706ba4500cf8d7bf575676ab214cd049e01a4d8e3559b81118014c410df3983442084dbcf19c847ad564f17b01c22059de22c5c886d008652bcf0de433b90082a1cad203f52e32c8724abc4d1567012263e522ae41280a1aa2f66b90d5c36cae495cda3ac61c09f9aa7a903393a2d6aa6aa744355a25175b7ce04fcd081f04d10802bc90d10031a4f4dcd533b0cfe39f36c8f036d9665af27198c9c9c352c760de7beee5ec559cada3ecc29449db9add2e15737f3e63d6b5ee29b0cd7074402f8153d647fb991044112a0e54087556614fedc49db1ad230417e649deb83ca929564555dd207fc886e6e2936f1d539edb7f9cb115cfb2dedb5ac360f8d1675afa68e11326dbe28a7bc8341dfdd9bbdc614b2351c8fec8892eddd413f6d839e0303a73dcfe63cc83f13278bf36f4193b11ca95e277ff8841e9fc64a8d5a615538a8604865a350d46e2e5c7b83442084dbcf19c847ad564f17b01c22059de22c5c886d008652bcf0de433b90082a1cad203f52e32c8724abc4d1567012263e522ae41280a1aa2f66b90d5c36cae495cda3ac61c19f9aa7a903393a2d6aa6aa744355a25175b7ce04fcd081f04d10802bc90d10031a4f4dcd533b0cfe39f36c8f036d9665af27198c9c9c352c760de7beee5ec5591dcf93d2fad25fb17e81dd39a7069bcd2617b89266d6f0d71ce5369cc6e0ae100441027876985bbb765032c71747da7bc760218325edf3849c9cffdf4699b7b1e88d55cf83ec89b01154d8470ef3b62528a2b383e1b56aa78e3223e4d4eb61ad45ed834121be56156f144a58b865c3267ce04567fe4178321bf13f3abd7a4fd147a3ca4ca47e0fbb0e97f0ee39f745752cde2d1084f4a8dc4583442084dbcf19c847ad564f17b01c22059de22c5c886d008652bcf0de433b90082a1cad203f52e32c8724abc4d1567012263e522ae41280a1aa2f66b90d5c36cae495cda3ac61c19f9aa7a903393a2d6aa6aa744355a25175b7ce04fcd081f04d10802bc90d10031a4f4dcd533b0cfe39f36c8f036d9665af27198c9c9c352c760de7beee5ec5500000000";
-        var recoveryTransaction = network.CreateTransaction(recoveryTransactionHex);
-        var investmentTransactionHex = "010000080005c0c62d000000000016001464159155125d0522f0d951d25bbc584f8ccc48990000000000000000236a2102ee6e8902e7a8a5f343bb768b8bed2245620c886af241e2b374a7906a7d4c20a1c0c62d000000000022512091ffed43dbf778e1a4ab3758fc82189e56a8d99a3224c2a22ee5d3397645ad50c0c62d00000000002251202636cae6c34f00da94453afb36468f0c803402c5c5262aa59bf42800c5c58af4c0c62d0000000000225120f7d4c02d3e8380f8e380d84cf4c383fb745f21a5a09817108075f710002787c300000000";
-        var investmentTransaction = network.CreateTransaction(investmentTransactionHex);
+        // Generate test data dynamically (previously used hardcoded Blockcore-format hex)
+        var projectInfo = new ProjectInfo();
+        projectInfo.TargetAmount = Money.Coins(3).Satoshi;
+        projectInfo.StartDate = DateTime.UtcNow;
+        projectInfo.ExpiryDate = DateTime.UtcNow.AddDays(5);
+        projectInfo.PenaltyDays = 10;
+        projectInfo.Stages = new List<Stage>
+        {
+            new Stage { AmountToRelease = 25, ReleaseDate = DateTime.UtcNow.AddDays(1) },
+            new Stage { AmountToRelease = 25, ReleaseDate = DateTime.UtcNow.AddDays(2) },
+            new Stage { AmountToRelease = 50, ReleaseDate = DateTime.UtcNow.AddDays(3) }
+        };
+        projectInfo.FounderKey = _derivationOperations.DeriveFounderKey(words, 1);
+        projectInfo.FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, projectInfo.FounderKey);
+        projectInfo.ProjectIdentifier = _derivationOperations.DeriveAngorKey(angorRootKey, projectInfo.FounderKey);
+
+        var founderRecoveryPrivateKey = _derivationOperations.DeriveFounderRecoveryPrivateKey(words, projectInfo.FounderKey);
+        var investorKey = _derivationOperations.DeriveInvestorKey(words, projectInfo.FounderKey);
+        var investorPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, projectInfo.FounderKey);
+
+        var investmentTransaction = _investorTransactionActions.CreateInvestmentTransaction(projectInfo, investorKey, Money.Coins(10).Satoshi);
+        var signedInvestmentTransaction = _sut.AddInputsAndSignTransaction(accountInfo.GetNextReceiveAddress(), investmentTransaction, words, accountInfo, 3000);
+
+        var strippedInvestmentTransaction = network.CreateTransaction(signedInvestmentTransaction.Transaction.ToHex());
+        strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = WitScript.Empty);
+
+        var unsignedRecoveryTransaction = _investorTransactionActions.BuildRecoverInvestorFundsTransaction(projectInfo, strippedInvestmentTransaction);
+        var recoverySigs = _founderTransactionActions.SignInvestorRecoveryTransactions(projectInfo, strippedInvestmentTransaction.ToHex(), unsignedRecoveryTransaction, founderRecoveryPrivateKey);
+        var recoveryTransaction = _investorTransactionActions.AddSignaturesToRecoverSeederFundsTransaction(projectInfo, signedInvestmentTransaction.Transaction, recoverySigs, investorPrivateKey);
 
         // remove the first stage to simulate that is was spent
         recoveryTransaction.Outputs.RemoveAt(0);
@@ -124,7 +147,7 @@ public class WalletOperationsTest : AngorTestData
         List<Coin> coins = new();
         foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Skip(2))
         {
-            coins.Add(new Coin(new OutPoint(investmentTransaction.GetHash(), output.N), output.TxOut));
+            coins.Add(new Coin(new OutPoint(signedInvestmentTransaction.Transaction.GetHash(), output.N), output.TxOut));
         }
 
         //add all utxos as coins (easier)

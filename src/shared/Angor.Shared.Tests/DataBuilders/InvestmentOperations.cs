@@ -89,6 +89,9 @@ public class InvestmentOperations
             .SetChange(BitcoinAddress.Create(changeAddress, network.BitcoinNetwork))
             .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate.FeeRate)));
 
+        builder.DustPrevention = false;
+        builder.ShuffleOutputs = false;
+
         foreach (var output in transaction.Outputs)
         {
             builder.Send(output.ScriptPubKey, output.Value);
