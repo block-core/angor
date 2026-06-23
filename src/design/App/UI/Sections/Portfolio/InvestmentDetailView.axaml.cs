@@ -320,61 +320,61 @@ public partial class InvestmentDetailView : UserControl
         investVm.IsProcessing = false;
     }
 
-    /// <summary>
-    /// Cancel a pending investment request (Gap 2: CancelInvestmentRequest).
-    /// Available at Step 1 (PendingFounderSignatures) and Step 2 (FounderSignaturesReceived).
-    /// </summary>
-    private async Task CancelInvestmentAsync()
-    {
-        if (DataContext is not InvestmentViewModel investVm) return;
-        if (investVm.IsProcessing) return;
+     /// <summary>
+     /// Cancel a pending investment request (Gap 2: CancelInvestmentRequest).
+     /// Available at Step 1 (PendingFounderSignatures) and Step 2 (FounderSignaturesReceived).
+     /// </summary>
+     private async Task CancelInvestmentAsync()
+     {
+         if (DataContext is not InvestmentViewModel investVm) return;
+         if (investVm.IsCancelling) return;
 
-        investVm.IsProcessing = true;
+         investVm.IsCancelling = true;
 
-        var portfolioVm = App.Services.GetService<PortfolioViewModel>();
-        if (portfolioVm != null)
-        {
-            await portfolioVm.CancelInvestmentAsync(investVm);
-        }
+         var portfolioVm = App.Services.GetService<PortfolioViewModel>();
+         if (portfolioVm != null)
+         {
+             await portfolioVm.CancelInvestmentAsync(investVm);
+         }
 
-        // Always reset IsProcessing — even on success the VM may still be observed by tests
-        // or pending bindings. On success the detail is already closed (SelectedInvestment=null).
-        investVm.IsProcessing = false;
-    }
+         // Always reset IsCancelling — even on success the VM may still be observed by tests
+         // or pending bindings. On success the detail is already closed (SelectedInvestment=null).
+         investVm.IsCancelling = false;
+     }
 
-    /// <summary>
-    /// Refresh the current investment's data from the SDK, including approval status changes.
-    /// Reloads all investments to pick up founder approval, then re-selects this investment
-    /// and refreshes its recovery status.
-    /// </summary>
-    private async Task RefreshInvestmentAsync()
-    {
-        if (DataContext is not InvestmentViewModel investVm) return;
-        if (investVm.IsProcessing) return;
+     /// <summary>
+     /// Refresh the current investment's data from the SDK, including approval status changes.
+     /// Reloads all investments to pick up founder approval, then re-selects this investment
+     /// and refreshes its recovery status.
+     /// </summary>
+     private async Task RefreshInvestmentAsync()
+     {
+         if (DataContext is not InvestmentViewModel investVm) return;
+         if (investVm.IsRefreshing) return;
 
-        investVm.IsProcessing = true;
+         investVm.IsRefreshing = true;
 
-        var portfolioVm = App.Services.GetService<PortfolioViewModel>();
-        if (portfolioVm != null)
-        {
-            var projectId = investVm.ProjectIdentifier;
+         var portfolioVm = App.Services.GetService<PortfolioViewModel>();
+         if (portfolioVm != null)
+         {
+             var projectId = investVm.ProjectIdentifier;
 
-            // Reload all investments from SDK to pick up approval status changes (#7)
-            await portfolioVm.LoadInvestmentsFromSdkAsync();
+             // Reload all investments from SDK to pick up approval status changes (#7)
+             await portfolioVm.LoadInvestmentsFromSdkAsync();
 
-            // Re-select the same investment (LoadInvestmentsFromSdkAsync recreates VMs)
-            var refreshed = portfolioVm.Investments.FirstOrDefault(i => i.ProjectIdentifier == projectId);
-            if (refreshed != null)
-            {
-                portfolioVm.OpenInvestmentDetail(refreshed);
-                // OpenInvestmentDetail already triggers LoadRecoveryStatusAsync
-            }
-        }
+             // Re-select the same investment (LoadInvestmentsFromSdkAsync recreates VMs)
+             var refreshed = portfolioVm.Investments.FirstOrDefault(i => i.ProjectIdentifier == projectId);
+             if (refreshed != null)
+             {
+                 portfolioVm.OpenInvestmentDetail(refreshed);
+                 // OpenInvestmentDetail already triggers LoadRecoveryStatusAsync
+             }
+         }
 
-        // Note: investVm may be stale now (replaced by refreshed VM), but IsProcessing
-        // is set on the old VM which is no longer displayed — this is fine.
-        investVm.IsProcessing = false;
-    }
+         // Note: investVm may be stale now (replaced by refreshed VM), but IsRefreshing
+         // is set on the old VM which is no longer displayed — this is fine.
+         investVm.IsRefreshing = false;
+     }
 
     /// <summary>
     /// Open the investment transaction in the system browser via the indexer explorer.

@@ -385,6 +385,20 @@ public class InvestmentViewModel : INotifyPropertyChanged
         set { if (_isProcessing == value) return; _isProcessing = value; OnPropertyChanged(); }
     }
 
+    private bool _isCancelling;
+    public bool IsCancelling
+    {
+        get => _isCancelling;
+        set { if (_isCancelling == value) return; _isCancelling = value; OnPropertyChanged(); }
+    }
+
+    private bool _isRefreshing;
+    public bool IsRefreshing
+    {
+        get => _isRefreshing;
+        set { if (_isRefreshing == value) return; _isRefreshing = value; OnPropertyChanged(); }
+    }
+
     private string? _errorMessage;
     /// <summary>Error message shown when a recovery operation fails.</summary>
     public string? ErrorMessage
