@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
@@ -16,6 +17,7 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using App.UI.Shell;
+using App.UI.Shared.Services;
 using Microsoft.Extensions.DependencyInjection;
 using static App.Automation.AutomationDtos;
 using static App.Automation.AutomationFlowDtos;
@@ -287,6 +289,19 @@ public sealed class AutomationServer : IDisposable
                     catch { /* body is optional, ignore parse errors */ }
                 }
                 var result = await Dispatcher.UIThread.InvokeAsync(() => WipeData(deleteRecoveryWalletFiles));
+                // ConfirmWipeData is async void — wait until the wallet context is actually cleared
+                var wipeDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+                while (DateTime.UtcNow < wipeDeadline)
+                {
+                    var walletsCleared = await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        Dispatcher.UIThread.RunJobs();
+                        var walletContext = services.GetService<IWalletContext>();
+                        return walletContext == null || !walletContext.Wallets.Any();
+                    });
+                    if (walletsCleared) break;
+                    await Task.Delay(100);
+                }
                 return (200, result);
             }
 
@@ -765,7 +780,10 @@ public sealed class AutomationServer : IDisposable
             settingsVm.NetworkChangeConfirmed = true;
         });
 
-        await settingsVm.ConfirmNetworkSwitchAsync();
+        await Dispatcher.UIThread.InvokeAsync(async () =>
+        {
+            await settingsVm.ConfirmNetworkSwitchAsync();
+        });
         await Task.Delay(2000); // allow wallet rebuild
         return new ActionResponse { Success = true };
     }

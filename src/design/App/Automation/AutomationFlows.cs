@@ -71,6 +71,8 @@ public static class AutomationFlows
 
             var walletId = await Dispatcher.UIThread.InvokeAsync(() =>
             {
+                // Flush any pending UI jobs (e.g. RebuildSeedGroups posted via WalletsUpdated)
+                Dispatcher.UIThread.RunJobs();
                 var allWallets = fundsVm.SeedGroups.SelectMany(g => g.Wallets).ToList();
                 // Return the newly created wallet (not in existing set), or the first one
                 var newWallet = allWallets.FirstOrDefault(w => !existingIds.Contains(w.Id.Value));
@@ -79,7 +81,14 @@ public static class AutomationFlows
 
             if (string.IsNullOrWhiteSpace(walletId))
             {
-                return new CreateWalletAndFundResponse { Success = false, Error = "Wallet id not found after wallet creation" };
+                var groupCount = await Dispatcher.UIThread.InvokeAsync(() => fundsVm.SeedGroups.Count);
+                var walletCount = await Dispatcher.UIThread.InvokeAsync(() =>
+                    fundsVm.SeedGroups.SelectMany(g => g.Wallets).Count());
+                return new CreateWalletAndFundResponse
+                {
+                    Success = false,
+                    Error = $"Wallet id not found after wallet creation (SeedGroups={groupCount}, Wallets={walletCount}, hasWallet={hasWallet}, forceCreate={req.ForceCreate})"
+                };
             }
 
             if (!req.SkipFunding)
