@@ -1,4 +1,4 @@
-﻿﻿﻿using System.Reactive.Linq;
+﻿using System.Reactive.Linq;
 using Angor.Shared.Models;
 using Newtonsoft.Json;
 using Nostr.Client.Keys;
@@ -319,27 +319,24 @@ namespace Angor.Shared.Services
             }
 
             // Incoming messages subscription (requests, notifications, cancellations TO founder)
-            if (!_subscriptionsHanding.RelaySubscriptionAdded(incomingKey))
-            {
-                var incomingSub = nostrClient.Streams.EventStream
-                    .Where(_ => _.Subscription == incomingKey)
-                    .Select(_ => _.Event)
-                    .Subscribe(HandleEvent);
-
-                _subscriptionsHanding.TryAddRelaySubscription(incomingKey, incomingSub);
-            }
+            // Dispose the previous local event handler (if any) so we get a fresh closure
+            // that populates the current call's message lists. We do NOT send a Nostr CLOSE
+            // because we immediately re-send a REQ with the same subscription key.
+            _subscriptionsHanding.DisposeLocalSubscription(incomingKey);
+            var incomingSub = nostrClient.Streams.EventStream
+                .Where(_ => _.Subscription == incomingKey)
+                .Select(_ => _.Event)
+                .Subscribe(HandleEvent);
+            _subscriptionsHanding.TryAddRelaySubscription(incomingKey, incomingSub);
             _subscriptionsHanding.TryAddEoseAction(incomingKey, CheckAllReceived);
 
             // Outgoing messages subscription (approvals FROM founder)
-            if (!_subscriptionsHanding.RelaySubscriptionAdded(outgoingKey))
-            {
-                var outgoingSub = nostrClient.Streams.EventStream
-                    .Where(_ => _.Subscription == outgoingKey)
-                    .Select(_ => _.Event)
-                    .Subscribe(HandleEvent);
-
-                _subscriptionsHanding.TryAddRelaySubscription(outgoingKey, outgoingSub);
-            }
+            _subscriptionsHanding.DisposeLocalSubscription(outgoingKey);
+            var outgoingSub = nostrClient.Streams.EventStream
+                .Where(_ => _.Subscription == outgoingKey)
+                .Select(_ => _.Event)
+                .Subscribe(HandleEvent);
+            _subscriptionsHanding.TryAddRelaySubscription(outgoingKey, outgoingSub);
             _subscriptionsHanding.TryAddEoseAction(outgoingKey, CheckAllReceived);
 
             // Fetch messages TO founder (requests, notifications, cancellations)
