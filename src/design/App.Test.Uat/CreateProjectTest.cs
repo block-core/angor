@@ -32,6 +32,7 @@ public class CreateProjectTest
 
         await using var founderHost = await TestProcessHost.LaunchAsync(FounderProfile);
         await founderHost.Client.WipeDataAsync();
+        await founderHost.Client.SwitchNetworkAsync("Angornet");
         await founderHost.Client.EnableDebugModeAsync();
 
         // ── Step 1: Create wallet and fund ──

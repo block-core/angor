@@ -32,6 +32,7 @@ public class WalletRecoveryTest
 
         await using var host = await TestProcessHost.LaunchAsync(Profile);
         await host.Client.WipeDataAsync();
+        await host.Client.SwitchNetworkAsync("Angornet");
         await host.Client.EnableDebugModeAsync();
 
         // ── Step 1: Create wallet and fund (captures seed words) ──
@@ -64,6 +65,7 @@ public class WalletRecoveryTest
         // ── Step 3: Wipe all data ──
         Log("Step 3: Wiping all data...");
         await host.Client.WipeDataAsync();
+        await host.Client.SwitchNetworkAsync("Angornet");
         Log("Data wiped.");
 
         // ── Step 4: Import wallet from seed words ──

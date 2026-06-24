@@ -34,6 +34,9 @@ public class WipeDataRecoveryTest
         // ── Step 1: Clean slate ──
         Log("Step 1: Wiping data with recovery purge to start clean...");
         await host.Client.WipeDataWithRecoveryPurgeAsync();
+        // Purge-wipe resets the persisted network to Mainnet (default).
+        // Switch back to Angornet so wallet creation uses the testnet indexer.
+        await host.Client.SwitchNetworkAsync("Angornet");
         await host.Client.EnableDebugModeAsync();
 
         // ── Step 2: Create two wallets (no funding) ──
@@ -71,6 +74,7 @@ public class WipeDataRecoveryTest
         // ── Step 4: Standard wipe (no purge) -- recovery files survive ──
         Log("Step 4: Standard wipe (no recovery purge)...");
         await host.Client.WipeDataAsync();
+        await host.Client.SwitchNetworkAsync("Angornet");
         await host.Client.EnableDebugModeAsync();
 
         var storedCountAfterWipe = await host.Client.GetStoredWalletsCountAsync();
@@ -91,6 +95,7 @@ public class WipeDataRecoveryTest
         // ── Step 6: Wipe WITH recovery purge -- recovery files deleted ──
         Log("Step 6: Wiping data WITH recovery wallet file purge...");
         await host.Client.WipeDataWithRecoveryPurgeAsync();
+        await host.Client.SwitchNetworkAsync("Angornet");
         await host.Client.EnableDebugModeAsync();
 
         var storedCountAfterPurge = await host.Client.GetStoredWalletsCountAsync();
