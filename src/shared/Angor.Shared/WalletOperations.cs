@@ -104,6 +104,9 @@ public class WalletOperations : IWalletOperations
                 .SetChange(BitcoinAddress.Create(changeAddress, network.BitcoinNetwork))
                 .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)));
 
+            builder.ShuffleOutputs = false;
+            builder.DustPrevention = false;
+
             foreach (var output in transaction.Outputs)
             {
                 builder.Send(output.ScriptPubKey, output.Value);
@@ -327,6 +330,8 @@ public class WalletOperations : IWalletOperations
             .AddKeys(keys.ToArray())
             .SetChange(BitcoinAddress.Create(sendInfo.ChangeAddress, network.BitcoinNetwork))
             .SendEstimatedFees(new FeeRate(Money.Satoshis(sendInfo.FeeRate)));
+
+        builder.ShuffleOutputs = false;
 
         var signedTransaction = builder.BuildTransaction(true);
 

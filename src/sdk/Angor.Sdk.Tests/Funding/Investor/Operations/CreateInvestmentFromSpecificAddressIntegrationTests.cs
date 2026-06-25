@@ -59,7 +59,7 @@ public class CreateInvestmentFromSpecificAddressIntegrationTests : IDisposable
         
         // Setup network - Use Angornet (Bitcoin Signet)
         _networkConfiguration = new NetworkConfiguration();
-        _networkConfiguration.SetNetwork(new Angornet());
+        _networkConfiguration.SetNetwork(AngorNetwork.Angornet());
         _network = _networkConfiguration.GetNetwork();
 
         // Create derivation operations first (needed by indexer)
