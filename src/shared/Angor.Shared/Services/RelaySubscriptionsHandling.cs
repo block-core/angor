@@ -140,7 +140,9 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         if (!add)
             _logger.LogDebug($"Subscription {subscriptionName} is already being monitored");
 
-        return userEoseActions.TryAdd(subscriptionName,action); 
+        // Replace any existing action so repeated refreshes get the current callback.
+        userEoseActions[subscriptionName] = action;
+        return true;
     }
 
     public void HandleEoseMessages(NostrEoseResponse _)
@@ -188,6 +190,20 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         relaySubscriptionsKeepActive.Remove(subscriptionKey, out _);
 
         _logger.LogDebug($"subscription disposed - {subscriptionKey}");
+    }
+
+    /// <summary>
+    /// Disposes only the local event stream handler for a subscription key
+    /// without sending a Nostr CLOSE to the relay. Use this when you intend
+    /// to immediately re-send a REQ with the same subscription key.
+    /// </summary>
+    public void DisposeLocalSubscription(string subscriptionKey)
+    {
+        if (relaySubscriptions.TryRemove(subscriptionKey, out var subscription))
+        {
+            subscription.Dispose();
+            _logger.LogDebug($"Local subscription handler disposed (no CLOSE sent) - {subscriptionKey}");
+        }
     }
 
     public bool RelaySubscriptionAdded(string subscriptionKey)

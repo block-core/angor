@@ -41,6 +41,7 @@ public class MultiFundClaimAndRecoverTest
         // ── Founder: create wallet + fund project (monthly, 6 installments, past start date) ──
         await using var founderHost = await TestProcessHost.LaunchAsync(FounderProfile);
         await founderHost.Client.WipeDataAsync();
+        await founderHost.Client.SwitchNetworkAsync("Angornet");
         await founderHost.Client.EnableDebugModeAsync();
 
         var founderWallet = await founderHost.Client.CreateWalletAndFundAsync(new CreateWalletAndFundRequest
@@ -70,21 +71,25 @@ public class MultiFundClaimAndRecoverTest
         // ── Launch all 4 investor processes ──
         await using var investor1Host = await TestProcessHost.LaunchAsync(Investor1Profile);
         await investor1Host.Client.WipeDataAsync();
+        await investor1Host.Client.SwitchNetworkAsync("Angornet");
         var wallet1 = await investor1Host.Client.CreateWalletAndFundAsync(new CreateWalletAndFundRequest { ProfileName = Investor1Profile });
         wallet1.Success.Should().BeTrue(wallet1.Error);
 
         await using var investor2Host = await TestProcessHost.LaunchAsync(Investor2Profile);
         await investor2Host.Client.WipeDataAsync();
+        await investor2Host.Client.SwitchNetworkAsync("Angornet");
         var wallet2 = await investor2Host.Client.CreateWalletAndFundAsync(new CreateWalletAndFundRequest { ProfileName = Investor2Profile });
         wallet2.Success.Should().BeTrue(wallet2.Error);
 
         await using var investor3Host = await TestProcessHost.LaunchAsync(Investor3Profile);
         await investor3Host.Client.WipeDataAsync();
+        await investor3Host.Client.SwitchNetworkAsync("Angornet");
         var wallet3 = await investor3Host.Client.CreateWalletAndFundAsync(new CreateWalletAndFundRequest { ProfileName = Investor3Profile });
         wallet3.Success.Should().BeTrue(wallet3.Error);
 
         await using var investor4Host = await TestProcessHost.LaunchAsync(Investor4Profile);
         await investor4Host.Client.WipeDataAsync();
+        await investor4Host.Client.SwitchNetworkAsync("Angornet");
         var wallet4 = await investor4Host.Client.CreateWalletAndFundAsync(new CreateWalletAndFundRequest { ProfileName = Investor4Profile });
         wallet4.Success.Should().BeTrue(wallet4.Error);
 

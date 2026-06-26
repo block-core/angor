@@ -220,6 +220,7 @@ public class SendFundsTest
     private static async Task WipeAndInit(TestProcessHost host)
     {
         await host.Client.WipeDataAsync();
+        await host.Client.SwitchNetworkAsync("Angornet");
         await host.Client.EnableDebugModeAsync();
     }
 
