@@ -94,12 +94,12 @@ public class ProjectValidator
     /// </summary>
     public ValidationResult ValidateFundingEndDate(DateTime endDate)
     {
-        if (endDate.Date < DateTime.UtcNow.Date)
-            return ValidationResult.Fail("Funding end date must be on or after today");
-
-        // Debug mode: allow same-day end date, no maximum period
+        // Debug mode: allow any date (past, today, or future) for testing
         if (_isDebugMode)
             return ValidationResult.Success();
+
+        if (endDate.Date < DateTime.UtcNow.Date)
+            return ValidationResult.Fail("Funding end date must be on or after today");
 
         // Production mode: must be in the future (not today) and within one year
         if (endDate.Date <= DateTime.UtcNow.Date)

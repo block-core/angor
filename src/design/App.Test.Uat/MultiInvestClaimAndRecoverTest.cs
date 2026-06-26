@@ -43,6 +43,7 @@ public class MultiInvestClaimAndRecoverTest
         await using var founderHost = await TestProcessHost.LaunchAsync(FounderProfile);
         await founderHost.Client.WipeDataAsync();
         await founderHost.Client.SwitchNetworkAsync("Angornet");
+        await founderHost.Client.EnableDebugModeAsync();
 
         var founderWallet = await founderHost.Client.CreateWalletAndFundAsync(new CreateWalletAndFundRequest
         {

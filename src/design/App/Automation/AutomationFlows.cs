@@ -409,7 +409,7 @@ public static class AutomationFlows
 
             // Step 4: Target amount + invest end date (set via CalendarDatePicker control)
             await TypeTextByNameAsync(window, "InvestTargetAmountInput", "1.0");
-            await SetCalendarDateByNameAsync(window, "InvestEndDatePicker", DateTime.UtcNow.AddMonths(3));
+            await SetCalendarDateByNameAsync(window, "InvestEndDatePicker", DateTime.UtcNow.AddDays(-90));
             // Also set VM property directly to guard against binding race conditions
             await Dispatcher.UIThread.InvokeAsync(() =>
             {

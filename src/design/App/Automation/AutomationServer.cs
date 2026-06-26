@@ -91,6 +91,17 @@ public sealed class AutomationServer : IDisposable
 
     private void Start()
     {
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+        {
+            var ex = args.ExceptionObject as Exception;
+            Console.WriteLine($"[AutomationServer] FATAL UnhandledException: {ex}");
+        };
+        TaskScheduler.UnobservedTaskException += (_, args) =>
+        {
+            Console.WriteLine($"[AutomationServer] FATAL UnobservedTaskException: {args.Exception}");
+            args.SetObserved();
+        };
+
         listener.Start();
         Console.WriteLine($"[AutomationServer] Listening on http://127.0.0.1:{port}");
         listenTask = Task.Run(() => AcceptLoop(cts.Token));
