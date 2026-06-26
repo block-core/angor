@@ -58,6 +58,7 @@
 
     <ItemGroup>
         <PackageReference Include="Avalonia.Desktop" />
+        <PackageReference Include="Branta" />
     </ItemGroup>
 
     <ItemGroup>

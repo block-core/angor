@@ -16,6 +16,7 @@
     <PackageVersion Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Headless" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Headless.XUnit" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Branta" Version="3.1.4" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.7" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.7" />
     <PackageVersion Include="NBitcoin" Version="7.0.46" />
@@ -30,10 +31,10 @@
     <PackageVersion Include="JetBrains.Annotations" Version="2024.3.0" />
     <PackageVersion Include="LiteDB" Version="5.0.21" />
     <PackageVersion Include="MediatR" Version="12.5.0" />
-    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="9.0.10" />
-    <PackageVersion Include="Microsoft.Extensions.Http" Version="9.0.10" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Caching.Memory" Version="10.0.5" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.5" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.5" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.5" />
     <PackageVersion Include="PanAndZoom" Version="11.3.6" />
     <PackageVersion Include="QRCoder" Version="1.6.0" />
     <PackageVersion Include="ReactiveUI" Version="23.2.1" />
@@ -66,9 +67,9 @@
     <PackageVersion Include="Projektanker.Icons.Avalonia.FontAwesome" Version="9.6.2" />
     <PackageVersion Include="Optris.Icons.Avalonia" Version="12.0.6" />
     <PackageVersion Include="Optris.Icons.Avalonia.FontAwesome" Version="12.0.6" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.10" />
-    <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.10" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="9.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="10.0.5" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="10.0.5" />
     <PackageVersion Include="Zafiro.Avalonia.Dialogs" Version="51.2.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <PackageVersion Include="FluentAssertions" Version="8.0.0" />
@@ -84,7 +85,7 @@
     <!-- CLI / MCP packages -->
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageVersion Include="ModelContextProtocol" Version="1.3.0" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.10" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.5" />
     <!-- Shared / legacy packages -->
     <PackageVersion Include="Blockcore.Core" Version="1.1.41" />
     <PackageVersion Include="Blockcore.Nostr.Client" Version="2.0.2" />
@@ -100,4 +101,4 @@
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.11" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.11" />
   </ItemGroup>
-</Project>
+</Project>

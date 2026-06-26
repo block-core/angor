@@ -1,11 +1,19 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media.Imaging;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using Angor.Shared.Services;
 using App.UI.Shared;
 using App.UI.Shared.Helpers;
 using App.UI.Shell;
+using Branta.Classes;
+using Branta.Enums;
+using Branta.V2.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using System.Net.Http;
+using System.Threading;
 
 namespace App.UI.Sections.Funds;
 
@@ -24,6 +32,8 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
     private string _walletBalance = "0.00000000";
     private string _walletId = "";
     private string _lastTxId = "";
+    private string? _brantaVerifyUrl;
+    private CancellationTokenSource? _brantaLookupCts;
 
     private ICurrencyService CurrencyService =>
         App.Services.GetRequiredService<ICurrencyService>();
@@ -34,8 +44,122 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         AddHandler(Button.ClickEvent, OnButtonClick);
 
         // Clear errors on input (Vue: @input clears errors)
-        AddressInput.TextChanged += (_, _) => ClearSendErrors();
+        AddressInput.TextChanged += OnAddressTextChanged;
         AmountInput.TextChanged += (_, _) => ClearSendErrors();
+
+        // Re-run lookup immediately when the on-chain toggle changes
+        BrantaOnChainToggle.IsCheckedChanged += OnBrantaToggleChanged;
+    }
+
+    private async void OnAddressTextChanged(object? sender, TextChangedEventArgs e)
+    {
+        ClearSendErrors();
+        _brantaLookupCts?.Cancel();
+        _brantaLookupCts = new CancellationTokenSource();
+        var cts = _brantaLookupCts;
+
+        var text = AddressInput.Text?.Trim() ?? "";
+        if (string.IsNullOrEmpty(text))
+        {
+            HideBrantaPanel();
+            return;
+        }
+
+        try
+        {
+            await Task.Delay(400, cts.Token);
+            if (!cts.IsCancellationRequested)
+                await LookupBrantaAsync(text, cts.Token);
+        }
+        catch (OperationCanceledException) { }
+    }
+
+    private async void OnBrantaToggleChanged(object? sender, RoutedEventArgs e)
+    {
+        var text = AddressInput.Text?.Trim() ?? "";
+        if (string.IsNullOrEmpty(text)) return;
+
+        _brantaLookupCts?.Cancel();
+        _brantaLookupCts = new CancellationTokenSource();
+        var cts = _brantaLookupCts;
+        try { await LookupBrantaAsync(text, cts.Token); }
+        catch (OperationCanceledException) { }
+    }
+
+    private async Task LookupBrantaAsync(string address, CancellationToken ct)
+    {
+        var brantaService = App.Services.GetRequiredService<IBrantaService>();
+
+        try
+        {
+            BrantaClientOptions? options = BrantaOnChainToggle.IsChecked == true
+                ? new BrantaClientOptions { BaseUrl = BrantaServerBaseUrl.Production, Privacy = PrivacyMode.Loose }
+                : null;
+
+            var result = await brantaService.GetPaymentsAsync(address, null, options, ct);
+
+            if (ct.IsCancellationRequested) return;
+
+            if (result.Payments.Count == 0)
+            {
+                HideBrantaPanel();
+                return;
+            }
+
+            var payment = result.Payments[0];
+            _brantaVerifyUrl = result.VerifyUrl;
+
+            bool isDark = Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
+            var logoUrl = isDark
+                ? payment.PlatformLogoUrl
+                : (!string.IsNullOrEmpty(payment.PlatformLogoLightUrl) ? payment.PlatformLogoLightUrl : payment.PlatformLogoUrl);
+
+            BrantaPlatformName.Text = payment.Platform;
+            BrantaDescription.Text = payment.Description;
+            BrantaDescription.IsVisible = !string.IsNullOrEmpty(payment.Description);
+            BrantaVerificationPanel.IsVisible = true;
+
+            if (!string.IsNullOrEmpty(logoUrl))
+                _ = LoadBrantaLogoAsync(logoUrl, ct);
+        }
+        catch
+        {
+            HideBrantaPanel();
+        }
+    }
+
+    private async Task LoadBrantaLogoAsync(string logoUrl, CancellationToken ct)
+    {
+        try
+        {
+            var httpFactory = App.Services.GetRequiredService<IHttpClientFactory>();
+            using var http = httpFactory.CreateClient();
+            var bytes = await http.GetByteArrayAsync(logoUrl, ct);
+            if (ct.IsCancellationRequested) return;
+            using var ms = new System.IO.MemoryStream(bytes);
+            var bitmap = new Bitmap(ms);
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                BrantaLogo.Source = bitmap;
+                BrantaLogo.IsVisible = true;
+                BrantaShieldIcon.IsVisible = false;
+            });
+        }
+        catch { }
+    }
+
+    private void HideBrantaPanel()
+    {
+        BrantaVerificationPanel.IsVisible = false;
+        BrantaLogo.IsVisible = false;
+        BrantaShieldIcon.IsVisible = true;
+        _brantaVerifyUrl = null;
+    }
+
+    private void OnBrantaCardPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (!string.IsNullOrEmpty(_brantaVerifyUrl))
+            ExplorerHelper.OpenUrl(_brantaVerifyUrl);
     }
 
     private ShellViewModel? GetShellVm()
