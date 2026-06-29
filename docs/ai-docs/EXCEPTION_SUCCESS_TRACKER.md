@@ -16,12 +16,14 @@ Purpose:
 - Keep a layman explanation of the user journey that leads to each failure, so copy and UI choices are understandable without reading code.
 - Work through each case as a question-and-answer scenario: what is the user trying to do, what went wrong or right, what should the app ask/tell them, and what can they do next?
 
-Local preview hook:
+Implementation status (new Avalonia design app, `src/design/App`):
 
-- Debug-only recovery exception lab added behind `ANGOR_EXCEPTION_UX_LAB=1`.
-- Run with `ANGOR_EXCEPTION_UX_LAB=1 dotnet run --project src/design/App.Desktop/App.Desktop.csproj`.
-- Open `Funded` / Portfolio and click `Exception UX Lab`.
-- The lab previews recovery question, error, and success states using canned data and does not call the SDK.
+- A temporary debug-only Exception UX Lab (behind `ANGOR_EXCEPTION_UX_LAB=1`) was used to review wording/components, then **removed**. The approved copy is now wired into the real error handlers.
+- **Implemented:** Recovery/Portfolio (`DESIGN-RECOVERY-001`), Deploy (`DESIGN-DEPLOY-001..010`), Payment flow (`DESIGN-PAY-001..009`), Funds (`DESIGN-FUNDS-001..005`). Raw `{ex.Message}` / SDK errors / method-name leaks replaced with user-safe copy (technical detail logged).
+- **Toasts** now support severity (`ToastSeverity` Success/Info/Warning/Error); Warning/Error render yellow (non-aggressive) with a dismiss cross. Pre-existing green-styled error toasts fixed.
+- **New visible error states** added where previously silent: Portfolio load, My Projects load/scan, Manage refresh (`DESIGN-PORTFOLIO-001`, `MYPROJECTS-001`, `MANAGE-001`) now surface an Error toast; existing Refresh/Scan act as retry.
+- **Deferred as justified log-only:** `DESIGN-SHELL-001` settings saves are throttled background UI-preference writes — a toast would be noise.
+- Out of scope (untouched): primary Avalonia app (`AV-*`), SDK/shared (`SDK-*`), legacy webapp (`WEB-*`).
 
 Recovery Q/A cases currently previewable:
 

@@ -294,49 +294,11 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         }
         else
         {
-            AmountError.Text = error ?? "Transaction failed. Please try again.";
-            AmountError.IsVisible = true;
+            System.Diagnostics.Debug.WriteLine($"Send transaction failed: {error}");
+            SendErrorText.Text = "We couldn't send this transaction. The network rejected it — check your connection and try again.";
+            SendErrorBanner.IsVisible = true;
         }
     }
-
-#if DEBUG
-    /// <summary>
-    /// Exception UX Lab preview hook. Drives the modal into a representative form,
-    /// broadcast-failure, or success state with canned data. No SDK call is made.
-    /// </summary>
-    public void ShowLabState(string mode, string? error)
-    {
-        SetWallet("Lab Wallet", "On-Chain", $"0.05000000 {CurrencyService.Symbol}", "lab-wallet-id");
-
-        if (mode == "success")
-        {
-            _lastTxId = "a1b2c3d4e5f67890abcdef1234567890abcdef1234567890abcdef7890abcd";
-            SummaryAmount.Text = CurrencyService.FormatBtc(0.0125);
-            SummaryFee.Text = $"0.00001200 {CurrencyService.Symbol}";
-            SummaryTxid.Text = _lastTxId;
-            ShowStep("success");
-            return;
-        }
-
-        ShowStep("form");
-        AddressInput.Text = "tb1qexampledestinationaddress00000000000000000000000000x9z3";
-        AmountInput.Text = "0.01250000";
-
-        if (mode != "validation" && mode != "error") return;
-
-        var message = mode == "validation"
-            ? "Amount exceeds balance"
-            : error ?? "We could not broadcast this transaction. The network rejected it — check your connection and try again.";
-
-        // Post so the error survives any synchronous/queued TextChanged → ClearSendErrors()
-        // fired by setting the inputs above, and is applied after the modal is shown.
-        Dispatcher.UIThread.Post(() =>
-        {
-            AmountError.Text = message;
-            AmountError.IsVisible = true;
-        }, DispatcherPriority.Loaded);
-    }
-#endif
 
     private void SetPercentage(double pct)
     {
@@ -357,6 +319,7 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
     {
         AddressError.IsVisible = false;
         AmountError.IsVisible = false;
+        SendErrorBanner.IsVisible = false;
     }
 
     /// <summary>

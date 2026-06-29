@@ -145,37 +145,6 @@
                             </Button>
                         </StackPanel>
 
-                        <StackPanel Orientation="Vertical" Spacing="8"
-                                    HorizontalAlignment="Center"
-                                    IsVisible="{Binding IsExceptionUxLabEnabled}">
-                            <Button Name="ExceptionUxLabButton"
-                                    Classes="MobileAction"
-                                    Padding="16,8"
-                                    Background="#334B7C5A"
-                                    BorderBrush="{DynamicResource PrimaryGreenBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="8"
-                                    Cursor="Hand">
-                                <TextBlock Text="Exception UX Lab"
-                                           FontSize="13"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource PrimaryGreenBrush}" />
-                            </Button>
-                            <Button Name="PaymentUxLabButton"
-                                    Classes="MobileAction"
-                                    Padding="16,8"
-                                    Background="#334B7C5A"
-                                    BorderBrush="{DynamicResource PrimaryGreenBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="8"
-                                    Cursor="Hand">
-                                <TextBlock Text="Payment UX Lab"
-                                           FontSize="13"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource PrimaryGreenBrush}" />
-                            </Button>
-                        </StackPanel>
-
                         <!-- Stats Grid: 2x2 -->
                         <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto"
                               Margin="0,4,0,0">

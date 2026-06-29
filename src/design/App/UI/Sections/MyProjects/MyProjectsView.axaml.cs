@@ -316,10 +316,10 @@ public partial class MyProjectsView : UserControl, ISectionView
             .DisposeWith(_subscriptions!);
     }
 
-    private void OnToastRequested(string message)
+    private void OnToastRequested(string message, ToastSeverity severity)
     {
         var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
-        shellVm?.ShowToast(message);
+        shellVm?.ShowToast(message, severity);
     }
 
     protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
@@ -426,13 +426,6 @@ public partial class MyProjectsView : UserControl, ISectionView
                 e.Handled = true;
                 return;
 
-            case "DeployUxLabButton":
-#if DEBUG
-                OpenDeployUxLab(vm);
-#endif
-                e.Handled = true;
-                return;
-
             case "PART_ManageButton":
                 // Walk up from the button to find the ProjectCard, then get its DataContext
                 var element = btn as Control;
@@ -514,16 +507,6 @@ public partial class MyProjectsView : UserControl, ISectionView
         vm.LaunchCreateWizard();
         EnsureCreateWizardView(vm, resetVisualState: true);
     }
-
-#if DEBUG
-    private void OpenDeployUxLab(MyProjectsViewModel vm)
-    {
-        var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
-        if (shellVm == null) return;
-
-        shellVm.ShowModal(new DeployExceptionUxLabModal(shellVm, vm.CreateProjectVm.DeployFlow));
-    }
-#endif
 
     private void WireWizardCallbacks(MyProjectsViewModel vm, CreateProjectViewModel wvm)
     {

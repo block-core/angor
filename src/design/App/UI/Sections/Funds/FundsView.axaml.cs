@@ -202,12 +202,6 @@ public partial class FundsView : UserControl, ISectionView
                 e.Handled = true;
                 return;
 
-            case "FundsUxLabButton":
-#if DEBUG
-                OpenFundsUxLab();
-#endif
-                e.Handled = true;
-                return;
         }
 
         // EmptyState or seed group "Add Wallet" button
@@ -317,8 +311,9 @@ public partial class FundsView : UserControl, ISectionView
         catch (Exception ex)
         {
             var shellView = this.FindAncestorOfType<ShellView>();
+            System.Diagnostics.Debug.WriteLine($"Refresh balance failed: {ex.Message}");
             if (shellView?.DataContext is ShellViewModel shellVm)
-                shellVm.ShowToast($"Failed to refresh balance: {ex.Message}");
+                shellVm.ShowToast("We couldn't refresh this wallet's balance. It will retry automatically — your funds are unaffected.", ToastSeverity.Warning);
         }
         finally
         {
@@ -344,16 +339,27 @@ public partial class FundsView : UserControl, ISectionView
             if (shellView?.DataContext is ShellViewModel shellVm)
             {
                 if (success)
-                    shellVm.ShowToast("Testnet coins sent to your wallet. Balance will update shortly.");
+                {
+                    shellVm.ShowToast("Testnet coins are on the way. Your balance will update shortly.", ToastSeverity.Success);
+                }
                 else
-                    shellVm.ShowToast($"Faucet failed: {error}");
+                {
+                    // "already have too much" is a balance limit (warning), not a service failure.
+                    bool isLimit = error?.Contains("too much", StringComparison.OrdinalIgnoreCase) == true
+                        || error?.Contains("already have", StringComparison.OrdinalIgnoreCase) == true;
+                    if (isLimit)
+                        shellVm.ShowToast("Your test wallet already has enough coins. Try spending some before requesting more.", ToastSeverity.Warning);
+                    else
+                        shellVm.ShowToast("The testnet faucet is unavailable right now. Please try again in a few minutes.", ToastSeverity.Error);
+                }
             }
         }
         catch (Exception ex)
         {
             var shellView = this.FindAncestorOfType<ShellView>();
+            System.Diagnostics.Debug.WriteLine($"Faucet request threw: {ex.Message}");
             if (shellView?.DataContext is ShellViewModel shellVm)
-                shellVm.ShowToast($"Error: {ex.Message}");
+                shellVm.ShowToast("The testnet faucet is unavailable right now. Please try again in a few minutes.", ToastSeverity.Error);
         }
         finally
         {
@@ -397,16 +403,6 @@ public partial class FundsView : UserControl, ISectionView
             shellVm.ShowModal(modal);
         }
     }
-
-#if DEBUG
-    private void OpenFundsUxLab()
-    {
-        var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
-        if (shellVm == null) return;
-
-        shellVm.ShowModal(new FundsExceptionUxLabModal(shellVm));
-    }
-#endif
 
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
     {

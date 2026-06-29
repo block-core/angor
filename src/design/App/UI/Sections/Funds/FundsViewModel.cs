@@ -68,18 +68,6 @@ public partial class FundsViewModel : ReactiveObject, IDisposable
     /// <summary>Default wallet name based on the current network.</summary>
     public string DefaultWalletName => _getNetwork() == BitcoinNetwork.Mainnet ? "Main Wallet" : "Test Wallet";
 
-    /// <summary>Temporary local UX lab for exception/success previews. Enabled only in Debug via env var.</summary>
-    public bool IsExceptionUxLabEnabled => IsExceptionUxLabEnvironmentEnabled();
-
-    private static bool IsExceptionUxLabEnvironmentEnabled()
-    {
-#if DEBUG
-        return string.Equals(Environment.GetEnvironmentVariable("ANGOR_EXCEPTION_UX_LAB"), "1", StringComparison.Ordinal);
-#else
-        return false;
-#endif
-    }
-
     public FundsViewModel(
         IWalletAppService walletAppService,
         IWalletAccountBalanceService balanceService,

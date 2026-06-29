@@ -66,40 +66,25 @@
                             BoxShadow="{DynamicResource ItemShadow}">
                         <StackPanel Spacing="20">
                             <!-- Header: Bitcoin icon + "Balance Summary" -->
-                            <Grid ColumnDefinitions="*,Auto">
-                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
-                                    <!-- Bitcoin circle icon: 40x40, gradient #F7931A→#FFA500, shadow -->
-                                    <Border Width="40" Height="40" CornerRadius="20"
-                                            ClipToBounds="True">
-                                        <Border.Background>
-                                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                                <GradientStop Color="#F7931A" Offset="0" />
-                                                <GradientStop Color="#FFA500" Offset="1" />
-                                            </LinearGradientBrush>
-                                        </Border.Background>
-                                        <i:Icon Value="fa-brands fa-bitcoin"
-                                               FontSize="20"
-                                               Foreground="White" />
-                                    </Border>
-                                    <TextBlock Text="Balance Summary"
-                                               FontSize="20" FontWeight="Bold"
-                                               Foreground="{DynamicResource StatsDetailLabel}"
-                                               VerticalAlignment="Center" />
-                                </StackPanel>
-                                <Button Name="FundsUxLabButton" Grid.Column="1"
-                                        Padding="16,8"
-                                        VerticalAlignment="Center"
-                                        Background="#334B7C5A"
-                                        BorderBrush="{DynamicResource PrimaryGreenBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="8"
-                                        Cursor="Hand"
-                                        IsVisible="{Binding IsExceptionUxLabEnabled}">
-                                    <TextBlock Text="Funds UX Lab"
-                                               FontSize="13" FontWeight="SemiBold"
-                                               Foreground="{DynamicResource PrimaryGreenBrush}" />
-                                </Button>
-                            </Grid>
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <!-- Bitcoin circle icon: 40x40, gradient #F7931A→#FFA500, shadow -->
+                                <Border Width="40" Height="40" CornerRadius="20"
+                                        ClipToBounds="True">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#F7931A" Offset="0" />
+                                            <GradientStop Color="#FFA500" Offset="1" />
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                    <i:Icon Value="fa-brands fa-bitcoin"
+                                           FontSize="20"
+                                           Foreground="White" />
+                                </Border>
+                                <TextBlock Text="Balance Summary"
+                                           FontSize="20" FontWeight="Bold"
+                                           Foreground="{DynamicResource StatsDetailLabel}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
 
                             <!-- Stats Grid: 3 stat cards in a row -->
                             <!--

@@ -429,12 +429,6 @@ public class InvestmentViewModel : INotifyPropertyChanged
         }
     }
 
-#if DEBUG
-    public bool IsExceptionUxLabPreview { get; set; }
-    public bool ExceptionUxLabShouldSucceed { get; set; }
-    public string ExceptionUxLabError { get; set; } = "This is a local preview of how this exception will read in the flow.";
-#endif
-
     // ── Recovery data (populated from SDK when available) ──
     public string PenaltyDuration { get; set; } = "";
     public string MinerFee { get; set; } = "";
@@ -503,12 +497,16 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
     private readonly ILogger<PortfolioViewModel> _logger;
     private readonly CompositeDisposable _disposables = new();
 
-    public event Action<string>? ToastRequested;
+    public event Action<string, ToastSeverity>? ToastRequested;
 
     [Reactive] private bool hasInvestments;
     [Reactive] private InvestmentViewModel? selectedInvestment;
     [Reactive] private bool isLoading;
     [Reactive] private bool isInitialLoad = true;
+
+    /// <summary>Set when loading investments fails, so the section can show a retryable error.</summary>
+    [Reactive] private string? loadError;
+    public bool HasLoadError => !string.IsNullOrEmpty(LoadError);
 
     // ── Left panel stats ──
     public int FundedProjects { get; private set; }
@@ -530,9 +528,6 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
 
     /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
     public string CurrencySymbol => _currencyService.Symbol;
-
-    /// <summary>Temporary local UX lab for exception/success previews. Enabled only in Debug via env var.</summary>
-    public bool IsExceptionUxLabEnabled => IsExceptionUxLabEnvironmentEnabled();
 
     public PortfolioViewModel(
         IInvestmentAppService investmentAppService,
@@ -564,15 +559,6 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
         _ = LoadInvestmentsFromSdkAsync();
     }
 
-    private static bool IsExceptionUxLabEnvironmentEnabled()
-    {
-#if DEBUG
-        return string.Equals(Environment.GetEnvironmentVariable("ANGOR_EXCEPTION_UX_LAB"), "1", StringComparison.Ordinal);
-#else
-        return false;
-#endif
-    }
-
     /// <summary>
     /// Load investments from SDK for all wallets.
     /// Preserves optimistic items that were added locally but not yet indexed by the server.
@@ -583,6 +569,8 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
         if (IsLoading) return;
 
         IsLoading = true;
+        LoadError = null;
+        this.RaisePropertyChanged(nameof(HasLoadError));
         _logger.LogInformation("Loading investments from SDK...");
 
         try
@@ -759,6 +747,9 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
         {
             _logger.LogError(ex, "Error loading investments from SDK");
             ClearToEmpty();
+            LoadError = "We couldn't load your investments. Check your connection and use Refresh to try again.";
+            this.RaisePropertyChanged(nameof(HasLoadError));
+            ToastRequested?.Invoke(LoadError, ToastSeverity.Error);
         }
         finally
         {
@@ -1174,13 +1165,13 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
                 investment.ProjectIdentifier,
                 investment.InvestmentTransactionId,
                 result.Error);
-            ToastRequested?.Invoke("Failed to confirm investment. Please try again.");
+            ToastRequested?.Invoke("Failed to confirm investment. Please try again.", ToastSeverity.Error);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "ConfirmInvestmentAsync threw exception for project {ProjectId}",
                 investment.ProjectIdentifier);
-            ToastRequested?.Invoke("Failed to confirm investment. Please try again.");
+            ToastRequested?.Invoke("Failed to confirm investment. Please try again.", ToastSeverity.Error);
         }
 
         return false;
@@ -1223,13 +1214,13 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
                 investment.ProjectIdentifier,
                 investment.InvestmentTransactionId,
                 result.Error);
-            ToastRequested?.Invoke("Failed to cancel investment. Please try again.");
+            ToastRequested?.Invoke("Failed to cancel investment. Please try again.", ToastSeverity.Error);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "CancelInvestmentAsync threw exception for project {ProjectId}",
                 investment.ProjectIdentifier);
-            ToastRequested?.Invoke("Failed to cancel investment. Please try again.");
+            ToastRequested?.Invoke("Failed to cancel investment. Please try again.", ToastSeverity.Error);
         }
 
         return false;

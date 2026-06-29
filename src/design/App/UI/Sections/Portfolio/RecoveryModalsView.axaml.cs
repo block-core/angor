@@ -132,14 +132,6 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
 
         Vm.ErrorMessage = null;
 
-#if DEBUG
-        if (Vm.IsExceptionUxLabPreview)
-        {
-            await ProcessExceptionUxLabResultAsync(() => Vm.ShowRecoveryModal = false);
-            return;
-        }
-#endif
-
         var feeRate = await AskForFeeRateAsync();
         if (feeRate == null) return; // user cancelled
 
@@ -162,7 +154,8 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
             }
             else
             {
-                Vm.ErrorMessage = error ?? "Recovery transaction failed. Please try again later.";
+                System.Diagnostics.Debug.WriteLine($"Recovery transaction failed: {error}");
+                Vm.ErrorMessage = "We couldn't build the recovery transaction. This can happen if founder signatures aren't available yet or the wallet needs a fresh change address — refresh and try again.";
             }
         }
         else
@@ -176,14 +169,6 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
         if (Vm == null || Vm.IsProcessing) return;
 
         Vm.ErrorMessage = null;
-
-#if DEBUG
-        if (Vm.IsExceptionUxLabPreview)
-        {
-            await ProcessExceptionUxLabResultAsync(() => Vm.ShowClaimModal = false);
-            return;
-        }
-#endif
 
         var feeRate = await AskForFeeRateAsync();
         if (feeRate == null) return; // user cancelled
@@ -207,7 +192,8 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
             }
             else
             {
-                Vm.ErrorMessage = claimError ?? "Claim transaction failed. Please try again later.";
+                System.Diagnostics.Debug.WriteLine($"Claim transaction failed: {claimError}");
+                Vm.ErrorMessage = "We couldn't build the claim transaction. The project output may not be on the indexer yet — refresh in a few minutes and try again.";
             }
         }
         else
@@ -221,14 +207,6 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
         if (Vm == null || Vm.IsProcessing) return;
 
         Vm.ErrorMessage = null;
-
-#if DEBUG
-        if (Vm.IsExceptionUxLabPreview)
-        {
-            await ProcessExceptionUxLabResultAsync(() => Vm.ShowReleaseModal = false);
-            return;
-        }
-#endif
 
         var feeRate = await AskForFeeRateAsync();
         if (feeRate == null) return; // user cancelled
@@ -252,7 +230,8 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
             }
             else
             {
-                Vm.ErrorMessage = releaseError ?? "Release transaction failed. Please try again later.";
+                System.Diagnostics.Debug.WriteLine($"Release transaction failed: {releaseError}");
+                Vm.ErrorMessage = "We couldn't build the release transaction. The recovery transaction may not have confirmed on-chain yet — please try again shortly.";
             }
         }
         else
@@ -262,27 +241,6 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
     }
 
     // ── Helpers ──
-
-#if DEBUG
-    private async Task ProcessExceptionUxLabResultAsync(Action hideActiveModal)
-    {
-        if (Vm == null) return;
-
-        Vm.IsProcessing = true;
-        await Task.Delay(450);
-        Vm.IsProcessing = false;
-
-        if (Vm.ExceptionUxLabShouldSucceed)
-        {
-            hideActiveModal();
-            Vm.ShowSuccessModal = true;
-            return;
-        }
-
-        Vm.IsRecoveryActionBlocked = true;
-        Vm.ErrorMessage = Vm.ExceptionUxLabError;
-    }
-#endif
 
     private void CloseAllModals()
     {

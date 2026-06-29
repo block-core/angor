@@ -108,7 +108,7 @@
                         <Button Name="PayWithWalletButton" HorizontalAlignment="Stretch"
                                  HorizontalContentAlignment="Center"
                                  CornerRadius="8" Padding="12,14"
-                                 IsEnabled="{Binding CanPayWithWallet}"
+                                 IsEnabled="{Binding HasSelectedWallet}"
                                  Cursor="Hand" BorderThickness="0">
                             <Button.Background>
                                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
@@ -153,7 +153,6 @@
                         <Button Name="PayInvoiceInsteadButton" HorizontalAlignment="Stretch"
                                  HorizontalContentAlignment="Center"
                                  CornerRadius="8" Padding="12,14"
-                                 IsEnabled="{Binding !IsDeployActionBlocked}"
                                  Background="Transparent"
                                  BorderBrush="{DynamicResource PrimaryGreenBrush}" BorderThickness="2"
                                 Cursor="Hand">

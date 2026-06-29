@@ -175,25 +175,25 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         GenerateReceiveAddressCommand.ThrownExceptions.Subscribe(ex =>
         {
             _logger.LogError(ex, "GenerateReceiveAddressCommand error");
-            PaymentStatusText = $"Error: {ex.Message}";
+            PaymentStatusText = "Something went wrong. Please try again.";
         }).DisposeWith(_disposables);
         PayToOnChainAddressCommand = ReactiveCommand.CreateFromTask(PayToOnChainAddressAsync);
         PayToOnChainAddressCommand.ThrownExceptions.Subscribe(ex =>
         {
             _logger.LogError(ex, "PayToOnChainAddressCommand error");
-            PaymentStatusText = $"Error: {ex.Message}";
+            PaymentStatusText = "Something went wrong. Please try again.";
         }).DisposeWith(_disposables);
         PayViaLightningCommand = ReactiveCommand.CreateFromTask(PayViaLightningAsync);
         PayViaLightningCommand.ThrownExceptions.Subscribe(ex =>
         {
             _logger.LogError(ex, "PayViaLightningCommand error");
-            PaymentStatusText = $"Error: {ex.Message}";
+            PaymentStatusText = "Something went wrong. Please try again.";
         }).DisposeWith(_disposables);
         PayWithWalletCommand = ReactiveCommand.CreateFromTask(PayWithWalletAsync);
         PayWithWalletCommand.ThrownExceptions.Subscribe(ex =>
         {
             _logger.LogError(ex, "PayWithWalletCommand error");
-            PaymentStatusText = $"Error: {ex.Message}";
+            PaymentStatusText = "Something went wrong. Please try again.";
         }).DisposeWith(_disposables);
 
         // Raise derived property notifications
@@ -309,7 +309,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "PayWithWalletAsync failed");
-            ErrorMessage = $"Payment failed: {ex.Message}";
+            ErrorMessage = "Payment could not be processed. The wallet couldn't sign the transaction — unlock it and try again.";
         }
         finally
         {
@@ -344,7 +344,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             var createResult = await EnsureWalletExistsAsync();
             if (createResult.IsFailure)
             {
-                ErrorMessage = createResult.Error;
+                ErrorMessage = "We couldn't set up a wallet to receive this payment. Try again, or create a wallet first from the Funds tab.";
                 IsProcessing = false;
                 _addressReadyTcs.TrySetCanceled();
                 return;
@@ -352,7 +352,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             wallet = Wallets.FirstOrDefault();
             if (wallet == null)
             {
-                ErrorMessage = "Wallet was created but not found after reload.";
+                ErrorMessage = "We couldn't set up a wallet to receive this payment. Try again, or create a wallet first from the Funds tab.";
                 IsProcessing = false;
                 _addressReadyTcs.TrySetCanceled();
                 return;
@@ -360,7 +360,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         }
         if (wallet.Id is null || string.IsNullOrEmpty(wallet.Id.Value))
         {
-            ErrorMessage = "Wallet has no ID.";
+            ErrorMessage = "We couldn't set up a wallet to receive this payment. Try again, or create a wallet first from the Funds tab.";
             IsProcessing = false;
             _addressReadyTcs.TrySetCanceled();
             return;
@@ -383,7 +383,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "RefreshAllBalancesAsync failed");
-            ErrorMessage = $"Refresh wallet failed: {ex.Message}";
+            ErrorMessage = "We couldn't prepare a receive address for this payment. Unlock the wallet and try again.";
             IsProcessing = false;
             _addressReadyTcs.TrySetCanceled();
             return;
@@ -398,7 +398,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "GetNextReceiveAddress threw");
-            ErrorMessage = $"GetNextReceiveAddress threw: {ex.GetType().Name}: {ex.Message}";
+            ErrorMessage = "We couldn't prepare a receive address for this payment. Unlock the wallet and try again.";
             IsProcessing = false;
             _addressReadyTcs.TrySetCanceled();
             return;
@@ -406,7 +406,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         if (addressResult.IsFailure)
         {
             _logger.LogError("GetNextReceiveAddress failed: {Error}", addressResult.Error);
-            ErrorMessage = $"GetNextReceiveAddress failed: {addressResult.Error}";
+            ErrorMessage = "We couldn't prepare a receive address for this payment. Unlock the wallet and try again.";
             IsProcessing = false;
             _addressReadyTcs.TrySetCanceled();
             return;
@@ -556,7 +556,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             {
                 _logger.LogError("MonitorLightningSwap failed for resumed swap {SwapId}: {Error}",
                     swap.SwapId, monitorSwapResult.Error);
-                ErrorMessage = monitorSwapResult.Error;
+                ErrorMessage = "The Lightning payment couldn't be confirmed on-chain. If you already paid, your funds are safe and will be claimed automatically.";
                 IsProcessing = false;
                 return;
             }
@@ -577,7 +577,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
                     _logger.LogInformation("Resumed swap on-chain monitoring cancelled");
                     return;
                 }
-                ErrorMessage = monitorAddressResult.Error;
+                ErrorMessage = "The Lightning payment couldn't be confirmed on-chain. If you already paid, your funds are safe and will be claimed automatically.";
                 IsProcessing = false;
                 return;
             }
@@ -594,7 +594,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error resuming lightning swap {SwapId}", swap.SwapId);
-            ErrorMessage = $"Error resuming swap: {ex.Message}";
+            ErrorMessage = "The Lightning payment couldn't be confirmed on-chain. If you already paid, your funds are safe and will be claimed automatically.";
         }
         finally
         {
@@ -677,7 +677,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         var wallet = Wallets.FirstOrDefault();
         if (wallet?.Id is null || string.IsNullOrEmpty(OnChainAddress))
         {
-            ErrorMessage = "Wallet or receive address not ready.";
+            ErrorMessage = "We couldn't start watching for your payment because the wallet wasn't ready. Please try again.";
             return;
         }
 
@@ -709,7 +709,8 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
                     _logger.LogInformation("On-chain monitoring cancelled — suppressing error");
                     return;
                 }
-                ErrorMessage = monitorResult.Error;
+                _logger.LogError("On-chain payment monitor failed: {Error}", monitorResult.Error);
+                ErrorMessage = "We stopped watching for this payment because the connection to the network failed. Your funds are safe — reopen to resume watching.";
                 IsProcessing = false;
                 return;
             }
@@ -726,7 +727,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "PayToOnChainAddressAsync failed");
-            ErrorMessage = $"An error occurred: {ex.Message}";
+            ErrorMessage = "Something went wrong while processing your payment. If you already paid, your funds are safe. Please try again.";
         }
         finally
         {
@@ -743,7 +744,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         var wallet = Wallets.FirstOrDefault();
         if (wallet?.Id is null)
         {
-            ErrorMessage = "Wallet not ready.";
+            ErrorMessage = "The wallet isn't ready yet. Please try again in a moment.";
             IsProcessing = false;
             IsGeneratingLightningInvoice = false;
             return;
@@ -761,7 +762,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             }
             catch (Exception)
             {
-                ErrorMessage = ErrorMessage ?? "Receive address not available. Please try again.";
+                ErrorMessage = ErrorMessage ?? "We couldn't prepare a receive address for this payment. Please try again.";
                 IsProcessing = false;
                 IsGeneratingLightningInvoice = false;
                 return;
@@ -794,7 +795,8 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             var pubKeyResult = await _walletAppService.GetPublicKeyForAddress(walletId, receivingAddress);
             if (pubKeyResult.IsFailure)
             {
-                ErrorMessage = $"Failed to derive claim key: {pubKeyResult.Error}";
+                _logger.LogError("Lightning: derive claim key failed: {Error}", pubKeyResult.Error);
+                ErrorMessage = "We couldn't set up the Lightning payment. Switch to On-Chain to pay instead, or try Lightning again.";
                 IsProcessing = false;
                 IsGeneratingLightningInvoice = false;
                 return;
@@ -817,7 +819,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             catch (Exception ex)
             {
                 _logger.LogError(ex, "CreateLightningSwap threw");
-                ErrorMessage = $"CreateLightningSwap threw: {ex.Message}";
+                ErrorMessage = "We couldn't set up the Lightning payment. Switch to On-Chain to pay instead, or try Lightning again.";
                 IsProcessing = false;
                 IsGeneratingLightningInvoice = false;
                 return;
@@ -825,7 +827,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             if (swapResult.IsFailure)
             {
                 _logger.LogError("CreateLightningSwap failed: {Error}", swapResult.Error);
-                ErrorMessage = $"CreateLightningSwap failed: {swapResult.Error}";
+                ErrorMessage = "We couldn't set up the Lightning payment. Switch to On-Chain to pay instead, or try Lightning again.";
                 IsProcessing = false;
                 IsGeneratingLightningInvoice = false;
                 return;
@@ -845,7 +847,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             if (monitorSwapResult.IsFailure)
             {
                 _logger.LogError("MonitorLightningSwap failed: {Error}", monitorSwapResult.Error);
-                ErrorMessage = monitorSwapResult.Error;
+                ErrorMessage = "The Lightning payment couldn't be confirmed on-chain. If you already paid, your funds are safe and will be claimed automatically.";
                 IsProcessing = false;
                 return;
             }
@@ -865,7 +867,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
                     _logger.LogInformation("Lightning on-chain monitoring cancelled — suppressing error");
                     return;
                 }
-                ErrorMessage = monitorAddressResult.Error;
+                ErrorMessage = "The Lightning payment couldn't be confirmed on-chain. If you already paid, your funds are safe and will be claimed automatically.";
                 IsProcessing = false;
                 return;
             }
@@ -882,7 +884,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "PayViaLightningAsync failed");
-            ErrorMessage = $"An error occurred: {ex.Message}";
+            ErrorMessage = "Something went wrong while processing your payment. If you already paid, your funds are safe. Please try again.";
         }
         finally
         {
@@ -902,7 +904,8 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         var result = await _config.OnPaymentReceived(walletId, fundingAddress, _config.AmountSats);
         if (result.IsFailure)
         {
-            ErrorMessage = result.Error;
+            _logger.LogError("Post-payment callback failed after funds received: {Error}", result.Error);
+            ErrorMessage = "Your payment was received, but we couldn't finish your transaction. Do not pay again — please retry, or contact support if it persists.";
             return;
         }
 
@@ -921,37 +924,6 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
     }
 
     public void OnSuccessButtonClicked() => _config.OnSuccessButtonClicked();
-
-#if DEBUG
-    /// <summary>
-    /// Local-only preview hook for the Exception UX Lab. Sets display state directly
-    /// (screen, tab, status, error, intermediate flags) without invoking any SDK
-    /// command or starting monitoring. Canned address/invoice render the QR + field.
-    /// </summary>
-    public void ShowLabPreview(
-        PaymentFlowScreen screen,
-        NetworkTab tab,
-        string statusText,
-        string? error,
-        bool paymentReceived,
-        bool isProcessing)
-    {
-        _monitorCts?.Cancel();
-        _monitorCts = null;
-        CurrentScreen = screen;
-        SelectedNetworkTab = tab;
-        PaymentStatusText = statusText;
-        ErrorMessage = error;
-        PaymentReceived = paymentReceived;
-        IsProcessing = isProcessing;
-        IsGeneratingLightningInvoice = false;
-        OnChainAddress = "tb1qexceptionuxpreviewpaymentaddress00000000000000000000x9z3";
-        LightningInvoice = tab == NetworkTab.Lightning
-            ? "lntb1250u1pexceptionuxlabpreviewinvoicedonotpay000000000000000000"
-            : null;
-        SelectWallet(_walletContext.SelectedWallet ?? Wallets.FirstOrDefault());
-    }
-#endif
 
     public void Reset()
     {

@@ -8,6 +8,7 @@ using Angor.Sdk.Funding.Projects;
 using App.UI.Sections.MyProjects.EditProfile;
 using App.UI.Shared;
 using App.UI.Shared.Services;
+using App.UI.Shell;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 
@@ -62,13 +63,10 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
     private int _loadGeneration;
 
     /// <summary>Raised when the VM wants to show a transient toast notification.</summary>
-    public event Action<string>? ToastRequested;
+    public event Action<string, ToastSeverity>? ToastRequested;
 
     /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
     public string CurrencySymbol => _currencyService.Symbol;
-
-    /// <summary>Temporary local UX lab for exception/success previews. Enabled only in Debug via env var.</summary>
-    public bool IsExceptionUxLabEnabled => IsExceptionUxLabEnvironmentEnabled();
 
     [Reactive] private bool showCreateWizard;
     [Reactive] private ManageProjectViewModel? selectedManageProject;
@@ -114,15 +112,6 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
         CreateProjectVm = createProjectVm;
         _currencyService = currencyService;
         _logger = logger;
-    }
-
-    private static bool IsExceptionUxLabEnvironmentEnabled()
-    {
-#if DEBUG
-        return string.Equals(Environment.GetEnvironmentVariable("ANGOR_EXCEPTION_UX_LAB"), "1", StringComparison.Ordinal);
-#else
-        return false;
-#endif
     }
 
     /// <summary>
@@ -192,6 +181,7 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "LoadFounderProjectsAsync failed");
+            ToastRequested?.Invoke("We couldn't load your projects. Use Scan for Projects to try again.", ToastSeverity.Error);
         }
         finally
         {
@@ -237,15 +227,13 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
                 return scanErrors;
             });
 
-            foreach (var error in errors)
-            {
-                ToastRequested?.Invoke($"Scan failed: {error}");
-            }
+            if (errors.Count > 0)
+                ToastRequested?.Invoke("We couldn't scan some wallets for your projects. Check your connection and try again.", ToastSeverity.Error);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "ScanForProjectsAsync threw an unexpected exception");
-            ToastRequested?.Invoke("Failed to scan for projects. Please try again.");
+            ToastRequested?.Invoke("We couldn't scan for your projects. Please try again.", ToastSeverity.Error);
         }
         finally
         {
