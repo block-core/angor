@@ -5,7 +5,6 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
-using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Sections.MyProjects.EditProfile;
 using App.UI.Shared;
 using App.UI.Shared.Controls;
