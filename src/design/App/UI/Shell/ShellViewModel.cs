@@ -18,6 +18,15 @@ using Microsoft.Extensions.Logging;
 
 namespace App.UI.Shell;
 
+/// <summary>Toast severity — drives colour and icon. Warning/Error render yellow (not red) to stay non-aggressive.</summary>
+public enum ToastSeverity
+{
+    Success,
+    Info,
+    Warning,
+    Error
+}
+
 // ICurrencyService is resolved from DI and threaded through to sub-types that need it.
 
 /// <summary>
@@ -475,6 +484,18 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
     /// </summary>
     [Reactive] private string? toastMessage;
 
+    /// <summary>Severity of the current toast — drives colour/icon (success=green, warning/error=yellow).</summary>
+    [Reactive] private ToastSeverity toastSeverity = ToastSeverity.Success;
+
+    /// <summary>FontAwesome glyph for the current toast severity (bound by the toast icon).</summary>
+    public string ToastIconGlyph => ToastSeverity switch
+    {
+        ToastSeverity.Warning => "fa-solid fa-triangle-exclamation",
+        ToastSeverity.Error => "fa-solid fa-circle-exclamation",
+        ToastSeverity.Info => "fa-solid fa-circle-info",
+        _ => "fa-solid fa-check"
+    };
+
     /// <summary>True when a toast is visible (non-null message).</summary>
     public bool HasToast => ToastMessage != null;
 
@@ -609,6 +630,10 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
         // When toast message changes, notify HasToast
         this.WhenAnyValue(x => x.ToastMessage)
             .Subscribe(_ => this.RaisePropertyChanged(nameof(HasToast)))
+            .DisposeWith(_disposables);
+
+        this.WhenAnyValue(x => x.ToastSeverity)
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(ToastIconGlyph)))
             .DisposeWith(_disposables);
     }
 
@@ -1100,12 +1125,16 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
     }
 
     public void ShowToast(string message, int durationMs = 0)
+        => ShowToast(message, ToastSeverity.Success, durationMs);
+
+    public void ShowToast(string message, ToastSeverity severity, int durationMs = 0)
     {
         // Cancel any previous dismiss timer
         _toastCts?.Cancel();
         _toastCts = new CancellationTokenSource();
         var token = _toastCts.Token;
 
+        ToastSeverity = severity;
         ToastMessage = message;
 
         // Auto-scale duration based on message length if not explicitly specified
@@ -1117,6 +1146,13 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
 
         // Auto-dismiss after duration
         _ = DismissToastAsync(durationMs, token);
+    }
+
+    /// <summary>Dismiss the current toast immediately (e.g. user clicked the close cross).</summary>
+    public void HideToast()
+    {
+        _toastCts?.Cancel();
+        ToastMessage = null;
     }
 
     private async Task DismissToastAsync(int durationMs, CancellationToken token)
