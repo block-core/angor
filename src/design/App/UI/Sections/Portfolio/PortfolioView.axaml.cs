@@ -257,6 +257,20 @@ public partial class PortfolioView : UserControl, ISectionView
                 e.Handled = true;
                 break;
 
+            case "ExceptionUxLabButton":
+#if DEBUG
+                OpenExceptionUxLab();
+#endif
+                e.Handled = true;
+                break;
+
+            case "PaymentUxLabButton":
+#if DEBUG
+                OpenPaymentUxLab();
+#endif
+                e.Handled = true;
+                break;
+
             case "ManageButton" when btn.Tag is InvestmentViewModel investment:
                 if (DataContext is PortfolioViewModel vm)
                     vm.OpenInvestmentDetail(investment);
@@ -277,4 +291,22 @@ public partial class PortfolioView : UserControl, ISectionView
         shellVm?.HandleInvestorSubTabChange("find-projects");
         e.Handled = true;
     }
+
+#if DEBUG
+    private void OpenExceptionUxLab()
+    {
+        var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
+        if (shellVm == null) return;
+
+        shellVm.ShowModal(new RecoveryExceptionUxLabModal(shellVm));
+    }
+
+    private void OpenPaymentUxLab()
+    {
+        var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
+        if (shellVm == null) return;
+
+        shellVm.ShowModal(new global::App.UI.Shared.PaymentFlow.PaymentExceptionUxLabModal(shellVm));
+    }
+#endif
 }

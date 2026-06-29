@@ -5,6 +5,7 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using App.UI.Sections.MyProjects.Deploy;
 using App.UI.Sections.MyProjects.EditProfile;
 using App.UI.Shared;
 using App.UI.Shared.Controls;
@@ -141,7 +142,8 @@ public partial class MyProjectsView : UserControl, ISectionView
             _myProjectsSidebar.Background = null;
             _myProjectsSidebar.BorderThickness = new Avalonia.Thickness(0);
             _myProjectsSidebar.BoxShadow = new Avalonia.Media.BoxShadows(default);
-            _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.PaddingProperty);
+            // Explicit (not ClearValue) so the literal XAML padding isn't reset to 0.
+            _myProjectsSidebar.Padding = new Avalonia.Thickness(24);
 
             Grid.SetColumn(_myProjectsContent, 0);
             Grid.SetRow(_myProjectsContent, 1);
@@ -160,11 +162,13 @@ public partial class MyProjectsView : UserControl, ISectionView
             Grid.SetRow(_myProjectsSidebar, 0);
             _myProjectsSidebar.Margin = new Avalonia.Thickness(0, 0, columnGap, 0);
             _myProjectsSidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch;
-            // Restore card styling — clear local overrides so XAML DynamicResource values take effect
+            // Restore card styling. ClearValue works for DynamicResource-bound properties
+            // (Background, BoxShadow), but reverts literal XAML values to the type default
+            // (0) — so Padding and BorderThickness must be set back explicitly, not cleared.
             _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.BackgroundProperty);
-            _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.BorderThicknessProperty);
             _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.BoxShadowProperty);
-            _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.PaddingProperty);
+            _myProjectsSidebar.BorderThickness = new Avalonia.Thickness(1);
+            _myProjectsSidebar.Padding = new Avalonia.Thickness(24);
 
             Grid.SetColumn(_myProjectsContent, 1);
             Grid.SetRow(_myProjectsContent, 0);
@@ -422,6 +426,13 @@ public partial class MyProjectsView : UserControl, ISectionView
                 e.Handled = true;
                 return;
 
+            case "DeployUxLabButton":
+#if DEBUG
+                OpenDeployUxLab(vm);
+#endif
+                e.Handled = true;
+                return;
+
             case "PART_ManageButton":
                 // Walk up from the button to find the ProjectCard, then get its DataContext
                 var element = btn as Control;
@@ -503,6 +514,16 @@ public partial class MyProjectsView : UserControl, ISectionView
         vm.LaunchCreateWizard();
         EnsureCreateWizardView(vm, resetVisualState: true);
     }
+
+#if DEBUG
+    private void OpenDeployUxLab(MyProjectsViewModel vm)
+    {
+        var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
+        if (shellVm == null) return;
+
+        shellVm.ShowModal(new DeployExceptionUxLabModal(shellVm, vm.CreateProjectVm.DeployFlow));
+    }
+#endif
 
     private void WireWizardCallbacks(MyProjectsViewModel vm, CreateProjectViewModel wvm)
     {

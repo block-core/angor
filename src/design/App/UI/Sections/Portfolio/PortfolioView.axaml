@@ -104,8 +104,8 @@
                         <!-- Buttons Row: Refresh + Penalties -->
                         <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
                             <Button Name="RefreshButton" Classes="Primary MobileAction" Padding="20,8"
-                                   AutomationProperties.AutomationId="PortfolioRefreshButton"
-                                   IsEnabled="{Binding !IsLoading}">
+                                    AutomationProperties.AutomationId="PortfolioRefreshButton"
+                                    IsEnabled="{Binding !IsLoading}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="13"
                                             Foreground="White" VerticalAlignment="Center">
@@ -142,6 +142,37 @@
                                     <TextBlock Text="Penalties" FontSize="13" FontWeight="SemiBold"
                                                Foreground="White" VerticalAlignment="Center" />
                                 </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <StackPanel Orientation="Vertical" Spacing="8"
+                                    HorizontalAlignment="Center"
+                                    IsVisible="{Binding IsExceptionUxLabEnabled}">
+                            <Button Name="ExceptionUxLabButton"
+                                    Classes="MobileAction"
+                                    Padding="16,8"
+                                    Background="#334B7C5A"
+                                    BorderBrush="{DynamicResource PrimaryGreenBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Cursor="Hand">
+                                <TextBlock Text="Exception UX Lab"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryGreenBrush}" />
+                            </Button>
+                            <Button Name="PaymentUxLabButton"
+                                    Classes="MobileAction"
+                                    Padding="16,8"
+                                    Background="#334B7C5A"
+                                    BorderBrush="{DynamicResource PrimaryGreenBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Cursor="Hand">
+                                <TextBlock Text="Payment UX Lab"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryGreenBrush}" />
                             </Button>
                         </StackPanel>
 

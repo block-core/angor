@@ -68,9 +68,12 @@ public partial class DeployFlowViewModel : ReactiveObject
     public bool IsSuccess => CurrentScreen == DeployScreen.Success;
     public bool HasSelectedWallet => SelectedWallet != null;
     public bool HasDeployError => !string.IsNullOrWhiteSpace(DeployErrorMessage);
+    public bool CanPayWithWallet => HasSelectedWallet && !IsDeployActionBlocked;
     public string PayButtonText => SelectedWallet != null
         ? $"Pay with {SelectedWallet.Name}"
         : "Choose Wallet";
+
+    [Reactive] private bool isDeployActionBlocked;
 
     public string DeployFee => $"0.0001 {_currencyService.Symbol}";
 
@@ -141,10 +144,14 @@ public partial class DeployFlowViewModel : ReactiveObject
         this.WhenAnyValue(x => x.DeployErrorMessage)
             .Subscribe(_ => this.RaisePropertyChanged(nameof(HasDeployError)));
 
+        this.WhenAnyValue(x => x.IsDeployActionBlocked)
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(CanPayWithWallet)));
+
         this.WhenAnyValue(x => x.SelectedWallet)
             .Subscribe(_ =>
             {
                 this.RaisePropertyChanged(nameof(HasSelectedWallet));
+                this.RaisePropertyChanged(nameof(CanPayWithWallet));
                 this.RaisePropertyChanged(nameof(PayButtonText));
             });
     }
@@ -157,6 +164,7 @@ public partial class DeployFlowViewModel : ReactiveObject
         CurrentScreen = DeployScreen.WalletSelector;
         SelectWallet(_walletContext.SelectedWallet ?? Wallets.FirstOrDefault());
         IsDeploying = false;
+        IsDeployActionBlocked = false;
         DeployStatusText = "Waiting for payment...";
         DeployErrorMessage = null;
 
@@ -253,8 +261,23 @@ public partial class DeployFlowViewModel : ReactiveObject
     {
         _invoiceMonitorCts?.Cancel();
         DeployErrorMessage = null;
+        IsDeployActionBlocked = false;
         IsVisible = false;
     }
+
+#if DEBUG
+    public void ShowLabPreview(DeployScreen screen, string projectName, string statusText, string? errorMessage, bool isActionBlocked)
+    {
+        ProjectName = projectName;
+        CurrentScreen = screen;
+        IsDeploying = false;
+        IsDeployActionBlocked = isActionBlocked;
+        DeployStatusText = statusText;
+        DeployErrorMessage = errorMessage;
+        SelectWallet(_walletContext.SelectedWallet ?? Wallets.FirstOrDefault());
+        this.RaisePropertyChanged(nameof(ProjectName));
+    }
+#endif
 
     /// <summary>Select a wallet from the list.</summary>
     public void SelectWallet(WalletInfo? wallet)

@@ -201,6 +201,13 @@ public partial class FundsView : UserControl, ISectionView
                 HandleFaucet(btn);
                 e.Handled = true;
                 return;
+
+            case "FundsUxLabButton":
+#if DEBUG
+                OpenFundsUxLab();
+#endif
+                e.Handled = true;
+                return;
         }
 
         // EmptyState or seed group "Add Wallet" button
@@ -390,6 +397,16 @@ public partial class FundsView : UserControl, ISectionView
             shellVm.ShowModal(modal);
         }
     }
+
+#if DEBUG
+    private void OpenFundsUxLab()
+    {
+        var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
+        if (shellVm == null) return;
+
+        shellVm.ShowModal(new FundsExceptionUxLabModal(shellVm));
+    }
+#endif
 
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
     {

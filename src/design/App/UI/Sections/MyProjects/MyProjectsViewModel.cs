@@ -67,6 +67,9 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
     /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
     public string CurrencySymbol => _currencyService.Symbol;
 
+    /// <summary>Temporary local UX lab for exception/success previews. Enabled only in Debug via env var.</summary>
+    public bool IsExceptionUxLabEnabled => IsExceptionUxLabEnvironmentEnabled();
+
     [Reactive] private bool showCreateWizard;
     [Reactive] private ManageProjectViewModel? selectedManageProject;
     [Reactive] private EditProfileViewModel? selectedEditProject;
@@ -111,6 +114,15 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
         CreateProjectVm = createProjectVm;
         _currencyService = currencyService;
         _logger = logger;
+    }
+
+    private static bool IsExceptionUxLabEnvironmentEnabled()
+    {
+#if DEBUG
+        return string.Equals(Environment.GetEnvironmentVariable("ANGOR_EXCEPTION_UX_LAB"), "1", StringComparison.Ordinal);
+#else
+        return false;
+#endif
     }
 
     /// <summary>

@@ -131,6 +131,15 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
         if (Vm == null || Vm.IsProcessing) return;
 
         Vm.ErrorMessage = null;
+
+#if DEBUG
+        if (Vm.IsExceptionUxLabPreview)
+        {
+            await ProcessExceptionUxLabResultAsync(() => Vm.ShowRecoveryModal = false);
+            return;
+        }
+#endif
+
         var feeRate = await AskForFeeRateAsync();
         if (feeRate == null) return; // user cancelled
 
@@ -167,6 +176,15 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
         if (Vm == null || Vm.IsProcessing) return;
 
         Vm.ErrorMessage = null;
+
+#if DEBUG
+        if (Vm.IsExceptionUxLabPreview)
+        {
+            await ProcessExceptionUxLabResultAsync(() => Vm.ShowClaimModal = false);
+            return;
+        }
+#endif
+
         var feeRate = await AskForFeeRateAsync();
         if (feeRate == null) return; // user cancelled
 
@@ -203,6 +221,15 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
         if (Vm == null || Vm.IsProcessing) return;
 
         Vm.ErrorMessage = null;
+
+#if DEBUG
+        if (Vm.IsExceptionUxLabPreview)
+        {
+            await ProcessExceptionUxLabResultAsync(() => Vm.ShowReleaseModal = false);
+            return;
+        }
+#endif
+
         var feeRate = await AskForFeeRateAsync();
         if (feeRate == null) return; // user cancelled
 
@@ -236,12 +263,34 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
 
     // ── Helpers ──
 
+#if DEBUG
+    private async Task ProcessExceptionUxLabResultAsync(Action hideActiveModal)
+    {
+        if (Vm == null) return;
+
+        Vm.IsProcessing = true;
+        await Task.Delay(450);
+        Vm.IsProcessing = false;
+
+        if (Vm.ExceptionUxLabShouldSucceed)
+        {
+            hideActiveModal();
+            Vm.ShowSuccessModal = true;
+            return;
+        }
+
+        Vm.IsRecoveryActionBlocked = true;
+        Vm.ErrorMessage = Vm.ExceptionUxLabError;
+    }
+#endif
+
     private void CloseAllModals()
     {
         if (Vm != null)
         {
             Vm.IsProcessing = false;
             Vm.ErrorMessage = null;
+            Vm.IsRecoveryActionBlocked = false;
             Vm.ShowRecoveryModal = false;
             Vm.ShowClaimModal = false;
             Vm.ShowReleaseModal = false;

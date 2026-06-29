@@ -922,6 +922,37 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
 
     public void OnSuccessButtonClicked() => _config.OnSuccessButtonClicked();
 
+#if DEBUG
+    /// <summary>
+    /// Local-only preview hook for the Exception UX Lab. Sets display state directly
+    /// (screen, tab, status, error, intermediate flags) without invoking any SDK
+    /// command or starting monitoring. Canned address/invoice render the QR + field.
+    /// </summary>
+    public void ShowLabPreview(
+        PaymentFlowScreen screen,
+        NetworkTab tab,
+        string statusText,
+        string? error,
+        bool paymentReceived,
+        bool isProcessing)
+    {
+        _monitorCts?.Cancel();
+        _monitorCts = null;
+        CurrentScreen = screen;
+        SelectedNetworkTab = tab;
+        PaymentStatusText = statusText;
+        ErrorMessage = error;
+        PaymentReceived = paymentReceived;
+        IsProcessing = isProcessing;
+        IsGeneratingLightningInvoice = false;
+        OnChainAddress = "tb1qexceptionuxpreviewpaymentaddress00000000000000000000x9z3";
+        LightningInvoice = tab == NetworkTab.Lightning
+            ? "lntb1250u1pexceptionuxlabpreviewinvoicedonotpay000000000000000000"
+            : null;
+        SelectWallet(_walletContext.SelectedWallet ?? Wallets.FirstOrDefault());
+    }
+#endif
+
     public void Reset()
     {
         _monitorCts?.Cancel();

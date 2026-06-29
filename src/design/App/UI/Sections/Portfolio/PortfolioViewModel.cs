@@ -416,6 +416,25 @@ public class InvestmentViewModel : INotifyPropertyChanged
     /// <summary>True when there is an error to display.</summary>
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
+    private bool _isRecoveryActionBlocked;
+    /// <summary>True when the visible recovery error is a precondition blocker, not a retryable failure.</summary>
+    public bool IsRecoveryActionBlocked
+    {
+        get => _isRecoveryActionBlocked;
+        set
+        {
+            if (_isRecoveryActionBlocked == value) return;
+            _isRecoveryActionBlocked = value;
+            OnPropertyChanged();
+        }
+    }
+
+#if DEBUG
+    public bool IsExceptionUxLabPreview { get; set; }
+    public bool ExceptionUxLabShouldSucceed { get; set; }
+    public string ExceptionUxLabError { get; set; } = "This is a local preview of how this exception will read in the flow.";
+#endif
+
     // ── Recovery data (populated from SDK when available) ──
     public string PenaltyDuration { get; set; } = "";
     public string MinerFee { get; set; } = "";
@@ -512,6 +531,9 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
     /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
     public string CurrencySymbol => _currencyService.Symbol;
 
+    /// <summary>Temporary local UX lab for exception/success previews. Enabled only in Debug via env var.</summary>
+    public bool IsExceptionUxLabEnabled => IsExceptionUxLabEnvironmentEnabled();
+
     public PortfolioViewModel(
         IInvestmentAppService investmentAppService,
         IWalletContext walletContext,
@@ -540,6 +562,15 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
 
         // Load investments from SDK
         _ = LoadInvestmentsFromSdkAsync();
+    }
+
+    private static bool IsExceptionUxLabEnvironmentEnabled()
+    {
+#if DEBUG
+        return string.Equals(Environment.GetEnvironmentVariable("ANGOR_EXCEPTION_UX_LAB"), "1", StringComparison.Ordinal);
+#else
+        return false;
+#endif
     }
 
     /// <summary>
