@@ -665,6 +665,16 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
                         TotalInvested = investedBtc.ToString("F8", CultureInfo.InvariantCulture),
                         FundingAmount = $"{investedBtc:F4} {_currencyService.Symbol}",
                         FundingDate = dto.RequestedOn?.ToString("dd MMM yyyy") ?? DateTime.UtcNow.ToString("dd MMM yyyy"),
+                        // Investment Information card dates. Start/End come from the
+                        // project funding window (carried on the DTO); the transaction
+                        // date is the on-chain investment request (RequestedOn).
+                        StartDate = dto.StartingDate > DateTime.MinValue
+                            ? dto.StartingDate.ToString("dd MMM yyyy")
+                            : dto.RequestedOn?.ToString("dd MMM yyyy") ?? "",
+                        EndDate = dto.EndDate > DateTime.MinValue
+                            ? dto.EndDate.ToString("dd MMM yyyy")
+                            : "",
+                        TransactionDate = (dto.TransactionDate ?? dto.RequestedOn)?.ToString("dd MMM yyyy") ?? "",
                         TypeLabel = typeLabel,
                         StatusText = statusText,
                         StatusClass = statusClass,

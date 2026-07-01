@@ -400,6 +400,17 @@ public partial class MyProjectsView : UserControl, ISectionView
         var showManage = vm.SelectedManageProject != null;
         var showEdit = vm.SelectedEditProject != null;
 
+        // Single authoritative place that resolves panel visibility with a fixed
+        // priority (wizard > manage > edit > list/empty). Each panel also gets
+        // toggled by its own subscription, but those only react to one property —
+        // so opening the wizard while Edit Profile was open left both visible and
+        // overlapping. Reconciling all panels here guarantees exactly one shows.
+        if (CreateWizardPanel != null)
+            CreateWizardPanel.IsVisible = showWizard;
+        if (ManageProjectPanel != null)
+            ManageProjectPanel.IsVisible = !showWizard && showManage;
+        if (EditProfilePanel != null)
+            EditProfilePanel.IsVisible = !showWizard && !showManage && showEdit;
         if (EmptyStatePanel != null)
             EmptyStatePanel.IsVisible = !showWizard && !showManage && !showEdit && !vm.HasProjects;
         if (ProjectListPanel != null)
@@ -494,6 +505,11 @@ public partial class MyProjectsView : UserControl, ISectionView
 
     private async void OpenCreateWizard(MyProjectsViewModel vm)
     {
+        // Close any open Manage/Edit detail first so the wizard opens on a clean
+        // screen instead of rendering on top of them (overlapping pages bug).
+        vm.SelectedEditProject = null;
+        vm.SelectedManageProject = null;
+
         CreateProjectViewModel wvm = vm.CreateProjectVm;
         // Only reset when there is no in-progress data: fresh start or after a successful deploy.
         if (!wvm.HasInProgressData)
