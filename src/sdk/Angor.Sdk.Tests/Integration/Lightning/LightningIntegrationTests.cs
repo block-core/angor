@@ -56,7 +56,7 @@ public class BoltzSwapIntegrationTests : IDisposable
     {
         _output = output;
         _networkConfiguration = new NetworkConfiguration();
-        _networkConfiguration.SetNetwork(new Angornet());
+        _networkConfiguration.SetNetwork(AngorNetwork.Angornet());
         _network = _networkConfiguration.GetNetwork();
 
         _derivationOperations = new DerivationOperations(
