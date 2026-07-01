@@ -311,7 +311,8 @@ public partial class FundsView : UserControl, ISectionView
         catch (Exception ex)
         {
             var shellView = this.FindAncestorOfType<ShellView>();
-            System.Diagnostics.Debug.WriteLine($"Refresh balance failed: {ex.Message}");
+            App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<FundsView>()
+                .LogWarning(ex, "Refresh balance failed");
             if (shellView?.DataContext is ShellViewModel shellVm)
                 shellVm.ShowToast("We couldn't refresh this wallet's balance. It will retry automatically — your funds are unaffected.", ToastSeverity.Warning);
         }
@@ -357,7 +358,8 @@ public partial class FundsView : UserControl, ISectionView
         catch (Exception ex)
         {
             var shellView = this.FindAncestorOfType<ShellView>();
-            System.Diagnostics.Debug.WriteLine($"Faucet request threw: {ex.Message}");
+            App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<FundsView>()
+                .LogWarning(ex, "Faucet request threw");
             if (shellView?.DataContext is ShellViewModel shellVm)
                 shellVm.ShowToast("The testnet faucet is unavailable right now. Please try again in a few minutes.", ToastSeverity.Error);
         }

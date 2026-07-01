@@ -8,6 +8,7 @@ using App.UI.Shared;
 using App.UI.Shared.Helpers;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace App.UI.Sections.Portfolio;
 
@@ -24,6 +25,9 @@ namespace App.UI.Sections.Portfolio;
 /// </summary>
 public partial class RecoveryModalsView : UserControl, IBackdropCloseable
 {
+    private static ILogger? _logger;
+    private static ILogger Logger => _logger ??= App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<RecoveryModalsView>();
+
     public RecoveryModalsView()
     {
         InitializeComponent();
@@ -154,7 +158,7 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine($"Recovery transaction failed: {error}");
+                Logger.LogWarning("Recovery transaction failed: {Error}", error);
                 Vm.ErrorMessage = "We couldn't build the recovery transaction. This can happen if founder signatures aren't available yet or the wallet needs a fresh change address — refresh and try again.";
             }
         }
@@ -192,7 +196,7 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine($"Claim transaction failed: {claimError}");
+                Logger.LogWarning("Claim transaction failed: {Error}", claimError);
                 Vm.ErrorMessage = "We couldn't build the claim transaction. The project output may not be on the indexer yet — refresh in a few minutes and try again.";
             }
         }
@@ -230,7 +234,7 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine($"Release transaction failed: {releaseError}");
+                Logger.LogWarning("Release transaction failed: {Error}", releaseError);
                 Vm.ErrorMessage = "We couldn't build the release transaction. The recovery transaction may not have confirmed on-chain yet — please try again shortly.";
             }
         }
