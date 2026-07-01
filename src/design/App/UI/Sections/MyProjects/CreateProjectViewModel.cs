@@ -1201,8 +1201,8 @@ public partial class CreateProjectViewModel : ReactiveObject
                 continue;
             }
 
-            // Rule 1: must be on or after funding end date
-            if (endDate.HasValue && stage.ReleaseDateValue < endDate.Value)
+            // Rule 1: must be on or after funding end date (skipped in debug mode)
+            if (!IsDebugMode && endDate.HasValue && stage.ReleaseDateValue < endDate.Value)
             {
                 stage.ReleaseDateError = $"Must be on or after {endDate.Value:dd MMM yyyy}";
                 continue;
