@@ -573,7 +573,7 @@
         <!-- ═══════════════════════════════════════════════════════════ -->
         <Border Name="ToastOverlay"
                 ZIndex="2000"
-                IsHitTestVisible="False"
+                IsHitTestVisible="True"
                 IsVisible="False"
                 Opacity="0"
                 HorizontalAlignment="Stretch"
@@ -584,13 +584,29 @@
                 CornerRadius="8"
                 Padding="16,8">
             <DockPanel Name="ToastContent" LastChildFill="True" VerticalAlignment="Center">
-                <!-- Checkmark icon — fa-solid fa-check, white -->
-                <i:Icon Value="fa-solid fa-check"
+                <!-- Severity icon — glyph from ToastIconGlyph; colour follows the text foreground -->
+                <i:Icon Name="ToastIcon"
+                        Value="{Binding ToastIconGlyph}"
                         FontSize="14"
-                        Foreground="White"
+                        Foreground="{Binding #ToastText.Foreground}"
                         DockPanel.Dock="Left"
                         Margin="0,0,8,0"
                         VerticalAlignment="Center" />
+                <!-- Close cross — dismisses the toast -->
+                <Button Name="ToastCloseButton"
+                        DockPanel.Dock="Right"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Padding="6,2"
+                        Margin="8,0,0,0"
+                        Cursor="Hand"
+                        VerticalAlignment="Center">
+                    <i:Icon Name="ToastCloseIcon"
+                            Value="fa-solid fa-xmark"
+                            FontSize="14"
+                            Foreground="{Binding #ToastText.Foreground}"
+                            VerticalAlignment="Center" />
+                </Button>
                 <TextBlock Name="ToastText"
                            Text="{Binding ToastMessage}"
                            FontSize="14" FontWeight="Medium"

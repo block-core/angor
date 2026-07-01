@@ -21,6 +21,7 @@ public static class GetInvestments
     
     public class GetInvestmentsHandler(
         IAngorIndexerService angorIndexerService,
+        IIndexerService indexerService,
         IPortfolioService portfolioService,
         IProjectService projectService,
         IInvestmentHandshakeService HandshakeService,
@@ -58,13 +59,26 @@ public static class GetInvestments
                         .First(x => x.ProjectIdentifier == project.Id.Value);
 
                     var investmentTask = Result.Try(() => angorIndexerService.GetInvestmentAsync(project.Id.Value, investmentRecord.InvestorPubKey));
-                    var statsTask = Result.Try(() => 
+                    var statsTask = Result.Try(() =>
                         angorIndexerService.GetProjectStatsAsync(project.Id.Value));
+                    // Fetch the on-chain investment transaction so we can show its
+                    // confirmation date (the local record may not carry a request time).
+                    var txInfoTask = Result.Try(() =>
+                        indexerService.GetTransactionInfoByIdAsync(investmentRecord.InvestmentTransactionHash));
 
-                    await Task.WhenAll(investmentTask, statsTask);
+                    await Task.WhenAll(investmentTask, statsTask, txInfoTask);
 
                     var investment = investmentTask.Result.IsSuccess ? investmentTask.Result.Value : null;
                     var stats = statsTask.Result.IsSuccess ? statsTask.Result.Value : (project.Id.Value, null);
+                    var txInfo = txInfoTask.Result.IsSuccess ? txInfoTask.Result.Value : null;
+
+                    // Transaction date: confirmed on-chain timestamp if available,
+                    // otherwise the local request time (null when neither exists).
+                    var transactionDate = (txInfo?.Timestamp ?? 0) > 0
+                        ? DateTimeOffset.FromUnixTimeSeconds(txInfo!.Timestamp)
+                        : investmentRecord.RequestEventTime.HasValue
+                            ? new DateTimeOffset(investmentRecord.RequestEventTime.Value)
+                            : (DateTimeOffset?)null;
 
                     if (investment?.TransactionId != null)
                         if (investment.TransactionId != investmentRecord.InvestmentTransactionHash)
@@ -89,6 +103,9 @@ public static class GetInvestments
                         RequestedOn = investmentRecord.RequestEventTime.HasValue
                             ? new DateTimeOffset(investmentRecord.RequestEventTime.Value)
                             : null,
+                        TransactionDate = transactionDate,
+                        StartingDate = project.StartingDate,
+                        EndDate = project.EndDate,
                         ProjectType = project.ProjectType,
                         TotalInvestors = (int)(stats.stats?.InvestorCount ?? 0)
                     };

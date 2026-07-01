@@ -189,6 +189,8 @@ public partial class ManageProjectView : UserControl
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "OnRefreshClick failed");
+            var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
+            shellVm?.ShowToast("We couldn't refresh this project's data. Check your connection and try again.", ToastSeverity.Error);
         }
     }
 

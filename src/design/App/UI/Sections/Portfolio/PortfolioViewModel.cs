@@ -416,6 +416,19 @@ public class InvestmentViewModel : INotifyPropertyChanged
     /// <summary>True when there is an error to display.</summary>
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
+    private bool _isRecoveryActionBlocked;
+    /// <summary>True when the visible recovery error is a precondition blocker, not a retryable failure.</summary>
+    public bool IsRecoveryActionBlocked
+    {
+        get => _isRecoveryActionBlocked;
+        set
+        {
+            if (_isRecoveryActionBlocked == value) return;
+            _isRecoveryActionBlocked = value;
+            OnPropertyChanged();
+        }
+    }
+
     // ── Recovery data (populated from SDK when available) ──
     public string PenaltyDuration { get; set; } = "";
     public string MinerFee { get; set; } = "";
@@ -484,12 +497,16 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
     private readonly ILogger<PortfolioViewModel> _logger;
     private readonly CompositeDisposable _disposables = new();
 
-    public event Action<string>? ToastRequested;
+    public event Action<string, ToastSeverity>? ToastRequested;
 
     [Reactive] private bool hasInvestments;
     [Reactive] private InvestmentViewModel? selectedInvestment;
     [Reactive] private bool isLoading;
     [Reactive] private bool isInitialLoad = true;
+
+    /// <summary>Set when loading investments fails, so the section can show a retryable error.</summary>
+    [Reactive] private string? loadError;
+    public bool HasLoadError => !string.IsNullOrEmpty(LoadError);
 
     // ── Left panel stats ──
     public int FundedProjects { get; private set; }
@@ -552,6 +569,8 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
         if (IsLoading) return;
 
         IsLoading = true;
+        LoadError = null;
+        this.RaisePropertyChanged(nameof(HasLoadError));
         _logger.LogInformation("Loading investments from SDK...");
 
         try
@@ -646,6 +665,16 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
                         TotalInvested = investedBtc.ToString("F8", CultureInfo.InvariantCulture),
                         FundingAmount = $"{investedBtc:F4} {_currencyService.Symbol}",
                         FundingDate = dto.RequestedOn?.ToString("dd MMM yyyy") ?? DateTime.UtcNow.ToString("dd MMM yyyy"),
+                        // Investment Information card dates. Start/End come from the
+                        // project funding window (carried on the DTO); the transaction
+                        // date is the on-chain investment request (RequestedOn).
+                        StartDate = dto.StartingDate > DateTime.MinValue
+                            ? dto.StartingDate.ToString("dd MMM yyyy")
+                            : dto.RequestedOn?.ToString("dd MMM yyyy") ?? "",
+                        EndDate = dto.EndDate > DateTime.MinValue
+                            ? dto.EndDate.ToString("dd MMM yyyy")
+                            : "",
+                        TransactionDate = (dto.TransactionDate ?? dto.RequestedOn)?.ToString("dd MMM yyyy") ?? "",
                         TypeLabel = typeLabel,
                         StatusText = statusText,
                         StatusClass = statusClass,
@@ -728,6 +757,9 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
         {
             _logger.LogError(ex, "Error loading investments from SDK");
             ClearToEmpty();
+            LoadError = "We couldn't load your investments. Check your connection and use Refresh to try again.";
+            this.RaisePropertyChanged(nameof(HasLoadError));
+            ToastRequested?.Invoke(LoadError, ToastSeverity.Error);
         }
         finally
         {
@@ -1143,13 +1175,13 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
                 investment.ProjectIdentifier,
                 investment.InvestmentTransactionId,
                 result.Error);
-            ToastRequested?.Invoke("Failed to confirm investment. Please try again.");
+            ToastRequested?.Invoke("Failed to confirm investment. Please try again.", ToastSeverity.Error);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "ConfirmInvestmentAsync threw exception for project {ProjectId}",
                 investment.ProjectIdentifier);
-            ToastRequested?.Invoke("Failed to confirm investment. Please try again.");
+            ToastRequested?.Invoke("Failed to confirm investment. Please try again.", ToastSeverity.Error);
         }
 
         return false;
@@ -1192,13 +1224,13 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
                 investment.ProjectIdentifier,
                 investment.InvestmentTransactionId,
                 result.Error);
-            ToastRequested?.Invoke("Failed to cancel investment. Please try again.");
+            ToastRequested?.Invoke("Failed to cancel investment. Please try again.", ToastSeverity.Error);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "CancelInvestmentAsync threw exception for project {ProjectId}",
                 investment.ProjectIdentifier);
-            ToastRequested?.Invoke("Failed to cancel investment. Please try again.");
+            ToastRequested?.Invoke("Failed to cancel investment. Please try again.", ToastSeverity.Error);
         }
 
         return false;

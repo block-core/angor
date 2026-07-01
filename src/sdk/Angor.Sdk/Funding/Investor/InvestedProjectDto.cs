@@ -21,7 +21,24 @@ public class InvestedProjectDto
     public InvestmentStatus InvestmentStatus { get; set; }
     public string InvestmentId { get; set; }
     public DateTimeOffset? RequestedOn { get; set; }
-    
+
+    /// <summary>
+    /// On-chain confirmation date of the investment transaction (from the indexer).
+    /// Falls back to the request time when the transaction isn't confirmed yet.
+    /// </summary>
+    public DateTimeOffset? TransactionDate { get; set; }
+
+    /// <summary>
+    /// Project funding-window start date, carried from the project info.
+    /// </summary>
+    public DateTime StartingDate { get; set; }
+
+    /// <summary>
+    /// Project funding-window end date, carried from the project info so the
+    /// investor's "Investment End Date" can be shown.
+    /// </summary>
+    public DateTime EndDate { get; set; }
+
     /// <summary>
     /// Project type: Invest, Fund, or Subscribe. Defaults to Invest for backward compatibility.
     /// </summary>

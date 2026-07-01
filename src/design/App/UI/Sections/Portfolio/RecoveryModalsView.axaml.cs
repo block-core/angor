@@ -8,6 +8,7 @@ using App.UI.Shared;
 using App.UI.Shared.Helpers;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace App.UI.Sections.Portfolio;
 
@@ -24,6 +25,9 @@ namespace App.UI.Sections.Portfolio;
 /// </summary>
 public partial class RecoveryModalsView : UserControl, IBackdropCloseable
 {
+    private static ILogger? _logger;
+    private static ILogger Logger => _logger ??= App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<RecoveryModalsView>();
+
     public RecoveryModalsView()
     {
         InitializeComponent();
@@ -131,6 +135,7 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
         if (Vm == null || Vm.IsProcessing) return;
 
         Vm.ErrorMessage = null;
+
         var feeRate = await AskForFeeRateAsync();
         if (feeRate == null) return; // user cancelled
 
@@ -153,7 +158,8 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
             }
             else
             {
-                Vm.ErrorMessage = error ?? "Recovery transaction failed. Please try again later.";
+                Logger.LogWarning("Recovery transaction failed: {Error}", error);
+                Vm.ErrorMessage = "We couldn't build the recovery transaction. This can happen if founder signatures aren't available yet or the wallet needs a fresh change address — refresh and try again.";
             }
         }
         else
@@ -167,6 +173,7 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
         if (Vm == null || Vm.IsProcessing) return;
 
         Vm.ErrorMessage = null;
+
         var feeRate = await AskForFeeRateAsync();
         if (feeRate == null) return; // user cancelled
 
@@ -189,7 +196,8 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
             }
             else
             {
-                Vm.ErrorMessage = claimError ?? "Claim transaction failed. Please try again later.";
+                Logger.LogWarning("Claim transaction failed: {Error}", claimError);
+                Vm.ErrorMessage = "We couldn't build the claim transaction. The project output may not be on the indexer yet — refresh in a few minutes and try again.";
             }
         }
         else
@@ -203,6 +211,7 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
         if (Vm == null || Vm.IsProcessing) return;
 
         Vm.ErrorMessage = null;
+
         var feeRate = await AskForFeeRateAsync();
         if (feeRate == null) return; // user cancelled
 
@@ -225,7 +234,8 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
             }
             else
             {
-                Vm.ErrorMessage = releaseError ?? "Release transaction failed. Please try again later.";
+                Logger.LogWarning("Release transaction failed: {Error}", releaseError);
+                Vm.ErrorMessage = "We couldn't build the release transaction. The recovery transaction may not have confirmed on-chain yet — please try again shortly.";
             }
         }
         else
@@ -242,6 +252,7 @@ public partial class RecoveryModalsView : UserControl, IBackdropCloseable
         {
             Vm.IsProcessing = false;
             Vm.ErrorMessage = null;
+            Vm.IsRecoveryActionBlocked = false;
             Vm.ShowRecoveryModal = false;
             Vm.ShowClaimModal = false;
             Vm.ShowReleaseModal = false;

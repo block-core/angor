@@ -106,10 +106,10 @@
                     <StackPanel Spacing="12">
                         <!-- Primary: gradient #4B7C5A -> #3d6448 -->
                         <Button Name="PayWithWalletButton" HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Center"
-                                CornerRadius="8" Padding="12,14"
-                                IsEnabled="{Binding HasSelectedWallet}"
-                                Cursor="Hand" BorderThickness="0">
+                                 HorizontalContentAlignment="Center"
+                                 CornerRadius="8" Padding="12,14"
+                                 IsEnabled="{Binding HasSelectedWallet}"
+                                 Cursor="Hand" BorderThickness="0">
                             <Button.Background>
                                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
                                     <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
@@ -151,10 +151,10 @@
                         </Button>
                         <!-- Secondary: transparent, border 2px solid #4B7C5A -->
                         <Button Name="PayInvoiceInsteadButton" HorizontalAlignment="Stretch"
-                                HorizontalContentAlignment="Center"
-                                CornerRadius="8" Padding="12,14"
-                                Background="Transparent"
-                                BorderBrush="{DynamicResource PrimaryGreenBrush}" BorderThickness="2"
+                                 HorizontalContentAlignment="Center"
+                                 CornerRadius="8" Padding="12,14"
+                                 Background="Transparent"
+                                 BorderBrush="{DynamicResource PrimaryGreenBrush}" BorderThickness="2"
                                 Cursor="Hand">
                             <TextBlock Text="Or pay an invoice instead"
                                        FontSize="14" FontWeight="SemiBold"
@@ -173,18 +173,20 @@
                                 Background="{DynamicResource ErrorBannerBg}"
                                 BorderBrush="{DynamicResource ErrorBannerBorder}"
                                 BorderThickness="1">
-                            <StackPanel Orientation="Horizontal" Spacing="10">
-                                <i:Icon Value="fa-solid fa-circle-exclamation"
+                            <Grid ColumnDefinitions="Auto,*">
+                                <i:Icon Grid.Column="0"
+                                        Value="fa-solid fa-circle-exclamation"
                                         FontSize="14"
                                         Foreground="{DynamicResource ErrorBannerText}"
-                                        VerticalAlignment="Center" />
-                                <TextBlock Text="{Binding DeployErrorMessage}"
+                                        VerticalAlignment="Top"
+                                        Margin="0,1,10,0" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding DeployErrorMessage}"
                                            FontSize="13"
                                            FontWeight="Medium"
                                            Foreground="{DynamicResource ErrorBannerText}"
-                                           TextWrapping="Wrap"
-                                           VerticalAlignment="Center" />
-                            </StackPanel>
+                                           TextWrapping="Wrap" />
+                            </Grid>
                         </Border>
 
                         <ItemsControl ItemsSource="{Binding Wallets}">
@@ -350,6 +352,29 @@
                                HorizontalAlignment="Center" />
                 </Border>
 
+                <Border IsVisible="{Binding HasDeployError}"
+                        Margin="0,0,0,12"
+                        Padding="12"
+                        CornerRadius="8"
+                        Background="{DynamicResource ErrorBannerBg}"
+                        BorderBrush="{DynamicResource ErrorBannerBorder}"
+                        BorderThickness="1">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <i:Icon Grid.Column="0"
+                                Value="fa-solid fa-circle-exclamation"
+                                FontSize="14"
+                                Foreground="{DynamicResource ErrorBannerText}"
+                                VerticalAlignment="Top"
+                                Margin="0,1,10,0" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding DeployErrorMessage}"
+                                   FontSize="13"
+                                   FontWeight="Medium"
+                                   Foreground="{DynamicResource ErrorBannerText}"
+                                   TextWrapping="Wrap" />
+                    </Grid>
+                </Border>
+
                 <!-- Address/Invoice display: rounded-lg p-3 -->
                 <Border Margin="0,0,0,12" CornerRadius="8" Padding="12"
                         Background="{DynamicResource DeployModalInputBg}">
@@ -442,16 +467,14 @@
                 </Border>
 
                 <!-- Title: text-3xl font-bold text-center mb-3 -->
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
-                            Spacing="8" Margin="0,0,0,12">
-                    <TextBlock Text="{Binding ProjectName}"
-                               AutomationProperties.AutomationId="DeploySuccessProjectName"
-                               FontSize="28" FontWeight="Bold"
-                               Foreground="{DynamicResource TextStrong}" />
-                    <TextBlock Text="Deployed!"
-                               FontSize="28" FontWeight="Bold"
-                               Foreground="{DynamicResource TextStrong}" />
-                </StackPanel>
+                <TextBlock Text="{Binding ProjectName, StringFormat='{}{0} Deployed!'}"
+                           AutomationProperties.AutomationId="DeploySuccessProjectName"
+                           FontSize="28" FontWeight="Bold"
+                           Foreground="{DynamicResource TextStrong}"
+                           TextAlignment="Center" TextWrapping="Wrap"
+                           HorizontalAlignment="Center"
+                           MaxWidth="380"
+                           Margin="0,0,0,12" />
 
                 <!-- Description: text-gray-300, mb-8 (32px) -->
                 <TextBlock Text="Your project has been successfully deployed. Investors can now discover and fund your project."

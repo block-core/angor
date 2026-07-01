@@ -76,6 +76,19 @@ public partial class EditProfileViewModel : ReactiveObject
     // ── Relays tab ──
     [Reactive] private string newRelayUrl = "";
 
+    // ── Validation errors ──
+    [Reactive] private string memberError = "";
+    [Reactive] private string mediaError = "";
+    [Reactive] private string nip05Error = "";
+    [Reactive] private string lud16Error = "";
+    [Reactive] private string websiteError = "";
+
+    public bool HasMemberError => !string.IsNullOrEmpty(MemberError);
+    public bool HasMediaError => !string.IsNullOrEmpty(MediaError);
+    public bool HasNip05Error => !string.IsNullOrEmpty(Nip05Error);
+    public bool HasLud16Error => !string.IsNullOrEmpty(Lud16Error);
+    public bool HasWebsiteError => !string.IsNullOrEmpty(WebsiteError);
+
     // ── Collections ──
     public ObservableCollection<FaqItemViewModel> FaqItems { get; } = new();
     public ObservableCollection<string> Members { get; } = new();
@@ -106,6 +119,20 @@ public partial class EditProfileViewModel : ReactiveObject
             .Throttle(TimeSpan.FromMilliseconds(500))
             .ObserveOn(RxSchedulers.MainThreadScheduler)
             .Subscribe(url => ImageCacheService.LoadBitmapAsync(url, bmp => ProfileBannerBitmap = bmp));
+
+        // Re-raise the computed Has*Error flags whenever the backing error text changes.
+        this.WhenAnyValue(x => x.MemberError).Subscribe(_ => this.RaisePropertyChanged(nameof(HasMemberError)));
+        this.WhenAnyValue(x => x.MediaError).Subscribe(_ => this.RaisePropertyChanged(nameof(HasMediaError)));
+        this.WhenAnyValue(x => x.Nip05Error).Subscribe(_ => this.RaisePropertyChanged(nameof(HasNip05Error)));
+        this.WhenAnyValue(x => x.Lud16Error).Subscribe(_ => this.RaisePropertyChanged(nameof(HasLud16Error)));
+        this.WhenAnyValue(x => x.WebsiteError).Subscribe(_ => this.RaisePropertyChanged(nameof(HasWebsiteError)));
+
+        // Clear field errors as soon as the user edits the offending input.
+        this.WhenAnyValue(x => x.NewMemberPubKey).Skip(1).Subscribe(_ => MemberError = "");
+        this.WhenAnyValue(x => x.NewMediaUrl).Skip(1).Subscribe(_ => MediaError = "");
+        this.WhenAnyValue(x => x.ProfileNip05).Skip(1).Subscribe(_ => Nip05Error = "");
+        this.WhenAnyValue(x => x.ProfileLud16).Skip(1).Subscribe(_ => Lud16Error = "");
+        this.WhenAnyValue(x => x.ProfileWebsite).Skip(1).Subscribe(_ => WebsiteError = "");
 
         _ = LoadAsync();
     }
@@ -185,6 +212,13 @@ public partial class EditProfileViewModel : ReactiveObject
 
         try
         {
+            // Validate the free-form profile fields before publishing to relays.
+            if (!ValidateProfileFields())
+            {
+                ToastRequested?.Invoke("Please fix the highlighted fields before saving.");
+                return false;
+            }
+
             var walletId = new WalletId(_project.OwnerWalletId);
             var projectId = new ProjectId(_project.ProjectIdentifier);
             var metadata = new ProjectMetadata
@@ -252,8 +286,23 @@ public partial class EditProfileViewModel : ReactiveObject
     // ── Members tab helpers ──
     public void AddMember()
     {
-        if (string.IsNullOrWhiteSpace(NewMemberPubKey)) return;
-        Members.Add(NewMemberPubKey.Trim());
+        var pubkey = NewMemberPubKey.Trim();
+        if (string.IsNullOrWhiteSpace(pubkey))
+        {
+            MemberError = "Enter a public key.";
+            return;
+        }
+        if (!IsValidNostrPubKey(pubkey))
+        {
+            MemberError = "Invalid key — expected an npub1… or 64-character hex public key.";
+            return;
+        }
+        if (Members.Contains(pubkey))
+        {
+            MemberError = "This member is already added.";
+            return;
+        }
+        Members.Add(pubkey);
         NewMemberPubKey = "";
     }
 
@@ -262,12 +311,75 @@ public partial class EditProfileViewModel : ReactiveObject
     // ── Media tab helpers ──
     public void AddMedia()
     {
-        if (string.IsNullOrWhiteSpace(NewMediaUrl)) return;
-        MediaItems.Add(new MediaItemViewModel { Url = NewMediaUrl.Trim(), Type = NewMediaType });
+        var url = NewMediaUrl.Trim();
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            MediaError = "Enter a media URL.";
+            return;
+        }
+        if (!IsValidHttpUrl(url))
+        {
+            MediaError = "Invalid URL — must start with http:// or https://.";
+            return;
+        }
+        MediaItems.Add(new MediaItemViewModel { Url = url, Type = NewMediaType });
         NewMediaUrl = "";
     }
 
+    /// <summary>Add an already-uploaded media URL (from the Blossom uploader) to the gallery.</summary>
+    public void AddUploadedMedia(string url, string type)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return;
+        MediaItems.Add(new MediaItemViewModel { Url = url.Trim(), Type = string.IsNullOrEmpty(type) ? "image" : type });
+    }
+
     public void RemoveMedia(MediaItemViewModel item) => MediaItems.Remove(item);
+
+    // ── Validation helpers ──
+
+    /// <summary>True for a 64-char hex key or an npub1… bech32 key (lightweight UI check).</summary>
+    private static bool IsValidNostrPubKey(string value)
+    {
+        if (System.Text.RegularExpressions.Regex.IsMatch(value, "^[0-9a-fA-F]{64}$"))
+            return true;
+        return System.Text.RegularExpressions.Regex.IsMatch(value, "^npub1[a-z0-9]{58,}$");
+    }
+
+    /// <summary>True for an absolute http(s) URL.</summary>
+    private static bool IsValidHttpUrl(string value) =>
+        Uri.TryCreate(value, UriKind.Absolute, out var uri) &&
+        (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+
+    /// <summary>True for a name@domain.tld style address (NIP-05 / Lightning).</summary>
+    private static bool IsValidAddress(string value) =>
+        System.Text.RegularExpressions.Regex.IsMatch(value, @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+
+    /// <summary>Validate the optional NIP-05, Lightning and Website fields; populates *Error props.</summary>
+    private bool ValidateProfileFields()
+    {
+        Nip05Error = "";
+        Lud16Error = "";
+        WebsiteError = "";
+        var ok = true;
+
+        if (!string.IsNullOrWhiteSpace(ProfileNip05) && !IsValidAddress(ProfileNip05.Trim()))
+        {
+            Nip05Error = "Invalid NIP-05 — use name@domain.";
+            ok = false;
+        }
+        if (!string.IsNullOrWhiteSpace(ProfileLud16) && !IsValidAddress(ProfileLud16.Trim()))
+        {
+            Lud16Error = "Invalid Lightning address — use name@domain.";
+            ok = false;
+        }
+        if (!string.IsNullOrWhiteSpace(ProfileWebsite) && !IsValidHttpUrl(ProfileWebsite.Trim()))
+        {
+            WebsiteError = "Invalid URL — must start with http:// or https://.";
+            ok = false;
+        }
+
+        return ok;
+    }
 
     // ── Relays tab helpers ──
     public void AddRelay()
