@@ -1,7 +1,7 @@
-﻿using Angor.Client.Services;
+using Angor.Client.Services;
 using Angor.Client.Storage;
 using Angor.Shared;
-using Blockcore.Networks;
+using Angor.Shared.Networks;
 using Microsoft.AspNetCore.Components;
 
 namespace Angor.Client.Shared
@@ -25,7 +25,7 @@ namespace Angor.Client.Shared
 
         protected bool hasWallet { get; set; }
 
-        protected Network network { get; set; }
+        protected AngorNetwork network { get; set; }
 
         protected void SharedMethod()
         {

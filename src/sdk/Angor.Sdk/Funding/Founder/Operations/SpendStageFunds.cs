@@ -8,8 +8,8 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.DataEncoders;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -67,7 +67,7 @@ public static class SpendStageFunds
             if (addressResult.IsFailure) 
                 return Result.Failure<SpendStageFundsResponse>("Could not get an unfunded release address");
             
-            var addressScript = BitcoinAddress.Create(addressResult.Value, network).ScriptPubKey;
+            var addressScript = BitcoinAddress.Create(addressResult.Value, network.BitcoinNetwork).ScriptPubKey;
             
             int stageNumber = selectedStageId + 1;
 

@@ -1,7 +1,6 @@
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
-using Blockcore.Networks;
 
 namespace Angor.Sdk.Common;
 
@@ -14,12 +13,12 @@ public class NetworkConfiguration : INetworkConfiguration
     public const int AngorInvestFeePercentage = 1;
     public const short NostrEventIdKeyType = 1;
 
-    Network currentNetwork;
+    AngorNetwork currentNetwork;
     bool? debugMode;
 
-    public void SetNetwork(Network network) => currentNetwork = network;
+    public void SetNetwork(AngorNetwork network) => currentNetwork = network;
 
-    public Network GetNetwork() => currentNetwork ?? throw new ApplicationException("Network not set");
+    public AngorNetwork GetNetwork() => currentNetwork ?? throw new ApplicationException("Network not set");
 
     public bool GetDebugMode() => debugMode ?? false;
 
@@ -30,13 +29,13 @@ public class NetworkConfiguration : INetworkConfiguration
     public string GetAngorKey()
     {
         var network = GetNetwork();
-        return network.NetworkType == NetworkType.Mainnet ? AngorMainKey : AngorTestKey;
+        return network.IsMainnet ? AngorMainKey : AngorTestKey;
     }
 
     public List<SettingsUrl> GetDefaultIndexerUrls()
     {
         var network = GetNetwork();
-        if (network.NetworkType == NetworkType.Mainnet)
+        if (network.IsMainnet)
         {
             if (network.Name == "Liquid")
             {
@@ -56,7 +55,7 @@ public class NetworkConfiguration : INetworkConfiguration
             };
         }
 
-        if (network.NetworkType == NetworkType.Testnet && network.Name == "Angornet")
+        if (!network.IsMainnet && network.Name == "Angornet")
         {
             return new List<SettingsUrl>
             {
@@ -72,7 +71,7 @@ public class NetworkConfiguration : INetworkConfiguration
     public List<SettingsUrl> GetDefaultRelayUrls()
     {
         var network = GetNetwork();
-        if (network.NetworkType == NetworkType.Mainnet)
+        if (network.IsMainnet)
         {
             return new List<SettingsUrl>
             {
@@ -95,7 +94,7 @@ public class NetworkConfiguration : INetworkConfiguration
     public List<SettingsUrl> GetDefaultExplorerUrls()
     {
         var network = GetNetwork();
-        if (network.NetworkType == NetworkType.Mainnet)
+        if (network.IsMainnet)
         {
             if (network.Name == "Liquid")
             {
@@ -115,7 +114,7 @@ public class NetworkConfiguration : INetworkConfiguration
             };
         }
 
-        if (network.NetworkType == NetworkType.Testnet && network.Name == "Angornet")
+        if (!network.IsMainnet && network.Name == "Angornet")
         {
             return new List<SettingsUrl>
             {
@@ -163,7 +162,7 @@ public class NetworkConfiguration : INetworkConfiguration
             "Regtest" => "0f9195cbdb894feda6ee07798e0d597d",
             "Angornet" => "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
             "Liquid" => "d767f204777d8ebd0825f4f26c3d773c0d3f40268dc6afb3632a0fcbd49fde45",
-            _ => throw new NotSupportedException($"Network type {network.NetworkType} is not supported"),
+            _ => throw new NotSupportedException($"Network '{network.Name}' is not supported"),
         };
     }
 

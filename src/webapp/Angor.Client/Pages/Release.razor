@@ -3,11 +3,11 @@
 @using Angor.Client.Storage
 @using Angor.Shared.Models
 @using Angor.Client.Models
-@using Blockcore.NBitcoin
-@using Blockcore.NBitcoin.DataEncoders
+@using NBitcoin
+@using NBitcoin.DataEncoders
 @using Angor.Shared.Services
 @using System.Security.Cryptography
-@using Blockcore.Consensus.TransactionInfo
+
 @using Angor.Client.Shared
 @using Angor.Shared.Protocol
 
@@ -486,7 +486,7 @@
 
             Storage.UpdateInvestmentProject(InvestorProject);
 
-            var publishError = await _IndexerService.PublishTransactionAsync(releaseTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory));
+            var publishError = await _IndexerService.PublishTransactionAsync(releaseTransaction.Transaction.ToHex());
 
             if (!string.IsNullOrEmpty(publishError))
             {

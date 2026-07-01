@@ -82,9 +82,9 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         currentNetwork = networkStorage.GetNetwork();
         networkConfiguration.SetNetwork(currentNetwork switch
         {
-            "Mainnet" => new BitcoinMain(),
-            "Liquid" => new LiquidMain(),
-            _ => new Angornet()
+            "Mainnet" => AngorNetwork.Main(),
+            "Liquid" => AngorNetwork.Liquid(),
+            _ => AngorNetwork.Angornet()
         });
         Network = currentNetwork;
         SelectedNetwork = currentNetwork;
@@ -272,9 +272,9 @@ public partial class SettingsSectionViewModel : ReactiveObject, ISettingsSection
         networkStorage.SetSettings(new SettingsInfo());
         networkConfiguration.SetNetwork(newNetwork switch
         {
-            "Mainnet" => new BitcoinMain(),
-            "Liquid" => new LiquidMain(),
-            _ => new Angornet()
+            "Mainnet" => AngorNetwork.Main(),
+            "Liquid" => AngorNetwork.Liquid(),
+            _ => AngorNetwork.Angornet()
         });
         AmountUI.DefaultSymbol = networkConfiguration.GetNetwork().CoinTicker;
         networkService.AddSettingsIfNotExist();

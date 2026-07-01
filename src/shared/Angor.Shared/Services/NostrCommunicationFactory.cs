@@ -1,7 +1,6 @@
 using System.Collections.Concurrent;
 using System.Reactive.Linq;
 using Angor.Shared.Models;
-using ConcurrentCollections;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Client;
 using Nostr.Client.Communicator;
@@ -17,8 +16,8 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
     private NostrMultiWebsocketClient? _nostrMultiWebsocketClientDiscovery;
     private readonly List<IDisposable> _serviceSubscriptions;
 
-    private ConcurrentDictionary<string, ConcurrentHashSet<string>> _eoseCalledOnSubscriptionClients;
-    private ConcurrentDictionary<string, ConcurrentHashSet<string>> _okCalledOnSubscriptionClients;
+    private ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> _eoseCalledOnSubscriptionClients;
+    private ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> _okCalledOnSubscriptionClients;
 
     public event Action<string>? RelayDisconnected;
 
@@ -31,15 +30,15 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         _okCalledOnSubscriptionClients = new();
     }
 
-    private ConcurrentHashSet<string> GetAllConnectedRelayNames()
+    private ConcurrentDictionary<string, byte> GetAllConnectedRelayNames()
     {
-        var allRelays = new ConcurrentHashSet<string>();
+        var allRelays = new ConcurrentDictionary<string, byte>();
 
         if (_nostrMultiWebsocketClient != null)
         {
             foreach (var client in _nostrMultiWebsocketClient.Clients)
             {
-                allRelays.Add(client.Communicator.Name);
+                allRelays.TryAdd(client.Communicator.Name, 0);
             }
         }
 
@@ -76,7 +75,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
                 if (!_eoseCalledOnSubscriptionClients.TryGetValue(x.Subscription ?? string.Empty,
                         out var clientsReceivedList)) return;
                 
-                var tryRemove = clientsReceivedList.TryRemove(x.CommunicatorName);
+                var tryRemove = clientsReceivedList.TryRemove(x.CommunicatorName, out _);
                     
                 _logger.LogWarning("EOSE {x.Subscription} removed {x.CommunicatorName} - {tryRemove}",
                     x.Subscription, x.CommunicatorName, tryRemove);
@@ -87,7 +86,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
                 _logger.LogDebug($"{x.CommunicatorName} OK {x.EventId} {x.Accepted}");
                 if (_okCalledOnSubscriptionClients.TryGetValue(x.EventId ?? string.Empty, out var clientsReceivedList))
                 {
-                    var tryRemove = clientsReceivedList.TryRemove(x.CommunicatorName);
+                    var tryRemove = clientsReceivedList.TryRemove(x.CommunicatorName, out _);
                     _logger.LogWarning($"OK {x.EventId} accepted: {x.Accepted} removed ok {x.CommunicatorName} - {tryRemove}");
                 }
             }));
@@ -150,7 +149,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
                         out var clientsReceivedList)) return;
                 _logger.LogDebug($"EOSE {x.Subscription} adding {x.CommunicatorName}");
                      
-                var tryRemove = clientsReceivedList.TryRemove(x.CommunicatorName);
+                var tryRemove = clientsReceivedList.TryRemove(x.CommunicatorName, out _);
                     
                 _logger.LogWarning("EOSE {x.Subscription} removed {x.CommunicatorName} - {tryRemove}",
                     x.Subscription, x.CommunicatorName, tryRemove);
@@ -161,7 +160,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
                 _logger.LogDebug($"{x.CommunicatorName} OK {x.EventId} {x.Accepted}");
                 if (_okCalledOnSubscriptionClients.TryGetValue(x.EventId ?? string.Empty, out var clientsReceivedList))
                 {
-                    var tryRemove = clientsReceivedList.TryRemove(x.CommunicatorName);
+                    var tryRemove = clientsReceivedList.TryRemove(x.CommunicatorName, out _);
                     _logger.LogWarning($"OK {x.EventId} accepted: {x.Accepted} removed ok {x.CommunicatorName} - {tryRemove}");
                 } 
             }));
@@ -272,7 +271,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
             // so that remaining healthy relays can satisfy the "all relays responded" check.
             foreach (var kvp in _eoseCalledOnSubscriptionClients)
             {
-                if (kvp.Value.TryRemove(relayName))
+                if (kvp.Value.TryRemove(relayName, out _))
                 {
                     _logger.LogWarning(
                         "Removed disconnected relay {RelayName} from EOSE tracking for subscription {Subscription}",
@@ -282,7 +281,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
 
             foreach (var kvp in _okCalledOnSubscriptionClients)
             {
-                if (kvp.Value.TryRemove(relayName))
+                if (kvp.Value.TryRemove(relayName, out _))
                 {
                     _logger.LogWarning(
                         "Removed disconnected relay {RelayName} from OK tracking for event {EventId}",

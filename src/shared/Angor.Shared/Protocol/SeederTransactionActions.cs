@@ -2,13 +2,9 @@ using Angor.Shared.Models;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Protocol.TransactionBuilders;
 using Angor.Shared.Utilities;
-using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Op = Blockcore.Consensus.ScriptInfo.Op;
-using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
-using uint256 = Blockcore.NBitcoin.uint256;
-using WitScript = Blockcore.Consensus.TransactionInfo.WitScript;
+using NBitcoin.DataEncoders;
 
 namespace Angor.Shared.Protocol;
 
@@ -66,9 +62,9 @@ public class SeederTransactionActions : ISeederTransactionActions
 
         var (investorKey, secretHash) = _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(investmentTransaction.Outputs.First(_ => _.ScriptPubKey.IsUnspendable).ScriptPubKey);
         
-        var nbitcoinNetwork = NetworkMapper.Map(_networkConfiguration.GetNetwork());
-        var nbitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork);
-        var nbitcoinInvestmentTransaction = NBitcoin.Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork);
+        var nbitcoinNetwork = _networkConfiguration.GetNetwork().BitcoinNetwork;
+        var nbitcoinRecoveryTransaction = Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork);
+        var nbitcoinInvestmentTransaction = Transaction.Parse(investmentTransaction.ToHex(), nbitcoinNetwork);
 
         var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, investmentTransaction);
 
@@ -114,23 +110,25 @@ public class SeederTransactionActions : ISeederTransactionActions
                 $"Fee rate {feeEstimation.FeeRate} sat/kB is below the protocol minimum of {ProtocolConstants.MinFeeRateSatsPerKb} sat/kB.");
 
         return _spendingTransactionBuilder.BuildRecoverInvestorRemainingFundsInProject(investmentTransactionHex, projectInfo, stageIndex,
-            investorReceiveAddress, investorPrivateKey, new FeeRate(new NBitcoin.Money(feeEstimation.FeeRate)),
+            investorReceiveAddress, investorPrivateKey, new FeeRate(new Money(feeEstimation.FeeRate)),
             _ =>
             {
                 var controlBlock = _taprootScriptBuilder.CreateControlBlock(_, script => script.EndOfProject);
                 var fakeSig = new byte[64];
-                return new NBitcoin.WitScript(
-                    new WitScript(Op.GetPushOp(fakeSig), Op.GetPushOp(_.EndOfProject.ToBytes()),
-                        Op.GetPushOp(controlBlock.ToBytes())).ToBytes());
+                return new WitScript(
+                    Op.GetPushOp(fakeSig),
+                    Op.GetPushOp(_.EndOfProject.ToBytes()),
+                    Op.GetPushOp(controlBlock.ToBytes()));
             },
             (witScript, sig) =>
             {
                 var scriptToExecute = witScript[1];
                 var controlBlock = witScript[2];
 
-                return new NBitcoin.WitScript(
-                    new WitScript(Op.GetPushOp(sig.ToBytes()), Op.GetPushOp(scriptToExecute),
-                        Op.GetPushOp(controlBlock)).ToBytes());
+                return new WitScript(
+                    Op.GetPushOp(sig.ToBytes()),
+                    Op.GetPushOp(scriptToExecute),
+                    Op.GetPushOp(controlBlock));
             });
     }
 }

@@ -2,11 +2,9 @@ using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Protocol.TransactionBuilders;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.BIP39;
-using Blockcore.NBitcoin.DataEncoders;
 using Moq;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 
 namespace Angor.Test.Protocol.TransactionBuilders;
 
@@ -30,7 +28,7 @@ public class InvestmentTransactionBuilderTest : AngorTestData
     
     private Script GivenTheAngorFeeScript(ProjectInfo projectInvestmentInfo)
     {
-        var expectedScript = new Key().ScriptPubKey;
+        var expectedScript = new Key().PubKey.ScriptPubKey;
 
         _projectScriptsBuilder.Setup(_ => _.GetAngorFeeOutputScript(projectInvestmentInfo.ProjectIdentifier))
             .Returns(expectedScript);
@@ -46,13 +44,13 @@ public class InvestmentTransactionBuilderTest : AngorTestData
 
         var expectedScript = GivenTheAngorFeeScript(projectInvestmentInfo);
 
-        var opReturnScript = new Key().ScriptPubKey;
+        var opReturnScript = new Key().PubKey.ScriptPubKey;
 
         var stageScripts = new List<ProjectScripts>()
         {
-            new() { Founder = new Key().ScriptPubKey, Recover = new Key().ScriptPubKey, EndOfProject = new Key().ScriptPubKey, Seeders = new List<Script>() },
-            new() { Founder = new Key().ScriptPubKey, Recover = new Key().ScriptPubKey, EndOfProject = new Key().ScriptPubKey, Seeders = new List<Script>() },
-            new() { Founder = new Key().ScriptPubKey, Recover = new Key().ScriptPubKey, EndOfProject = new Key().ScriptPubKey, Seeders = new List<Script>() }
+            new() { Founder = new Key().PubKey.ScriptPubKey, Recover = new Key().PubKey.ScriptPubKey, EndOfProject = new Key().PubKey.ScriptPubKey, Seeders = new List<Script>() },
+            new() { Founder = new Key().PubKey.ScriptPubKey, Recover = new Key().PubKey.ScriptPubKey, EndOfProject = new Key().PubKey.ScriptPubKey, Seeders = new List<Script>() },
+            new() { Founder = new Key().PubKey.ScriptPubKey, Recover = new Key().PubKey.ScriptPubKey, EndOfProject = new Key().PubKey.ScriptPubKey, Seeders = new List<Script>() }
         };
 
         var seederInvestmentTransaction = _sut.BuildInvestmentTransaction(projectInvestmentInfo, opReturnScript,
@@ -71,15 +69,15 @@ public class InvestmentTransactionBuilderTest : AngorTestData
 
         var projectInvestmentInfo = GivenValidProjectInvestmentInfo(words);
 
-        var opReturnScript = new Key().ScriptPubKey;
+        var opReturnScript = new Key().PubKey.ScriptPubKey;
 
         GivenTheAngorFeeScript(projectInvestmentInfo);
 
         var stageScripts = new List<ProjectScripts>()
         {
-            new() { Founder = new Key().ScriptPubKey, Recover = new Key().ScriptPubKey, EndOfProject = new Key().ScriptPubKey, Seeders = new List<Script>() },
-            new() { Founder = new Key().ScriptPubKey, Recover = new Key().ScriptPubKey, EndOfProject = new Key().ScriptPubKey, Seeders = new List<Script>() },
-            new() { Founder = new Key().ScriptPubKey, Recover = new Key().ScriptPubKey, EndOfProject = new Key().ScriptPubKey, Seeders = new List<Script>() }
+            new() { Founder = new Key().PubKey.ScriptPubKey, Recover = new Key().PubKey.ScriptPubKey, EndOfProject = new Key().PubKey.ScriptPubKey, Seeders = new List<Script>() },
+            new() { Founder = new Key().PubKey.ScriptPubKey, Recover = new Key().PubKey.ScriptPubKey, EndOfProject = new Key().PubKey.ScriptPubKey, Seeders = new List<Script>() },
+            new() { Founder = new Key().PubKey.ScriptPubKey, Recover = new Key().PubKey.ScriptPubKey, EndOfProject = new Key().PubKey.ScriptPubKey, Seeders = new List<Script>() }
         };
 
         var seederInvestmentTransaction = _sut.BuildInvestmentTransaction(projectInvestmentInfo, opReturnScript, 
@@ -100,13 +98,13 @@ public class InvestmentTransactionBuilderTest : AngorTestData
 
         GivenTheAngorFeeScript(projectInvestmentInfo);
 
-        var opReturnScript = new Key().ScriptPubKey;
+        var opReturnScript = new Key().PubKey.ScriptPubKey;
 
         var stageScripts = new List<ProjectScripts>()
         {
-            new() { Founder = new Key().ScriptPubKey, Recover = new Key().ScriptPubKey, EndOfProject = new Key().ScriptPubKey, Seeders = new List<Script>() },
-            new() { Founder = new Key().ScriptPubKey, Recover = new Key().ScriptPubKey, EndOfProject = new Key().ScriptPubKey, Seeders = new List<Script>() },
-            new() { Founder = new Key().ScriptPubKey, Recover = new Key().ScriptPubKey, EndOfProject = new Key().ScriptPubKey, Seeders = new List<Script>() }
+            new() { Founder = new Key().PubKey.ScriptPubKey, Recover = new Key().PubKey.ScriptPubKey, EndOfProject = new Key().PubKey.ScriptPubKey, Seeders = new List<Script>() },
+            new() { Founder = new Key().PubKey.ScriptPubKey, Recover = new Key().PubKey.ScriptPubKey, EndOfProject = new Key().PubKey.ScriptPubKey, Seeders = new List<Script>() },
+            new() { Founder = new Key().PubKey.ScriptPubKey, Recover = new Key().PubKey.ScriptPubKey, EndOfProject = new Key().PubKey.ScriptPubKey, Seeders = new List<Script>() }
         };
         
         var seederInvestmentTransaction = _sut.BuildInvestmentTransaction(projectInvestmentInfo, opReturnScript, 
@@ -130,17 +128,17 @@ public class InvestmentTransactionBuilderTest : AngorTestData
         var changeAddress = new Key();
         var investmentTrxHex = "010000000102df7eb0603e53da8760b6037cca974550e85489d36d59efcedb8834bb691a71000000006a473044022047870ec27da9e51c3f4657b6ac376bb240191b93b1c597775f092a3c6e20e66602203f544e972f45e796730c02942393f9b7d02b4d6dc2301281c68029e693194549012103d418fd52b6bd5fc9330c51aa4480aa9f3bba2940bedc7ce7535ac164aebc25efffffffff06c0c62d0000000000160014b81698f9e2e78fa7fc87f8009183c8a4ab25a6c70000000000000000446a2103eb7d47c80390672435987b9a7ecaa22730cd9c4537fc8d257417fb058248ed7720fcdcd57c6c65b40bcdf9b454a96891d7375a60d516e3416af61f86d4999d44e180c3c901000000002251204f3edc853deba516c82aa9479daaddbe5c34bdde1b2a7be369d784e560271123804a5d0500000000225120d2f4094dc5c80bee991b76b089f230f086edfcef20550467026f80e79647b3f900879303000000002251208ea1c42515559fd53f811b333be518484aeecf9409aefeccb8e977b43ae1d9c99c547e6d00000000160014333a905154f56ef18b6f7aee53ed45a231da54f700000000";
         
-        var investmentTrx = Networks.Bitcoin.Testnet().Consensus.ConsensusFactory.CreateTransaction(investmentTrxHex);
+        var investmentTrx = Networks.Bitcoin.Testnet().CreateTransaction(investmentTrxHex);
 
         _investmentScriptBuilder.Setup(_ => _.GetInvestorPenaltyTransactionScript(It.IsAny<string>(), It.IsAny<int>()))
-            .Returns(new Key().ScriptPubKey);
+            .Returns(new Key().PubKey.ScriptPubKey);
 
         var recoveryTransaction = _sut.BuildUpfrontRecoverFundsTransaction(new ProjectInfo { Stages = new List<Stage> { new Stage(), new Stage(), new Stage() } }, investmentTrx, 180,
             Encoders.Hex.EncodeData(changeAddress.PubKey.ToBytes()));
 
         //All inputs are from the investment transaction outputs
         Assert.Contains(recoveryTransaction.Inputs.AsIndexedInputs(),
-            _ => investmentTrx.Outputs.AsIndexedOutputs().Any(o => o.ToOutPoint().Equals(_.PrevOut)));
+            _ => investmentTrx.Outputs.AsIndexedOutputs().Any(o => new OutPoint(o.Transaction.GetHash(), o.N).Equals(_.PrevOut)));
     }
     
     [Fact]
@@ -149,11 +147,11 @@ public class InvestmentTransactionBuilderTest : AngorTestData
         var changeAddress = new Key();
         var investmentTrxHex = "010000000102df7eb0603e53da8760b6037cca974550e85489d36d59efcedb8834bb691a71000000006a473044022047870ec27da9e51c3f4657b6ac376bb240191b93b1c597775f092a3c6e20e66602203f544e972f45e796730c02942393f9b7d02b4d6dc2301281c68029e693194549012103d418fd52b6bd5fc9330c51aa4480aa9f3bba2940bedc7ce7535ac164aebc25efffffffff06c0c62d0000000000160014b81698f9e2e78fa7fc87f8009183c8a4ab25a6c70000000000000000446a2103eb7d47c80390672435987b9a7ecaa22730cd9c4537fc8d257417fb058248ed7720fcdcd57c6c65b40bcdf9b454a96891d7375a60d516e3416af61f86d4999d44e180c3c901000000002251204f3edc853deba516c82aa9479daaddbe5c34bdde1b2a7be369d784e560271123804a5d0500000000225120d2f4094dc5c80bee991b76b089f230f086edfcef20550467026f80e79647b3f900879303000000002251208ea1c42515559fd53f811b333be518484aeecf9409aefeccb8e977b43ae1d9c99c547e6d00000000160014333a905154f56ef18b6f7aee53ed45a231da54f700000000";
         
-        var investmentTrx = Networks.Bitcoin.Testnet().Consensus.ConsensusFactory.CreateTransaction(investmentTrxHex);
+        var investmentTrx = Networks.Bitcoin.Testnet().CreateTransaction(investmentTrxHex);
 
         var expectedAddress = Encoders.Hex.EncodeData(changeAddress.PubKey.ToBytes());
         var expectedDays = 180;
-        var expectedScript = new Key().ScriptPubKey;
+        var expectedScript = new Key().PubKey.ScriptPubKey;
         
         _investmentScriptBuilder.Setup(_ => _.GetInvestorPenaltyTransactionScript(expectedAddress, expectedDays))
             .Returns(expectedScript);

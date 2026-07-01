@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build:*)",
+      "Read(//c/Users/David.THEDRAGON/Angor/**)",
+      "Bash(gh run:*)",
+      "Bash(dotnet test:*)",
+      "Bash(xargs grep:*)",
+      "Bash(dotnet restore:*)",
+      "Bash(ls:*)",
+      "Bash(gh pr create --title 'feat: connect 1-click fund flow to Funders section' --reviewer dangershony --body ':*)"
+    ]
+  }
+}

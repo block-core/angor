@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Blockcore.NBitcoin.BIP32;
+using NBitcoin;
 
 namespace Angor.Shared.Models;
 
