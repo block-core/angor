@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.DataEncoders;
-using BlockcoreKey = Blockcore.NBitcoin.Key;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 
 namespace Angor.Shared;
 
@@ -11,7 +10,7 @@ namespace Angor.Shared;
 /// preventing private key material from lingering as interned strings
 /// on the managed heap. Dispose when done to zero backing memory.
 /// </summary>
-public class AngorKey : NBitcoin.Key
+public class AngorKey : Key
 {
     public AngorKey() : base() { }
 
@@ -36,12 +35,11 @@ public class AngorKey : NBitcoin.Key
     }
 
     /// <summary>
-    /// Bridge factory: converts a Blockcore.NBitcoin.Key to AngorKey.
-    /// Temporary shim until the Blockcore dependency is removed.
+    /// Factory: creates an AngorKey from an NBitcoin Key.
     /// </summary>
-    public static AngorKey From(BlockcoreKey blockcoreKey)
+    public static AngorKey From(Key key)
     {
-        var bytes = blockcoreKey.ToBytes();
+        var bytes = key.ToBytes();
         try
         {
             return new AngorKey(bytes);

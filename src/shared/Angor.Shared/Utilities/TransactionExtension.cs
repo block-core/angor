@@ -1,9 +1,6 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Angor.Shared.Models;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.Consensus.TransactionInfo;
-using Blockcore.Networks;
+using Angor.Shared.Networks;
+using NBitcoin;
 
 namespace Angor.Shared.Utilities;
 
@@ -27,25 +24,18 @@ public static class TransactionExtension
             .Sum(output => output.TxOut.Value.Satoshi);
     }
 
-    public static long GetTotalInvestmentAmount(this NBitcoin.Transaction investmentTransaction)
-    {
-        return investmentTransaction.Outputs.AsIndexedOutputs()
-         .Where(output => output.TxOut.ScriptPubKey.IsScriptType(NBitcoin.ScriptType.Taproot))
-                .Sum(output => output.TxOut.Value.Satoshi);
-    }
-
     /// <summary>
-    /// Converts a Blockcore Transaction to a QueryTransaction object for JSON serialization
-    /// Note: InputAddress is not populated as Blockcore doesn't provide GetSignerAddress.
+    /// Converts a Transaction to a QueryTransaction object for JSON serialization
+    /// Note: InputAddress is not populated.
     /// Size and Weight values are approximations based on VirtualSize.
     /// </summary>
-    public static QueryTransaction ToQueryTransaction(this Transaction transaction, Network network)
+    public static QueryTransaction ToQueryTransaction(this Transaction transaction, AngorNetwork network)
     {
-        var virtualSize = (int)transaction.GetVirtualSize(4);
+        var virtualSize = (int)transaction.GetVirtualSize();
         return new QueryTransaction
         {
             TransactionId = transaction.GetHash().ToString(),
-            Version = transaction.Version,
+            Version = (uint)transaction.Version,
             LockTime = transaction.LockTime.ToString(),
             Size = virtualSize,
             VirtualSize = virtualSize,
@@ -55,7 +45,7 @@ public static class TransactionExtension
             {
                 InputIndex = (int)input.Index,
                 InputTransactionId = input.PrevOut.Hash.ToString(),
-                InputAddress = string.Empty, // Blockcore doesn't have GetSignerAddress
+                InputAddress = string.Empty,
                 ScriptSig = input.TxIn.ScriptSig.ToHex(),
                 ScriptSigAsm = input.TxIn.ScriptSig.ToString(),
                 WitScript = input.TxIn.WitScript?.ToString() ?? string.Empty,
@@ -64,16 +54,16 @@ public static class TransactionExtension
             Outputs = transaction.Outputs.AsIndexedOutputs().Select(output => new QueryTransactionOutput
             {
                 Index = (int)output.N,
-                Address = output.TxOut.ScriptPubKey.GetDestinationAddress(network)?.ToString() ?? string.Empty,
+                Address = output.TxOut.ScriptPubKey.GetDestinationAddress(network.BitcoinNetwork)?.ToString() ?? string.Empty,
                 Balance = output.TxOut.Value.Satoshi,
                 ScriptPubKey = output.TxOut.ScriptPubKey.ToHex(),
                 ScriptPubKeyAsm = output.TxOut.ScriptPubKey.ToString(),
-                OutputType = GetScriptTypeBlockcore(output.TxOut.ScriptPubKey)
+                OutputType = GetScriptType(output.TxOut.ScriptPubKey)
             }).ToList()
         };
     }
 
-    private static string GetScriptTypeBlockcore(Script scriptPubKey)
+    private static string GetScriptType(Script scriptPubKey)
     {
         var scriptBytes = scriptPubKey.ToBytes();
         

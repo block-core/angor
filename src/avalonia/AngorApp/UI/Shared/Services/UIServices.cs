@@ -8,7 +8,7 @@ using AngorApp.UI.Shared.Controls.Feerate;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Styling;
-using Blockcore.Networks;
+using Angor.Shared.Networks;
 using Serilog;
 using Zafiro.Avalonia.Dialogs;
 using Zafiro.Settings;
@@ -129,7 +129,7 @@ public partial class UIServices : ReactiveObject, IUIServices
     {
         var isDebugMode = IsDebugModeEnabled;
         var network = networkConfiguration.GetNetwork();
-        var isTestnet = network.NetworkType == NetworkType.Testnet;
+        var isTestnet = !network.IsMainnet;
 
         return !(isDebugMode && isTestnet);
     }

@@ -4,7 +4,7 @@ using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared;
 using Angor.Shared.Integration.Lightning;
-using Blockcore.NBitcoin;
+using NBitcoin;
 using Angor.Shared.Integration.Lightning.Models;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;

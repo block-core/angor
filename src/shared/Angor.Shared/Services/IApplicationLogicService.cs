@@ -1,5 +1,4 @@
 using Angor.Shared.Models;
-using Blockcore.Networks;
 
 namespace Angor.Shared.Services
 {
@@ -10,4 +9,3 @@ namespace Angor.Shared.Services
 
     }
 }
-

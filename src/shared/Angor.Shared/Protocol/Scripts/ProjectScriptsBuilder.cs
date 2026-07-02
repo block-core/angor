@@ -1,8 +1,7 @@
 using System.Buffers.Binary;
 using Angor.Shared.Models;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.DataEncoders;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 
 namespace Angor.Shared.Protocol.Scripts;
 
@@ -85,7 +84,7 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
             throw new Exception("Script is not an OP_RETURN script");
         }
 
-        var ops = script.ToOps();
+        var ops = script.ToOps().ToList();
 
         // Validate minimum structure: OP_RETURN + at least one push
         if (ops.Count < 2 || ops[1].PushData == null)
@@ -151,7 +150,7 @@ public class ProjectScriptsBuilder : IProjectScriptsBuilder
             return null;
         }
 
-        var ops = script.ToOps();
+        var ops = script.ToOps().ToList();
 
         // Check for dynamic stage info in different positions
         if (ops.Count == 3 && ops[2].PushData?.Length == 4)

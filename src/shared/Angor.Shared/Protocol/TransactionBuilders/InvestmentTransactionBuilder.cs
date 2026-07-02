@@ -1,11 +1,7 @@
 using Angor.Shared.Models;
-using Angor.Shared.Protocol;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Utilities;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.Consensus.TransactionInfo;
-using Blockcore.NBitcoin;
-using TxIn = Blockcore.Consensus.TransactionInfo.TxIn;
+using NBitcoin;
 
 namespace Angor.Shared.Protocol.TransactionBuilders;
 
@@ -30,20 +26,20 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
     {
         var network = _networkConfiguration.GetNetwork();
 
-        Transaction investmentTransaction = network.Consensus.ConsensusFactory.CreateTransaction();
+        Transaction investmentTransaction = network.CreateTransaction();
 
         // create the output and script of the project id 
         var angorFeeOutputScript = _projectScriptsBuilder.GetAngorFeeOutputScript(projectInfo.ProjectIdentifier);
         int angorFeePercentage = _networkConfiguration.GetAngorInvestFeePercentage;
         long angorFee = (totalInvestmentAmount * angorFeePercentage) / 100;
         var angorOutput = new TxOut(new Money(angorFee), angorFeeOutputScript);
-        investmentTransaction.AddOutput(angorOutput);
+        investmentTransaction.Outputs.Add(angorOutput);
 
         // reduce the fee from the total investment amount
         var totalInvestmentAmountAfterFee = totalInvestmentAmount - angorFee;
 
         var investorInfoOutput = new TxOut(new Money(0), opReturnScript);
-        investmentTransaction.AddOutput(investorInfoOutput);
+        investmentTransaction.Outputs.Add(investorInfoOutput);
 
         var stagesScripts = projectScripts.Select(_ => _taprootScriptBuilder.CreateStage(network, _));
 
@@ -96,7 +92,7 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
         }
 
         var stagesOutputs = stagesScripts.Select((script, i) =>
-        new TxOut(new Money(stageAmounts[i]), new Script(script.ToBytes())));
+        new TxOut(new Money(stageAmounts[i]), script));
 
         investmentTransaction.Outputs.AddRange(stagesOutputs);
 
@@ -116,7 +112,7 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
 
         foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Where(utxo => utxo.IsTaprooOutput()))
         {
-            transaction.Inputs.Add(new TxIn(output.ToOutPoint()));
+            transaction.Inputs.Add(new TxIn(new OutPoint(output.Transaction.GetHash(), output.N)));
 
             transaction.Outputs.Add(new TxOut(output.TxOut.Value, spendingScript.WitHash.ScriptPubKey));
         }
@@ -128,12 +124,14 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
     {
         // the release may be an address or a pubkey, first check if it is an address
         Script spendingScript = null;
-        if (BitcoinWitPubKeyAddress.IsValid(investorReleaseKey, _networkConfiguration.GetNetwork(), out Exception _))
+        try
         {
-            spendingScript = new BitcoinWitPubKeyAddress(investorReleaseKey, _networkConfiguration.GetNetwork()).ScriptPubKey;
+            var address = BitcoinAddress.Create(investorReleaseKey, _networkConfiguration.GetNetwork().BitcoinNetwork);
+            spendingScript = address.ScriptPubKey;
         }
-        else  // if it is not an address, then it is a pubkey
+        catch (FormatException)
         {
+            // if it is not an address, then it is a pubkey
             // for the release we just send to a regular witness address
             spendingScript = new PubKey(investorReleaseKey).WitHash.ScriptPubKey;
         }
@@ -142,7 +140,7 @@ public class InvestmentTransactionBuilder : IInvestmentTransactionBuilder
 
         foreach (var output in investmentTransaction.Outputs.AsIndexedOutputs().Where(utxo => utxo.IsTaprooOutput()))
         {
-            transaction.Inputs.Add(new TxIn(output.ToOutPoint()));
+            transaction.Inputs.Add(new TxIn(new OutPoint(output.Transaction.GetHash(), output.N)));
 
             transaction.Outputs.Add(new TxOut(output.TxOut.Value, spendingScript));
         }

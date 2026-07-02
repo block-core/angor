@@ -1,5 +1,4 @@
 using Angor.Sdk.Common;
-using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Application;
 using Angor.Sdk.Wallet.Domain;
 using Angor.Sdk.Wallet.Infrastructure.History;
@@ -26,8 +25,8 @@ public static class WalletContextServices
         services.AddSingleton<IWalletAppService, WalletAppService>();
         services.AddSingleton<IHdOperations, HdOperations>();
         var networkConfiguration = new NetworkConfiguration();
-        var blockcoreNetwork = bitcoinNetwork == BitcoinNetwork.Mainnet ? new BitcoinMain() : new Angornet();
-        networkConfiguration.SetNetwork(blockcoreNetwork);
+        var angorNetwork = bitcoinNetwork == BitcoinNetwork.Mainnet ? AngorNetwork.Main() : AngorNetwork.Angornet();
+        networkConfiguration.SetNetwork(angorNetwork);
         services.AddSingleton<INetworkConfiguration>(networkConfiguration);
         services.AddSingleton<INetworkService, NetworkService>();
         services.AddSingleton<INetworkStorage, NetworkStorage>();

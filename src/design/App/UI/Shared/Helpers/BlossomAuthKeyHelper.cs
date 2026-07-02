@@ -1,4 +1,4 @@
-using Blockcore.NBitcoin;
+using NBitcoin;
 
 namespace App.UI.Shared.Helpers;
 

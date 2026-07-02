@@ -1,7 +1,7 @@
+using System.Linq;
 using Angor.Shared;
 using Angor.Shared.Models;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.NBitcoin;
+using NBitcoin;
 
 namespace Angor.Test.DataBuilders;
 
@@ -41,7 +41,7 @@ public class ScriptBuilder
             throw new Exception();
         }
 
-        var ops = script.ToOps();
+        var ops = script.ToOps().ToList();
 
         if (ops.Count == 2)
         {
@@ -63,7 +63,7 @@ public class ScriptBuilder
 
         return new(new List<Op>
         {
-            Op.GetPushOp(new NBitcoin.PubKey(investorKey).ToBytes()),
+            Op.GetPushOp(new PubKey(investorKey).ToBytes()),
             OpcodeType.OP_CHECKSIGVERIFY,
             Op.GetPushOp((uint)sequence),
             OpcodeType.OP_CHECKSEQUENCEVERIFY
@@ -80,7 +80,7 @@ public class ScriptBuilder
         // funder gets funds after stage started
         projectScripts.Founder = new Script(new List<Op>
         {
-            Op.GetPushOp(new NBitcoin.PubKey(funderKey).GetTaprootFullPubKey().ToBytes()),
+            Op.GetPushOp(new PubKey(funderKey).GetTaprootFullPubKey().ToBytes()),
             OpcodeType.OP_CHECKSIGVERIFY,
             Op.GetPushOp(locktimeFounder),
             OpcodeType.OP_CHECKLOCKTIMEVERIFY
@@ -91,9 +91,9 @@ public class ScriptBuilder
             // regular investor pre-co-sign with founder to gets funds with penalty
             projectScripts.Recover = new Script(new List<Op>
             {
-                Op.GetPushOp(new NBitcoin.PubKey(funderRecoveryKey).GetTaprootFullPubKey().ToBytes()),
+                Op.GetPushOp(new PubKey(funderRecoveryKey).GetTaprootFullPubKey().ToBytes()),
                 OpcodeType.OP_CHECKSIGVERIFY,
-                Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
+                Op.GetPushOp(new PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
                 OpcodeType.OP_CHECKSIG
             });
         }
@@ -102,9 +102,9 @@ public class ScriptBuilder
             //  seed investor pre-co-sign with founder to gets funds with penalty and must expose the secret
             projectScripts.Recover = new Script(new List<Op>
             {
-                Op.GetPushOp(new NBitcoin.PubKey(funderRecoveryKey).GetTaprootFullPubKey().ToBytes()),
+                Op.GetPushOp(new PubKey(funderRecoveryKey).GetTaprootFullPubKey().ToBytes()),
                 OpcodeType.OP_CHECKSIGVERIFY,
-                Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
+                Op.GetPushOp(new PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
                 OpcodeType.OP_CHECKSIGVERIFY,
                 OpcodeType.OP_HASH256,
                 Op.GetPushOp(new uint256(secretHash).ToBytes()),
@@ -115,7 +115,7 @@ public class ScriptBuilder
         // project ended and investor can collect remaining funds
         projectScripts.EndOfProject = new Script(new List<Op>
         {
-            Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
+            Op.GetPushOp(new PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
             OpcodeType.OP_CHECKSIGVERIFY,
             Op.GetPushOp(locktimeExpiery),
             OpcodeType.OP_CHECKLOCKTIMEVERIFY
@@ -157,7 +157,7 @@ public class ScriptBuilder
 
             ops.AddRange(new[]
             {
-                Op.GetPushOp(new NBitcoin.PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
+                Op.GetPushOp(new PubKey(investorKey).GetTaprootFullPubKey().ToBytes()),
                 OpcodeType.OP_CHECKSIG,
             });
 

@@ -9,13 +9,11 @@ using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
 using Angor.Shared.Utilities;
-using Blockcore.Consensus.TransactionInfo;
-using Blockcore.NBitcoin;
+using NBitcoin;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Angor.Sdk.Funding.Projects;
-using Script = Blockcore.Consensus.ScriptInfo.Script;
 
 namespace Angor.Sdk.Funding.Investor.Operations;
 
@@ -273,8 +271,8 @@ public static class GetRecoveryStatus
                                         .FirstOrDefault(o => o.Index == item.StageIndex);
                                     var hasPenaltyTimelock = correspondingOutput != null
                                         && !string.IsNullOrEmpty(correspondingOutput.ScriptPubKey)
-                                        && NBitcoin.Script.FromHex(correspondingOutput.ScriptPubKey)
-                                            .IsScriptType(NBitcoin.ScriptType.P2WSH);
+                                    && Script.FromHex(correspondingOutput.ScriptPubKey)
+                                            .IsScriptType(ScriptType.P2WSH);
 
                                     if (!hasPenaltyTimelock)
                                     {

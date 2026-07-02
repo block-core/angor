@@ -1,6 +1,6 @@
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Shared.Models;
-using Blockcore.Consensus.TransactionInfo;
+using NBitcoin;
 using CSharpFunctionalExtensions;
 
 namespace Angor.Sdk.Funding.Projects;
