@@ -48,9 +48,15 @@ namespace Angor.Shared.Services
 
             if (!_subscriptionsHandling.RelaySubscriptionAdded(subscriptionName))
             {
+                // Synchronize(): the underlying multi-relay client merges every relay's events into
+                // one shared, unsynchronized Rx subject — without this, two relays responding around
+                // the same instant can invoke this callback concurrently and corrupt caller state
+                // (see DocumentProjectService.cs history). Synchronize() gives this one subscription
+                // its own private lock so deliveries to it are always serialized.
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == subscriptionName)
                     .Select(_ => _.Event)
+                    .Synchronize()
                     .Subscribe(ev => { responseDataAction(_serializer.Deserialize<T>(ev.Content)); });
 
                 _subscriptionsHandling.TryAddRelaySubscription(subscriptionName, subscription);
@@ -81,6 +87,7 @@ namespace Angor.Shared.Services
                     .Where(_ => _.Subscription == subscriptionKey)
                     .Where(_ => _.Event is not null)
                     .Select(_ => _.Event)
+                    .Synchronize()
                     .Subscribe(onResponseAction!);
 
                 _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription);
@@ -110,6 +117,7 @@ namespace Angor.Shared.Services
                     .Where(_ => _.Subscription == subscriptionKey)
                     .Where(_ => _.Event is not null)
                     .Select(_ => _.Event)
+                    .Synchronize()
                     .Subscribe(onResponseAction!);
 
                 _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription);
@@ -138,6 +146,7 @@ namespace Angor.Shared.Services
                     .Where(_ => _.Subscription == subscriptionKey)
                     .Where(_ => _.Event is not null)
                     .Select(_ => _.Event)
+                    .Synchronize()
                     .Subscribe(@event => onResponseAction(@event));
 
                 _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription, keepActive);
@@ -204,6 +213,7 @@ namespace Angor.Shared.Services
                     .Where(_ => _.Subscription == subscriptionKey)
                     .Where(_ => _.Event is not null)
                     .Select(_ => _.Event as NostrMetadataEvent)
+                    .Synchronize()
                     .Subscribe(@event => onResponse(@event.Pubkey, ProjectMetadata.Parse(@event.Metadata)));
 
                 _subscriptionsHandling.TryAddRelaySubscription(subscriptionKey, subscription);
@@ -319,6 +329,7 @@ namespace Angor.Shared.Services
                 .Where(_ => _.Event?.Kind == Nip3030NostrKind)
                 .Where(_ => _.Event?.IsSignatureValid() == true)
                 .Select(_ => _.Event)
+                .Synchronize()
                 .Subscribe(ev =>
               {
                   if (ev?.Content == null || ev.Id == null)
@@ -367,6 +378,7 @@ namespace Angor.Shared.Services
                     .Where(_ => _.Subscription == subscriptionKey)
                     .Where(_ => _.Event is not null)
                     .Select(_ => _.Event)
+                    .Synchronize()
                     .Subscribe(@event =>
                     {
                         // Extract relay tags ("r" tags contain relay URLs)
@@ -419,6 +431,7 @@ namespace Angor.Shared.Services
                 .Where(r => r.Subscription == subscriptionKey)
                 .Where(r => r.Event is not null)
                 .Select(r => r.Event)
+                .Synchronize()
                 .Subscribe(ev =>
                 {
                     // Filter client-side by the "d" tag value

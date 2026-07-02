@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.ComponentModel;
+using System.Reactive.Linq;
 using Blockcore.EventBus;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Requests;
@@ -37,13 +38,18 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
 
         var client = _communicationFactory.GetOrCreateClient(networkService); 
         
-        _okHandlingSubscription = client.Streams.OkStream.Subscribe(HandleOkMessages);
-        _eoseHandlingSubscription = client.Streams.EoseStream.Subscribe(HandleEoseMessages);
+        // Synchronize(): OkStream/EoseStream are fed by every connected relay concurrently
+        // (one shared, unsynchronized Rx subject per multi-relay client — see RelayService.cs).
+        // Without this, HandleOkMessages/HandleEoseMessages (and every user action they invoke,
+        // e.g. TaskCompletionSource.SetResult calls that aren't using the Try-variant) can be
+        // re-entered concurrently when two relays respond around the same instant.
+        _okHandlingSubscription = client.Streams.OkStream.Synchronize().Subscribe(HandleOkMessages);
+        _eoseHandlingSubscription = client.Streams.EoseStream.Synchronize().Subscribe(HandleEoseMessages);
         
         var discoveryClient = _communicationFactory.GetOrCreateDiscoveryClients(networkService); 
         
-        _okHandlingDiscoverySubscription = discoveryClient.Streams.OkStream.Subscribe(HandleOkMessages);
-        _eoseHandlingDiscoverySubscription = discoveryClient.Streams.EoseStream.Subscribe(HandleEoseMessages);
+        _okHandlingDiscoverySubscription = discoveryClient.Streams.OkStream.Synchronize().Subscribe(HandleOkMessages);
+        _eoseHandlingDiscoverySubscription = discoveryClient.Streams.EoseStream.Synchronize().Subscribe(HandleEoseMessages);
 
         _communicationFactory.RelayDisconnected += OnRelayDisconnected;
     }
