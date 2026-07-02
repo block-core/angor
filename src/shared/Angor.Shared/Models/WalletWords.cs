@@ -18,7 +18,13 @@ public class WalletWords : IDisposable
     private ExtKey? cachedExtKey;
     private bool disposed;
 
-    /// <summary>The BIP-39 mnemonic words (space-separated).</summary>
+    /// <summary>
+    /// The BIP-39 mnemonic words (space-separated).
+    /// SECURITY: Each access creates a new immutable string on the managed heap that
+    /// cannot be zeroed by the GC. Prefer <see cref="GetOrDeriveExtKey"/> which caches
+    /// the derived key and only calls this once. Use <see cref="WordsMemory"/> for
+    /// read-only access without allocating a new string.
+    /// </summary>
     public string Words
     {
         get
@@ -34,6 +40,20 @@ public class WalletWords : IDisposable
         }
     }
 
+    /// <summary>
+    /// Read-only access to the mnemonic characters without allocating a new string.
+    /// The backing memory is zeroed on <see cref="Dispose"/>.
+    /// </summary>
+    [JsonIgnore]
+    public ReadOnlyMemory<char> WordsMemory
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(disposed, this);
+            return wordsChars.AsMemory();
+        }
+    }
+
     /// <summary>Optional BIP-39 passphrase.</summary>
     public string? Passphrase
     {
@@ -43,6 +63,20 @@ public class WalletWords : IDisposable
             return passphraseChars != null ? new string(passphraseChars) : null;
         }
         set => passphraseChars = value?.ToCharArray();
+    }
+
+    /// <summary>
+    /// Read-only access to the passphrase characters without allocating a new string.
+    /// The backing memory is zeroed on <see cref="Dispose"/>.
+    /// </summary>
+    [JsonIgnore]
+    public ReadOnlyMemory<char>? PassphraseMemory
+    {
+        get
+        {
+            ObjectDisposedException.ThrowIf(disposed, this);
+            return passphraseChars?.AsMemory();
+        }
     }
 
     /// <summary>

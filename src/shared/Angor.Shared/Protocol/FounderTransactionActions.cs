@@ -70,7 +70,7 @@ public class FounderTransactionActions : IFounderTransactionActions
 
             var hashHex = Encoders.Hex.EncodeData(hash.ToBytes());
 
-            _logger.LogInformation($"creating sig for project={projectInfo.ProjectIdentifier}; founder-recovery-pubkey={key.PubKey.ToHex()}; stage={stageIndex}");
+            _logger.LogDebug("Creating recovery signature for project={ProjectId}, stage={Stage}", projectInfo.ProjectIdentifier, stageIndex);
 
             var result = new TaprootPubKey(
                 Angor.Shared.Protocol.Scripts.TaprootKeyHelper.GetTaprootOutputKeyBytes(key.PubKey))
@@ -156,7 +156,7 @@ public class FounderTransactionActions : IFounderTransactionActions
 
         spendingTransaction.Outputs[0].Value -= appliedFee;
 
-        _logger.LogInformation($"Unsigned spendingTransaction hex {spendingTransaction.ToHex()}");
+        _logger.LogDebug("Unsigned spending transaction prepared with {InputCount} inputs", spendingTransaction.Inputs.Count);
 
         // Step 4 - sign the taproot inputs
         var trxData = spendingTransaction.PrecomputeTransactionData(stageOutputs.Select(_ => _.TxOut).ToArray());
@@ -183,12 +183,12 @@ public class FounderTransactionActions : IFounderTransactionActions
                 Op.GetPushOp(scriptToExecute.ToBytes()),
                 Op.GetPushOp(controlBlock));
 
-            _logger.LogInformation($"WitScript of inputIndex {inputIndex} spendingTransaction hex {input.WitScript.ToString()}");
+            _logger.LogDebug("Signed input {InputIndex}", inputIndex);
 
             inputIndex++;
         }
 
-        _logger.LogInformation($"signed spendingTransaction hex {spendingTransaction.ToHex()}");
+        _logger.LogDebug("Spending transaction signed successfully");
 
         var finalTrx = network.CreateTransaction(spendingTransaction.ToHex());
 
