@@ -365,13 +365,12 @@ public class WalletOperationsTest : AngorTestData
         var walletOperations = new WalletOperations(null, mockHdOperations.Object, null, null);
 
         // Act
-        var (coins, keys) = walletOperations.GetUnspentOutputsForTransaction(walletWords, utxos);
+        var signingCoins = walletOperations.GetUnspentOutputsForTransaction(walletWords, utxos);
 
         // Assert
-        Assert.Single(coins);
-        Assert.Single(keys);
-        Assert.Equal((uint)0, coins[0].Outpoint.N);
-        Assert.Equal(1500000, coins[0].Amount.Satoshi);
-        Assert.Equal(expectedExtKey.Derive(new KeyPath("m/0/0")).PrivateKey, keys[0]);
+        Assert.Single(signingCoins);
+        Assert.Equal((uint)0, signingCoins[0].Coin.Outpoint.N);
+        Assert.Equal(1500000, signingCoins[0].Coin.Amount.Satoshi);
+        Assert.Equal(expectedExtKey.Derive(new KeyPath("m/0/0")).PrivateKey, signingCoins[0].Key);
     }
 }

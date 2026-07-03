@@ -45,7 +45,7 @@ public class FounderTransactionActionTest : AngorTestData
 
                 var coins = keys.Select(key => new Blockcore.NBitcoin.Coin(fakeInputTrx, fakeTxout)).ToList();
 
-                return (coins, keys);
+                return coins.Zip(keys, (c, k) => new SigningCoin(c, k)).ToList();
             });
 
 

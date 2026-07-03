@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Blockcore.NBitcoin.DataEncoders;
@@ -88,18 +88,18 @@ public class InvestmentOperations
         //var nbitcoinNetwork = NetworkMapper.Map(network);
         //var trx = NBitcoin.Transaction.Parse(transaction.ToHex(), nbitcoinNetwork);
 
-        var coins = _walletOperations.GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
+        var signingCoins = _walletOperations.GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
 
         // var fees = _walletOperations.GetFeeEstimationAsync().GetAwaiter().GetResult();
         // var fee = fees.First(f => f.Confirmations == 1);
 
 
-        //var incoins = coins.coins.Select(c => new NBitcoin.Coin(OutPoint.Parse(c.Outpoint.ToString()), new NBitcoin.TxOut(NBitcoin.Money.Satoshis(c.Amount.Satoshi), new NBitcoin.Script(c.ScriptPubKey.ToBytes()))));
-        //var inKeys = coins.keys.Select(k => new Key(k.ToBytes())).ToArray();
+        //var incoins = signingCoins.Select(sc => new NBitcoin.Coin(OutPoint.Parse(sc.Coin.Outpoint.ToString()), new NBitcoin.TxOut(NBitcoin.Money.Satoshis(sc.Coin.Amount.Satoshi), new NBitcoin.Script(sc.Coin.ScriptPubKey.ToBytes()))));
+        //var inKeys = signingCoins.Select(sc => new Key(sc.Key.ToBytes())).ToArray();
 
         var builder = new TransactionBuilder(network) // nbitcoinNetwork.CreateTransactionBuilder()
-            .AddCoins(coins.coins)
-            .AddKeys(coins.keys.ToArray())
+            .AddCoins(signingCoins.Select(sc => sc.Coin).ToList())
+            .AddKeys(signingCoins.Select(sc => sc.Key).ToArray())
             .SetChange(BitcoinAddress.Create(changeAddress, network))
             .ContinueToBuild(transaction)
             .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate.FeeRate)))
