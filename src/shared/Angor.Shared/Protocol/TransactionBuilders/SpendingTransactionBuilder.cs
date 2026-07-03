@@ -118,7 +118,16 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
 
         // Step 4 - sign the taproot inputs
         var trxData = spendingTrx.PrecomputeTransactionData(investmentTrxOutputs.Select(s => s.TxOut).ToArray());
-        var key = new Key(privateKey.ToBytes());
+        var keyBytes = privateKey.ToBytes();
+        Key key;
+        try
+        {
+            key = new Key(keyBytes);
+        }
+        finally
+        {
+            System.Security.Cryptography.CryptographicOperations.ZeroMemory(keyBytes);
+        }
 
         const TaprootSigHash sigHash = TaprootSigHash.All;
         var inputIndex = 0;

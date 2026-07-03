@@ -142,7 +142,16 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
         // sign the inputs (replace fake WitScript with real one)
         // Convert AngorKey (NBitcoin.Key) to Blockcore Key for P2WSH signing
-        var key = new Key(investorPrivateKey.ToBytes());
+        var keyBytes = investorPrivateKey.ToBytes();
+        Key key;
+        try
+        {
+            key = new Key(keyBytes);
+        }
+        finally
+        {
+            System.Security.Cryptography.CryptographicOperations.ZeroMemory(keyBytes);
+        }
 
         foreach (var intput in transaction.Inputs)
         {
