@@ -81,6 +81,11 @@ public class DerivationOperations : IDerivationOperations
 
     public string DeriveLeadInvestorSecretHash(WalletWords walletWords, string founderKey)
     {
+        return DeriveLeadInvestorSecretHash(walletWords, founderKey, projectVersion: 1);
+    }
+
+    public string DeriveLeadInvestorSecretHash(WalletWords walletWords, string founderKey, int projectVersion)
+    {
         ExtKey extendedKey = GetExtendedKey(walletWords);
 
         var upi = this.DeriveUniqueProjectIdentifier(founderKey);
@@ -89,11 +94,26 @@ public class DerivationOperations : IDerivationOperations
 
         ExtPubKey extPubKey = _hdOperations.GetExtendedPublicKey(extendedKey.PrivateKey, extendedKey.ChainCode, path);
 
+        if (projectVersion >= 3)
+        {
+            // V3+: Hash only the public key (deterministic, doesn't expose private key bytes)
+            var pubKeyBytes = extPubKey.PubKey.ToBytes();
+            var hash = Hashes.Hash256(pubKeyBytes).ToString();
+            return hash;
+        }
+
+        // V1/V2 legacy: hash full ExtKey serialization (backward compat)
         var derivedSecret = extendedKey.Derive(new KeyPath(path));
-
-        var hash = Hashes.Hash256(derivedSecret.ToBytes()).ToString();
-
-        return hash;
+        var secretBytes = derivedSecret.ToBytes();
+        try
+        {
+            var hash = Hashes.Hash256(secretBytes).ToString();
+            return hash;
+        }
+        finally
+        {
+            System.Security.Cryptography.CryptographicOperations.ZeroMemory(secretBytes);
+        }
     }
 
     public string DeriveInvestorKey(WalletWords walletWords, string founderKey)
@@ -283,14 +303,18 @@ public class DerivationOperations : IDerivationOperations
     {
         var key = DeriveNostrStorageKey(walletWords);
 
-         var privateKeyBytes = key.ToBytes();
+        var privateKeyBytes = key.ToBytes();
+        try
+        {
+            var hashedKey = Hashes.Hash256(new Span<byte>(privateKeyBytes));
 
-        var hashedKey = Hashes.Hash256(new Span<byte>(privateKeyBytes));
-
-        // the hex of the hash of the private key is the password
-        var hex = Encoders.Hex.EncodeData(hashedKey.ToArray()).Replace("-", "").ToLower();
-
-        return hex;
+            // Hex-encoded double-SHA256 of the private key serves as the Nostr storage password
+            return Encoders.Hex.EncodeData(hashedKey.ToArray());
+        }
+        finally
+        {
+            System.Security.Cryptography.CryptographicOperations.ZeroMemory(privateKeyBytes);
+        }
     }
 
     public string DeriveAngorKey(string angorRootKey, string founderKey)
