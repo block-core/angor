@@ -1,4 +1,5 @@
 using Angor.Shared.Models;
+using Angor.Shared.Protocol;
 using Angor.Shared.Services;
 using Angor.Shared.Utilities;
 using Blockcore.Consensus.ScriptInfo;
@@ -198,7 +199,7 @@ public class WalletOperations : IWalletOperations
         var changeAmount = totalAvailable - outputsTotal - totalFee;
         
         // Add change output if above dust threshold
-        if (changeAmount > 294) // Dust threshold
+        if (changeAmount > ProtocolConstants.DustThresholdSats)
         {
             clonedTransaction.AddOutput(Money.Satoshis(changeAmount), 
                 BitcoinAddress.Create(changeAddress, network).ScriptPubKey);
@@ -268,7 +269,7 @@ public class WalletOperations : IWalletOperations
         totalSats -= totalFee;
 
         // Handle cases where change is below "dust threshold" for SegWit
-        if (totalSats <= 294)
+        if (totalSats <= ProtocolConstants.DustThresholdSats)
         {
             // Absorb small change into the transaction fee
             changeOutput.Value = Money.Zero;
@@ -416,7 +417,7 @@ public class WalletOperations : IWalletOperations
         }
         catch (NotSupportedException ex)
         {
-            Console.WriteLine("Exception occurred: {0}", ex);
+            _logger.LogError(ex, "Failed to derive extended key from mnemonic");
 
             if (ex.Message == "Unknown")
                 throw new Exception("Please make sure you enter valid mnemonic words.");
@@ -465,7 +466,7 @@ public class WalletOperations : IWalletOperations
         }
         catch (NotSupportedException ex)
         {
-            Console.WriteLine("Exception occurred: {0}", ex.ToString());
+            _logger.LogError(ex, "Failed to derive extended key from mnemonic");
 
             if (ex.Message == "Unknown")
                 throw new Exception("Please make sure you enter valid mnemonic words.");
