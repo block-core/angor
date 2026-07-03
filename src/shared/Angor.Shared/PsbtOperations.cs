@@ -209,7 +209,7 @@ public class PsbtOperations : IPsbtOperations
 
         var psbt = NBitcoin.PSBT.Parse(psbtData.PsbtHex, nbitcoinNetwork);
 
-        ExtKey extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
+        ExtKey extendedKey = walletWords.GetOrDeriveExtKey(_hdOperations);
 
         var nbitcoinExtendedKey = NBitcoin.ExtKey.CreateFromBytes(extendedKey.ToBytes(network.Consensus.ConsensusFactory));
 
