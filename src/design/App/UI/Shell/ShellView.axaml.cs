@@ -406,6 +406,49 @@ public partial class ShellView : UserControl
                 });
             });
 
+        // ── Toast severity styling (colour) and close cross ──
+        // Icon glyph + colours are bound in XAML (glyph → ToastIconGlyph, icon Foreground →
+        // #ToastText.Foreground) to avoid referencing the Projektanker Icon CLR type here.
+        var toastText = this.FindControl<TextBlock>("ToastText");
+        var toastCloseButton = this.FindControl<Button>("ToastCloseButton");
+
+        if (toastCloseButton != null)
+            toastCloseButton.Click += (_, _) => vm.HideToast();
+
+        object? successResource = null;
+        Application.Current?.TryGetResource("ToastBackground", Application.Current.ActualThemeVariant, out successResource);
+        IBrush successBg = successResource as IBrush ?? new SolidColorBrush(Color.Parse("#1F7A4D"));
+
+        vm.WhenAnyValue(x => x.ToastSeverity)
+            .Subscribe(severity =>
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    IBrush bg;
+                    IBrush fg;
+                    switch (severity)
+                    {
+                        case ToastSeverity.Warning:
+                        case ToastSeverity.Error:
+                            // Yellow, dark text — visible but non-aggressive (not red).
+                            bg = new SolidColorBrush(Color.Parse("#FACC15"));
+                            fg = new SolidColorBrush(Color.Parse("#1A1A1A"));
+                            break;
+                        case ToastSeverity.Info:
+                            bg = new SolidColorBrush(Color.Parse("#334155"));
+                            fg = Brushes.White;
+                            break;
+                        default:
+                            bg = successBg;
+                            fg = Brushes.White;
+                            break;
+                    }
+
+                    toastBorder.Background = bg;
+                    if (toastText != null) toastText.Foreground = fg;
+                });
+            });
+
         // ── Mobile: SectionPanel replaces ContentControl to avoid detach/reattach ──
         // On mobile, Avalonia's ContentControl content swap costs ~250ms per tab
         // switch due to logical tree detach+attach+measure+arrange. SectionPanel

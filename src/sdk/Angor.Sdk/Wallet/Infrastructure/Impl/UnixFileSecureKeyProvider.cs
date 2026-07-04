@@ -7,15 +7,16 @@ using CSharpFunctionalExtensions;
 namespace Angor.Sdk.Wallet.Infrastructure.Impl;
 
 /// <summary>
-/// Linux ISecureKeyProvider that stores wallet encryption keys in a file with
-/// owner-only permissions (chmod 600). A PIN-based UI layer can be added later
-/// for additional protection.
+/// Unix (Linux and macOS) ISecureKeyProvider that stores wallet encryption keys
+/// in a file with owner-only permissions (chmod 600). A PIN-based UI layer can be
+/// added later for additional protection. macOS can move to a Keychain-backed
+/// provider in the future without changing this contract.
 /// </summary>
-public class LinuxSecureKeyProvider : ISecureKeyProvider
+public class UnixFileSecureKeyProvider : ISecureKeyProvider
 {
     private readonly string _filePath;
 
-    public LinuxSecureKeyProvider(IApplicationStorage storage, ProfileContext profileContext)
+    public UnixFileSecureKeyProvider(IApplicationStorage storage, ProfileContext profileContext)
     {
         var directory = storage.GetProfileDirectory(profileContext.AppName, profileContext.ProfileName);
         _filePath = Path.Combine(directory, "wallet-keys.json");

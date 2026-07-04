@@ -11,5 +11,6 @@ public interface IRelaySubscriptionsHandling
     bool RelaySubscriptionAdded(string subscriptionKey);
     bool TryAddRelaySubscription(string subscriptionKey, IDisposable subscription, bool keepActive = false);
     void CloseSubscription(string subscriptionKey);
+    void DisposeLocalSubscription(string subscriptionKey);
     void Dispose();
 }

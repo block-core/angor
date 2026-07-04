@@ -141,7 +141,8 @@ public partial class MyProjectsView : UserControl, ISectionView
             _myProjectsSidebar.Background = null;
             _myProjectsSidebar.BorderThickness = new Avalonia.Thickness(0);
             _myProjectsSidebar.BoxShadow = new Avalonia.Media.BoxShadows(default);
-            _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.PaddingProperty);
+            // Explicit (not ClearValue) so the literal XAML padding isn't reset to 0.
+            _myProjectsSidebar.Padding = new Avalonia.Thickness(24);
 
             Grid.SetColumn(_myProjectsContent, 0);
             Grid.SetRow(_myProjectsContent, 1);
@@ -160,11 +161,13 @@ public partial class MyProjectsView : UserControl, ISectionView
             Grid.SetRow(_myProjectsSidebar, 0);
             _myProjectsSidebar.Margin = new Avalonia.Thickness(0, 0, columnGap, 0);
             _myProjectsSidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch;
-            // Restore card styling — clear local overrides so XAML DynamicResource values take effect
+            // Restore card styling. ClearValue works for DynamicResource-bound properties
+            // (Background, BoxShadow), but reverts literal XAML values to the type default
+            // (0) — so Padding and BorderThickness must be set back explicitly, not cleared.
             _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.BackgroundProperty);
-            _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.BorderThicknessProperty);
             _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.BoxShadowProperty);
-            _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.PaddingProperty);
+            _myProjectsSidebar.BorderThickness = new Avalonia.Thickness(1);
+            _myProjectsSidebar.Padding = new Avalonia.Thickness(24);
 
             Grid.SetColumn(_myProjectsContent, 1);
             Grid.SetRow(_myProjectsContent, 0);
@@ -312,10 +315,10 @@ public partial class MyProjectsView : UserControl, ISectionView
             .DisposeWith(_subscriptions!);
     }
 
-    private void OnToastRequested(string message)
+    private void OnToastRequested(string message, ToastSeverity severity)
     {
         var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
-        shellVm?.ShowToast(message);
+        shellVm?.ShowToast(message, severity);
     }
 
     protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
@@ -397,6 +400,17 @@ public partial class MyProjectsView : UserControl, ISectionView
         var showManage = vm.SelectedManageProject != null;
         var showEdit = vm.SelectedEditProject != null;
 
+        // Single authoritative place that resolves panel visibility with a fixed
+        // priority (wizard > manage > edit > list/empty). Each panel also gets
+        // toggled by its own subscription, but those only react to one property —
+        // so opening the wizard while Edit Profile was open left both visible and
+        // overlapping. Reconciling all panels here guarantees exactly one shows.
+        if (CreateWizardPanel != null)
+            CreateWizardPanel.IsVisible = showWizard;
+        if (ManageProjectPanel != null)
+            ManageProjectPanel.IsVisible = !showWizard && showManage;
+        if (EditProfilePanel != null)
+            EditProfilePanel.IsVisible = !showWizard && !showManage && showEdit;
         if (EmptyStatePanel != null)
             EmptyStatePanel.IsVisible = !showWizard && !showManage && !showEdit && !vm.HasProjects;
         if (ProjectListPanel != null)
@@ -491,6 +505,11 @@ public partial class MyProjectsView : UserControl, ISectionView
 
     private async void OpenCreateWizard(MyProjectsViewModel vm)
     {
+        // Close any open Manage/Edit detail first so the wizard opens on a clean
+        // screen instead of rendering on top of them (overlapping pages bug).
+        vm.SelectedEditProject = null;
+        vm.SelectedManageProject = null;
+
         CreateProjectViewModel wvm = vm.CreateProjectVm;
         // Only reset when there is no in-progress data: fresh start or after a successful deploy.
         if (!wvm.HasInProgressData)

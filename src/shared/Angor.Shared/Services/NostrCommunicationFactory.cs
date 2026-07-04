@@ -193,7 +193,15 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
     public bool MonitoringEoseReceivedOnSubscription(string subscription)
     {
         _logger.LogDebug($"Started monitoring subscription {subscription}");
-        return _eoseCalledOnSubscriptionClients.TryAdd(subscription, GetAllConnectedRelayNames());
+        var relayNames = GetAllConnectedRelayNames();
+        if (_eoseCalledOnSubscriptionClients.TryAdd(subscription, relayNames))
+            return true;
+        
+        // Subscription already being monitored — replace with a fresh relay set
+        // so a repeated refresh gets a current snapshot of connected relays.
+        _eoseCalledOnSubscriptionClients[subscription] = relayNames;
+        _logger.LogDebug($"Replaced stale EOSE tracking for subscription {subscription}");
+        return false;
     }
     
     public void ClearEoseReceivedOnSubscriptionMonitoring(string subscription)
@@ -245,7 +253,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         var nostrCommunicator = new NostrWebsocketCommunicator(new Uri(uri))
         {
             Name = relayName,
-            ReconnectTimeout = null //TODO need to check what is the actual best time to set here
+            ReconnectTimeout = TimeSpan.FromSeconds(30)
         };
 
         _serviceSubscriptions.Add(nostrCommunicator.DisconnectionHappened.Subscribe(e =>

@@ -89,10 +89,8 @@ public static class CompositionRoot
         // Platform-specific secure key storage
         if (OperatingSystem.IsWindows())
             services.AddSingleton<ISecureKeyProvider, DpapiSecureKeyProvider>();
-        else if (OperatingSystem.IsLinux())
-            services.AddSingleton<ISecureKeyProvider, LinuxSecureKeyProvider>();
-        else if (OperatingSystem.IsMacOS())
-            services.AddSingleton<ISecureKeyProvider, LinuxSecureKeyProvider>(); // Fallback for macOS
+        else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+            services.AddSingleton<ISecureKeyProvider, UnixFileSecureKeyProvider>();
         else
             throw new PlatformNotSupportedException("No ISecureKeyProvider implementation available for this platform.");
 

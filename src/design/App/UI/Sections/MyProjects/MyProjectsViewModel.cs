@@ -5,9 +5,11 @@ using System.Threading;
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
+using Angor.Sdk.Funding.Shared;
 using App.UI.Sections.MyProjects.EditProfile;
 using App.UI.Shared;
 using App.UI.Shared.Services;
+using App.UI.Shell;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 
@@ -62,7 +64,7 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
     private int _loadGeneration;
 
     /// <summary>Raised when the VM wants to show a transient toast notification.</summary>
-    public event Action<string>? ToastRequested;
+    public event Action<string, ToastSeverity>? ToastRequested;
 
     /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
     public string CurrencySymbol => _currencyService.Symbol;
@@ -130,6 +132,7 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
             var loadedProjects = await Task.Run(async () =>
             {
                 var projects = new List<MyProjectItemViewModel>();
+                var statsTasks = new List<Task>();
 
                 foreach (var wallet in wallets)
                 {
@@ -146,7 +149,7 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
                             _ => "investment"
                         };
 
-                        projects.Add(new MyProjectItemViewModel
+                        var item = new MyProjectItemViewModel
                         {
                             Name = dto.Name ?? "Untitled Project",
                             Description = dto.ShortDescription ?? "",
@@ -160,10 +163,18 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
                             LogoUrl = dto.Avatar?.ToString(),
                             ProjectIdentifier = dto.Id?.Value ?? "",
                             OwnerWalletId = wallet.Id.Value
-                        });
+                        };
+                        projects.Add(item);
+
+                        // GetFounderProjects only returns project metadata — fetch live
+                        // funding stats (raised / investor count / progress) from the
+                        // indexer so the cards don't show 0/empty. Run in parallel.
+                        if (!string.IsNullOrEmpty(item.ProjectIdentifier))
+                            statsTasks.Add(PopulateProjectStatsAsync(item, targetBtc));
                     }
                 }
 
+                await Task.WhenAll(statsTasks);
                 return projects;
             });
 
@@ -180,6 +191,7 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "LoadFounderProjectsAsync failed");
+            ToastRequested?.Invoke("We couldn't load your projects. Use Scan for Projects to try again.", ToastSeverity.Error);
         }
         finally
         {
@@ -188,6 +200,30 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
                 IsLoading = false;
                 IsInitialLoad = false;
             }
+        }
+    }
+
+    /// <summary>
+    /// Fetch funding statistics for a single founder project and populate the
+    /// card's raised amount, investor count, and progress percentage.
+    /// </summary>
+    private async Task PopulateProjectStatsAsync(MyProjectItemViewModel item, double targetBtc)
+    {
+        try
+        {
+            var statsResult = await _projectAppService.GetProjectStatistics(new ProjectId(item.ProjectIdentifier));
+            if (statsResult.IsFailure) return;
+
+            var stats = statsResult.Value;
+            var raisedBtc = (double)stats.TotalInvested.ToUnitBtc();
+
+            item.Raised = raisedBtc.ToString("F8", CultureInfo.InvariantCulture);
+            item.InvestorCount = stats.TotalInvestors ?? 0;
+            item.Progress = targetBtc > 0 ? Math.Min(100, raisedBtc / targetBtc * 100) : 0;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to load stats for founder project {ProjectId}", item.ProjectIdentifier);
         }
     }
 
@@ -207,8 +243,9 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
         try
         {
             var wallets = _walletContext.Wallets.ToList();
-            await Task.Run(async () =>
+            var errors = await Task.Run(async () =>
             {
+                var scanErrors = new List<string>();
                 foreach (var wallet in wallets)
                 {
                     // ScanFounderProjects checks all 15 derived key slots,
@@ -218,14 +255,19 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
                     {
                         _logger.LogError("ScanFounderProjects failed for wallet {WalletId}: {Error}",
                             wallet.Id.Value, result.Error);
+                        scanErrors.Add(result.Error);
                     }
                 }
+                return scanErrors;
             });
+
+            if (errors.Count > 0)
+                ToastRequested?.Invoke("We couldn't scan some wallets for your projects. Check your connection and try again.", ToastSeverity.Error);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "ScanForProjectsAsync threw an unexpected exception");
-            ToastRequested?.Invoke("Failed to scan for projects. Please try again.");
+            ToastRequested?.Invoke("We couldn't scan for your projects. Please try again.", ToastSeverity.Error);
         }
         finally
         {

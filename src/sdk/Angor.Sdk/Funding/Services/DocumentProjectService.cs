@@ -228,13 +228,31 @@ public class DocumentProjectService(
 
     private async Task<Result<IEnumerable<ProjectInfo>>> ProjectInfos(IEnumerable<string> eventIds)
     {
+        var expectedIds = eventIds.ToHashSet();
+        var expectedCount = expectedIds.Count;
+
         var tcs = new TaskCompletionSource<List<ProjectInfo>>();
         var results = new List<ProjectInfo>();
+        var receivedIds = new HashSet<string>();
 
-        void OnNext(ProjectInfo info) => results.Add(info);
+        void OnNext(ProjectInfo info)
+        {
+            results.Add(info);
+
+            // Track by ProjectIdentifier to deduplicate across relays
+            if (info.ProjectIdentifier != null && receivedIds.Add(info.ProjectIdentifier))
+            {
+                // Complete early once we have info for all requested events
+                if (receivedIds.Count >= expectedCount)
+                {
+                    tcs.TrySetResult(results);
+                }
+            }
+        }
+
         void OnCompleted() => tcs.TrySetResult(results);
 
-        relayService.LookupProjectsInfoByEventIds<ProjectInfo>(OnNext, OnCompleted, eventIds.ToArray());
+        relayService.LookupProjectsInfoByEventIds<ProjectInfo>(OnNext, OnCompleted, expectedIds.ToArray());
 
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         cts.Token.Register(() => tcs.TrySetResult(results));
@@ -245,12 +263,30 @@ public class DocumentProjectService(
 
     private Task<Result<IEnumerable<ProjectMetadataWithNpub>>> ProjectMetadatas(IEnumerable<string> npubs)
     {
+        var npubSet = npubs.Where(x => x != null).ToHashSet();
+        var expectedCount = npubSet.Count;
+
         var projectMetadatas = Observable.Create<ProjectMetadataWithNpub>(observer =>
         {
+            var received = new HashSet<string>();
+
             relayService.LookupNostrProfileForNPub(
-                   (npub, nostrMetadata) => observer.OnNext(new ProjectMetadataWithNpub(npub, nostrMetadata)),
+                   (npub, nostrMetadata) =>
+                   {
+                       // Only emit distinct npubs (relays may send duplicates)
+                       if (received.Add(npub))
+                       {
+                           observer.OnNext(new ProjectMetadataWithNpub(npub, nostrMetadata));
+
+                           // Complete early once we have metadata for all requested npubs
+                           if (received.Count >= expectedCount)
+                           {
+                               observer.OnCompleted();
+                           }
+                       }
+                   },
                     observer.OnCompleted,
-                    npubs.Where(x => x != null).ToArray());
+                    npubSet.ToArray());
 
             return Disposable.Empty;
         }).Timeout(TimeSpan.FromSeconds(30));

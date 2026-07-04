@@ -39,7 +39,7 @@ namespace Angor.Shared.Services
         public void LookupProjectsInfoByEventIds<T>(Action<T> responseDataAction, Action? OnEndOfStreamAction,
             params string[] nostrEventIds)
         {
-            const string subscriptionName = "ProjectInfoLookups";
+            var subscriptionName = Guid.NewGuid().ToString().Replace("-", "");
 
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
 
@@ -324,6 +324,17 @@ namespace Angor.Shared.Services
                   if (ev?.Content == null || ev.Id == null)
                       return;
 
+                  // Kind 3030 is a draft/custom kind, not an officially-reserved Nostr event kind, so
+                  // other applications on shared public relays (e.g. relay.damus.io, nos.lol) can and do
+                  // reuse the same kind number for unrelated, non-JSON payloads. Skip those quietly
+                  // instead of logging a warning for every foreign event; only genuinely JSON-shaped
+                  // content that still fails to map to T is worth a warning.
+                  if (!LooksLikeJsonObject(ev.Content))
+                  {
+                      _logger.LogDebug("Skipping non-JSON content for Nostr event {EventId} (kind {Kind} reused by another application)", ev.Id, (int)Nip3030NostrKind);
+                      return;
+                  }
+
                   try
                   {
                       var projectInfo = _serializer.Deserialize<T>(ev.Content);
@@ -460,6 +471,18 @@ namespace Angor.Shared.Services
             nostrClient.Send(new NostrEventRequest(signed));
 
             return Task.FromResult(signed.Id);
+        }
+
+        /// <summary>
+        /// Cheaply checks whether content is shaped like a JSON object (starts with '{') without
+        /// attempting a full parse. Kind 3030 is not an officially-reserved Nostr event kind, so relays
+        /// can contain unrelated, non-JSON content published by other applications under the same kind
+        /// number; this lets us skip that noise without the cost/verbosity of a failed deserialization.
+        /// </summary>
+        internal static bool LooksLikeJsonObject(string content)
+        {
+            var span = content.AsSpan().Trim();
+            return span.Length > 0 && span[0] == '{';
         }
 
         private static NostrEvent GetNip3030NostrEvent(string content, string? projectIdentifier = null)

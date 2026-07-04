@@ -43,10 +43,12 @@ public class OneClickInvestInvoiceTest
         // ── Launch founder and investor app processes ──
         await using var founderHost = await TestProcessHost.LaunchAsync(FounderProfile);
         await founderHost.Client.WipeDataAsync();
+        await founderHost.Client.SwitchNetworkAsync("Angornet");
         await founderHost.Client.EnableDebugModeAsync();
 
         await using var investorHost = await TestProcessHost.LaunchAsync(InvestorProfile);
         await investorHost.Client.WipeDataAsync();
+        await investorHost.Client.SwitchNetworkAsync("Angornet");
         await investorHost.Client.EnableDebugModeAsync();
 
         // ════════════════════════════════════════════════════════════════

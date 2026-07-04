@@ -116,7 +116,7 @@ jobs:
           name: windows-installers
           path: artifacts/*.exe
 
-  # Build Linux packages (.deb, .AppImage) and macOS DMG (cross-compile)
+  # Build Linux packages (.deb, .AppImage, .rpm). macOS DMGs build natively in build-macos.
   build-linux:
     runs-on: ubuntu-latest
     needs: [prepare, test]
@@ -208,31 +208,112 @@ jobs:
           rm -rf squashfs-root
 
       
-      - name: Create macOS x64 .dmg (cross-compile)
-        run: |
-          dotnetpackager dmg from-project \
-            --project ${{ env.DESKTOP_PROJECT }} \
-            --arch x64 \
-            --output artifacts/Angor-${{ needs.prepare.outputs.version }}-osx-x64.dmg \
-            --application-name "${{ env.APP_NAME }}" \
-            --icon src/design/App.Desktop/icon.png
-
-      
-      - name: Create macOS arm64 .dmg (cross-compile)
-        run: |
-          dotnetpackager dmg from-project \
-            --project ${{ env.DESKTOP_PROJECT }} \
-            --arch arm64 \
-            --output artifacts/Angor-${{ needs.prepare.outputs.version }}-osx-arm64.dmg \
-            --application-name "${{ env.APP_NAME }}" \
-            --icon src/design/App.Desktop/icon.png
-
-      
-      - name: Upload Linux and macOS artifacts
+      - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: linux-macos-packages
+          name: linux-packages
           path: artifacts/*
+
+  # Build macOS DMGs natively on a macOS runner and ad-hoc sign them.
+  # Cross-compiling on Linux left the Mach-O binaries unsigned, which makes
+  # Apple Silicon report the app as "damaged and can't be opened". Building on
+  # macOS and ad-hoc signing (codesign -s -) produces a valid signature so the
+  # app launches behind the normal (bypassable) Gatekeeper prompt instead.
+  build-macos:
+    runs-on: macos-latest
+    needs: [prepare, test]
+    strategy:
+      matrix:
+        include:
+          - rid: osx-x64
+            arch: x64
+          - rid: osx-arm64
+            arch: arm64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Publish self-contained ${{ matrix.rid }}
+        run: |
+          dotnet publish ${{ env.DESKTOP_PROJECT }} \
+            -c Release -r ${{ matrix.rid }} --self-contained \
+            -p:Version=${{ needs.prepare.outputs.version }} \
+            -o publish-${{ matrix.rid }}
+
+      - name: Assemble, ad-hoc sign and pack .app into .dmg
+        run: |
+          set -euo pipefail
+          VERSION="${{ needs.prepare.outputs.version }}"
+          APP="Angor.app"
+          rm -rf "$APP" stage
+          mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources" stage
+
+          # Copy the published payload; drop .pdb debug symbols to slim the bundle.
+          cp -R publish-${{ matrix.rid }}/. "$APP/Contents/MacOS/"
+          find "$APP/Contents/MacOS" -name '*.pdb' -delete
+          cp src/design/App.Desktop/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+
+          cat > "$APP/Contents/Info.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleName</key><string>${{ env.APP_NAME }}</string>
+            <key>CFBundleDisplayName</key><string>${{ env.APP_NAME }}</string>
+            <key>CFBundleIdentifier</key><string>${{ env.APP_ID }}</string>
+            <key>CFBundleVersion</key><string>${VERSION}</string>
+            <key>CFBundleShortVersionString</key><string>${VERSION}</string>
+            <key>CFBundleExecutable</key><string>Angor2</string>
+            <key>CFBundleIconFile</key><string>AppIcon.icns</string>
+            <key>CFBundlePackageType</key><string>APPL</string>
+            <key>LSMinimumSystemVersion</key><string>11.0</string>
+            <key>NSHighResolutionCapable</key><true/>
+          </dict>
+          </plist>
+          PLIST
+
+          chmod +x "$APP/Contents/MacOS/Angor2"
+
+          # .NET needs JIT + executable memory. Under hardened runtime
+          # (--options runtime) the kernel blocks that unless these entitlements
+          # are present, otherwise the app dies at launch with
+          # "Failed to create CoreCLR, HRESULT: 0x80070008".
+          cat > entitlements.plist <<'ENT'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>com.apple.security.cs.allow-jit</key><true/>
+            <key>com.apple.security.cs.allow-unsigned-executable-memory</key><true/>
+            <key>com.apple.security.cs.disable-library-validation</key><true/>
+            <key>com.apple.security.cs.allow-dyld-environment-variables</key><true/>
+          </dict>
+          </plist>
+          ENT
+
+          # Ad-hoc sign (no Apple Developer ID needed). --options runtime keeps
+          # the hardened-runtime flag set so the same bundle is notarizable later.
+          codesign --force --deep --options runtime --entitlements entitlements.plist --sign - "$APP"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+
+          # Layout the disk image with an /Applications drag target.
+          cp -R "$APP" stage/
+          ln -s /Applications stage/Applications
+          DMG="artifacts/Angor-${VERSION}-${{ matrix.rid }}.dmg"
+          mkdir -p artifacts
+          hdiutil create -volname "${{ env.APP_NAME }}" -srcfolder stage \
+            -ov -format UDZO "$DMG"
+          hdiutil verify "$DMG"
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-dmg-${{ matrix.arch }}
+          path: artifacts/*.dmg
 
   # Build Android APK (signed if keystore secrets are configured, unsigned otherwise)
   build-android:
@@ -375,7 +456,7 @@ jobs:
   # Create GitHub Release and upload all artifacts
   release:
     runs-on: ubuntu-latest
-    needs: [prepare, build-windows, build-linux, build-android, build-cli]
+    needs: [prepare, build-windows, build-linux, build-macos, build-android, build-cli]
     permissions:
       contents: write
     steps:

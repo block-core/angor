@@ -38,6 +38,9 @@ public partial class EditProfileView : UserControl
     private string _picContentType = "image/jpeg";
     private byte[]? _bannerFileBytes;
     private string _bannerContentType = "image/jpeg";
+    private byte[]? _mediaFileBytes;
+    private string _mediaContentType = "image/jpeg";
+    private bool _mediaIsVideo;
 
     // Cached blossom upload controls
     private TextBox? _picBlossomServerBox;
@@ -48,6 +51,11 @@ public partial class EditProfileView : UserControl
     private TextBlock? _bannerFileNameText;
     private TextBlock? _bannerStatusText;
     private Button? _bannerUploadBtn;
+    private TextBox? _mediaBlossomServerBox;
+    private TextBlock? _mediaFileNameText;
+    private TextBlock? _mediaStatusText;
+    private Button? _mediaUploadBtn;
+    private Button? _mediaBrowseBtn;
 
     // Tab content panels
     private StackPanel? _profileTabContent;
@@ -213,6 +221,17 @@ public partial class EditProfileView : UserControl
             bannerBrowseBtn.Click += (_, _) => _ = BrowseFileAsync(true);
         if (_bannerUploadBtn != null)
             _bannerUploadBtn.Click += (_, _) => _ = UploadToBlossomAsync(true);
+
+        // Wire Blossom upload controls for the Media gallery
+        _mediaBlossomServerBox = this.FindControl<TextBox>("MediaBlossomServerBox");
+        _mediaFileNameText = this.FindControl<TextBlock>("MediaFileNameText");
+        _mediaStatusText = this.FindControl<TextBlock>("MediaStatusText");
+        _mediaUploadBtn = this.FindControl<Button>("MediaUploadBtn");
+        _mediaBrowseBtn = this.FindControl<Button>("MediaBrowseBtn");
+        if (_mediaBrowseBtn != null)
+            _mediaBrowseBtn.Click += (_, _) => _ = BrowseMediaFileAsync();
+        if (_mediaUploadBtn != null)
+            _mediaUploadBtn.Click += (_, _) => _ = UploadMediaToBlossomAsync();
 
         // Wire remove buttons in item templates via bubbling
         AddHandler(Button.ClickEvent, OnItemButtonClick, RoutingStrategies.Bubble);
@@ -673,6 +692,135 @@ public partial class EditProfileView : UserControl
 
         var icon = this.FindControl<Optris.Icons.Avalonia.Icon>(iconName);
         var spinner = this.FindControl<Optris.Icons.Avalonia.Icon>(spinnerName);
+
+        if (icon != null) icon.IsVisible = !inProgress;
+        if (spinner != null) spinner.IsVisible = inProgress;
+    }
+
+    private async Task BrowseMediaFileAsync()
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel == null) return;
+
+        try
+        {
+            var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = "Select Media File",
+                AllowMultiple = false,
+                FileTypeFilter = new[]
+                {
+                    new FilePickerFileType("Media")
+                    {
+                        Patterns = new[] { "*.png", "*.jpg", "*.jpeg", "*.webp", "*.gif", "*.mp4", "*.webm", "*.mov" },
+                        MimeTypes = new[] { "image/png", "image/jpeg", "image/webp", "image/gif", "video/mp4", "video/webm" }
+                    }
+                }
+            });
+
+            if (files.Count == 0) return;
+
+            var file = files[0];
+            await using var stream = await file.OpenReadAsync();
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+
+            _mediaFileBytes = ms.ToArray();
+            var ext = Path.GetExtension(file.Name).ToLowerInvariant();
+            (_mediaContentType, _mediaIsVideo) = ext switch
+            {
+                ".png" => ("image/png", false),
+                ".gif" => ("image/gif", false),
+                ".webp" => ("image/webp", false),
+                ".mp4" => ("video/mp4", true),
+                ".webm" => ("video/webm", true),
+                ".mov" => ("video/quicktime", true),
+                _ => ("image/jpeg", false)
+            };
+
+            if (_mediaFileNameText != null)
+                _mediaFileNameText.Text = $"{file.Name} ({_mediaFileBytes.Length / 1024} KB)";
+            SetMediaStatus($"Ready to upload: {file.Name}", isError: false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Browse media file failed");
+        }
+    }
+
+    private async Task UploadMediaToBlossomAsync()
+    {
+        var serverUrl = _mediaBlossomServerBox?.Text?.Trim();
+
+        if (_mediaFileBytes == null || _mediaFileBytes.Length == 0)
+        {
+            SetMediaStatus("Please browse and select a file first.", isError: true);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(serverUrl) || !Uri.TryCreate(serverUrl, UriKind.Absolute, out _))
+        {
+            SetMediaStatus("Please enter a valid Blossom server URL.", isError: true);
+            return;
+        }
+
+        SetMediaUploadInProgress(true);
+        SetMediaStatus($"Uploading to {serverUrl}…", isError: false);
+
+        try
+        {
+            var nostrKeyHex = await GetNostrPrivateKeyHexAsync();
+            if (nostrKeyHex == null)
+            {
+                SetMediaStatus("No wallet selected or unable to access wallet keys.", isError: true);
+                return;
+            }
+
+            var result = await _blossomService.UploadAsync(serverUrl, _mediaFileBytes, _mediaContentType, nostrKeyHex);
+
+            if (result.IsFailure)
+            {
+                SetMediaStatus($"Upload failed: {result.Error}", isError: true);
+                return;
+            }
+
+            Vm?.AddUploadedMedia(result.Value, _mediaIsVideo ? "video" : "image");
+            SetMediaStatus("Upload successful — added to gallery.", isError: false);
+
+            _mediaFileBytes = null;
+            if (_mediaFileNameText != null) _mediaFileNameText.Text = "No file selected";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "UploadMediaToBlossomAsync failed");
+            SetMediaStatus($"Upload error: {ex.Message}", isError: true);
+        }
+        finally
+        {
+            SetMediaUploadInProgress(false);
+        }
+    }
+
+    private void SetMediaStatus(string message, bool isError)
+    {
+        if (_mediaStatusText == null) return;
+        _mediaStatusText.Text = message;
+        _mediaStatusText.IsVisible = !string.IsNullOrEmpty(message);
+        if (Application.Current?.Resources.TryGetResource(
+            isError ? "ErrorFieldText" : "TextMuted",
+            Avalonia.Styling.ThemeVariant.Default,
+            out var brush) == true && brush is Avalonia.Media.IBrush b)
+        {
+            _mediaStatusText.Foreground = b;
+        }
+    }
+
+    private void SetMediaUploadInProgress(bool inProgress)
+    {
+        if (_mediaUploadBtn != null) _mediaUploadBtn.IsEnabled = !inProgress;
+
+        var icon = this.FindControl<Optris.Icons.Avalonia.Icon>("MediaUploadIcon");
+        var spinner = this.FindControl<Optris.Icons.Avalonia.Icon>("MediaUploadSpinner");
 
         if (icon != null) icon.IsVisible = !inProgress;
         if (spinner != null) spinner.IsVisible = inProgress;

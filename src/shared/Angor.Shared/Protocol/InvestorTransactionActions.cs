@@ -136,7 +136,16 @@ public class InvestorTransactionActions : IInvestorTransactionActions
         transaction.Outputs[0].Value -= fee;
 
         // sign the inputs (replace fake WitScript with real one)
-        var key = new Key(investorPrivateKey.ToBytes());
+        var keyBytes = investorPrivateKey.ToBytes();
+        Key key;
+        try
+        {
+            key = new Key(keyBytes);
+        }
+        finally
+        {
+            System.Security.Cryptography.CryptographicOperations.ZeroMemory(keyBytes);
+        }
 
         int inputIndex = 0;
         foreach (var intput in transaction.Inputs)
@@ -332,7 +341,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
             var hash = nbitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs, execData);
 
-            _logger.LogInformation($"project={projectInfo.ProjectIdentifier}; investor-pubkey={key.PubKey.ToHex()}; stage={stageIndex}");
+            _logger.LogDebug("Signing recovery for project={ProjectId}, stage={Stage}", projectInfo.ProjectIdentifier, stageIndex);
 
             var investorSignature = key.SignTaprootKeySpend(hash, sigHash);
 
@@ -378,7 +387,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
             var result = pubkey.VerifySignature(hash, TaprootSignature.Parse(sig).SchnorrSignature);
 
-            _logger.LogInformation($"verifying sig for project={projectInfo.ProjectIdentifier}; success = {result}; founder-recovery-pubkey={projectInfo.FounderRecoveryKey}; stage={stageIndex}");
+            _logger.LogDebug("Signature verification for project={ProjectId}, stage={Stage}: {Result}", projectInfo.ProjectIdentifier, stageIndex, result);
 
             // if even one sig failed we fail all the validation
             if (result == false)

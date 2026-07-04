@@ -73,7 +73,16 @@ public class SeederTransactionActions : ISeederTransactionActions
             .Select(_ => _.TxOut)
             .ToArray();
 
-        var key = new Key(privateKey.ToBytes());
+        var keyBytes = privateKey.ToBytes();
+        Key key;
+        try
+        {
+            key = new Key(keyBytes);
+        }
+        finally
+        {
+            System.Security.Cryptography.CryptographicOperations.ZeroMemory(keyBytes);
+        }
         var sigHash = TaprootSigHash.Single | TaprootSigHash.AnyoneCanPay;
 
         for (var stageIndex = 0; stageIndex < projectInfo.Stages.Count; stageIndex++)
@@ -86,7 +95,7 @@ public class SeederTransactionActions : ISeederTransactionActions
             var execData = new TaprootExecutionData(stageIndex, tapScript.LeafHash) { SigHash = sigHash };
             var hash = nbitcoinRecoveryTransaction.GetSignatureHashTaproot(outputs, execData);
 
-            _logger.LogInformation($"project={projectInfo.ProjectIdentifier}; seeder-pubkey={key.PubKey.ToHex()}; stage={stageIndex}");
+            _logger.LogDebug("Signing recovery for project={ProjectId}, stage={Stage}", projectInfo.ProjectIdentifier, stageIndex);
 
             var investorSignature = key.SignTaprootKeySpend(hash, sigHash);
 

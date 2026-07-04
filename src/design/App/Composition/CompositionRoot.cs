@@ -1,5 +1,8 @@
 using Angor.Data.Documents.LiteDb.Extensions;
 using Angor.Sdk.Common;
+using Branta.Classes;
+using Branta.Enums;
+using Branta.V2.Extensions;
 using Angor.Sdk.Funding;
 using Angor.Sdk.Integration;
 using Angor.Sdk.Funding.Founder;
@@ -123,8 +126,8 @@ public static class CompositionRoot
         {
             if (OperatingSystem.IsWindows())
                 services.AddSingleton<ISecureKeyProvider, DpapiSecureKeyProvider>();
-            else if (OperatingSystem.IsLinux())
-                services.AddSingleton<ISecureKeyProvider, LinuxSecureKeyProvider>();
+            else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+                services.AddSingleton<ISecureKeyProvider, UnixFileSecureKeyProvider>();
             else
                 throw new PlatformNotSupportedException("No ISecureKeyProvider implementation available for this platform.");
         }
@@ -153,6 +156,11 @@ public static class CompositionRoot
         //   ANGOR_FAUCET_BASE_URL   e.g. http://localhost:48500
         //   ANGOR_FAUCET_SEND_PATH  e.g. api/send/{0}/{1}   (defaults to the bitcoin-custom-signet path)
         services.AddHttpClient();
+        services.ConfigureBrantaServices(new BrantaClientOptions
+        {
+            BaseUrl = BrantaServerBaseUrl.Production,
+            Privacy = PrivacyMode.Strict
+        });
         services.AddSingleton(ResolveFaucetOptions());
         services.AddSingleton<IFaucetService, HttpFaucetService>();
         services.AddSingleton<BlossomUploadService>();

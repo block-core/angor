@@ -118,15 +118,17 @@ public partial class DeployFlowViewModel : ReactiveObject
         PayWithWalletCommand.ThrownExceptions.Subscribe(ex =>
         {
             _logger.LogError(ex, "PayWithWalletCommand error");
-            DeployStatusText = $"Deployment error: {ex.Message}";
-            DeployErrorMessage = ex.Message;
+            _logger.LogError(ex, "Deploy: unexpected error");
+            DeployStatusText = "Deployment hit an unexpected error.";
+            DeployErrorMessage = "Something unexpected happened while deploying. No funds were moved. Please try again, or check the logs for details.";
         });
         PayViaInvoiceCommand = ReactiveCommand.CreateFromTask(PayViaInvoiceAsync);
         PayViaInvoiceCommand.ThrownExceptions.Subscribe(ex =>
         {
             _logger.LogError(ex, "PayViaInvoiceCommand error");
-            DeployStatusText = $"Deployment error: {ex.Message}";
-            DeployErrorMessage = ex.Message;
+            _logger.LogError(ex, "Deploy: unexpected error");
+            DeployStatusText = "Deployment hit an unexpected error.";
+            DeployErrorMessage = "Something unexpected happened while deploying. No funds were moved. Please try again, or check the logs for details.";
         });
 
         // Raise derived property notifications when screen changes
@@ -210,37 +212,52 @@ public partial class DeployFlowViewModel : ReactiveObject
     private async Task<Result> RunDeployStepsAsync(WalletId walletId)
     {
         if (ProjectData == null)
-            return Result.Failure("No project data available.");
+            return Result.Failure("We could not start deployment because the project draft was not available. Go back to Review & Deploy and try again.");
 
         // Step 1: Create project keys
         var keysResult = await _founderAppService.CreateProjectKeys(
             new CreateProjectKeys.CreateProjectKeysRequest(walletId));
         if (keysResult.IsFailure)
-            return Result.Failure($"Failed to create project keys: {keysResult.Error}");
+        {
+            _logger.LogError("Deploy: create project keys failed: {Error}", keysResult.Error);
+            return Result.Failure("We could not reserve project keys for this wallet. Refresh My Projects, unlock the wallet, and try again.");
+        }
 
         var projectSeed = keysResult.Value.ProjectSeedDto;
 
         // Step 2: Create Nostr profile
         var profileResult = await _projectAppService.CreateProjectProfile(walletId, projectSeed, ProjectData);
         if (profileResult.IsFailure)
-            return Result.Failure($"Failed to create profile: {profileResult.Error}");
+        {
+            _logger.LogError("Deploy: create project profile failed: {Error}", profileResult.Error);
+            return Result.Failure("We could not publish the project profile to the Nostr relays. Check your relay connection and try again.");
+        }
 
         // Step 3: Create project info
         var infoResult = await _projectAppService.CreateProjectInfo(walletId, ProjectData, projectSeed);
         if (infoResult.IsFailure)
-            return Result.Failure($"Failed to create project info: {infoResult.Error}");
+        {
+            _logger.LogError("Deploy: create project info failed: {Error}", infoResult.Error);
+            return Result.Failure("We could not publish the project details to the Nostr relays. Review the project details and try again.");
+        }
 
         // Step 4: Create blockchain transaction
         var txResult = await _projectAppService.CreateProject(
             walletId, SelectedFeeRate, ProjectData, infoResult.Value.EventId, projectSeed);
         if (txResult.IsFailure)
-            return Result.Failure($"Failed to create transaction: {txResult.Error}");
+        {
+            _logger.LogError("Deploy: create blockchain transaction failed: {Error}", txResult.Error);
+            return Result.Failure("We could not prepare the on-chain deployment transaction. Check your wallet balance, fee rate, and spendable funds, then try again.");
+        }
 
         // Step 5: Publish to blockchain
         var publishResult = await _founderAppService.SubmitTransactionFromDraft(
             new PublishFounderTransaction.PublishFounderTransactionRequest(txResult.Value.TransactionDraft));
         if (publishResult.IsFailure)
-            return Result.Failure($"Failed to publish: {publishResult.Error}");
+        {
+            _logger.LogError("Deploy: publish transaction failed: {Error}", publishResult.Error);
+            return Result.Failure("The deployment transaction was prepared, but the network rejected the broadcast. Please try again in a moment.");
+        }
 
         return Result.Success();
     }
@@ -283,8 +300,8 @@ public partial class DeployFlowViewModel : ReactiveObject
         if (SelectedWallet == null) return;
         if (ProjectData == null)
         {
-            DeployStatusText = "No project data available.";
-            DeployErrorMessage = "No project data available.";
+            DeployStatusText = "Project data missing.";
+            DeployErrorMessage = "We could not start deployment because the project draft was not available. Go back to Review & Deploy and try again.";
             return;
         }
 
@@ -307,8 +324,9 @@ public partial class DeployFlowViewModel : ReactiveObject
                 new CreateProjectKeys.CreateProjectKeysRequest(walletId));
             if (keysResult.IsFailure)
             {
-                DeployStatusText = $"Failed to create project keys: {keysResult.Error}";
-                DeployErrorMessage = keysResult.Error;
+                _logger.LogError("Deploy: create project keys failed: {Error}", keysResult.Error);
+                DeployStatusText = "Couldn't set up project keys.";
+                DeployErrorMessage = "We could not reserve project keys for this wallet. Refresh My Projects, unlock the wallet, and try again.";
                 IsDeploying = false;
                 return;
             }
@@ -320,8 +338,9 @@ public partial class DeployFlowViewModel : ReactiveObject
             var profileResult = await _projectAppService.CreateProjectProfile(walletId, projectSeed, ProjectData);
             if (profileResult.IsFailure)
             {
-                DeployStatusText = $"Failed to create profile: {profileResult.Error}";
-                DeployErrorMessage = profileResult.Error;
+                _logger.LogError("Deploy: create project profile failed: {Error}", profileResult.Error);
+                DeployStatusText = "Couldn't publish the project profile.";
+                DeployErrorMessage = "We could not publish the project profile to the Nostr relays. Check your relay connection and try again.";
                 IsDeploying = false;
                 return;
             }
@@ -331,8 +350,9 @@ public partial class DeployFlowViewModel : ReactiveObject
             var infoResult = await _projectAppService.CreateProjectInfo(walletId, ProjectData, projectSeed);
             if (infoResult.IsFailure)
             {
-                DeployStatusText = $"Failed to create project info: {infoResult.Error}";
-                DeployErrorMessage = infoResult.Error;
+                _logger.LogError("Deploy: create project info failed: {Error}", infoResult.Error);
+                DeployStatusText = "Couldn't publish the project details.";
+                DeployErrorMessage = "We could not publish the project details to the Nostr relays. Review the project details and try again.";
                 IsDeploying = false;
                 return;
             }
@@ -344,8 +364,9 @@ public partial class DeployFlowViewModel : ReactiveObject
             var txResult = await _projectAppService.CreateProject(walletId, SelectedFeeRate, ProjectData, infoEventId, projectSeed);
             if (txResult.IsFailure)
             {
-                DeployStatusText = $"Failed to create transaction: {txResult.Error}";
-                DeployErrorMessage = txResult.Error;
+                _logger.LogError("Deploy: create blockchain transaction failed: {Error}", txResult.Error);
+                DeployStatusText = "Couldn't prepare the transaction.";
+                DeployErrorMessage = "We could not prepare the on-chain deployment transaction. Check your wallet balance, fee rate, and spendable funds, then try again.";
                 IsDeploying = false;
                 return;
             }
@@ -358,8 +379,9 @@ public partial class DeployFlowViewModel : ReactiveObject
                 new PublishFounderTransaction.PublishFounderTransactionRequest(transactionDraft));
             if (publishResult.IsFailure)
             {
-                DeployStatusText = $"Failed to publish: {publishResult.Error}";
-                DeployErrorMessage = publishResult.Error;
+                _logger.LogError("Deploy: publish transaction failed: {Error}", publishResult.Error);
+                DeployStatusText = "Couldn't broadcast the transaction.";
+                DeployErrorMessage = "The deployment transaction was prepared, but the network rejected the broadcast. Please try again in a moment.";
                 IsDeploying = false;
                 return;
             }
@@ -369,8 +391,9 @@ public partial class DeployFlowViewModel : ReactiveObject
         }
         catch (Exception ex)
         {
-            DeployStatusText = $"Deployment error: {ex.Message}";
-            DeployErrorMessage = ex.Message;
+            _logger.LogError(ex, "Deploy: unexpected error");
+            DeployStatusText = "Deployment hit an unexpected error.";
+            DeployErrorMessage = "Something unexpected happened while deploying. No funds were moved. Please try again, or check the logs for details.";
         }
         finally
         {
@@ -403,8 +426,8 @@ public partial class DeployFlowViewModel : ReactiveObject
     {
         if (ProjectData == null)
         {
-            DeployStatusText = "No project data available.";
-            DeployErrorMessage = "No project data available.";
+            DeployStatusText = "Project data missing.";
+            DeployErrorMessage = "We could not start deployment because the project draft was not available. Go back to Review & Deploy and try again.";
             return;
         }
 
@@ -412,8 +435,8 @@ public partial class DeployFlowViewModel : ReactiveObject
         var wallet = Wallets.FirstOrDefault();
         if (wallet == null)
         {
-            DeployStatusText = "No wallet available for invoice monitoring.";
-            DeployErrorMessage = "No wallet available for invoice monitoring.";
+            DeployStatusText = "Wallet required.";
+            DeployErrorMessage = "We can't watch this invoice payment because no wallet is available. Create or unlock a wallet, then try again.";
             return;
         }
 
@@ -432,8 +455,9 @@ public partial class DeployFlowViewModel : ReactiveObject
                 new CreateProjectKeys.CreateProjectKeysRequest(walletId));
             if (keysResult.IsFailure)
             {
-                DeployStatusText = $"Failed to create project keys: {keysResult.Error}";
-                DeployErrorMessage = keysResult.Error;
+                _logger.LogError("Deploy: create project keys failed: {Error}", keysResult.Error);
+                DeployStatusText = "Couldn't set up project keys.";
+                DeployErrorMessage = "We could not reserve project keys for this wallet. Refresh My Projects, unlock the wallet, and try again.";
                 IsDeploying = false;
                 return;
             }
@@ -448,8 +472,9 @@ public partial class DeployFlowViewModel : ReactiveObject
             var profileResult = await _projectAppService.CreateProjectProfile(walletId, projectSeed, ProjectData);
             if (profileResult.IsFailure)
             {
-                DeployStatusText = $"Failed to create profile: {profileResult.Error}";
-                DeployErrorMessage = profileResult.Error;
+                _logger.LogError("Deploy: create project profile failed: {Error}", profileResult.Error);
+                DeployStatusText = "Couldn't publish the project profile.";
+                DeployErrorMessage = "We could not publish the project profile to the Nostr relays. Check your relay connection and try again.";
                 IsDeploying = false;
                 return;
             }
@@ -459,8 +484,9 @@ public partial class DeployFlowViewModel : ReactiveObject
             var infoResult = await _projectAppService.CreateProjectInfo(walletId, ProjectData, projectSeed);
             if (infoResult.IsFailure)
             {
-                DeployStatusText = $"Failed to create project info: {infoResult.Error}";
-                DeployErrorMessage = infoResult.Error;
+                _logger.LogError("Deploy: create project info failed: {Error}", infoResult.Error);
+                DeployStatusText = "Couldn't publish the project details.";
+                DeployErrorMessage = "We could not publish the project details to the Nostr relays. Review the project details and try again.";
                 IsDeploying = false;
                 return;
             }
@@ -472,8 +498,9 @@ public partial class DeployFlowViewModel : ReactiveObject
             var txResult = await _projectAppService.CreateProject(walletId, SelectedFeeRate, ProjectData, infoEventId, projectSeed);
             if (txResult.IsFailure)
             {
-                DeployStatusText = $"Failed to create transaction: {txResult.Error}";
-                DeployErrorMessage = txResult.Error;
+                _logger.LogError("Deploy: create blockchain transaction failed: {Error}", txResult.Error);
+                DeployStatusText = "Couldn't prepare the transaction.";
+                DeployErrorMessage = "We could not prepare the on-chain deployment transaction. Check your wallet balance, fee rate, and spendable funds, then try again.";
                 IsDeploying = false;
                 return;
             }
@@ -484,8 +511,9 @@ public partial class DeployFlowViewModel : ReactiveObject
                 new PublishFounderTransaction.PublishFounderTransactionRequest(txResult.Value.TransactionDraft));
             if (publishResult.IsFailure)
             {
-                DeployStatusText = $"Failed to publish: {publishResult.Error}";
-                DeployErrorMessage = publishResult.Error;
+                _logger.LogError("Deploy: publish transaction failed: {Error}", publishResult.Error);
+                DeployStatusText = "Couldn't broadcast the transaction.";
+                DeployErrorMessage = "The deployment transaction was prepared, but the network rejected the broadcast. Please try again in a moment.";
                 IsDeploying = false;
                 return;
             }
@@ -495,13 +523,15 @@ public partial class DeployFlowViewModel : ReactiveObject
         }
         catch (OperationCanceledException)
         {
-            DeployStatusText = "Invoice monitoring cancelled.";
-            DeployErrorMessage = "Invoice monitoring cancelled.";
+            // Cancellation is neutral, not an error — clear the banner.
+            DeployStatusText = "Invoice monitoring stopped.";
+            DeployErrorMessage = null;
         }
         catch (Exception ex)
         {
-            DeployStatusText = $"Deployment error: {ex.Message}";
-            DeployErrorMessage = ex.Message;
+            _logger.LogError(ex, "Deploy: unexpected error");
+            DeployStatusText = "Deployment hit an unexpected error.";
+            DeployErrorMessage = "Something unexpected happened while deploying. No funds were moved. Please try again, or check the logs for details.";
         }
         finally
         {

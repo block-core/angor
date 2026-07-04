@@ -99,7 +99,7 @@ public static class PublishAndStoreInvestorTransaction
                             ProjectIdentifier = projectId,
                             UnfundedReleaseAddress = null, // No penalty path for direct investments
                             RequestEventId = null, // No founder approval request for investments below threshold
-                            RequestEventTime = null,
+                            RequestEventTime = DateTime.UtcNow, // record publish time so the transaction date is available
                             InvestedAmountSats = investmentDraft.InvestedAmount.Sats,
                         };
                     }

@@ -238,8 +238,8 @@ public partial class ManageProjectModalsView : UserControl
             var feeRate = await AskForFeeRateAsync();
             if (feeRate == null) return; // User cancelled — claim modal stays visible
 
-            Vm.ShowClaimModal = false;
             Vm.IsClaiming = true;
+            Vm.ShowClaimModal = false;
             var success = await Vm.ClaimStageFundsAsync(stage.Number, selectedTxs, feeRate.Value);
             Vm.IsClaiming = false;
 

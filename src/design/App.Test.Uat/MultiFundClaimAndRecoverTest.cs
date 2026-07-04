@@ -31,7 +31,7 @@ public class MultiFundClaimAndRecoverTest
         var projectName = $"Multi Fund {runId}";
         var bannerImageUrl = $"https://picsum.photos/seed/{Guid.NewGuid().ToString("N")[..8]}/320/200";
         var profileImageUrl = $"https://picsum.photos/seed/{Guid.NewGuid().ToString("N")[..8]}/100/100";
-        // Use today's day-of-month as MonthlyPayoutDay so stage 0 = today (immediately claimable)
+        // Use today's day-of-month as MonthlyPayoutDay so stage 0 is immediately claimable
         var todayDay = DateTime.UtcNow.Day;
         var projectAbout = $"{TestName} run {runId}. Monthly/6, payout day {todayDay}, 4 investors, all recovery paths.";
 
@@ -41,6 +41,7 @@ public class MultiFundClaimAndRecoverTest
         // ── Founder: create wallet + fund project (monthly, 6 installments, past start date) ──
         await using var founderHost = await TestProcessHost.LaunchAsync(FounderProfile);
         await founderHost.Client.WipeDataAsync();
+        await founderHost.Client.SwitchNetworkAsync("Angornet");
         await founderHost.Client.EnableDebugModeAsync();
 
         var founderWallet = await founderHost.Client.CreateWalletAndFundAsync(new CreateWalletAndFundRequest
@@ -61,6 +62,9 @@ public class MultiFundClaimAndRecoverTest
             PayoutFrequency = "Monthly",
             InstallmentCount = 6,
             MonthlyPayoutDay = todayDay,
+            // Use yesterday as start date so below-threshold recovery timelocks (which use
+            // StartDate as ExpiryDateOverride) are safely in the past regardless of signet MTP lag.
+            StartDate = DateTime.UtcNow.AddDays(-1).ToString("yyyy-MM-dd"),
             RunId = runId,
         });
         createdProject.Success.Should().BeTrue(createdProject.Error);
@@ -70,21 +74,25 @@ public class MultiFundClaimAndRecoverTest
         // ── Launch all 4 investor processes ──
         await using var investor1Host = await TestProcessHost.LaunchAsync(Investor1Profile);
         await investor1Host.Client.WipeDataAsync();
+        await investor1Host.Client.SwitchNetworkAsync("Angornet");
         var wallet1 = await investor1Host.Client.CreateWalletAndFundAsync(new CreateWalletAndFundRequest { ProfileName = Investor1Profile });
         wallet1.Success.Should().BeTrue(wallet1.Error);
 
         await using var investor2Host = await TestProcessHost.LaunchAsync(Investor2Profile);
         await investor2Host.Client.WipeDataAsync();
+        await investor2Host.Client.SwitchNetworkAsync("Angornet");
         var wallet2 = await investor2Host.Client.CreateWalletAndFundAsync(new CreateWalletAndFundRequest { ProfileName = Investor2Profile });
         wallet2.Success.Should().BeTrue(wallet2.Error);
 
         await using var investor3Host = await TestProcessHost.LaunchAsync(Investor3Profile);
         await investor3Host.Client.WipeDataAsync();
+        await investor3Host.Client.SwitchNetworkAsync("Angornet");
         var wallet3 = await investor3Host.Client.CreateWalletAndFundAsync(new CreateWalletAndFundRequest { ProfileName = Investor3Profile });
         wallet3.Success.Should().BeTrue(wallet3.Error);
 
         await using var investor4Host = await TestProcessHost.LaunchAsync(Investor4Profile);
         await investor4Host.Client.WipeDataAsync();
+        await investor4Host.Client.SwitchNetworkAsync("Angornet");
         var wallet4 = await investor4Host.Client.CreateWalletAndFundAsync(new CreateWalletAndFundRequest { ProfileName = Investor4Profile });
         wallet4.Success.Should().BeTrue(wallet4.Error);
 

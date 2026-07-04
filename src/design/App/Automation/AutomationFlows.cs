@@ -69,17 +69,39 @@ public static class AutomationFlows
                 seedWords = await CreateWalletViaGenerateAsync(window);
             }
 
-            var walletId = await Dispatcher.UIThread.InvokeAsync(() =>
+            // Wait for the wallet to appear in SeedGroups. The RebuildSeedGroups action is posted
+            // to the dispatcher via WalletsUpdated → Post(RebuildSeedGroups), so we may need
+            // to wait a few UI cycles for it to execute.
+            string? walletId = null;
+            var walletDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(15);
+            while (DateTime.UtcNow < walletDeadline)
             {
-                var allWallets = fundsVm.SeedGroups.SelectMany(g => g.Wallets).ToList();
-                // Return the newly created wallet (not in existing set), or the first one
-                var newWallet = allWallets.FirstOrDefault(w => !existingIds.Contains(w.Id.Value));
-                return (newWallet ?? allWallets.FirstOrDefault())?.Id.Value;
-            });
+                walletId = await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    // Flush any pending UI jobs (e.g. RebuildSeedGroups posted via WalletsUpdated)
+                    Dispatcher.UIThread.RunJobs();
+                    var allWallets = fundsVm.SeedGroups.SelectMany(g => g.Wallets).ToList();
+                    // Return the newly created wallet (not in existing set), or the first one
+                    var newWallet = allWallets.FirstOrDefault(w => !existingIds.Contains(w.Id.Value));
+                    return (newWallet ?? allWallets.FirstOrDefault())?.Id.Value;
+                });
+
+                if (!string.IsNullOrWhiteSpace(walletId))
+                    break;
+
+                await Task.Delay(300);
+            }
 
             if (string.IsNullOrWhiteSpace(walletId))
             {
-                return new CreateWalletAndFundResponse { Success = false, Error = "Wallet id not found after wallet creation" };
+                var groupCount = await Dispatcher.UIThread.InvokeAsync(() => fundsVm.SeedGroups.Count);
+                var walletCount = await Dispatcher.UIThread.InvokeAsync(() =>
+                    fundsVm.SeedGroups.SelectMany(g => g.Wallets).Count());
+                return new CreateWalletAndFundResponse
+                {
+                    Success = false,
+                    Error = $"Wallet id not found after wallet creation (SeedGroups={groupCount}, Wallets={walletCount}, hasWallet={hasWallet}, forceCreate={req.ForceCreate})"
+                };
             }
 
             if (!req.SkipFunding)
@@ -400,7 +422,7 @@ public static class AutomationFlows
 
             // Step 4: Target amount + invest end date (set via CalendarDatePicker control)
             await TypeTextByNameAsync(window, "InvestTargetAmountInput", "1.0");
-            await SetCalendarDateByNameAsync(window, "InvestEndDatePicker", DateTime.UtcNow.AddMonths(3));
+            await SetCalendarDateByNameAsync(window, "InvestEndDatePicker", DateTime.UtcNow.AddDays(-90));
             // Also set VM property directly to guard against binding race conditions
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
@@ -525,24 +547,40 @@ public static class AutomationFlows
                 await ClickFundPatternByStageCountAsync(window, req.TargetPatternStageCount);
             }
 
-            // Type investment amount into AmountInput TextBox, then click SubmitButton
-            await TypeTextByNameAsync(window, "AmountInput", req.AmountBtc);
-            await ClickByNameAsync(window, "SubmitButton");
-
-            // Wait for payment flow modal to appear (SubmitButton triggers shell modal)
-            await Task.Delay(500);
-
-            // Wait for PaymentFlow VM to be created
-            var pfDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
-            while (DateTime.UtcNow < pfDeadline)
+            // Type investment amount into AmountInput TextBox, then click SubmitButton.
+            // Retry if the UI stays on InvestForm (e.g. CanSubmit was false due to binding
+            // race condition where the amount wasn't yet propagated to the VM).
+            var maxSubmitAttempts = 5;
+            for (var submitAttempt = 1; submitAttempt <= maxSubmitAttempts; submitAttempt++)
             {
-                var ready = await Dispatcher.UIThread.InvokeAsync(() =>
+                await TypeTextByNameAsync(window, "AmountInput", req.AmountBtc);
+                await ClickByNameAsync(window, "SubmitButton");
+
+                // Wait for PaymentFlow VM to be created (SubmitButton triggers shell modal)
+                var pfDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(15);
+                while (DateTime.UtcNow < pfDeadline)
                 {
-                    Dispatcher.UIThread.RunJobs();
-                    return investVm.PaymentFlow != null;
-                });
-                if (ready) break;
-                await Task.Delay(200);
+                    var ready = await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        Dispatcher.UIThread.RunJobs();
+                        return investVm.PaymentFlow != null;
+                    });
+                    if (ready) break;
+                    await Task.Delay(200);
+                }
+
+                if (investVm.PaymentFlow != null)
+                    break;
+
+                // Still on InvestForm — the submit likely didn't advance. Retry.
+                var screen = await Dispatcher.UIThread.InvokeAsync(() => investVm.CurrentScreen);
+                Log(req.ProjectIdentifier, $"Submit attempt {submitAttempt}/{maxSubmitAttempts} did not advance (screen={screen}); retrying...");
+                await Task.Delay(1000);
+            }
+
+            if (investVm.PaymentFlow == null)
+            {
+                return new InvestResponse { Success = false, Error = "Payment flow did not appear after submitting investment amount" };
             }
 
             var maxPayAttempts = 3;

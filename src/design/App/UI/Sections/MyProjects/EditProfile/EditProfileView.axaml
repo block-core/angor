@@ -85,6 +85,42 @@
             <Setter Property="FontSize" Value="14" />
         </Style>
 
+        <!-- ═══ Consistent sizing for add-row fields, dropdowns and buttons ═══ -->
+        <!-- 44px control height matches the app's standard input/button height so
+             the dropdown lines up with the text field and buttons aren't tiny. -->
+        <Style Selector="TextBox.RowField">
+            <Setter Property="Height" Value="44" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style Selector="ComboBox.RowField">
+            <Setter Property="Height" Value="44" />
+            <Setter Property="VerticalAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="12,0" />
+        </Style>
+        <Style Selector="Button.RowAction">
+            <Setter Property="Height" Value="44" />
+            <Setter Property="MinWidth" Value="104" />
+            <Setter Property="Padding" Value="18,0" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <!-- Secondary (outline) variant — e.g. Browse… -->
+        <Style Selector="Button.RowSecondary">
+            <Setter Property="Background" Value="{DynamicResource SurfaceLow}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
+        <Style Selector="Button.RowSecondary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+        </Style>
+
         <!-- Remove button for list items -->
         <Style Selector="Button.RemoveBtn">
             <Setter Property="Background" Value="Transparent" />
@@ -416,15 +452,13 @@
                                         <DockPanel>
                                             <Button Name="PicUploadBtn"
                                                     DockPanel.Dock="Right"
-                                                    Classes="Primary"
-                                                    Padding="10,7"
-                                                    Margin="6,0,0,0"
-                                                    FontSize="13"
+                                                    Classes="Primary RowAction"
+                                                    Margin="8,0,0,0"
                                                     Cursor="Hand">
-                                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
                                                     <i:Icon Name="PicUploadIcon"
                                                             Value="fa-solid fa-cloud-arrow-up"
-                                                            FontSize="11"
+                                                            FontSize="13"
                                                             Foreground="{DynamicResource PrimaryButtonForeground}"
                                                             IsVisible="True" />
                                                     <i:Icon Name="PicUploadSpinner"
@@ -446,22 +480,22 @@
                                                         </i:Icon.Styles>
                                                     </i:Icon>
                                                     <TextBlock Text="Upload"
-                                                               FontSize="13"
+                                                               FontSize="14"
                                                                Foreground="{DynamicResource PrimaryButtonForeground}"
                                                                VerticalAlignment="Center" />
                                                 </StackPanel>
                                             </Button>
                                             <Button Name="PicBrowseBtn"
                                                     DockPanel.Dock="Right"
+                                                    Classes="RowSecondary RowAction"
                                                     Content="Browse…"
-                                                    Padding="10,7"
-                                                    FontSize="13"
                                                     Cursor="Hand" />
                                             <TextBlock Name="PicFileNameText"
                                                        Text="No file selected"
-                                                       FontSize="12"
+                                                       FontSize="13"
                                                        Foreground="{DynamicResource TextMuted}"
                                                        VerticalAlignment="Center"
+                                                       Margin="2,0,8,0"
                                                        TextTrimming="CharacterEllipsis" />
                                         </DockPanel>
                                         <TextBlock Name="PicStatusText"
@@ -560,15 +594,13 @@
                                     <DockPanel>
                                         <Button Name="BannerUploadBtn"
                                                 DockPanel.Dock="Right"
-                                                Classes="Primary"
-                                                Padding="10,7"
-                                                Margin="6,0,0,0"
-                                                FontSize="13"
+                                                Classes="Primary RowAction"
+                                                Margin="8,0,0,0"
                                                 Cursor="Hand">
-                                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
                                                 <i:Icon Name="BannerUploadIcon"
                                                         Value="fa-solid fa-cloud-arrow-up"
-                                                        FontSize="11"
+                                                        FontSize="13"
                                                         Foreground="{DynamicResource PrimaryButtonForeground}"
                                                         IsVisible="True" />
                                                 <i:Icon Name="BannerUploadSpinner"
@@ -590,22 +622,22 @@
                                                     </i:Icon.Styles>
                                                 </i:Icon>
                                                 <TextBlock Text="Upload"
-                                                           FontSize="13"
+                                                           FontSize="14"
                                                            Foreground="{DynamicResource PrimaryButtonForeground}"
                                                            VerticalAlignment="Center" />
                                             </StackPanel>
                                         </Button>
                                         <Button Name="BannerBrowseBtn"
                                                 DockPanel.Dock="Right"
+                                                Classes="RowSecondary RowAction"
                                                 Content="Browse…"
-                                                Padding="10,7"
-                                                FontSize="13"
                                                 Cursor="Hand" />
                                         <TextBlock Name="BannerFileNameText"
                                                    Text="No file selected"
-                                                   FontSize="12"
+                                                   FontSize="13"
                                                    Foreground="{DynamicResource TextMuted}"
                                                    VerticalAlignment="Center"
+                                                   Margin="2,0,8,0"
                                                    TextTrimming="CharacterEllipsis" />
                                     </DockPanel>
                                     <TextBlock Name="BannerStatusText"
@@ -635,6 +667,11 @@
                                     <TextBox Classes="EditField"
                                              Text="{Binding ProfileNip05}"
                                              Watermark="you@example.com" />
+                                    <TextBlock Text="{Binding Nip05Error}"
+                                               IsVisible="{Binding HasNip05Error}"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource ErrorFieldText}"
+                                               TextWrapping="Wrap" />
                                 </StackPanel>
                                 <StackPanel Name="LightningField" Grid.Column="1" Spacing="6">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
@@ -644,6 +681,11 @@
                                     <TextBox Classes="EditField"
                                              Text="{Binding ProfileLud16}"
                                              Watermark="your@lightning.address" />
+                                    <TextBlock Text="{Binding Lud16Error}"
+                                               IsVisible="{Binding HasLud16Error}"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource ErrorFieldText}"
+                                               TextWrapping="Wrap" />
                                 </StackPanel>
                                 <StackPanel Name="WebsiteField" Grid.Column="2" Spacing="6">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
@@ -653,6 +695,11 @@
                                     <TextBox Name="ProfileWebsiteTextBox" Classes="EditField"
                                              Text="{Binding ProfileWebsite}"
                                              Watermark="https://your-website.com" />
+                                    <TextBlock Text="{Binding WebsiteError}"
+                                               IsVisible="{Binding HasWebsiteError}"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource ErrorFieldText}"
+                                               TextWrapping="Wrap" />
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
@@ -773,22 +820,29 @@
 
                             <!-- Add member input -->
                             <Grid Name="MemberInputGrid" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="8">
-                                <TextBox Classes="EditField"
+                                <TextBox Classes="EditField RowField"
                                          Grid.Column="0"
                                          Text="{Binding NewMemberPubKey}"
                                          Watermark="npub1... or hex public key" />
                                 <Button Name="AddMemberButton"
                                         Grid.Column="1"
-                                        Classes="Primary"
-                                        Padding="12,10"
+                                        Classes="Primary RowAction"
                                         VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <i:Icon Value="fa-solid fa-plus" FontSize="12"
+                                        <i:Icon Value="fa-solid fa-plus" FontSize="13"
                                                 Foreground="{DynamicResource PrimaryButtonForeground}" />
                                         <TextBlock Text="Add" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
                             </Grid>
+
+                            <!-- Validation error for the new-member input -->
+                            <TextBlock Text="{Binding MemberError}"
+                                       IsVisible="{Binding HasMemberError}"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource ErrorFieldText}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,-8,0,0" />
 
                             <!-- Members list -->
                             <ItemsControl ItemsSource="{Binding Members}">
@@ -849,33 +903,110 @@
 
                             <!-- Add media input -->
                             <Grid Name="MediaInputGrid" ColumnDefinitions="*,140,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="8">
-                                <TextBox Classes="EditField"
+                                <TextBox Classes="EditField RowField"
                                          Grid.Column="0"
                                          Text="{Binding NewMediaUrl}"
                                          Watermark="https://example.com/image.jpg" />
                                 <ComboBox Grid.Column="1"
                                           Name="MediaTypeCombo"
+                                          Classes="RowField"
                                           SelectedItem="{Binding NewMediaType}"
                                           Background="{DynamicResource SurfaceLow}"
                                           BorderBrush="{DynamicResource Stroke}"
-                                          BorderThickness="1"
-                                          CornerRadius="8"
-                                          Padding="10,8">
+                                          BorderThickness="1">
                                     <ComboBoxItem Content="image" />
                                     <ComboBoxItem Content="video" />
                                 </ComboBox>
                                 <Button Name="AddMediaButton"
                                         Grid.Column="2"
-                                        Classes="Primary"
-                                        Padding="12,10"
+                                        Classes="Primary RowAction"
                                         VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <i:Icon Value="fa-solid fa-plus" FontSize="12"
+                                        <i:Icon Value="fa-solid fa-plus" FontSize="13"
                                                 Foreground="{DynamicResource PrimaryButtonForeground}" />
                                         <TextBlock Text="Add" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
                             </Grid>
+
+                            <!-- Validation error for the new-media URL input -->
+                            <TextBlock Text="{Binding MediaError}"
+                                       IsVisible="{Binding HasMediaError}"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource ErrorFieldText}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,-8,0,0" />
+
+                            <!-- Upload media file to a Blossom server, mirrors profile/banner uploads -->
+                            <Border Background="{DynamicResource SurfaceLow}"
+                                    BorderBrush="{DynamicResource Stroke}"
+                                    BorderThickness="1"
+                                    CornerRadius="8"
+                                    Padding="12">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Upload media to Blossom server"
+                                               FontSize="12" FontWeight="Medium"
+                                               Foreground="{DynamicResource TextMuted}" />
+                                    <TextBox Name="MediaBlossomServerBox"
+                                             Classes="EditField RowField"
+                                             Text="https://blossom.angor.io"
+                                             Watermark="Blossom server URL" />
+                                    <DockPanel>
+                                        <Button Name="MediaUploadBtn"
+                                                DockPanel.Dock="Right"
+                                                Classes="Primary RowAction"
+                                                Margin="8,0,0,0"
+                                                Cursor="Hand">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <i:Icon Name="MediaUploadIcon"
+                                                        Value="fa-solid fa-cloud-arrow-up"
+                                                        FontSize="13"
+                                                        Foreground="{DynamicResource PrimaryButtonForeground}"
+                                                        IsVisible="True" />
+                                                <i:Icon Name="MediaUploadSpinner"
+                                                        Value="fa-solid fa-spinner"
+                                                        FontSize="11"
+                                                        Foreground="{DynamicResource PrimaryButtonForeground}"
+                                                        IsVisible="False"
+                                                        RenderTransformOrigin="50%,50%">
+                                                    <i:Icon.RenderTransform><RotateTransform /></i:Icon.RenderTransform>
+                                                    <i:Icon.Styles>
+                                                        <Style Selector="i|Icon[IsVisible=True]">
+                                                            <Style.Animations>
+                                                                <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                                    <KeyFrame Cue="0%"><Setter Property="RotateTransform.Angle" Value="0" /></KeyFrame>
+                                                                    <KeyFrame Cue="100%"><Setter Property="RotateTransform.Angle" Value="360" /></KeyFrame>
+                                                                </Animation>
+                                                            </Style.Animations>
+                                                        </Style>
+                                                    </i:Icon.Styles>
+                                                </i:Icon>
+                                                <TextBlock Text="Upload"
+                                                           FontSize="14"
+                                                           Foreground="{DynamicResource PrimaryButtonForeground}"
+                                                           VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Name="MediaBrowseBtn"
+                                                DockPanel.Dock="Right"
+                                                Classes="RowSecondary RowAction"
+                                                Content="Browse…"
+                                                Cursor="Hand" />
+                                        <TextBlock Name="MediaFileNameText"
+                                                   Text="No file selected"
+                                                   FontSize="13"
+                                                   Foreground="{DynamicResource TextMuted}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="2,0,8,0"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </DockPanel>
+                                    <TextBlock Name="MediaStatusText"
+                                               IsVisible="False"
+                                               FontSize="12"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
 
                             <!-- Media list -->
                             <ItemsControl ItemsSource="{Binding MediaItems}">
@@ -936,17 +1067,16 @@
 
                             <!-- Add relay input -->
                             <Grid Name="RelayInputGrid" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="8">
-                                <TextBox Classes="EditField"
+                                <TextBox Classes="EditField RowField"
                                          Grid.Column="0"
                                          Text="{Binding NewRelayUrl}"
                                          Watermark="wss://relay.example.com" />
                                 <Button Name="AddRelayButton"
                                         Grid.Column="1"
-                                        Classes="Primary"
-                                        Padding="12,10"
+                                        Classes="Primary RowAction"
                                         VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <i:Icon Value="fa-solid fa-plus" FontSize="12"
+                                        <i:Icon Value="fa-solid fa-plus" FontSize="13"
                                                 Foreground="{DynamicResource PrimaryButtonForeground}" />
                                         <TextBlock Text="Add Relay" VerticalAlignment="Center" />
                                     </StackPanel>
