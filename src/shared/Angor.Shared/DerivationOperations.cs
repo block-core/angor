@@ -222,7 +222,7 @@ public class DerivationOperations : IDerivationOperations
 
         var upi = (uint)(hashOfid.GetLow64() & int.MaxValue);
         
-        _logger.LogInformation($"Unique Project Identifier - founderKey = {founderKey}, hashOfFounderKey = {hashOfid}, hashOfFounderKeyCastToInt = {upi}");
+        _logger.LogDebug("UPI derived: {Upi} for founderKey={FounderKey}", upi, founderKey);
         
         if (upi >= 2_147_483_648)
             throw new Exception();
@@ -307,7 +307,7 @@ public class DerivationOperations : IDerivationOperations
 
         var address = encoder.Encode(0, angorKey.WitHash.ToBytes());
 
-        _logger.LogInformation($"DeriveAngorKey - angorRootKey = {angorRootKey}, founderKey = {founderKey}, upi = {upi}, angorKey = {angorKey}, angorKeyWitHash = {angorKey.WitHash}, address = {address}");
+        _logger.LogDebug("DeriveAngorKey - founderKey={FounderKey}, upi={Upi}, address={Address}", founderKey, upi, address);
 
         return address;
     }
@@ -335,7 +335,7 @@ public class DerivationOperations : IDerivationOperations
         var networkEncoder = network.Bech32Encoders[(int)Bech32Type.WITNESS_PUBKEY_ADDRESS];
         var bitcoinAddress = networkEncoder.Encode(witnessVersion, data);
 
-        _logger.LogInformation($"ConvertAngorKeyToBitcoinAddress - projectId = {projectId}, witnessVersion = {witnessVersion}, bitcoinAddress = {bitcoinAddress}");
+        _logger.LogDebug("ConvertAngorKeyToBitcoinAddress - projectId={ProjectId}, address={Address}", projectId, bitcoinAddress);
 
         return bitcoinAddress;
     }
