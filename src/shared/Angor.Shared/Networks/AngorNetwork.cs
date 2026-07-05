@@ -41,7 +41,7 @@ public class AngorNetwork
     public Transaction CreateTransaction() => BitcoinNetwork.CreateTransaction();
 
     /// <summary>Parse a transaction hex string for this network.</summary>
-    public Transaction CreateTransaction(string hex) => Transaction.Parse(hex, BitcoinNetwork);
+    public Transaction CreateTransaction(string hex) => Transaction.Parse(hex.Trim(), BitcoinNetwork);
 
     // --- Factory methods for all supported networks ---
 

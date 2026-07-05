@@ -55,7 +55,7 @@ public class InvestorTransactionActions : IInvestorTransactionActions
 
         var scripts = _investmentScriptBuilder.BuildProjectScriptsForStage(projectInfo, fundingParameters, stageIndex);
 
-        var witScriptInfo = new WitScript(Encoders.Hex.DecodeData(witScript));
+        var witScriptInfo = new WitScript(Script.FromHex(witScript));
         var executeScript = new Script(witScriptInfo[witScriptInfo.PushCount - 2]);
 
         var withex = executeScript.ToHex();
