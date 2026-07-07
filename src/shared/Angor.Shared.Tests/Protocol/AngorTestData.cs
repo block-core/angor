@@ -1,8 +1,7 @@
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.BIP39;
+using NBitcoin;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 

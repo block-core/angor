@@ -1,7 +1,6 @@
-﻿using Angor.Shared.Services;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.Crypto;
-using Blockcore.NBitcoin.DataEncoders;
+using Angor.Shared.Services;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 using Microsoft.JSInterop;
 using NBitcoin.Crypto;
 

@@ -3,7 +3,7 @@ using System.Reactive.Linq;
 using Angor.Sdk.Wallet.Application;
 using Angor.Shared;
 using AngorApp.UI.Flows.AddWallet;
-using Blockcore.Networks;
+using Angor.Shared.Networks;
 using DynamicData;
 using ReactiveUI;
 using Zafiro.CSharpFunctionalExtensions;
@@ -39,13 +39,13 @@ namespace AngorApp.UI.Sections.Funds.Accounts
 
             Balances = accountBalances;
 
-            CanGetTestCoins = networkConfiguration.GetNetwork().NetworkType == NetworkType.Testnet;
+            CanGetTestCoins = !networkConfiguration.GetNetwork().IsMainnet;
 
             // Update CanGetTestCoins when wallets are reloaded (e.g. after network change)
             walletContext.WalletChanges
                 .QueryWhenChanged()
                 .Select(wallets => wallets.Items.Any(w => w.CanGetTestCoins))
-                .StartWith(networkConfiguration.GetNetwork().NetworkType == NetworkType.Testnet)
+                .StartWith(!networkConfiguration.GetNetwork().IsMainnet)
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Subscribe(value => CanGetTestCoins = value)
                 .DisposeWith(disposable);

@@ -4,6 +4,9 @@ using Angor.Shared.Integration.Lightning.Models;
 using Angor.Shared.Services;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
+using NBitcoin;
+using NBitcoin.Crypto;
+using NBitcoin.Secp256k1;
 
 namespace Angor.Shared.Integration.Lightning;
 
@@ -131,11 +134,11 @@ public class BoltzClaimService : IBoltzClaimService
             return Result.Failure<BoltzClaimResult>("Swap tree is missing - required for Taproot tweak computation");
         }
         
-        var network = GetNBitcoinNetwork();
-        var lockupTx = NBitcoin.Transaction.Parse(lockupTransactionHex, network);
+        var network = GetBitcoinNetwork();
+        var lockupTx = Transaction.Parse(lockupTransactionHex, network);
         
         // Find the lockup output
-        NBitcoin.TxOut? lockupOutput = null;
+        TxOut? lockupOutput = null;
         int foundOutputIndex = lockupOutputIndex;
         
         for (int i = 0; i < lockupTx.Outputs.Count; i++)
@@ -155,7 +158,7 @@ public class BoltzClaimService : IBoltzClaimService
             lockupOutput = lockupTx.Outputs[lockupOutputIndex];
         }
         
-        var lockupOutpoint = new NBitcoin.OutPoint(lockupTx.GetHash(), foundOutputIndex);
+        var lockupOutpoint = new OutPoint(lockupTx.GetHash(), foundOutputIndex);
         
         // Initialize MuSig2 session
         var claimPrivateKeyBytes = claimPrivateKey.ToBytes();
@@ -164,7 +167,7 @@ public class BoltzClaimService : IBoltzClaimService
         // Verify the derived claim key matches what was registered with Boltz
         if (!string.IsNullOrEmpty(swap.ClaimPublicKey))
         {
-            var derivedPubKeyBytes = NBitcoin.Secp256k1.ECPrivKey.Create(claimPrivateKeyBytes).CreatePubKey().ToBytes();
+            var derivedPubKeyBytes = ECPrivKey.Create(claimPrivateKeyBytes).CreatePubKey().ToBytes();
             var derivedPubKeyHex = Convert.ToHexString(derivedPubKeyBytes).ToLowerInvariant();
             var storedClaimKey = swap.ClaimPublicKey.ToLowerInvariant();
             
@@ -203,7 +206,7 @@ public class BoltzClaimService : IBoltzClaimService
         
         // Verify the tweaked output key matches the lockup address
         var outputKeyXOnly = musig.GetOutputPubKeyXOnly();
-        var outputKey = new NBitcoin.TaprootPubKey(outputKeyXOnly);
+        var outputKey = new TaprootPubKey(outputKeyXOnly);
         var computedAddress = outputKey.GetAddress(network).ToString();
         
         if (computedAddress != swap.LockupAddress)
@@ -218,7 +221,7 @@ public class BoltzClaimService : IBoltzClaimService
         _logger.LogInformation("Tweaked output key matches lockup address: {Address}", computedAddress);
         
         // Build the claim transaction
-        var destAddress = NBitcoin.BitcoinAddress.Create(swap.Address, network);
+        var destAddress = BitcoinAddress.Create(swap.Address, network);
         var estimatedVbytes = 110;
         var fee = feeRate * estimatedVbytes;
         var outputAmount = lockupOutput.Value.Satoshi - fee;
@@ -228,11 +231,11 @@ public class BoltzClaimService : IBoltzClaimService
             return Result.Failure<BoltzClaimResult>($"Output amount after fee is below dust threshold");
         }
         
-        var claimTx = NBitcoin.Transaction.Create(network);
+        var claimTx = Transaction.Create(network);
         claimTx.Version = 2;
-        claimTx.Inputs.Add(new NBitcoin.TxIn(lockupOutpoint));
+        claimTx.Inputs.Add(new TxIn(lockupOutpoint));
         claimTx.Inputs[0].Sequence = 0xFFFFFFFD;
-        claimTx.Outputs.Add(new NBitcoin.TxOut(NBitcoin.Money.Satoshis(outputAmount), destAddress.ScriptPubKey));
+        claimTx.Outputs.Add(new TxOut(Money.Satoshis(outputAmount), destAddress.ScriptPubKey));
         
         // Generate our nonce
         var ourPubNonce = musig.GenerateNonce();
@@ -262,9 +265,9 @@ public class BoltzClaimService : IBoltzClaimService
         var boltzNonceBytes = Convert.FromHexString(boltzResponse.PubNonce);
         musig.AggregateNonces(boltzNonceBytes);
         
-        var prevOuts = new NBitcoin.TxOut[] { lockupOutput };
+        var prevOuts = new TxOut[] { lockupOutput };
         var sighash = claimTx.GetSignatureHashTaproot(prevOuts, 
-            new NBitcoin.TaprootExecutionData(0) { SigHash = NBitcoin.TaprootSigHash.Default });
+            new TaprootExecutionData(0) { SigHash = TaprootSigHash.Default });
         
         musig.InitializeSession(sighash.ToBytes());
         var ourPartialSig = musig.SignPartial();
@@ -273,8 +276,8 @@ public class BoltzClaimService : IBoltzClaimService
         var aggregatedSig = musig.AggregatePartials(boltzPartialSig, ourPartialSig);
         
         // Verify the aggregated signature
-        var outputPubKeyForVerify = new NBitcoin.TaprootPubKey(musig.GetOutputPubKeyXOnly());
-        var schnorrSig = new NBitcoin.Crypto.SchnorrSignature(aggregatedSig);
+        var outputPubKeyForVerify = new TaprootPubKey(musig.GetOutputPubKeyXOnly());
+        var schnorrSig = new SchnorrSignature(aggregatedSig);
         if (!outputPubKeyForVerify.VerifySignature(sighash, schnorrSig))
         {
             _logger.LogError("Schnorr signature verification FAILED before broadcast!");
@@ -283,7 +286,7 @@ public class BoltzClaimService : IBoltzClaimService
         _logger.LogInformation("Schnorr signature verification PASSED");
         
         // Set the witness and broadcast
-        claimTx.Inputs[0].WitScript = new NBitcoin.WitScript(new[] { aggregatedSig });
+        claimTx.Inputs[0].WitScript = new WitScript(new[] { aggregatedSig });
         
         var signedTxHex = claimTx.ToHex();
         var claimTxId = claimTx.GetHash().ToString();
@@ -376,12 +379,12 @@ public class BoltzClaimService : IBoltzClaimService
                 return Result.Failure<BoltzClaimResult>($"Invalid swap tree - missing claim leaf");
             }
 
-            var network = GetNBitcoinNetwork();
-            var lockupTx = NBitcoin.Transaction.Parse(lockupTransactionHex, network);
+            var network = GetBitcoinNetwork();
+            var lockupTx = Transaction.Parse(lockupTransactionHex, network);
             
             // Find the lockup output
             int foundOutputIndex = -1;
-            NBitcoin.TxOut? lockupOutput = null;
+            TxOut? lockupOutput = null;
             
             for (int i = 0; i < lockupTx.Outputs.Count; i++)
             {
@@ -407,7 +410,7 @@ public class BoltzClaimService : IBoltzClaimService
                 return Result.Failure<BoltzClaimResult>("Could not find lockup output in transaction");
             }
             
-            var lockupOutpoint = new NBitcoin.OutPoint(lockupTx.GetHash(), foundOutputIndex);
+            var lockupOutpoint = new OutPoint(lockupTx.GetHash(), foundOutputIndex);
 
             // Check if UTXO is spent
             try
@@ -429,21 +432,21 @@ public class BoltzClaimService : IBoltzClaimService
 
             // Parse claim script
             var claimScriptHex = swapTree.ClaimLeaf.Output;
-            var claimScript = new NBitcoin.Script(Convert.FromHexString(claimScriptHex));
+            var claimScript = new Script(Convert.FromHexString(claimScriptHex));
 
             // Build claim transaction
             var claimTx = BuildClaimTransaction(lockupOutpoint, lockupOutput, swap.Address, feeRate, network);
 
             // Sign the transaction
             var claimKey = claimPrivateKey;
-            var tapScript = claimScript.ToTapScript(NBitcoin.TapLeafVersion.C0);
+            var tapScript = claimScript.ToTapScript(TapLeafVersion.C0);
             var leafHash = tapScript.LeafHash;
 
-            var prevOuts = new NBitcoin.TxOut[] { lockupOutput };
-            var execData = new NBitcoin.TaprootExecutionData(0, leafHash) { SigHash = NBitcoin.TaprootSigHash.Default };
+            var prevOuts = new TxOut[] { lockupOutput };
+            var execData = new TaprootExecutionData(0, leafHash) { SigHash = TaprootSigHash.Default };
             var sighash = claimTx.GetSignatureHashTaproot(prevOuts, execData);
             
-            var signature = claimKey.SignTaprootKeySpend(sighash, NBitcoin.TaprootSigHash.Default);
+            var signature = claimKey.SignTaprootKeySpend(sighash, TaprootSigHash.Default);
 
             // Build the control block
             var (controlBlock, computedTaprootAddress) = BuildControlBlockWithVerification(
@@ -456,7 +459,7 @@ public class BoltzClaimService : IBoltzClaimService
             }
 
             // Build witness
-            var witness = new NBitcoin.WitScript(new[] {
+            var witness = new WitScript(new[] {
                 signature.ToBytes(),
                 preimageBytes,
                 claimScript.ToBytes(),
@@ -521,31 +524,20 @@ public class BoltzClaimService : IBoltzClaimService
         }
     }
 
-    private NBitcoin.Network GetNBitcoinNetwork()
+    private Network GetBitcoinNetwork()
     {
-        var blockcoreNetwork = _networkConfiguration.GetNetwork();
-        var networkName = blockcoreNetwork.Name.ToLowerInvariant();
-        
-        if (networkName.Contains("main"))
-            return NBitcoin.Network.Main;
-        if (networkName.Contains("testnet") || networkName.Contains("test"))
-            return NBitcoin.Network.TestNet;
-        if (networkName.Contains("signet"))
-            return NBitcoin.Network.GetNetwork("signet") ?? NBitcoin.Network.TestNet;
-        if (networkName.Contains("regtest"))
-            return NBitcoin.Network.RegTest;
-        
-        return NBitcoin.Network.TestNet;
+        var network = _networkConfiguration.GetNetwork();
+        return network.BitcoinNetwork;
     }
 
-    private NBitcoin.Transaction BuildClaimTransaction(
-        NBitcoin.OutPoint lockupOutpoint,
-        NBitcoin.TxOut lockupOutput,
+    private Transaction BuildClaimTransaction(
+        OutPoint lockupOutpoint,
+        TxOut lockupOutput,
         string destinationAddress,
         long feeRate,
-        NBitcoin.Network network)
+        Network network)
     {
-        var destAddress = NBitcoin.BitcoinAddress.Create(destinationAddress, network);
+        var destAddress = BitcoinAddress.Create(destinationAddress, network);
         var estimatedVbytes = 200;
         var fee = feeRate * estimatedVbytes;
         var outputAmount = lockupOutput.Value.Satoshi - fee;
@@ -556,26 +548,26 @@ public class BoltzClaimService : IBoltzClaimService
                 $"Output amount ({lockupOutput.Value.Satoshi} - {fee} = {outputAmount}) is below dust threshold");
         }
 
-        var claimTx = NBitcoin.Transaction.Create(network);
+        var claimTx = Transaction.Create(network);
         claimTx.Version = 2;
-        claimTx.Inputs.Add(new NBitcoin.TxIn(lockupOutpoint));
+        claimTx.Inputs.Add(new TxIn(lockupOutpoint));
         claimTx.Inputs[0].Sequence = 0xFFFFFFFD;
-        claimTx.Outputs.Add(new NBitcoin.TxOut(NBitcoin.Money.Satoshis(outputAmount), destAddress.ScriptPubKey));
+        claimTx.Outputs.Add(new TxOut(Money.Satoshis(outputAmount), destAddress.ScriptPubKey));
 
         return claimTx;
     }
 
     private (byte[] ControlBlock, string ComputedAddress) BuildControlBlockWithVerification(
         SwapTreeResponse swapTree, 
-        NBitcoin.Script claimScript, 
+        Script claimScript, 
         string claimPublicKeyHex, 
         string refundPublicKeyHex,
-        NBitcoin.Network network)
+        Network network)
     {
         var refundScriptHex = swapTree.RefundLeaf?.Output ?? "";
-        var refundScript = new NBitcoin.Script(Convert.FromHexString(refundScriptHex));
+        var refundScript = new Script(Convert.FromHexString(refundScriptHex));
 
-        NBitcoin.TaprootInternalPubKey internalKey;
+        TaprootInternalPubKey internalKey;
         
         try
         {
@@ -585,22 +577,22 @@ public class BoltzClaimService : IBoltzClaimService
             
             // Boltz convention: aggregate in fixed order [refundKey, claimKey] (NOT sorted)
             var aggregateXOnly = BoltzMusig2.KeyAgg(refundPubKeyBytes, claimPubKeyBytes);
-            internalKey = new NBitcoin.TaprootInternalPubKey(aggregateXOnly);
+            internalKey = new TaprootInternalPubKey(aggregateXOnly);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to compute MuSig2 internal key, falling back to unspendable key");
-            internalKey = NBitcoin.TaprootInternalPubKey.Parse(
+            internalKey = TaprootInternalPubKey.Parse(
                 "50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0");
         }
 
-        var builder1 = new NBitcoin.TaprootBuilder();
-        builder1.AddLeaf(1, claimScript.ToTapScript(NBitcoin.TapLeafVersion.C0));
-        builder1.AddLeaf(1, refundScript.ToTapScript(NBitcoin.TapLeafVersion.C0));
+        var builder1 = new TaprootBuilder();
+        builder1.AddLeaf(1, claimScript.ToTapScript(TapLeafVersion.C0));
+        builder1.AddLeaf(1, refundScript.ToTapScript(TapLeafVersion.C0));
         var spendInfo = builder1.Finalize(internalKey);
         var computedAddress = spendInfo.OutputPubKey.GetAddress(network).ToString();
 
-        var controlBlock = spendInfo.GetControlBlock(claimScript.ToTapScript(NBitcoin.TapLeafVersion.C0));
+        var controlBlock = spendInfo.GetControlBlock(claimScript.ToTapScript(TapLeafVersion.C0));
         
         if (controlBlock == null)
         {
@@ -612,11 +604,11 @@ public class BoltzClaimService : IBoltzClaimService
 
     private static byte[] ComputeSwapTreeMerkleRoot(string claimScriptHex, string refundScriptHex)
     {
-        var claimScript = new NBitcoin.Script(Convert.FromHexString(claimScriptHex));
-        var refundScript = new NBitcoin.Script(Convert.FromHexString(refundScriptHex));
+        var claimScript = new Script(Convert.FromHexString(claimScriptHex));
+        var refundScript = new Script(Convert.FromHexString(refundScriptHex));
 
-        var claimLeafHash = claimScript.ToTapScript(NBitcoin.TapLeafVersion.C0).LeafHash;
-        var refundLeafHash = refundScript.ToTapScript(NBitcoin.TapLeafVersion.C0).LeafHash;
+        var claimLeafHash = claimScript.ToTapScript(TapLeafVersion.C0).LeafHash;
+        var refundLeafHash = refundScript.ToTapScript(TapLeafVersion.C0).LeafHash;
 
         var claimHashBytes = claimLeafHash.ToBytes();
         var refundHashBytes = refundLeafHash.ToBytes();

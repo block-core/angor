@@ -2,13 +2,11 @@
 @using Angor.Shared
 @using Angor.Client.Storage
 @using Angor.Shared.Models
-@using Blockcore.NBitcoin
-@using Blockcore.NBitcoin.DataEncoders
-@using Money = Blockcore.NBitcoin.Money
-@using Transaction = Blockcore.Consensus.TransactionInfo.Transaction
+@using NBitcoin
+@using NBitcoin.DataEncoders
 @using Angor.Shared.Services
 @using Angor.Client.Models
-@using Blockcore.Networks
+@using Angor.Shared.Networks
 @using System.Text.Json
 @using Angor.Shared.Utilities
 @using Angor.Client.Shared
@@ -1007,7 +1005,7 @@
 
     private async Task InvestFunds()
     {
-        bool isTestnet = network.NetworkType == NetworkType.Testnet;
+        bool isTestnet = !network.IsMainnet;
         bool debugMode = storage.GetDebugMode();
         decimal maxInvestmentBtc = isTestnet ? decimal.MaxValue : 0.2m;
         decimal minInvestmentBtc = 0.0001m;
@@ -1116,7 +1114,7 @@
             };
 
             var strippedInvestmentTransaction = network.CreateTransaction(investorProject.SignedTransactionHex);
-            strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
+            strippedInvestmentTransaction.Inputs.ForEach(f => { f.WitScript = WitScript.Empty; });
 
             var accountInfo = storage.GetAccountInfo(network.Name);
             var words = await passwordComponent.GetWalletAsync();
@@ -1128,7 +1126,7 @@
             SignRecoveryRequest signRecoveryRequest = new()
             {
                 ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
-                InvestmentTransactionHex = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory),
+                InvestmentTransactionHex = strippedInvestmentTransaction.ToHex(),
                 UnfundedReleaseAddress = releaseAddress,
             };
 
@@ -1250,7 +1248,7 @@
                 return;
             }
 
-            var publishError = await _indexerService.PublishTransactionAsync(signedTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory));
+            var publishError = await _indexerService.PublishTransactionAsync(signedTransaction.Transaction.ToHex());
 
             if (!string.IsNullOrEmpty(publishError))
             {
@@ -1967,7 +1965,7 @@
 
     private bool ValidateInvestmentAmount()
     {
-        bool isTestnet = network.NetworkType == NetworkType.Testnet;
+        bool isTestnet = !network.IsMainnet;
         bool debugMode = storage.GetDebugMode();
         decimal maxInvestmentBtc = isTestnet ? decimal.MaxValue : 0.2m;
         decimal minInvestmentBtc = 0.0001m;
