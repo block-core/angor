@@ -8,14 +8,12 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.DataEncoders;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Angor.Sdk.Funding.Projects;
 using Angor.Shared.Utilities;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.Consensus.TransactionInfo;
 
 namespace Angor.Sdk.Funding.Investor.Operations;
 

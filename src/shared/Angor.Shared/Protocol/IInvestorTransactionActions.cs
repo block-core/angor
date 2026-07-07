@@ -1,5 +1,5 @@
 using Angor.Shared.Models;
-using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
+using NBitcoin;
 
 namespace Angor.Shared.Protocol;
 

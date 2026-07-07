@@ -1,18 +1,15 @@
 using Angor.Shared;
 using Angor.Shared.Models;
+using Angor.Shared.Networks;
 using Angor.Shared.Protocol;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Protocol.TransactionBuilders;
 using Angor.Shared.Services;
 using Angor.Test.Protocol;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.Consensus.TransactionInfo;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.BIP32;
-using Blockcore.NBitcoin.DataEncoders;
-using Blockcore.Networks;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 using Xunit;
 
 namespace Angor.Test;
@@ -22,7 +19,7 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
     private readonly WalletOperations _sut;
     private readonly Mock<IIndexerService> _indexerService;
     private readonly InvestorTransactionActions _investorTransactionActions;
-    private readonly Network _network;
+    private readonly AngorNetwork _network;
 
     public AddInputsFromAddressAndSignTransactionTests()
     {
@@ -59,21 +56,21 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
 
         // Manually add an address to the account (BuildAccountInfoForWalletWords doesn't populate addresses)
         var hdPath = "m/84'/1'/0'/0/0";
-        var extPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, _network);
+        var extPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, _network.BitcoinNetwork);
         var pubKey = extPubKey.Derive(new KeyPath("0/0")).PubKey;
-        var address = pubKey.GetSegwitAddress(_network).ToString();
+        var address = pubKey.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.AddressesInfo.Add(new AddressInfo { Address = address, HdPath = hdPath });
 
         // Add a second address for destination
         var hdPath1 = "m/84'/1'/0'/0/1";
         var pubKey1 = extPubKey.Derive(new KeyPath("0/1")).PubKey;
-        var address1 = pubKey1.GetSegwitAddress(_network).ToString();
+        var address1 = pubKey1.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.AddressesInfo.Add(new AddressInfo { Address = address1, HdPath = hdPath1 });
 
         // Add a change address
         var changeHdPath = "m/84'/1'/0'/1/0";
         var changePubKey = extPubKey.Derive(new KeyPath("1/0")).PubKey;
-        var changeAddress = changePubKey.GetSegwitAddress(_network).ToString();
+        var changeAddress = changePubKey.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.ChangeAddressesInfo.Add(new AddressInfo { Address = changeAddress, HdPath = changeHdPath });
 
         // Add UTXOs to the first address
@@ -83,7 +80,7 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
         // Create a simple transaction
         var destinationAddress = accountInfo.AddressesInfo[1].Address;
         var transaction = _network.CreateTransaction();
-        transaction.AddOutput(Money.Satoshis(250000000), BitcoinAddress.Create(destinationAddress, _network).ScriptPubKey);
+        transaction.Outputs.Add(Money.Satoshis(250000000), BitcoinAddress.Create(destinationAddress, _network.BitcoinNetwork).ScriptPubKey);
 
         // Act
         var result = _sut.AddInputsFromAddressAndSignTransaction(
@@ -116,17 +113,17 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
         var accountInfo = _sut.BuildAccountInfoForWalletWords(words);
 
         // Manually add addresses to the account
-        var extPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, _network);
+        var extPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, _network.BitcoinNetwork);
         var pubKey = extPubKey.Derive(new KeyPath("0/0")).PubKey;
-        var address = pubKey.GetSegwitAddress(_network).ToString();
+        var address = pubKey.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.AddressesInfo.Add(new AddressInfo { Address = address, HdPath = "m/84'/1'/0'/0/0" });
 
         var pubKey1 = extPubKey.Derive(new KeyPath("0/1")).PubKey;
-        var address1 = pubKey1.GetSegwitAddress(_network).ToString();
+        var address1 = pubKey1.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.AddressesInfo.Add(new AddressInfo { Address = address1, HdPath = "m/84'/1'/0'/0/1" });
 
         var changePubKey = extPubKey.Derive(new KeyPath("1/0")).PubKey;
-        var changeAddress = changePubKey.GetSegwitAddress(_network).ToString();
+        var changeAddress = changePubKey.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.ChangeAddressesInfo.Add(new AddressInfo { Address = changeAddress, HdPath = "m/84'/1'/0'/1/0" });
 
         var fundingAddress = accountInfo.AddressesInfo[0];
@@ -134,7 +131,7 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
 
         var destinationAddress = accountInfo.AddressesInfo[1].Address;
         var transaction = _network.CreateTransaction();
-        transaction.AddOutput(Money.Satoshis(500000000), BitcoinAddress.Create(destinationAddress, _network).ScriptPubKey); // Trying to send 5 BTC
+        transaction.Outputs.Add(Money.Satoshis(500000000), BitcoinAddress.Create(destinationAddress, _network.BitcoinNetwork).ScriptPubKey); // Trying to send 5 BTC
 
         // Act & Assert
         var exception = Assert.Throws<ApplicationException>(() =>
@@ -158,18 +155,18 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
         var accountInfo = _sut.BuildAccountInfoForWalletWords(words);
 
         // Manually add addresses to the account
-        var extPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, _network);
+        var extPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, _network.BitcoinNetwork);
         var pubKey1 = extPubKey.Derive(new KeyPath("0/1")).PubKey;
-        var address1 = pubKey1.GetSegwitAddress(_network).ToString();
+        var address1 = pubKey1.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.AddressesInfo.Add(new AddressInfo { Address = address1, HdPath = "m/84'/1'/0'/0/1" });
 
         var changePubKey = extPubKey.Derive(new KeyPath("1/0")).PubKey;
-        var changeAddress = changePubKey.GetSegwitAddress(_network).ToString();
+        var changeAddress = changePubKey.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.ChangeAddressesInfo.Add(new AddressInfo { Address = changeAddress, HdPath = "m/84'/1'/0'/1/0" });
 
         var transaction = _network.CreateTransaction();
-        transaction.AddOutput(Money.Satoshis(100000000),
-              BitcoinAddress.Create(accountInfo.AddressesInfo[0].Address, _network).ScriptPubKey);
+        transaction.Outputs.Add(Money.Satoshis(100000000),
+              BitcoinAddress.Create(accountInfo.AddressesInfo[0].Address, _network.BitcoinNetwork).ScriptPubKey);
 
         // Act & Assert
         var exception = Assert.Throws<ApplicationException>(() =>
@@ -192,17 +189,17 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
         var accountInfo = _sut.BuildAccountInfoForWalletWords(words);
 
         // Manually add addresses to the account
-        var extPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, _network);
+        var extPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, _network.BitcoinNetwork);
         var pubKey = extPubKey.Derive(new KeyPath("0/0")).PubKey;
-        var address = pubKey.GetSegwitAddress(_network).ToString();
+        var address = pubKey.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.AddressesInfo.Add(new AddressInfo { Address = address, HdPath = "m/84'/1'/0'/0/0" });
 
         var pubKey1 = extPubKey.Derive(new KeyPath("0/1")).PubKey;
-        var address1 = pubKey1.GetSegwitAddress(_network).ToString();
+        var address1 = pubKey1.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.AddressesInfo.Add(new AddressInfo { Address = address1, HdPath = "m/84'/1'/0'/0/1" });
 
         var changePubKey = extPubKey.Derive(new KeyPath("1/0")).PubKey;
-        var changeAddress = changePubKey.GetSegwitAddress(_network).ToString();
+        var changeAddress = changePubKey.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.ChangeAddressesInfo.Add(new AddressInfo { Address = changeAddress, HdPath = "m/84'/1'/0'/1/0" });
 
         var fundingAddress = accountInfo.AddressesInfo[0];
@@ -213,7 +210,7 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
 
         var destinationAddress = accountInfo.AddressesInfo[1].Address;
         var transaction = _network.CreateTransaction();
-        transaction.AddOutput(Money.Satoshis(150000000), BitcoinAddress.Create(destinationAddress, _network).ScriptPubKey);
+        transaction.Outputs.Add(Money.Satoshis(150000000), BitcoinAddress.Create(destinationAddress, _network.BitcoinNetwork).ScriptPubKey);
 
         // Act
         var result = _sut.AddInputsFromAddressAndSignTransaction(
@@ -241,17 +238,17 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
         var accountInfo = _sut.BuildAccountInfoForWalletWords(words);
 
         // Manually add addresses to the account
-        var extPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, _network);
+        var extPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, _network.BitcoinNetwork);
         var pubKey = extPubKey.Derive(new KeyPath("0/0")).PubKey;
-        var address = pubKey.GetSegwitAddress(_network).ToString();
+        var address = pubKey.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.AddressesInfo.Add(new AddressInfo { Address = address, HdPath = "m/84'/1'/0'/0/0" });
 
         var pubKey1 = extPubKey.Derive(new KeyPath("0/1")).PubKey;
-        var address1 = pubKey1.GetSegwitAddress(_network).ToString();
+        var address1 = pubKey1.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.AddressesInfo.Add(new AddressInfo { Address = address1, HdPath = "m/84'/1'/0'/0/1" });
 
         var changePubKey = extPubKey.Derive(new KeyPath("1/0")).PubKey;
-        var changeAddress = changePubKey.GetSegwitAddress(_network).ToString();
+        var changeAddress = changePubKey.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.ChangeAddressesInfo.Add(new AddressInfo { Address = changeAddress, HdPath = "m/84'/1'/0'/1/0" });
 
         var fundingAddress = accountInfo.AddressesInfo[0];
@@ -259,7 +256,7 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
 
         var destinationAddress = accountInfo.AddressesInfo[1].Address;
         var transaction = _network.CreateTransaction();
-        transaction.AddOutput(Money.Satoshis(50000000), BitcoinAddress.Create(destinationAddress, _network).ScriptPubKey);
+        transaction.Outputs.Add(Money.Satoshis(50000000), BitcoinAddress.Create(destinationAddress, _network.BitcoinNetwork).ScriptPubKey);
 
         // Act
         var result = _sut.AddInputsFromAddressAndSignTransaction(
@@ -277,9 +274,9 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
         Assert.True(result.Transaction.Outputs.Count >= 2, "Should have change output");
 
         // Change should go to change address
-        var changeAddr = BitcoinAddress.Create(accountInfo.GetNextChangeReceiveAddress()!, _network);
+        var changeAddr = BitcoinAddress.Create(accountInfo.GetNextChangeReceiveAddress()!, _network.BitcoinNetwork);
         var hasChangeOutput = result.Transaction.Outputs.Any(o =>
-          o.ScriptPubKey.GetDestinationAddress(_network)?.ToString() == changeAddr.ToString());
+          o.ScriptPubKey.GetDestinationAddress(_network.BitcoinNetwork)?.ToString() == changeAddr.ToString());
         Assert.True(hasChangeOutput, "Should have change output to change address");
     }
 
@@ -291,17 +288,17 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
         var accountInfo = _sut.BuildAccountInfoForWalletWords(words);
 
         // Manually add addresses to the account
-        var extPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, _network);
+        var extPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, _network.BitcoinNetwork);
         var pubKey = extPubKey.Derive(new KeyPath("0/0")).PubKey;
-        var address = pubKey.GetSegwitAddress(_network).ToString();
+        var address = pubKey.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.AddressesInfo.Add(new AddressInfo { Address = address, HdPath = "m/84'/1'/0'/0/0" });
 
         var pubKey1 = extPubKey.Derive(new KeyPath("0/1")).PubKey;
-        var address1 = pubKey1.GetSegwitAddress(_network).ToString();
+        var address1 = pubKey1.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.AddressesInfo.Add(new AddressInfo { Address = address1, HdPath = "m/84'/1'/0'/0/1" });
 
         var changePubKey = extPubKey.Derive(new KeyPath("1/0")).PubKey;
-        var changeAddress = changePubKey.GetSegwitAddress(_network).ToString();
+        var changeAddress = changePubKey.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.ChangeAddressesInfo.Add(new AddressInfo { Address = changeAddress, HdPath = "m/84'/1'/0'/1/0" });
 
         var fundingAddress = accountInfo.AddressesInfo[0];
@@ -312,7 +309,7 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
 
         var destinationAddress = accountInfo.AddressesInfo[1].Address;
         var transaction = _network.CreateTransaction();
-        transaction.AddOutput(Money.Satoshis(150000000), BitcoinAddress.Create(destinationAddress, _network).ScriptPubKey);
+        transaction.Outputs.Add(Money.Satoshis(150000000), BitcoinAddress.Create(destinationAddress, _network.BitcoinNetwork).ScriptPubKey);
 
         // Act
         var result = _sut.AddInputsFromAddressAndSignTransaction(
@@ -340,17 +337,17 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
         var accountInfo = _sut.BuildAccountInfoForWalletWords(words);
 
         // Manually add addresses to the account
-        var extPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, _network);
+        var extPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, _network.BitcoinNetwork);
         var pubKey = extPubKey.Derive(new KeyPath("0/0")).PubKey;
-        var address = pubKey.GetSegwitAddress(_network).ToString();
+        var address = pubKey.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.AddressesInfo.Add(new AddressInfo { Address = address, HdPath = "m/84'/1'/0'/0/0" });
 
         var pubKey1 = extPubKey.Derive(new KeyPath("0/1")).PubKey;
-        var address1 = pubKey1.GetSegwitAddress(_network).ToString();
+        var address1 = pubKey1.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.AddressesInfo.Add(new AddressInfo { Address = address1, HdPath = "m/84'/1'/0'/0/1" });
 
         var changePubKey = extPubKey.Derive(new KeyPath("1/0")).PubKey;
-        var changeAddress = changePubKey.GetSegwitAddress(_network).ToString();
+        var changeAddress = changePubKey.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.ChangeAddressesInfo.Add(new AddressInfo { Address = changeAddress, HdPath = "m/84'/1'/0'/1/0" });
 
         var fundingAddress = accountInfo.AddressesInfo[0];
@@ -358,7 +355,7 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
 
         var destinationAddress = accountInfo.AddressesInfo[1].Address;
         var transaction = _network.CreateTransaction();
-        transaction.AddOutput(Money.Satoshis(95000000), BitcoinAddress.Create(destinationAddress, _network).ScriptPubKey);
+        transaction.Outputs.Add(Money.Satoshis(95000000), BitcoinAddress.Create(destinationAddress, _network.BitcoinNetwork).ScriptPubKey);
 
         // Act
         var result = _sut.AddInputsFromAddressAndSignTransaction(
@@ -382,17 +379,17 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
         var accountInfo = _sut.BuildAccountInfoForWalletWords(words);
 
         // Manually add addresses to the account
-        var extPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, _network);
+        var extPubKey = ExtPubKey.Parse(accountInfo.ExtPubKey, _network.BitcoinNetwork);
         var pubKey = extPubKey.Derive(new KeyPath("0/0")).PubKey;
-        var address = pubKey.GetSegwitAddress(_network).ToString();
+        var address = pubKey.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.AddressesInfo.Add(new AddressInfo { Address = address, HdPath = "m/84'/1'/0'/0/0" });
 
         var pubKey1 = extPubKey.Derive(new KeyPath("0/1")).PubKey;
-        var address1 = pubKey1.GetSegwitAddress(_network).ToString();
+        var address1 = pubKey1.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.AddressesInfo.Add(new AddressInfo { Address = address1, HdPath = "m/84'/1'/0'/0/1" });
 
         var changePubKey = extPubKey.Derive(new KeyPath("1/0")).PubKey;
-        var changeAddress = changePubKey.GetSegwitAddress(_network).ToString();
+        var changeAddress = changePubKey.GetAddress(ScriptPubKeyType.Segwit, _network.BitcoinNetwork).ToString();
         accountInfo.ChangeAddressesInfo.Add(new AddressInfo { Address = changeAddress, HdPath = "m/84'/1'/0'/1/0" });
 
         var fundingAddress = accountInfo.AddressesInfo[0];
@@ -400,7 +397,7 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
 
         var destinationAddress = accountInfo.AddressesInfo[1].Address;
         var transaction = _network.CreateTransaction();
-        transaction.AddOutput(Money.Satoshis(50000000), BitcoinAddress.Create(destinationAddress, _network).ScriptPubKey);
+        transaction.Outputs.Add(Money.Satoshis(50000000), BitcoinAddress.Create(destinationAddress, _network.BitcoinNetwork).ScriptPubKey);
 
         // Act
         var result = _sut.AddInputsFromAddressAndSignTransaction(
@@ -435,7 +432,7 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
             addressInfo.UtxoData.Add(new UtxoData
             {
                 address = addressInfo.Address,
-                scriptHex = BitcoinAddress.Create(addressInfo.Address, network).ScriptPubKey.ToHex(),
+                scriptHex = BitcoinAddress.Create(addressInfo.Address, network.BitcoinNetwork).ScriptPubKey.ToHex(),
                 outpoint = outpoint,
                 value = valuePerUtxo,
                 blockIndex = 100 + i // Confirmed
@@ -443,4 +440,3 @@ public class AddInputsFromAddressAndSignTransactionTests : AngorTestData
         }
     }
 }
-

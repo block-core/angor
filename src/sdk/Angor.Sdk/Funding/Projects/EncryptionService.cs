@@ -1,8 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.DataEncoders;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 using Nostr.Client.Keys;
 using Nostr.Client.Utils;
 

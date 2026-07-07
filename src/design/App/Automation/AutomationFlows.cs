@@ -1159,20 +1159,35 @@ public static class AutomationFlows
         // deploy modal is a PaymentFlowView (DeployFlowViewModel.CurrentScreen is not set
         // in the wallet-pay path)
         var deployDeadline = DateTime.UtcNow + TxTimeout;
+        bool deploySucceeded = false;
         while (DateTime.UtcNow < deployDeadline)
         {
-            var success = await Dispatcher.UIThread.InvokeAsync(() =>
+            var (success, errorMsg) = await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 Dispatcher.UIThread.RunJobs();
                 var paymentFlow = myProjectsVm.CreateProjectVm?.DeployFlow?.PaymentFlow;
-                return paymentFlow?.IsSuccess == true;
+                var deployFlow = myProjectsVm.CreateProjectVm?.DeployFlow;
+                var err = paymentFlow?.ErrorMessage ?? deployFlow?.DeployErrorMessage;
+                return (paymentFlow?.IsSuccess == true, err);
             });
             if (success)
             {
+                deploySucceeded = true;
                 break;
             }
 
+            // If the deploy flow reported an error, don't wait the full timeout
+            if (!string.IsNullOrEmpty(errorMsg))
+            {
+                return new ProjectCreatedResponse { Success = false, Error = $"Deploy failed: {errorMsg}" };
+            }
+
             await Task.Delay(PollInterval);
+        }
+
+        if (!deploySucceeded)
+        {
+            return new ProjectCreatedResponse { Success = false, Error = "Deploy timed out waiting for IsSuccess" };
         }
 
         // Click SuccessActionButton in the PaymentFlowView success screen

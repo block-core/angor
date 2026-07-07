@@ -6,10 +6,9 @@
 @using Angor.Shared.Protocol
 @using Angor.Shared.Services
 @using Angor.Shared.Utilities
-@using Blockcore.Consensus.TransactionInfo
-@using Blockcore.NBitcoin
-@using Blockcore.NBitcoin.DataEncoders
-@using Blockcore.Networks
+@using NBitcoin
+@using NBitcoin.DataEncoders
+@using Angor.Shared.Networks
 @using System.Globalization
 @inherits BaseComponent
 @inject IDerivationOperations _derivationOperations
@@ -1187,7 +1186,7 @@
     {
         NavMenuState.SetActivePage("founder");
         debugMode = storage?.GetDebugMode() ?? false;
-        isTestnet = network?.NetworkType == NetworkType.Testnet;
+        isTestnet = network?.IsMainnet == false;
 
         if (!hasWallet)
         {
@@ -1239,7 +1238,7 @@
         // Always update expiry date based on stages (or start date if no stages)
         project.ProjectInfo.ExpiryDate = CalculateExpiryDate();
 
-        if (network.NetworkType == NetworkType.Testnet && debugMode)
+        if (!network.IsMainnet && debugMode)
         {
             PopulateTestnetData(project);
         }
@@ -1603,7 +1602,7 @@
         {
             showCreateModal = false;
 
-            var publishError = await _IndexerService.PublishTransactionAsync(signedTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory));
+            var publishError = await _IndexerService.PublishTransactionAsync(signedTransaction.Transaction.ToHex());
 
             if (!string.IsNullOrEmpty(publishError))
             {

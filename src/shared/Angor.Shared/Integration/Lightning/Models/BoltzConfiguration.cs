@@ -1,4 +1,4 @@
-using Blockcore.Networks;
+using Angor.Shared.Networks;
 
 namespace Angor.Shared.Integration.Lightning.Models
 {
@@ -55,7 +55,7 @@ namespace Angor.Shared.Integration.Lightning.Models
         private static string SelectByNetwork(INetworkConfiguration networkConfiguration)
         {
             var network = networkConfiguration.GetNetwork();
-            return network.NetworkType == NetworkType.Mainnet ? MainnetUrl : TestnetUrl;
+            return network.IsMainnet ? MainnetUrl : TestnetUrl;
         }
     }
 }
