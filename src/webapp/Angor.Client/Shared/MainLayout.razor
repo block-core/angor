@@ -1,10 +1,10 @@
-﻿@using Angor.Client.Services
+@using Angor.Client.Services
 @using Angor.Client.Storage
 @using System.Reflection
 @using Angor.Shared
 @using Angor.Shared.Networks
 @using Angor.Shared.Services
-@using Blockcore.Networks
+
 @inherits LayoutComponentBase
 @implements IDisposable
 @inject IJSRuntime Js;
@@ -202,7 +202,7 @@
     private bool IsTestnet()
     {
         var network = _networkConfiguration.GetNetwork();
-        return network.NetworkType != NetworkType.Mainnet;
+        return !network.IsMainnet;
     }
 
     private bool IsDebugMode()

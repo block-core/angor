@@ -1,6 +1,6 @@
 using ReactiveUI.Validation.Extensions;
 using ReactiveUI.Validation.Helpers;
-using Blockcore.NBitcoin.BIP39;
+using NBitcoin;
 
 namespace AngorApp.UI.Flows.AddWallet.Import
 {

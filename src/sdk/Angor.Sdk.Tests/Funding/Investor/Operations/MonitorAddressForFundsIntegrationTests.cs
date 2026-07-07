@@ -7,7 +7,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Shared.Services;
-using Blockcore.Networks;
+using Angor.Shared.Networks;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -31,7 +31,7 @@ namespace Angor.Sdk.Tests.Funding.Investor.Operations;
 [Trait("Network", "Angornet")]
 public class MonitorAddressForFundsIntegrationTests : IDisposable
 {
-    private readonly Network _network;
+    private readonly AngorNetwork _network;
     private readonly NetworkConfiguration _networkConfiguration;
     private readonly WalletOperations _walletOperations;
     private readonly DerivationOperations _derivationOperations;
@@ -51,7 +51,7 @@ public class MonitorAddressForFundsIntegrationTests : IDisposable
 
         // Setup network - Use Angornet (Bitcoin Signet)
         _networkConfiguration = new NetworkConfiguration();
-        _networkConfiguration.SetNetwork(new Angornet());
+        _networkConfiguration.SetNetwork(AngorNetwork.Angornet());
         _network = _networkConfiguration.GetNetwork();
 
         // Create derivation operations first (needed by indexer)

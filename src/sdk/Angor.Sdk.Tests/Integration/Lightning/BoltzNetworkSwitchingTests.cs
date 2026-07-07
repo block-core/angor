@@ -29,7 +29,7 @@ public class BoltzNetworkSwitchingTests
     public void ResolveBaseUrl_OnMainnet_ReturnsMainnetUrl()
     {
         var networkConfiguration = new NetworkConfiguration();
-        networkConfiguration.SetNetwork(new BitcoinMain());
+        networkConfiguration.SetNetwork(AngorNetwork.Main());
         var config = new BoltzConfiguration();
 
         var resolved = config.ResolveBaseUrl(networkConfiguration);
@@ -41,7 +41,7 @@ public class BoltzNetworkSwitchingTests
     public void ResolveBaseUrl_OnAngornet_ReturnsTestnetUrl()
     {
         var networkConfiguration = new NetworkConfiguration();
-        networkConfiguration.SetNetwork(new Angornet());
+        networkConfiguration.SetNetwork(AngorNetwork.Angornet());
         var config = new BoltzConfiguration();
 
         var resolved = config.ResolveBaseUrl(networkConfiguration);
@@ -53,7 +53,7 @@ public class BoltzNetworkSwitchingTests
     public void ResolveBaseUrl_WithOverride_AlwaysReturnsOverride()
     {
         var networkConfiguration = new NetworkConfiguration();
-        networkConfiguration.SetNetwork(new BitcoinMain());
+        networkConfiguration.SetNetwork(AngorNetwork.Main());
         var config = new BoltzConfiguration { OverrideBaseUrl = "https://my-boltz.example/" };
 
         var resolved = config.ResolveBaseUrl(networkConfiguration);
@@ -73,7 +73,7 @@ public class BoltzNetworkSwitchingTests
     public async Task BoltzSwapService_FollowsRuntimeNetworkSwitch_FromAngornetToMainnet()
     {
         var networkConfiguration = new NetworkConfiguration();
-        networkConfiguration.SetNetwork(new Angornet());
+        networkConfiguration.SetNetwork(AngorNetwork.Angornet());
 
         var handler = new RecordingHandler();
         var httpClient = new HttpClient(handler);
@@ -90,7 +90,7 @@ public class BoltzNetworkSwitchingTests
         var firstHost = handler.LastRequestUri?.Host;
 
         // Simulate the Settings → Switch network → Mainnet action.
-        networkConfiguration.SetNetwork(new BitcoinMain());
+        networkConfiguration.SetNetwork(AngorNetwork.Main());
 
         // Second call: must now hit the mainnet host on the SAME singleton instance.
         await service.GetReverseSwapFeesAsync();
@@ -104,7 +104,7 @@ public class BoltzNetworkSwitchingTests
     public async Task BoltzSwapService_FollowsRuntimeNetworkSwitch_FromMainnetToAngornet()
     {
         var networkConfiguration = new NetworkConfiguration();
-        networkConfiguration.SetNetwork(new BitcoinMain());
+        networkConfiguration.SetNetwork(AngorNetwork.Main());
 
         var handler = new RecordingHandler();
         var httpClient = new HttpClient(handler);
@@ -119,7 +119,7 @@ public class BoltzNetworkSwitchingTests
         await service.GetReverseSwapFeesAsync();
         var firstHost = handler.LastRequestUri?.Host;
 
-        networkConfiguration.SetNetwork(new Angornet());
+        networkConfiguration.SetNetwork(AngorNetwork.Angornet());
 
         await service.GetReverseSwapFeesAsync();
         var secondHost = handler.LastRequestUri?.Host;
@@ -132,7 +132,7 @@ public class BoltzNetworkSwitchingTests
     public async Task BoltzSwapService_RequestPath_IncludesV2Prefix()
     {
         var networkConfiguration = new NetworkConfiguration();
-        networkConfiguration.SetNetwork(new BitcoinMain());
+        networkConfiguration.SetNetwork(AngorNetwork.Main());
 
         var handler = new RecordingHandler();
         var httpClient = new HttpClient(handler);

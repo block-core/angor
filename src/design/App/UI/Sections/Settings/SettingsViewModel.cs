@@ -325,9 +325,9 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
         // Switch the runtime network object so Bitcoin operations use the correct parameters.
         _networkConfig.SetNetwork(newNetwork switch
         {
-            "Mainnet" => new BitcoinMain(),
-            "Liquid" => new LiquidMain(),
-            _ => new Angornet()
+            "Mainnet" => AngorNetwork.Main(),
+            "Liquid" => AngorNetwork.Liquid(),
+            _ => AngorNetwork.Angornet()
         });
 
         // Re-initialize defaults for the new network.
