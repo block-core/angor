@@ -206,7 +206,7 @@ public class PsbtOperations : IPsbtOperations
 
         var psbt = PSBT.Parse(psbtData.PsbtHex, nbitcoinNetwork);
 
-        ExtKey extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
+        ExtKey extendedKey = walletWords.GetOrDeriveExtKey(_hdOperations);
 
         psbt.SignAll(ScriptPubKeyType.Segwit, extendedKey);
 
