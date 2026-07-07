@@ -1,6 +1,4 @@
-using System;
 using Angor.Shared.Models;
-using Blockcore.Networks;
 
 namespace Angor.Shared.Services
 {
@@ -18,7 +16,7 @@ namespace Angor.Shared.Services
             if (project == null) return false;
 
             // on testnet we always allow to invest for testing purposes.
-            var isTestnet = _networkConfiguration.GetNetwork().NetworkType == NetworkType.Testnet;
+            var isTestnet = !_networkConfiguration.GetNetwork().IsMainnet;
             var debugMode = _networkConfiguration.GetDebugMode();
             if (isTestnet && debugMode) return true;
 

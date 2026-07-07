@@ -8,7 +8,6 @@
   <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" />
     <PackageReference Include="Blazored.SessionStorage" />
-    <PackageReference Include="Blockcore.Core" />
     <PackageReference Include="HtmlAgilityPack" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" VersionOverride="9.0.5" />
     <PackageReference Include="Microsoft.JSInterop" />

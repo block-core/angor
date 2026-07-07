@@ -1,7 +1,7 @@
 using Angor.Shared.Models;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.DataEncoders;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;

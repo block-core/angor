@@ -1,21 +1,10 @@
 using Angor.Shared.Models;
 using Angor.Shared.Protocol.Scripts;
 using Angor.Shared.Utilities;
-using Blockcore.NBitcoin.DataEncoders;
-using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using NBitcoin.DataEncoders;
 using System.Buffers.Binary;
-using static NBitcoin.Scripting.OutputDescriptor;
-using IndexedTxOut = NBitcoin.IndexedTxOut;
-using Key = NBitcoin.Key;
-using Op = NBitcoin.Op;
-using OutPoint = NBitcoin.OutPoint;
-using Script = Blockcore.Consensus.ScriptInfo.Script;
-using Transaction = Blockcore.Consensus.TransactionInfo.Transaction;
-using uint256 = Blockcore.NBitcoin.uint256;
-using Utils = NBitcoin.Utils;
-using WitScript = NBitcoin.WitScript;
 
 namespace Angor.Shared.Protocol;
 
@@ -40,7 +29,7 @@ public class FounderTransactionActions : IFounderTransactionActions
         Transaction recoveryTransaction, AngorKey founderPrivateKey)
     {
         var network = _networkConfiguration.GetNetwork();
-        var nbitcoinNetwork = NetworkMapper.Map(network);
+        var nbitcoinNetwork = network.BitcoinNetwork;
         var nbitcoinRecoveryTransaction = NBitcoin.Transaction.Parse(recoveryTransaction.ToHex(), nbitcoinNetwork);
         var nbitcoinInvestmentTransaction = NBitcoin.Transaction.Parse(investmentTrxHex, nbitcoinNetwork);
 
@@ -70,7 +59,7 @@ public class FounderTransactionActions : IFounderTransactionActions
 
             var hashHex = Encoders.Hex.EncodeData(hash.ToBytes());
 
-            _logger.LogInformation($"creating sig for project={projectInfo.ProjectIdentifier}; founder-recovery-pubkey={key.PubKey.ToHex()}; stage={stageIndex}");
+            _logger.LogDebug("Creating recovery signature for project={ProjectId}, stage={Stage}", projectInfo.ProjectIdentifier, stageIndex);
 
             var result = new TaprootPubKey(
                 Angor.Shared.Protocol.Scripts.TaprootKeyHelper.GetTaprootOutputKeyBytes(key.PubKey))
@@ -100,7 +89,7 @@ public class FounderTransactionActions : IFounderTransactionActions
                 $"Fee rate {fee.FeeRate} sat/kB is below the protocol minimum of {ProtocolConstants.MinFeeRateSatsPerKb} sat/kB.");
 
         var network = _networkConfiguration.GetNetwork();
-        var nbitcoinNetwork = NetworkMapper.Map(network);
+        var nbitcoinNetwork = network.BitcoinNetwork;
         var spendingTransaction = nbitcoinNetwork.CreateTransaction();
 
         // Step 1 - the time lock
@@ -156,7 +145,7 @@ public class FounderTransactionActions : IFounderTransactionActions
 
         spendingTransaction.Outputs[0].Value -= appliedFee;
 
-        _logger.LogInformation($"Unsigned spendingTransaction hex {spendingTransaction.ToHex()}");
+        _logger.LogDebug("Unsigned spending transaction prepared with {InputCount} inputs", spendingTransaction.Inputs.Count);
 
         // Step 4 - sign the taproot inputs
         var trxData = spendingTransaction.PrecomputeTransactionData(stageOutputs.Select(_ => _.TxOut).ToArray());
@@ -183,12 +172,12 @@ public class FounderTransactionActions : IFounderTransactionActions
                 Op.GetPushOp(scriptToExecute.ToBytes()),
                 Op.GetPushOp(controlBlock));
 
-            _logger.LogInformation($"WitScript of inputIndex {inputIndex} spendingTransaction hex {input.WitScript.ToString()}");
+            _logger.LogDebug("Signed input {InputIndex}", inputIndex);
 
             inputIndex++;
         }
 
-        _logger.LogInformation($"signed spendingTransaction hex {spendingTransaction.ToHex()}");
+        _logger.LogDebug("Spending transaction signed successfully");
 
         var finalTrx = network.CreateTransaction(spendingTransaction.ToHex());
 
@@ -265,31 +254,26 @@ public class FounderTransactionActions : IFounderTransactionActions
 
     public Transaction CreateNewProjectTransaction(string founderKey, Script angorKey, long angorFeeSatoshis, short keyType, string nostrEventId)
     {
-        var projectStartTransaction = _networkConfiguration.GetNetwork()
-            .Consensus.ConsensusFactory.CreateTransaction();
+        var network = _networkConfiguration.GetNetwork();
+        var projectStartTransaction = network.CreateTransaction();
 
         // create the output and script of the project id
-        var investorInfoOutput = new Blockcore.Consensus.TransactionInfo.TxOut(
-            new Blockcore.NBitcoin.Money(angorFeeSatoshis), angorKey);
-
-        projectStartTransaction.AddOutput(investorInfoOutput);
+        projectStartTransaction.Outputs.Add(new TxOut(new Money(angorFeeSatoshis), angorKey));
 
         // todo: here we should add the hash of the project data as opreturn
 
         // create the output and script of the investor pubkey script opreturn
         var angorFeeOutputScript = _projectScriptsBuilder.BuildFounderInfoScript(founderKey, keyType, nostrEventId);
-        var founderOPReturnOutput = new Blockcore.Consensus.TransactionInfo.TxOut(
-                new Blockcore.NBitcoin.Money(0), angorFeeOutputScript);
-        projectStartTransaction.AddOutput(founderOPReturnOutput);
+        projectStartTransaction.Outputs.Add(new TxOut(Money.Zero, angorFeeOutputScript));
 
         return projectStartTransaction;
     }
 
-    private IndexedTxOut AddInputToSpendingTransaction(ProjectInfo projectInfo, StageTransactionInput stageTransactionInput, NBitcoin.Transaction spendingTransaction)
+    private IndexedTxOut AddInputToSpendingTransaction(ProjectInfo projectInfo, StageTransactionInput stageTransactionInput, Transaction spendingTransaction)
     {
         var network = _networkConfiguration.GetNetwork();
-        var nbitcoinNetwork = NetworkMapper.Map(network);
-        NBitcoin.Transaction trx = NBitcoin.Transaction.Parse(stageTransactionInput.TransactionHex, nbitcoinNetwork);
+        var nbitcoinNetwork = network.BitcoinNetwork;
+        Transaction trx = Transaction.Parse(stageTransactionInput.TransactionHex, nbitcoinNetwork);
 
         var fundingParameters = FundingParameters.CreateFromTransaction(projectInfo, network.CreateTransaction(stageTransactionInput.TransactionHex));
 
@@ -316,12 +300,11 @@ public class FounderTransactionActions : IFounderTransactionActions
         return stageOutput;
     }
 
-    private (string investorKey, uint256? secretHash) GetProjectDetailsFromOpReturn(NBitcoin.Transaction investmentTransaction)
+    private (string investorKey, uint256? secretHash) GetProjectDetailsFromOpReturn(Transaction investmentTransaction)
     {
         var opretunOutput = investmentTransaction.Outputs.AsIndexedOutputs().ElementAt(1);
 
         return
-            _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(
-                new Script(opretunOutput.TxOut.ScriptPubKey.ToBytes()));
+            _projectScriptsBuilder.GetInvestmentDataFromOpReturnScript(opretunOutput.TxOut.ScriptPubKey);
     }
 }

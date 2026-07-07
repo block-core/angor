@@ -1,11 +1,11 @@
-﻿@page "/settings"
+@page "/settings"
 @using Angor.Client.Storage;
 @using Angor.Shared
 @using Angor.Shared.Models;
 @using Angor.Client.Services
 @using Angor.Shared.Services
 @using Angor.Client.Shared
-@using Blockcore.Networks
+@using Angor.Shared.Networks
 
 @inject INetworkConfiguration _networkConfiguration
 @inject INetworkService _networkService
@@ -395,7 +395,7 @@
 </div>
 
 @* Debug Mode Toggle *@
-@if (network.NetworkType != NetworkType.Mainnet)
+@if (!network.IsMainnet)
 {
     <div class="row mt-4 slide-in">
         <div class="card card-body">

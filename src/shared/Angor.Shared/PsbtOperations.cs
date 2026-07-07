@@ -1,10 +1,7 @@
 using Angor.Shared.Models;
+using Angor.Shared.Networks;
 using Angor.Shared.Services;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.Consensus.TransactionInfo;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.BIP32;
-using Blockcore.Networks;
+using NBitcoin;
 using Microsoft.Extensions.Logging;
 
 namespace Angor.Shared;
@@ -36,8 +33,8 @@ public class PsbtOperations : IPsbtOperations
             throw new ApplicationException("The Root ExtPubKey is missing");
         }
 
-        Network network = _networkConfiguration.GetNetwork();
-        var nbitcoinNetwork = NetworkMapper.Map(network);
+        AngorNetwork network = _networkConfiguration.GetNetwork();
+        var nbitcoinNetwork = network.BitcoinNetwork;
 
         changeAddress ??= accountInfo.GetNextChangeReceiveAddress();
 
@@ -49,15 +46,15 @@ public class PsbtOperations : IPsbtOperations
         if (!utxoDataWithPaths.Any())
             throw new ApplicationException("No coins found to fund the transaction.");
 
-        var unsignedTx = NBitcoin.Transaction.Parse(transaction.ToHex(), nbitcoinNetwork);
+        var unsignedTx = Transaction.Parse(transaction.ToHex(), nbitcoinNetwork);
 
         foreach (var coin in utxoDataWithPaths)
         {
-            NBitcoin.OutPoint outputint = new NBitcoin.OutPoint(new NBitcoin.uint256(coin.UtxoData.outpoint.transactionId), coin.UtxoData.outpoint.outputIndex);
+            OutPoint outputint = new OutPoint(new uint256(coin.UtxoData.outpoint.transactionId), coin.UtxoData.outpoint.outputIndex);
             if (unsignedTx.Inputs.Any(x => x.PrevOut == outputint))
                 continue;
-            var txin = new NBitcoin.TxIn(outputint, null);
-            txin.WitScript = new NBitcoin.WitScript(NBitcoin.Op.GetPushOp(new byte[72]), NBitcoin.Op.GetPushOp(new byte[33])); // for total size calculation
+            var txin = new TxIn(outputint, null);
+            txin.WitScript = new WitScript(Op.GetPushOp(new byte[72]), Op.GetPushOp(new byte[33])); // for total size calculation
             unsignedTx.Inputs.Add(txin);
         }
 
@@ -85,12 +82,12 @@ public class PsbtOperations : IPsbtOperations
                 throw new ApplicationException($"The change amount {totalToChange} is below the dust threshold for SegWit transactions.");
             }
 
-            unsignedTx.Outputs.Add(new NBitcoin.TxOut(NBitcoin.Money.Satoshis(totalToChange.Satoshi), NBitcoin.BitcoinAddress.Create(changeAddress, nbitcoinNetwork).ScriptPubKey));
+            unsignedTx.Outputs.Add(new TxOut(Money.Satoshis(totalToChange.Satoshi), BitcoinAddress.Create(changeAddress, nbitcoinNetwork).ScriptPubKey));
         }
 
-        var psbt = NBitcoin.PSBT.FromTransaction(unsignedTx, nbitcoinNetwork);
+        var psbt = PSBT.FromTransaction(unsignedTx, nbitcoinNetwork);
 
-        NBitcoin.ExtPubKey accountExtPubKey = NBitcoin.ExtPubKey.Parse(accountInfo.RootExtPubKey, nbitcoinNetwork);
+        ExtPubKey accountExtPubKey = ExtPubKey.Parse(accountInfo.RootExtPubKey, nbitcoinNetwork);
 
         for (int i = 0; i < unsignedTx.Inputs.Count; i++)
         {
@@ -100,18 +97,18 @@ public class PsbtOperations : IPsbtOperations
             if (utxoInfo == null)
                 throw new InvalidOperationException($"Could not find UTXO information for input {input.PrevOut}");
 
-            psbt.Inputs[i].WitnessUtxo = new NBitcoin.TxOut(NBitcoin.Money.Satoshis(utxoInfo.UtxoData.value), NBitcoin.Script.FromHex(utxoInfo.UtxoData.scriptHex));
+            psbt.Inputs[i].WitnessUtxo = new TxOut(Money.Satoshis(utxoInfo.UtxoData.value), Script.FromHex(utxoInfo.UtxoData.scriptHex));
 
-            var keyPath = new NBitcoin.KeyPath(utxoInfo.HdPath);
-            var rootedKeyPath = new NBitcoin.RootedKeyPath(accountExtPubKey, keyPath);
+            var keyPath = new KeyPath(utxoInfo.HdPath);
+            var rootedKeyPath = new RootedKeyPath(accountExtPubKey.PubKey.GetHDFingerPrint(), keyPath);
 
-            var pubKey = _hdOperations.GeneratePublicKey(ExtPubKey.Parse(accountInfo.ExtPubKey, network), (int)keyPath.Indexes[4], keyPath.Indexes[3] == 1);
-            var path = _hdOperations.CreateHdPath(Purpose, network.Consensus.CoinType, AccountIndex, keyPath.Indexes[3] == 1, (int)keyPath.Indexes[4]);
+            var pubKey = _hdOperations.GeneratePublicKey(ExtPubKey.Parse(accountInfo.ExtPubKey, nbitcoinNetwork), (int)keyPath.Indexes[4], keyPath.Indexes[3] == 1);
+            var path = _hdOperations.CreateHdPath(Purpose, network.CoinType, AccountIndex, keyPath.Indexes[3] == 1, (int)keyPath.Indexes[4]);
 
             if (path != utxoInfo.HdPath)
                 throw new InvalidOperationException($"Path does not match {path} {utxoInfo.HdPath}");
 
-            psbt.Inputs[i].HDKeyPaths.Add(new NBitcoin.PubKey(pubKey.ToBytes()), rootedKeyPath);
+            psbt.Inputs[i].HDKeyPaths.Add(pubKey, rootedKeyPath);
         }
 
         return new PsbtData { PsbtHex = psbt.ToHex() };
@@ -124,13 +121,13 @@ public class PsbtOperations : IPsbtOperations
             throw new ApplicationException("The Root ExtPubKey is missing");
         }
 
-        Network network = _networkConfiguration.GetNetwork();
-        var nbitcoinNetwork = NetworkMapper.Map(network);
+        AngorNetwork network = _networkConfiguration.GetNetwork();
+        var nbitcoinNetwork = network.BitcoinNetwork;
 
         var changeAddress = accountInfo.GetNextChangeReceiveAddress();
 
-        var unsignedTx = NBitcoin.Transaction.Parse(transaction.ToHex(), nbitcoinNetwork);
-        var fromTransaction = NBitcoin.Transaction.Parse(sourceTransaction.ToHex(), nbitcoinNetwork);
+        var unsignedTx = Transaction.Parse(transaction.ToHex(), nbitcoinNetwork);
+        var fromTransaction = Transaction.Parse(sourceTransaction.ToHex(), nbitcoinNetwork);
 
         var totalSize = unsignedTx.GetVirtualSize();
         var totalFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(totalSize);
@@ -142,11 +139,11 @@ public class PsbtOperations : IPsbtOperations
 
         foreach (var coin in utxoDataWithPaths)
         {
-            NBitcoin.OutPoint outputint = new NBitcoin.OutPoint(new NBitcoin.uint256(coin.UtxoData.outpoint.transactionId), coin.UtxoData.outpoint.outputIndex);
+            OutPoint outputint = new OutPoint(new uint256(coin.UtxoData.outpoint.transactionId), coin.UtxoData.outpoint.outputIndex);
             if (unsignedTx.Inputs.Any(x => x.PrevOut == outputint))
                 continue;
-            var txin = new NBitcoin.TxIn(outputint, null);
-            txin.WitScript = new NBitcoin.WitScript(NBitcoin.Op.GetPushOp(new byte[72]), NBitcoin.Op.GetPushOp(new byte[33])); // for total size calculation
+            var txin = new TxIn(outputint, null);
+            txin.WitScript = new WitScript(Op.GetPushOp(new byte[72]), Op.GetPushOp(new byte[33])); // for total size calculation
             unsignedTx.Inputs.Add(txin);
         }
 
@@ -158,11 +155,11 @@ public class PsbtOperations : IPsbtOperations
             throw new ApplicationException($"The change amount {totalToChange} is below the dust threshold for SegWit transactions.");
         }
 
-        unsignedTx.Outputs.Add(new NBitcoin.TxOut(NBitcoin.Money.Satoshis(totalToChange), NBitcoin.BitcoinAddress.Create(changeAddress, nbitcoinNetwork).ScriptPubKey));
+        unsignedTx.Outputs.Add(new TxOut(Money.Satoshis(totalToChange.Satoshi), BitcoinAddress.Create(changeAddress, nbitcoinNetwork).ScriptPubKey));
 
-        var psbt = NBitcoin.PSBT.FromTransaction(unsignedTx, nbitcoinNetwork);
+        var psbt = PSBT.FromTransaction(unsignedTx, nbitcoinNetwork);
 
-        NBitcoin.ExtPubKey accountExtPubKey = NBitcoin.ExtPubKey.Parse(accountInfo.RootExtPubKey, nbitcoinNetwork);
+        ExtPubKey accountExtPubKey = ExtPubKey.Parse(accountInfo.RootExtPubKey, nbitcoinNetwork);
 
         for (int i = 0; i < unsignedTx.Inputs.Count; i++)
         {
@@ -185,18 +182,18 @@ public class PsbtOperations : IPsbtOperations
                 throw new InvalidOperationException($"Could not find UTXO information for input {input.PrevOut}");
             }
 
-            psbtInput.WitnessUtxo = new NBitcoin.TxOut(NBitcoin.Money.Satoshis(utxoInfo.UtxoData.value), NBitcoin.Script.FromHex(utxoInfo.UtxoData.scriptHex));
+            psbtInput.WitnessUtxo = new TxOut(Money.Satoshis(utxoInfo.UtxoData.value), Script.FromHex(utxoInfo.UtxoData.scriptHex));
 
-            var keyPath = new NBitcoin.KeyPath(utxoInfo.HdPath);
-            var rootedKeyPath = new NBitcoin.RootedKeyPath(accountExtPubKey, keyPath);
+            var keyPath = new KeyPath(utxoInfo.HdPath);
+            var rootedKeyPath = new RootedKeyPath(accountExtPubKey.PubKey.GetHDFingerPrint(), keyPath);
 
-            var pubKey = _hdOperations.GeneratePublicKey(ExtPubKey.Parse(accountInfo.ExtPubKey, network), (int)keyPath.Indexes[4], keyPath.Indexes[3] == 1);
-            var path = _hdOperations.CreateHdPath(Purpose, network.Consensus.CoinType, AccountIndex, keyPath.Indexes[3] == 1, (int)keyPath.Indexes[4]);
+            var pubKey = _hdOperations.GeneratePublicKey(ExtPubKey.Parse(accountInfo.ExtPubKey, nbitcoinNetwork), (int)keyPath.Indexes[4], keyPath.Indexes[3] == 1);
+            var path = _hdOperations.CreateHdPath(Purpose, network.CoinType, AccountIndex, keyPath.Indexes[3] == 1, (int)keyPath.Indexes[4]);
 
             if (path != utxoInfo.HdPath)
                 throw new InvalidOperationException($"Path does not match {path} {utxoInfo.HdPath}");
 
-            psbtInput.HDKeyPaths.Add(new NBitcoin.PubKey(pubKey.ToBytes()), rootedKeyPath);
+            psbtInput.HDKeyPaths.Add(pubKey, rootedKeyPath);
         }
 
         return new PsbtData { PsbtHex = psbt.ToHex() };
@@ -204,26 +201,24 @@ public class PsbtOperations : IPsbtOperations
 
     public TransactionInfo SignPsbt(PsbtData psbtData, WalletWords walletWords)
     {
-        Network network = _networkConfiguration.GetNetwork();
-        var nbitcoinNetwork = NetworkMapper.Map(network);
+        AngorNetwork network = _networkConfiguration.GetNetwork();
+        var nbitcoinNetwork = network.BitcoinNetwork;
 
-        var psbt = NBitcoin.PSBT.Parse(psbtData.PsbtHex, nbitcoinNetwork);
+        var psbt = PSBT.Parse(psbtData.PsbtHex, nbitcoinNetwork);
 
-        ExtKey extendedKey = _hdOperations.GetExtendedKey(walletWords.Words, walletWords.Passphrase);
+        ExtKey extendedKey = walletWords.GetOrDeriveExtKey(_hdOperations);
 
-        var nbitcoinExtendedKey = NBitcoin.ExtKey.CreateFromBytes(extendedKey.ToBytes(network.Consensus.ConsensusFactory));
+        psbt.SignAll(ScriptPubKeyType.Segwit, extendedKey);
 
-        psbt.SignAll(NBitcoin.ScriptPubKeyType.Segwit, nbitcoinExtendedKey);
-
-        if (!psbt.TryFinalize(out IList<NBitcoin.PSBTError>? errors))
+        if (!psbt.TryFinalize(out IList<PSBTError>? errors))
         {
-            throw new NBitcoin.PSBTException(errors);
+            throw new PSBTException(errors);
         }
 
-        NBitcoin.Transaction signedTransaction = psbt.ExtractTransaction();
+        Transaction signedTransaction = psbt.ExtractTransaction();
 
-        NBitcoin.Money fee = psbt.GetFee();
+        Money fee = psbt.GetFee();
 
-        return new TransactionInfo { Transaction = network.CreateTransaction(signedTransaction.ToHex()), TransactionFee = fee.Satoshi };
+        return new TransactionInfo { Transaction = signedTransaction, TransactionFee = fee.Satoshi };
     }
 }

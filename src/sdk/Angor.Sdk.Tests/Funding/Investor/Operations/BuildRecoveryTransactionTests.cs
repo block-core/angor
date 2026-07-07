@@ -8,7 +8,8 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
+using NBitcoin;
+using Angor.Shared.Networks;
 using CSharpFunctionalExtensions;
 using FluentAssertions;
 using Moq;
@@ -254,14 +255,14 @@ public class BuildRecoveryTransactionTests
         _mockInvestorTransactionActions
             .Setup(x => x.CheckInvestorRecoverySignatures(
                 It.IsAny<ProjectInfo>(),
-                It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>(),
+                It.IsAny<Transaction>(),
                 It.IsAny<SignatureInfo>()))
             .Returns(true);
 
         _mockInvestorTransactionActions
             .Setup(x => x.AddSignaturesToRecoverSeederFundsTransaction(
                 It.IsAny<ProjectInfo>(),
-                It.IsAny<Blockcore.Consensus.TransactionInfo.Transaction>(),
+                It.IsAny<Transaction>(),
                 It.IsAny<SignatureInfo>(),
                 It.IsAny<AngorKey>()))
             .Returns(network.CreateTransaction());
@@ -355,7 +356,7 @@ public class BuildRecoveryTransactionTests
             .ReturnsAsync(Result.Success(records));
     }
 
-    private Blockcore.Networks.Network SetupNetwork()
+    private AngorNetwork SetupNetwork()
     {
         var network = Angor.Shared.Networks.Networks.Bitcoin.Testnet();
         _mockNetworkConfiguration

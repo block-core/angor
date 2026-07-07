@@ -4,9 +4,8 @@
 @using Angor.Client.Services
 @using Angor.Shared.Models
 @using Angor.Shared.Services
-@using Blockcore.Consensus.TransactionInfo
-@using Blockcore.NBitcoin
-@using Blockcore.NBitcoin.DataEncoders
+@using NBitcoin
+@using NBitcoin.DataEncoders
 @using Angor.Shared.Utilities
 @using ITransactionSignature = NBitcoin.ITransactionSignature
 @using System.Text.Json
@@ -758,7 +757,7 @@
                 var insert = new StageDataTrx
                     {
                         Trxid = item.TrxId,
-                        OutputAddress = item.Transaction.Outputs[stageItem.StageIndex + 1].ScriptPubKey.WitHash.GetAddress(network).ToString(),
+                        OutputAddress = item.Transaction.Outputs[stageItem.StageIndex + 1].ScriptPubKey.WitHash.GetAddress(network.BitcoinNetwork).ToString(),
                         Outputindex = stageItem.StageIndex + 1,
                         Amount = item.Transaction.Outputs[stageItem.StageIndex + 1].Value.Satoshi,
                     };
@@ -893,13 +892,13 @@
                 var trxId = utxo.Key.Trxid;
                 var trx = transactions.First(f => f.TrxId == trxId);
 
-                founderContext.InvestmentTrasnactionsHex.Add(trx.Transaction.ToHex(network.Consensus.ConsensusFactory));
+                founderContext.InvestmentTrasnactionsHex.Add(trx.Transaction.ToHex());
             }
 
 
             var accountInfo = storage.GetAccountInfo(network.Name);
             var address = accountInfo.GetNextReceiveAddress();
-            var addressScript = BitcoinWitPubKeyAddress.Create(address, network).ScriptPubKey;
+            var addressScript = BitcoinWitPubKeyAddress.Create(address, network.BitcoinNetwork).ScriptPubKey;
 
             var keys = _walletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
 
@@ -944,7 +943,7 @@
 
             var accountInfo = storage.GetAccountInfo(network.Name);
             var address = accountInfo.GetNextReceiveAddress();
-            var addressScript = BitcoinWitPubKeyAddress.Create(address, network).ScriptPubKey;
+            var addressScript = BitcoinWitPubKeyAddress.Create(address, network.BitcoinNetwork).ScriptPubKey;
             
             var words = await passwordComponent.GetWalletAsync();
             var keys = _walletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
@@ -978,7 +977,7 @@
         {
             showCreateModal = false;
 
-            var publishError = await _IndexerService.PublishTransactionAsync(signedTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory));
+            var publishError = await _IndexerService.PublishTransactionAsync(signedTransaction.Transaction.ToHex());
 
             if (!string.IsNullOrEmpty(publishError))
             {
