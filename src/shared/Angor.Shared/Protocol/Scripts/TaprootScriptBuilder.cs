@@ -86,9 +86,11 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
         return (new Script(controlBlock.ToBytes()), execute, secretHashes.ToArray());
     }
     
-    private static TaprootSpendInfo BuildTaprootSpendInfo(ProjectScripts scripts)
+    private static TaprootSpendInfo BuildTaprootSpendInfo(ProjectScripts scripts, int projectVersion = 1)
     {
-        var taprootKey = CreateUnspendableInternalKey();
+        var taprootKey = projectVersion >= 3
+            ? CreateUnspendableInternalKeyV2()
+            : CreateUnspendableInternalKey();
 
         var scriptWeights = BuildTaprootScripts(scripts);
 
@@ -119,14 +121,30 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
         return scriptWeights;
     }
 
+    /// <summary>
+    /// BIP-341 recommended provably unspendable NUMS (Nothing Up My Sleeve) internal key.
+    /// This is lift_x(SHA256("unspendable")) = 0x50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0
+    /// Used for new projects (Version 3+). Provably unspendable because nobody knows the discrete log.
+    /// </summary>
+    private static readonly byte[] Bip341NumsPointBytes = Convert.FromHexString(
+        "50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0");
+
+    /// <summary>
+    /// Creates the standard BIP-341 unspendable internal key (for new V3+ projects).
+    /// </summary>
+    public static TaprootInternalPubKey CreateUnspendableInternalKeyV2()
+    {
+        return new TaprootInternalPubKey(Bip341NumsPointBytes);
+    }
+
+    /// <summary>
+    /// Legacy unspendable internal key used by V1/V2 projects already on-chain.
+    /// DO NOT use for new projects — use <see cref="CreateUnspendableInternalKeyV2"/> instead.
+    /// Kept for backward compatibility when spending existing taproot outputs.
+    /// </summary>
     public static TaprootInternalPubKey CreateUnspendableInternalKey()
     {
-        // todo: double check this key is unspendable
-        // https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#constructing-and-spending-taproot-outputs
-        // this is a key that can not be spent, we will always spend a tapscript using scripts
-        //var taprootKey = TaprootInternalPubKey.Parse("0x50929b74c1a04954b78b4b6035e97a5e078a5a0f28ec96d547bfee9ace803ac0");
-
-        // 1. Calculate the SHA256 of a known constant
+        // Legacy: SHA256("Angor Unspendable Taproot Key") interpreted directly as x-coordinate
         var sha256 = Hashes.SHA256(Encoding.UTF8.GetBytes("Angor Unspendable Taproot Key"));
 
         if (!TaprootPubKey.TryCreate(sha256, out TaprootPubKey? taprootPubKey))
