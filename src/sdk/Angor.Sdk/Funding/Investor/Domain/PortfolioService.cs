@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Shared;
 using Angor.Data.Documents.Interfaces;
@@ -6,6 +7,8 @@ using Angor.Shared.Services;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
+using Microsoft.Extensions.Logging;
+using Nostr.Client.Messages;
 
 namespace Angor.Sdk.Funding.Investor.Domain;
 
@@ -15,7 +18,8 @@ public class PortfolioService(
     ISerializer serializer,
     ISeedwordsProvider seedwordsProvider,
     IRelayService relayService,
-    IGenericDocumentCollection<InvestmentRecordsDocument> documentCollection) : IPortfolioService
+    IGenericDocumentCollection<InvestmentRecordsDocument> documentCollection,
+    ILogger<PortfolioService> logger) : IPortfolioService
 {
     public async Task<Result<InvestmentRecords>> GetByWalletId(string walletId)
     {
@@ -144,17 +148,28 @@ public class PortfolioService(
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         var tcs = new TaskCompletionSource<Result>();
-            
+
         cts.Token.Register(() => tcs.TrySetCanceled());
 
-        var encryptedContent = string.Empty;
-        
+        // Collect events from all relays, keyed by content to deduplicate.
+        // Different relays may return the same event or different versions
+        // (e.g. stale data from a previous session that used a different key).
+        var receivedEvents = new ConcurrentDictionary<string, NostrEvent>();
+
         relayService.LookupDirectMessagesForPubKey(storageAccountKey, null, 1, nostrEvent =>
             {
                 try
                 {
-                    encryptedContent = nostrEvent.Content;
-                    tcs.TrySetResult( Result.Success());
+                    if (!string.IsNullOrEmpty(nostrEvent.Content))
+                    {
+                        // Keep the newest event per unique content payload
+                        receivedEvents.AddOrUpdate(
+                            nostrEvent.Content,
+                            nostrEvent,
+                            (_, existing) => nostrEvent.CreatedAt > existing.CreatedAt ? nostrEvent : existing);
+                    }
+
+                    tcs.TrySetResult(Result.Success());
                 }
                 catch (Exception e)
                 {
@@ -168,26 +183,90 @@ public class PortfolioService(
                 tcs.TrySetResult(Result.Success());
             });
 
-        
         try
         {
-            var lookupResult = await tcs.Task;
-            
-            if (!lookupResult.IsSuccess) 
-                return Result.Failure<InvestmentRecords>(lookupResult.Error);
-
-            if (string.IsNullOrEmpty(encryptedContent))
-                return Result.Success(new InvestmentRecords());
-
-            var decrypted = await encryptionService.DecryptData(encryptedContent, password);
-            var investmentRecords = serializer.Deserialize<InvestmentRecords>(decrypted);
-            return Result.Success(investmentRecords!);
-
+            await tcs.Task;
         }
-        catch (OperationCanceledException e)
+        catch (OperationCanceledException)
         {
-            return Result.Failure<InvestmentRecords>(e.Message);
+            // Timeout — but we may have collected events before the timeout fired.
+            // Fall through to process whatever we have.
         }
 
+        // Process whatever events we collected (even if the relay lookup timed out)
+        return await TryDecryptRelayEvents(receivedEvents, storageAccountKey, password);
+    }
+
+    private async Task<Result<InvestmentRecords>> TryDecryptRelayEvents(
+        ConcurrentDictionary<string, NostrEvent> receivedEvents,
+        string storageAccountKey,
+        string password)
+    {
+        // Sort unique payloads by timestamp, newest first
+        var uniqueEvents = receivedEvents.Values
+            .OrderByDescending(e => e.CreatedAt ?? DateTime.MinValue)
+            .ToList();
+
+        if (uniqueEvents.Count == 0)
+            return Result.Success(new InvestmentRecords());
+
+        if (uniqueEvents.Count > 1)
+        {
+            logger.LogWarning(
+                "Received {UniqueCount} distinct relay payloads for storage key {StorageKey}. " +
+                "Timestamps: {Timestamps}. Content lengths: {Lengths}. " +
+                "This may indicate stale data on some relays from a previous session",
+                uniqueEvents.Count,
+                storageAccountKey[..12] + "...",
+                string.Join(", ", uniqueEvents.Select(e => e.CreatedAt?.ToString("O") ?? "null")),
+                string.Join(", ", uniqueEvents.Select(e => e.Content?.Length ?? 0)));
+        }
+
+        // Try decrypting each unique payload starting from the newest.
+        // If the newest fails (e.g. stale data encrypted with a different key),
+        // fall back to older payloads that may still be valid.
+        for (var i = 0; i < uniqueEvents.Count; i++)
+        {
+            var nostrEvent = uniqueEvents[i];
+            try
+            {
+                var decrypted = await encryptionService.DecryptData(nostrEvent.Content!, password);
+                var investmentRecords = serializer.Deserialize<InvestmentRecords>(decrypted);
+
+                if (uniqueEvents.Count > 1)
+                {
+                    logger.LogInformation(
+                        "Successfully decrypted relay event from {Timestamp} (tried {Index} of {Total})",
+                        nostrEvent.CreatedAt?.ToString("O") ?? "null",
+                        i + 1,
+                        uniqueEvents.Count);
+                }
+
+                return Result.Success(investmentRecords!);
+            }
+            catch (Exception ex) when (ex is System.Security.Cryptography.AuthenticationTagMismatchException
+                                           or System.Security.Cryptography.CryptographicException
+                                           or FormatException)
+            {
+                logger.LogWarning(ex,
+                    "Failed to decrypt relay event from {Timestamp} " +
+                    "(content length={ContentLength}, payload {Index} of {Total}). " +
+                    "This event may contain stale data encrypted with a different key",
+                    nostrEvent.CreatedAt?.ToString("O") ?? "null",
+                    nostrEvent.Content?.Length ?? 0,
+                    i + 1,
+                    uniqueEvents.Count);
+            }
+        }
+
+        // All payloads failed to decrypt — return empty rather than crashing the pipeline
+        logger.LogError(
+            "All {Count} distinct relay payloads for storage key {StorageKey} failed to decrypt. " +
+            "Returning empty investment records. The relay may contain stale data " +
+            "from a previous session that used a different encryption key",
+            uniqueEvents.Count,
+            storageAccountKey[..12] + "...");
+
+        return Result.Success(new InvestmentRecords());
     }
 }
