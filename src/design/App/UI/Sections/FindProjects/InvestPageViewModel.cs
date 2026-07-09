@@ -705,6 +705,7 @@ public partial class InvestPageViewModel : ReactiveObject, IDisposable
             AmountSats = amountSats,
             StageCount = Stages.Count,
             FeeRateSatsPerVbyte = 20,
+            OnChainRequiredSatsOverride = PaymentFlowConfig.EstimateOnChainRequired(amountSats, Stages.Count, 20),
             Title = $"Pay to {actionVerb}",
             SuccessTitle = successTitle,
             SuccessDescription = $"Your {actionVerb.ToLowerInvariant()} of {FormattedAmount} {_currencyService.Symbol} has been submitted.",

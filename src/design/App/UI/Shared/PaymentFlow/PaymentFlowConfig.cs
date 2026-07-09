@@ -10,7 +10,7 @@ namespace App.UI.Shared.PaymentFlow;
 /// </summary>
 public record PaymentFlowConfig
 {
-    /// <summary>Amount to receive in satoshis.</summary>
+    /// <summary>Amount to receive in satoshis (the net investment/deploy amount).</summary>
     public required long AmountSats { get; init; }
 
     /// <summary>Number of stage outputs for Lightning swap fee estimation (0 if not applicable).</summary>
@@ -18,6 +18,45 @@ public record PaymentFlowConfig
 
     /// <summary>Default fee rate in sat/vB.</summary>
     public int FeeRateSatsPerVbyte { get; init; } = 20;
+
+    /// <summary>
+    /// Total on-chain amount the user must send when paying via on-chain invoice.
+    /// For investment flows, this must cover the investment amount + Angor fee + miner fee,
+    /// because the spending transaction is built exclusively from UTXOs on the funding address.
+    /// If null, defaults to <see cref="AmountSats"/> (suitable for flows like deploy where the
+    /// spending transaction is not restricted to the funding address).
+    /// </summary>
+    public long? OnChainRequiredSatsOverride { get; init; }
+
+    /// <summary>
+    /// Effective on-chain required amount: uses the explicit override if provided,
+    /// otherwise falls back to <see cref="AmountSats"/>.
+    /// </summary>
+    public long OnChainRequiredSats => OnChainRequiredSatsOverride ?? AmountSats;
+
+    /// <summary>
+    /// Calculates the total on-chain amount needed for an investment transaction,
+    /// including the Angor fee (1%) and estimated miner fee.
+    /// Use this as <see cref="OnChainRequiredSatsOverride"/> for investment flows.
+    /// </summary>
+    public static long EstimateOnChainRequired(long investmentAmountSats, int stageCount, int feeRateSatsPerVbyte)
+    {
+        const int AngorFeePercentage = 1;
+        long angorFee = (investmentAmountSats * AngorFeePercentage) / 100;
+
+        // Investment tx structure (same estimate as CreateLightningSwap):
+        //   ~10.5 vB  tx overhead
+        //   ~68   vB  1 P2WPKH input
+        //    43   vB  1 P2WSH output (angor fee)
+        //   ~99   vB  1 OP_RETURN output
+        //  N×43   vB  N P2TR stage outputs
+        //    31   vB  1 P2WPKH change output
+        // Total ≈ 252 + (stageCount × 43) vbytes
+        int estimatedTxVbytes = 252 + (stageCount * 43);
+        long estimatedMinerFee = feeRateSatsPerVbyte * estimatedTxVbytes;
+
+        return investmentAmountSats + angorFee + estimatedMinerFee;
+    }
 
     /// <summary>Title for the invoice screen, e.g. "Pay to Invest" or "Fund Deployment".</summary>
     public string Title { get; init; } = "Payment";
