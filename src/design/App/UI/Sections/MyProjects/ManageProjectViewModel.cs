@@ -9,6 +9,7 @@ using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
+using App.UI.Shared.Services;
 using Nostr.Client.Utils;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -117,6 +118,7 @@ public partial class ManageProjectViewModel : ReactiveObject
     private readonly IProjectAppService _projectAppService;
     private readonly IProjectService _projectService;
     private readonly ICurrencyService _currencyService;
+    private readonly IWalletContext _walletContext;
     private readonly ILogger<ManageProjectViewModel> _logger;
 
     public event Action<string>? ToastRequested;
@@ -194,12 +196,14 @@ public partial class ManageProjectViewModel : ReactiveObject
         IProjectAppService projectAppService,
         IProjectService projectService,
         ICurrencyService currencyService,
+        IWalletContext walletContext,
         ILogger<ManageProjectViewModel> logger)
     {
         _founderAppService = founderAppService;
         _projectAppService = projectAppService;
         _projectService = projectService;
         _currencyService = currencyService;
+        _walletContext = walletContext;
         _logger = logger;
         Project = project;
         WalletPassword = "";
@@ -285,10 +289,43 @@ public partial class ManageProjectViewModel : ReactiveObject
             {
                 NostrNpub = NostrConverter.ToNpub(project.NostrPubKey) ?? project.NostrPubKey;
             }
+
+            // Derive the project nostr private key (nsec + hex) from the wallet seed
+            if (!string.IsNullOrEmpty(project.FounderKey))
+            {
+                await LoadNostrPrivateKeysAsync(project.FounderKey);
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load project keys for project {ProjectId}", Project.ProjectIdentifier);
+        }
+    }
+
+    /// <summary>
+    /// Derives the project-specific Nostr private key via the SDK.
+    /// Populates NostrNsec (bech32 nsec1...) and NostrHex (raw hex) fields.
+    /// </summary>
+    private async Task LoadNostrPrivateKeysAsync(string founderKey)
+    {
+        var selectedWallet = _walletContext.SelectedWallet;
+        if (selectedWallet == null)
+        {
+            _logger.LogWarning("No wallet selected — cannot derive project nostr private key");
+            return;
+        }
+
+        var result = await _founderAppService.GetFounderNsec(
+            new GetFounderNsec.GetFounderNsecRequest(selectedWallet.Id, founderKey));
+
+        if (result.IsSuccess)
+        {
+            NostrNsec = result.Value.Nsec;
+            NostrHex = result.Value.Hex;
+        }
+        else
+        {
+            _logger.LogWarning("Failed to derive project nostr private key: {Error}", result.Error);
         }
     }
 

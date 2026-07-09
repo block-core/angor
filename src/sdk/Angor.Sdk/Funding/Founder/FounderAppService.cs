@@ -17,6 +17,8 @@ public class FounderAppService(IMediator mediator) : IFounderAppService
     public Task<Result<GetReleasableTransactions.GetReleasableTransactionsResponse>> GetReleasableTransactions(GetReleasableTransactions.GetReleasableTransactionsRequest request) => mediator.Send(request);
 
     public Task<Result<ReleaseFunds.ReleaseFundsResponse>> ReleaseFunds(ReleaseFunds.ReleaseFundsRequest request) => mediator.Send(request);
+
+    public Task<Result<GetFounderNsec.GetFounderNsecResponse>> GetFounderNsec(GetFounderNsec.GetFounderNsecRequest request) => mediator.Send(request);
     
     public Task<Result<CreateProjectKeys.CreateProjectKeysResponse>> CreateProjectKeys(CreateProjectKeys.CreateProjectKeysRequest request) => mediator.Send(request);
     
