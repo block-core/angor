@@ -2,6 +2,7 @@ using System.IO;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
+using App.UI.Shared.Helpers;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -32,6 +33,9 @@ public partial class LogViewerModal : UserControl, IBackdropCloseable
         var refreshBtn = this.FindControl<Button>("RefreshButton");
         if (refreshBtn != null) refreshBtn.Click += OnRefreshClick;
 
+        var copyBtn = this.FindControl<Button>("CopyLogsButton");
+        if (copyBtn != null) copyBtn.Click += OnCopyLogsClick;
+
         // Load logs on attach
         AttachedToVisualTree += (_, _) => LoadLatestLogs();
     }
@@ -47,6 +51,31 @@ public partial class LogViewerModal : UserControl, IBackdropCloseable
     private void OnRefreshClick(object? sender, RoutedEventArgs e)
     {
         LoadLatestLogs();
+    }
+
+    private async void OnCopyLogsClick(object? sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var logContent = this.FindControl<TextBlock>("LogContentText");
+            var text = logContent?.Text;
+            if (string.IsNullOrWhiteSpace(text)) return;
+
+            ClipboardHelper.CopyToClipboard(this, text);
+
+            // Brief visual feedback
+            var copyText = this.FindControl<TextBlock>("CopyButtonText");
+            if (copyText != null)
+            {
+                copyText.Text = "Copied!";
+                await Task.Delay(2000);
+                copyText.Text = "Copy";
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to copy logs to clipboard");
+        }
     }
 
     private void LoadLatestLogs()
