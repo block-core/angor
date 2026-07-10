@@ -277,8 +277,10 @@ public class DerivationOperations : IDerivationOperations
 
         var hashedKey = Hashes.DoubleSHA256(privateKeyBytes);
 
-        // the hex of the hash of the private key is the password
-        var hex = Encoders.Hex.EncodeData(hashedKey.ToBytes(false)).Replace("-", "").ToLower();
+        // The hex of the hash of the private key is the password.
+        // ToBytes(true) = big-endian, matching the byte order that the pre-NBitcoin
+        // Blockcore code produced via uint256.ToArray().
+        var hex = Encoders.Hex.EncodeData(hashedKey.ToBytes(true)).Replace("-", "").ToLower();
 
         return hex;
     }
