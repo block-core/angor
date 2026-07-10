@@ -88,7 +88,6 @@ public class CreateInvestmentTests
             _derivationOperations,
             _mockWalletBalanceService.Object,
             _mockPortfolioService.Object,
-            new Mock<IAngorIndexerService>().Object,
             new NullLogger<BuildInvestmentDraft.BuildInvestmentDraftHandler>());
     }
 

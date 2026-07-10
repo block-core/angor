@@ -122,7 +122,6 @@ public class CreateInvestmentFromSpecificAddressIntegrationTests : IDisposable
             _derivationOperations,
             _mockWalletAccountBalanceService.Object,
             _mockPortfolioService.Object,
-            new Mock<IAngorIndexerService>().Object,
             new NullLogger<BuildInvestmentDraft.BuildInvestmentDraftHandler>());
     }
 

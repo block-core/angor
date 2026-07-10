@@ -9,7 +9,6 @@ using Angor.Sdk.Wallet.Domain;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
-using Angor.Shared.Services;
 using NBitcoin;
 using CSharpFunctionalExtensions;
 using MediatR;
@@ -39,7 +38,6 @@ public static class BuildInvestmentDraft
             IDerivationOperations derivationOperations,
             IWalletAccountBalanceService walletAccountBalanceService,
             IPortfolioService portfolioService,
-            IAngorIndexerService angorIndexerService,
             ILogger<BuildInvestmentDraftHandler> logger)
         : IRequestHandler<BuildInvestmentDraftRequest, Result<BuildInvestmentDraftResponse>>
     {
@@ -70,12 +68,13 @@ public static class BuildInvestmentDraft
                 // Derive investor key
                 var investorKey = derivationOperations.DeriveInvestorKey(walletWords, project.FounderKey);
 
-                // Check if the investor has already invested in this project.
-                // First check local portfolio, then fall back to the on-chain indexer.
-                // If the indexer finds an investment that's missing from the portfolio,
-                // auto-recover it so it appears in the Funded tab.
+                // Check if the investor has already invested in this project
                 var portfolioResult = await portfolioService.GetByWalletId(transactionRequest.WalletId.Value);
-                if (portfolioResult.IsSuccess)
+                if (portfolioResult.IsFailure)
+                {
+                    logger.LogWarning("Could not check existing investments for wallet {WalletId}: {Error}. Proceeding with investment.", transactionRequest.WalletId, portfolioResult.Error);
+                }
+                else
                 {
                     var existingInvestment = portfolioResult.Value?.ProjectIdentifiers
                         .FirstOrDefault(i => i.ProjectIdentifier == transactionRequest.ProjectId.Value);
@@ -85,37 +84,6 @@ public static class BuildInvestmentDraft
                         logger.LogWarning("Investor has already invested in project {ProjectId}", transactionRequest.ProjectId);
                         return Result.Failure<BuildInvestmentDraftResponse>("You have already invested in this project.");
                     }
-                }
-                else
-                {
-                    logger.LogWarning("Could not check existing investments for wallet {WalletId}: {Error}. Checking indexer as fallback.",
-                        transactionRequest.WalletId, portfolioResult.Error);
-                }
-
-                // Indexer fallback: check on-chain data for an existing investment.
-                // This catches cases where the portfolio relay data was lost, corrupted,
-                // or encrypted with a different key (e.g. after the Blockcore migration).
-                var indexerCheck = await Result.Try(() =>
-                    angorIndexerService.GetInvestmentAsync(transactionRequest.ProjectId.Value, investorKey));
-
-                if (indexerCheck is { IsSuccess: true, Value: not null })
-                {
-                    var onChainInvestment = indexerCheck.Value;
-                    logger.LogInformation(
-                        "Found existing on-chain investment for project {ProjectId} (TxId: {TxId}, Amount: {Amount} sats). " +
-                        "Re-adding to portfolio to recover missing record.",
-                        transactionRequest.ProjectId, onChainInvestment.TransactionId, onChainInvestment.TotalAmount);
-
-                    // Auto-recover: re-add the missing investment record to the portfolio
-                    await portfolioService.AddOrUpdate(transactionRequest.WalletId.Value, new InvestmentRecord
-                    {
-                        ProjectIdentifier = transactionRequest.ProjectId.Value,
-                        InvestmentTransactionHash = onChainInvestment.TransactionId,
-                        InvestorPubKey = investorKey,
-                        InvestedAmountSats = onChainInvestment.TotalAmount,
-                    });
-
-                    return Result.Failure<BuildInvestmentDraftResponse>("You have already invested in this project.");
                 }
 
                 // Convert Project to ProjectInfo
