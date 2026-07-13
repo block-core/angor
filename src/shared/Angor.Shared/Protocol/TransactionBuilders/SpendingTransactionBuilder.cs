@@ -1,9 +1,6 @@
 using Angor.Shared.Models;
 using Angor.Shared.Protocol.Scripts;
-using Blockcore.NBitcoin.DataEncoders;
 using NBitcoin;
-using Script = Blockcore.Consensus.ScriptInfo.Script;
-using uint256 = Blockcore.NBitcoin.uint256;
 
 namespace Angor.Shared.Protocol.TransactionBuilders;
 
@@ -44,8 +41,7 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
 
         var network = _networkConfiguration.GetNetwork();
 
-        // We'll use the NBitcoin lib because its a taproot spend
-        var nbitcoinNetwork = NetworkMapper.Map(network);
+        var nbitcoinNetwork = network.BitcoinNetwork;
 
         var spendingTrx = nbitcoinNetwork.CreateTransaction();
 
@@ -68,7 +64,7 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
         spendingTrx.LockTime = Utils.DateTimeToUnixTime(effectiveExpiryDate.AddMinutes(1));
 
         // Step 2 - build the transaction outputs and inputs without signing using fake sigs for fee estimation
-        spendingTrx.Outputs.Add(investmentTrxOutputs.Sum(_ => _.TxOut.Value), NBitcoin.BitcoinAddress.Create(receiveAddress, nbitcoinNetwork));
+        spendingTrx.Outputs.Add(investmentTrxOutputs.Sum(_ => _.TxOut.Value), BitcoinAddress.Create(receiveAddress, nbitcoinNetwork));
         
 
         //Need to add the script sig to calculate the fee correctly
@@ -118,14 +114,23 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
 
         // Step 4 - sign the taproot inputs
         var trxData = spendingTrx.PrecomputeTransactionData(investmentTrxOutputs.Select(s => s.TxOut).ToArray());
-        var key = new Key(privateKey.ToBytes());
+        var keyBytes = privateKey.ToBytes();
+        Key key;
+        try
+        {
+            key = new Key(keyBytes);
+        }
+        finally
+        {
+            System.Security.Cryptography.CryptographicOperations.ZeroMemory(keyBytes);
+        }
 
         const TaprootSigHash sigHash = TaprootSigHash.All;
         var inputIndex = 0;
         foreach (var input in spendingTrx.Inputs)
         {
             var scriptToExecute =
-            new NBitcoin.Script(
+            new Script(
            input.WitScript[input.WitScript.PushCount - 2]); //control block is the last and execute one before it
 
             var hash = spendingTrx.GetSignatureHashTaproot(trxData,
@@ -147,10 +152,9 @@ public class SpendingTransactionBuilder : ISpendingTransactionBuilder
     {
         var network = _networkConfiguration.GetNetwork();
 
-        // We'll use the NBitcoin lib because its a taproot spend
-        var nbitcoinNetwork = NetworkMapper.Map(network);
+        var nbitcoinNetwork = network.BitcoinNetwork;
 
-        var trx = NBitcoin.Transaction.Parse(investorTrxHash, nbitcoinNetwork);
+        var trx = Transaction.Parse(investorTrxHash, nbitcoinNetwork);
 
         var investmentTrxOutputs = trx.Outputs.AsIndexedOutputs()
             .Where(utxo => utxo.TxOut.ScriptPubKey.IsScriptType(ScriptType.Taproot))

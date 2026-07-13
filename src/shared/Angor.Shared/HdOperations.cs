@@ -1,8 +1,5 @@
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.BIP32;
-using Blockcore.NBitcoin.BIP39;
-using Blockcore.Networks;
-using Blockcore.Utilities;
+using NBitcoin;
+using Angor.Shared.Networks;
 
 namespace Angor.Shared;
 
@@ -32,11 +29,12 @@ public class HdOperations : IHdOperations
         /// <returns>
         /// An HD public key derived from an extended public key.
         /// </returns>
-        public PubKey GeneratePublicKey(string accountExtPubKey, int index, bool isChange)
+        public PubKey GeneratePublicKey(string accountExtPubKey, int index, bool isChange, Network network)
         {
-            Guard.NotEmpty(accountExtPubKey, nameof(accountExtPubKey));
+            ArgumentException.ThrowIfNullOrEmpty(accountExtPubKey, nameof(accountExtPubKey));
+            ArgumentNullException.ThrowIfNull(network, nameof(network));
 
-            return GeneratePublicKey(ExtPubKey.Parse(accountExtPubKey), index, isChange);
+            return GeneratePublicKey(ExtPubKey.Parse(accountExtPubKey, network), index, isChange);
         }
 
         /// <summary>
@@ -50,7 +48,7 @@ public class HdOperations : IHdOperations
         /// </returns>
         public PubKey GeneratePublicKey(ExtPubKey accountExtPubKey, int index, bool isChange)
         {
-            Guard.NotNull(accountExtPubKey, nameof(accountExtPubKey));
+            ArgumentNullException.ThrowIfNull(accountExtPubKey, nameof(accountExtPubKey));
 
             int change = isChange ? 1 : 0;
             var keyPath = new KeyPath($"{change}/{index}");
@@ -66,17 +64,17 @@ public class HdOperations : IHdOperations
         /// <param name="chainCode">The chain code used in creating the extended private key.</param>
         /// <param name="hdPath">The HD path of the account for which to get the extended private key.</param>
         /// <param name="network">The network for which to generate this extended private key.</param>
-        public static ISecret GetExtendedPrivateKey(Key privateKey, byte[] chainCode, string hdPath, Network network)
+        public static ISecret GetExtendedPrivateKey(Key privateKey, byte[] chainCode, string hdPath, AngorNetwork network)
         {
-            Guard.NotNull(privateKey, nameof(privateKey));
-            Guard.NotNull(chainCode, nameof(chainCode));
-            Guard.NotEmpty(hdPath, nameof(hdPath));
-            Guard.NotNull(network, nameof(network));
+            ArgumentNullException.ThrowIfNull(privateKey, nameof(privateKey));
+            ArgumentNullException.ThrowIfNull(chainCode, nameof(chainCode));
+            ArgumentException.ThrowIfNullOrEmpty(hdPath, nameof(hdPath));
+            ArgumentNullException.ThrowIfNull(network, nameof(network));
 
             // Get the extended key.
             var seedExtKey = new ExtKey(privateKey, chainCode);
             ExtKey addressExtKey = seedExtKey.Derive(new KeyPath(hdPath));
-            BitcoinExtKey addressPrivateKey = addressExtKey.GetWif(network);
+            BitcoinExtKey addressPrivateKey = addressExtKey.GetWif(network.BitcoinNetwork);
             return addressPrivateKey;
         }
 
@@ -91,8 +89,8 @@ public class HdOperations : IHdOperations
         /// <returns>The extended public key for an account, used to derive child keys.</returns>
         public ExtPubKey GetExtendedPublicKey(Key privateKey, byte[] chainCode, int purpose, int coinType, int accountIndex)
         {
-            Guard.NotNull(privateKey, nameof(privateKey));
-            Guard.NotNull(chainCode, nameof(chainCode));
+            ArgumentNullException.ThrowIfNull(privateKey, nameof(privateKey));
+            ArgumentNullException.ThrowIfNull(chainCode, nameof(chainCode));
 
             string accountHdPath = GetAccountHdPath(purpose, coinType, accountIndex);
             return GetExtendedPublicKey(privateKey, chainCode, accountHdPath);
@@ -107,9 +105,9 @@ public class HdOperations : IHdOperations
         /// <returns>The extended public key, used to derive child keys.</returns>
         public ExtPubKey GetExtendedPublicKey(Key privateKey, byte[] chainCode, string hdPath)
         {
-            Guard.NotNull(privateKey, nameof(privateKey));
-            Guard.NotNull(chainCode, nameof(chainCode));
-            Guard.NotEmpty(hdPath, nameof(hdPath));
+            ArgumentNullException.ThrowIfNull(privateKey, nameof(privateKey));
+            ArgumentNullException.ThrowIfNull(chainCode, nameof(chainCode));
+            ArgumentException.ThrowIfNullOrEmpty(hdPath, nameof(hdPath));
 
             // get extended private key
             var seedExtKey = new ExtKey(privateKey, chainCode);
@@ -139,7 +137,7 @@ public class HdOperations : IHdOperations
         /// <remarks>This key is sometimes referred to as the 'root seed' or the 'master key'.</remarks>
         public ExtKey GetExtendedKey(string mnemonic, string? passphrase = null)
         {
-            Guard.NotEmpty(mnemonic, nameof(mnemonic));
+            ArgumentException.ThrowIfNullOrEmpty(mnemonic, nameof(mnemonic));
 
             return GetExtendedKey(new Mnemonic(mnemonic), passphrase);
         }
@@ -153,7 +151,7 @@ public class HdOperations : IHdOperations
         /// <remarks>This key is sometimes referred to as the 'root seed' or the 'master key'.</remarks>
         private static ExtKey GetExtendedKey(Mnemonic mnemonic, string? passphrase = null)
         {
-            Guard.NotNull(mnemonic, nameof(mnemonic));
+            ArgumentNullException.ThrowIfNull(mnemonic, nameof(mnemonic));
 
             return mnemonic.DeriveExtKey(passphrase);
         }
@@ -183,7 +181,7 @@ public class HdOperations : IHdOperations
         /// <remarks>Refer to <seealso cref="https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki#path-levels"/> for the format of the HD path.</remarks>
         public static int GetCoinType(string hdPath)
         {
-            Guard.NotEmpty(hdPath, nameof(hdPath));
+            ArgumentException.ThrowIfNullOrEmpty(hdPath, nameof(hdPath));
 
             string[] pathElements = hdPath.Split('/');
             if (pathElements.Length < 3)
@@ -206,7 +204,7 @@ public class HdOperations : IHdOperations
         /// <remarks>Refer to <seealso cref="https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki#path-levels"/> for the format of the HD path.</remarks>
         public static int GetPurpose(string hdPath)
         {
-            Guard.NotEmpty(hdPath, nameof(hdPath));
+            ArgumentException.ThrowIfNullOrEmpty(hdPath, nameof(hdPath));
 
             string[] pathElements = hdPath.Split('/');
             if (pathElements.Length < 3)
@@ -229,7 +227,7 @@ public class HdOperations : IHdOperations
         /// <remarks>Refer to <seealso cref="https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki#path-levels"/> for the format of the HD path.</remarks>
         public static int GetAccountIndex(string hdPath)
         {
-            Guard.NotEmpty(hdPath, nameof(hdPath));
+            ArgumentException.ThrowIfNullOrEmpty(hdPath, nameof(hdPath));
 
             string[] pathElements = hdPath.Split('/');
             if (pathElements.Length < 4)
@@ -252,7 +250,7 @@ public class HdOperations : IHdOperations
         /// <remarks>Refer to <seealso cref="https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki#path-levels"/> for the format of the HD path.</remarks>
         public static bool IsChangeAddress(string hdPath)
         {
-            Guard.NotEmpty(hdPath, nameof(hdPath));
+            ArgumentException.ThrowIfNullOrEmpty(hdPath, nameof(hdPath));
 
             string[] hdPathParts = hdPath.Split('/');
             if (hdPathParts.Length < 5)
@@ -273,20 +271,17 @@ public class HdOperations : IHdOperations
         /// <param name="password">The password used to decrypt the encrypted seed.</param>
         /// <param name="network">The network this seed applies to.</param>
         /// <returns>The decrypted private key.</returns>
-        public static Key DecryptSeed(string encryptedSeed, string password, Network network)
+        public static Key DecryptSeed(string encryptedSeed, string password, AngorNetwork network)
         {
-            Guard.NotEmpty(encryptedSeed, nameof(encryptedSeed));
-            Guard.NotEmpty(password, nameof(password));
-            Guard.NotNull(network, nameof(network));
+            ArgumentException.ThrowIfNullOrEmpty(encryptedSeed, nameof(encryptedSeed));
+            ArgumentException.ThrowIfNullOrEmpty(password, nameof(password));
+            ArgumentNullException.ThrowIfNull(network, nameof(network));
 
-            return Key.Parse(encryptedSeed, password, network);
+            return Key.Parse(encryptedSeed, password, network.BitcoinNetwork);
         }
 
         public string DerivePublicKey(string mnemonic, string? passphrase, string hdPath)
         {
-            ExtKey.UseBCForHMACSHA512 = true;
-            Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
-
             var extendedKey = GetExtendedKey(mnemonic, passphrase);
             var derivedKey = extendedKey.Derive(new KeyPath(hdPath));
             return derivedKey.PrivateKey.PubKey.ToHex();
@@ -294,12 +289,9 @@ public class HdOperations : IHdOperations
 
         public AngorKey DerivePrivateKey(string mnemonic, string? passphrase, string hdPath)
         {
-            ExtKey.UseBCForHMACSHA512 = true;
-            Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
-
             var extendedKey = GetExtendedKey(mnemonic, passphrase);
             var derivedKey = extendedKey.Derive(new KeyPath(hdPath));
-            return AngorKey.From(derivedKey.PrivateKey);
+            return new AngorKey(derivedKey.PrivateKey.ToBytes());
         }
 
         public string DerivePublicKey(ExtKey extKey, string hdPath)
@@ -311,6 +303,6 @@ public class HdOperations : IHdOperations
         public AngorKey DerivePrivateKey(ExtKey extKey, string hdPath)
         {
             var derivedKey = extKey.Derive(new KeyPath(hdPath));
-            return AngorKey.From(derivedKey.PrivateKey);
+            return new AngorKey(derivedKey.PrivateKey.ToBytes());
         }
     }

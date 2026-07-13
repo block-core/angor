@@ -269,6 +269,13 @@ public partial class PortfolioView : UserControl, ISectionView
     {
         var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
         var vm = DataContext as PortfolioViewModel;
+
+        // Open the modal immediately (it shows its own loading state) and kick off a fresh,
+        // wallet-wide penalty scan — the modal must not rely on per-investment RecoveryState,
+        // which is only populated when a user has manually opened that investment's detail view.
+        if (vm != null)
+            _ = vm.LoadPenaltiesAsync();
+
         shellVm?.ShowModal(new PenaltiesModal(vm!));
     }
 

@@ -1,15 +1,13 @@
-﻿@page "/invest/{ProjectId}"
+@page "/invest/{ProjectId}"
 @using Angor.Shared
 @using Angor.Client.Storage
 @using Angor.Shared.Models
-@using Blockcore.NBitcoin
-@using Blockcore.NBitcoin.DataEncoders
-@using Money = Blockcore.NBitcoin.Money
-@using Transaction = Blockcore.Consensus.TransactionInfo.Transaction
+@using NBitcoin
+@using NBitcoin.DataEncoders
 @using Angor.Shared.Services
 @using System.Diagnostics
 @using Angor.Client.Models
-@using Blockcore.Networks
+@using Angor.Shared.Networks
 @using System.Text.Json
 @using Angor.Shared.Utilities
 @using Angor.Client.Shared
@@ -1020,7 +1018,7 @@ else
 
     private async Task InvestFunds()
     {
-        bool isTestnet = network.NetworkType == NetworkType.Testnet;
+        bool isTestnet = !network.IsMainnet;
         bool debugMode = storage.GetDebugMode();
         decimal maxInvestmentBtc = isTestnet ? decimal.MaxValue : 0.2m; // 0.2 BTC for mainnet, unlimited for testnet
         decimal minInvestmentBtc = 0.0001m; // Minimum investment for all networks
@@ -1222,7 +1220,7 @@ else
             };
 
             var strippedInvestmentTransaction = network.CreateTransaction(investorProject.SignedTransactionHex);
-            strippedInvestmentTransaction.Inputs.ForEach(f => f.WitScript = Blockcore.Consensus.TransactionInfo.WitScript.Empty);
+            strippedInvestmentTransaction.Inputs.ForEach(f => { f.WitScript = WitScript.Empty; });
 
             var accountInfo = storage.GetAccountInfo(network.Name);
 
@@ -1236,7 +1234,7 @@ else
             SignRecoveryRequest signRecoveryRequest = new()
             {
                 ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
-                InvestmentTransactionHex = strippedInvestmentTransaction.ToHex(network.Consensus.ConsensusFactory),
+                InvestmentTransactionHex = strippedInvestmentTransaction.ToHex(),
                 UnfundedReleaseAddress = releaseAddress,
                 AdditionalNpub = Investment.AdditionalNpub
             };
@@ -1374,7 +1372,7 @@ else
                 return;
             }
 
-            var publishError = await _indexerService.PublishTransactionAsync(signedTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory));
+            var publishError = await _indexerService.PublishTransactionAsync(signedTransaction.Transaction.ToHex());
 
             if (!string.IsNullOrEmpty(publishError))
             {

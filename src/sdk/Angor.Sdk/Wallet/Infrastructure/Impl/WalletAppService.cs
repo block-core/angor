@@ -10,7 +10,7 @@ using Angor.Sdk.Wallet.Infrastructure.Interfaces;
 using Angor.Sdk.Wallet.Operations;
 using Angor.Shared;
 using Angor.Shared.Models;
-using Blockcore.NBitcoin.BIP39;
+using NBitcoin;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 
@@ -459,7 +459,7 @@ public class WalletAppService(
             
             var signedTransaction = psbtOperations.SignPsbt(psbt, walletWords);
             var realFeeInSatoshis = signedTransaction.TransactionFee;
-            var virtualSize = (long)signedTransaction.Transaction.GetVirtualSize(4);
+            var virtualSize = (long)signedTransaction.Transaction.GetVirtualSize();
 
             return Task.FromResult(Result.Success((realFeeInSatoshis, virtualSize)));
         }

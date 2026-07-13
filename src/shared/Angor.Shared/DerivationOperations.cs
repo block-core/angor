@@ -1,12 +1,9 @@
 using System.Text;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.BIP32;
-using Blockcore.NBitcoin.Crypto;
-using Blockcore.NBitcoin.DataEncoders;
-using Blockcore.Networks;
+using NBitcoin;
+using NBitcoin.Crypto;
+using NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
 
 namespace Angor.Shared;
@@ -95,7 +92,7 @@ public class DerivationOperations : IDerivationOperations
 
         var derivedSecret = extendedKey.Derive(new KeyPath(path));
 
-        var hash = Hashes.Hash256(derivedSecret.ToBytes()).ToString();
+        var hash = Hashes.DoubleSHA256(derivedSecret.ToBytes()).ToString();
 
         return hash;
     }
@@ -245,16 +242,13 @@ public class DerivationOperations : IDerivationOperations
 
     public uint DeriveUniqueProjectIdentifier(string founderKey)
     {
-        ExtKey.UseBCForHMACSHA512 = true;
-        Hashes.UseBCForHMACSHA512 = true;
-
         var key = new PubKey(founderKey);
 
-        var hashOfid = Hashes.Hash256(key.ToBytes());
+        var hashOfid = Hashes.DoubleSHA256(key.ToBytes());
 
         var upi = (uint)(hashOfid.GetLow64() & int.MaxValue);
         
-        _logger.LogInformation($"Unique Project Identifier - founderKey = {founderKey}, hashOfFounderKey = {hashOfid}, hashOfFounderKeyCastToInt = {upi}");
+        _logger.LogDebug("UPI derived: {Upi} for founderKey={FounderKey}", upi, founderKey);
         
         if (upi >= 2_147_483_648)
             throw new Exception();
@@ -324,11 +318,7 @@ public class DerivationOperations : IDerivationOperations
     private int GetNetworkStorageIndex()
     {
         var network = _networkConfiguration.GetNetwork();
-        return network switch
-        {
-            BitcoinMain => 0,
-            _ => 1
-        };
+        return network.Name == "Main" ? 0 : 1;
     }
 
     public AngorKey DeriveSupportDmKey(WalletWords walletWords)
@@ -349,12 +339,12 @@ public class DerivationOperations : IDerivationOperations
     {
         var key = DeriveNostrStorageKey(walletWords);
 
-         var privateKeyBytes = key.ToBytes();
+        var privateKeyBytes = key.ToBytes();
 
-        var hashedKey = Hashes.Hash256(new Span<byte>(privateKeyBytes));
+        var hashedKey = Hashes.DoubleSHA256(privateKeyBytes);
 
         // the hex of the hash of the private key is the password
-        var hex = Encoders.Hex.EncodeData(hashedKey.ToArray()).Replace("-", "").ToLower();
+        var hex = Encoders.Hex.EncodeData(hashedKey.ToBytes(false)).Replace("-", "").ToLower();
 
         return hex;
     }
@@ -366,36 +356,36 @@ public class DerivationOperations : IDerivationOperations
 
     public string DeriveAngorKey(string angorRootKey, string founderKey, int projectVersion)
     {
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
 
-        var extKey = new BitcoinExtPubKey(angorRootKey, network).ExtPubKey;
+        var extKey = new BitcoinExtPubKey(angorRootKey, network.BitcoinNetwork).ExtPubKey;
 
         if (projectVersion >= 3)
         {
             var (hi, lo) = DeriveProjectIndicesV2(founderKey);
             var angorKey = extKey.Derive(hi).Derive(lo).PubKey;
 
-            var encoder = new Bech32Encoder("angor");
+            var encoder = Encoders.Bech32("angor");
             var address = encoder.Encode(0, angorKey.WitHash.ToBytes());
 
-            _logger.LogInformation($"DeriveAngorKey V2 - founderKey = {founderKey}, hi = {hi}, lo = {lo}, address = {address}");
+            _logger.LogDebug("DeriveAngorKey V2 - founderKey={FounderKey}, hi={Hi}, lo={Lo}, address={Address}", founderKey, hi, lo, address);
             return address;
         }
 
         var upi = this.DeriveUniqueProjectIdentifier(founderKey);
         var legacyAngorKey = extKey.Derive(upi).PubKey;
-        
-        var legacyEncoder = new Bech32Encoder("angor");
+
+        var legacyEncoder = Encoders.Bech32("angor");
         var legacyAddress = legacyEncoder.Encode(0, legacyAngorKey.WitHash.ToBytes());
 
-        _logger.LogInformation($"DeriveAngorKey - angorRootKey = {angorRootKey}, founderKey = {founderKey}, upi = {upi}, angorKey = {legacyAngorKey}, angorKeyWitHash = {legacyAngorKey.WitHash}, address = {legacyAddress}");
+        _logger.LogDebug("DeriveAngorKey - founderKey={FounderKey}, upi={Upi}, address={Address}", founderKey, upi, legacyAddress);
 
         return legacyAddress;
     }
 
     public Script AngorKeyToScript(string angorKey)
     {
-        var encoder = new Bech32Encoder("angor");
+        var encoder = Encoders.Bech32("angor");
 
         var data = encoder.Decode(angorKey, out byte ver);
 
@@ -406,17 +396,17 @@ public class DerivationOperations : IDerivationOperations
 
     public string ConvertAngorKeyToBitcoinAddress(string projectId)
     {
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
 
         // Decode the angor address to get the witness program
-        var angorEncoder = new Bech32Encoder("angor");
+        var angorEncoder = Encoders.Bech32("angor");
         var data = angorEncoder.Decode(projectId, out byte witnessVersion);
 
-        // Re-encode using the network's Bech32 encoder
-        var networkEncoder = network.Bech32Encoders[(int)Bech32Type.WITNESS_PUBKEY_ADDRESS];
-        var bitcoinAddress = networkEncoder.Encode(witnessVersion, data);
+        // Re-encode using the network's address format
+        var wit = new WitKeyId(data);
+        var bitcoinAddress = wit.GetAddress(network.BitcoinNetwork).ToString();
 
-        _logger.LogInformation($"ConvertAngorKeyToBitcoinAddress - projectId = {projectId}, witnessVersion = {witnessVersion}, bitcoinAddress = {bitcoinAddress}");
+        _logger.LogDebug("ConvertAngorKeyToBitcoinAddress - projectId={ProjectId}, address={Address}", projectId, bitcoinAddress);
 
         return bitcoinAddress;
     }

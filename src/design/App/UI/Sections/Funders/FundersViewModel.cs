@@ -7,6 +7,7 @@ using Angor.Sdk.Funding.Shared;
 using App.UI.Shared;
 using App.UI.Shared.Services;
 using Microsoft.Extensions.Logging;
+using Nostr.Client.Utils;
 
 namespace App.UI.Sections.Funders;
 
@@ -162,7 +163,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
                                 Date = investment.CreatedOn.ToString("dd MMM yyyy"),
                                 Time = investment.CreatedOn.ToString("HH:mm"),
                                 Status = status,
-                                Npub = investment.InvestorNostrPubKey ?? "",
+                                Npub = NostrConverter.ToNpub(investment.InvestorNostrPubKey) ?? investment.InvestorNostrPubKey ?? "",
                                 EventId = investment.EventId ?? "",
                                 ProjectIdentifier = project.Id.Value,
                                 FounderWalletId = wallet.Id.Value,
