@@ -126,9 +126,19 @@ public class GetPenalties
                 lookup.RecoveryTransactionId = response.RecoveryTransactionId;
                 lookup.RecoveryReleaseTransactionId = response.RecoveryReleaseTransactionId;
                 lookup.UnfundedReleaseTransactionId = response.UnfundedReleaseTransactionId;
+
+                // Bug fix: without this, LookupInvestment.Project was never populated, so
+                // RefreshPenalties always fell into its "project info unavailable" branch and
+                // hard-coded DaysLeftForPenalty=365/IsExpired=false for every result — even
+                // when the penalty had already fully expired and was ready to release.
+                lookup.Project = projectsDict[lookup.ProjectIdentifier];
             }
 
-            return Result.Success(lookups.Where(x => !string.IsNullOrEmpty(x.RecoveryTransactionId)).AsEnumerable());
+            // Only outstanding penalties: recovered into the penalty timelock script, and not yet
+            // released back out (RecoveryReleaseTransactionId set = investor already claimed it).
+            return Result.Success(lookups.Where(x =>
+                !string.IsNullOrEmpty(x.RecoveryTransactionId) &&
+                string.IsNullOrEmpty(x.RecoveryReleaseTransactionId)).AsEnumerable());
         }
 
 
