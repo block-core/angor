@@ -263,7 +263,7 @@ public class DerivationOperations : IDerivationOperations
     public (uint Hi, uint Lo) DeriveProjectIndicesV2(string founderKey)
     {
         var key = new PubKey(founderKey);
-        var hashOfid = Hashes.Hash256(key.ToBytes());
+        var hashOfid = Hashes.DoubleSHA256(key.ToBytes());
         var low64 = hashOfid.GetLow64();
 
         // Split 62 bits into two 31-bit indices (each valid for BIP-32 hardened derivation)
