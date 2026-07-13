@@ -28,6 +28,7 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
     private readonly Mock<IProjectService> _mockProjectService;
     private readonly Mock<IPortfolioService> _mockPortfolioService;
     private readonly Mock<IAngorIndexerService> _mockAngorIndexerService;
+    private readonly Mock<IIndexerService> _mockIndexerService;
     private readonly Mock<IInvestmentHandshakeService> _mockInvestmentHandshakeService;
     private readonly Mock<ITransactionService> _mockTransactionService;
     private readonly Mock<IProjectInvestmentsService> _mockProjectInvestmentsService;
@@ -39,6 +40,7 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
         _mockProjectService = new Mock<IProjectService>();
         _mockPortfolioService = new Mock<IPortfolioService>();
         _mockAngorIndexerService = new Mock<IAngorIndexerService>();
+        _mockIndexerService = new Mock<IIndexerService>();
         _mockInvestmentHandshakeService = new Mock<IInvestmentHandshakeService>();
         _mockTransactionService = new Mock<ITransactionService>();
         _mockProjectInvestmentsService = new Mock<IProjectInvestmentsService>();
@@ -59,6 +61,7 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
         
         var handler = new GetInvestments.GetInvestmentsHandler(
             _mockAngorIndexerService.Object,
+            _mockIndexerService.Object,
             _mockPortfolioService.Object,
             _mockProjectService.Object,
             _mockInvestmentHandshakeService.Object,
@@ -88,6 +91,7 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
         
         var handler = new GetInvestments.GetInvestmentsHandler(
             _mockAngorIndexerService.Object,
+            _mockIndexerService.Object,
             _mockPortfolioService.Object,
             _mockProjectService.Object,
             _mockInvestmentHandshakeService.Object,
@@ -128,6 +132,7 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
         
         var handler = new GetInvestments.GetInvestmentsHandler(
             _mockAngorIndexerService.Object,
+            _mockIndexerService.Object,
             _mockPortfolioService.Object,
             _mockProjectService.Object,
             _mockInvestmentHandshakeService.Object,
@@ -157,6 +162,7 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
         
         var handler = new GetInvestments.GetInvestmentsHandler(
             _mockAngorIndexerService.Object,
+            _mockIndexerService.Object,
             _mockPortfolioService.Object,
             _mockProjectService.Object,
             _mockInvestmentHandshakeService.Object,
@@ -199,6 +205,7 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
         
         var handler = new GetInvestments.GetInvestmentsHandler(
             _mockAngorIndexerService.Object,
+            _mockIndexerService.Object,
             _mockPortfolioService.Object,
             _mockProjectService.Object,
             _mockInvestmentHandshakeService.Object,

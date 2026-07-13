@@ -548,7 +548,7 @@
                                                               StrokeThickness="2"
                                                               StrokeLineCap="Round"
                                                               StrokeJoin="Round"
-                                                              Width="24" Height="24" Stretch="Uniform" />
+                                                              Width="24" Height="24" Stretch="None" />
                                                     </Viewbox>
                                                     <Viewbox Width="16" Height="16"
                                                              IsVisible="{Binding IsExpanded}">
@@ -557,7 +557,7 @@
                                                               StrokeThickness="2"
                                                               StrokeLineCap="Round"
                                                               StrokeJoin="Round"
-                                                              Width="24" Height="24" Stretch="Uniform" />
+                                                              Width="24" Height="24" Stretch="None" />
                                                     </Viewbox>
                                                 </Panel>
                                             </Button>
@@ -840,7 +840,7 @@
                                                                StrokeThickness="2"
                                                                StrokeLineCap="Round"
                                                                StrokeJoin="Round"
-                                                               Width="24" Height="24" Stretch="Uniform" />
+                                                               Width="24" Height="24" Stretch="None" />
                                                      </Viewbox>
                                                      <Viewbox Width="16" Height="16"
                                                               IsVisible="{Binding IsExpanded}">
@@ -849,7 +849,7 @@
                                                                StrokeThickness="2"
                                                                StrokeLineCap="Round"
                                                                StrokeJoin="Round"
-                                                               Width="24" Height="24" Stretch="Uniform" />
+                                                               Width="24" Height="24" Stretch="None" />
                                                      </Viewbox>
                                                  </Panel>
                                              </Button>

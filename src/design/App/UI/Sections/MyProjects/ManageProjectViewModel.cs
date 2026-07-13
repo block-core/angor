@@ -6,6 +6,8 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Dtos;
 using Angor.Sdk.Funding.Founder.Operations;
+using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
@@ -115,6 +117,7 @@ public partial class ManageProjectViewModel : ReactiveObject
 {
     private readonly IFounderAppService _founderAppService;
     private readonly IProjectAppService _projectAppService;
+    private readonly IInvestmentAppService _investmentAppService;
     private readonly IProjectService _projectService;
     private readonly ICurrencyService _currencyService;
     private readonly ILogger<ManageProjectViewModel> _logger;
@@ -192,12 +195,14 @@ public partial class ManageProjectViewModel : ReactiveObject
         MyProjectItemViewModel project,
         IFounderAppService founderAppService,
         IProjectAppService projectAppService,
+        IInvestmentAppService investmentAppService,
         IProjectService projectService,
         ICurrencyService currencyService,
         ILogger<ManageProjectViewModel> logger)
     {
         _founderAppService = founderAppService;
         _projectAppService = projectAppService;
+        _investmentAppService = investmentAppService;
         _projectService = projectService;
         _currencyService = currencyService;
         _logger = logger;
@@ -285,10 +290,62 @@ public partial class ManageProjectViewModel : ReactiveObject
             {
                 NostrNpub = NostrConverter.ToNpub(project.NostrPubKey) ?? project.NostrPubKey;
             }
+
+            await Task.WhenAll(
+                LoadNostrPrivateKeysAsync(project.FounderKey),
+                LoadNip05Async());
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load project keys for project {ProjectId}", Project.ProjectIdentifier);
+        }
+    }
+
+    /// <summary>
+    /// Derive the project's Nostr private key (nsec + hex) from the owning wallet.
+    /// The founder's project Nostr key is derived from the wallet words and the founder key.
+    /// </summary>
+    private async Task LoadNostrPrivateKeysAsync(string? founderKey)
+    {
+        if (string.IsNullOrEmpty(founderKey) || string.IsNullOrEmpty(Project.OwnerWalletId)) return;
+
+        try
+        {
+            var nsecResult = await _investmentAppService.GetInvestorNsec(
+                new GetInvestorNsec.GetInvestorNsecRequest(new WalletId(Project.OwnerWalletId), founderKey));
+            if (nsecResult.IsFailure)
+            {
+                _logger.LogWarning("Failed to derive Nostr private key for project {ProjectId}: {Error}",
+                    Project.ProjectIdentifier, nsecResult.Error);
+                return;
+            }
+
+            NostrNsec = nsecResult.Value.Nsec;
+            NostrHex = NostrConverter.ToHex(nsecResult.Value.Nsec, out _) ?? "";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to derive Nostr private keys for project {ProjectId}",
+                Project.ProjectIdentifier);
+        }
+    }
+
+    /// <summary>
+    /// Load the project's NIP-05 identifier from its Nostr profile metadata.
+    /// </summary>
+    private async Task LoadNip05Async()
+    {
+        try
+        {
+            var profileResult = await _projectAppService.FetchProjectProfileData(
+                new ProjectId(Project.ProjectIdentifier));
+            if (profileResult.IsFailure) return;
+
+            Nip05 = profileResult.Value.Metadata?.Nip05 ?? "";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load NIP-05 for project {ProjectId}", Project.ProjectIdentifier);
         }
     }
 
