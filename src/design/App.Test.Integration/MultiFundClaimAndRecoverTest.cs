@@ -1085,26 +1085,34 @@ public class MultiFundClaimAndRecoverTest
         InvestmentViewModel investment,
         string profileName)
     {
-        // The investment reference may be stale (replaced by LoadInvestmentsFromSdkAsync
-        // triggered via WalletsUpdated). Re-fetch from the Investments collection and
-        // reload recovery status on the current reference so PenaltyInvestments is populated.
-        var currentInvestment = portfolioVm.Investments
-            .FirstOrDefault(i => i.ProjectIdentifier == investment.ProjectIdentifier);
-        currentInvestment.Should().NotBeNull("investment should still be in the Investments collection");
+        // Penalties are loaded from the SDK's wallet-wide GetPenalties operation (an independent
+        // indexer scan), not from the per-investment RecoveryState cache — poll until the
+        // just-broadcast recovery transaction is reflected.
+        var deadline = DateTime.UtcNow + IndexerLagTimeout;
+        PenaltyItemViewModel? penaltyItem = null;
 
-        if (!currentInvestment!.RecoveryState.HasSpendableItemsInPenalty)
+        while (DateTime.UtcNow < deadline)
         {
-            Log(profileName, "Current investment reference lacks penalty state — reloading recovery status...");
-            await portfolioVm.LoadRecoveryStatusAsync(currentInvestment);
+            await portfolioVm.LoadPenaltiesAsync();
             Dispatcher.UIThread.RunJobs();
+
+            penaltyItem = portfolioVm.Penalties
+                .FirstOrDefault(p => p.ProjectIdentifier == investment.ProjectIdentifier);
+
+            if (penaltyItem != null)
+            {
+                Log(profileName,
+                    $"Penalty found via GetPenalties: project={penaltyItem.ProjectIdentifier}, amount={penaltyItem.AmountLabel}, daysRemaining={penaltyItem.DaysRemaining}, expired={penaltyItem.IsExpired}");
+                break;
+            }
+
+            await Task.Delay(PollInterval);
         }
 
         // Verify VM-level data
-        portfolioVm.PenaltyInvestments.Should().NotBeEmpty("there should be at least one penalty investment");
-        portfolioVm.HasPenaltyInvestments.Should().BeTrue();
-        var penaltyItem = portfolioVm.PenaltyInvestments
-            .FirstOrDefault(i => i.ProjectIdentifier == investment.ProjectIdentifier);
-        penaltyItem.Should().NotBeNull("the current investment should appear in PenaltyInvestments");
+        portfolioVm.Penalties.Should().NotBeEmpty("there should be at least one outstanding penalty");
+        portfolioVm.HasPenalties.Should().BeTrue();
+        penaltyItem.Should().NotBeNull("the current investment should appear in Penalties");
 
         // Navigate to the portfolio section so the PenaltiesButton is in the visual tree
         await window.NavigateToSectionAndVerify("Funded");
@@ -1116,8 +1124,15 @@ public class MultiFundClaimAndRecoverTest
         penaltiesBtn.Should().NotBeNull("PenaltiesButton should exist in the portfolio view");
         penaltiesBtn!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, penaltiesBtn));
         Dispatcher.UIThread.RunJobs();
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+
+        // The click kicks off an async, wallet-wide GetPenalties scan (fire-and-forget from
+        // code-behind) — poll IsLoadingPenalties instead of a fixed delay.
+        var modalDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        while (portfolioVm.IsLoadingPenalties && DateTime.UtcNow < modalDeadline)
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(200));
+            Dispatcher.UIThread.RunJobs();
+        }
 
         // Find the PenaltiesModal in the visual tree
         var modal = window.GetVisualDescendants()
