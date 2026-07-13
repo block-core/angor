@@ -12,6 +12,7 @@ using Branta.Classes;
 using Branta.Enums;
 using Branta.V2.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Net.Http;
 using System.Threading;
 
@@ -294,7 +295,8 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         }
         else
         {
-            System.Diagnostics.Debug.WriteLine($"Send transaction failed: {error}");
+            App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<SendFundsModal>()
+                .LogWarning("Send transaction failed: {Error}", error);
             SendErrorText.Text = "We couldn't send this transaction. The network rejected it — check your connection and try again.";
             SendErrorBanner.IsVisible = true;
         }

@@ -6,9 +6,8 @@
 @using Angor.Shared.Models
 @using Angor.Shared.Services
 @using Angor.Shared.Utilities
-@using Blockcore.Consensus.TransactionInfo
-@using Blockcore.NBitcoin
-@using Blockcore.NBitcoin.DataEncoders
+@using NBitcoin
+@using NBitcoin.DataEncoders
 @using Angor.Client.Models
 @using Angor.Shared.Protocol
 
@@ -414,7 +413,7 @@
                                     <div class="col-md-12">
                                         <div class="info-card h-100">
                                             <div class="info-label">Destination Address</div>
-                                            <div class="info-value">@releaseRecoveryTransaction.Transaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork())</div>
+                                            <div class="info-value">@releaseRecoveryTransaction.Transaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork().BitcoinNetwork)</div>
                                         </div>
                                     </div>
                                     <div class="col-md-12">
@@ -493,7 +492,7 @@
                                     <div class="col-md-12">
                                         <div class="info-card h-100">
                                             <div class="info-label">Destination Address</div>
-                                            <div class="info-value">@endOfProjectTransaction.Transaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork())</div>
+                                            <div class="info-value">@endOfProjectTransaction.Transaction.Outputs[0].ScriptPubKey.GetDestinationAddress(_NetworkConfiguration.GetNetwork().BitcoinNetwork)</div>
                                         </div>
                                     </div>
                                     <div class="col-md-12">
@@ -986,9 +985,9 @@
 
             storage.UpdateInvestmentProject(project);
 
-            Logger.LogInformation($"recover trx hex = {recoveryTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory)}");
+            Logger.LogInformation($"recover trx hex = {recoveryTransaction.Transaction.ToHex()}");
 
-            var publishError = await _IndexerService.PublishTransactionAsync(recoveryTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory));
+            var publishError = await _IndexerService.PublishTransactionAsync(recoveryTransaction.Transaction.ToHex());
 
             if (!string.IsNullOrEmpty(publishError))
             {
@@ -1134,9 +1133,9 @@
 
             storage.UpdateInvestmentProject(project);
 
-            Logger.LogInformation($"release trx hex = {releaseRecoveryTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory)}");
+            Logger.LogInformation($"release trx hex = {releaseRecoveryTransaction.Transaction.ToHex()}");
 
-            var publishError = await _IndexerService.PublishTransactionAsync(releaseRecoveryTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory));
+            var publishError = await _IndexerService.PublishTransactionAsync(releaseRecoveryTransaction.Transaction.ToHex());
 
             if (!string.IsNullOrEmpty(publishError))
             {
@@ -1199,7 +1198,7 @@
 
             var fromStage = StageInfo.Items.First(f => f.IsSpent == false);
 
-            endOfProjectTransaction = _InvestorTransactionActions.RecoverEndOfProjectFunds(investmentTransaction.ToHex(network.Consensus.ConsensusFactory), project.ProjectInfo, fromStage.StageIndex,
+            endOfProjectTransaction = _InvestorTransactionActions.RecoverEndOfProjectFunds(investmentTransaction.ToHex(), project.ProjectInfo, fromStage.StageIndex,
                 accountInfo.GetNextChangeReceiveAddress(), investorPrivateKey, feeData.SelectedFeeEstimation);
 
             Logger.LogInformation($"EndOfProjectTransactionId={endOfProjectTransaction.Transaction.GetHash().ToString()}");
@@ -1244,7 +1243,7 @@
             var fromStage = StageInfo.Items.First(f => f.IsSpent == false);
 
             endOfProjectTransaction = _InvestorTransactionActions.RecoverEndOfProjectFunds(
-                investmentTransaction.ToHex(network.Consensus.ConsensusFactory),
+                investmentTransaction.ToHex(),
                 project.ProjectInfo,
                 fromStage.StageIndex,
                 accountInfo.GetNextChangeReceiveAddress(),
@@ -1272,9 +1271,9 @@
 
             storage.UpdateInvestmentProject(project);
 
-            Logger.LogInformation($"end of project trx hex = {endOfProjectTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory)}");
+            Logger.LogInformation($"end of project trx hex = {endOfProjectTransaction.Transaction.ToHex()}");
 
-            var publishError = await _IndexerService.PublishTransactionAsync(endOfProjectTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory));
+            var publishError = await _IndexerService.PublishTransactionAsync(endOfProjectTransaction.Transaction.ToHex());
 
             if (!string.IsNullOrEmpty(publishError))
             {

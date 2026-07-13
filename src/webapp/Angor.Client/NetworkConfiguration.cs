@@ -1,6 +1,6 @@
 using Angor.Shared;
 using Angor.Shared.Models;
-using Blockcore.Networks;
+using Angor.Shared.Networks;
 
 namespace Angor.Client;
 
@@ -18,7 +18,7 @@ public class NetworkConfiguration : INetworkConfiguration
     {
         var network = GetNetwork();
 
-        if (network.NetworkType == NetworkType.Mainnet)
+        if (network.IsMainnet)
         {
             return AngorMainKey;
         }
@@ -26,15 +26,15 @@ public class NetworkConfiguration : INetworkConfiguration
         return AngorTestKey;
     }
 
-    private Network currentNetwork;
+    private AngorNetwork currentNetwork;
     private bool? _debugMode;
 
-    public void SetNetwork(Network network)
+    public void SetNetwork(AngorNetwork network)
     {
         currentNetwork = network;
     }
 
-    public Network GetNetwork()
+    public AngorNetwork GetNetwork()
     {
         if (currentNetwork == null)
         {
@@ -56,7 +56,7 @@ public class NetworkConfiguration : INetworkConfiguration
 
     public List<SettingsUrl> GetDefaultIndexerUrls()
     {
-        if (currentNetwork.NetworkType == NetworkType.Mainnet)
+        if (currentNetwork.IsMainnet)
         {
             if (currentNetwork.Name == "Liquid")
             {
@@ -76,7 +76,7 @@ public class NetworkConfiguration : INetworkConfiguration
             };
         }
         
-        if (currentNetwork.NetworkType == NetworkType.Testnet)
+        if (!currentNetwork.IsMainnet)
         {
             if (currentNetwork.Name == "Angornet")
             {
@@ -110,7 +110,7 @@ public class NetworkConfiguration : INetworkConfiguration
 
     public List<SettingsUrl> GetDefaultRelayUrls()
     {
-        if (currentNetwork.NetworkType == NetworkType.Mainnet)
+        if (currentNetwork.IsMainnet)
         {
             return new List<SettingsUrl>
             {
@@ -133,7 +133,7 @@ public class NetworkConfiguration : INetworkConfiguration
 
     public List<SettingsUrl> GetDefaultExplorerUrls()
     {
-        if (currentNetwork.NetworkType == NetworkType.Mainnet)
+        if (currentNetwork.IsMainnet)
         {
             if (currentNetwork.Name == "Liquid")
             {
@@ -153,7 +153,7 @@ public class NetworkConfiguration : INetworkConfiguration
             };
         }
 
-        if (currentNetwork.NetworkType == NetworkType.Testnet)
+        if (!currentNetwork.IsMainnet)
         {
             if (currentNetwork.Name == "Angornet")
             {
@@ -204,7 +204,7 @@ public class NetworkConfiguration : INetworkConfiguration
             "Regtest" => "0f9195cbdb894feda6ee07798e0d597d",
             "Angornet" => "00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6",
             "Liquid" => "d767f204777d8ebd0825f4f26c3d773c0d3f40268dc6afb3632a0fcbd49fde45",
-            _ => throw new NotSupportedException($"Network type {currentNetwork.NetworkType.ToString()} is not supported")
+            _ => throw new NotSupportedException($"Network type {currentNetwork.Name} is not supported")
         };
     }
 
@@ -253,7 +253,7 @@ public class NetworkConfiguration : INetworkConfiguration
                 {"HW_Support", false}
             },
             "Liquid" => new() {},
-            _ => throw new NotSupportedException($"Network type {currentNetwork.NetworkType.ToString()} is not supported")
+            _ => throw new NotSupportedException($"Network type {currentNetwork.Name} is not supported")
         };
     }
 }

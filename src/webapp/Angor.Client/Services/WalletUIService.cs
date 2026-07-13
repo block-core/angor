@@ -1,7 +1,7 @@
-﻿using Angor.Client.Storage;
+using Angor.Client.Storage;
 using Angor.Shared;
 using Angor.Shared.Models;
-using Blockcore.Consensus.TransactionInfo;
+using NBitcoin;
 using Microsoft.Extensions.Logging;
 
 namespace Angor.Client.Services

@@ -31,7 +31,7 @@ public class MultiFundClaimAndRecoverTest
         var projectName = $"Multi Fund {runId}";
         var bannerImageUrl = $"https://picsum.photos/seed/{Guid.NewGuid().ToString("N")[..8]}/320/200";
         var profileImageUrl = $"https://picsum.photos/seed/{Guid.NewGuid().ToString("N")[..8]}/100/100";
-        // Use today's day-of-month as MonthlyPayoutDay so stage 0 = today (immediately claimable)
+        // Use today's day-of-month as MonthlyPayoutDay so stage 0 is immediately claimable
         var todayDay = DateTime.UtcNow.Day;
         var projectAbout = $"{TestName} run {runId}. Monthly/6, payout day {todayDay}, 4 investors, all recovery paths.";
 
@@ -62,6 +62,9 @@ public class MultiFundClaimAndRecoverTest
             PayoutFrequency = "Monthly",
             InstallmentCount = 6,
             MonthlyPayoutDay = todayDay,
+            // Use yesterday as start date so below-threshold recovery timelocks (which use
+            // StartDate as ExpiryDateOverride) are safely in the past regardless of signet MTP lag.
+            StartDate = DateTime.UtcNow.AddDays(-1).ToString("yyyy-MM-dd"),
             RunId = runId,
         });
         createdProject.Success.Should().BeTrue(createdProject.Error);

@@ -9,7 +9,8 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
-using Blockcore.NBitcoin;
+using NBitcoin;
+using Angor.Shared.Networks;
 using CSharpFunctionalExtensions;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
@@ -230,7 +231,7 @@ public class SpendStageFundsTests
                 It.IsAny<ProjectInfo>(),
                 It.IsAny<IEnumerable<string>>(),
                 It.IsAny<int>(),
-                It.IsAny<Blockcore.Consensus.ScriptInfo.Script>(),
+                It.IsAny<Script>(),
                 It.IsAny<AngorKey>(),
                 It.IsAny<FeeEstimation>()))
             .Returns(new Angor.Shared.Models.TransactionInfo
@@ -262,7 +263,7 @@ public class SpendStageFundsTests
             toSpend);
     }
 
-    private Blockcore.Networks.Network SetupNetwork()
+    private AngorNetwork SetupNetwork()
     {
         var network = Angor.Shared.Networks.Networks.Bitcoin.Testnet();
         _mockNetworkConfiguration

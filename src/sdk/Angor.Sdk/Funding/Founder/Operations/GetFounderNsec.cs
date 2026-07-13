@@ -1,42 +1,41 @@
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared;
-using NBitcoin;
 using NBitcoin.DataEncoders;
 using CSharpFunctionalExtensions;
 using MediatR;
 using Nostr.Client.Utils;
 
-namespace Angor.Sdk.Funding.Investor.Operations;
+namespace Angor.Sdk.Funding.Founder.Operations;
 
-public static class GetInvestorNsec
+public static class GetFounderNsec
 {
-    public record GetInvestorNsecRequest(WalletId WalletId, string FounderKey) : IRequest<Result<GetInvestorNsecResponse>>;
+    public record GetFounderNsecRequest(WalletId WalletId, string FounderKey) : IRequest<Result<GetFounderNsecResponse>>;
 
-    public record GetInvestorNsecResponse(string Nsec);
+    public record GetFounderNsecResponse(string Nsec, string Hex);
 
-    public class GetInvestorNsecHandler(
+    public class GetFounderNsecHandler(
         ISeedwordsProvider seedwordsProvider,
         IDerivationOperations derivationOperations
-    ) : IRequestHandler<GetInvestorNsecRequest, Result<GetInvestorNsecResponse>>
+    ) : IRequestHandler<GetFounderNsecRequest, Result<GetFounderNsecResponse>>
     {
-        public async Task<Result<GetInvestorNsecResponse>> Handle(GetInvestorNsecRequest request, CancellationToken cancellationToken)
+        public async Task<Result<GetFounderNsecResponse>> Handle(GetFounderNsecRequest request, CancellationToken cancellationToken)
         {
             var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(request.WalletId.Value);
-            
+
             if (sensitiveDataResult.IsFailure)
-                return Result.Failure<GetInvestorNsecResponse>(sensitiveDataResult.Error);
+                return Result.Failure<GetFounderNsecResponse>(sensitiveDataResult.Error);
 
             var nostrPrivateKey = await derivationOperations.DeriveProjectNostrPrivateKeyAsync(
-                sensitiveDataResult.Value.ToWalletWords(), 
+                sensitiveDataResult.Value.ToWalletWords(),
                 request.FounderKey);
 
             var privateKeyHex = Encoders.Hex.EncodeData(nostrPrivateKey.ToBytes());
-            
+
             // Convert to nsec format using Nostr.Client library
             var nsec = NostrConverter.ToNsec(privateKeyHex);
 
-            return Result.Success(new GetInvestorNsecResponse(nsec));
+            return Result.Success(new GetFounderNsecResponse(nsec, privateKeyHex));
         }
     }
 }
