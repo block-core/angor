@@ -140,7 +140,7 @@ public class ProjectItemViewModel : INotifyPropertyChanged
         set
         {
             _bannerUrl = value;
-            ImageCacheService.LoadBitmapAsync(value, bmp => { BannerBitmap = bmp; OnPropertyChanged(nameof(BannerBitmap)); });
+            ImageCacheService.LoadBitmapAsync(value, bmp => { BannerBitmap = bmp; OnPropertyChanged(nameof(BannerBitmap)); }, decodeWidth: 1280);
         }
     }
 
@@ -151,7 +151,7 @@ public class ProjectItemViewModel : INotifyPropertyChanged
         set
         {
             _avatarUrl = value;
-            ImageCacheService.LoadBitmapAsync(value, bmp => { AvatarBitmap = bmp; OnPropertyChanged(nameof(AvatarBitmap)); });
+            ImageCacheService.LoadBitmapAsync(value, bmp => { AvatarBitmap = bmp; OnPropertyChanged(nameof(AvatarBitmap)); }, decodeWidth: 256);
         }
     }
 
@@ -222,6 +222,21 @@ public class ProjectItemViewModel : INotifyPropertyChanged
         ProfileDescription = !string.IsNullOrWhiteSpace(data.ProjectContent)
             ? data.ProjectContent!
             : data.Metadata?.About ?? "";
+
+        // Freshness: the profile fetch returns live kind-0 metadata from relays.
+        // Apply banner/avatar changes so an updated profile (e.g. new logo) shows
+        // immediately — the URL setters trigger a re-download through the image cache.
+        if (!string.IsNullOrWhiteSpace(data.Metadata?.Banner) && data.Metadata.Banner != BannerUrl)
+        {
+            BannerUrl = data.Metadata.Banner;
+            OnPropertyChanged(nameof(BannerUrl));
+        }
+
+        if (!string.IsNullOrWhiteSpace(data.Metadata?.Picture) && data.Metadata.Picture != AvatarUrl)
+        {
+            AvatarUrl = data.Metadata.Picture;
+            OnPropertyChanged(nameof(AvatarUrl));
+        }
 
         FaqItems.Clear();
         if (data.FaqItems != null)
@@ -643,19 +658,32 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable
     /// Load latest projects from the SDK (Nostr relays).
     /// Falls back to empty list on failure.
     /// </summary>
-    public void ResetAfterNetworkSwitch()
-    {
-        CloseInvestPage();
-        CloseProjectDetail();
-        CachedDtos = null;
-        Projects.Clear();
-        pendingItems.Clear();
-        HasMoreItems = false;
-        IsInitialLoad = true;
-        _ = Task.Run(LoadProjectsFromSdkAsync);
-    }
-
-    public async Task LoadProjectsFromSdkAsync()
+    public void ResetAfterNetworkSwitch()
+
+    {
+
+        CloseInvestPage();
+
+        CloseProjectDetail();
+
+        CachedDtos = null;
+
+        Projects.Clear();
+
+        pendingItems.Clear();
+
+        HasMoreItems = false;
+
+        IsInitialLoad = true;
+
+        _ = Task.Run(LoadProjectsFromSdkAsync);
+
+    }
+
+
+
+    public async Task LoadProjectsFromSdkAsync()
+
     {
         var pl = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger("ProjectsLoad");
         var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -755,7 +783,8 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable
         finally
         {
             cts.Cancel();
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { IsLoading = false; IsInitialLoad = false; });
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { IsLoading = false; IsInitialLoad = false; });
+
             pl.LogInformation("[ProjectsLoad] t={T}ms DONE", sw.ElapsedMilliseconds);
         }
     }

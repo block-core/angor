@@ -17,4 +17,10 @@ public interface IProjectService
     /// Projects not found on-chain are filtered out (potential spam).
     /// </summary>
     Task<Result<IEnumerable<Project>>> LatestFromNostrAsync();
+
+    /// <summary>
+    /// Drop a project's cached document so the next read refetches fresh data from
+    /// the indexer and relays (e.g. after the founder publishes a profile update).
+    /// </summary>
+    Task<Result> InvalidateCacheAsync(ProjectId id);
 }
