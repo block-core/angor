@@ -78,7 +78,7 @@ public class DerivationOperations : IDerivationOperations
 
     public string DeriveLeadInvestorSecretHash(WalletWords walletWords, string founderKey)
     {
-        return DeriveLeadInvestorSecretHash(walletWords, founderKey, projectVersion: 1);
+        return DeriveLeadInvestorSecretHash(walletWords, founderKey, projectVersion: 2);
     }
 
     public string DeriveLeadInvestorSecretHash(WalletWords walletWords, string founderKey, int projectVersion)
@@ -99,7 +99,7 @@ public class DerivationOperations : IDerivationOperations
 
     public string DeriveInvestorKey(WalletWords walletWords, string founderKey)
     {
-        return DeriveInvestorKey(walletWords, founderKey, projectVersion: 1);
+        return DeriveInvestorKey(walletWords, founderKey, projectVersion: 2);
     }
 
     public string DeriveInvestorKey(WalletWords walletWords, string founderKey, int projectVersion)
@@ -116,7 +116,7 @@ public class DerivationOperations : IDerivationOperations
 
     public AngorKey DeriveInvestorPrivateKey(WalletWords walletWords, string founderKey)
     {
-        return DeriveInvestorPrivateKey(walletWords, founderKey, projectVersion: 1);
+        return DeriveInvestorPrivateKey(walletWords, founderKey, projectVersion: 2);
     }
 
     public AngorKey DeriveInvestorPrivateKey(WalletWords walletWords, string founderKey, int projectVersion)
@@ -146,7 +146,7 @@ public class DerivationOperations : IDerivationOperations
     
     public string DeriveNostrPubKey(WalletWords walletWords, string founderKey)
     {
-        return DeriveNostrPubKey(walletWords, founderKey, projectVersion: 1);
+        return DeriveNostrPubKey(walletWords, founderKey, projectVersion: 2);
     }
 
     public string DeriveNostrPubKey(WalletWords walletWords, string founderKey, int projectVersion)
@@ -163,7 +163,7 @@ public class DerivationOperations : IDerivationOperations
 
     public string DeriveFounderRecoveryKey(WalletWords walletWords, string founderKey)
     {
-        return DeriveFounderRecoveryKey(walletWords, founderKey, projectVersion: 1);
+        return DeriveFounderRecoveryKey(walletWords, founderKey, projectVersion: 2);
     }
 
     public string DeriveFounderRecoveryKey(WalletWords walletWords, string founderKey, int projectVersion)
@@ -191,7 +191,7 @@ public class DerivationOperations : IDerivationOperations
 
     public AngorKey DeriveFounderRecoveryPrivateKey(WalletWords walletWords, string founderKey)
     {
-        return DeriveFounderRecoveryPrivateKey(walletWords, founderKey, projectVersion: 1);
+        return DeriveFounderRecoveryPrivateKey(walletWords, founderKey, projectVersion: 2);
     }
 
     public AngorKey DeriveFounderRecoveryPrivateKey(WalletWords walletWords, string founderKey, int projectVersion)
@@ -208,7 +208,7 @@ public class DerivationOperations : IDerivationOperations
 
     public AngorKey DeriveProjectNostrPrivateKey(WalletWords walletWords, string founderKey)
     {
-        return DeriveProjectNostrPrivateKey(walletWords, founderKey, projectVersion: 1);
+        return DeriveProjectNostrPrivateKey(walletWords, founderKey, projectVersion: 2);
     }
 
     public AngorKey DeriveProjectNostrPrivateKey(WalletWords walletWords, string founderKey, int projectVersion)
@@ -225,7 +225,7 @@ public class DerivationOperations : IDerivationOperations
     
     public async Task<AngorKey> DeriveProjectNostrPrivateKeyAsync(WalletWords walletWords, string founderKey)
     {
-        return await DeriveProjectNostrPrivateKeyAsync(walletWords, founderKey, projectVersion: 1);
+        return await DeriveProjectNostrPrivateKeyAsync(walletWords, founderKey, projectVersion: 2);
     }
 
     public async Task<AngorKey> DeriveProjectNostrPrivateKeyAsync(WalletWords walletWords, string founderKey, int projectVersion)
@@ -278,7 +278,7 @@ public class DerivationOperations : IDerivationOperations
     /// V1/V2: single level "{upi}'" (31-bit entropy)
     /// V3+:   two levels "{hi}'/{lo}'" (62-bit entropy)
     /// </summary>
-    private string BuildProjectSubPath(string founderKey, int projectVersion = 1)
+    private string BuildProjectSubPath(string founderKey, int projectVersion = 2)
     {
         if (projectVersion >= 3)
         {
@@ -351,7 +351,7 @@ public class DerivationOperations : IDerivationOperations
 
     public string DeriveAngorKey(string angorRootKey, string founderKey)
     {
-        return DeriveAngorKey(angorRootKey, founderKey, projectVersion: 1);
+        return DeriveAngorKey(angorRootKey, founderKey, projectVersion: 2);
     }
 
     public string DeriveAngorKey(string angorRootKey, string founderKey, int projectVersion)
