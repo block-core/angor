@@ -90,9 +90,10 @@ public static class ProjectStatistics
                 }
             }
 
+            dto.TotalInvestors = CalculateUniqueInvestors(stagesInformation);
+
             if (isDynamicProject)
             {
-                dto.TotalInvestors = CalculateUniqueInvestors(stagesInformation);
                 dto.DynamicStages = MapDynamicStages(stagesInformation);
             }
 

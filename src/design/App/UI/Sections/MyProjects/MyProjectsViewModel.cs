@@ -137,7 +137,11 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
                 foreach (var wallet in wallets)
                 {
                     var projectsResult = await _projectAppService.GetFounderProjects(wallet.Id);
-                    if (projectsResult.IsFailure) continue;
+                    if (projectsResult.IsFailure)
+                    {
+                        _logger.LogWarning("GetFounderProjects failed for wallet {WalletId}: {Error}", wallet.Id.Value, projectsResult.Error);
+                        continue;
+                    }
 
                     foreach (var dto in projectsResult.Value.Projects)
                     {
@@ -212,7 +216,11 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
         try
         {
             var statsResult = await _projectAppService.GetProjectStatistics(new ProjectId(item.ProjectIdentifier));
-            if (statsResult.IsFailure) return;
+            if (statsResult.IsFailure)
+            {
+                _logger.LogWarning("Failed to load stats for founder project {ProjectId}: {Error}", item.ProjectIdentifier, statsResult.Error);
+                return;
+            }
 
             var stats = statsResult.Value;
             var raisedBtc = (double)stats.TotalInvested.ToUnitBtc();
