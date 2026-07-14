@@ -60,6 +60,37 @@ public record RecoveryState(
 }
 
 /// <summary>
+/// A single outstanding penalty entry for the PenaltiesModal, loaded fresh from the SDK's
+/// wallet-wide GetPenalties operation (not derived from per-investment RecoveryState, which is
+/// only populated lazily when a user opens a specific investment's detail view — see bug where
+/// the Penalties popup silently omitted investments the user hadn't drilled into).
+/// </summary>
+public class PenaltyItemViewModel
+{
+    public string ProjectIdentifier { get; init; } = "";
+    public string? ProjectName { get; init; }
+    public string CurrencySymbol { get; init; } = "BTC";
+
+    /// <summary>Amount currently held in the penalty-locked script, formatted as BTC.</summary>
+    public string AmountDisplay { get; init; } = "0.00000000";
+
+    /// <summary>Days remaining until the penalty timelock expires (0 once expired).</summary>
+    public int DaysRemaining { get; init; }
+
+    /// <summary>True once the penalty timelock has expired and funds are ready to release.</summary>
+    public bool IsExpired { get; init; }
+
+    public string AmountLabel => $"{AmountDisplay} {CurrencySymbol}";
+
+    /// <summary>Whether a resolved project name is available to show above the raw identifier.</summary>
+    public bool HasProjectName => !string.IsNullOrWhiteSpace(ProjectName);
+
+    public string StatusText => IsExpired
+        ? "Penalty release available now"
+        : $"Penalty Release in {DaysRemaining} day{(DaysRemaining == 1 ? "" : "s")}";
+}
+
+/// <summary>
 /// A stage in an investment's release schedule.
 /// </summary>
 public class InvestmentStageViewModel
@@ -519,12 +550,19 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
     // ── Right panel investments ──
     public ObservableCollection<InvestmentViewModel> Investments { get; } = new();
 
-    /// <summary>Investments currently in penalty (for PenaltiesModal).</summary>
-    public IEnumerable<InvestmentViewModel> PenaltyInvestments =>
-        Investments.Where(i => i.RecoveryState.HasSpendableItemsInPenalty);
+    [Reactive] private bool isLoadingPenalties;
 
-    /// <summary>Whether there are any penalty investments (for XAML empty-state binding).</summary>
-    public bool HasPenaltyInvestments => PenaltyInvestments.Any();
+    /// <summary>
+    /// Outstanding penalties across all wallets (for PenaltiesModal), loaded fresh from the SDK's
+    /// GetPenalties operation whenever the Penalties button is clicked. See <see cref="LoadPenaltiesAsync"/>.
+    /// </summary>
+    public ObservableCollection<PenaltyItemViewModel> Penalties { get; } = new();
+
+    /// <summary>Whether there are any outstanding penalties (for XAML empty-state binding).</summary>
+    public bool HasPenalties => Penalties.Count > 0;
+
+    /// <summary>True once loading has finished and there are no penalties — avoids flashing the empty state while loading.</summary>
+    public bool ShowEmptyPenaltiesState => !IsLoadingPenalties && !HasPenalties;
 
     /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
     public string CurrencySymbol => _currencyService.Symbol;
@@ -696,8 +734,8 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
                         CurrencySymbol = _currencyService.Symbol
                     };
 
-                    // Carry over recovery state from previous load so that PenaltyInvestments
-                    // is not lost when WalletsUpdated triggers a reload (see #19).
+                    // Carry over recovery state from previous load so per-investment recovery
+                    // button labels aren't lost when WalletsUpdated triggers a reload (see #19).
                     if (existingInvestment != null)
                     {
                         vm.RecoveryState = existingInvestment.RecoveryState;
@@ -749,8 +787,6 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
             this.RaisePropertyChanged(nameof(RecoveredToPenalty));
             this.RaisePropertyChanged(nameof(ProjectsInRecovery));
             this.RaisePropertyChanged(nameof(HasRecoveryProjects));
-            this.RaisePropertyChanged(nameof(PenaltyInvestments));
-            this.RaisePropertyChanged(nameof(HasPenaltyInvestments));
             this.RaisePropertyChanged(nameof(TotalAvailable));
         }
         catch (Exception ex)
@@ -898,9 +934,6 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
                 investment.ProjectIdentifier, recovery.HasUnspentItems, recovery.HasSpendableItemsInPenalty,
                 recovery.HasReleaseSignatures, recovery.EndOfProject, recovery.IsAboveThreshold,
                 investment.RecoveryState.ActionKey);
-
-            this.RaisePropertyChanged(nameof(PenaltyInvestments));
-            this.RaisePropertyChanged(nameof(HasPenaltyInvestments));
         }
         catch (Exception ex)
         {
@@ -909,6 +942,71 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
         finally
         {
             investment.IsProcessing = false;
+        }
+    }
+
+    /// <summary>
+    /// Load outstanding penalties across every wallet from the SDK's wallet-wide GetPenalties
+    /// operation. This is deliberately independent of <see cref="Investments"/>/<see cref="RecoveryState"/>
+    /// (which is only populated lazily via <see cref="LoadRecoveryStatusAsync"/> when a user opens a
+    /// specific investment's detail view) so the Penalties popup shows every outstanding penalty for
+    /// the connected wallets, even ones the user has never drilled into.
+    /// </summary>
+    public async Task LoadPenaltiesAsync()
+    {
+        if (IsLoadingPenalties) return;
+
+        IsLoadingPenalties = true;
+        this.RaisePropertyChanged(nameof(ShowEmptyPenaltiesState));
+        _logger.LogInformation("Loading penalties from SDK...");
+
+        try
+        {
+            var wallets = _walletContext.Wallets.ToList();
+            var results = new List<PenaltyItemViewModel>();
+
+            foreach (var wallet in wallets)
+            {
+                var result = await _investmentAppService.GetPenalties(
+                    new GetPenalties.GetPenaltiesRequest(wallet.Id));
+
+                if (result.IsFailure)
+                {
+                    _logger.LogWarning("GetPenalties failed for wallet {WalletId}: {Error}", wallet.Id.Value, result.Error);
+                    continue;
+                }
+
+                foreach (var dto in result.Value.Penalties)
+                {
+                    results.Add(new PenaltyItemViewModel
+                    {
+                        ProjectIdentifier = dto.ProjectIdentifier,
+                        ProjectName = dto.ProjectName,
+                        CurrencySymbol = _currencyService.Symbol,
+                        AmountDisplay = ((double)dto.TotalAmountSats.ToUnitBtc()).ToString("F8", CultureInfo.InvariantCulture),
+                        DaysRemaining = Math.Max(0, dto.DaysLeftForPenalty),
+                        IsExpired = dto.IsExpired
+                    });
+                }
+            }
+
+            Penalties.Clear();
+            foreach (var p in results)
+                Penalties.Add(p);
+
+            _logger.LogInformation("Penalties loaded: {Count} outstanding penalty(ies) across {WalletCount} wallet(s)",
+                Penalties.Count, wallets.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error loading penalties");
+            ToastRequested?.Invoke("Failed to load penalties. Please try again.", ToastSeverity.Error);
+        }
+        finally
+        {
+            IsLoadingPenalties = false;
+            this.RaisePropertyChanged(nameof(HasPenalties));
+            this.RaisePropertyChanged(nameof(ShowEmptyPenaltiesState));
         }
     }
 
@@ -1266,6 +1364,7 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
     {
         SelectedInvestment = null;
         Investments.Clear();
+        Penalties.Clear();
         HasInvestments = false;
         FundedProjects = 0;
         TotalInvested = "0.0000";
@@ -1277,8 +1376,8 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
         this.RaisePropertyChanged(nameof(RecoveredToPenalty));
         this.RaisePropertyChanged(nameof(ProjectsInRecovery));
         this.RaisePropertyChanged(nameof(HasRecoveryProjects));
-        this.RaisePropertyChanged(nameof(PenaltyInvestments));
-        this.RaisePropertyChanged(nameof(HasPenaltyInvestments));
+        this.RaisePropertyChanged(nameof(HasPenalties));
+        this.RaisePropertyChanged(nameof(ShowEmptyPenaltiesState));
         this.RaisePropertyChanged(nameof(TotalAvailable));
     }
 
