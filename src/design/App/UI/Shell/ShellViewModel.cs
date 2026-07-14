@@ -362,19 +362,55 @@ public partial class PrototypeSettings : ReactiveObject
 /// <summary>
 /// Base type for sidebar navigation entries (items and group headers).
 /// </summary>
-public abstract record NavEntry;
+public abstract class NavEntry : ReactiveObject;
 
 /// <summary>
 /// A selectable sidebar navigation item with an icon resource key and display label.
 /// Icon refers to a StreamGeometry key in Icons.axaml (e.g. "NavIconHome").
 /// IconIsFilled indicates the icon uses Fill instead of Stroke rendering (e.g. the wallet icon).
+/// BadgeCount drives the small notification badge (e.g. pending funder approvals).
 /// </summary>
-public record NavItem(string Label, string Icon, bool IconIsFilled = false) : NavEntry;
+public class NavItem : NavEntry
+{
+    public NavItem(string label, string icon, bool iconIsFilled = false)
+    {
+        Label = label;
+        Icon = icon;
+        IconIsFilled = iconIsFilled;
+    }
+
+    public string Label { get; }
+    public string Icon { get; }
+    public bool IconIsFilled { get; }
+
+    private int badgeCount;
+
+    /// <summary>Notification count shown next to the label. 0 hides the badge.</summary>
+    public int BadgeCount
+    {
+        get => badgeCount;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref badgeCount, value);
+            this.RaisePropertyChanged(nameof(HasBadge));
+            this.RaisePropertyChanged(nameof(BadgeText));
+        }
+    }
+
+    public bool HasBadge => badgeCount > 0;
+
+    /// <summary>Badge display text, capped at "99+".</summary>
+    public string BadgeText => badgeCount > 99 ? "99+" : badgeCount.ToString();
+}
 
 /// <summary>
 /// A non-selectable group header with a divider line and uppercase label.
 /// </summary>
-public record NavGroupHeader(string Title) : NavEntry;
+public class NavGroupHeader : NavEntry
+{
+    public NavGroupHeader(string title) => Title = title;
+    public string Title { get; }
+}
 
 public partial class ShellViewModel : ReactiveObject, IDisposable
 {
@@ -386,6 +422,7 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
     private readonly IInvestmentAppService _investmentAppService;
     private readonly ICurrencyService _currencyService;
     private readonly PrototypeSettings _prototypeSettings;
+    private readonly FundersMonitor _fundersMonitor;
 
     [Reactive] private NavItem? selectedNavItem;
     [Reactive] private bool isSettingsOpen;
@@ -539,7 +576,7 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
     /// </summary>
     public string? ProfileName { get; }
 
-    public ShellViewModel(PortfolioViewModel portfolioVm, SignatureStore signatureStore, Func<string, object?> viewFactory, IWalletContext walletContext, IInvestmentAppService investmentAppService, ICurrencyService currencyService, ProfileContext profileContext, PrototypeSettings prototypeSettings)
+    public ShellViewModel(PortfolioViewModel portfolioVm, SignatureStore signatureStore, Func<string, object?> viewFactory, IWalletContext walletContext, IInvestmentAppService investmentAppService, ICurrencyService currencyService, ProfileContext profileContext, PrototypeSettings prototypeSettings, FundersMonitor fundersMonitor)
     {
         _portfolioVm = portfolioVm;
         _signatureStore = signatureStore;
@@ -548,6 +585,7 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
         _investmentAppService = investmentAppService;
         _currencyService = currencyService;
         _prototypeSettings = prototypeSettings;
+        _fundersMonitor = fundersMonitor;
         _instance = this;
 
         // Mobile perf: pre-warm all tab views after first render so the first
@@ -566,7 +604,7 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
         {
             // Ungrouped
             new NavItem("Home", "NavIconHome"),
-            new NavItem("Funds", "NavIconWallet", IconIsFilled: true),
+            new NavItem("Funds", "NavIconWallet", iconIsFilled: true),
             // INVESTOR group
             new NavGroupHeader("INVESTOR"),
             new NavItem("Find Projects", "NavIconSearch"),
@@ -635,7 +673,40 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
         this.WhenAnyValue(x => x.ToastSeverity)
             .Subscribe(_ => this.RaisePropertyChanged(nameof(ToastIconGlyph)))
             .DisposeWith(_disposables);
+
+        // ── Funders monitor: background polling for new funding requests ──
+        // Updates the Founder tab badge (mobile) and Funders nav badge (desktop),
+        // and toasts when new requests arrive or approved funders complete funding.
+        _fundersMonitor.Updated += OnFundersMonitorUpdated;
+        _fundersMonitor.NotificationRaised += OnFundersNotification;
+        Disposable.Create(() =>
+        {
+            _fundersMonitor.Updated -= OnFundersMonitorUpdated;
+            _fundersMonitor.NotificationRaised -= OnFundersNotification;
+        }).DisposeWith(_disposables);
+        _fundersMonitor.Start();
     }
+
+    /// <summary>Count of funding requests awaiting approval — drives the mobile Founder tab badge.</summary>
+    [Reactive] private int founderPendingCount;
+
+    /// <summary>Whether the founder notification badge is visible.</summary>
+    public bool ShowFounderBadge => FounderPendingCount > 0;
+
+    /// <summary>Badge text for the mobile Founder tab, capped at "99+".</summary>
+    public string FounderBadgeText => FounderPendingCount > 99 ? "99+" : FounderPendingCount.ToString();
+
+    private void OnFundersMonitorUpdated()
+    {
+        FounderPendingCount = _fundersMonitor.PendingCount;
+        this.RaisePropertyChanged(nameof(ShowFounderBadge));
+        this.RaisePropertyChanged(nameof(FounderBadgeText));
+
+        var fundersItem = NavEntries.OfType<NavItem>().FirstOrDefault(n => n.Label == "Funders");
+        if (fundersItem != null) fundersItem.BadgeCount = _fundersMonitor.PendingCount;
+    }
+
+    private void OnFundersNotification(string message) => ShowToast(message, ToastSeverity.Info);
 
     public ObservableCollection<NavEntry> NavEntries { get; }
 
@@ -1355,7 +1426,10 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
                                 mpVm.CloseManageProject();
                             }
                         }),
-                    "Funders" => GetOrCreateView("Funders"),
+                    // Desktop uses this ContentControl path (SectionPanel is mobile-only),
+                    // so OnBecameActive must be invoked here for refresh-on-entry.
+                    "Funders" => GetOrCreateView("Funders",
+                        onReuse: v => (v as ISectionView)?.OnBecameActive()),
                     _ => null,
                 };
             }

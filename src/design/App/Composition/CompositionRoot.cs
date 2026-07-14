@@ -170,6 +170,7 @@ public static class CompositionRoot
         services.AddSingleton<SignatureStore>();
         services.AddSingleton<PrototypeSettings>();
         services.AddSingleton<IWalletContext, WalletContext>();
+        services.AddSingleton<FundersMonitor>();
         services.AddSingleton<PortfolioViewModel>();
 
         // ── Section VMs (transient — fresh per navigation) ──
