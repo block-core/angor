@@ -112,7 +112,7 @@ public partial class CreateProjectStep3View : UserControl
                     img.IsVisible = bmp != null;
                 }
             }
-        });
+        }, decodeWidth: isBanner ? 1280 : 256);
     }
 
     #endregion

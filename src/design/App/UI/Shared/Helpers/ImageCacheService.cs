@@ -41,15 +41,21 @@ public static class ImageCacheService
     private const int DefaultAvatarDecodeWidth = 128;
 
     /// <summary>
-    /// In-memory cache: URL → Bitmap. Once a bitmap is loaded it stays in RAM
-    /// for the lifetime of the app (same as the old RamCachedWebImageLoader).
+    /// In-memory cache: "url|width" → Bitmap (see <see cref="CacheKey"/>). Once a bitmap
+    /// is loaded it stays in RAM for the lifetime of the app (same as the old
+    /// RamCachedWebImageLoader). The key includes the decode width so a card-sized
+    /// banner and a full-size detail banner don't collide.
     /// </summary>
     private static readonly ConcurrentDictionary<string, Bitmap> MemoryCache = new();
 
     /// <summary>
-    /// Tracks in-flight downloads so the same URL is never downloaded twice concurrently.
+    /// Tracks in-flight downloads so the same URL+width is never decoded twice concurrently.
     /// </summary>
     private static readonly ConcurrentDictionary<string, Task<Bitmap?>> InFlight = new();
+
+    /// <summary>Memory/in-flight cache key: URL plus decode width.</summary>
+    private static string CacheKey(string url, int? decodeWidth) =>
+        decodeWidth is > 0 ? url + "|w=" + decodeWidth.Value : url + "|w=full";
 
     /// <summary>
     /// Disk cache directory — sits alongside the app's local data.
@@ -86,15 +92,17 @@ public static class ImageCacheService
         if (string.IsNullOrWhiteSpace(url))
             return null;
 
+        var key = CacheKey(url, decodeWidth);
+
         // 1. Check memory cache
-        if (MemoryCache.TryGetValue(url, out var cached))
+        if (MemoryCache.TryGetValue(key, out var cached))
             return cached;
 
         // 2. Download (or join existing in-flight request)
-        var bitmap = await InFlight.GetOrAdd(url, u => DownloadAndCacheAsync(u, decodeWidth));
+        var bitmap = await InFlight.GetOrAdd(key, _ => DownloadAndCacheAsync(url, decodeWidth));
 
         // Clean up the in-flight tracker
-        InFlight.TryRemove(url, out _);
+        InFlight.TryRemove(key, out _);
 
         return bitmap;
     }
@@ -102,8 +110,11 @@ public static class ImageCacheService
     /// <summary>
     /// Fire-and-forget helper: loads the bitmap and invokes a callback on the UI thread.
     /// Ideal for calling from property setters / constructors in ViewModels.
+    /// Pass a <paramref name="decodeWidth"/> whenever the target control has a bounded
+    /// size — full-resolution decodes of oversized logos (e.g. a 4000px "Reputation"
+    /// project logo) produce giant textures the GPU must resample every scroll frame.
     /// </summary>
-    public static void LoadBitmapAsync(string? url, Action<Bitmap?> onLoaded)
+    public static void LoadBitmapAsync(string? url, Action<Bitmap?> onLoaded, int? decodeWidth = null)
     {
         if (string.IsNullOrWhiteSpace(url))
         {
@@ -112,7 +123,7 @@ public static class ImageCacheService
         }
 
         // Fast path: already in memory
-        if (MemoryCache.TryGetValue(url, out var cached))
+        if (MemoryCache.TryGetValue(CacheKey(url, decodeWidth), out var cached))
         {
             Dispatcher.UIThread.Post(() => onLoaded(cached));
             return;
@@ -123,7 +134,7 @@ public static class ImageCacheService
         {
             try
             {
-                var bitmap = await GetBitmapAsync(url);
+                var bitmap = await GetBitmapAsync(url, decodeWidth);
                 Dispatcher.UIThread.Post(() => onLoaded(bitmap));
             }
             catch (Exception ex)
@@ -133,6 +144,14 @@ public static class ImageCacheService
             }
         });
     }
+
+    /// <summary>Fire-and-forget banner load decoded at <see cref="DefaultBannerDecodeWidth"/> px.</summary>
+    public static void LoadBannerBitmapAsync(string? url, Action<Bitmap?> onLoaded) =>
+        LoadBitmapAsync(url, onLoaded, DefaultBannerDecodeWidth);
+
+    /// <summary>Fire-and-forget avatar load decoded at <see cref="DefaultAvatarDecodeWidth"/> px.</summary>
+    public static void LoadAvatarBitmapAsync(string? url, Action<Bitmap?> onLoaded) =>
+        LoadBitmapAsync(url, onLoaded, DefaultAvatarDecodeWidth);
 
     private static async Task<Bitmap?> DownloadAndCacheAsync(string url, int? decodeWidth)
     {
@@ -150,7 +169,7 @@ public static class ImageCacheService
                 {
                     await using var fs = File.OpenRead(cacheFile);
                     var bitmap = DecodeBitmap(fs, decodeWidth);
-                    MemoryCache.TryAdd(url, bitmap);
+                    MemoryCache.TryAdd(CacheKey(url, decodeWidth), bitmap);
                     return bitmap;
                 }
                 catch (Exception ex)
@@ -189,7 +208,7 @@ public static class ImageCacheService
             // 4. Decode bitmap
             using var ms = new MemoryStream(bytes);
             var bmp = DecodeBitmap(ms, decodeWidth);
-            MemoryCache.TryAdd(url, bmp);
+            MemoryCache.TryAdd(CacheKey(url, decodeWidth), bmp);
             return bmp;
         }
         catch (Exception ex)

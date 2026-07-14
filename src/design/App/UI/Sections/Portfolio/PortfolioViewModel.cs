@@ -155,7 +155,7 @@ public class InvestmentViewModel : INotifyPropertyChanged
         set
         {
             _bannerUrl = value;
-            ImageCacheService.LoadBitmapAsync(value, bmp => { BannerBitmap = bmp; OnPropertyChanged(nameof(BannerBitmap)); });
+            ImageCacheService.LoadBitmapAsync(value, bmp => { BannerBitmap = bmp; OnPropertyChanged(nameof(BannerBitmap)); }, decodeWidth: 1280);
         }
     }
     /// <summary>Avatar/logo image URL</summary>
@@ -166,7 +166,7 @@ public class InvestmentViewModel : INotifyPropertyChanged
         set
         {
             _avatarUrl = value;
-            ImageCacheService.LoadBitmapAsync(value, bmp => { AvatarBitmap = bmp; OnPropertyChanged(nameof(AvatarBitmap)); });
+            ImageCacheService.LoadBitmapAsync(value, bmp => { AvatarBitmap = bmp; OnPropertyChanged(nameof(AvatarBitmap)); }, decodeWidth: 256);
         }
     }
     /// <summary>Decoded banner bitmap, loaded from <see cref="BannerUrl"/> via ImageCacheService.</summary>

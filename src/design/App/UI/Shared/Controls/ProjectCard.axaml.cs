@@ -30,9 +30,9 @@ public class ProjectCard : TemplatedControl
     static ProjectCard()
     {
         BannerProperty.Changed.AddClassHandler<ProjectCard>((card, _) =>
-            ImageCacheService.LoadBitmapAsync(card.Banner, bmp => card.BannerBitmap = bmp));
+            ImageCacheService.LoadBannerBitmapAsync(card.Banner, bmp => card.BannerBitmap = bmp));
         AvatarProperty.Changed.AddClassHandler<ProjectCard>((card, _) =>
-            ImageCacheService.LoadBitmapAsync(card.Avatar, bmp => card.AvatarBitmap = bmp));
+            ImageCacheService.LoadAvatarBitmapAsync(card.Avatar, bmp => card.AvatarBitmap = bmp));
     }
 
     public ProjectCard()
