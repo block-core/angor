@@ -6,6 +6,7 @@
 
 
              xmlns:controls="clr-namespace:App.UI.Shared.Controls"
+             xmlns:helpers="clr-namespace:App.UI.Shared.Helpers"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="1600"
              x:Class="App.UI.Sections.FindProjects.ProjectDetailView"
@@ -252,7 +253,7 @@
                                        FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrongBrush}"
                                        TextWrapping="Wrap" />
-                            <TextBlock Text="{Binding ShortDescription}"
+                            <TextBlock Text="{Binding ShortDescription, Converter={x:Static helpers:MarkdownToPlainConverter.Instance}}"
                                        FontSize="15"
                                        Foreground="{DynamicResource TextMutedBrush}"
                                        TextWrapping="Wrap"
@@ -449,11 +450,10 @@
                                    Foreground="{DynamicResource TextStrongBrush}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
-                    <TextBlock Text="{Binding DisplayDescription}"
-                               FontSize="15"
-                               LineHeight="23"
-                               Foreground="{DynamicResource TextMutedBrush}"
-                               TextWrapping="Wrap" />
+                    <!-- Long descriptions are authored in markdown (EditProfile says
+                         "Markdown is supported") — render it instead of raw text. -->
+                    <controls:MarkdownTextBlock Markdown="{Binding DisplayDescription}"
+                                                BaseFontSize="15" />
                 </StackPanel>
             </Border>
 

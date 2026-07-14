@@ -1,6 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:App.UI.Shared.Controls"
+        xmlns:helpers="clr-namespace:App.UI.Shared.Helpers"
         xmlns:i="https://github.com/projektanker/icons.avalonia">
 
     <Design.PreviewWith>
@@ -144,7 +145,7 @@
                                        MaxLines="1" />
 
                             <!-- 3. Description — Vue: 14px, 2-line clamp, height ~42px -->
-                            <TextBlock Text="{TemplateBinding ShortDescription}"
+                            <TextBlock Text="{Binding ShortDescription, RelativeSource={RelativeSource TemplatedParent}, Converter={x:Static helpers:MarkdownToPlainConverter.Instance}}"
                                        FontSize="14"
                                        LineHeight="21"
                                        Foreground="{DynamicResource TextMuted}"

@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:portfolio="clr-namespace:App.UI.Sections.Portfolio"
              xmlns:controls="clr-namespace:App.UI.Shared.Controls"
+             xmlns:helpers="clr-namespace:App.UI.Shared.Helpers"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="900"
              x:Class="App.UI.Sections.Portfolio.InvestmentDetailView"
@@ -485,7 +486,7 @@
                                        FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrongBrush}" />
                             <!-- Description — Vue: .project-description-compact 15px, color:#666 dark:#a0a0a0 -->
-                            <TextBlock Text="{Binding ShortDescription}"
+                            <TextBlock Text="{Binding ShortDescription, Converter={x:Static helpers:MarkdownToPlainConverter.Instance}}"
                                        FontSize="15"
                                        Foreground="{DynamicResource TextMutedBrush}"
                                        TextWrapping="Wrap"
