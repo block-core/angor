@@ -19,8 +19,11 @@ public interface IProjectService
     Task<Result<IEnumerable<Project>>> LatestFromNostrAsync();
 
     /// <summary>
-    /// Drop a project's cached document so the next read refetches fresh data from
-    /// the indexer and relays (e.g. after the founder publishes a profile update).
+    /// Refresh a project's cached profile metadata (name/banner/picture/about) from
+    /// relays in the background. By default the refresh only runs when the cached
+    /// metadata is older than the freshness TTL; pass <paramref name="force"/> to
+    /// bypass the TTL (e.g. right after the founder publishes a profile update).
+    /// Returns immediately; the refresh completes in the background.
     /// </summary>
-    Task<Result> InvalidateCacheAsync(ProjectId id);
+    Task<Result> RevalidateAsync(ProjectId id, bool force = false);
 }

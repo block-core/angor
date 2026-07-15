@@ -547,6 +547,11 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable
         SelectedProject = project;
         _ = LoadProfileDataAsync(project);
         _ = CheckExistingInvestmentAsync(project);
+
+        // Kick a background refresh of cached profile metadata (TTL-gated) so any
+        // founder profile update propagates to this user, not just the founder.
+        if (!string.IsNullOrEmpty(project.ProjectId))
+            _ = _projectAppService.RevalidateProjectMetadata(new ProjectId(project.ProjectId));
     }
 
     public void CloseProjectDetail()

@@ -21,7 +21,7 @@ public class DocumentProjectService(
     /// Stale entries are served immediately and revalidated in the background
     /// (stale-while-revalidate), so founder profile updates propagate without
     /// re-querying relays on every read.</summary>
-    private static readonly TimeSpan MetadataTtl = TimeSpan.FromHours(1);
+    private static readonly TimeSpan MetadataTtl = TimeSpan.FromDays(1);
 
     /// <summary>Project ids with an in-flight background metadata revalidation.</summary>
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, byte> RevalidationsInFlight = new();
@@ -153,14 +153,30 @@ public class DocumentProjectService(
     }
 
     /// <summary>
-    /// Drop a project's cached document so the next read refetches everything from
-    /// the indexer and relays. Used after the founder publishes a profile update so
-    /// their own app reflects the change immediately.
+    /// Refresh a project's cached profile metadata from relays in the background.
+    /// Skips the refresh when the cached metadata is younger than <see cref="MetadataTtl"/>
+    /// unless <paramref name="force"/> is set (e.g. the founder just published a profile
+    /// update). Runs for any user landing on a project page, so profile changes
+    /// propagate to everyone — not just the founder who made them.
     /// </summary>
-    public async Task<Result> InvalidateCacheAsync(ProjectId id)
+    public async Task<Result> RevalidateAsync(ProjectId id, bool force = false)
     {
-        var result = await collection.DeleteAsync(id.Value);
-        return result.IsSuccess ? Result.Success() : Result.Failure(result.Error);
+        var cachedResult = await collection.FindByIdsAsync(new[] { id.Value });
+        if (cachedResult.IsFailure)
+            return Result.Failure(cachedResult.Error);
+
+        var project = cachedResult.Value.FirstOrDefault();
+        if (project == null || string.IsNullOrEmpty(project.NostrPubKey))
+            return Result.Success(); // nothing cached — the next read fetches fresh data anyway
+
+        if (!force && DateTime.UtcNow - project.MetadataFetchedAt <= MetadataTtl)
+            return Result.Success(); // still fresh — no relay round-trip needed
+
+        if (!RevalidationsInFlight.TryAdd(project.Id.Value, 0))
+            return Result.Success(); // a revalidation for this project is already running
+
+        RefreshMetadataInBackground([project]);
+        return Result.Success();
     }
 
     /// <summary>
@@ -181,18 +197,28 @@ public class DocumentProjectService(
         if (stale.Count == 0)
             return;
 
+        RefreshMetadataInBackground(stale);
+    }
+
+    /// <summary>
+    /// Fetch fresh kind-0 metadata from relays for the given cached projects and
+    /// upsert the profile fields. Callers must have registered each project in
+    /// <see cref="RevalidationsInFlight"/>; entries are released on completion.
+    /// </summary>
+    private void RefreshMetadataInBackground(List<Project> projects)
+    {
         _ = Task.Run(async () =>
         {
             try
             {
-                var metadataResult = await ProjectMetadatas(stale.Select(p => p.NostrPubKey).Distinct().ToArray());
+                var metadataResult = await ProjectMetadatas(projects.Select(p => p.NostrPubKey).Distinct().ToArray());
                 if (metadataResult.IsFailure)
                 {
                     logger.LogDebug("Metadata revalidation fetch failed: {Error}", metadataResult.Error);
                     return;
                 }
 
-                foreach (var project in stale)
+                foreach (var project in projects)
                 {
                     var metadata = metadataResult.Value
                         .FirstOrDefault(m => m.Npub == project.NostrPubKey)?.NostrMetadata;
@@ -218,7 +244,7 @@ public class DocumentProjectService(
             }
             finally
             {
-                foreach (var project in stale)
+                foreach (var project in projects)
                     RevalidationsInFlight.TryRemove(project.Id.Value, out _);
             }
         });

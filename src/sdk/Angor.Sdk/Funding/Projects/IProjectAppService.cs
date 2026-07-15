@@ -29,6 +29,13 @@ public interface IProjectAppService
 
     Task<Result<FetchProjectProfileData.FetchProjectProfileDataResponse>> FetchProjectProfileData(ProjectId projectId);
 
+    /// <summary>
+    /// Kick a background refresh of a project's cached profile metadata from relays.
+    /// Call when a user lands on a project page; the refresh only runs when the cache
+    /// is older than the freshness TTL unless <paramref name="force"/> is set.
+    /// </summary>
+    Task<Result<RevalidateProjectMetadata.RevalidateProjectMetadataResponse>> RevalidateProjectMetadata(ProjectId projectId, bool force = false);
+
     Task<Result<UpdateProjectProfile.UpdateProjectProfileResponse>> UpdateProjectProfile(
         WalletId walletId,
         ProjectId projectId,

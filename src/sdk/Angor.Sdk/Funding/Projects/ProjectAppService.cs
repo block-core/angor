@@ -71,6 +71,11 @@ public class ProjectAppService(
         return mediator.Send(new FetchProjectProfileData.FetchProjectProfileDataRequest(projectId));
     }
 
+    public Task<Result<RevalidateProjectMetadata.RevalidateProjectMetadataResponse>> RevalidateProjectMetadata(ProjectId projectId, bool force = false)
+    {
+        return mediator.Send(new RevalidateProjectMetadata.RevalidateProjectMetadataRequest(projectId, force));
+    }
+
     public Task<Result<UpdateProjectProfile.UpdateProjectProfileResponse>> UpdateProjectProfile(
         WalletId walletId,
         ProjectId projectId,

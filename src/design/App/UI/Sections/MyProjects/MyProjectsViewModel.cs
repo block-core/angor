@@ -356,6 +356,11 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
     public void OpenManageProject(MyProjectItemViewModel project)
     {
         SelectedManageProject = _manageFactory(project);
+
+        // Kick a background refresh of cached profile metadata (TTL-gated) so the
+        // founder always sees the latest published profile on their project page.
+        if (!string.IsNullOrEmpty(project.ProjectIdentifier))
+            _ = _projectAppService.RevalidateProjectMetadata(new ProjectId(project.ProjectIdentifier));
     }
 
     public void CloseManageProject() => SelectedManageProject = null;
