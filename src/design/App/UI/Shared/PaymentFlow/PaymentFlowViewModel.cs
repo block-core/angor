@@ -122,7 +122,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
     [Reactive] private string successDescription;
     public string SuccessButtonText => _config.SuccessButtonText;
     public string CurrencySymbol => _currencyService.Symbol;
-    public string AmountDisplay => $"{_config.AmountSats / 100_000_000m:F8} {_currencyService.Symbol}";
+    public string AmountDisplay => $"{_config.OnChainRequiredSats / 100_000_000m:F8} {_currencyService.Symbol}";
 
     // ── Wallets ──
     public ReadOnlyObservableCollection<WalletInfo> Wallets => _walletContext.Wallets;
@@ -275,7 +275,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
 
     private bool CanWalletPay(WalletInfo wallet)
     {
-        return wallet.AvailableSats >= _config.AmountSats;
+        return wallet.AvailableSats >= _config.OnChainRequiredSats;
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -565,7 +565,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             PaymentStatusText = "Confirming on-chain claim...";
             var monitorAddressRequest = new MonitorOp.MonitorAddressForFundsRequest(
                 walletId, receivingAddress,
-                new Amount(_config.AmountSats),
+                new Amount(_config.OnChainRequiredSats),
                 TimeSpan.FromMinutes(30));
 
             var monitorAddressResult = await _investmentAppService.MonitorAddressForFunds(
@@ -696,7 +696,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             var monitorRequest = new MonitorOp.MonitorAddressForFundsRequest(
                 walletId,
                 OnChainAddress,
-                new Amount(_config.AmountSats),
+                new Amount(_config.OnChainRequiredSats),
                 TimeSpan.FromMinutes(30));
 
             var monitorResult = await _investmentAppService.MonitorAddressForFunds(
@@ -855,7 +855,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             PaymentStatusText = "Confirming on-chain claim...";
             var monitorAddressRequest = new MonitorOp.MonitorAddressForFundsRequest(
                 walletId, receivingAddress,
-                new Amount(_config.AmountSats),
+                new Amount(_config.OnChainRequiredSats),
                 TimeSpan.FromMinutes(30));
 
             var monitorAddressResult = await _investmentAppService.MonitorAddressForFunds(
