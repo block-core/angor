@@ -45,7 +45,7 @@ namespace Angor.Test
 
                     var coins = keys.Select(key => new Coin(fakeInputTrx, fakeTxout)).ToList();
 
-                    return (coins, keys);
+                    return coins.Zip(keys, (c, k) => new SigningCoin(c, k)).ToList();
                 });
 
             _networkConfiguration = new Mock<INetworkConfiguration>();
