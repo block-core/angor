@@ -11,6 +11,7 @@ using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Projects.Operations;
 using Angor.Sdk.Funding.Shared;
+using Angor.Shared;
 using Angor.Shared.Models;
 using Avalonia.Media.Imaging;
 using App.UI.Sections.Portfolio;
@@ -388,18 +389,36 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable
     /// </summary>
     internal static IReadOnlyList<ProjectDto>? CachedDtos { get; set; }
 
-    internal const string CacheStoreKey = "findprojects_cache.json";
+    /// <summary>
+    /// Monotonically increasing token bumped on every network switch.
+    /// In-flight loads capture it at start and discard their results if it
+    /// changed by the time they complete, preventing a stale pre-switch
+    /// Latest() call from repopulating the list/caches with old-network data
+    /// (mobile keeps the same VM instance alive across a network switch).
+    /// </summary>
+    private static int loadGeneration;
+
+    /// <summary>Bump the load generation, invalidating all in-flight loads.</summary>
+    internal static void InvalidateInFlightLoads() => Interlocked.Increment(ref loadGeneration);
+
+    /// <summary>
+    /// Disk cache key, qualified by network name so a cache written on one
+    /// network is never seeded on another.
+    /// </summary>
+    internal static string CacheStoreKeyFor(string networkName) =>
+        $"findprojects_cache_{networkName.ToLowerInvariant()}.json";
 
     /// <summary>
     /// Load persisted DTO cache from disk into <see cref="CachedDtos"/>.
     /// Called from CompositionRoot on startup so the first tap seeds from disk.
     /// </summary>
-    internal static async Task LoadCachedDtosFromDiskAsync(IStore store, ILogger logger)
+    internal static async Task LoadCachedDtosFromDiskAsync(IStore store, string networkName, ILogger logger)
     {
-        logger.LogInformation("[FindProjects] disk-load: attempt key={Key}", CacheStoreKey);
+        var cacheStoreKey = CacheStoreKeyFor(networkName);
+        logger.LogInformation("[FindProjects] disk-load: attempt key={Key}", cacheStoreKey);
         try
         {
-            var result = await store.Load<List<ProjectDto>>(CacheStoreKey);
+            var result = await store.Load<List<ProjectDto>>(cacheStoreKey);
             if (!result.IsSuccess)
             {
                 logger.LogInformation("[FindProjects] disk-load: Load() returned failure: {Error}", result.Error);
@@ -428,12 +447,13 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable
     /// Persist the current <see cref="CachedDtos"/> to disk for the next app launch.
     /// Fire-and-forget; failures are logged and swallowed.
     /// </summary>
-    internal static async Task SaveCachedDtosToDiskAsync(IStore store, IReadOnlyList<ProjectDto> dtos, ILogger logger)
+    internal static async Task SaveCachedDtosToDiskAsync(IStore store, string networkName, IReadOnlyList<ProjectDto> dtos, ILogger logger)
     {
-        logger.LogInformation("[FindProjects] disk-save: attempt count={Count} key={Key}", dtos.Count, CacheStoreKey);
+        var cacheStoreKey = CacheStoreKeyFor(networkName);
+        logger.LogInformation("[FindProjects] disk-save: attempt count={Count} key={Key}", dtos.Count, cacheStoreKey);
         try
         {
-            var result = await store.Save(CacheStoreKey, dtos.ToList());
+            var result = await store.Save(cacheStoreKey, dtos.ToList());
             if (result.IsSuccess)
                 logger.LogInformation("[FindProjects] disk-save: SUCCESS wrote {Count} projects", dtos.Count);
             else
@@ -735,6 +755,10 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable
     /// </summary>
     public void ResetAfterNetworkSwitch()
     {
+        // Invalidate any in-flight Latest() call from before the switch so it
+        // cannot repopulate Projects/CachedDtos/disk cache with old-network data
+        // (on mobile this VM instance stays alive across the switch).
+        InvalidateInFlightLoads();
         CloseInvestPage();
         CloseProjectDetail();
         CachedDtos = null;
@@ -747,6 +771,10 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable
 
     public async Task LoadProjectsFromSdkAsync()
     {
+        // Capture the generation and network at start; if a network switch
+        // happens while Latest() is in flight, the results are discarded.
+        var generation = Volatile.Read(ref loadGeneration);
+        var networkName = App.Services.GetRequiredService<INetworkConfiguration>().GetNetwork().Name;
         var pl = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger("ProjectsLoad");
         var sw = System.Diagnostics.Stopwatch.StartNew();
         pl.LogInformation("[ProjectsLoad] t=0ms begin");
@@ -785,6 +813,15 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable
 
             if (result.IsSuccess)
             {
+                // A network switch happened while Latest() was in flight: these
+                // results belong to the old network — discard them entirely.
+                if (generation != Volatile.Read(ref loadGeneration))
+                {
+                    pl.LogWarning("[ProjectsLoad] t={T}ms discarding stale results (network switched mid-load, gen {Old} != {New})",
+                        sw.ElapsedMilliseconds, generation, Volatile.Read(ref loadGeneration));
+                    return;
+                }
+
                 var dtos = result.Value.Projects;
                 var dtoCount = dtos.Count();
                 pl.LogInformation("[ProjectsLoad] t={T}ms got {Count} dtos", sw.ElapsedMilliseconds, dtoCount);
@@ -798,6 +835,7 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable
                 // instantly while the SDK fetch runs in background.
                 _ = SaveCachedDtosToDiskAsync(
                     App.Services.GetRequiredService<IStore>(),
+                    networkName,
                     cachedCopy,
                     App.Services.GetRequiredService<ILoggerFactory>().CreateLogger("FindProjectsCache"));
 

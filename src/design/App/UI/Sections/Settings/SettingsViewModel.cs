@@ -26,6 +26,7 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
     private readonly INetworkStorage _networkStorage;
     private readonly IWalletAppService _walletAppService;
     private readonly IDatabaseManagementService _databaseManagementService;
+    private readonly INostrCommunicationFactory _nostrCommunicationFactory;
     private readonly ICurrencyService _currencyService;
     private readonly IWalletContext _walletContext;
     private readonly ILogExportService _logExportService;
@@ -140,6 +141,7 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
         INetworkStorage networkStorage,
         IWalletAppService walletAppService,
         IDatabaseManagementService databaseManagementService,
+        INostrCommunicationFactory nostrCommunicationFactory,
         PrototypeSettings prototypeSettings,
         ICurrencyService currencyService,
         IWalletContext walletContext,
@@ -154,6 +156,7 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
         _networkStorage = networkStorage;
         _walletAppService = walletAppService;
         _databaseManagementService = databaseManagementService;
+        _nostrCommunicationFactory = nostrCommunicationFactory;
         _prototypeSettings = prototypeSettings;
         _currencyService = currencyService;
         _walletContext = walletContext;
@@ -318,6 +321,11 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
 
         // Persist new network to SDK storage.
         _networkStorage.SetNetwork(newNetwork);
+
+        // Tear down the shared Nostr multi-websocket client so old-network relay
+        // connections don't keep streaming events; it is lazily rebuilt with the
+        // new network's relays on the next GetOrCreateClient call.
+        _nostrCommunicationFactory.CloseClientConnection();
 
         // Clear settings for the new network.
         _networkStorage.SetSettings(new SettingsInfo());
