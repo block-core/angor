@@ -38,7 +38,7 @@ public class FounderTransactionActionTest : AngorTestData
 
                 var coins = keys.Select(key => fakeInputTrx.Outputs.AsCoins().First()).ToList();
 
-                return (coins, keys);
+                return coins.Zip(keys, (c, k) => new SigningCoin(c, k)).ToList();
             });
 
 

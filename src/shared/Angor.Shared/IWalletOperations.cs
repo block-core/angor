@@ -3,6 +3,12 @@ using NBitcoin;
 
 namespace Angor.Shared;
 
+/// <summary>
+/// A coin paired with its signing key, ensuring they cannot be mismatched.
+/// Replaces the unsafe parallel List&lt;Coin&gt;/List&lt;Key&gt; pattern.
+/// </summary>
+public record SigningCoin(Coin Coin, Key Key);
+
 public interface IWalletOperations
 {
     string GenerateWalletWords();
@@ -14,7 +20,7 @@ public interface IWalletOperations
     List<UtxoDataWithPath> FindOutputsForTransaction(long sendAmountat, AccountInfo accountInfo);
     Task<IEnumerable<FeeEstimation>> GetFeeEstimationAsync();
     Transaction CreateSendTransaction(SendInfo sendInfo, AccountInfo accountInfo);
-    (List<Coin>? coins, List<Key> keys) GetUnspentOutputsForTransaction(WalletWords walletWords, List<UtxoDataWithPath> utxoDataWithPaths);
+    List<SigningCoin> GetUnspentOutputsForTransaction(WalletWords walletWords, List<UtxoDataWithPath> utxoDataWithPaths);
 
     TransactionInfo AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo, long feeRate);

@@ -62,4 +62,11 @@ public interface IInvestmentAppService
     /// Gets the total invested amount (in sats) for a wallet by summing locally stored InvestmentRecord amounts.
     /// </summary>
     Task<Result<GetTotalInvested.GetTotalInvestedResponse>> GetTotalInvested(GetTotalInvested.GetTotalInvestedRequest request);
+
+    /// <summary>
+    /// Checks whether a wallet has already invested in a specific project by querying the
+    /// local portfolio and the on-chain indexer. If an investment is found on-chain but
+    /// missing from the local portfolio, auto-recovers it.
+    /// </summary>
+    Task<Result<CheckExistingInvestment.CheckExistingInvestmentResponse>> CheckExistingInvestment(CheckExistingInvestment.CheckExistingInvestmentRequest request);
 }

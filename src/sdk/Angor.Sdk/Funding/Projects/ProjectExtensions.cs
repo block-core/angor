@@ -24,6 +24,7 @@ public static class ProjectExtensions
             FundingEndDate = project.EndDate,
             InformationUri = project.InformationUri,
             TargetAmount = project.TargetAmount,
+            FounderPubKey = project.FounderKey,
             Stages = project.Stages.Select(stage => new StageDto
             {
                 Index = stage.Index,

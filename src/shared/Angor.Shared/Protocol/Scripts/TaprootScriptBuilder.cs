@@ -86,7 +86,7 @@ public class TaprootScriptBuilder : ITaprootScriptBuilder
         return (new Script(controlBlock.ToBytes()), execute, secretHashes.ToArray());
     }
     
-    private static TaprootSpendInfo BuildTaprootSpendInfo(ProjectScripts scripts, int projectVersion = 1)
+    private static TaprootSpendInfo BuildTaprootSpendInfo(ProjectScripts scripts, int projectVersion = 2)
     {
         var taprootKey = projectVersion >= 3
             ? CreateUnspendableInternalKeyV2()

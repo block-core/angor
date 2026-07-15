@@ -37,15 +37,59 @@
         <!-- yet. Browse the latest to find one." description,       -->
         <!-- "Find Projects" button with search icon                 -->
         <!-- ═══════════════════════════════════════════════════════ -->
-        <controls:EmptyState Title="FUNDED"
-                              Description="You haven't funded any projects yet. Browse the latest to find one."
-                              DescriptionFontSize="20"
-                              HasButton="True"
-                              ButtonText="Find Projects"
-                              ButtonIconValue="fa-solid fa-magnifying-glass"
-                              ButtonClick="OnFindProjectsEmptyStateClick"
-                              IsVisible="False"
-                              Name="EmptyStatePanel" />
+        <Panel IsVisible="False" Name="EmptyStatePanel">
+            <controls:EmptyState Title="FUNDED"
+                                  Description="You haven't funded any projects yet. Browse the latest to find one."
+                                  DescriptionFontSize="20"
+                                  HasButton="True"
+                                  ButtonText="Find Projects"
+                                  ButtonIconValue="fa-solid fa-magnifying-glass"
+                                  ButtonClick="OnFindProjectsEmptyStateClick" />
+            <!-- Refresh button — top-right, same pattern as MyProjectsView.EmptyScanButton -->
+            <Button Name="EmptyRefreshButton"
+                    Classes="Primary Light MobileAction"
+                    Padding="12,8"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Margin="24"
+                    IsEnabled="{Binding !IsLoading}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <i:Icon Value="fa-solid fa-arrows-rotate"
+                            FontSize="14"
+                            IsVisible="{Binding !IsLoading}"
+                            Foreground="{DynamicResource LightPrimaryButtonForeground}"
+                            VerticalAlignment="Center" />
+                    <i:Icon Value="fa-solid fa-spinner"
+                            FontSize="14"
+                            IsVisible="{Binding IsLoading}"
+                            Foreground="{DynamicResource LightPrimaryButtonForeground}"
+                            VerticalAlignment="Center"
+                            RenderTransformOrigin="50%,50%">
+                        <i:Icon.RenderTransform>
+                            <RotateTransform />
+                        </i:Icon.RenderTransform>
+                        <i:Icon.Styles>
+                            <Style Selector="i|Icon[IsVisible=True]">
+                                <Style.Animations>
+                                    <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                        <KeyFrame Cue="0%">
+                                            <Setter Property="RotateTransform.Angle" Value="0" />
+                                        </KeyFrame>
+                                        <KeyFrame Cue="100%">
+                                            <Setter Property="RotateTransform.Angle" Value="360" />
+                                        </KeyFrame>
+                                    </Animation>
+                                </Style.Animations>
+                            </Style>
+                        </i:Icon.Styles>
+                    </i:Icon>
+                    <TextBlock Text="Refresh"
+                               VerticalAlignment="Center"
+                               FontSize="13" FontWeight="SemiBold"
+                               Foreground="{DynamicResource LightPrimaryButtonForeground}" />
+                </StackPanel>
+            </Button>
+        </Panel>
 
         <!-- ═══════════════════════════════════════════════════════ -->
         <!-- INVESTMENT DETAIL: lazy-mounted by code-behind on first  -->
