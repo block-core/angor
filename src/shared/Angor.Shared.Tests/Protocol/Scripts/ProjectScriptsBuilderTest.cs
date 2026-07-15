@@ -1,6 +1,6 @@
 using Angor.Shared;
 using Angor.Shared.Protocol.Scripts;
-using Blockcore.NBitcoin;
+using NBitcoin;
 using Moq;
 
 namespace Angor.Test.Protocol.Scripts;
@@ -33,7 +33,7 @@ public class ProjectScriptsBuilderTest
     public void GetAngorFee_ReturnsFromDerivationOperations()
     {
         var key = Guid.NewGuid().ToString();
-        var expectedResult = new Key().ScriptPubKey;
+        var expectedResult = new Key().PubKey.ScriptPubKey;
 
 
         _derivationOperations.Setup(_ => _.AngorKeyToScript(key))

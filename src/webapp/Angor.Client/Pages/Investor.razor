@@ -1,12 +1,12 @@
-﻿@page "/investor"
+@page "/investor"
 @using Angor.Client.Storage
 @using Angor.Shared.Models
-@using Blockcore.NBitcoin
+@using NBitcoin
 @using Angor.Client.Models
 @using Angor.Shared
 @using Angor.Shared.Protocol
 @using Angor.Shared.Services
-@using Blockcore.NBitcoin.DataEncoders
+@using NBitcoin.DataEncoders
 @using Nostr.Client.Messages.Direct
 
 @inject ILogger<Investor> _Logger
@@ -704,7 +704,7 @@
         }
 
         var trxHex = await _IndexerService.GetTransactionHexByIdAsync(investorProject.TransactionId);
-        Blockcore.Consensus.TransactionInfo.Transaction investmentTransaction = network.CreateTransaction(trxHex);
+        Transaction investmentTransaction = network.CreateTransaction(trxHex);
 
         for (int stageIndex = 0; stageIndex < investorProject.ProjectInfo.Stages.Count; stageIndex++)
         {

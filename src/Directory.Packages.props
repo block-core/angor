@@ -87,7 +87,6 @@
     <PackageVersion Include="ModelContextProtocol" Version="1.3.0" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.5" />
     <!-- Shared / legacy packages -->
-    <PackageVersion Include="Blockcore.Core" Version="1.1.41" />
     <PackageVersion Include="Blockcore.Nostr.Client" Version="2.0.2" />
     <PackageVersion Include="NBitcoin.Altcoins" Version="3.0.21" />
     <PackageVersion Include="System.Text.Json" Version="8.0.5" />

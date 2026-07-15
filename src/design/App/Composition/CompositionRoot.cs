@@ -206,6 +206,7 @@ public static class CompositionRoot
                 sp.GetRequiredService<IProjectAppService>(),
                 sp.GetRequiredService<IProjectService>(),
                 sp.GetRequiredService<ICurrencyService>(),
+                sp.GetRequiredService<IWalletContext>(),
                 sp.GetRequiredService<ILoggerFactory>().CreateLogger<ManageProjectViewModel>()));
 
         services.AddSingleton<Func<MyProjectItemViewModel, EditProfileViewModel>>(sp =>

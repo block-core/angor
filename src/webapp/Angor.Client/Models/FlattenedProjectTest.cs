@@ -1,5 +1,5 @@
 using Angor.Shared.Models;
-using Blockcore.NBitcoin;
+using NBitcoin;
 
 namespace Angor.Client.Models;
 

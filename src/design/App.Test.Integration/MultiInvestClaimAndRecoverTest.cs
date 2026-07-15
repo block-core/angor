@@ -675,10 +675,15 @@ public class MultiInvestClaimAndRecoverTest
         PortfolioViewModel portfolioVm,
         string profileName)
     {
-        // VM-level: no penalty investments expected after unfunded release
-        portfolioVm.HasPenaltyInvestments.Should().BeFalse(
-            "unfunded release should not produce penalty investments");
-        portfolioVm.PenaltyInvestments.Should().BeEmpty();
+        // VM-level: no outstanding penalties expected after unfunded release.
+        // Penalties are loaded from the SDK's wallet-wide GetPenalties operation, so trigger
+        // a fresh scan rather than reading a stale/never-populated collection.
+        await portfolioVm.LoadPenaltiesAsync();
+        Dispatcher.UIThread.RunJobs();
+
+        portfolioVm.HasPenalties.Should().BeFalse(
+            "unfunded release should not produce outstanding penalties");
+        portfolioVm.Penalties.Should().BeEmpty();
 
         // Navigate to Funded section so PortfolioView (and PenaltiesButton) is in the visual tree
         await window.NavigateToSectionAndVerify("Funded");
@@ -690,8 +695,15 @@ public class MultiInvestClaimAndRecoverTest
         penaltiesBtn.Should().NotBeNull("PenaltiesButton should exist in the portfolio view");
         penaltiesBtn!.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, penaltiesBtn));
         Dispatcher.UIThread.RunJobs();
-        await Task.Delay(500);
-        Dispatcher.UIThread.RunJobs();
+
+        // The click kicks off an async, wallet-wide GetPenalties scan (fire-and-forget from
+        // code-behind) — poll IsLoadingPenalties instead of a fixed delay.
+        var modalDeadline = DateTime.UtcNow + IndexerLagTimeout;
+        while (portfolioVm.IsLoadingPenalties && DateTime.UtcNow < modalDeadline)
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(200));
+            Dispatcher.UIThread.RunJobs();
+        }
 
         // Find the PenaltiesModal in the visual tree
         var modal = window.GetVisualDescendants()
@@ -706,7 +718,7 @@ public class MultiInvestClaimAndRecoverTest
             .FirstOrDefault();
         itemsControl.Should().NotBeNull("PenaltiesModal should contain an ItemsControl");
         itemsControl!.ItemCount.Should().Be(0,
-            "ItemsControl should have zero rows when there are no penalty investments");
+            "ItemsControl should have zero rows when there are no outstanding penalties");
 
         // Verify empty state message is visible
         var emptyText = modal.GetVisualDescendants()

@@ -1,14 +1,10 @@
 using Angor.Shared.Models;
+using Angor.Shared.Networks;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
 using Angor.Shared.Utilities;
-using Blockcore.Consensus.ScriptInfo;
-using Blockcore.Consensus.TransactionInfo;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.BIP32;
-using Blockcore.NBitcoin.BIP39;
-using Blockcore.Networks;
 using Microsoft.Extensions.Logging;
+using NBitcoin;
 using NBitcoin.Crypto;
 
 namespace Angor.Shared;
@@ -42,16 +38,16 @@ public class WalletOperations : IWalletOperations
     public TransactionInfo AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo, long feeRate)
     {
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
 
-        var utxoDataWithPaths = FindOutputsForTransaction((long)transaction.Outputs.Sum(_ => _.Value), accountInfo);
-        var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
+        var utxoDataWithPaths = FindOutputsForTransaction(transaction.Outputs.Sum(_ => _.Value.Satoshi), accountInfo);
+        var signingCoins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
 
-        if (coins.coins == null)
+        if (signingCoins == null || !signingCoins.Any())
             throw new ApplicationException("No coins found");
        
         // did we spend all the coins?
-        var spendAll = coins.coins.Sum(s => s.Amount.Satoshi) == transaction.Outputs.Sum(o => o.Value.Satoshi);
+        var spendAll = signingCoins.Sum(s => s.Coin.Amount.Satoshi) == transaction.Outputs.Sum(o => o.Value.Satoshi);
 
         if (spendAll)
         {
@@ -59,56 +55,58 @@ public class WalletOperations : IWalletOperations
             var clonedTransaction = network.CreateTransaction(transaction.ToHex());
 
             // Step 2: Add inputs and recalculate the transaction size
-            foreach (var coin in coins.coins)
+            foreach (var sc in signingCoins)
             {
-                if (clonedTransaction.Inputs.Any(x => x.PrevOut == coin.Outpoint))
+                if (clonedTransaction.Inputs.Any(x => x.PrevOut == sc.Coin.Outpoint))
                     continue;
-                var txin = new TxIn(coin.Outpoint, null);
+                var txin = new TxIn(sc.Coin.Outpoint);
                 txin.WitScript = new WitScript(Op.GetPushOp(new byte[72]), Op.GetPushOp(new byte[33])); // for total size calculation
-                clonedTransaction.AddInput(txin);
+                clonedTransaction.Inputs.Add(txin);
             }
 
             // Step 3: Calculate fee, based on the size with inputs
-            var totalSize = clonedTransaction.GetVirtualSize(4);
-            var totalFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(totalSize);
+            var totalSize = clonedTransaction.GetVirtualSize();
+            long totalFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(totalSize).Satoshi;
 
             // Step 4: Select the last output to remove the fee from
             var lastOutput = clonedTransaction.Outputs.Last();
 
-            if (totalFee >= lastOutput.Value)
+            if (totalFee >= lastOutput.Value.Satoshi)
                 throw new ApplicationException($"The fee {totalFee} is greater then the last output {lastOutput.Value}");
 
             // Step 5: remove the fee from the last output
-            lastOutput.Value -= totalFee;
+            lastOutput.Value -= Money.Satoshis(totalFee);
 
             // Step 6: Sign inputs
-            var index = 0;
-            foreach (var coin in coins.coins)
+            foreach (var sc in signingCoins)
             {
-                var key = coins.keys[index];
+                if (sc.Key.PubKey.WitHash.ScriptPubKey != sc.Coin.ScriptPubKey)
+                    throw new InvalidOperationException($"Derived key does not match coin ScriptPubKey for outpoint {sc.Coin.Outpoint}");
 
-                if (key.PubKey.WitHash.ScriptPubKey != coin.ScriptPubKey)
-                    throw new InvalidOperationException($"Derived key does not match coin ScriptPubKey at index {index}");
-
-                var input = clonedTransaction.Inputs.Single(p => p.PrevOut == coin.Outpoint);
-                var signature = clonedTransaction.SignInput(network, key, coin, SigHash.All);
-                input.WitScript = new WitScript(Op.GetPushOp(signature.ToBytes()), Op.GetPushOp(key.PubKey.ToBytes()));
-
-                index++;
+                var inputIndex = FindInputIndex(clonedTransaction, sc.Coin.Outpoint);
+                var scriptCode = sc.Key.PubKey.Hash.ScriptPubKey;
+                var sighash = clonedTransaction.GetSignatureHash(scriptCode, inputIndex, SigHash.All, sc.Coin.TxOut, HashVersion.WitnessV0);
+                var signature = new TransactionSignature(sc.Key.Sign(sighash), SigHash.All);
+                clonedTransaction.Inputs[inputIndex].WitScript = new WitScript(Op.GetPushOp(signature.ToBytes()), Op.GetPushOp(sc.Key.PubKey.ToBytes()));
             }
 
             return new TransactionInfo { Transaction = clonedTransaction, TransactionFee = totalFee };
         }
         else
         {
-            TransactionBuilder builder;
-            builder = new TransactionBuilder(network)
-                .AddCoins(coins.coins)
-                .AddKeys(coins.keys.ToArray())
-                .SetChange(BitcoinAddress.Create(changeAddress, network))
-                .ContinueToBuild(transaction)
-                .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)))
-                .CoverTheRest();
+            var builder = network.BitcoinNetwork.CreateTransactionBuilder()
+                .AddCoins(signingCoins.Select(sc => sc.Coin))
+                .AddKeys(signingCoins.Select(sc => sc.Key).ToArray())
+                .SetChange(BitcoinAddress.Create(changeAddress, network.BitcoinNetwork))
+                .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)));
+
+            builder.ShuffleOutputs = false;
+            builder.DustPrevention = false;
+
+            foreach (var output in transaction.Outputs)
+            {
+                builder.Send(output.ScriptPubKey, output.Value);
+            }
 
 
             var signTransaction = builder.BuildTransaction(true);
@@ -119,20 +117,20 @@ public class WalletOperations : IWalletOperations
 
             foreach (var input in signTransaction.Inputs)
             {
-                var foundInput = coins.coins.First(c => c.Outpoint.ToString() == input.PrevOut.ToString());
+                var foundInput = signingCoins.First(sc => sc.Coin.Outpoint.ToString() == input.PrevOut.ToString());
 
-                totaInInputs += foundInput.Amount.Satoshi;
+                totaInInputs += foundInput.Coin.Amount.Satoshi;
             }
 
             var minerFee = totaInInputs - totaInOutputs;
 
-            var txSize = signTransaction.GetVirtualSize(4);
-            var minimumFee = new FeeRate(Money.Satoshis(1000)).GetFee(txSize); //1000 sats per kilobyte
+            var txSize = signTransaction.GetVirtualSize();
+            long minimumFee = new FeeRate(Money.Satoshis(1000)).GetFee(txSize).Satoshi; //1000 sats per kilobyte
 
             if (minerFee >= minimumFee) //Fixed a bug in the builder that creates a fee that is too low
                 return new TransactionInfo { Transaction = signTransaction, TransactionFee = minerFee };
             
-            builder.SendFees(minimumFee);
+            builder.SendFees(Money.Satoshis(minimumFee));
             signTransaction = builder.BuildTransaction(true);
 
             return new TransactionInfo { Transaction = signTransaction, TransactionFee = minimumFee  };
@@ -142,7 +140,7 @@ public class WalletOperations : IWalletOperations
     public TransactionInfo AddInputsFromAddressAndSignTransaction(string fundingAddress, string changeAddress,
         Transaction transaction, WalletWords walletWords, AccountInfo accountInfo, long feeRate)
     {
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
 
         // Find UTXOs only for the specified funding address
         var addressInfo = accountInfo.AllAddresses()
@@ -161,9 +159,9 @@ public class WalletOperations : IWalletOperations
             throw new ApplicationException($"No available UTXOs found for address {fundingAddress}");
 
         // Calculate required amount (outputs + estimated fee)
-        long outputsTotal = (long)transaction.Outputs.Sum(_ => _.Value);
-        var estimatedSize = transaction.GetVirtualSize(4) + (availableUtxos.Count * 68); // Estimate with inputs
-        var estimatedFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(estimatedSize);
+        long outputsTotal = transaction.Outputs.Sum(_ => _.Value.Satoshi);
+        var estimatedSize = transaction.GetVirtualSize() + (availableUtxos.Count * 68); // Estimate with inputs
+        long estimatedFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(estimatedSize).Satoshi;
         long requiredAmount = outputsTotal + estimatedFee;
 
         // Select UTXOs from the specific address (use all available)
@@ -173,27 +171,27 @@ public class WalletOperations : IWalletOperations
             throw new ApplicationException(
                 $"Insufficient funds in address {fundingAddress}. Required: {requiredAmount} sats ({Money.Satoshis(requiredAmount).ToUnit(MoneyUnit.BTC):F8} BTC), Available: {totalAvailable} sats ({Money.Satoshis(totalAvailable).ToUnit(MoneyUnit.BTC):F8} BTC)");
 
-        var coins = GetUnspentOutputsForTransaction(walletWords, availableUtxos);
+        var signingCoins = GetUnspentOutputsForTransaction(walletWords, availableUtxos);
 
-        if (coins.coins == null || !coins.coins.Any())
+        if (signingCoins == null || !signingCoins.Any())
             throw new ApplicationException("Failed to get coins for the funding address");
 
         // Clone transaction
         var clonedTransaction = network.CreateTransaction(transaction.ToHex());
 
         // Add inputs
-        foreach (var coin in coins.coins)
+        foreach (var sc in signingCoins)
         {
-            if (clonedTransaction.Inputs.Any(x => x.PrevOut == coin.Outpoint))
+            if (clonedTransaction.Inputs.Any(x => x.PrevOut == sc.Coin.Outpoint))
                 continue;
-            var txin = new TxIn(coin.Outpoint, null);
+            var txin = new TxIn(sc.Coin.Outpoint);
             txin.WitScript = new WitScript(Op.GetPushOp(new byte[72]), Op.GetPushOp(new byte[33]));
-            clonedTransaction.AddInput(txin);
+            clonedTransaction.Inputs.Add(txin);
         }
 
         // Calculate actual fee
-        var totalSize = clonedTransaction.GetVirtualSize(4);
-        var totalFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(totalSize);
+        var totalSize = clonedTransaction.GetVirtualSize();
+        long totalFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(totalSize).Satoshi;
 
         // Calculate change
         var changeAmount = totalAvailable - outputsTotal - totalFee;
@@ -201,8 +199,8 @@ public class WalletOperations : IWalletOperations
         // Add change output if above dust threshold
         if (changeAmount > ProtocolConstants.DustThresholdSats)
         {
-            clonedTransaction.AddOutput(Money.Satoshis(changeAmount), 
-                BitcoinAddress.Create(changeAddress, network).ScriptPubKey);
+            clonedTransaction.Outputs.Add(new TxOut(Money.Satoshis(changeAmount), 
+                BitcoinAddress.Create(changeAddress, network.BitcoinNetwork).ScriptPubKey));
         }
         else if (changeAmount > 0)
         {
@@ -214,18 +212,16 @@ public class WalletOperations : IWalletOperations
         }
 
         // Sign inputs
-        var index = 0;
-        foreach (var coin in coins.coins)
+        foreach (var sc in signingCoins)
         {
-            var key = coins.keys[index];
+            if (sc.Key.PubKey.WitHash.ScriptPubKey != sc.Coin.ScriptPubKey)
+                throw new InvalidOperationException($"Derived key does not match coin ScriptPubKey for outpoint {sc.Coin.Outpoint}");
 
-            if (key.PubKey.WitHash.ScriptPubKey != coin.ScriptPubKey)
-                throw new InvalidOperationException($"Derived key does not match coin ScriptPubKey at index {index}");
-
-            var input = clonedTransaction.Inputs.Single(p => p.PrevOut == coin.Outpoint);
-            var signature = clonedTransaction.SignInput(network, key, coin, SigHash.All);
-            input.WitScript = new WitScript(Op.GetPushOp(signature.ToBytes()), Op.GetPushOp(key.PubKey.ToBytes()));
-            index++;
+            var inputIndex = FindInputIndex(clonedTransaction, sc.Coin.Outpoint);
+            var scriptCode = sc.Key.PubKey.Hash.ScriptPubKey;
+            var sighash = clonedTransaction.GetSignatureHash(scriptCode, inputIndex, SigHash.All, sc.Coin.TxOut, HashVersion.WitnessV0);
+            var signature = new TransactionSignature(sc.Key.Sign(sighash), SigHash.All);
+            clonedTransaction.Inputs[inputIndex].WitScript = new WitScript(Op.GetPushOp(signature.ToBytes()), Op.GetPushOp(sc.Key.PubKey.ToBytes()));
         }
 
         return new TransactionInfo { Transaction = clonedTransaction, TransactionFee = totalFee };
@@ -234,38 +230,38 @@ public class WalletOperations : IWalletOperations
     public TransactionInfo AddFeeAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo, long feeRate)
     {
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
 
         // Clone transaction for modification
         var clonedTransaction = network.CreateTransaction(transaction.ToHex());
-        var changeOutput =
-            clonedTransaction.AddOutput(Money.Zero, BitcoinAddress.Create(changeAddress, network).ScriptPubKey);
+        var changeOutput = new TxOut(Money.Zero, BitcoinAddress.Create(changeAddress, network.BitcoinNetwork).ScriptPubKey);
+        clonedTransaction.Outputs.Add(changeOutput);
 
         // Step 1: Estimate fee for the transaction WITHOUT inputs
-        var initialSize = clonedTransaction.GetVirtualSize(4);
-        var initialFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(initialSize);
+        var initialSize = clonedTransaction.GetVirtualSize();
+        long initialFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(initialSize).Satoshi;
 
         // Step 2: Find UTXOs to fund the total cost of transaction (outputs + initial fee)
-        var utxoDataWithPaths = FindOutputsForTransaction((long)initialFee, accountInfo);
-        var coins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
+        var utxoDataWithPaths = FindOutputsForTransaction(initialFee, accountInfo);
+        var signingCoins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
 
         // Step 3: Add inputs and recalculate the transaction size
-        foreach (var coin in coins.coins)
+        foreach (var sc in signingCoins)
         {
-            if (clonedTransaction.Inputs.Any(x => x.PrevOut == coin.Outpoint))
+            if (clonedTransaction.Inputs.Any(x => x.PrevOut == sc.Coin.Outpoint))
                 continue;
-            var txin = new TxIn(coin.Outpoint, null);
+            var txin = new TxIn(sc.Coin.Outpoint);
             txin.WitScript = new WitScript(Op.GetPushOp(new byte[72]), Op.GetPushOp(new byte[33])); // for total size calculation
-            clonedTransaction.AddInput(txin);
+            clonedTransaction.Inputs.Add(txin);
         }
 
-        var totalSize = clonedTransaction.GetVirtualSize(4);
+        var totalSize = clonedTransaction.GetVirtualSize();
 
         // Step 4: Calculate fee again, based on the UPDATED size with inputs
-        var totalFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(totalSize);
+        long totalFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(totalSize).Satoshi;
 
         // Step 5: Adjust the change output (remaining coins after paying the fee)
-        var totalSats = coins.coins.Sum(s => s.Amount.Satoshi);
+        var totalSats = signingCoins.Sum(s => s.Coin.Amount.Satoshi);
         totalSats -= totalFee;
 
         // Handle cases where change is below "dust threshold" for SegWit
@@ -281,19 +277,16 @@ public class WalletOperations : IWalletOperations
         }
 
         // Step 6: Sign inputs
-        var index = 0;
-        foreach (var coin in coins.coins)
+        foreach (var sc in signingCoins)
         {
-            var key = coins.keys[index];
+            if (sc.Key.PubKey.WitHash.ScriptPubKey != sc.Coin.ScriptPubKey)
+                throw new InvalidOperationException($"Derived key does not match coin ScriptPubKey for outpoint {sc.Coin.Outpoint}");
 
-            if (key.PubKey.WitHash.ScriptPubKey != coin.ScriptPubKey)
-                throw new InvalidOperationException($"Derived key does not match coin ScriptPubKey at index {index}");
-
-            var input = clonedTransaction.Inputs.Single(p => p.PrevOut == coin.Outpoint);
-            var signature = clonedTransaction.SignInput(network, key, coin, SigHash.All);
-            input.WitScript = new WitScript(Op.GetPushOp(signature.ToBytes()), Op.GetPushOp(key.PubKey.ToBytes()));
-
-            index++;
+            var inputIndex = FindInputIndex(clonedTransaction, sc.Coin.Outpoint);
+            var scriptCode = sc.Key.PubKey.Hash.ScriptPubKey;
+            var sighash = clonedTransaction.GetSignatureHash(scriptCode, inputIndex, SigHash.All, sc.Coin.TxOut, HashVersion.WitnessV0);
+            var signature = new TransactionSignature(sc.Key.Sign(sighash), SigHash.All);
+            clonedTransaction.Inputs[inputIndex].WitScript = new WitScript(Op.GetPushOp(signature.ToBytes()), Op.GetPushOp(sc.Key.PubKey.ToBytes()));
         }
 
         return new TransactionInfo { Transaction = clonedTransaction, TransactionFee = totalFee };
@@ -303,31 +296,33 @@ public class WalletOperations : IWalletOperations
         SendAmountToAddress(WalletWords walletWords,
             SendInfo sendInfo) //TODO change the passing of wallet words as parameter after refactoring is complete
     {
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
 
         if (sendInfo.SendAmount > sendInfo.SendUtxos.Values.Sum(s => s.UtxoData.value))
         {
             throw new ApplicationException("not enough funds");
         }
 
-        var (coins, keys) =
+        var signingCoins =
             GetUnspentOutputsForTransaction(walletWords, sendInfo.SendUtxos.Values.ToList());
 
-        if (coins == null)
+        if (signingCoins == null || !signingCoins.Any())
         {
             return new OperationResult<Transaction> { Success = false, Message = "not enough funds" };
         }
 
-        var builder = new TransactionBuilder(network)
-            .Send(BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network), Money.Satoshis(sendInfo.SendAmount))
-            .AddCoins(coins)
-            .AddKeys(keys.ToArray())
-            .SetChange(BitcoinWitPubKeyAddress.Create(sendInfo.ChangeAddress, network))
+        var builder = network.BitcoinNetwork.CreateTransactionBuilder()
+            .Send(BitcoinAddress.Create(sendInfo.SendToAddress, network.BitcoinNetwork), Money.Satoshis(sendInfo.SendAmount))
+            .AddCoins(signingCoins.Select(sc => sc.Coin))
+            .AddKeys(signingCoins.Select(sc => sc.Key).ToArray())
+            .SetChange(BitcoinAddress.Create(sendInfo.ChangeAddress, network.BitcoinNetwork))
             .SendEstimatedFees(new FeeRate(Money.Satoshis(sendInfo.FeeRate)));
+
+        builder.ShuffleOutputs = false;
 
         var signedTransaction = builder.BuildTransaction(true);
 
-        var hex = signedTransaction.ToHex(network.Consensus.ConsensusFactory);
+        var hex = signedTransaction.ToHex();
         var res = await _indexerService.PublishTransactionAsync(hex);
 
         if (string.IsNullOrEmpty(res))
@@ -338,7 +333,7 @@ public class WalletOperations : IWalletOperations
 
     public List<UtxoData> UpdateAccountUnconfirmedInfoWithSpentTransaction(AccountInfo accountInfo, Transaction transaction)
     {
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
         
         var inputs = transaction.Inputs.Select(_ => _.PrevOut.ToString()).ToList();
 
@@ -357,17 +352,17 @@ public class WalletOperations : IWalletOperations
 
         foreach (var output in transaction.Outputs.AsIndexedOutputs())
         {
-            var address = output.TxOut.ScriptPubKey.GetDestinationAddress(network)?.ToString();
+            var address = output.TxOut.ScriptPubKey.GetDestinationAddress(network.BitcoinNetwork)?.ToString();
 
             if (address != null && accountChangeAddresses.Contains(address))
             {
                 list.Add(new UtxoData
                 {
-                    address = output.TxOut.ScriptPubKey.GetDestinationAddress(network).ToString(),
+                    address = output.TxOut.ScriptPubKey.GetDestinationAddress(network.BitcoinNetwork).ToString(),
                     scriptHex = output.TxOut.ScriptPubKey.ToHex(),
                     outpoint = new Outpoint(transactionHash, (int)output.N),
                     blockIndex = 0,
-                    value = output.TxOut.Value
+                    value = output.TxOut.Value.Satoshi
                 });
             }
         }
@@ -408,7 +403,7 @@ public class WalletOperations : IWalletOperations
         return utxosToSpend;
     }
 
-    public (List<Coin>? coins,List<Key> keys) GetUnspentOutputsForTransaction(WalletWords walletWords , List<UtxoDataWithPath> utxoDataWithPaths)
+    public List<SigningCoin> GetUnspentOutputsForTransaction(WalletWords walletWords , List<UtxoDataWithPath> utxoDataWithPaths)
     {
         ExtKey extendedKey;
         try
@@ -425,23 +420,23 @@ public class WalletOperations : IWalletOperations
             throw;
         }
 
-        var coins = new List<Coin>();
-        var keys = new List<Key>();
+        var signingCoins = new List<SigningCoin>();
 
         foreach (var utxoDataWithPath in utxoDataWithPaths)
         {
             var utxo = utxoDataWithPath.UtxoData;
 
-            coins.Add(new Coin(uint256.Parse(utxo.outpoint.transactionId), (uint)utxo.outpoint.outputIndex,
-                Money.Satoshis(utxo.value), Script.FromHex(utxo.scriptHex)));
+            var coin = new Coin(uint256.Parse(utxo.outpoint.transactionId), (uint)utxo.outpoint.outputIndex,
+                Money.Satoshis(utxo.value), Script.FromHex(utxo.scriptHex));
 
             // derive the private key
             var extKey = extendedKey.Derive(new KeyPath(utxoDataWithPath.HdPath));
             Key privateKey = extKey.PrivateKey;
-            keys.Add(privateKey);
+            
+            signingCoins.Add(new SigningCoin(coin, privateKey));
         }
 
-        return (coins,keys);
+        return signingCoins;
     }
 
 
@@ -453,11 +448,8 @@ public class WalletOperations : IWalletOperations
 
     public AccountInfo BuildAccountInfoForWalletWords(WalletWords walletWords)
     {
-        ExtKey.UseBCForHMACSHA512 = true;
-        Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
-
-        Network network = _networkConfiguration.GetNetwork();
-        var coinType = network.Consensus.CoinType;
+        AngorNetwork network = _networkConfiguration.GetNetwork();
+        var coinType = network.CoinType;
 
         ExtKey extendedKey;
         try
@@ -487,17 +479,14 @@ public class WalletOperations : IWalletOperations
         return new AccountInfo()
         {
             walletId = rootExtPubKeyHash,
-            RootExtPubKey = rootExtPubKey.ToString(network),
-            ExtPubKey = accountExtPubKeyTostore.ToString(network),
+            RootExtPubKey = rootExtPubKey.ToString(network.BitcoinNetwork),
+            ExtPubKey = accountExtPubKeyTostore.ToString(network.BitcoinNetwork),
             Path = accountHdPath
         };
     }
 
     public async Task UpdateDataForExistingAddressesAsync(AccountInfo accountInfo)
     {
-        ExtKey.UseBCForHMACSHA512 = true;
-        Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
-
         var addressTasks=  accountInfo.AddressesInfo.Select(UpdateAddressInfoUtxoData);
         
         var changeAddressTasks=  accountInfo.ChangeAddressesInfo.Select(UpdateAddressInfoUtxoData);
@@ -553,10 +542,7 @@ public class WalletOperations : IWalletOperations
 
     public async Task UpdateAccountInfoWithNewAddressesAsync(AccountInfo accountInfo)
     {
-        ExtKey.UseBCForHMACSHA512 = true;
-        Blockcore.NBitcoin.Crypto.Hashes.UseBCForHMACSHA512 = true;
-
-        Network network = _networkConfiguration.GetNetwork();
+        AngorNetwork network = _networkConfiguration.GetNetwork();
         
         var (index, items) = await FetchAddressesDataForPubKeyAsync(accountInfo.LastFetchIndex, accountInfo.ExtPubKey, network, false);
 
@@ -593,9 +579,9 @@ public class WalletOperations : IWalletOperations
         }
     }
 
-    private async Task<(int,List<AddressInfo>)> FetchAddressesDataForPubKeyAsync(int scanIndex, string ExtendedPubKey, Network network, bool isChange)
+    private async Task<(int,List<AddressInfo>)> FetchAddressesDataForPubKeyAsync(int scanIndex, string ExtendedPubKey, AngorNetwork network, bool isChange)
     {
-        ExtPubKey accountExtPubKey = ExtPubKey.Parse(ExtendedPubKey, network);
+        ExtPubKey accountExtPubKey = ExtPubKey.Parse(ExtendedPubKey, network.BitcoinNetwork);
         
         var addressesInfo = new List<AddressInfo>();
 
@@ -604,7 +590,7 @@ public class WalletOperations : IWalletOperations
         AddressBalance[] addressesNotEmpty;
         do
         {
-            _logger.LogInformation($"fetching balance for account = {accountExtPubKey.ToString(network)} start index = {scanIndex} isChange = {isChange} gap = {gap}");
+            _logger.LogInformation($"fetching balance for account = {accountExtPubKey.ToString(network.BitcoinNetwork)} start index = {scanIndex} isChange = {isChange} gap = {gap}");
 
             var newAddressesToCheck = Enumerable.Range(0, gap)
                 .Select(_ => GenerateAddressFromPubKey(scanIndex + _, network, isChange, accountExtPubKey))
@@ -658,11 +644,11 @@ public class WalletOperations : IWalletOperations
         return (scanIndex, addressesInfo);
     }
 
-    private AddressInfo GenerateAddressFromPubKey(int scanIndex, Network network, bool isChange, ExtPubKey accountExtPubKey)
+    private AddressInfo GenerateAddressFromPubKey(int scanIndex, AngorNetwork network, bool isChange, ExtPubKey accountExtPubKey)
     {
         var pubKey = _hdOperations.GeneratePublicKey(accountExtPubKey, scanIndex, isChange);
-        var path = _hdOperations.CreateHdPath(Purpose, network.Consensus.CoinType, AccountIndex, isChange, scanIndex);
-        var address = pubKey.GetSegwitAddress(network).ToString();
+        var path = _hdOperations.CreateHdPath(Purpose, network.CoinType, AccountIndex, isChange, scanIndex);
+        var address = pubKey.GetAddress(ScriptPubKeyType.Segwit, network.BitcoinNetwork).ToString();
 
         return new AddressInfo { Address = address, HdPath = path };
     }
@@ -755,10 +741,20 @@ public class WalletOperations : IWalletOperations
 
         Transaction transaction = network.CreateTransaction();
 
-        transaction.Outputs.Add(new TxOut(Money.Satoshis(sendInfo.SendAmount), BitcoinWitPubKeyAddress.Create(sendInfo.SendToAddress, network).ScriptPubKey));
+        transaction.Outputs.Add(new TxOut(Money.Satoshis(sendInfo.SendAmount), BitcoinAddress.Create(sendInfo.SendToAddress, network.BitcoinNetwork).ScriptPubKey));
 
         sendInfo.UnSignedTransaction = transaction;
 
         return transaction;
+    }
+
+    private static int FindInputIndex(Transaction transaction, OutPoint outpoint)
+    {
+        for (int i = 0; i < transaction.Inputs.Count; i++)
+        {
+            if (transaction.Inputs[i].PrevOut == outpoint)
+                return i;
+        }
+        throw new InvalidOperationException($"Input with outpoint {outpoint} not found in transaction");
     }
 }

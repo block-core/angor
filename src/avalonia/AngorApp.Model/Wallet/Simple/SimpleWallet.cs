@@ -7,7 +7,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using AngorApp.Model.Amounts;
 using AngorApp.Model.Common;
-using Blockcore.Networks;
+using Angor.Shared.Networks;
 using CSharpFunctionalExtensions;
 using ReactiveUI;
 using ReactiveUI.SourceGenerators;
@@ -82,7 +82,7 @@ public partial class SimpleWallet : ReactiveObject, IWallet, IDisposable
 
         GetTestCoins.HandleErrorsWith(notificationService, "Cannot get test coins");
 
-        CanGetTestCoins = networkConfiguration.GetNetwork().NetworkType == NetworkType.Testnet;
+        CanGetTestCoins = !networkConfiguration.GetNetwork().IsMainnet;
         Name = CanGetTestCoins ? "Test Wallet" : "Bitcoin Wallet";
     }
 

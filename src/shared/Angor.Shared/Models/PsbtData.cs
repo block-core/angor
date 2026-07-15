@@ -1,5 +1,3 @@
-using Blockcore.Consensus.TransactionInfo;
-
 namespace Angor.Shared.Models;
 
 public class PsbtData

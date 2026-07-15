@@ -12,7 +12,8 @@
         Penalties Details Modal - Vue InvestmentDetail.vue lines 563-626
         Shell modal pattern: card content only, no backdrop (shell provides blur + backdrop).
         max-w-2xl (~672px), table with PROJECT ID / AMOUNT IN PENALTY / DAYS REMAINING
-        Bound to real PenaltyInvestments from PortfolioViewModel.
+        Bound to Penalties — a fresh, wallet-wide scan from the SDK's GetPenalties operation
+        (triggered from PortfolioView's Penalties button), not a per-investment cache.
     -->
 
     <Panel>
@@ -65,7 +66,7 @@
                                         Padding="0">
                                     <Grid ColumnDefinitions="3*,2*,2*">
                                         <TextBlock Grid.Column="0"
-                                                   Text="PROJECT ID"
+                                                   Text="PROJECT"
                                                    FontSize="12" FontWeight="SemiBold"
                                                    Foreground="{DynamicResource PenaltyTableHeaderText}"
                                                    Padding="16,12"
@@ -85,9 +86,39 @@
                                     </Grid>
                                 </Border>
 
+                                <!-- Loading state -->
+                                <Border Padding="24" IsVisible="{Binding IsLoadingPenalties}">
+                                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+                                        <i:Icon Value="fa-solid fa-spinner" FontSize="16"
+                                                Foreground="{DynamicResource TextMuted}"
+                                                RenderTransformOrigin="50%,50%">
+                                            <i:Icon.RenderTransform>
+                                                <RotateTransform />
+                                            </i:Icon.RenderTransform>
+                                            <i:Icon.Styles>
+                                                <Style Selector="i|Icon[IsVisible=True]">
+                                                    <Style.Animations>
+                                                        <Animation Duration="0:0:1" IterationCount="INFINITE">
+                                                            <KeyFrame Cue="0%">
+                                                                <Setter Property="RotateTransform.Angle" Value="0" />
+                                                            </KeyFrame>
+                                                            <KeyFrame Cue="100%">
+                                                                <Setter Property="RotateTransform.Angle" Value="360" />
+                                                            </KeyFrame>
+                                                        </Animation>
+                                                    </Style.Animations>
+                                                </Style>
+                                            </i:Icon.Styles>
+                                        </i:Icon>
+                                        <TextBlock Text="Checking for penalties…"
+                                                   FontSize="14"
+                                                   Foreground="{DynamicResource TextMuted}" />
+                                    </StackPanel>
+                                </Border>
+
                                 <!-- Empty state -->
                                 <Border Padding="24"
-                                        IsVisible="{Binding !HasPenaltyInvestments}">
+                                        IsVisible="{Binding ShowEmptyPenaltiesState}">
                                     <TextBlock Text="No investments currently in penalty."
                                                FontSize="14"
                                                Foreground="{DynamicResource TextMuted}"
@@ -95,29 +126,35 @@
                                 </Border>
 
                                 <!-- Dynamic rows from real data -->
-                                <ItemsControl ItemsSource="{Binding PenaltyInvestments}">
+                                <ItemsControl ItemsSource="{Binding Penalties}">
                                     <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="portfolio:InvestmentViewModel">
+                                        <DataTemplate x:DataType="portfolio:PenaltyItemViewModel">
                                             <Border BorderBrush="{DynamicResource RecoveryTableRowBorder}"
                                                     BorderThickness="0,0,0,1"
                                                     Padding="0">
                                                 <Grid ColumnDefinitions="3*,2*,2*">
-                                                    <TextBlock Grid.Column="0"
-                                                               Text="{Binding ProjectIdentifier}"
-                                                               FontSize="13"
-                                                               FontFamily="Cascadia Mono, Consolas, monospace"
-                                                               Foreground="{DynamicResource PenaltyTableText}"
-                                                               Padding="16,16"
-                                                               VerticalAlignment="Center"
-                                                               TextTrimming="CharacterEllipsis" />
+                                                    <Border Grid.Column="0"
+                                                            Padding="16,16"
+                                                            VerticalAlignment="Center">
+                                                        <StackPanel Spacing="2">
+                                                            <TextBlock Text="{Binding ProjectName}"
+                                                                       IsVisible="{Binding HasProjectName}"
+                                                                       FontSize="14" FontWeight="SemiBold"
+                                                                       Foreground="{DynamicResource PenaltyTableText}"
+                                                                       TextTrimming="CharacterEllipsis" />
+                                                            <TextBlock Text="{Binding ProjectIdentifier}"
+                                                                       FontSize="12"
+                                                                       FontFamily="Cascadia Mono, Consolas, monospace"
+                                                                       Foreground="{DynamicResource TextMuted}"
+                                                                       TextTrimming="CharacterEllipsis" />
+                                                        </StackPanel>
+                                                    </Border>
                                                     <TextBlock Grid.Column="1"
+                                                               Text="{Binding AmountLabel}"
                                                                FontSize="13" FontWeight="SemiBold"
                                                                Foreground="{DynamicResource PenaltyAmountText}"
                                                                Padding="16,16"
-                                                               VerticalAlignment="Center">
-                                                        <Run Text="{Binding PenaltyAmount, Mode=OneWay}" />
-                                                        <Run Text=" TBTC" />
-                                                    </TextBlock>
+                                                               VerticalAlignment="Center" />
                                                     <Border Grid.Column="2"
                                                             Padding="16,16"
                                                             VerticalAlignment="Center">
@@ -127,12 +164,9 @@
                                                                 CornerRadius="12"
                                                                 Padding="12,6"
                                                                 HorizontalAlignment="Left">
-                                                            <TextBlock FontSize="12" FontWeight="SemiBold"
-                                                                       Foreground="{DynamicResource PenaltyPillText}">
-                                                                <Run Text="Penalty Release in " />
-                                                                <Run Text="{Binding PenaltyDaysRemaining, Mode=OneWay}" />
-                                                                <Run Text=" days" />
-                                                            </TextBlock>
+                                                            <TextBlock Text="{Binding StatusText}"
+                                                                       FontSize="12" FontWeight="SemiBold"
+                                                                       Foreground="{DynamicResource PenaltyPillText}" />
                                                         </Border>
                                                     </Border>
                                                 </Grid>

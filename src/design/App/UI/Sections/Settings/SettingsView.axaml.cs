@@ -312,6 +312,16 @@ public partial class SettingsView : UserControl, ISectionView
         }
     }
 
+    // ── Show Logs ──
+    private void OnShowLogsClick(object? sender, RoutedEventArgs e)
+    {
+        var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
+        if (shellVm == null) return;
+
+        var modal = new LogViewerModal();
+        shellVm.ShowModal(modal);
+    }
+
     // ── Backup ──
     private async void OnRevealSeedClick(object? sender, RoutedEventArgs e)
     {

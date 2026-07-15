@@ -1,4 +1,4 @@
-﻿@page "/wallet"
+@page "/wallet"
 
 @using System.Text.Json
 @using Angor.Client.Models
@@ -8,8 +8,8 @@
 @using Angor.Shared.Models
 @using Angor.Shared.Services
 @using Angor.Shared.Utilities
-@using Blockcore.NBitcoin
-@using Blockcore.Networks
+@using NBitcoin
+@using Angor.Shared.Networks
 @inject HttpClient _httpClient;
 @inject IClientStorage storage;
 @inject ICacheStorage _cacheStorage;
@@ -336,7 +336,7 @@
 
                         <div class="modal-footer border-0">
                             <div class="wallet-footer-actions">
-                                @if ((network.NetworkType == NetworkType.Testnet) && currentStep == 2 && isNewWallet)
+                                @if ((!network.IsMainnet) && currentStep == 2 && isNewWallet)
                                 {
                                     <div class="wallet-next-back">
                                         @if (currentStep > 1)
@@ -1649,7 +1649,7 @@ else
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unconfirmedInfo = _cacheStorage.GetUnconfirmedInboundFunds();
 
-            var publishError = await _indexerService.PublishTransactionAsync(_sendInfo.SignedTransaction.Transaction.ToHex(network.Consensus.ConsensusFactory));
+            var publishError = await _indexerService.PublishTransactionAsync(_sendInfo.SignedTransaction.Transaction.ToHex());
 
             if (string.IsNullOrEmpty(publishError))
             {
@@ -1744,7 +1744,7 @@ else
 
     private bool CanGetTestCoins()
     {
-        if (network.NetworkType == NetworkType.Mainnet)
+        if (network.IsMainnet)
         {
             return false;
         }

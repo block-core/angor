@@ -1,21 +1,20 @@
 ﻿using System.Text;
 using Angor.Shared;
 using Angor.Shared.Models;
-using Blockcore.NBitcoin;
+using Angor.Shared.Networks;
 using NBitcoin;
 using NBitcoin.Crypto;
-using Script = Blockcore.Consensus.ScriptInfo.Script;
 
 
 namespace Angor.Test.DataBuilders
 {
     public class AngorScripts
     {
-        public static Script CreateStage(Blockcore.Networks.Network network, ProjectScripts scripts)
+        public static Script CreateStage(AngorNetwork network, ProjectScripts scripts)
         {
             var treeInfo = AngorScripts.BuildTaprootSpendInfo(scripts);
 
-            var address = treeInfo.OutputPubKey.GetAddress(NetworkMapper.Map(network));
+            var address = treeInfo.OutputPubKey.GetAddress(network.BitcoinNetwork);
 
             return new Script(address.ScriptPubKey.ToBytes());
         }
@@ -26,12 +25,12 @@ namespace Angor.Test.DataBuilders
 
             var script = func(scripts);
 
-            ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(script.ToBytes()).ToTapScript(TapLeafVersion.C0));
+            ControlBlock controlBlock = treeInfo.GetControlBlock(new Script(script.ToBytes()).ToTapScript(TapLeafVersion.C0));
 
             return new Script(controlBlock.ToBytes());
         }
 
-        public static (Script controlBlock, Script execute, Script[] secrets) CreateControlSeederSecrets(ProjectScripts scripts, Blockcore.NBitcoin.Key[] secrets)
+        public static (Script controlBlock, Script execute, Script[] secrets) CreateControlSeederSecrets(ProjectScripts scripts, Key[] secrets)
         {
             var treeInfo = AngorScripts.BuildTaprootSpendInfo(scripts);
 
@@ -39,7 +38,7 @@ namespace Angor.Test.DataBuilders
 
             // find the spending script for the current secret hash combination
 
-            var hashes = secrets.Select(secret => (Blockcore.NBitcoin.Crypto.Hashes.Hash256(secret.ToBytes()), new Script(secret.ToBytes()))).ToList();
+            var hashes = secrets.Select(secret => (Hashes.DoubleSHA256(secret.ToBytes()), new Script(secret.ToBytes()))).ToList();
 
             Script execute = null;
             List<Script> secretHashes = new List<Script>();
@@ -54,7 +53,7 @@ namespace Angor.Test.DataBuilders
                 {
                     if (op.PushData != null && op.PushData.Length == 32)
                     {
-                        var comp = new Blockcore.NBitcoin.uint256(op.PushData);
+                        var comp = new uint256(op.PushData);
 
                         foreach (var hash in hashes)
                         {
@@ -79,7 +78,7 @@ namespace Angor.Test.DataBuilders
                 throw new Exception("no secret found that matches the given scripts");
             }
 
-            ControlBlock controlBlock = treeInfo.GetControlBlock(new NBitcoin.Script(execute.ToBytes()).ToTapScript(TapLeafVersion.C0));
+            ControlBlock controlBlock = treeInfo.GetControlBlock(new Script(execute.ToBytes()).ToTapScript(TapLeafVersion.C0));
 
             return (new Script(controlBlock.ToBytes()), execute, secretHashes.ToArray());
         }
@@ -101,18 +100,18 @@ namespace Angor.Test.DataBuilders
             return treeInfo;
         }
 
-        private static List<(uint, NBitcoin.Script)> BuildTaprootScripts(ProjectScripts scripts)
+        private static List<(uint, Script)> BuildTaprootScripts(ProjectScripts scripts)
         {
-            var scriptWeights = new List<(uint, NBitcoin.Script)>()
+            var scriptWeights = new List<(uint, Script)>()
             {
-                (70u, new NBitcoin.Script (scripts.Founder.ToBytes())),
-                (40u, new NBitcoin.Script (scripts.Recover.ToBytes())),
-                (1u, new NBitcoin.Script (scripts.EndOfProject.ToBytes()))
+                (70u, new Script (scripts.Founder.ToBytes())),
+                (40u, new Script (scripts.Recover.ToBytes())),
+                (1u, new Script (scripts.EndOfProject.ToBytes()))
             };
 
             foreach (var scriptsSeeder in scripts.Seeders)
             {
-                scriptWeights.Add((10u, new NBitcoin.Script(scriptsSeeder.ToBytes())));
+                scriptWeights.Add((10u, new Script(scriptsSeeder.ToBytes())));
             }
 
             return scriptWeights;

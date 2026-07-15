@@ -2,18 +2,13 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
 using Angor.Test.DataBuilders;
-using Blockcore.NBitcoin;
-using Blockcore.NBitcoin.Crypto;
-using Blockcore.NBitcoin.DataEncoders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using NBitcoin;
+using NBitcoin.Crypto;
+using NBitcoin.DataEncoders;
 using NBitcoin.Policy;
-using Coin = Blockcore.NBitcoin.Coin;
-using Key = Blockcore.NBitcoin.Key;
-using Money = Blockcore.NBitcoin.Money;
-using Transaction = NBitcoin.Transaction;
 
 namespace Angor.Test
 {
@@ -42,15 +37,15 @@ namespace Angor.Test
                     var network = Networks.Bitcoin.Testnet();
 
                     // create a fake inputTrx
-                    var fakeInputTrx = network.Consensus.ConsensusFactory.CreateTransaction();
+                    var fakeInputTrx = network.CreateTransaction();
                     var fakeInputKey = new Key();
-                    var fakeTxout = fakeInputTrx.AddOutput(Money.Parse("20.2"), fakeInputKey.ScriptPubKey);
+                    var fakeTxout = fakeInputTrx.Outputs.Add(Money.Parse("20.2"), fakeInputKey.PubKey.ScriptPubKey);
 
                     var keys = new List<Key> { fakeInputKey };
 
                     var coins = keys.Select(key => new Coin(fakeInputTrx, fakeTxout)).ToList();
 
-                    return (coins, keys);
+                    return coins.Zip(keys, (c, k) => new SigningCoin(c, k)).ToList();
                 });
 
             _networkConfiguration = new Mock<INetworkConfiguration>();
@@ -97,8 +92,8 @@ namespace Angor.Test
             InvestorContext seeder1Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
 
             seeder1Context.InvestorKey = Encoders.Hex.EncodeData(seeder1Key.PubKey.ToBytes());
-            seeder1Context.ChangeAddress = seeder1ChangeKey.PubKey.GetSegwitAddress(network).ToString();
-            seeder1Context.InvestorSecretHash = Hashes.Hash256(seeder1secret.ToBytes()).ToString();
+            seeder1Context.ChangeAddress = seeder1ChangeKey.PubKey.GetAddress(ScriptPubKeyType.Segwit, network).ToString();
+            seeder1Context.InvestorSecretHash = Hashes.DoubleSHA256(seeder1secret.ToBytes()).ToString();
 
             // Create the seeder 2 params
             var seeder2Key = new Key();
@@ -108,8 +103,8 @@ namespace Angor.Test
             InvestorContext seeder2Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
 
             seeder2Context.InvestorKey = Encoders.Hex.EncodeData(seeder2Key.PubKey.ToBytes());
-            seeder2Context.ChangeAddress = seeder2ChangeKey.PubKey.GetSegwitAddress(network).ToString();
-            seeder2Context.InvestorSecretHash = Hashes.Hash256(seeder2secret.ToBytes()).ToString();
+            seeder2Context.ChangeAddress = seeder2ChangeKey.PubKey.GetAddress(ScriptPubKeyType.Segwit, network).ToString();
+            seeder2Context.InvestorSecretHash = Hashes.DoubleSHA256(seeder2secret.ToBytes()).ToString();
 
             // Create the seeder 3 params
             var seeder3Key = new Key();
@@ -119,8 +114,8 @@ namespace Angor.Test
             InvestorContext seeder3Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
 
             seeder3Context.InvestorKey = Encoders.Hex.EncodeData(seeder3Key.PubKey.ToBytes());
-            seeder3Context.ChangeAddress = seeder3ChangeKey.PubKey.GetSegwitAddress(network).ToString();
-            seeder3Context.InvestorSecretHash = Hashes.Hash256(seeder3secret.ToBytes()).ToString();
+            seeder3Context.ChangeAddress = seeder3ChangeKey.PubKey.GetAddress(ScriptPubKeyType.Segwit, network).ToString();
+            seeder3Context.InvestorSecretHash = Hashes.DoubleSHA256(seeder3secret.ToBytes()).ToString();
 
             // Build seeders hashes
 
@@ -139,7 +134,7 @@ namespace Angor.Test
             InvestorContext investor1Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
 
             investor1Context.InvestorKey = Encoders.Hex.EncodeData(investor1Key.PubKey.ToBytes());
-            investor1Context.ChangeAddress = investor1ChangeKey.PubKey.GetSegwitAddress(network).ToString();
+            investor1Context.ChangeAddress = investor1ChangeKey.PubKey.GetAddress(ScriptPubKeyType.Segwit, network).ToString();
 
             // Create the investor 2 params
             var investor2Key = new Key();
@@ -148,7 +143,7 @@ namespace Angor.Test
             InvestorContext investor2Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
 
             investor2Context.InvestorKey = Encoders.Hex.EncodeData(investor2Key.PubKey.ToBytes());
-            investor2Context.ChangeAddress = investor2ChangeKey.PubKey.GetSegwitAddress(network).ToString();
+            investor2Context.ChangeAddress = investor2ChangeKey.PubKey.GetAddress(ScriptPubKeyType.Segwit, network).ToString();
 
             // create founder context
             FounderContext founderContext = new FounderContext
@@ -254,8 +249,8 @@ namespace Angor.Test
             InvestorContext seeder1Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
 
             seeder1Context.InvestorKey = Encoders.Hex.EncodeData(seeder11Key.PubKey.ToBytes());
-            seeder1Context.ChangeAddress = seeder1ChangeKey.PubKey.GetSegwitAddress(network).ToString();
-            seeder1Context.InvestorSecretHash = Hashes.Hash256(seeder1secret.ToBytes()).ToString();
+            seeder1Context.ChangeAddress = seeder1ChangeKey.PubKey.GetAddress(ScriptPubKeyType.Segwit, network).ToString();
+            seeder1Context.InvestorSecretHash = Hashes.DoubleSHA256(seeder1secret.ToBytes()).ToString();
 
             // create the investment transaction
 
@@ -307,7 +302,7 @@ namespace Angor.Test
             InvestorContext seeder1Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
 
             seeder1Context.InvestorKey = Encoders.Hex.EncodeData(seeder11Key.PubKey.ToBytes());
-            seeder1Context.ChangeAddress = seeder1ChangeKey.PubKey.GetSegwitAddress(network).ToString();
+            seeder1Context.ChangeAddress = seeder1ChangeKey.PubKey.GetAddress(ScriptPubKeyType.Segwit, network).ToString();
 
             // create the investment transaction
 
@@ -359,14 +354,14 @@ namespace Angor.Test
 
             ProjectSeeders projectSeeders = new ProjectSeeders();
             projectSeeders.Threshold = 2;
-            projectSeeders.SecretHashes.Add(Hashes.Hash256(new Key().ToBytes()).ToString());
-            projectSeeders.SecretHashes.Add(Hashes.Hash256(new Key().ToBytes()).ToString());
-            projectSeeders.SecretHashes.Add(Hashes.Hash256(new Key().ToBytes()).ToString());
+            projectSeeders.SecretHashes.Add(Hashes.DoubleSHA256(new Key().ToBytes()).ToString());
+            projectSeeders.SecretHashes.Add(Hashes.DoubleSHA256(new Key().ToBytes()).ToString());
+            projectSeeders.SecretHashes.Add(Hashes.DoubleSHA256(new Key().ToBytes()).ToString());
 
             InvestorContext seeder1Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
 
             seeder1Context.InvestorKey = Encoders.Hex.EncodeData(seeder11Key.PubKey.ToBytes());
-            seeder1Context.ChangeAddress = seeder1ChangeKey.PubKey.GetSegwitAddress(network).ToString();
+            seeder1Context.ChangeAddress = seeder1ChangeKey.PubKey.GetAddress(ScriptPubKeyType.Segwit, network).ToString();
 
             // create the investment transaction
 
@@ -424,7 +419,7 @@ namespace Angor.Test
                     ProjectSeeders = new ProjectSeeders()
                 },
                 InvestorKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes()),
-                ChangeAddress = investorChangeKey.PubKey.GetSegwitAddress(network).ToString()
+                ChangeAddress = investorChangeKey.PubKey.GetAddress(ScriptPubKeyType.Segwit, network).ToString()
             };
 
             // create the investment transaction
@@ -444,7 +439,7 @@ namespace Angor.Test
             operations.AddWitScriptToInvestorRecoveryTransactions(investorContext, network, recoveryTransactions,
                 founderSignatures, Encoders.Hex.EncodeData(investorKey.ToBytes()), null);
 
-            var nbitcoinNetwork = NetworkMapper.Map(network);
+            var nbitcoinNetwork = network.BitcoinNetwork;
 
             var builder = nbitcoinNetwork.CreateTransactionBuilder();
             for (int i = 0; i < investmentTransaction.Outputs.Count; i++)
@@ -526,14 +521,14 @@ namespace Angor.Test
                             Threshold = 2,
                             SecretHashes = new List<string>
                             {
-                                Hashes.Hash256(seeder1Key.ToBytes()).ToString(),
-                                Hashes.Hash256(seeder2Key.ToBytes()).ToString(),
-                                Hashes.Hash256(seeder3Key.ToBytes()).ToString(),
+                                Hashes.DoubleSHA256(seeder1Key.ToBytes()).ToString(),
+                                Hashes.DoubleSHA256(seeder2Key.ToBytes()).ToString(),
+                                Hashes.DoubleSHA256(seeder3Key.ToBytes()).ToString(),
                             }
                         }
                     },
                     InvestorKey = Encoders.Hex.EncodeData(investorKey.PubKey.ToBytes()),
-                    ChangeAddress = investorChangeKey.PubKey.GetSegwitAddress(network).ToString(),
+                    ChangeAddress = investorChangeKey.PubKey.GetAddress(ScriptPubKeyType.Segwit, network).ToString(),
                 };
 
                 // create the investment transaction
@@ -553,7 +548,7 @@ namespace Angor.Test
                 operations.AddWitScriptToInvestorRecoveryTransactions(investorContext, network, recoveryTransactions,
                     founderSignatures, Encoders.Hex.EncodeData(investorKey.ToBytes()), null);
 
-                var nbitcoinNetwork = NetworkMapper.Map(network);
+                var nbitcoinNetwork = network.BitcoinNetwork;
 
                 var builder = nbitcoinNetwork.CreateTransactionBuilder();
                 for (int i = 0; i < investmentTransaction.Outputs.Count; i++)
@@ -569,7 +564,7 @@ namespace Angor.Test
                             "4a8a3d6bb78a5ec5bf2c599eeb1ea522677c4b10132e554d78abecd7561e4b42"))); //Adding fee inputs
                 }
 
-                var transaction = nbitcoinNetwork.Consensus.ConsensusFactory.CreateTransaction();
+                var transaction = nbitcoinNetwork.CreateTransaction();
 
                 foreach (var recoveryTransaction in recoveryTransactions)
                 {
@@ -579,14 +574,13 @@ namespace Angor.Test
                         txIn.WitScript = new WitScript(_.WitScript.ToBytes());
                         return txIn;
                     }));
-                    transaction.Outputs.AddRange(recoveryTransaction.Outputs.Select(_ =>
-                        TxOut.Parse(_.ToHex(network.Consensus.ConsensusFactory))));
+                    transaction.Outputs.AddRange(recoveryTransaction.Outputs);
                     // transaction.Outputs.Add(new NBitcoin.Money(recoveryTransaction.Outputs.Single().Value.Satoshi),
                     //     new Script(recoveryTransaction.Outputs.Single().ScriptPubKey.ToBytes()));
                 }
 
                 transaction.Inputs.Add(new OutPoint(NBitcoin.uint256.Zero, 0), null, null); //Add fee to the transaction
-                transaction.Outputs.Add(new NBitcoin.Money(9000), new Script(investorChangeKey.ScriptPubKey.ToBytes()));
+                transaction.Outputs.Add(new NBitcoin.Money(9000), new Script(investorChangeKey.PubKey.ScriptPubKey.ToBytes()));
 
                 builder.Verify(transaction, out TransactionPolicyError[] errors);
                 Assert.Empty(errors);
@@ -637,8 +631,8 @@ namespace Angor.Test
                         ProjectSeeders = new ProjectSeeders()
                     },
                     InvestorKey = Encoders.Hex.EncodeData(seederKey.PubKey.ToBytes()),
-                    InvestorSecretHash = Hashes.Hash256(seedersecret.ToBytes()).ToString(),
-                    ChangeAddress = seederChangeKey.PubKey.GetSegwitAddress(network).ToString()
+                    InvestorSecretHash = Hashes.DoubleSHA256(seedersecret.ToBytes()).ToString(),
+                    ChangeAddress = seederChangeKey.PubKey.GetAddress(ScriptPubKeyType.Segwit, network).ToString()
                 };
 
                 // create the investment transaction
@@ -659,7 +653,7 @@ namespace Angor.Test
                     founderSignatures, Encoders.Hex.EncodeData(seederKey.ToBytes()),
                     Encoders.Hex.EncodeData(seedersecret.ToBytes()));
 
-                var nbitcoinNetwork = NetworkMapper.Map(network);
+                var nbitcoinNetwork = network.BitcoinNetwork;
 
                 var builder = nbitcoinNetwork.CreateTransactionBuilder();
                 for (int i = 0; i < investmentTransaction.Outputs.Count; i++)
@@ -675,7 +669,7 @@ namespace Angor.Test
                             "4a8a3d6bb78a5ec5bf2c599eeb1ea522677c4b10132e554d78abecd7561e4b42"))); //Adding fee inputs
                 }
 
-                var transaction = nbitcoinNetwork.Consensus.ConsensusFactory.CreateTransaction();
+                var transaction = nbitcoinNetwork.CreateTransaction();
 
                 foreach (var recoveryTransaction in recoveryTransactions)
                 {
@@ -685,14 +679,13 @@ namespace Angor.Test
                         txIn.WitScript = new WitScript(_.WitScript.ToBytes());
                         return txIn;
                     }));
-                    transaction.Outputs.AddRange(recoveryTransaction.Outputs.Select(_ =>
-                        TxOut.Parse(_.ToHex(network.Consensus.ConsensusFactory))));
+                    transaction.Outputs.AddRange(recoveryTransaction.Outputs);
                     // transaction.Outputs.Add(new NBitcoin.Money(recoveryTransaction.Outputs.Single().Value.Satoshi),
                     //     new Script(recoveryTransaction.Outputs.Single().ScriptPubKey.ToBytes()));
                 }
 
                 transaction.Inputs.Add(new OutPoint(NBitcoin.uint256.Zero, 0), null, null); //Add fee to the transaction
-                transaction.Outputs.Add(new NBitcoin.Money(9000), new Script(seederChangeKey.ScriptPubKey.ToBytes()));
+                transaction.Outputs.Add(new NBitcoin.Money(9000), new Script(seederChangeKey.PubKey.ScriptPubKey.ToBytes()));
 
                 builder.Verify(transaction, out TransactionPolicyError[] errors);
                 Assert.Empty(errors);
@@ -736,16 +729,16 @@ namespace Angor.Test
 
             ProjectSeeders projectSeeders = new ProjectSeeders();
             projectSeeders.Threshold = 2;
-            projectSeeders.SecretHashes.Add(Hashes.Hash256(seeder1Key.ToBytes()).ToString());
-            projectSeeders.SecretHashes.Add(Hashes.Hash256(seeder2Key.ToBytes()).ToString());
-            projectSeeders.SecretHashes.Add(Hashes.Hash256(seeder3Key.ToBytes()).ToString());
+            projectSeeders.SecretHashes.Add(Hashes.DoubleSHA256(seeder1Key.ToBytes()).ToString());
+            projectSeeders.SecretHashes.Add(Hashes.DoubleSHA256(seeder2Key.ToBytes()).ToString());
+            projectSeeders.SecretHashes.Add(Hashes.DoubleSHA256(seeder3Key.ToBytes()).ToString());
 
             projectInvestmentInfo.ProjectSeeders = projectSeeders;
 
             InvestorContext seeder1Context = new InvestorContext() { ProjectInfo = projectInvestmentInfo };
 
             seeder1Context.InvestorKey = Encoders.Hex.EncodeData(seeder11Key.PubKey.ToBytes());
-            seeder1Context.ChangeAddress = seeder1ChangeKey.PubKey.GetSegwitAddress(network).ToString();
+            seeder1Context.ChangeAddress = seeder1ChangeKey.PubKey.GetAddress(ScriptPubKeyType.Segwit, network).ToString();
 
             // create the investment transaction
 
