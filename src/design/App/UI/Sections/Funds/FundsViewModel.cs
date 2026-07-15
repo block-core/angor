@@ -26,7 +26,7 @@ public class SeedGroupViewModel
 /// Funds ViewModel — connected to Angor.SDK wallet services.
 /// Uses <see cref="IWalletContext"/> for wallet state and <see cref="IWalletAppService"/> for wallet operations.
 /// </summary>
-public partial class FundsViewModel : ReactiveObject, IDisposable
+public partial class FundsViewModel : ReactiveObject, IDisposable, INetworkSwitchAware
 {
     private readonly IWalletAppService _walletAppService;
     private readonly IWalletAccountBalanceService _balanceService;
@@ -224,6 +224,9 @@ public partial class FundsViewModel : ReactiveObject, IDisposable
         this.RaisePropertyChanged(nameof(DefaultWalletName));
         this.RaisePropertyChanged(nameof(CurrencySymbol));
     }
+
+    /// <inheritdoc />
+    public void ResetAfterNetworkSwitch() => RefreshNetworkState();
 
     /// <summary>
     /// Create a new wallet using the SDK.

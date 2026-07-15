@@ -1323,27 +1323,24 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
         const string settingsKey = "Settings";
 
         _signatureStore.Clear();
-        _portfolioVm.ResetAfterDataWipe();
+        _fundersMonitor.Reset();
+        // PortfolioViewModel is a singleton that may not (yet) be in the view
+        // cache, so reset it directly rather than relying on the cache sweep.
+        _portfolioVm.ResetAfterNetworkSwitch();
         InvestedBalanceDisplay = "0.0000 " + _currencyService.Symbol;
         ModalContent = null;
         IsModalOpen = false;
 
-        if (_viewCache.TryGetValue("My Projects", out object? myProjectsView)
-            && myProjectsView is MyProjectsView { DataContext: MyProjectsViewModel myProjectsVm })
+        // Reset every cached section VM that holds network-derived state.
+        // Crucial on mobile, where the view cache is kept alive (SectionPanel
+        // owns the views) and the same VM instances survive the switch.
+        foreach (object view in _viewCache.Values)
         {
-            myProjectsVm.ResetAfterNetworkSwitch();
-        }
-
-        if (_viewCache.TryGetValue("Find Projects", out object? findProjectsView)
-            && findProjectsView is FindProjectsView { DataContext: FindProjectsViewModel findProjectsVm })
-        {
-            findProjectsVm.ResetAfterNetworkSwitch();
-        }
-
-        if (_viewCache.TryGetValue("Funds", out object? fundsView)
-            && fundsView is FundsView { DataContext: FundsViewModel fundsVm })
-        {
-            fundsVm.RefreshNetworkState();
+            if (view is StyledElement { DataContext: INetworkSwitchAware aware }
+                && !ReferenceEquals(aware, _portfolioVm))
+            {
+                aware.ResetAfterNetworkSwitch();
+            }
         }
 
         if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())

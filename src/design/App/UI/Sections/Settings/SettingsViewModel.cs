@@ -302,8 +302,10 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
 
             ToastRequested?.Invoke("Network updated successfully.");
 
-            if (!OperatingSystem.IsAndroid() && !OperatingSystem.IsIOS())
-                _ = RebuildWalletsAfterNetworkSwitchAsync();
+            // Rebuild wallet balances for the new network on all platforms.
+            // This used to be desktop-only, which left mobile showing
+            // balances/UTXOs derived from the previous network.
+            _ = RebuildWalletsAfterNetworkSwitchAsync();
         }
         finally
         {

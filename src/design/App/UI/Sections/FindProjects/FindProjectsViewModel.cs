@@ -379,7 +379,7 @@ public class ProjectItemViewModel : INotifyPropertyChanged
 /// FindProjects ViewModel -- connected to SDK for project discovery.
 /// Falls back to sample data if SDK call fails.
 /// </summary>
-public partial class FindProjectsViewModel : ReactiveObject, IDisposable
+public partial class FindProjectsViewModel : ReactiveObject, IDisposable, INetworkSwitchAware
 {
     /// <summary>
     /// Process-wide cache of the last successful Latest() DTOs.

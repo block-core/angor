@@ -52,7 +52,7 @@ public class MyProjectItemViewModel
 /// My Projects ViewModel — connected to SDK for founder project discovery and management.
 /// Uses IProjectAppService.GetFounderProjects() to load projects owned by the user.
 /// </summary>
-public partial class MyProjectsViewModel : ReactiveObject, IDisposable
+public partial class MyProjectsViewModel : ReactiveObject, IDisposable, INetworkSwitchAware
 {
     private readonly IProjectAppService _projectAppService;
     private readonly IWalletContext _walletContext;
@@ -351,6 +351,9 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable
         Interlocked.Increment(ref _loadGeneration);
         IsLoading = false;
         ClearProjects();
+        // On mobile the view stays alive and only reloads via OnBecameActive()
+        // when this flag is set — without it the tab would stay empty/stale.
+        NeedsRefresh = true;
     }
 
     public void OpenManageProject(MyProjectItemViewModel project)

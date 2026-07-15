@@ -519,7 +519,7 @@ public class InvestmentViewModel : INotifyPropertyChanged
 /// Portfolio/Funded ViewModel — connected to SDK for investment discovery and management.
 /// Uses IInvestmentAppService for loading investments and performing recovery/release operations.
 /// </summary>
-public partial class PortfolioViewModel : ReactiveObject, IDisposable
+public partial class PortfolioViewModel : ReactiveObject, IDisposable, INetworkSwitchAware
 {
     private readonly IInvestmentAppService _investmentAppService;
     private readonly Angor.Sdk.Funding.Projects.IProjectAppService _projectAppService;
@@ -1386,6 +1386,13 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
 
     public void ResetAfterDataWipe()
     {
+        ClearToEmpty();
+    }
+
+    /// <inheritdoc />
+    public void ResetAfterNetworkSwitch()
+    {
+        CloseInvestmentDetail();
         ClearToEmpty();
     }
 
