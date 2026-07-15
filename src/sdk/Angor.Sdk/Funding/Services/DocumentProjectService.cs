@@ -21,7 +21,7 @@ public class DocumentProjectService(
     /// Stale entries are served immediately and revalidated in the background
     /// (stale-while-revalidate), so founder profile updates propagate without
     /// re-querying relays on every read.</summary>
-    private static readonly TimeSpan MetadataTtl = TimeSpan.FromDays(1);
+    private static readonly TimeSpan MetadataTtl = TimeSpan.FromHours(1);
 
     /// <summary>Project ids with an in-flight background metadata revalidation.</summary>
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, byte> RevalidationsInFlight = new();
