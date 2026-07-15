@@ -8,6 +8,9 @@
         <PublishTrimmed>true</PublishTrimmed>
         <TrimMode>partial</TrimMode>
         <PublishSingleFile>true</PublishSingleFile>
+        <!-- Bundle native libs (libSkiaSharp, ANGLE, etc.) into the single-file exe.
+             Without this, the portable exe crashes with DllNotFoundException. -->
+        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
         <PublishReadyToRun>true</PublishReadyToRun>
         <!-- SDK uses reflection-based System.Text.Json (FileStore, WalletFactory, AesWalletEncryption, etc.) -->
         <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
