@@ -78,7 +78,7 @@ public class DerivationOperations : IDerivationOperations
 
     public string DeriveLeadInvestorSecretHash(WalletWords walletWords, string founderKey)
     {
-        return DeriveLeadInvestorSecretHash(walletWords, founderKey, projectVersion: 1);
+        return DeriveLeadInvestorSecretHash(walletWords, founderKey, projectVersion: 2);
     }
 
     public string DeriveLeadInvestorSecretHash(WalletWords walletWords, string founderKey, int projectVersion)
