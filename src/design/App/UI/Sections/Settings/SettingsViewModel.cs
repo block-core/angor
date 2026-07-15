@@ -41,7 +41,7 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
 
     private static string GetVersion()
     {
-        var assembly = typeof(SettingsViewModel).Assembly;
+        var assembly = System.Reflection.Assembly.GetEntryAssembly() ?? typeof(SettingsViewModel).Assembly;
         var informational = (System.Reflection.AssemblyInformationalVersionAttribute?)
             System.Reflection.CustomAttributeExtensions.GetCustomAttribute(
                 assembly, typeof(System.Reflection.AssemblyInformationalVersionAttribute));
