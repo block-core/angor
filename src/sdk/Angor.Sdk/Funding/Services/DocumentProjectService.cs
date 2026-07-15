@@ -17,6 +17,15 @@ public class DocumentProjectService(
     IAngorIndexerService angorIndexerService,
     ILogger<DocumentProjectService> logger) : IProjectService
 {
+    /// <summary>How long cached Nostr profile metadata is considered fresh.
+    /// Stale entries are served immediately and revalidated in the background
+    /// (stale-while-revalidate), so founder profile updates propagate without
+    /// re-querying relays on every read.</summary>
+    private static readonly TimeSpan MetadataTtl = TimeSpan.FromHours(1);
+
+    /// <summary>Project ids with an in-flight background metadata revalidation.</summary>
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, byte> RevalidationsInFlight = new();
+
     public Task<Result<Project>> GetAsync(ProjectId id)
     {
         return TryGetAsync(id).Bind(maybe => maybe.ToResult($"Project with id {id} not found"));
@@ -48,6 +57,11 @@ public class DocumentProjectService(
             {
                 localLookup = projectResult.Value.ToList();
             }
+
+            // Stale-while-revalidate: cached docs are returned immediately below, but any
+            // whose profile metadata is older than the TTL get refreshed in the background
+            // so banner/avatar/name changes eventually propagate to every reader.
+            RevalidateStaleMetadata(localLookup);
 
             if (ids.Length == localLookup.Count)
                 return Result.Success(localLookup.OrderByDescending(p => p.StartingDate).AsEnumerable()); //all ids are in the local database, return them
@@ -108,6 +122,7 @@ public class DocumentProjectService(
                              Picture = TryGetUri(metadata.Picture),
                              Name = metadata.Name,
                              ShortDescription = metadata.About,
+                             MetadataFetchedAt = DateTime.UtcNow,
 
                               // New properties from ProjectInfo
                               Version = info.Version,
@@ -135,6 +150,104 @@ public class DocumentProjectService(
         {
             return Result.Failure<IEnumerable<Project>>(ex.Message);
         }
+    }
+
+    /// <summary>
+    /// Refresh a project's cached profile metadata from relays in the background.
+    /// Skips the refresh when the cached metadata is younger than <see cref="MetadataTtl"/>
+    /// unless <paramref name="force"/> is set (e.g. the founder just published a profile
+    /// update). Runs for any user landing on a project page, so profile changes
+    /// propagate to everyone — not just the founder who made them.
+    /// </summary>
+    public async Task<Result> RevalidateAsync(ProjectId id, bool force = false)
+    {
+        var cachedResult = await collection.FindByIdsAsync(new[] { id.Value });
+        if (cachedResult.IsFailure)
+            return Result.Failure(cachedResult.Error);
+
+        var project = cachedResult.Value.FirstOrDefault();
+        if (project == null || string.IsNullOrEmpty(project.NostrPubKey))
+            return Result.Success(); // nothing cached — the next read fetches fresh data anyway
+
+        if (!force && DateTime.UtcNow - project.MetadataFetchedAt <= MetadataTtl)
+            return Result.Success(); // still fresh — no relay round-trip needed
+
+        if (!RevalidationsInFlight.TryAdd(project.Id.Value, 0))
+            return Result.Success(); // a revalidation for this project is already running
+
+        RefreshMetadataInBackground([project]);
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Background revalidation for cached projects whose profile metadata is older
+    /// than <see cref="MetadataTtl"/>. Fetches fresh kind-0 metadata from relays
+    /// (using the cached NostrPubKey — no indexer round-trip needed) and upserts the
+    /// profile fields. Fire-and-forget; failures only log.
+    /// </summary>
+    private void RevalidateStaleMetadata(List<Project> cached)
+    {
+        var now = DateTime.UtcNow;
+        var stale = cached
+            .Where(p => !string.IsNullOrEmpty(p.NostrPubKey))
+            .Where(p => now - p.MetadataFetchedAt > MetadataTtl)
+            .Where(p => RevalidationsInFlight.TryAdd(p.Id.Value, 0))
+            .ToList();
+
+        if (stale.Count == 0)
+            return;
+
+        RefreshMetadataInBackground(stale);
+    }
+
+    /// <summary>
+    /// Fetch fresh kind-0 metadata from relays for the given cached projects and
+    /// upsert the profile fields. Callers must have registered each project in
+    /// <see cref="RevalidationsInFlight"/>; entries are released on completion.
+    /// </summary>
+    private void RefreshMetadataInBackground(List<Project> projects)
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var metadataResult = await ProjectMetadatas(projects.Select(p => p.NostrPubKey).Distinct().ToArray());
+                if (metadataResult.IsFailure)
+                {
+                    logger.LogDebug("Metadata revalidation fetch failed: {Error}", metadataResult.Error);
+                    return;
+                }
+
+                foreach (var project in projects)
+                {
+                    var metadata = metadataResult.Value
+                        .FirstOrDefault(m => m.Npub == project.NostrPubKey)?.NostrMetadata;
+                    if (metadata == null)
+                        continue; // no profile event received — keep cached values, retry after TTL
+
+                    project.Name = metadata.Name;
+                    project.ShortDescription = metadata.About;
+                    project.Picture = TryGetUri(metadata.Picture);
+                    project.Banner = TryGetUri(metadata.Banner);
+                    project.InformationUri = TryGetUri(metadata.Website);
+                    project.MetadataFetchedAt = DateTime.UtcNow;
+
+                    var upsert = await collection.UpsertAsync(p => p.Id.Value, project);
+                    if (upsert.IsFailure)
+                        logger.LogWarning("Failed to persist revalidated metadata for {ProjectId}: {Error}",
+                            project.Id.Value, upsert.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogDebug(ex, "Background metadata revalidation failed");
+            }
+            finally
+            {
+                foreach (var project in projects)
+                    RevalidationsInFlight.TryRemove(project.Id.Value, out _);
+            }
+        });
     }
 
     public async Task<Result<IEnumerable<Project>>> LatestAsync()

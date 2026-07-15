@@ -25,6 +25,14 @@ public class Project
     public ProjectType ProjectType { get; set; } = ProjectType.Invest;
     public List<DynamicStagePattern> DynamicStagePatterns { get; set; } = new();
     public string NetworkName { get; set; }
+
+    /// <summary>
+    /// When the Nostr profile metadata (Name/About/Picture/Banner) was last fetched
+    /// from relays. Drives stale-while-revalidate refresh in DocumentProjectService —
+    /// existing documents default to MinValue and are treated as stale.
+    /// </summary>
+    public DateTime MetadataFetchedAt { get; set; }
+
     public override string ToString()
     {
         return Name;

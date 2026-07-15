@@ -290,15 +290,37 @@ public partial class ManageProjectViewModel : ReactiveObject
                 NostrNpub = NostrConverter.ToNpub(project.NostrPubKey) ?? project.NostrPubKey;
             }
 
-            // Derive the project nostr private key (nsec + hex) from the wallet seed
+            // Derive the project nostr private key (nsec + hex) and load the
+            // NIP-05 identifier from the project's Nostr profile metadata.
+            var tasks = new List<Task> { LoadNip05Async() };
             if (!string.IsNullOrEmpty(project.FounderKey))
             {
-                await LoadNostrPrivateKeysAsync(project.FounderKey);
+                tasks.Add(LoadNostrPrivateKeysAsync(project.FounderKey));
             }
+            await Task.WhenAll(tasks);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load project keys for project {ProjectId}", Project.ProjectIdentifier);
+        }
+    }
+
+    /// <summary>
+    /// Load the project's NIP-05 identifier from its Nostr profile metadata.
+    /// </summary>
+    private async Task LoadNip05Async()
+    {
+        try
+        {
+            var profileResult = await _projectAppService.FetchProjectProfileData(
+                new ProjectId(Project.ProjectIdentifier));
+            if (profileResult.IsFailure) return;
+
+            Nip05 = profileResult.Value.Metadata?.Nip05 ?? "";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load NIP-05 for project {ProjectId}", Project.ProjectIdentifier);
         }
     }
 

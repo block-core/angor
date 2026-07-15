@@ -45,6 +45,9 @@ public partial class SignatureRequestViewModel : ReactiveObject
     /// <summary>Investment amount in sats</summary>
     public long AmountSats { get; set; }
 
+    /// <summary>Whether the investment transaction is confirmed on-chain (funded).</summary>
+    public bool IsFunded { get; set; }
+
     // Status visibility helpers for XAML — reactive via [ObservableAsProperty] would be ideal
     // but since Status changes infrequently and these are re-read on each filter update,
     // we use computed getters that raise when Status changes (via [Reactive] above).
@@ -52,18 +55,21 @@ public partial class SignatureRequestViewModel : ReactiveObject
     public bool IsApproved => Status == SignatureStatus.Approved.ToLowerString();
     public bool IsRejected => Status == SignatureStatus.Rejected.ToLowerString();
 
+    /// <summary>Label for the approved state — distinguishes signed-but-unfunded from funded.</summary>
+    public string ApprovedLabel => IsFunded ? "Funded" : "Awaiting funding";
+
 }
 
 /// <summary>
-/// Funders ViewModel — connected to SDK for loading investment requests and approval.
-/// Uses IFounderAppService.GetProjectInvestments() to load pending signatures
-/// and ApproveInvestment() to approve them.
+/// Funders ViewModel — renders investment requests from the shared FundersMonitor.
+/// The monitor keeps a warm snapshot via background polling, so opening the tab is
+/// instant; a background sync then refreshes relays and pushes updates in.
+/// Approval goes through IFounderAppService.ApproveInvestment().
 /// </summary>
 public partial class FundersViewModel : ReactiveObject, IDisposable
 {
     private readonly IFounderAppService _founderAppService;
-    private readonly IProjectAppService _projectAppService;
-    private readonly IWalletContext _walletContext;
+    private readonly FundersMonitor _fundersMonitor;
     private readonly ICurrencyService _currencyService;
     private readonly ILogger<FundersViewModel> _logger;
 
@@ -79,8 +85,29 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
     public int RejectedCount => GetAllViewModels().Count(s => s.Status == SignatureStatus.Rejected.ToLowerString());
     public bool HasRejected => RejectedCount > 0;
 
+    /// <summary>True while any load/refresh is in flight.</summary>
+    public bool IsBusy => IsLoading || IsRefreshing;
+
+    /// <summary>True once the monitor has completed at least one poll (even if empty).</summary>
+    [Reactive] private bool hasEverLoaded;
+
+    /// <summary>Full-screen loading state: only before the very first poll completes.
+    /// Subsequent refreshes keep showing data/empty state with the spinning refresh icon —
+    /// relay syncs can take 30s+, a full-page loader would look stuck.</summary>
+    public bool ShowInitialLoading => !HasEverLoaded && IsBusy;
+
+    /// <summary>Empty state whenever there's nothing to show and we're past the initial load.</summary>
+    public bool ShowEmptyState => !HasFunders && !ShowInitialLoading;
+
     // SDK-loaded investment requests
     private readonly List<SignatureRequestViewModel> _sdkSignatures = new();
+
+    /// <summary>Requests the founder rejected locally this session (UI-only state — there is
+    /// no reject operation in the protocol; the request simply never gets approved).</summary>
+    private readonly HashSet<string> _locallyRejected = new();
+
+    /// <summary>Expanded card EventIds, preserved across snapshot rebuilds.</summary>
+    private readonly HashSet<string> _expandedEventIds = new();
 
     [Reactive] private ObservableCollection<SignatureRequestViewModel> filteredSignatures = new();
 
@@ -90,14 +117,12 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
 
     public FundersViewModel(
         IFounderAppService founderAppService,
-        IProjectAppService projectAppService,
-        IWalletContext walletContext,
+        FundersMonitor fundersMonitor,
         ICurrencyService currencyService,
         ILogger<FundersViewModel> logger)
     {
         _founderAppService = founderAppService;
-        _projectAppService = projectAppService;
-        _walletContext = walletContext;
+        _fundersMonitor = fundersMonitor;
         _currencyService = currencyService;
         _logger = logger;
 
@@ -105,84 +130,50 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
             .Subscribe(_ => UpdateFilteredSignatures())
             .DisposeWith(_disposables);
 
+        // Keep the composed busy/empty-state properties in sync
+        this.WhenAnyValue(x => x.IsLoading, x => x.IsRefreshing, x => x.HasFunders, x => x.HasEverLoaded)
+            .Subscribe(_ =>
+            {
+                this.RaisePropertyChanged(nameof(IsBusy));
+                this.RaisePropertyChanged(nameof(ShowInitialLoading));
+                this.RaisePropertyChanged(nameof(ShowEmptyState));
+            })
+            .DisposeWith(_disposables);
+
+        // Live updates: whenever the monitor completes a poll, rebuild from its snapshot.
+        // The monitor raises Updated on the UI thread.
+        _fundersMonitor.Updated += OnMonitorUpdated;
+        Disposable.Create(() => _fundersMonitor.Updated -= OnMonitorUpdated)
+            .DisposeWith(_disposables);
+
         // Loading is started by FundersView.OnBecameActive(). Pre-warmed mobile views
         // are hidden, so eager SDK requests here compete with tab switching and can
         // make Android show an ANR while the user is on another section.
     }
 
+    private void OnMonitorUpdated() => RebuildFromSnapshot();
+
     /// <summary>
-    /// Load investment requests from SDK for all founder projects.
+    /// Load investment requests. If the monitor already has a warm snapshot the tab
+    /// renders instantly and a relay sync runs in the background; otherwise we show
+    /// the loading state while the first sync completes.
     /// </summary>
     public async Task LoadInvestmentRequestsAsync()
     {
-        IsLoading = true;
+        if (_fundersMonitor.HasLoaded)
+        {
+            // Instant render from the warm snapshot, then await the relay sync so
+            // IsRefreshing (spinner) stays active for the duration of the refresh.
+            RebuildFromSnapshot();
+            await _fundersMonitor.RefreshAsync();
+            return;
+        }
 
+        IsLoading = true;
         try
         {
-            var wallets = _walletContext.Wallets.ToList();
-            var loadedSignatures = await Task.Run(async () =>
-            {
-                var signatures = new List<SignatureRequestViewModel>();
-                int idCounter = 10000; // high ID to avoid collision with shared store IDs
-
-                foreach (var wallet in wallets)
-                {
-                    // Get founder's projects
-                    var projectsResult = await _projectAppService.GetFounderProjects(wallet.Id);
-                    if (projectsResult.IsFailure) continue;
-
-                    foreach (var project in projectsResult.Value.Projects)
-                    {
-                        if (project.Id == null) continue;
-
-                        // Get investment requests for this project
-                        var investmentsResult = await _founderAppService.GetProjectInvestments(
-                            new GetProjectInvestments.GetProjectInvestmentsRequest(wallet.Id, project.Id));
-
-                        if (investmentsResult.IsFailure) continue;
-
-                        foreach (var investment in investmentsResult.Value.Investments)
-                        {
-                            var status = investment.Status switch
-                            {
-                                InvestmentStatus.PendingFounderSignatures => SignatureStatus.Waiting.ToLowerString(),
-                                InvestmentStatus.FounderSignaturesReceived or InvestmentStatus.Invested =>
-                                    SignatureStatus.Approved.ToLowerString(),
-                                InvestmentStatus.Cancelled => SignatureStatus.Rejected.ToLowerString(),
-                                _ => SignatureStatus.Waiting.ToLowerString()
-                            };
-
-                            var amountBtc = (double)investment.Amount.ToUnitBtc();
-
-                            signatures.Add(new SignatureRequestViewModel
-                            {
-                                Id = idCounter++,
-                                ProjectTitle = project.Name ?? "Unknown Project",
-                                Amount = amountBtc.ToString("F4", System.Globalization.CultureInfo.InvariantCulture),
-                                Currency = _currencyService.Symbol,
-                                Date = investment.CreatedOn.ToString("dd MMM yyyy"),
-                                Time = investment.CreatedOn.ToString("HH:mm"),
-                                Status = status,
-                                Npub = NostrConverter.ToNpub(investment.InvestorNostrPubKey) ?? investment.InvestorNostrPubKey ?? "",
-                                EventId = investment.EventId ?? "",
-                                ProjectIdentifier = project.Id.Value,
-                                FounderWalletId = wallet.Id.Value,
-                                InvestmentTransactionHex = investment.InvestmentTransactionHex ?? "",
-                                InvestorNostrPubKey = investment.InvestorNostrPubKey ?? "",
-                                AmountSats = investment.Amount
-                            });
-                        }
-                    }
-                }
-
-                return signatures;
-            });
-
-            _sdkSignatures.Clear();
-            _sdkSignatures.AddRange(loadedSignatures);
-
-            _cachedAllViewModels = null;
-            UpdateFilteredSignatures();
+            await _fundersMonitor.RefreshAsync();
+            RebuildFromSnapshot();
         }
         catch (Exception ex)
         {
@@ -192,6 +183,61 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
         {
             IsLoading = false;
         }
+    }
+
+    /// <summary>Rebuild the view model list from the monitor snapshot (UI thread).</summary>
+    private void RebuildFromSnapshot()
+    {
+        if (_fundersMonitor.HasLoaded)
+            HasEverLoaded = true;
+
+        var signatures = new List<SignatureRequestViewModel>();
+        int idCounter = 10000; // high ID to avoid collision with shared store IDs
+
+        foreach (var record in _fundersMonitor.Snapshot)
+        {
+            var effectiveStatus = _fundersMonitor.EffectiveStatus(record);
+            var status = effectiveStatus switch
+            {
+                InvestmentStatus.PendingFounderSignatures => SignatureStatus.Waiting.ToLowerString(),
+                InvestmentStatus.FounderSignaturesReceived or InvestmentStatus.Invested =>
+                    SignatureStatus.Approved.ToLowerString(),
+                InvestmentStatus.Cancelled => SignatureStatus.Rejected.ToLowerString(),
+                _ => SignatureStatus.Waiting.ToLowerString()
+            };
+
+            // Session-local rejections stick until the app restarts.
+            if (_locallyRejected.Contains(record.EventId))
+                status = SignatureStatus.Rejected.ToLowerString();
+
+            var amountBtc = record.AmountSats / 100_000_000.0;
+
+            signatures.Add(new SignatureRequestViewModel
+            {
+                Id = idCounter++,
+                ProjectTitle = record.ProjectTitle,
+                Amount = amountBtc.ToString("F4", System.Globalization.CultureInfo.InvariantCulture),
+                Currency = _currencyService.Symbol,
+                Date = record.CreatedOn.ToString("dd MMM yyyy"),
+                Time = record.CreatedOn.ToString("HH:mm"),
+                Status = status,
+                Npub = NostrConverter.ToNpub(record.InvestorNostrPubKey) ?? record.InvestorNostrPubKey,
+                EventId = record.EventId,
+                ProjectIdentifier = record.ProjectIdentifier,
+                FounderWalletId = record.WalletId,
+                InvestmentTransactionHex = record.InvestmentTransactionHex,
+                InvestorNostrPubKey = record.InvestorNostrPubKey,
+                AmountSats = record.AmountSats,
+                IsFunded = record.Status == InvestmentStatus.Invested,
+                IsExpanded = _expandedEventIds.Contains(record.EventId)
+            });
+        }
+
+        _sdkSignatures.Clear();
+        _sdkSignatures.AddRange(signatures);
+
+        _cachedAllViewModels = null;
+        UpdateFilteredSignatures();
     }
 
     /// <summary>
@@ -271,6 +317,9 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
             if (result.IsSuccess)
             {
                 sig.Status = SignatureStatus.Approved.ToLowerString();
+                // Overlay so the next monitor poll doesn't flip the card back to
+                // "waiting" before the approval DM is visible on relays.
+                _fundersMonitor.MarkApprovedLocally(sig.EventId);
                 _cachedAllViewModels = null;
                 UpdateFilteredSignatures();
                 return;
@@ -299,6 +348,8 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
         if (sdkSig != null)
         {
             sdkSig.Status = SignatureStatus.Rejected.ToLowerString();
+            // UI-only: remember across monitor snapshot rebuilds for this session.
+            if (sdkSig.EventId.Length > 0) _locallyRejected.Add(sdkSig.EventId);
             _cachedAllViewModels = null;
             UpdateFilteredSignatures();
             return;
@@ -321,7 +372,14 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
     {
         var sig = GetAllViewModels().FirstOrDefault(s => s.Id == id);
         if (sig != null)
+        {
             sig.IsExpanded = !sig.IsExpanded;
+            if (sig.EventId.Length > 0)
+            {
+                if (sig.IsExpanded) _expandedEventIds.Add(sig.EventId);
+                else _expandedEventIds.Remove(sig.EventId);
+            }
+        }
     }
 
     public bool IsExpanded(int id) => GetAllViewModels().FirstOrDefault(s => s.Id == id)?.IsExpanded ?? false;

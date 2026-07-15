@@ -21,8 +21,8 @@ public class ProjectMetadata
         var project = new ProjectMetadata
         {
             Nip57 = nostrMetadata.Nip57,
-            Lud16 = nostrMetadata.Nip57,
-            Nip05 = nostrMetadata.Nip57,
+            Lud16 = nostrMetadata.Lud16,
+            Nip05 = nostrMetadata.Nip05,
             About = nostrMetadata.About,
             Banner = nostrMetadata.Banner,
             Picture = nostrMetadata.Picture,

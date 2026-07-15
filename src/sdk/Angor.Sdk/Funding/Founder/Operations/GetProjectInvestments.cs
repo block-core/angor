@@ -25,6 +25,7 @@ public static class GetProjectInvestments
 
     public class GetProjectInvestmentsHandler(
         IAngorIndexerService angorIndexerService,
+        IIndexerService indexerService,
         IProjectService projectService,
         INetworkConfiguration networkConfiguration,
         IInvestmentHandshakeService HandshakeService) : IRequestHandler<GetProjectInvestmentsRequest, Result<GetProjectInvestmentsResponse>>
@@ -71,10 +72,11 @@ public static class GetProjectInvestments
                 return Result.Failure<GetProjectInvestmentsResponse>(alreadyInvestedResult.Error);
             }
 
-            var investments = HandshakesResult.Value
-                .OrderByDescending(req => req.RequestCreated)
-                .Select(conv => CreateInvestmentFromHandshake(conv, alreadyInvestedResult.Value, projectResult.Value))
-                .ToList();
+            var investments = new List<Investment>();
+            foreach (var conv in HandshakesResult.Value.OrderByDescending(req => req.RequestCreated))
+            {
+                investments.Add(await CreateInvestmentFromHandshake(conv, alreadyInvestedResult.Value, projectResult.Value));
+            }
 
             return Result.Success(new GetProjectInvestmentsResponse(investments));
         }
@@ -111,7 +113,7 @@ public static class GetProjectInvestments
             return alreadyInvested.Any(investment => investment.TransactionId == transactionId);
         }
         
-        private Investment CreateInvestmentFromHandshake(
+        private async Task<Investment> CreateInvestmentFromHandshake(
             InvestmentHandshake Handshake,
             List<ProjectInvestment> alreadyInvested,
             Project project)
@@ -122,7 +124,26 @@ public static class GetProjectInvestments
                 var transactionId = Handshake.InvestmentTransactionId ?? string.Empty;
                 var indexedInvestment = alreadyInvested.FirstOrDefault(i => i.TransactionId == transactionId);
                 var amount = indexedInvestment?.TotalAmount ?? 0;
-                
+
+                // Fallback: the indexer investment list may not (yet) include this transaction.
+                // Fetch the raw transaction by ID and sum its taproot (investment) outputs.
+                if (amount == 0 && !string.IsNullOrEmpty(transactionId))
+                {
+                    try
+                    {
+                        var transactionHex = await indexerService.GetTransactionHexByIdAsync(transactionId);
+                        if (!string.IsNullOrEmpty(transactionHex))
+                        {
+                            var directTransaction = networkConfiguration.GetNetwork().CreateTransaction(transactionHex);
+                            amount = directTransaction.GetTotalInvestmentAmount();
+                        }
+                    }
+                    catch
+                    {
+                        // Transaction lookup is best-effort; leave amount at 0 if the indexer fails.
+                    }
+                }
+
                 return new Investment(
                     Handshake.RequestEventId,
                     Handshake.RequestCreated,

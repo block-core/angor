@@ -113,12 +113,12 @@ public partial class EditProfileViewModel : ReactiveObject
         this.WhenAnyValue(x => x.ProfilePicture)
             .Throttle(TimeSpan.FromMilliseconds(500))
             .ObserveOn(RxSchedulers.MainThreadScheduler)
-            .Subscribe(url => ImageCacheService.LoadBitmapAsync(url, bmp => ProfilePictureBitmap = bmp));
+            .Subscribe(url => ImageCacheService.LoadBitmapAsync(url, bmp => ProfilePictureBitmap = bmp, decodeWidth: 256));
 
         this.WhenAnyValue(x => x.ProfileBanner)
             .Throttle(TimeSpan.FromMilliseconds(500))
             .ObserveOn(RxSchedulers.MainThreadScheduler)
-            .Subscribe(url => ImageCacheService.LoadBitmapAsync(url, bmp => ProfileBannerBitmap = bmp));
+            .Subscribe(url => ImageCacheService.LoadBitmapAsync(url, bmp => ProfileBannerBitmap = bmp, decodeWidth: 1280));
 
         // Re-raise the computed Has*Error flags whenever the backing error text changes.
         this.WhenAnyValue(x => x.MemberError).Subscribe(_ => this.RaisePropertyChanged(nameof(HasMemberError)));

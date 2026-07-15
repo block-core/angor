@@ -96,6 +96,16 @@ public static class UpdateProjectProfile
             if (profileResult.IsFailure)
                 return Result.Failure<UpdateProjectProfileResponse>(profileResult.Error);
 
+            // Force-revalidate the local project cache so the founder's own app
+            // immediately reflects the new profile (name/banner/picture) instead
+            // of waiting for the stale-while-revalidate TTL. Other users pick up
+            // the change via the revalidation triggered when they land on the
+            // project page.
+            var revalidateResult = await projectService.RevalidateAsync(request.ProjectId, force: true);
+            if (revalidateResult.IsFailure)
+                logger.LogWarning("Failed to revalidate cached project {ProjectId} after profile update: {Error}",
+                    request.ProjectId.Value, revalidateResult.Error);
+
             // Publish app-specific data events (kind 30078)
             if (request.ProjectContent != null)
                 await relayService.PublishAppSpecificDataAsync("angor:project", request.ProjectContent, nostrKeyHex, NoopCallback);

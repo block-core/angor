@@ -155,7 +155,7 @@ public class InvestmentViewModel : INotifyPropertyChanged
         set
         {
             _bannerUrl = value;
-            ImageCacheService.LoadBitmapAsync(value, bmp => { BannerBitmap = bmp; OnPropertyChanged(nameof(BannerBitmap)); });
+            ImageCacheService.LoadBitmapAsync(value, bmp => { BannerBitmap = bmp; OnPropertyChanged(nameof(BannerBitmap)); }, decodeWidth: 1280);
         }
     }
     /// <summary>Avatar/logo image URL</summary>
@@ -166,7 +166,7 @@ public class InvestmentViewModel : INotifyPropertyChanged
         set
         {
             _avatarUrl = value;
-            ImageCacheService.LoadBitmapAsync(value, bmp => { AvatarBitmap = bmp; OnPropertyChanged(nameof(AvatarBitmap)); });
+            ImageCacheService.LoadBitmapAsync(value, bmp => { AvatarBitmap = bmp; OnPropertyChanged(nameof(AvatarBitmap)); }, decodeWidth: 256);
         }
     }
     /// <summary>Decoded banner bitmap, loaded from <see cref="BannerUrl"/> via ImageCacheService.</summary>
@@ -522,6 +522,7 @@ public class InvestmentViewModel : INotifyPropertyChanged
 public partial class PortfolioViewModel : ReactiveObject, IDisposable
 {
     private readonly IInvestmentAppService _investmentAppService;
+    private readonly Angor.Sdk.Funding.Projects.IProjectAppService _projectAppService;
     private readonly IWalletContext _walletContext;
     private readonly SignatureStore _signatureStore;
     private readonly ICurrencyService _currencyService;
@@ -569,12 +570,14 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
 
     public PortfolioViewModel(
         IInvestmentAppService investmentAppService,
+        Angor.Sdk.Funding.Projects.IProjectAppService projectAppService,
         IWalletContext walletContext,
         SignatureStore signatureStore,
         ICurrencyService currencyService,
         ILogger<PortfolioViewModel> logger)
     {
         _investmentAppService = investmentAppService;
+        _projectAppService = projectAppService;
         _walletContext = walletContext;
         _signatureStore = signatureStore;
         _currencyService = currencyService;
@@ -1392,6 +1395,11 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable
         SelectedInvestment = investment;
         // Load recovery status when detail is opened
         _ = LoadRecoveryStatusAsync(investment);
+
+        // Kick a background refresh of cached profile metadata (TTL-gated) so any
+        // founder profile update propagates to investors viewing their funded projects.
+        if (!string.IsNullOrEmpty(investment.ProjectIdentifier))
+            _ = _projectAppService.RevalidateProjectMetadata(new ProjectId(investment.ProjectIdentifier));
     }
 
     /// <summary>Navigate back to portfolio list from investment detail</summary>
