@@ -35,17 +35,36 @@ public record PaymentFlowConfig
     public long OnChainRequiredSats => OnChainRequiredSatsOverride ?? AmountSats;
 
     /// <summary>
+    /// Optional: recalculates the on-chain required amount for the actual number of UTXOs
+    /// detected on the funding address. The signing code spends ALL UTXOs on the address
+    /// and pays ~68 vB per input, so if the user pays in multiple transactions the required
+    /// amount grows with each extra input. When set, the payment flow rechecks the received
+    /// total against this after funds arrive and keeps monitoring for the shortfall instead
+    /// of failing at signing. Null = no recheck (flows not restricted to the funding address).
+    /// </summary>
+    public Func<int, long>? OnChainRequiredForUtxoCount { get; init; }
+
+    /// <summary>
     /// Calculates the total on-chain amount needed for an investment transaction,
     /// including the Angor fee (1%) and estimated miner fee.
     /// Use this as <see cref="OnChainRequiredSatsOverride"/> for investment flows.
     /// </summary>
     public static long EstimateOnChainRequired(long investmentAmountSats, int stageCount, int feeRateSatsPerVbyte)
+        => EstimateOnChainRequired(investmentAmountSats, stageCount, feeRateSatsPerVbyte, inputCount: 1);
+
+    /// <summary>
+    /// Calculates the total on-chain amount needed for an investment transaction for a
+    /// specific number of funding inputs. The signing transaction spends all UTXOs on the
+    /// funding address, so each extra UTXO adds ~68 vB of miner fee.
+    /// </summary>
+    public static long EstimateOnChainRequired(long investmentAmountSats, int stageCount, 
+        int feeRateSatsPerVbyte, int inputCount)
     {
         const int AngorFeePercentage = 1;
 
         // Shared with the web app so invoice sizing and tx-build fee budgets never drift apart.
         return Angor.Shared.Protocol.InvestmentFeeEstimator.EstimateOnChainRequired(
-            investmentAmountSats, AngorFeePercentage, stageCount, feeRateSatsPerVbyte);
+            investmentAmountSats, AngorFeePercentage, stageCount, feeRateSatsPerVbyte, inputCount);
     }
 
     /// <summary>Title for the invoice screen, e.g. "Pay to Invest" or "Fund Deployment".</summary>
