@@ -298,8 +298,10 @@ public class DerivationOperations : IDerivationOperations
         {
             var hashedKey = Hashes.DoubleSHA256(privateKeyBytes);
 
-            // Hex-encoded double-SHA256 of the private key serves as the Nostr storage password
-            return Encoders.Hex.EncodeData(hashedKey.ToBytes(false));
+            // The hex of the hash of the private key is the password.
+            // ToBytes(true) = big-endian, matching the byte order that the pre-NBitcoin
+            // Blockcore code produced via uint256.ToArray().
+            return Encoders.Hex.EncodeData(hashedKey.ToBytes(true)).Replace("-", "").ToLower();
         }
         finally
         {

@@ -252,6 +252,7 @@ public partial class PortfolioView : UserControl, ISectionView
         {
             case "RefreshButton":
             case "MobileRefreshButton":
+            case "EmptyRefreshButton":
                 if (DataContext is PortfolioViewModel refreshVm)
                     _ = refreshVm.LoadInvestmentsFromSdkAsync();
                 e.Handled = true;

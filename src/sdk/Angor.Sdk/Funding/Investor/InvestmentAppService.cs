@@ -77,5 +77,8 @@ public class InvestmentAppService(IMediator mediator) : IInvestmentAppService
     public Task<Result<GetTotalInvested.GetTotalInvestedResponse>> GetTotalInvested(GetTotalInvested.GetTotalInvestedRequest request)
         => mediator.Send(request);
 
+    public Task<Result<CheckExistingInvestment.CheckExistingInvestmentResponse>> CheckExistingInvestment(CheckExistingInvestment.CheckExistingInvestmentRequest request)
+        => mediator.Send(request);
+
     #endregion
 }

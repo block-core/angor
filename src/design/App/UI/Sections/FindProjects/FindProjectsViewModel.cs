@@ -5,6 +5,8 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Angor.Sdk.Common;
+using Angor.Sdk.Funding.Investor;
+using Angor.Sdk.Funding.Investor.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Projects.Operations;
@@ -14,6 +16,7 @@ using Avalonia.Media.Imaging;
 using App.UI.Sections.Portfolio;
 using App.UI.Shared;
 using App.UI.Shared.Helpers;
+using App.UI.Shared.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -195,6 +198,20 @@ public class ProjectItemViewModel : INotifyPropertyChanged
     public string RaisedNoun => ProjectTypeTerminology.RaisedNoun(TypeEnum);
 
     public bool IsInvestmentType => ProjectType == "Invest";
+
+    private bool _hasAlreadyInvested;
+    public bool HasAlreadyInvested
+    {
+        get => _hasAlreadyInvested;
+        set { _hasAlreadyInvested = value; OnPropertyChanged(); }
+    }
+
+    private string? _existingInvestmentAmount;
+    public string? ExistingInvestmentAmount
+    {
+        get => _existingInvestmentAmount;
+        set { _existingInvestmentAmount = value; OnPropertyChanged(); }
+    }
     public bool IsFundType => ProjectType == "Fund";
     public bool IsSubscriptionType => ProjectType == "Subscription";
     public bool IsOpen => Status == "Open";
@@ -417,6 +434,8 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable
     private readonly Func<ProjectItemViewModel, InvestPageViewModel> _investPageFactory;
     private readonly PortfolioViewModel _portfolioViewModel;
     private readonly ICurrencyService _currencyService;
+    private readonly IInvestmentAppService _investmentAppService;
+    private readonly IWalletContext _walletContext;
     private readonly ILogger<FindProjectsViewModel> _logger;
     private readonly CompositeDisposable _disposables = new();
 
@@ -512,6 +531,7 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable
         _logger.LogInformation("Opening project detail: '{ProjectName}' (ID: {ProjectId})", project.ProjectName, project.ProjectId);
         SelectedProject = project;
         _ = LoadProfileDataAsync(project);
+        _ = CheckExistingInvestmentAsync(project);
     }
 
     public void CloseProjectDetail()
@@ -570,11 +590,59 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable
         }
     }
 
+    /// <summary>
+    /// Check if any wallet has already invested in this project via the on-chain indexer.
+    /// If found but missing from the local portfolio, the SDK auto-recovers it.
+    /// </summary>
+    private async Task CheckExistingInvestmentAsync(ProjectItemViewModel project)
+    {
+        if (string.IsNullOrEmpty(project.ProjectId) || string.IsNullOrEmpty(project.FounderKey))
+            return;
+
+        var wallets = _walletContext.Wallets.ToList();
+        if (wallets.Count == 0) return;
+
+        try
+        {
+            foreach (var wallet in wallets)
+            {
+                var result = await _investmentAppService.CheckExistingInvestment(
+                    new CheckExistingInvestment.CheckExistingInvestmentRequest(
+                        wallet.Id, new ProjectId(project.ProjectId), project.FounderKey));
+
+                if (result.IsSuccess && result.Value.HasExistingInvestment)
+                {
+                    var amountBtc = result.Value.InvestedAmountSats.ToUnitBtc();
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        project.HasAlreadyInvested = true;
+                        project.ExistingInvestmentAmount = $"{amountBtc:G} {_currencyService.Symbol}";
+                    });
+
+                    if (result.Value.WasRecovered)
+                    {
+                        _logger.LogInformation(
+                            "Recovered missing investment in '{ProjectName}' ({Amount} sats) from on-chain data",
+                            project.ProjectName, result.Value.InvestedAmountSats);
+                    }
+
+                    return;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Error checking existing investment for project {ProjectId}", project.ProjectId);
+        }
+    }
+
     public FindProjectsViewModel(
         IProjectAppService projectAppService,
         Func<ProjectItemViewModel, InvestPageViewModel> investPageFactory,
         PortfolioViewModel portfolioViewModel,
         ICurrencyService currencyService,
+        IInvestmentAppService investmentAppService,
+        IWalletContext walletContext,
         ILogger<FindProjectsViewModel> logger)
     {
         var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -583,6 +651,8 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable
         _investPageFactory = investPageFactory;
         _portfolioViewModel = portfolioViewModel;
         _currencyService = currencyService;
+        _investmentAppService = investmentAppService;
+        _walletContext = walletContext;
         _logger = logger;
 
         var fieldsMs = sw.ElapsedMilliseconds;
