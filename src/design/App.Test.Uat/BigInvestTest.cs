@@ -43,6 +43,7 @@ public class BigInvestTest
 
         await using var founderHost = await TestProcessHost.LaunchAsync(FounderProfile);
         await founderHost.Client.WipeDataAsync();
+        await founderHost.Client.EnableDebugModeAsync();
 
         var founderWallet = await founderHost.Client.CreateWalletAndFundAsync(new CreateWalletAndFundRequest
         {
@@ -158,6 +159,7 @@ public class BigInvestTest
 
         var host = await TestProcessHost.LaunchAsync(profileName);
         await host.Client.WipeDataAsync();
+        await host.Client.EnableDebugModeAsync();
         hosts[profileName] = host;
         return host;
     }

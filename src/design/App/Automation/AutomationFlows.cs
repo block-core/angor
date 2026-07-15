@@ -1876,35 +1876,62 @@ public static class AutomationFlows
 
     /// <summary>
     /// Set text on a TextBox found by Name.
+    /// Retries until the control appears in the visual tree (views may render a
+    /// beat after the preceding click advances the wizard step).
     /// Must be called from a background thread.
     /// </summary>
     private static async Task TypeTextByNameAsync(Window window, string name, string text)
     {
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        var deadline = DateTime.UtcNow + UiTimeout;
+        while (true)
         {
-            var textBox = FindByName<TextBox>(window, name)
-                       ?? FindByAutomationId<TextBox>(window, name);
-            if (textBox == null) throw new InvalidOperationException($"TextBox '{name}' not found");
-            textBox.Text = text;
-            Dispatcher.UIThread.RunJobs();
-        });
+            var done = await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var textBox = FindByName<TextBox>(window, name)
+                           ?? FindByAutomationId<TextBox>(window, name);
+                if (textBox == null) return false;
+                textBox.Text = text;
+                Dispatcher.UIThread.RunJobs();
+                return true;
+            });
+
+            if (done) break;
+
+            if (DateTime.UtcNow >= deadline)
+                throw new InvalidOperationException($"TextBox '{name}' not found within timeout");
+
+            await Task.Delay(100);
+        }
         await Task.Delay(100);
     }
 
     /// <summary>
     /// Set value on a NumericUpDown found by Name.
+    /// Retries until the control appears in the visual tree.
     /// Must be called from a background thread.
     /// </summary>
     private static async Task SetNumericByNameAsync(Window window, string name, decimal value)
     {
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        var deadline = DateTime.UtcNow + UiTimeout;
+        while (true)
         {
-            var nud = FindByName<NumericUpDown>(window, name)
-                   ?? FindByAutomationId<NumericUpDown>(window, name);
-            if (nud == null) throw new InvalidOperationException($"NumericUpDown '{name}' not found");
-            nud.Value = value;
-            Dispatcher.UIThread.RunJobs();
-        });
+            var done = await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var nud = FindByName<NumericUpDown>(window, name)
+                       ?? FindByAutomationId<NumericUpDown>(window, name);
+                if (nud == null) return false;
+                nud.Value = value;
+                Dispatcher.UIThread.RunJobs();
+                return true;
+            });
+
+            if (done) break;
+
+            if (DateTime.UtcNow >= deadline)
+                throw new InvalidOperationException($"NumericUpDown '{name}' not found within timeout");
+
+            await Task.Delay(100);
+        }
         await Task.Delay(100);
     }
 
