@@ -715,6 +715,52 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
                 return;
             }
 
+            // The signing transaction spends ALL UTXOs on the funding address and pays a miner
+            // fee per input. If the payment arrived as multiple UTXOs (e.g. two separate sends),
+            // the originally displayed amount may no longer cover the fee. Recheck against the
+            // actual UTXO count and keep monitoring for the shortfall instead of failing later.
+            if (_config.OnChainRequiredForUtxoCount != null)
+            {
+                var received = monitorResult.Value.TotalAmount.Sats;
+                var utxoCount = monitorResult.Value.DetectedUtxos.Count;
+                var requiredForCount = _config.OnChainRequiredForUtxoCount(utxoCount);
+
+                while (received < requiredForCount)
+                {
+                    var shortfall = requiredForCount - received;
+                    _logger.LogWarning(
+                        "Funds received as {UtxoCount} UTXO(s) totaling {Received} sats, but {Required} sats are needed to cover the per-input miner fee. Waiting for {Shortfall} more sats.",
+                        utxoCount, received, requiredForCount, shortfall);
+                    PaymentStatusText = $"Payment arrived in {utxoCount} parts — network fees increased. Please send {shortfall:N0} sats more.";
+
+                    var topUpRequest = new MonitorOp.MonitorAddressForFundsRequest(
+                        walletId,
+                        OnChainAddress,
+                        new Amount(requiredForCount),
+                        TimeSpan.FromMinutes(30));
+
+                    var topUpResult = await _investmentAppService.MonitorAddressForFunds(
+                        topUpRequest, cts.Token);
+
+                    if (topUpResult.IsFailure)
+                    {
+                        if (cts.IsCancellationRequested)
+                        {
+                            _logger.LogInformation("On-chain top-up monitoring cancelled — suppressing error");
+                            return;
+                        }
+                        _logger.LogError("On-chain top-up monitor failed: {Error}", topUpResult.Error);
+                        ErrorMessage = "Your payment arrived in multiple parts, which increased the network fee. Please send the remaining amount shown above — your funds are safe.";
+                        IsProcessing = false;
+                        return;
+                    }
+
+                    received = topUpResult.Value.TotalAmount.Sats;
+                    utxoCount = topUpResult.Value.DetectedUtxos.Count;
+                    requiredForCount = _config.OnChainRequiredForUtxoCount(utxoCount);
+                }
+            }
+
             PaymentStatusText = "Payment received!";
             PaymentReceived = true;
 
