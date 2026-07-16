@@ -603,6 +603,136 @@
                     </StackPanel>
                 </Border>
 
+                <!-- ═══ 6b. Cloud Backup ═══ -->
+                <Border Background="{DynamicResource CardSurface}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1"
+                        CornerRadius="16"
+                        ClipToBounds="True"
+                        BoxShadow="{DynamicResource ItemShadow}">
+                    <StackPanel>
+                        <Border Background="{DynamicResource SurfaceHigh}"
+                                CornerRadius="15,15,0,0"
+                                BorderBrush="{DynamicResource Stroke}"
+                                BorderThickness="0,0,0,1"
+                                Padding="24,20">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <i:Icon Value="fa-solid fa-cloud-arrow-up"
+                                       FontSize="20"
+                                       Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                <TextBlock Text="Cloud Backup"
+                                           FontSize="18"
+                                           FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                        <Border Padding="24">
+                            <StackPanel Spacing="16">
+                                <TextBlock Text="Encrypt your seed with a Recovery Passphrase and store it on Nostr + Blossom servers. Recover on any device with just the passphrase."
+                                           FontSize="14"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           TextWrapping="Wrap" />
+
+                                <!-- Disabled state -->
+                                <StackPanel IsVisible="{Binding !IsCloudBackupEnabled}" Spacing="12">
+                                    <TextBlock Text="Cloud backup is not set up for this wallet."
+                                               FontSize="14"
+                                               Foreground="{DynamicResource TextMuted}" />
+                                    <Button Name="BtnEnableCloudBackup"
+                                            Click="OnEnableCloudBackupClick"
+                                            HorizontalAlignment="Left"
+                                            Padding="20,14"
+                                            Background="{DynamicResource GreenGradient}"
+                                            Foreground="White"
+                                            BorderThickness="0"
+                                            CornerRadius="8"
+                                            FontWeight="SemiBold"
+                                            FontSize="14"
+                                            Cursor="Hand"
+                                            IsEnabled="{Binding !IsCloudBackupBusy}">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <i:Icon Value="fa-solid fa-shield-halved" FontSize="16" Foreground="White" />
+                                            <TextBlock Text="Set up Cloud Backup" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+
+                                <!-- Enabled state -->
+                                <StackPanel IsVisible="{Binding IsCloudBackupEnabled}" Spacing="12">
+                                    <Border Background="{DynamicResource CreateWalletSeedBg}"
+                                            BorderBrush="{DynamicResource CreateWalletSeedBorder}"
+                                            BorderThickness="1"
+                                            CornerRadius="8"
+                                            Padding="16">
+                                        <StackPanel Spacing="6">
+                                            <TextBlock Text="Backup active" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource TextStrong}" />
+                                            <TextBlock Text="{Binding CloudBackupBlobSha256, StringFormat='Blob hash: {0}'}"
+                                                       FontFamily="Cascadia Mono, Consolas, monospace"
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource TextMuted}"
+                                                       TextWrapping="Wrap" />
+                                            <TextBlock FontSize="12" Foreground="{DynamicResource TextMuted}">
+                                                <Run Text="Reachable on" />
+                                                <Run Text="{Binding CloudBackupServersHealthy}" />
+                                                <Run Text="/" />
+                                                <Run Text="{Binding CloudBackupServersTotal}" />
+                                                <Run Text="Blossom servers" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <Button Click="OnVerifyCloudBackupClick"
+                                                Padding="16,10"
+                                                Background="{DynamicResource SurfaceHigh}"
+                                                Foreground="{DynamicResource TextStrong}"
+                                                BorderBrush="{DynamicResource Stroke}"
+                                                BorderThickness="1"
+                                                CornerRadius="8"
+                                                FontSize="13"
+                                                Cursor="Hand"
+                                                IsEnabled="{Binding !IsCloudBackupBusy}">
+                                            <TextBlock Text="Verify Health" />
+                                        </Button>
+                                        <Button Click="OnRefreshCloudBackupClick"
+                                                Padding="16,10"
+                                                Background="{DynamicResource SurfaceHigh}"
+                                                Foreground="{DynamicResource TextStrong}"
+                                                BorderBrush="{DynamicResource Stroke}"
+                                                BorderThickness="1"
+                                                CornerRadius="8"
+                                                FontSize="13"
+                                                Cursor="Hand"
+                                                IsEnabled="{Binding !IsCloudBackupBusy}">
+                                            <TextBlock Text="Refresh Backup" />
+                                        </Button>
+                                        <Button Click="OnDisableCloudBackupClick"
+                                                Padding="16,10"
+                                                Background="Transparent"
+                                                Foreground="{DynamicResource TextMuted}"
+                                                BorderBrush="{DynamicResource Stroke}"
+                                                BorderThickness="1"
+                                                CornerRadius="8"
+                                                FontSize="13"
+                                                Cursor="Hand"
+                                                IsEnabled="{Binding !IsCloudBackupBusy}">
+                                            <TextBlock Text="Disable" />
+                                        </Button>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Status line -->
+                                <TextBlock IsVisible="{Binding CloudBackupStatusMessage, Converter={x:Static ObjectConverters.IsNotNull}}"
+                                           Text="{Binding CloudBackupStatusMessage}"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextMuted}"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
                 <!-- ═══ 7. Debug Mode (testnet only) ═══ -->
                 <!-- Visible only on testnet networks. Enables debug features like project wizard
                      data prepopulation and relaxed validation for easier testing. -->

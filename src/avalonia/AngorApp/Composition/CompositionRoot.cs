@@ -54,6 +54,7 @@ public static class CompositionRoot
             .AddUIServices(topLevelView, profileContext, applicationStorage);
         
         services.AddSecurityContext();
+        services.AddCloudBackup();
         RegisterWalletServices(services, logger, network);
         FundingContextServices.Register(services, logger);
 

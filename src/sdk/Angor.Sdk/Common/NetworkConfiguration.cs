@@ -144,6 +144,18 @@ public class NetworkConfiguration : INetworkConfiguration
             new() { Name = "nostria (Blossom)", Url = "https://mibo.eu.nostria.app", IsPrimary = false },
         };
 
+    public List<SettingsUrl> GetDefaultBackupServerUrls() =>
+        new()
+        {
+            // Blossom servers used for encrypted seed backup blobs (BUD-02).
+            // Initially mirrors the image server list; can diverge if a server stops
+            // accepting blobs that look like backups (rare — they are opaque binary).
+            new() { Name = "Angor Blossom", Url = "https://blossom.angor.io", IsPrimary = true },
+            new() { Name = "nostr.build", Url = "https://nostr.build", IsPrimary = false },
+            new() { Name = "blossom.primal.net", Url = "https://blossom.primal.net", IsPrimary = false },
+            new() { Name = "nostria (Blossom)", Url = "https://mibo.eu.nostria.app", IsPrimary = false },
+        };
+
     public List<SettingsUrl> GetDiscoveryRelays() =>
         new()
         {
