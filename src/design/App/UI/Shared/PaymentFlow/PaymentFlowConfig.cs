@@ -52,7 +52,16 @@ public record PaymentFlowConfig
         //  N×43   vB  N P2TR stage outputs
         //    31   vB  1 P2WPKH change output
         // Total ≈ 252 + (stageCount × 43) vbytes
-        int estimatedTxVbytes = 252 + (stageCount * 43);
+        //
+        // The signing code (AddInputsFromAddressAndSignTransaction) spends ALL UTXOs on the
+        // funding address and charges ~68 vB per input. Lightning claims always produce a
+        // single UTXO, but a user paying on-chain from an external wallet may deliver the
+        // funds as multiple UTXOs (two separate sends, exchange withdrawal splits, RBF
+        // leftovers). Budget for up to 3 inputs so signing still succeeds in those cases;
+        // any surplus is returned to the user's wallet as change.
+        const int MaxBudgetedInputs = 3;
+        const int InputVbytes = 68;
+        int estimatedTxVbytes = 252 + ((MaxBudgetedInputs - 1) * InputVbytes) + (stageCount * 43);
         long estimatedMinerFee = feeRateSatsPerVbyte * estimatedTxVbytes;
 
         return investmentAmountSats + angorFee + estimatedMinerFee;
