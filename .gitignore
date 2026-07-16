@@ -410,3 +410,6 @@ RESUME.md
 # Windows reserved device names
 nul
 perf-reports/
+
+# Accidental Go module cache
+root/
