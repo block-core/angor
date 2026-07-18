@@ -18,6 +18,13 @@ public partial class App : Application
     public static IServiceProvider Services { get; private set; } = null!;
     public static Action<ServiceCollection>? PlatformServices { get; set; }
 
+    /// <summary>
+    /// Root view on mobile/single-view platforms (Android/iOS/WASM), where there is no
+    /// MainWindow. Used by the test automation server to resolve the visual root via
+    /// TopLevel.GetTopLevel. Null on desktop.
+    /// </summary>
+    public static Avalonia.Controls.Control? MainView { get; private set; }
+
     public override void Initialize()
     {
         IconProvider.Current.Register<FontAwesomeIconProvider>();
@@ -79,14 +86,21 @@ public partial class App : Application
             // ISingleViewApplicationLifetime because IActivityApplicationLifetime
             // also implements ISingleViewApplicationLifetime in some configurations.
             LayoutModeService.Instance.UpdateWidth(400);
-            activity.MainViewFactory = () => new ShellView();
+            activity.MainViewFactory = () =>
+            {
+                var view = new ShellView();
+                MainView = view;
+                return view;
+            };
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
         {
             // iOS / WASM — no window, just set the main view directly.
             // Force mobile layout since there's no resizable window.
             LayoutModeService.Instance.UpdateWidth(400);
-            singleView.MainView = new ShellView();
+            var mainView = new ShellView();
+            MainView = mainView;
+            singleView.MainView = mainView;
         }
 
         base.OnFrameworkInitializationCompleted();
