@@ -18,6 +18,12 @@ public class MainApplication : AvaloniaAndroidApplication<global::App.App>
 
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
     {
+#if DEBUG
+        // Map debug.angor.* system properties (set via adb for UAT runs) onto the
+        // ANGOR_* environment variables before the DI container is built.
+        DebugTestConfig.ApplyFromSystemProperties();
+#endif
+
         global::App.App.PlatformServices = services =>
         {
             services.AddSingleton<Angor.Sdk.Wallet.Infrastructure.Interfaces.ISecureKeyProvider, AndroidKeyStoreSecureKeyProvider>();

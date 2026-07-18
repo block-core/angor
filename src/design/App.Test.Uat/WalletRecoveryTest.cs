@@ -30,7 +30,7 @@ public class WalletRecoveryTest
         Log($"========== STARTING {nameof(RecoverWalletFromSeedWords)} ==========");
         Log($"Run ID: {runId}");
 
-        await using var host = await TestProcessHost.LaunchAsync(Profile);
+        await using var host = await TestHostFactory.LaunchAsync(Profile);
         await host.Client.WipeDataAsync();
         await host.Client.SwitchNetworkAsync("Angornet");
         await host.Client.EnableDebugModeAsync();
