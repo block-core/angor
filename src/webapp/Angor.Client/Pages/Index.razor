@@ -1,95 +1,55 @@
 ﻿@page "/"
-@inject NavMenuState NavMenuState
-@implements IDisposable
+@layout EmptyLayout
 
 @inherits BaseComponent
 
-<PageTitle>Angor</PageTitle>
+<PageTitle>Angor Invest</PageTitle>
 
-<div class="card b-shadow">
-    <div class="card-body text-center py-5">
-        <div class="animate-fade-in">
+<header class="hub-header">
+    <a class="hub-brand" href="https://angor.io" target="_blank" rel="noopener">
+        <img src="/assets/img/angor-logo.svg" alt="Angor" />
+        <span>Angor Invest</span>
+    </a>
+    <span class="hub-network-badge @(network.IsMainnet ? "" : "testnet")">@network.Name</span>
+</header>
+
+<div class="container mt-5" style="max-width: 640px;">
+    <div class="card">
+        <div class="card-body text-center py-5">
             <span class="main-logo mb-4 d-block">
                 <Icon IconName="angor-logo" Width="96" Height="96" />
             </span>
-            <h2 class="mb-3 text-primary">Welcome to Angor</h2>
-            <p class="lead mb-4">A P2P funding protocol built on Bitcoin and Nostr</p>
-            <div class="d-flex justify-content-center gap-3">
-                <a href="/wallet" class="btn btn-border btn-sm">Get Started</a>
-                <a href="https://docs.angor.io" target="_blank" class="btn btn-border btn-sm">Learn More</a>
+            <h3 class="mb-2">Invest in a project</h3>
+            <p class="text-muted mb-4">
+                Open an invest link from a project page on
+                <a class="hub-link" href="https://angor.io" target="_blank" rel="noopener">angor.io</a>,
+                or paste a project ID below.
+            </p>
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" placeholder="Project ID (angor1...)"
+                       @bind="projectIdInput"
+                       @onkeypress="@(e => { if (e.Key == "Enter") GoToProject(); })" />
+                <button class="btn btn-success" @onclick="GoToProject" disabled="@string.IsNullOrWhiteSpace(projectIdInput)">
+                    Invest
+                </button>
             </div>
+            <a class="hub-link" href="https://angor.io" target="_blank" rel="noopener">Browse projects on angor.io</a>
         </div>
     </div>
-</div>
 
-<div class="mt-4">
-    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4 g-4">
-        <div class="col">
-            <a href="/wallet" class="text-decoration-none h-100 d-block">
-                <div class="card b-shadow hover-effect h-100">
-                    <div class="card-body text-center p-4">
-                        <i class="mb-3 text-primary d-flex justify-content-center">
-                            <Icon IconName="wallet" Width="48" Height="48" />
-                        </i>
-                        <h4 class="card-title h5 mb-3 mt-4">Create Your Wallet</h4>
-                        <p class="card-text text-muted">Create a new wallet or recover your existing one to get started with Angor</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <div class="col">
-            <a href="/browse" class="text-decoration-none h-100 d-block">
-                <div class="card b-shadow hover-effect h-100">
-                    <div class="card-body text-center p-4">
-                        <i class="mb-3 text-primary d-flex justify-content-center">
-                            <Icon IconName="browse" Width="48" Height="48" />
-                        </i>
-                        <h4 class="card-title h5 mb-3 mt-4">Explore Opportunities</h4>
-                        <p class="card-text text-muted">Browse through innovative projects and find your next investment</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <div class="col">
-            <a href="/founder" class="text-decoration-none h-100 d-block">
-                <div class="card b-shadow hover-effect h-100">
-                    <div class="card-body text-center p-4">
-                        <i class="mb-3 text-primary d-flex justify-content-center">
-                            <Icon IconName="founder" Width="48" Height="48" />
-                        </i>
-                        <h4 class="card-title h5 mb-3 mt-4">Launch Your Project</h4>
-                        <p class="card-text text-muted">Start your fundraising journey and launch your project on Angor</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <div class="col">
-            <a href="/investor" class="text-decoration-none h-100 d-block">
-                <div class="card b-shadow hover-effect h-100">
-                    <div class="card-body text-center p-4">
-                        <i class="mb-3 text-primary d-flex justify-content-center">
-                            <Icon IconName="portfolio" Width="48" Height="48" />
-                        </i>
-                        <h4 class="card-title h5 mb-3 mt-4">Invest & Grow</h4>
-                        <p class="card-text text-muted">Invest in promising projects and be part of their success story</p>
-                    </div>
-                </div>
-            </a>
-        </div>
+    <div class="hub-footer">
+        Powered by <a href="https://angor.io" target="_blank" rel="noopener">Angor</a> — a decentralized crowdfunding protocol on Bitcoin
     </div>
 </div>
 
 @code {
-    protected override async Task OnInitializedAsync()
-    {
-        NavMenuState.SetActivePage("");
-    }
+    private string? projectIdInput;
 
-    public void Dispose()
+    private void GoToProject()
     {
-        // Clean up if needed
+        if (string.IsNullOrWhiteSpace(projectIdInput))
+            return;
+
+        NavigationManager.NavigateTo($"/invest/{projectIdInput.Trim()}");
     }
 }

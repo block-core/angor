@@ -1,0 +1,19 @@
+@inherits LayoutComponentBase
+@using Angor.Shared.Services
+@inject INetworkService _networkService
+@inject NavigationManager _navManager
+
+<div class="hub-page">
+    @Body
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Standalone layout — perform the network/settings initialization
+        // MainLayout normally does, before any child component renders.
+        _networkService.CheckAndSetNetwork(_navManager.Uri.ToLower());
+        _networkService.AddSettingsIfNotExist();
+        _ = _networkService.CheckServices(true);
+    }
+}
