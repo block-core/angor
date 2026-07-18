@@ -52,7 +52,20 @@ public class InvestorProject : Project
     {
         TransactionId = investmentTransaction.GetHash().ToString();
         SignedTransactionHex = null;
-        AmountInvested = investmentTransaction.Outputs.Skip(2).Take(ProjectInfo.Stages.Count).Sum(s => s.Value);
+
+        // Fund/Subscribe projects have no fixed stages (stage count comes from the dynamic
+        // pattern), so counting via ProjectInfo.Stages would yield 0. In that case sum all
+        // taproot stage outputs instead (skip Angor fee + OP_RETURN, exclude change).
+        if (ProjectInfo.Stages.Count > 0)
+        {
+            AmountInvested = investmentTransaction.Outputs.Skip(2).Take(ProjectInfo.Stages.Count).Sum(s => s.Value);
+        }
+        else if (AmountInvested is null or 0)
+        {
+            AmountInvested = investmentTransaction.Outputs.Skip(2)
+                .Where(o => o.ScriptPubKey.IsScriptType(ScriptType.Taproot))
+                .Sum(s => s.Value);
+        }
     }
 
 }

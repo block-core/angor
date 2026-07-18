@@ -15,6 +15,9 @@ namespace Angor.Shared.Services
         {
             if (project == null) return false;
 
+            // Fund/Subscribe projects have no investment window — they accept funds continuously.
+            if (!project.RequiresInvestmentWindow) return true;
+
             // on testnet we always allow to invest for testing purposes.
             var isTestnet = !_networkConfiguration.GetNetwork().IsMainnet;
             var debugMode = _networkConfiguration.GetDebugMode();

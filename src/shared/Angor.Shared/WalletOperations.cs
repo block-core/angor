@@ -189,24 +189,31 @@ public class WalletOperations : IWalletOperations
             clonedTransaction.Inputs.Add(txin);
         }
 
+        // Add the change output BEFORE measuring the size, so the fee covers it.
+        // (The value is filled in after the fee is known.)
+        var changeOutput = new TxOut(Money.Satoshis(0),
+            BitcoinAddress.Create(changeAddress, network.BitcoinNetwork).ScriptPubKey);
+        clonedTransaction.Outputs.Add(changeOutput);
+
         // Calculate actual fee
         var totalSize = clonedTransaction.GetVirtualSize();
         long totalFee = new FeeRate(Money.Satoshis(feeRate)).GetFee(totalSize).Satoshi;
 
         // Calculate change
         var changeAmount = totalAvailable - outputsTotal - totalFee;
-        
-        // Add change output if above dust threshold
+
         if (changeAmount > ProtocolConstants.DustThresholdSats)
         {
-            clonedTransaction.Outputs.Add(new TxOut(Money.Satoshis(changeAmount), 
-                BitcoinAddress.Create(changeAddress, network.BitcoinNetwork).ScriptPubKey));
+            changeOutput.Value = Money.Satoshis(changeAmount);
         }
-        else if (changeAmount > 0)
+        else if (changeAmount >= 0)
         {
-            totalFee += changeAmount; // Add dust to fee
+            // Change is dust — drop the output and add the remainder to the fee.
+            // The tx gets smaller than measured, so the fee rate only goes up.
+            clonedTransaction.Outputs.Remove(changeOutput);
+            totalFee += changeAmount;
         }
-        else if (changeAmount < 0)
+        else
         {
             throw new ApplicationException($"Insufficient funds after fee calculation. Short by {Math.Abs(changeAmount)} sats");
         }
