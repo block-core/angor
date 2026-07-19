@@ -297,7 +297,9 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         {
             App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<SendFundsModal>()
                 .LogWarning("Send transaction failed: {Error}", error);
-            SendErrorText.Text = "We couldn't send this transaction. The network rejected it — check your connection and try again.";
+            SendErrorText.Text = error != null && error.Contains("not enough funds", StringComparison.OrdinalIgnoreCase)
+                ? "Insufficient funds to cover this amount plus the network fee. Try a smaller amount or a lower fee rate."
+                : "We couldn't send this transaction. The network rejected it — check your connection and try again.";
             SendErrorBanner.IsVisible = true;
         }
     }

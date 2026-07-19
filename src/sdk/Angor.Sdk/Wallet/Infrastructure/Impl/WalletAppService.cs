@@ -190,15 +190,29 @@ public class WalletAppService(
                     .ToDictionary(data => data.UtxoData.outpoint.ToString(), data => data),
             };
             
-            // Calculate the real transaction fee using PSBT operations (following Wallet.razor pattern)
-            var feeCalculationResult = await CalculateTransactionFee(sendInfo, accountInfo, walletWords, feeRate);
-            if (feeCalculationResult.IsSuccess)
+            // Calculate the real transaction fee using PSBT operations (following Wallet.razor pattern),
+            // then make sure the selected UTXOs cover amount + fee. The initial selection only targets
+            // the send amount, so a UTXO that exactly matches it would leave nothing for the fee.
+            // Adding inputs grows the tx (and the fee), so iterate until the selection is stable.
+            for (var attempt = 0; ; attempt++)
             {
+                var feeCalculationResult = await CalculateTransactionFee(sendInfo, accountInfo, walletWords, feeRate);
+                if (feeCalculationResult.IsFailure)
+                {
+                    return Result.Failure<TxId>("Could not calculate transaction fee: " + feeCalculationResult.Error);
+                }
+
                 sendInfo.SendFee = (decimal)feeCalculationResult.Value.Fee;
-            }
-            else
-            {
-                return Result.Failure<TxId>("Could not calculate transaction fee: " + feeCalculationResult.Error);
+
+                var selectedTotal = sendInfo.SendUtxos.Values.Sum(u => u.UtxoData.value);
+                if (selectedTotal >= amount.Sats + feeCalculationResult.Value.Fee || attempt >= 5)
+                {
+                    break;
+                }
+
+                sendInfo.SendUtxos = walletOperations
+                    .FindOutputsForTransaction(amount.Sats + feeCalculationResult.Value.Fee, accountInfo)
+                    .ToDictionary(data => data.UtxoData.outpoint.ToString(), data => data);
             }
             
             var result = await walletOperations.SendAmountToAddress(walletWords, sendInfo);
