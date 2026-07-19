@@ -261,7 +261,9 @@ public static class CompositionRoot
                 prewarmLogger = provider.GetRequiredService<ILoggerFactory>().CreateLogger("Prewarm");
 
                 await FindProjectsViewModel.LoadCachedDtosFromDiskAsync(
-                    provider.GetRequiredService<IStore>(), prewarmLogger);
+                    provider.GetRequiredService<IStore>(),
+                    networkConfig.GetNetwork().Name,
+                    prewarmLogger);
             }
             catch (Exception ex)
             {

@@ -67,7 +67,7 @@ public partial class SignatureRequestViewModel : ReactiveObject
 /// instant; a background sync then refreshes relays and pushes updates in.
 /// Approval goes through IFounderAppService.ApproveInvestment().
 /// </summary>
-public partial class FundersViewModel : ReactiveObject, IDisposable
+public partial class FundersViewModel : ReactiveObject, IDisposable, INetworkSwitchAware
 {
     private readonly IFounderAppService _founderAppService;
     private readonly FundersMonitor _fundersMonitor;
@@ -258,6 +258,24 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
         _sdkSignatures.AddRange(signatures);
 
         _cachedAllViewModels = null;
+        UpdateFilteredSignatures();
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Clears all funder state derived from the previous network. The shared
+    /// <see cref="FundersMonitor"/> is reset separately by the shell; its
+    /// Updated event then rebuilds this VM from the (now empty) snapshot.
+    /// </remarks>
+    public void ResetAfterNetworkSwitch()
+    {
+        _sdkSignatures.Clear();
+        _locallyRejected.Clear();
+        _expandedEventIds.Clear();
+        _cachedAllViewModels = null;
+        HasEverLoaded = false;
+        IsLoading = false;
+        IsRefreshing = false;
         UpdateFilteredSignatures();
     }
 

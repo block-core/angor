@@ -291,6 +291,25 @@ public sealed class FundersMonitor : IDisposable
     }
 
     /// <summary>
+    /// Drop all state derived from the previous network (snapshot, change-detection
+    /// baseline, optimistic overlays). Called by the shell on a network switch so
+    /// stale funder records never survive into the new network; the next poll or
+    /// explicit RefreshAsync rebuilds the snapshot from the new network's data.
+    /// </summary>
+    public void Reset()
+    {
+        lock (_stateLock)
+        {
+            _snapshot = Array.Empty<FunderRecord>();
+            _previousStatuses = null;
+            _locallyApproved.Clear();
+            HasLoaded = false;
+        }
+
+        Avalonia.Threading.Dispatcher.UIThread.Post(() => Updated?.Invoke());
+    }
+
+    /// <summary>
     /// Mark a request as approved locally (optimistic). The snapshot keeps reporting
     /// the synced status, but <see cref="EffectiveStatus"/> overlays this until the
     /// approval DM is visible on relays — prevents the badge/tab flipping back to
