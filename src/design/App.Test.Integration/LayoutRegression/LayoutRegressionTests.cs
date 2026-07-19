@@ -3,9 +3,14 @@ using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using FluentAssertions;
 using App.Test.Integration.Helpers;
+using App.UI.Sections.FindProjects;
 using App.UI.Sections.Funders;
+using App.UI.Sections.Funds;
+using App.UI.Sections.Home;
 using App.UI.Sections.MyProjects;
+using App.UI.Sections.MyProjects.EditProfile;
 using App.UI.Sections.Portfolio;
+using App.UI.Sections.Settings;
 using App.UI.Shared;
 using App.UI.Shared.Controls;
 using Microsoft.Extensions.DependencyInjection;
@@ -161,6 +166,231 @@ public class LayoutRegressionTests
     }
 
     // ═══════════════════════════════════════════════════════════════════
+    // HomeView — static hero/cards content, responsive grid restructure
+    // ═══════════════════════════════════════════════════════════════════
+
+    [AvaloniaTheory]
+    [MemberData(nameof(Viewports))]
+    public void HomeView_has_no_overlaps_or_overflow(double width, double height)
+    {
+        var view = new HomeView(new HomeViewModel());
+
+        var violations = RenderAndAudit(view, width, height);
+
+        violations.Should().BeEmpty(
+            $"HomeView must not have overlapping/overflowing elements at {width}x{height}:\n" +
+            string.Join("\n", violations));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // FindProjectsView — card grid + search strip + load-more footer
+    // ═══════════════════════════════════════════════════════════════════
+
+    [AvaloniaTheory]
+    [MemberData(nameof(Viewports))]
+    public void FindProjectsView_has_no_overlaps_or_overflow(double width, double height)
+    {
+        var vm = global::App.App.Services.GetRequiredService<FindProjectsViewModel>();
+        // Deterministic worst case: skip the async relay load's UI states and
+        // populate the grid ourselves (long names, error strip, load-more visible).
+        vm.IsInitialLoad = false;
+        vm.IsLoading = false;
+        vm.HasMoreItems = true;
+        vm.SearchError = "Search failed: this is a fairly long error message that must wrap on phones";
+        vm.Projects.Clear();
+        for (int i = 0; i < 4; i++)
+        {
+            vm.Projects.Add(CreateWorstCaseProjectItem());
+        }
+
+        var view = new FindProjectsView(vm);
+
+        var violations = RenderAndAudit(view, width, height);
+
+        violations.Should().BeEmpty(
+            $"FindProjectsView must not have overlapping/overflowing elements at {width}x{height}:\n" +
+            string.Join("\n", violations));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // ProjectDetailView — header, stats, FAQ/members/media accordions
+    // ═══════════════════════════════════════════════════════════════════
+
+    [AvaloniaTheory]
+    [MemberData(nameof(Viewports))]
+    public void ProjectDetailView_has_no_overlaps_or_overflow(double width, double height)
+    {
+        var vm = CreateWorstCaseProjectItem();
+        var view = new ProjectDetailView { DataContext = vm };
+
+        var violations = RenderAndAudit(view, width, height);
+
+        violations.Should().BeEmpty(
+            $"ProjectDetailView must not have overlapping/overflowing elements at {width}x{height}:\n" +
+            string.Join("\n", violations));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // InvestPageView — amount entry, quick amounts, stage breakdown
+    // ═══════════════════════════════════════════════════════════════════
+
+    [AvaloniaTheory]
+    [MemberData(nameof(Viewports))]
+    public void InvestPageView_has_no_overlaps_or_overflow(double width, double height)
+    {
+        var factory = global::App.App.Services
+            .GetRequiredService<Func<ProjectItemViewModel, InvestPageViewModel>>();
+        var vm = factory(CreateWorstCaseProjectItem());
+        vm.InvestmentAmount = "0.12345678";
+
+        var view = new InvestPageView { DataContext = vm };
+
+        var violations = RenderAndAudit(view, width, height);
+
+        violations.Should().BeEmpty(
+            $"InvestPageView must not have overlapping/overflowing elements at {width}x{height}:\n" +
+            string.Join("\n", violations));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // PortfolioView — investment cards, totals, penalties
+    // ═══════════════════════════════════════════════════════════════════
+
+    [AvaloniaTheory]
+    [MemberData(nameof(Viewports))]
+    public void PortfolioView_has_no_overlaps_or_overflow(double width, double height)
+    {
+        // PortfolioViewModel is a process-wide singleton: populate deterministically
+        // and restore the empty state afterwards so other tests aren't affected.
+        var vm = global::App.App.Services.GetRequiredService<PortfolioViewModel>();
+        vm.Investments.Clear();
+        vm.Investments.Add(CreateWorstCaseInvestment());
+        vm.Investments.Add(CreateWorstCaseInvestment());
+        vm.HasInvestments = true;
+        vm.IsLoading = false;
+
+        try
+        {
+            var view = new PortfolioView(vm);
+
+            var violations = RenderAndAudit(view, width, height);
+
+            violations.Should().BeEmpty(
+                $"PortfolioView must not have overlapping/overflowing elements at {width}x{height}:\n" +
+                string.Join("\n", violations));
+        }
+        finally
+        {
+            vm.Investments.Clear();
+            vm.HasInvestments = false;
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // FundsView — wallet empty state + stats cards
+    // ═══════════════════════════════════════════════════════════════════
+
+    [AvaloniaTheory]
+    [MemberData(nameof(Viewports))]
+    public void FundsView_empty_state_has_no_overlaps_or_overflow(double width, double height)
+    {
+        var vm = global::App.App.Services.GetRequiredService<FundsViewModel>();
+        var view = new FundsView(vm);
+
+        var violations = RenderAndAudit(view, width, height);
+
+        violations.Should().BeEmpty(
+            $"FundsView must not have overlapping/overflowing elements at {width}x{height}:\n" +
+            string.Join("\n", violations));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // SettingsView — indexer/relay/explorer lists, network card
+    // ═══════════════════════════════════════════════════════════════════
+
+    [AvaloniaTheory]
+    [MemberData(nameof(Viewports))]
+    public void SettingsView_has_no_overlaps_or_overflow(double width, double height)
+    {
+        var vm = global::App.App.Services.GetRequiredService<SettingsViewModel>();
+        var view = new SettingsView(vm);
+
+        var violations = RenderAndAudit(view, width, height);
+
+        violations.Should().BeEmpty(
+            $"SettingsView must not have overlapping/overflowing elements at {width}x{height}:\n" +
+            string.Join("\n", violations));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // CreateProjectView — all 6 wizard steps at phone + desktop widths
+    // ═══════════════════════════════════════════════════════════════════
+
+    public static TheoryData<int, double> CreateProjectSteps
+    {
+        get
+        {
+            var data = new TheoryData<int, double>();
+            for (int step = 1; step <= 6; step++)
+            {
+                data.Add(step, 360);
+                data.Add(step, 768);
+                data.Add(step, 1280);
+            }
+
+            return data;
+        }
+    }
+
+    [AvaloniaTheory]
+    [MemberData(nameof(CreateProjectSteps))]
+    public void CreateProjectView_step_has_no_overlaps_or_overflow(int step, double width)
+    {
+        var vm = global::App.App.Services.GetRequiredService<CreateProjectViewModel>();
+        vm.SelectProjectType("fund");
+        vm.ProjectName = "A Very Long Project Name That Stresses The Wizard Header Layout";
+        vm.ProjectAbout = new string('x', 240);
+        vm.GoToStep(step);
+
+        var view = new CreateProjectView { DataContext = vm };
+
+        var violations = RenderAndAudit(view, width, 900);
+
+        violations.Should().BeEmpty(
+            $"CreateProjectView step {step} must not have overlapping/overflowing elements at width {width}:\n" +
+            string.Join("\n", violations));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // EditProfileView — tabs (faq/members/media/relays) with long content
+    // ═══════════════════════════════════════════════════════════════════
+
+    [AvaloniaTheory]
+    [MemberData(nameof(Viewports))]
+    public void EditProfileView_has_no_overlaps_or_overflow(double width, double height)
+    {
+        var factory = global::App.App.Services
+            .GetRequiredService<Func<MyProjectItemViewModel, EditProfileViewModel>>();
+        // Bogus identifier: the VM's background profile fetch fails fast, and we
+        // populate the fields we care about deterministically here.
+        var vm = factory(new MyProjectItemViewModel
+        {
+            Name = "A Very Long Project Name That Should Wrap Not Overlay Anything",
+            Description = new string('x', 200),
+            ProjectType = "fund",
+            ProjectIdentifier = "angor1qtest000000000000000000000000000000000",
+        });
+
+        var view = new EditProfileView { DataContext = vm };
+
+        var violations = RenderAndAudit(view, width, height);
+
+        violations.Should().BeEmpty(
+            $"EditProfileView must not have overlapping/overflowing elements at {width}x{height}:\n" +
+            string.Join("\n", violations));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
     // Harness
     // ═══════════════════════════════════════════════════════════════════
 
@@ -254,5 +484,63 @@ public class LayoutRegressionTests
             InvestmentTransactionId = new string('a', 64),
             ProjectIdentifier = "angor1qtest000000000000000000000000000000000",
         };
+    }
+
+    /// <summary>
+    /// Worst-case project item POCO: fund-type, long strings, huge stats,
+    /// populated FAQ/members/media accordions, many dynamic stages.
+    /// No image URLs so nothing hits the network.
+    /// </summary>
+    private static ProjectItemViewModel CreateWorstCaseProjectItem()
+    {
+        var item = new ProjectItemViewModel
+        {
+            ProjectName = "An Extremely Long Project Name That Must Wrap Or Trim Not Break Layout",
+            ShortDescription = new string('y', 300),
+            Description = new string('d', 500),
+            ProfileDescription = new string('p', 400),
+            ProfileLoaded = true,
+            InvestorCount = 123456,
+            InvestorLabel = "Funders",
+            Raised = "21000000.00000000",
+            Target = "21000000.00000",
+            TargetLabel = "Goal:",
+            Progress = 100,
+            ProjectType = "Fund",
+            Status = "Funding Closed",
+            ProjectId = "angor1qtest000000000000000000000000000000000",
+            FounderKey = new string('f', 64),
+            NostrNpub = "npub1" + new string('n', 58),
+            StartDate = "09 Jul 2026",
+            EndDate = "Open Ended",
+            ExpiryDate = "01 Jan 2030",
+            PenaltyDays = "90",
+        };
+
+        for (int i = 1; i <= 5; i++)
+        {
+            item.FaqItems.Add(new ProjectFaqItemViewModel
+            {
+                Question = $"Question {i}: a fairly long question line that must wrap on phone widths?",
+                Answer = new string('a', 220),
+            });
+            item.MemberPubkeys.Add("npub1" + new string((char)('a' + i), 58));
+            item.MediaItems.Add(new ProjectMediaItemViewModel { Url = "", Type = "image" });
+        }
+
+        for (int i = 1; i <= 8; i++)
+        {
+            item.Stages.Add(new InvestmentStageViewModel
+            {
+                StageNumber = i,
+                Percentage = "12.5%",
+                ReleaseDate = "01 Jan 2027",
+                Amount = "0.06250000",
+                Status = "Not Spent",
+                StagePrefix = "Payment",
+            });
+        }
+
+        return item;
     }
 }

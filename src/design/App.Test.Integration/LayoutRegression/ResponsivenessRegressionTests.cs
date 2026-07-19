@@ -112,6 +112,69 @@ public class ResponsivenessRegressionTests
         }
     }
 
+    /// <summary>
+    /// Views that subscribe to LayoutModeService and dispose the subscription in
+    /// OnDetachedFromLogicalTree MUST re-create it in OnAttachedToLogicalTree —
+    /// sections are cached and re-attached on every section switch, and a missing
+    /// re-subscribe silently kills responsiveness for the rest of the session.
+    /// This asserts the private _layoutSubscription field is repopulated after a
+    /// detach/re-attach cycle for every responsive section view.
+    /// </summary>
+    [AvaloniaFact]
+    public void Responsive_views_recreate_layout_subscription_after_detach_and_reattach()
+    {
+        LayoutModeService.Instance.UpdateWidth(1280);
+
+        var views = new Control[]
+        {
+            new global::App.UI.Sections.Home.HomeView(new global::App.UI.Sections.Home.HomeViewModel()),
+            new global::App.UI.Sections.FindProjects.FindProjectsView(
+                global::App.App.Services.GetRequiredService<global::App.UI.Sections.FindProjects.FindProjectsViewModel>()),
+            new global::App.UI.Sections.FindProjects.InvestPageView(),
+            new global::App.UI.Sections.Funds.FundsView(
+                global::App.App.Services.GetRequiredService<global::App.UI.Sections.Funds.FundsViewModel>()),
+            new global::App.UI.Sections.Settings.SettingsView(
+                global::App.App.Services.GetRequiredService<global::App.UI.Sections.Settings.SettingsViewModel>()),
+            new global::App.UI.Sections.Portfolio.PortfolioView(
+                global::App.App.Services.GetRequiredService<global::App.UI.Sections.Portfolio.PortfolioViewModel>()),
+            new CreateProjectView
+            {
+                DataContext = global::App.App.Services.GetRequiredService<CreateProjectViewModel>(),
+            },
+            new global::App.UI.Sections.MyProjects.EditProfile.EditProfileView(),
+        };
+
+        foreach (var view in views)
+        {
+            var window = new Window { Width = 1280, Height = 900, Content = new ContentControl { Content = view } };
+            window.Show();
+            Dispatcher.UIThread.RunJobs();
+
+            try
+            {
+                var field = view.GetType().GetField("_layoutSubscription",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                field.Should().NotBeNull(
+                    $"{view.GetType().Name} is expected to keep its LayoutModeService subscription in _layoutSubscription");
+
+                // Simulate a section switch: detach, then re-attach.
+                var host = (ContentControl)window.Content!;
+                host.Content = null;
+                Dispatcher.UIThread.RunJobs();
+                host.Content = view;
+                Dispatcher.UIThread.RunJobs();
+
+                field!.GetValue(view).Should().NotBeNull(
+                    $"{view.GetType().Name} must re-create its layout subscription on re-attach — " +
+                    "views are cached across section switches and a dead subscription kills responsiveness");
+            }
+            finally
+            {
+                Cleanup(window);
+            }
+        }
+    }
+
     // ── helpers ──
 
     private static (ManageProjectContentView view, Window window) CreateManageView(double width)

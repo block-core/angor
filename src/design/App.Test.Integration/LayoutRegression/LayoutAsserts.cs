@@ -30,7 +30,10 @@ public static class LayoutAsserts
     /// </summary>
     private static bool IsIgnored(Control c) =>
         (c.Tag as string) == "LayoutTest.Ignore" ||
-        (c.Name?.EndsWith("_LayoutIgnore") ?? false);
+        (c.Name?.EndsWith("_LayoutIgnore") ?? false) ||
+        // Popups are windowless overlays: their in-tree bounds are meaningless
+        // (they render in a separate top-level), so auditing them is pure noise.
+        c is Popup;
 
     public static List<string> FindViolations(Visual root)
     {
@@ -55,12 +58,29 @@ public static class LayoutAsserts
             var parentRect = ToRootRect(parentPanel, root);
             foreach (var child in children)
             {
+                // ScrollContentPresenter clips and pans its content by design (e.g. a
+                // swipeable tab strip wider than its viewport) — overflow is the feature.
+                // Its own descendants are still walked and audited normally.
+                if (child is ScrollContentPresenter)
+                    continue;
+
                 // Negative margins signal intentional overlap (e.g. overlapping avatar)
                 if (child.Margin.Left < 0 || child.Margin.Top < 0 ||
                     child.Margin.Right < 0 || child.Margin.Bottom < 0)
                     continue;
 
                 var childRect = ToRootRect(child, root);
+
+                // ItemsControl wraps each item in an invisible ContentPresenter that
+                // panels like UniformGrid may arrange with 1-2px rounding overflow.
+                // The user-visible element is the presenter's content (often inset by
+                // margins) — audit that instead of the chrome-less wrapper.
+                if (child is ContentPresenter presenter &&
+                    presenter.GetVisualChildren().OfType<Control>().FirstOrDefault(c => c.IsVisible) is { } inner)
+                {
+                    childRect = ToRootRect(inner, root);
+                }
+
                 if (childRect.Right > parentRect.Right + Tolerance ||
                     childRect.Bottom > parentRect.Bottom + Tolerance ||
                     childRect.X < parentRect.X - Tolerance ||
