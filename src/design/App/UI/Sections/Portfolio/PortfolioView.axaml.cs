@@ -124,9 +124,10 @@ public partial class PortfolioView : UserControl, ISectionView
         }
     }
 
+    /// <summary>Idempotent responsive-layout subscription — re-created on every logical-tree attach because OnDetachedFromLogicalTree disposes it (views are cached and re-attached on section switches).</summary>
     private void SubscribeToLayoutMode()
     {
-        _layoutSubscription?.Dispose();
+        if (_layoutSubscription != null) return;
         _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
             .Subscribe(ApplyResponsiveLayout);
     }

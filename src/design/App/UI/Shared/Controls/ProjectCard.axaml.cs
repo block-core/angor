@@ -107,6 +107,14 @@ public class ProjectCard : TemplatedControl
     public static readonly StyledProperty<string> CurrencySymbolProperty =
         AvaloniaProperty.Register<ProjectCard, string>(nameof(CurrencySymbol), "BTC");
 
+    /// <summary>
+    /// True while live funding stats (raised / investor count / progress) are still
+    /// loading from the indexer. The card shows a "Syncing…" affordance instead of
+    /// misleading zeros.
+    /// </summary>
+    public static readonly StyledProperty<bool> StatsPendingProperty =
+        AvaloniaProperty.Register<ProjectCard, bool>(nameof(StatsPending));
+
     public string? Banner
     {
         get => GetValue(BannerProperty);
@@ -213,5 +221,11 @@ public class ProjectCard : TemplatedControl
     {
         get => GetValue(CurrencySymbolProperty);
         set => SetValue(CurrencySymbolProperty, value);
+    }
+
+    public bool StatsPending
+    {
+        get => GetValue(StatsPendingProperty);
+        set => SetValue(StatsPendingProperty, value);
     }
 }

@@ -59,6 +59,18 @@ public class DerivationOperations : IDerivationOperations
             });
         }
 
+        // Guard against the ARM64 JIT derivation-collapse bug (and any future
+        // regression): 15 slots must yield 15 distinct project identifiers.
+        // Persisting collapsed keys silently breaks founder project discovery,
+        // so fail loudly instead — this is mainnet key material.
+        var distinctIds = founderKeyCollection.Keys.Select(k => k.ProjectIdentifier).Distinct().Count();
+        if (distinctIds != founderKeyCollection.Keys.Count)
+        {
+            throw new InvalidOperationException(
+                $"Project key derivation collapsed: {founderKeyCollection.Keys.Count} slots produced only {distinctIds} distinct project identifiers. " +
+                "Refusing to persist corrupted keys (see docs/ai-docs/taproot-arm64-jit-bug.md).");
+        }
+
         return founderKeyCollection;
 
     }
@@ -384,7 +396,12 @@ public class DerivationOperations : IDerivationOperations
         if (projectVersion >= 3)
         {
             var (hi, lo) = DeriveProjectIndicesV2(founderKey);
-            var angorKey = extKey.Derive(hi).Derive(lo).PubKey;
+            // Bip32PublicDerivationHelper instead of ExtPubKey.Derive: the ARM64 JIT
+            // miscompiles NBitcoin's CKDpub and returns index-independent children,
+            // collapsing every project id to the same value on Android.
+            var hiKey = Bip32PublicDerivationHelper.DerivePublicChild(extKey, hi);
+            var hiExt = new ExtPubKey(hiKey, DeriveChildChainCode(extKey, hi));
+            var angorKey = Bip32PublicDerivationHelper.DerivePublicChild(hiExt, lo);
 
             var encoder = Encoders.Bech32("angor");
             var address = encoder.Encode(0, angorKey.WitHash.ToBytes());
@@ -394,7 +411,7 @@ public class DerivationOperations : IDerivationOperations
         }
 
         var upi = this.DeriveUniqueProjectIdentifier(founderKey);
-        var legacyAngorKey = extKey.Derive(upi).PubKey;
+        var legacyAngorKey = Bip32PublicDerivationHelper.DerivePublicChild(extKey, upi);
 
         var legacyEncoder = Encoders.Bech32("angor");
         var legacyAddress = legacyEncoder.Encode(0, legacyAngorKey.WitHash.ToBytes());
@@ -402,6 +419,22 @@ public class DerivationOperations : IDerivationOperations
         _logger.LogDebug("DeriveAngorKey - founderKey={FounderKey}, upi={Upi}, address={Address}", founderKey, upi, legacyAddress);
 
         return legacyAddress;
+    }
+
+    /// <summary>BIP32 CKDpub chain-code half (I_R) — needed to chain two non-hardened levels.</summary>
+    private static byte[] DeriveChildChainCode(ExtPubKey parent, uint index)
+    {
+        var data = new byte[37];
+        parent.PubKey.ToBytes().CopyTo(data, 0);
+        data[33] = (byte)(index >> 24);
+        data[34] = (byte)(index >> 16);
+        data[35] = (byte)(index >> 8);
+        data[36] = (byte)index;
+        using var hmac = new System.Security.Cryptography.HMACSHA512(parent.ChainCode);
+        var i = hmac.ComputeHash(data);
+        var ir = new byte[32];
+        Array.Copy(i, 32, ir, 0, 32);
+        return ir;
     }
 
     public Script AngorKeyToScript(string angorKey)

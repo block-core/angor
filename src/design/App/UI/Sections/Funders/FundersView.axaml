@@ -25,6 +25,16 @@
             <Setter Property="IsVisible" Value="False" />
         </Style>
 
+        <!-- Empty-state auto-approve card: desktop margin lives here (not inline)
+             so the Mobile override below can win — inline properties beat styles. -->
+        <Style Selector="Border.EmptyAutoApproveCard">
+            <Setter Property="Margin" Value="24" />
+        </Style>
+        <!-- Mobile: clear the bottom tab bar (same 96px clearance the list uses) -->
+        <Style Selector="funders|FundersView.Mobile Border.EmptyAutoApproveCard">
+            <Setter Property="Margin" Value="16,24,16,96" />
+        </Style>
+
         <Style Selector="Border.FilterTabsOuter">
             <Setter Property="Background" Value="{DynamicResource FundersFilterRailBg}" />
             <Setter Property="BorderBrush" Value="Transparent" />
@@ -212,12 +222,12 @@
                 </i:Icon>
             </Button>
             <!-- Auto-approve toggle — available even before the first request arrives -->
-            <Border Background="{DynamicResource Surface}"
+            <Border Classes="EmptyAutoApproveCard"
+                    Background="{DynamicResource Surface}"
                     BorderBrush="{DynamicResource Stroke}"
                     BorderThickness="1"
                     CornerRadius="12"
                     Padding="16,12"
-                    Margin="24"
                     MaxWidth="480"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Bottom">
@@ -410,15 +420,20 @@
                     <Border Name="TabRejected" IsVisible="False" />
                 </Grid>
 
-                <!-- ═══════════════════════════════════════ -->
-                <!-- EMPTY FILTER STATE                      -->
-                <!-- Shown when filteredSignatures is empty   -->
-                <!-- Vue: flex-1 flex items-center justify-center min-h-[400px] -->
-                <!-- ═══════════════════════════════════════ -->
-                <Panel Name="FilterEmptyPanel" IsVisible="False"
-                       MinHeight="400">
+                <!-- (Per-tab empty state moved to the fill area below so it centers vertically) -->
+
+            </StackPanel>
+
+            <!-- ═══════════════════════════════════════ -->
+            <!-- FILL AREA: empty filter state OR cards  -->
+            <!-- Panel fills the remaining height, so    -->
+            <!-- the empty state centers vertically      -->
+            <!-- ═══════════════════════════════════════ -->
+            <Panel>
+                <!-- EMPTY FILTER STATE — shown when filteredSignatures is empty -->
+                <Panel Name="FilterEmptyPanel" IsVisible="False">
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
-                                Spacing="12" MaxWidth="400">
+                                Spacing="12" MaxWidth="400" Margin="24">
                         <Border Width="64" Height="64" CornerRadius="8"
                                 Background="{DynamicResource SurfaceLow}"
                                 HorizontalAlignment="Center"
@@ -432,12 +447,12 @@
                                       Width="24" Height="24" Stretch="Uniform" />
                             </Viewbox>
                         </Border>
-                        <TextBlock Text="No Funders Yet"
+                        <TextBlock Text="{Binding FilterEmptyTitle}"
                                    FontSize="20"
                                    FontWeight="Bold"
                                    Foreground="{DynamicResource TextStrong}"
                                    HorizontalAlignment="Center" />
-                        <TextBlock Text="When investors fund your projects, they'll appear here. You can review and approve funding requests from this page."
+                        <TextBlock Text="{Binding FilterEmptyDescription}"
                                    FontSize="14"
                                    Foreground="{DynamicResource TextMuted}"
                                    TextWrapping="Wrap"
@@ -445,8 +460,6 @@
                                    HorizontalAlignment="Center" />
                     </StackPanel>
                 </Panel>
-
-            </StackPanel>
 
             <!-- ═══════════════════════════════════════ -->
             <!-- SIGNATURE REQUEST CARDS (virtualized)   -->
@@ -534,17 +547,22 @@
                                                 </StackPanel>
                                             </Button>
 
-                                            <!-- Approved status (approved only) -->
-                                            <!-- Vue: bg-green-100 text-green-700 opacity-70 cursor-not-allowed -->
+                                            <!-- Approved status — theme-aware green pill (rounded, subtle
+                                                 tint + border; the old hardcoded #1A4B7C5A read badly on dark) -->
                                             <Border IsVisible="{Binding IsApproved}"
                                                     Classes="FundersAction MobileAction"
-                                                    Background="#1A4B7C5A"
+                                                    Background="{DynamicResource PillGreenBg}"
+                                                    BorderBrush="{DynamicResource StagePillBorder}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="8"
+                                                    Padding="16,0"
                                                     VerticalAlignment="Center">
                                                 <StackPanel Orientation="Horizontal" Spacing="8"
+                                                            HorizontalAlignment="Center"
                                                             VerticalAlignment="Center">
                                                     <Viewbox Width="16" Height="16" VerticalAlignment="Center">
                                                         <Path Data="{StaticResource Checkmark}"
-                                                              Stroke="{DynamicResource PrimaryGreenBrush}"
+                                                              Stroke="{DynamicResource StagePillText}"
                                                               StrokeThickness="2"
                                                               StrokeLineCap="Round"
                                                               StrokeJoin="Round"
@@ -553,7 +571,7 @@
                                                     <TextBlock Text="{Binding ApprovedLabel}"
                                                                FontSize="14"
                                                                FontWeight="SemiBold"
-                                                               Foreground="{DynamicResource PrimaryGreenBrush}"
+                                                               Foreground="{DynamicResource StagePillText}"
                                                                VerticalAlignment="Center" />
                                                 </StackPanel>
                                             </Border>
@@ -672,8 +690,10 @@
                                                        Foreground="{DynamicResource TextMuted}"
                                                        TextTrimming="CharacterEllipsis" />
 
-                                            <!-- Vue: text-lg font-bold — amount -->
-                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <!-- Vue: text-lg font-bold — amount (or syncing state while
+                                                 the indexer hasn't returned the funding tx yet) -->
+                                            <StackPanel Orientation="Horizontal" Spacing="4"
+                                                        IsVisible="{Binding IsAmountKnown}">
                                                 <TextBlock Text="{Binding Amount}"
                                                            FontSize="18"
                                                            FontWeight="Bold"
@@ -682,6 +702,18 @@
                                                            FontSize="18"
                                                            FontWeight="Bold"
                                                            Foreground="{DynamicResource TextStrong}" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Spacing="6"
+                                                        IsVisible="{Binding IsAmountPending}">
+                                                <i:Icon Value="fa-solid fa-arrows-rotate"
+                                                        FontSize="12"
+                                                        Foreground="{DynamicResource TextMuted}"
+                                                        VerticalAlignment="Center" />
+                                                <TextBlock Text="Syncing amount…"
+                                                           FontSize="15"
+                                                           FontStyle="Italic"
+                                                           Foreground="{DynamicResource TextMuted}"
+                                                           VerticalAlignment="Center" />
                                             </StackPanel>
 
                                             <!-- Vue: calendar icon + date/time text-sm -->
@@ -703,7 +735,8 @@
 
                                     <StackPanel Classes="MobileSignatureLayout" Spacing="14" Margin="0,0,0,16">
                                         <Grid ColumnDefinitions="*,Auto">
-                                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4">
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4"
+                                                        IsVisible="{Binding IsAmountKnown}">
                                                 <TextBlock Text="{Binding Amount}"
                                                            FontSize="18"
                                                            FontWeight="Bold"
@@ -712,6 +745,18 @@
                                                            FontSize="18"
                                                            FontWeight="Bold"
                                                            Foreground="{DynamicResource TextStrong}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6"
+                                                        IsVisible="{Binding IsAmountPending}">
+                                                <i:Icon Value="fa-solid fa-arrows-rotate"
+                                                        FontSize="12"
+                                                        Foreground="{DynamicResource TextMuted}"
+                                                        VerticalAlignment="Center" />
+                                                <TextBlock Text="Syncing amount…"
+                                                           FontSize="15"
+                                                           FontStyle="Italic"
+                                                           Foreground="{DynamicResource TextMuted}"
+                                                           VerticalAlignment="Center" />
                                             </StackPanel>
 
                                             <StackPanel Grid.Column="1">
@@ -725,11 +770,13 @@
                                                 </Border>
                                                 <Border Classes="SignatureStatusPill"
                                                         IsVisible="{Binding IsApproved}"
-                                                        Background="#1A7C4B">
+                                                        Background="{DynamicResource PillGreenBg}"
+                                                        BorderBrush="{DynamicResource StagePillBorder}"
+                                                        BorderThickness="1">
                                                     <TextBlock Text="{Binding ApprovedLabel}"
                                                                FontSize="12"
                                                                FontWeight="Bold"
-                                                               Foreground="White" />
+                                                               Foreground="{DynamicResource StagePillText}" />
                                                 </Border>
                                                 <Border Classes="SignatureStatusPill"
                                                         IsVisible="{Binding IsRejected}"
@@ -866,11 +913,14 @@
                                                      Grid.ColumnSpan="3"
                                                      IsVisible="{Binding IsApproved}"
                                                      Classes="FundersAction MobileAction"
-                                                     Background="#D9FBE7">
+                                                     Background="{DynamicResource PillGreenBg}"
+                                                     BorderBrush="{DynamicResource StagePillBorder}"
+                                                     BorderThickness="1"
+                                                     CornerRadius="8">
                                                  <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
                                                      <Viewbox Width="16" Height="16" VerticalAlignment="Center">
                                                          <Path Data="{StaticResource Checkmark}"
-                                                               Stroke="{DynamicResource PrimaryGreenBrush}"
+                                                               Stroke="{DynamicResource StagePillText}"
                                                                StrokeThickness="2"
                                                                StrokeLineCap="Round"
                                                                StrokeJoin="Round"
@@ -879,7 +929,7 @@
                                                      <TextBlock Text="{Binding ApprovedLabel}"
                                                                 FontSize="14"
                                                                 FontWeight="SemiBold"
-                                                                Foreground="{DynamicResource PrimaryGreenBrush}"
+                                                                Foreground="{DynamicResource StagePillText}"
                                                                 VerticalAlignment="Center" />
                                                  </StackPanel>
                                              </Border>
@@ -959,7 +1009,8 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
+            </Panel>
 
-            </DockPanel>
+        </DockPanel>
     </Panel>
 </UserControl>

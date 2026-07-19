@@ -46,6 +46,13 @@ public partial class SignatureRequestViewModel : ReactiveObject
     /// <summary>Investment amount in sats</summary>
     public long AmountSats { get; set; }
 
+    /// <summary>True while the amount is still unknown (0). Happens for direct
+    /// below-threshold investments when the indexer hasn't returned the funding
+    /// transaction yet — the card shows a "Syncing…" affordance instead of a
+    /// misleading "0.0000 BTC" until the next monitor poll fills it in.</summary>
+    public bool IsAmountPending => AmountSats == 0;
+    public bool IsAmountKnown => AmountSats > 0;
+
     /// <summary>Whether the investment transaction is confirmed on-chain (funded).</summary>
     public bool IsFunded { get; set; }
 
@@ -86,6 +93,25 @@ public partial class FundersViewModel : ReactiveObject, IDisposable, INetworkSwi
     public int ApprovedCount => GetAllViewModels().Count(s => s.Status == SignatureStatus.Approved.ToLowerString());
     public int RejectedCount => GetAllViewModels().Count(s => s.Status == SignatureStatus.Rejected.ToLowerString());
     public bool HasRejected => RejectedCount > 0;
+
+    /// <summary>Title for the per-tab empty state. The Waiting tab distinguishes
+    /// "no funders at all" from "no *new* funders" (approved ones exist).</summary>
+    public string FilterEmptyTitle => CurrentFilter switch
+    {
+        "waiting" when ApprovedCount > 0 || RejectedCount > 0 => "No New Funders",
+        "approved" when WaitingCount > 0 || RejectedCount > 0 => "No Approved Funders",
+        _ => "No Funders Yet"
+    };
+
+    /// <summary>Description for the per-tab empty state.</summary>
+    public string FilterEmptyDescription => CurrentFilter switch
+    {
+        "waiting" when ApprovedCount > 0 || RejectedCount > 0 =>
+            "You're all caught up. New funding requests will appear here for your approval.",
+        "approved" when WaitingCount > 0 || RejectedCount > 0 =>
+            "Requests you approve will appear here.",
+        _ => "When investors fund your projects, they'll appear here. You can review and approve funding requests from this page."
+    };
 
     /// <summary>True while any load/refresh is in flight.</summary>
     public bool IsBusy => IsLoading || IsRefreshing;
@@ -317,6 +343,8 @@ public partial class FundersViewModel : ReactiveObject, IDisposable, INetworkSwi
         this.RaisePropertyChanged(nameof(ApprovedCount));
         this.RaisePropertyChanged(nameof(RejectedCount));
         this.RaisePropertyChanged(nameof(HasRejected));
+        this.RaisePropertyChanged(nameof(FilterEmptyTitle));
+        this.RaisePropertyChanged(nameof(FilterEmptyDescription));
     }
 
     /// <summary>

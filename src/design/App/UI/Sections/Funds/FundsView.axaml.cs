@@ -32,7 +32,7 @@ public partial class FundsView : UserControl, ISectionView
     {
         InitializeComponent();
         CacheControls();
-        SubscribeLayout();
+        SubscribeToLayoutMode();
     }
 
     public FundsView(FundsViewModel vm)
@@ -49,7 +49,7 @@ public partial class FundsView : UserControl, ISectionView
             Classes.Add("Mobile");
 
         CacheControls();
-        SubscribeLayout();
+        SubscribeToLayoutMode();
 
         // Handle button clicks from EmptyState "Add Wallet", populated "Add Wallet",
         // and WalletCard action buttons (BtnSend, BtnReceive, BtnUtxo)
@@ -72,8 +72,10 @@ public partial class FundsView : UserControl, ISectionView
         _scrollableView = this.FindControl<ScrollableView>("FundsScrollableView");
     }
 
-    private void SubscribeLayout()
+    /// <summary>Idempotent responsive-layout subscription — re-created on every logical-tree attach because OnDetachedFromLogicalTree disposes it (views are cached and re-attached on section switches).</summary>
+    private void SubscribeToLayoutMode()
     {
+        if (_layoutSubscription != null) return;
         _layoutSubscription = LayoutModeService.Instance
             .WhenAnyValue(x => x.IsCompact)
             .Subscribe(ApplyResponsiveLayout);
@@ -160,6 +162,10 @@ public partial class FundsView : UserControl, ISectionView
     protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
     {
         base.OnAttachedToLogicalTree(e);
+
+        // Re-create the responsive subscription — views are cached and re-attached on
+        // section switches; the subscription is disposed on detach.
+        SubscribeToLayoutMode();
 
         // Reload wallet data when the view re-enters the tree (e.g. after wipe or navigation)
         // On mobile with SectionPanel, OnBecameActive() handles this instead.
