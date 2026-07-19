@@ -29,7 +29,7 @@ public partial class FindProjectsView : UserControl, ISectionView
     private TextBlock? _discoverProjectsTitle;
     private Border? _searchContainer;
     private TextBox? _searchBox;
-    private StackPanel? _searchErrorContainer;
+    private Grid? _searchErrorContainer;
 
     // Lazy-mounted drill-down children — materialised on first visibility
     // to avoid the ~1800-line XAML inflate cost on the initial tab switch.
@@ -57,7 +57,7 @@ public partial class FindProjectsView : UserControl, ISectionView
         _headerGrid = this.FindControl<Grid>("FindProjectsHeaderGrid");
         _discoverProjectsTitle = this.FindControl<TextBlock>("DiscoverProjectsTitle");
         _searchContainer = this.FindControl<Border>("SearchContainer");
-        _searchErrorContainer = this.FindControl<StackPanel>("SearchErrorContainer");
+        _searchErrorContainer = this.FindControl<Grid>("SearchErrorContainer");
 
         // Wire refresh button
         var refreshBtn = this.FindControl<Button>("RefreshProjectsButton");

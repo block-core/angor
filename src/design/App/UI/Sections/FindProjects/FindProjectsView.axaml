@@ -167,25 +167,28 @@
                             </Button>
                         </Grid>
                     </Border>
-                    <!-- Search error message -->
-                    <StackPanel Name="SearchErrorContainer"
-                                Grid.Row="1" Grid.Column="1"
-                                Orientation="Horizontal"
-                                Spacing="6"
-                                Margin="18,6,0,0"
-                                IsVisible="{Binding SearchError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                    <!-- Search error message. Grid (not horizontal StackPanel) so the
+                         text gets a bounded width and TextWrapping actually engages
+                         on phone widths instead of overflowing the container. -->
+                    <Grid Name="SearchErrorContainer"
+                          Grid.Row="1" Grid.Column="1"
+                          ColumnDefinitions="Auto,*"
+                          Margin="18,6,0,0"
+                          IsVisible="{Binding SearchError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                         <i:Icon Value="fa-solid fa-circle-info"
                                 FontSize="11"
                                 Foreground="{DynamicResource TextMuted}"
+                                Margin="0,0,6,0"
                                 VerticalAlignment="Center" />
                         <TextBlock Name="SearchErrorText"
+                                   Grid.Column="1"
                                    Text="{Binding SearchError}"
                                    Foreground="{DynamicResource TextMuted}"
                                    FontSize="12"
                                    FontWeight="Medium"
                                    TextWrapping="Wrap"
                                    VerticalAlignment="Center" />
-                    </StackPanel>
+                    </Grid>
                     <Button Name="RefreshProjectsButton" Grid.Row="0" Grid.Column="2"
                             Classes="Primary Light MobileAction"
                             Padding="12,8"
