@@ -19,6 +19,7 @@
 @using Angor.Shared.Integration.Lightning.Models
 
 @inherits BaseComponent
+@implements IDisposable
 
 @inject IJSRuntime JS
 @inject ILogger<InvestView> _Logger
@@ -179,7 +180,7 @@
                 <p class="text-muted">
                     Your signature request was sent to the founder over Nostr.
                     As soon as the founder responds, your investment will be published automatically.
-                    You can keep this page open or come back later.
+                    This page checks for a response every 30 seconds — you can keep it open or come back later.
                 </p>
                 <div class="d-flex justify-content-center gap-2">
                     <button type="button" class="btn btn-outline-danger" @onclick="CancelInvestment">
@@ -269,6 +270,32 @@
                                 </button>
                             }
                         </div>
+
+                        <!-- Approval indicator (mirrors the desktop app's threshold status) -->
+                        @if (RequiresFounderApproval)
+                        {
+                            <div class="alert alert-warning d-flex align-items-center gap-2 mt-3 mb-0 py-2">
+                                <Icon IconName="shield-star" Width="18" Height="18" class="flex-shrink-0" />
+                                <small>
+                                    <strong>Requires founder approval.</strong>
+                                    The investment is sent to the founder to sign before it is published.
+                                    @if (FundApprovalThresholdBtc is decimal threshold)
+                                    {
+                                        <span> Amounts below @threshold @network.CoinTicker publish instantly.</span>
+                                    }
+                                </small>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-success d-flex align-items-center gap-2 mt-3 mb-0 py-2">
+                                <Icon IconName="circle-check" Width="18" Height="18" class="flex-shrink-0" />
+                                <small>
+                                    <strong>No approval needed.</strong>
+                                    This investment publishes instantly once payment is received.
+                                </small>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -920,6 +947,10 @@
     // Auto-publish guard
     private bool autoPublishStarted;
 
+    // Periodic signature polling while waiting for founder approval
+    private CancellationTokenSource? signaturePollCts;
+    private static readonly TimeSpan SignaturePollInterval = TimeSpan.FromSeconds(30);
+
     // Network auto-detection guard (retry on the alternate network at most once)
     private bool networkRetryAttempted;
 
@@ -943,6 +974,25 @@
     private List<StageBreakdown> StagesBreakdown { get; set; } = new();
 
     private decimal[] AmountPresets = { 0.001m, 0.005m, 0.01m, 0.05m, 0.1m };
+
+    /// <summary>
+    /// Whether the current amount will need the founder to sign before publishing.
+    /// Uses the same shared threshold logic as Send(): Invest always needs approval,
+    /// Fund only above the penalty threshold, Subscribe never.
+    /// </summary>
+    private bool RequiresFounderApproval => project?.ProjectInfo?.ProjectType switch
+    {
+        ProjectType.Invest => true,
+        ProjectType.Fund => _InvestorTransactionActions.IsInvestmentAbovePenaltyThreshold(
+            project.ProjectInfo, Investment.InvestmentAmountBtc.ToUnitSatoshi()),
+        _ => false
+    };
+
+    /// <summary>The Fund project's approval threshold in BTC, when one is configured.</summary>
+    private decimal? FundApprovalThresholdBtc =>
+        project?.ProjectInfo is { ProjectType: ProjectType.Fund, PenaltyThreshold: > 0 } info
+            ? Money.Satoshis(info.PenaltyThreshold.Value).ToUnit(MoneyUnit.BTC)
+            : null;
 
     private bool ShowPatternSelector => AvailablePatterns?.Any() == true;
     private List<DynamicStagePattern>? AvailablePatterns { get; set; }
@@ -1019,8 +1069,66 @@
         if (firstRender && walletAvailable)
         {
             await RefreshSignatures();
+            StartSignaturePolling();
             StateHasChanged();
         }
+    }
+
+    /// <summary>
+    /// While an investment is waiting for founder approval, re-check the relays every
+    /// 30 seconds (same as clicking "Check Now"). Stops on its own once the state
+    /// changes (approved/cancelled/published) or the page is disposed.
+    /// </summary>
+    private void StartSignaturePolling()
+    {
+        if (signaturePollCts != null)
+            return; // already polling
+
+        if (project is not InvestorProject waiting || !waiting.WaitingForFounderResponse())
+            return;
+
+        signaturePollCts = new CancellationTokenSource();
+        var token = signaturePollCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                while (!token.IsCancellationRequested)
+                {
+                    await Task.Delay(SignaturePollInterval, token);
+
+                    if (invested || project is not InvestorProject stillWaiting || !stillWaiting.WaitingForFounderResponse())
+                        break;
+
+                    if (!passwordComponent.HasPassword())
+                        continue; // cannot decrypt without the key; keep waiting
+
+                    _Logger.LogInformation("Auto-checking for founder signatures...");
+                    await InvokeAsync(ScanForPendingSignatures);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // page disposed or flow completed
+            }
+            catch (Exception ex)
+            {
+                _Logger.LogWarning(ex, "Signature polling stopped unexpectedly");
+            }
+            finally
+            {
+                signaturePollCts?.Dispose();
+                signaturePollCts = null;
+            }
+        }, token);
+    }
+
+    public void Dispose()
+    {
+        signaturePollCts?.Cancel();
+        invoiceMonitorCts?.Cancel();
+        lightningMonitorCts?.Cancel();
     }
 
     /// <summary>
@@ -1745,6 +1853,7 @@
                 signatures => HandleSignatureReceivedAsync(nostrPrivateKeyHex, signatures));
 
             notificationComponent.ShowNotificationMessage("Signature request sent", 5);
+            StartSignaturePolling();
         }
         catch (Exception e)
         {
