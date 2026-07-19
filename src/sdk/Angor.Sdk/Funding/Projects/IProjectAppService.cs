@@ -24,6 +24,12 @@ public interface IProjectAppService
     Task<Result<CreateProjectInfoResponse>> CreateProjectInfo(WalletId walletId, CreateProjectDto project, ProjectSeedDto projectSeedDto);
     Task<Result<CreateProjectResponse>> CreateProject(WalletId walletId, long selectedFee, CreateProjectDto project, string projectInfoEventId, ProjectSeedDto projectSeedDto);
     Task<Result<ProjectStatisticsDto>> GetProjectStatistics(ProjectId projectId);
+
+    /// <summary>
+    /// Gets per-investor share breakdown for a project, showing each investor's
+    /// total investment, share percentage, and amount claimed by the founder.
+    /// </summary>
+    Task<Result<GetInvestorShares.GetInvestorSharesResponse>> GetInvestorShares(ProjectId projectId);
     Task<Result<GetProjectRelays.GetProjectRelaysResponse>> GetRelaysForNpubAsync(string nostrPubKey);
     Task<Result<GetProjectInfoJson.GetProjectInfoJsonResponse>> GetProjectInfoJson(ProjectId projectId);
 

@@ -48,6 +48,22 @@ public class InvestedProjectDto
     /// Total number of unique investors in this project (from indexer stats).
     /// </summary>
     public int TotalInvestors { get; set; }
+
+    /// <summary>
+    /// This investor's share of the total project investment as a percentage (0-100).
+    /// For Fund projects, this is "as of now" since funds can always be added.
+    /// </summary>
+    public double SharePercentage { get; set; }
+
+    /// <summary>
+    /// Amount from this investor's share that has been claimed/spent by the founder (in sats).
+    /// </summary>
+    public long AmountClaimedByFounder { get; set; }
+
+    /// <summary>
+    /// Percentage of this investor's total that has been claimed by the founder (0-100).
+    /// </summary>
+    public double ClaimedPercentage { get; set; }
 }
 
 public enum FounderStatus

@@ -1,0 +1,188 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:portfolio="clr-namespace:App.UI.Sections.Portfolio"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="600"
+             x:Class="App.UI.Sections.Portfolio.InvestorBreakdownView"
+             x:DataType="portfolio:InvestorBreakdownViewModel">
+
+    <Border Classes="ModalCard Wide"
+            Padding="0">
+        <DockPanel>
+            <!-- Footer: Close button -->
+            <Border DockPanel.Dock="Bottom"
+                    BorderBrush="{DynamicResource Stroke}"
+                    BorderThickness="0,1,0,0"
+                    Padding="24,16">
+                <Button Name="CloseButton"
+                        Classes="Primary"
+                        HorizontalAlignment="Center"
+                        Padding="32,10">
+                    <TextBlock Text="Close"
+                               FontSize="14"
+                               FontWeight="SemiBold" />
+                </Button>
+            </Border>
+
+            <!-- Content -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          MaxHeight="500">
+                <StackPanel Spacing="20" Margin="24">
+
+                    <!-- Header -->
+                    <StackPanel Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <i:Icon Value="fa-solid fa-chart-pie"
+                                   FontSize="22"
+                                   Foreground="{DynamicResource PrimaryGreenBrush}"
+                                   VerticalAlignment="Center" />
+                            <TextBlock Text="Investor Breakdown"
+                                       FontSize="20"
+                                       FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding ProjectName}"
+                                   FontSize="14"
+                                   Foreground="{DynamicResource TextMuted}" />
+                    </StackPanel>
+
+                    <!-- Summary stats -->
+                    <Grid ColumnDefinitions="*,*">
+                        <Border Grid.Column="0"
+                                Background="{DynamicResource SurfaceLow}"
+                                BorderBrush="{DynamicResource Stroke}"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="16"
+                                Margin="0,0,8,0">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Total Invested"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextMuted}" />
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="{Binding TotalInvested}"
+                                               FontSize="18"
+                                               FontWeight="Bold"
+                                               Foreground="{DynamicResource TextStrong}" />
+                                    <TextBlock Text="{Binding CurrencySymbol}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               VerticalAlignment="Bottom" Margin="0,0,0,1" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="1"
+                                Background="{DynamicResource SurfaceLow}"
+                                BorderBrush="{DynamicResource Stroke}"
+                                BorderThickness="1"
+                                CornerRadius="12"
+                                Padding="16"
+                                Margin="8,0,0,0">
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Total Investors"
+                                           FontSize="12"
+                                           Foreground="{DynamicResource TextMuted}" />
+                                <TextBlock Text="{Binding TotalInvestors}"
+                                           FontSize="18"
+                                           FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Context note for Fund projects -->
+                    <Border Background="#1AF7931A"
+                            CornerRadius="8"
+                            Padding="12"
+                            IsVisible="{Binding IsFundType}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <i:Icon Value="fa-solid fa-circle-info"
+                                   FontSize="14"
+                                   Foreground="#F7931A"
+                                   VerticalAlignment="Top" Margin="0,2,0,0" />
+                            <TextBlock Text="{Binding ShareContextNote}"
+                                       FontSize="13"
+                                       Foreground="{DynamicResource TextMuted}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Table header -->
+                    <Grid ColumnDefinitions="40,*,120,100,100"
+                          Margin="0,4,0,0">
+                        <TextBlock Grid.Column="0" Text="#"
+                                   FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextMuted}" />
+                        <TextBlock Grid.Column="1" Text="Investor"
+                                   FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextMuted}" />
+                        <TextBlock Grid.Column="2" Text="Invested"
+                                   FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   HorizontalAlignment="Right" />
+                        <TextBlock Grid.Column="3" Text="Share"
+                                   FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   HorizontalAlignment="Right" />
+                        <TextBlock Grid.Column="4" Text="Claimed"
+                                   FontSize="12" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   HorizontalAlignment="Right" />
+                    </Grid>
+
+                    <Border Height="1" Background="{DynamicResource Stroke}" />
+
+                    <!-- Investor rows -->
+                    <ItemsControl ItemsSource="{Binding Investors}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="portfolio:InvestorShareRowViewModel">
+                                <Border Padding="0,8"
+                                        BorderBrush="{DynamicResource Stroke}"
+                                        BorderThickness="0,0,0,1">
+                                    <Grid ColumnDefinitions="40,*,120,100,100">
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding Rank}"
+                                                   FontSize="13"
+                                                   Foreground="{DynamicResource TextMuted}"
+                                                   VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding ShortKey}"
+                                                   FontSize="13"
+                                                   FontFamily="Consolas,Courier New,monospace"
+                                                   Foreground="{DynamicResource TextStrong}"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4"
+                                                    HorizontalAlignment="Right" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding TotalInvested}"
+                                                       FontSize="13"
+                                                       Foreground="{DynamicResource TextStrong}" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="3"
+                                                   Text="{Binding SharePercentage}"
+                                                   FontSize="13"
+                                                   FontWeight="Bold"
+                                                   Foreground="{DynamicResource PrimaryGreenBrush}"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="4"
+                                                   Text="{Binding ClaimedPercentage}"
+                                                   FontSize="13"
+                                                   Foreground="#F7931A"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
+    </Border>
+</UserControl>

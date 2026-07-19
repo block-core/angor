@@ -107,7 +107,12 @@ public static class GetInvestments
                         StartingDate = project.StartingDate,
                         EndDate = project.EndDate,
                         ProjectType = project.ProjectType,
-                        TotalInvestors = (int)(stats.stats?.InvestorCount ?? 0)
+                        TotalInvestors = (int)(stats.stats?.InvestorCount ?? 0),
+                        // Compute share percentage from already-fetched data.
+                        // For Fund projects this is "as of now" since new funds can be added.
+                        SharePercentage = ComputeSharePercentage(
+                            investment?.TotalAmount > 0 ? investment.TotalAmount : investmentRecord.InvestedAmountSats,
+                            stats.stats?.AmountInvested ?? 0)
                     };
 
                     if (investment != null && investment.TotalAmount > 0)
@@ -233,6 +238,14 @@ public static class GetInvestments
                 return InvestmentStatus.FounderSignaturesReceived;
 
             return InvestmentStatus.PendingFounderSignatures;
+        }
+
+        private static double ComputeSharePercentage(long myInvestment, long totalRaised)
+        {
+            if (totalRaised <= 0 || myInvestment <= 0)
+                return 0;
+
+            return Math.Round((double)myInvestment / totalRaised * 100, 2);
         }
     }
 }
