@@ -138,7 +138,7 @@
             <div class="d-flex flex-wrap gap-3 mt-3 small text-muted">
                 <span>Starts: <span class="fw-bold" style="color: var(--text);">@project.ProjectInfo.StartDate.ToString("dd MMM yyyy")</span></span>
                 <span>Expires: <span class="fw-bold" style="color: var(--text);">@project.ProjectInfo.ExpiryDate.ToString("dd MMM yyyy")</span></span>
-                <span>Stages: <span class="fw-bold" style="color: var(--text);">@(project.ProjectInfo.Stages?.Count ?? 0)</span></span>
+                <span>Stages: <span class="fw-bold" style="color: var(--text);">@((project.ProjectInfo.AllowDynamicStages ? SelectedPattern?.StageCount : project.ProjectInfo.Stages?.Count) ?? 0)</span></span>
                 <span>Penalty: <span class="fw-bold" style="color: var(--text);">@project.ProjectInfo.PenaltyDays days</span></span>
             </div>
         </div>
@@ -1826,25 +1826,35 @@
     /// </summary>
     private async Task HandleSignatureReceivedAsync(string? nostrPrivateKeyHex, string encryptedSignatures)
     {
-        if (project is not InvestorProject investorProject || investorProject.ReceivedFounderSignatures())
-            return;
-
-        var signatureJson = await encryption.DecryptNostrContentAsync(
-            nostrPrivateKeyHex, project.ProjectInfo.NostrPubKey, encryptedSignatures);
-
-        var res = serializer.Deserialize<SignatureInfo>(signatureJson);
-
-        if (res.ProjectIdentifier == investorProject.SignaturesInfo?.ProjectIdentifier)
+        try
         {
-            investorProject.SignaturesInfo.Signatures = res.Signatures;
-            StateHasChanged();
+            if (project is not InvestorProject investorProject || investorProject.ReceivedFounderSignatures())
+                return;
 
-            // Auto-publish — the user should not have to come back and click again.
-            if (!autoPublishStarted)
+            var signatureJson = await encryption.DecryptNostrContentAsync(
+                nostrPrivateKeyHex, project.ProjectInfo.NostrPubKey, encryptedSignatures);
+
+            var res = serializer.Deserialize<SignatureInfo>(signatureJson);
+
+            if (res.ProjectIdentifier == investorProject.SignaturesInfo?.ProjectIdentifier)
             {
-                autoPublishStarted = true;
-                await InvokeAsync(PublishSignedTransactionAsync);
+                investorProject.SignaturesInfo.Signatures = res.Signatures;
+                StateHasChanged();
+
+                // Auto-publish — the user should not have to come back and click again.
+                if (!autoPublishStarted)
+                {
+                    autoPublishStarted = true;
+                    await InvokeAsync(PublishSignedTransactionAsync);
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            // This runs as a relay-subscription callback — never let a failure vanish silently.
+            _Logger.LogError(ex, "Failed to process founder signature response");
+            notificationComponent.ShowErrorMessage($"Failed to process the founder's response: {ex.Message}", ex);
+            StateHasChanged();
         }
     }
 
