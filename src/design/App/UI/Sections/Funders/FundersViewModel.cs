@@ -6,6 +6,7 @@ using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Shared;
 using App.UI.Shared;
 using App.UI.Shared.Services;
+using App.UI.Shell;
 using Microsoft.Extensions.Logging;
 using Nostr.Client.Utils;
 
@@ -71,6 +72,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
     private readonly IFounderAppService _founderAppService;
     private readonly FundersMonitor _fundersMonitor;
     private readonly ICurrencyService _currencyService;
+    private readonly PrototypeSettings _settings;
     private readonly ILogger<FundersViewModel> _logger;
 
     [Reactive] private bool hasFunders;
@@ -119,12 +121,19 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
         IFounderAppService founderAppService,
         FundersMonitor fundersMonitor,
         ICurrencyService currencyService,
+        PrototypeSettings settings,
         ILogger<FundersViewModel> logger)
     {
         _founderAppService = founderAppService;
         _fundersMonitor = fundersMonitor;
         _currencyService = currencyService;
+        _settings = settings;
         _logger = logger;
+
+        // Reflect settings changes (including the async load at startup) into the toggle.
+        _settings.WhenAnyValue(x => x.IsAutoApproveEnabled)
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(AutoApproveEnabled)))
+            .DisposeWith(_disposables);
 
         this.WhenAnyValue(x => x.CurrentFilter)
             .Subscribe(_ => UpdateFilteredSignatures())
@@ -152,6 +161,18 @@ public partial class FundersViewModel : ReactiveObject, IDisposable
     }
 
     private void OnMonitorUpdated() => RebuildFromSnapshot();
+
+    /// <summary>
+    /// Founder auto-approve toggle. Persisted via <see cref="PrototypeSettings"/>;
+    /// the background <see cref="FundersMonitor"/> reacts to it — switching it on
+    /// triggers an immediate refresh + approval of everything pending, and every
+    /// subsequent background poll approves new requests as they arrive.
+    /// </summary>
+    public bool AutoApproveEnabled
+    {
+        get => _settings.IsAutoApproveEnabled;
+        set => _settings.IsAutoApproveEnabled = value;
+    }
 
     /// <summary>
     /// Load investment requests. If the monitor already has a warm snapshot the tab
