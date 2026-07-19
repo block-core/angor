@@ -2804,6 +2804,13 @@
             await JS.InvokeVoidAsync("localStorage.removeItem", EphemeralKeyStorageKey);
             _PasswordCacheService.Data = null;
 
+            // Investment records belong to the deleted wallet — without its keys they
+            // cannot be signed or recovered from this browser, so remove them as well.
+            foreach (var investment in storage.GetInvestmentProjects().ToList())
+            {
+                storage.RemoveInvestmentProject(investment.ProjectInfo.ProjectIdentifier);
+            }
+
             hasWallet = false;
             walletAvailable = false;
             walletAutoCreated = false;
@@ -2812,6 +2819,21 @@
             autoCreatedSeedWords = null;
             deleteWalletSeedWords = null;
             WalletBalance = new();
+
+            // Reset the page to the fresh not-invested state.
+            invested = false;
+            investedTransactionId = null;
+            autoPublishStarted = false;
+            project = SessionStorage.GetProjectById(ProjectId);
+
+            if (project?.ProjectInfo == null)
+            {
+                // Session cache is gone — do a full reload to refetch the project.
+                NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+                return;
+            }
+
+            OnProjectLoaded();
 
             showDeleteWalletModal = false;
             notificationComponent.ShowNotificationMessage("Wallet deleted from this browser", 5);
