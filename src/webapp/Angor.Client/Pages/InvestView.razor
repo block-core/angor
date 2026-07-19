@@ -1,4 +1,6 @@
+@page "/invest/{ProjectId}"
 @page "/investview/{ProjectId}"
+@layout EmptyLayout
 @using Angor.Shared
 @using Angor.Client.Storage
 @using Angor.Shared.Models
@@ -8,6 +10,7 @@
 @using Angor.Client.Models
 @using Angor.Shared.Networks
 @using System.Text.Json
+@using System.Security.Cryptography
 @using Angor.Shared.Utilities
 @using Angor.Client.Shared
 @using Angor.Shared.Protocol
@@ -16,9 +19,9 @@
 @using Angor.Shared.Integration.Lightning.Models
 
 @inherits BaseComponent
+@implements IDisposable
 
 @inject IJSRuntime JS
-@inject NavMenuState NavMenuState
 @inject ILogger<InvestView> _Logger
 @inject IDerivationOperations _derivationOperations
 @inject IClientStorage storage
@@ -45,26 +48,33 @@
 <NotificationComponent @ref="notificationComponent" />
 <PasswordComponent @ref="passwordComponent" />
 
+<!-- Standalone header (no app navigation) -->
+<header class="hub-header">
+    <a class="hub-brand" href="https://angor.io" target="_blank" rel="noopener">
+        <img src="/assets/img/angor-logo.svg" alt="Angor" />
+        <span>Angor Invest</span>
+    </a>
+    <span class="hub-network-badge @(network.IsMainnet ? "" : "testnet")">@network.Name</span>
+</header>
+
+@if (loadingProject)
+{
+    <div class="container mt-5 text-center">
+        <div class="spinner-border text-success" role="status"></div>
+        <p class="mt-3" style="color: var(--text-secondary);">Loading project...</p>
+    </div>
+    return;
+}
 
 @if (project == null)
 {
     <div class="container mt-4">
         <div class="alert alert-info d-flex align-items-center">
             <Icon IconName="info" Width="24" Height="24" class="me-2" />
-            <span>The project was not found.</span>
+            <span>@(loadError ?? "The project was not found.")</span>
         </div>
-    </div>
-    return;
-}
-
-@if (invested)
-{
-    <div class="container mt-4">
-        <div class="alert alert-success d-flex align-items-center gap-2">
-            <Icon IconName="circle-check" Width="24" Height="24" />
-            <div>
-                <strong>Investment Confirmed</strong> — You have already successfully invested in this project.
-            </div>
+        <div class="text-center mt-3">
+            <a class="hub-link" href="https://angor.io" target="_blank" rel="noopener">Browse projects on angor.io</a>
         </div>
     </div>
     return;
@@ -81,245 +91,98 @@
     return;
 }
 
-<!-- Investment View - Card Grid Layout -->
-<div class="container mt-4 invest-view-page">
+<div class="container mt-4 invest-view-page" style="max-width: 1000px;">
 
-    <div class="row g-4">
-
-        <!-- Investment Amount Card -->
-        <div class="col-md-6">
-            <div class="card h-100 shadow-sm" style="border-left: 4px solid var(--bs-warning);">
-                <div class="card-header bg-transparent d-flex align-items-center gap-2">
-                    <Icon IconName="bitcoin" Width="20" Height="20" />
-                    <h5 class="mb-0">Investment Amount</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Amount (@network.CoinTicker)</label>
-                        <div class="input-group">
-                            <input type="number"
-                                   class="form-control"
-                                   step="0.00000001"
-                                   min="0.001"
-                                   placeholder="0.00"
-                                   value="@Investment.InvestmentAmountBtc"
-                                   @oninput="OnAmountChanged" />
-                            <span class="input-group-text fw-bold">@network.CoinTicker</span>
-                        </div>
-                        <small class="text-muted">Minimum investment: 0.001 @network.CoinTicker</small>
-                    </div>
-
-                    <!-- Amount Presets -->
-                    <div class="d-flex flex-wrap gap-2 justify-content-end">
-                        @foreach (var preset in AmountPresets)
-                        {
-                            <button type="button"
-                                    class="btn btn-sm @(Investment.InvestmentAmountBtc == preset ? "btn-warning" : "btn-outline-warning")"
-                                    @onclick="() => SelectPreset(preset)">
-                                <div class="text-center">
-                                    <div class="fw-bold">@preset</div>
-                                    <div class="small">@network.CoinTicker</div>
-                                </div>
-                            </button>
-                        }
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Funding Pattern Card (conditionally shown) -->
-        @if (ShowPatternSelector && AvailablePatterns?.Any() == true)
+    <!-- Project summary card -->
+    <div class="card hub-project-hero mb-4">
+        @if (!string.IsNullOrEmpty(project.Metadata?.Banner))
         {
-            <div class="col-md-6">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-header bg-transparent">
-                        <h5 class="mb-0">Funding Pattern</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted mb-3">Choose a funding pattern for your investment:</p>
-                        <div class="list-group">
-                            @foreach (var pattern in AvailablePatterns)
-                            {
-                                <button type="button"
-                                        class="list-group-item list-group-item-action @(SelectedPattern == pattern ? "active" : "")"
-                                        @onclick="() => SelectPattern(pattern)">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <h6 class="mb-1 fw-bold">@pattern.Name</h6>
-                                            <small class="@(SelectedPattern == pattern ? "text-white-50" : "text-muted")">@pattern.Description</small>
-                                        </div>
-                                        <span class="badge bg-success rounded-pill">@pattern.StageCount stages</span>
-                                    </div>
-                                    <small class="@(SelectedPattern == pattern ? "text-white-50" : "text-muted")">
-                                        Frequency: @pattern.Frequency
-                                    </small>
-                                </button>
-                            }
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <img class="hub-project-banner" src="@project.Metadata.Banner" alt="" />
         }
-
-        <!-- Release Schedule Card -->
-        <div class="col-md-6">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header bg-transparent">
-                    <h5 class="mb-0">Release Schedule</h5>
-                </div>
-                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
-                    <p class="text-muted mb-3">Your investment will be released in stages:</p>
-                    @if (StagesBreakdown?.Any() == true)
+        <div class="card-body">
+            <div class="d-flex align-items-start gap-3">
+                @if (!string.IsNullOrEmpty(project.Metadata?.Picture))
+                {
+                    <img class="hub-project-logo" src="@project.Metadata.Picture" alt="" />
+                }
+                <div class="flex-grow-1">
+                    <h4 class="mb-1">@(project.Metadata?.Name ?? project.ProjectInfo.ProjectIdentifier)</h4>
+                    @if (!string.IsNullOrEmpty(project.Metadata?.About))
                     {
-                        int stageIndex = 0;
-                        @foreach (var stage in StagesBreakdown)
-                        {
-                            stageIndex++;
-                            <div class="card mb-2 border-0 invest-stage-card">
-                                <div class="card-body p-3">
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <span class="fw-bold small">Stage @stageIndex</span>
-                                        <span class="badge bg-success">
-                                            @(project?.ProjectInfo?.Stages?.ElementAtOrDefault(stageIndex - 1)?.AmountToRelease.ToString("F1"))%
-                                        </span>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <small class="text-muted">@stage.StageDateTime.FormatDate()</small>
-                                        <span class="fw-bold small">@stage.AmountBtc.ToString("0.00000000") @network.CoinTicker</span>
-                                    </div>
-                                </div>
-                            </div>
-                        }
+                        <p class="text-muted mb-2">@TruncateAbout(project.Metadata.About)</p>
                     }
-                    else
-                    {
-                        <p class="text-muted text-center">Enter an amount to see the stage breakdown.</p>
-                    }
+                    <a class="hub-link" href="https://angor.io/project/@ProjectId" target="_blank" rel="noopener">
+                        View full project details on angor.io
+                        <Icon IconName="link" Width="14" Height="14" />
+                    </a>
                 </div>
             </div>
-        </div>
 
-        <!-- Transaction Details Card -->
-        <div class="col-md-6">
-            <div class="card h-100 shadow-sm">
-                <div class="card-header bg-transparent">
-                    <h5 class="mb-0">Transaction Details</h5>
+            <!-- Funding progress -->
+            <div class="mt-4">
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="text-muted small">Raised</span>
+                    <span class="fw-bold" style="color: var(--accent);">@fundingProgressPercent%</span>
                 </div>
-                <div class="card-body">
-                    <!-- Project ID -->
-                    <div class="mb-3">
-                        <label class="form-label text-muted small mb-1">Project ID</label>
-                        <div class="d-flex align-items-center rounded p-2 invest-project-id-box">
-                            <span class="text-break fw-bold small flex-grow-1" style="word-break: break-all;">
-                                @project.ProjectInfo.ProjectIdentifier
-                            </span>
-                            <button class="btn btn-sm btn-outline-secondary ms-2 flex-shrink-0" @onclick="() => CopyToClipboard(project.ProjectInfo.ProjectIdentifier)">
-                                <Icon IconName="copy" Width="16" Height="16" />
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Amount to Invest -->
-                    <div class="d-flex justify-content-between py-2">
-                        <span class="text-muted">Amount to Invest</span>
-                        <span class="fw-bold">@Investment.InvestmentAmountBtc @network.CoinTicker</span>
-                    </div>
-                    <hr class="my-1" />
-
-                    <!-- Miner Fee -->
-                    <div class="d-flex justify-content-between py-2">
-                        <span class="text-muted">Miner Fee</span>
-                        <span class="fw-bold">
-                            @if (signedTransaction != null)
-                            {
-                                @Money.Satoshis(signedTransaction.TransactionFee).ToUnit(MoneyUnit.BTC)<text> @network.CoinTicker</text>
-                            }
-                            else
-                            {
-                                <text>—</text>
-                            }
-                        </span>
-                    </div>
-                    <hr class="my-1" />
-
-                    <!-- Angor Fee -->
-                    <div class="d-flex justify-content-between py-2">
-                        <span class="text-muted">Angor Fee</span>
-                        <span class="fw-bold">
-                            @if (signedTransaction?.Transaction != null)
-                            {
-                                @signedTransaction.Transaction.Outputs.First().Value.ToUnit(MoneyUnit.BTC)<text> @network.CoinTicker</text>
-                            }
-                            else
-                            {
-                                <text>—</text>
-                            }
-                        </span>
-                    </div>
+                <div class="hub-progress-track">
+                    <div class="hub-progress-fill" style="width: @(Math.Min(fundingProgressPercent, 100))%"></div>
+                </div>
+                <div class="d-flex justify-content-between mt-2">
+                    <span class="small">
+                        <span class="fw-bold">@Money.Satoshis(totalRaisedSats).ToUnit(MoneyUnit.BTC)</span>
+                        <span class="text-muted">of @Money.Satoshis(project.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
+                    </span>
+                    <span class="small text-muted">@totalInvestors investors</span>
                 </div>
             </div>
-        </div>
 
+            <div class="d-flex flex-wrap gap-3 mt-3 small text-muted">
+                <span>Starts: <span class="fw-bold" style="color: var(--text);">@project.ProjectInfo.StartDate.ToString("dd MMM yyyy")</span></span>
+                <span>Expires: <span class="fw-bold" style="color: var(--text);">@project.ProjectInfo.ExpiryDate.ToString("dd MMM yyyy")</span></span>
+                <span>Stages: <span class="fw-bold" style="color: var(--text);">@((project.ProjectInfo.AllowDynamicStages ? SelectedPattern?.StageCount : project.ProjectInfo.Stages?.Count) ?? 0)</span></span>
+                <span>Penalty: <span class="fw-bold" style="color: var(--text);">@project.ProjectInfo.PenaltyDays days</span></span>
+            </div>
+        </div>
     </div>
 
-    <!-- Action Buttons -->
-    <div class="row mt-4 mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-end gap-2">
-                @if (project is InvestorProject investorP && investorP.ReceivedFounderSignatures() && !investorP.InvestedInProject())
-                {
-                    <button type="button" class="btn btn-outline-danger" @onclick="CancelInvestment">
-                        <Icon IconName="close-circle" Width="18" Height="18" class="me-1" />
-                        Cancel
-                    </button>
-                    <button type="button" class="btn btn-success" @onclick="PublishSignedTransactionAsync" disabled="@publishSpinner">
-                        @if (publishSpinner)
-                        {
-                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                            <span>Confirming...</span>
-                        }
-                        else
-                        {
-                            <Icon IconName="shield-star" Width="18" Height="18" class="me-1" />
-                            <span>Invest @Investment.InvestmentAmountBtc @network.CoinTicker</span>
-                        }
-                    </button>
-                }
-                else if (project is not InvestorProject)
-                {
-                    @if (walletAvailable)
-                    {
-                        <button type="button" class="btn btn-success w-100" @onclick="HandleInvestClick" disabled="@buildSpinner">
-                            @if (buildSpinner)
-                            {
-                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                                <span>Building Transaction...</span>
-                            }
-                            else
-                            {
-                                <Icon IconName="arrow-right" Width="18" Height="18" class="me-1" />
-                                <span>Continue to Confirmation</span>
-                            }
-                        </button>
-                    }
-                    else
-                    {
-                        <button type="button" class="btn btn-success w-100" @onclick="HandleInvestClick" disabled="@buildSpinner">
-                            @if (buildSpinner)
-                            {
-                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                                <span>Preparing...</span>
-                            }
-                            else
-                            {
-                                <Icon IconName="arrow-right" Width="18" Height="18" class="me-1" />
-                                <span>Invest</span>
-                            }
-                        </button>
-                    }
-                }
-                else if (project is InvestorProject waitingP && waitingP.WaitingForFounderResponse())
-                {
+    @if (invested)
+    {
+        <div class="hub-opportunity mb-4">
+            <div class="mb-3">
+                <Icon IconName="circle-check" Width="48" Height="48" />
+            </div>
+            <h4 class="text-white mb-2">Investment Confirmed</h4>
+            <p class="mb-3" style="color: rgba(255,255,255,.9);">
+                Your investment was published to the Bitcoin network.
+                To manage or recover your funds later, import your recovery phrase into the Angor desktop app.
+            </p>
+            @if (!string.IsNullOrEmpty(investedTransactionId))
+            {
+                <a class="btn btn-white mb-2" href="@(_networkService.GetPrimaryExplorer().Url + $"/tx/{investedTransactionId}")" target="_blank" rel="noopener">
+                    View Transaction
+                </a>
+            }
+            <button class="btn btn-white" @onclick="ShowRecoveryPhraseAsync">Show Recovery Phrase</button>
+            <div class="mt-3">
+                <a href="#" class="small" style="color: rgba(255,255,255,.75);"
+                   @onclick="OpenDeleteWalletModal" @onclick:preventDefault>
+                    Using a shared computer? Delete the wallet from this browser
+                </a>
+            </div>
+        </div>
+    }
+    else if (project is InvestorProject pendingProject && pendingProject.WaitingForFounderResponse())
+    {
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <div class="spinner-border text-success mb-3" role="status"></div>
+                <h5>Waiting for founder approval</h5>
+                <p class="text-muted">
+                    Your signature request was sent to the founder over Nostr.
+                    As soon as the founder responds, your investment will be published automatically.
+                    This page checks for a response every 30 seconds — you can keep it open or come back later.
+                </p>
+                <div class="d-flex justify-content-center gap-2">
                     <button type="button" class="btn btn-outline-danger" @onclick="CancelInvestment">
                         <Icon IconName="close-circle" Width="16" Height="16" class="me-1" />
                         Cancel
@@ -328,133 +191,338 @@
                         @if (refreshSpinner)
                         {
                             <span class="spinner-border spinner-border-sm me-1" role="status"></span>
-                            <span>Refreshing...</span>
+                            <span>Checking...</span>
                         }
                         else
                         {
                             <Icon IconName="refresh" Width="16" Height="16" class="me-1" />
-                            <span>Refresh</span>
+                            <span>Check Now</span>
                         }
                     </button>
-                }
+                </div>
             </div>
         </div>
+    }
+    else if (project is InvestorProject readyProject && readyProject.ReceivedFounderSignatures() && !readyProject.InvestedInProject())
+    {
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <h5>Founder approved — publishing your investment</h5>
+                <p class="text-muted">Signatures received and validated. Publishing the transaction...</p>
+                <div class="d-flex justify-content-center gap-2">
+                    <button type="button" class="btn btn-outline-danger" @onclick="CancelInvestment">
+                        <Icon IconName="close-circle" Width="18" Height="18" class="me-1" />
+                        Cancel
+                    </button>
+                    <button type="button" class="btn btn-success" @onclick="PublishSignedTransactionAsync" disabled="@publishSpinner">
+                        @if (publishSpinner)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            <span>Publishing...</span>
+                        }
+                        else
+                        {
+                            <Icon IconName="shield-star" Width="18" Height="18" class="me-1" />
+                            <span>Publish Investment</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+
+            <!-- Investment Amount Card -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-transparent d-flex align-items-center gap-2">
+                        <Icon IconName="bitcoin" Width="20" Height="20" />
+                        <h5 class="mb-0">Investment Amount</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Amount (@network.CoinTicker)</label>
+                            <div class="input-group">
+                                <input type="number"
+                                       class="form-control"
+                                       step="0.00000001"
+                                       min="0.001"
+                                       placeholder="0.00"
+                                       value="@Investment.InvestmentAmountBtc"
+                                       @oninput="OnAmountChanged" />
+                                <span class="input-group-text fw-bold">@network.CoinTicker</span>
+                            </div>
+                            <small class="text-muted">Minimum investment: 0.001 @network.CoinTicker</small>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2 justify-content-end">
+                            @foreach (var preset in AmountPresets)
+                            {
+                                <button type="button"
+                                        class="btn btn-sm @(Investment.InvestmentAmountBtc == preset ? "btn-warning" : "btn-outline-warning")"
+                                        @onclick="() => SelectPreset(preset)">
+                                    <div class="text-center">
+                                        <div class="fw-bold">@preset</div>
+                                        <div class="small">@network.CoinTicker</div>
+                                    </div>
+                                </button>
+                            }
+                        </div>
+
+                        <!-- Approval indicator (mirrors the desktop app's threshold status) -->
+                        @if (RequiresFounderApproval)
+                        {
+                            <div class="alert alert-warning d-flex align-items-center gap-2 mt-3 mb-0 py-2">
+                                <Icon IconName="shield-star" Width="18" Height="18" class="flex-shrink-0" />
+                                <small>
+                                    <strong>Requires founder approval.</strong>
+                                    The investment is sent to the founder to sign before it is published.
+                                    @if (FundApprovalThresholdBtc is decimal threshold)
+                                    {
+                                        <span> Amounts below @threshold @network.CoinTicker publish instantly.</span>
+                                    }
+                                </small>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-success d-flex align-items-center gap-2 mt-3 mb-0 py-2">
+                                <Icon IconName="circle-check" Width="18" Height="18" class="flex-shrink-0" />
+                                <small>
+                                    <strong>No approval needed.</strong>
+                                    This investment publishes instantly once payment is received.
+                                </small>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Funding Pattern Card (conditionally shown) -->
+            @if (ShowPatternSelector && AvailablePatterns?.Any() == true)
+            {
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-transparent">
+                            <h5 class="mb-0">Funding Pattern</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-3">Choose a funding pattern for your investment:</p>
+                            <div class="list-group">
+                                @foreach (var pattern in AvailablePatterns)
+                                {
+                                    <button type="button"
+                                            class="list-group-item list-group-item-action @(SelectedPattern == pattern ? "active" : "")"
+                                            @onclick="() => SelectPattern(pattern)">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="mb-1 fw-bold">@pattern.Name</h6>
+                                                <small class="@(SelectedPattern == pattern ? "text-white-50" : "text-muted")">@pattern.Description</small>
+                                            </div>
+                                            <span class="badge bg-success rounded-pill">@pattern.StageCount stages</span>
+                                        </div>
+                                        <small class="@(SelectedPattern == pattern ? "text-white-50" : "text-muted")">
+                                            Frequency: @pattern.Frequency
+                                        </small>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Release Schedule Card -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-transparent">
+                        <h5 class="mb-0">Release Schedule</h5>
+                    </div>
+                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                        <p class="text-muted mb-3">Your investment will be released in stages:</p>
+                        @if (StagesBreakdown?.Any() == true)
+                        {
+                            int stageIndex = 0;
+                            @foreach (var stage in StagesBreakdown)
+                            {
+                                stageIndex++;
+                                <div class="card mb-2 border-0 invest-stage-card">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="fw-bold small">Stage @stageIndex</span>
+                                            <span class="badge bg-success">
+                                                @(project?.ProjectInfo?.Stages?.ElementAtOrDefault(stageIndex - 1)?.AmountToRelease.ToString("F1"))%
+                                            </span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">@stage.StageDateTime.FormatDate()</small>
+                                            <span class="fw-bold small">@stage.AmountBtc.ToString("0.00000000") @network.CoinTicker</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted text-center">Enter an amount to see the stage breakdown.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- How it works / wallet info card -->
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-header bg-transparent">
+                        <h5 class="mb-0">How It Works</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (!walletAvailable)
+                        {
+                            <ol class="text-muted small ps-3 mb-3">
+                                <li class="mb-2">A temporary wallet is created in your browser — you'll get a recovery phrase to save.</li>
+                                <li class="mb-2">Pay the exact amount with Lightning or an on-chain transfer from any wallet.</li>
+                                <li class="mb-2">Your investment transaction is built and sent to the founder for approval.</li>
+                                <li class="mb-2">Once approved, it is published automatically — you're invested.</li>
+                            </ol>
+                            <div class="alert alert-warning small mb-0">
+                                <strong>Keep your recovery phrase.</strong> You can import it into the
+                                <a class="hub-link" href="https://angor.io" target="_blank" rel="noopener">Angor desktop app</a>
+                                at any time to manage or recover your funds.
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted small">
+                                A wallet already exists in this browser. You can pay from its balance,
+                                send on-chain from an external wallet, or pay with Lightning.
+                            </p>
+                            @if (walletNeedsPassword)
+                            {
+                                <div class="alert alert-warning small mb-2">
+                                    This wallet is protected with a password. If you don't know it,
+                                    you can discard it and create a fresh wallet for this investment.
+                                    <strong>Discarding is permanent</strong> — any funds on the old wallet
+                                    will only be recoverable with its seed phrase.
+                                </div>
+                                @if (!confirmDiscardWallet)
+                                {
+                                    <button class="btn btn-outline-danger btn-sm me-2" @onclick="() => confirmDiscardWallet = true">
+                                        Discard wallet &amp; start fresh
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-outline-danger btn-sm me-2" @onclick="DiscardWalletAndStartFresh">
+                                        Yes, discard it permanently
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm me-2" @onclick="() => confirmDiscardWallet = false">
+                                        Keep it
+                                    </button>
+                                }
+                            }
+                            <button class="btn btn-outline-secondary btn-sm me-2" @onclick="ShowRecoveryPhraseAsync">
+                                <Icon IconName="alert" Width="14" Height="14" class="me-1" />
+                                Show Recovery Phrase
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" @onclick="OpenDeleteWalletModal">
+                                <Icon IconName="delete" Width="14" Height="14" class="me-1" />
+                                Delete Wallet
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Action Button -->
+        <div class="row mt-4 mb-4">
+            <div class="col-12">
+                <button type="button" class="btn btn-success w-100 btn-lg" @onclick="HandleInvestClick" disabled="@buildSpinner">
+                    @if (buildSpinner)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        <span>Preparing...</span>
+                    }
+                    else
+                    {
+                        <Icon IconName="shield-star" Width="18" Height="18" class="me-1" />
+                        <span>Invest @Investment.InvestmentAmountBtc @network.CoinTicker</span>
+                    }
+                </button>
+            </div>
+        </div>
+    }
+
+    <div class="hub-footer">
+        Powered by <a href="https://angor.io" target="_blank" rel="noopener">Angor</a> — a decentralized crowdfunding protocol on Bitcoin
+        <span class="mx-2">·</span>
+        <a href="#" @onclick="OpenConnectionModal" @onclick:preventDefault>Connection settings</a>
     </div>
 
 </div>
 
-<!-- Confirmation Modal -->
-@if (showCreateModal)
+<!-- Use Available Funds Modal — shown when the browser wallet already covers the amount -->
+@if (showUseFundsModal)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.7);">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title d-flex align-items-center gap-2">
-                        <Icon IconName="transaction" Width="24" Height="24" />
-                        Investment Confirmation
+                        <Icon IconName="wallet" Width="24" Height="24" />
+                        You Already Have Funds
                     </h5>
-                    <button type="button" class="btn-close" @onclick="() => showCreateModal = false"></button>
+                    <button type="button" class="btn-close" @onclick="() => showUseFundsModal = false"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Project ID -->
-                    <div class="d-flex align-items-center bg-light rounded p-3 mb-3">
-                        <Icon IconName="project" Width="24" Height="24" class="me-2" />
-                        <div class="flex-grow-1 overflow-hidden">
-                            <small class="text-muted">Project ID</small>
-                            <div class="text-truncate fw-bold" title="@project.ProjectInfo.ProjectIdentifier">
-                                @project.ProjectInfo.ProjectIdentifier
-                            </div>
-                        </div>
-                        <button class="btn btn-sm btn-outline-secondary ms-2" @onclick="() => CopyToClipboard(project.ProjectInfo.ProjectIdentifier)">
-                            <Icon IconName="copy" Width="16" Height="16" />
-                        </button>
-                    </div>
-
-                    <!-- Fee Summary -->
+                    <p class="text-muted">
+                        Your wallet in this browser has funds left from a previous session —
+                        no need to pay again.
+                    </p>
                     <div class="row g-2 mb-3">
                         <div class="col-6">
                             <div class="bg-light rounded p-3">
-                                <small class="text-muted">Amount to Invest</small>
-                                <div class="fw-bold text-success">@Investment.InvestmentAmountBtc @network.CoinTicker</div>
+                                <small class="text-muted">Available</small>
+                                <div class="fw-bold text-success">@Money.Satoshis(WalletBalance.TotalBalance).ToUnit(MoneyUnit.BTC) @network.CoinTicker</div>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="bg-light rounded p-3">
-                                <small class="text-muted">Miner Fee</small>
-                                <div class="fw-bold text-warning">
-                                    @Money.Satoshis(signedTransaction?.TransactionFee ?? 0).ToUnit(MoneyUnit.BTC) @network.CoinTicker
-                                </div>
+                                <small class="text-muted">This Investment</small>
+                                <div class="fw-bold">@Investment.InvestmentAmountBtc @network.CoinTicker</div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="bg-light rounded p-3 mb-3">
-                        <small class="text-muted">Angor Fee</small>
-                        <div class="fw-bold">
-                            @(signedTransaction?.Transaction?.Outputs.First().Value.ToUnit(MoneyUnit.BTC)) @network.CoinTicker
-                        </div>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success btn-lg" @onclick="UseAvailableFunds" disabled="@investSpinner">
+                            @if (investSpinner)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                <span>Investing...</span>
+                            }
+                            else
+                            {
+                                <span>Use Available Funds</span>
+                            }
+                        </button>
+                        <button class="btn btn-outline-secondary" @onclick="PayAnotherWay" disabled="@investSpinner">
+                            Pay Another Way
+                        </button>
                     </div>
-
-                    <!-- Stages -->
-                    @if (StagesBreakdown?.Any() == true)
-                    {
-                        <h6 class="d-flex align-items-center gap-2 mb-3">
-                            <Icon IconName="stage" Width="18" Height="18" />
-                            Investment Stages
-                        </h6>
-                        int modalStageIndex = 0;
-                        @foreach (var stage in StagesBreakdown)
-                        {
-                            modalStageIndex++;
-                            <div class="bg-light rounded p-3 mb-2">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <small class="text-muted">Stage @modalStageIndex</small>
-                                        <div class="fw-bold">@stage.AmountBtc.ToString("0.00000000") @network.CoinTicker</div>
-                                    </div>
-                                    <div class="text-end">
-                                        <small class="text-muted">Release</small>
-                                        <div>@stage.StageDateTime.FormatDate()</div>
-                                    </div>
-                                </div>
-                                <small class="text-muted">
-                                    @(project.ProjectInfo.Stages.ElementAtOrDefault(modalStageIndex - 1)?.AmountToRelease.ToString("F2"))% of investment
-                                    — @stage.DaysFromStartDate days after start
-                                </small>
-                            </div>
-                        }
-                    }
-
-                    <!-- Warning -->
-                    <div class="text-center mt-3">
-                        <Icon IconName="alert" Width="20" Height="20" class="me-1" />
-                        <small class="text-muted">Please review the investment details carefully before confirming.</small>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-outline-secondary btn-sm" @onclick="() => showCreateModal = false">Cancel</button>
-                    <button type="button" class="btn btn-success btn-sm" @onclick="Send" disabled="@investSpinner">
-                        @if (investSpinner)
-                        {
-                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                            <span>Processing...</span>
-                        }
-                        else
-                        {
-                            <span>Confirm Investment</span>
-                        }
-                    </button>
                 </div>
             </div>
         </div>
     </div>
 }
 
-<!-- Payment Method Choice Modal (Step 7) -->
+<!-- Payment Method Choice Modal -->
 @if (showPaymentMethodModal)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.7);">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -470,28 +538,8 @@
                         <div class="fw-bold text-success fs-5">@Investment.InvestmentAmountBtc @network.CoinTicker</div>
                     </div>
                     <div class="d-grid gap-3">
-                        @{
-                            var walletBalance = WalletBalance.TotalBalance;
-                            var requiredSatsForModal = Investment.InvestmentAmountBtc.ToUnitSatoshi();
-                            var canPayWithWallet = walletBalance >= requiredSatsForModal;
-                        }
-                        @if (canPayWithWallet)
-                        {
-                            <button class="btn btn-success btn-lg" @onclick="PayWithWallet">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <Icon IconName="wallet" Width="24" Height="24" />
-                                        <div class="text-start">
-                                            <div class="fw-bold">Pay with Wallet</div>
-                                            <small class="opacity-75">Use your existing wallet balance</small>
-                                        </div>
-                                    </div>
-                                    <Icon IconName="arrow-right" Width="18" Height="18" />
-                                </div>
-                            </button>
-                        }
                         <button class="btn btn-outline-success btn-lg" @onclick="PayWithAddress">
-                            <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center justify-content-between w-100">
                                 <div class="d-flex align-items-center gap-2">
                                     <Icon IconName="qr-code" Width="24" Height="24" />
                                     <div class="text-start">
@@ -503,7 +551,7 @@
                             </div>
                         </button>
                         <button class="btn btn-outline-warning btn-lg" @onclick="PayWithLightning">
-                            <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center justify-content-between w-100">
                                 <div class="d-flex align-items-center gap-2">
                                     <Icon IconName="bitcoin" Width="24" Height="24" />
                                     <div class="text-start">
@@ -521,10 +569,10 @@
     </div>
 }
 
-<!-- On-Chain Invoice Modal (Step 5) -->
+<!-- On-Chain Invoice Modal -->
 @if (showInvoiceModal)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.7);">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -535,13 +583,11 @@
                     <button type="button" class="btn-close" @onclick="CloseInvoiceModal"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <!-- Amount Required -->
                     <div class="bg-light rounded p-3 mb-3">
                         <small class="text-muted">Amount Required</small>
                         <div class="fw-bold text-success fs-4">@Investment.InvestmentAmountBtc @network.CoinTicker</div>
                     </div>
 
-                    <!-- QR Code -->
                     @if (!string.IsNullOrEmpty(invoiceAddress))
                     {
                         <div class="mb-3">
@@ -551,7 +597,6 @@
                         </div>
                     }
 
-                    <!-- Address with Copy -->
                     <div class="bg-light rounded p-3 mb-3">
                         <small class="text-muted d-block mb-1">On-Chain Address</small>
                         <div class="d-flex align-items-center justify-content-center gap-2">
@@ -561,8 +606,6 @@
                             </button>
                         </div>
                     </div>
-
-                    <!-- Payment Status -->
 
                     @if (paymentReceived && invoiceProcessing)
                     {
@@ -598,7 +641,7 @@
 <!-- Lightning Invoice Modal -->
 @if (showLightningInvoiceModal)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.7);">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -609,7 +652,6 @@
                     <button type="button" class="btn-close" @onclick="CloseLightningModal"></button>
                 </div>
                 <div class="modal-body text-center">
-                    <!-- Amount Required -->
                     <div class="bg-light rounded p-3 mb-3">
                         <small class="text-muted">Amount Required</small>
                         <div class="fw-bold text-success fs-4">@Investment.InvestmentAmountBtc @network.CoinTicker</div>
@@ -624,14 +666,12 @@
                     }
                     else if (!string.IsNullOrEmpty(lightningInvoiceString))
                     {
-                        <!-- QR Code -->
                         <div class="mb-3">
                             <img src="data:image/png;base64,@GenerateQRCode(lightningInvoiceString)"
                                  class="img-fluid rounded" style="max-width: 200px;"
                                  alt="Lightning Invoice QR Code" />
                         </div>
 
-                        <!-- Invoice with Copy -->
                         <div class="bg-light rounded p-3 mb-3">
                             <small class="text-muted d-block mb-1">Lightning Invoice (BOLT11)</small>
                             <div class="d-flex align-items-center justify-content-center gap-2">
@@ -644,7 +684,6 @@
                             </div>
                         </div>
 
-                        <!-- Payment Status -->
                         @if (paymentReceived && invoiceProcessing)
                         {
                             <div class="alert alert-success d-flex align-items-center justify-content-center gap-2 mb-2">
@@ -677,56 +716,24 @@
     </div>
 }
 
-<!-- New Wallet Password Modal (Step 4 - for users without a wallet) -->
-@if (showNewWalletPasswordModal)
-{
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title d-flex align-items-center gap-2">
-                        <Icon IconName="lock" Width="24" Height="24" />
-                        Set Wallet Password
-                    </h5>
-                    <button type="button" class="btn-close" @onclick="() => showNewWalletPasswordModal = false"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="text-muted mb-3">A wallet will be created automatically for your investment. Choose a password to protect it.</p>
-                    <div class="mb-3">
-                        <label class="form-label">Password</label>
-                        <input type="password" class="form-control" placeholder="Enter password"
-                               @bind="newWalletPasswordInput"
-                               @onkeypress="@(async e => { if (e.Key is "Enter") await ConfirmNewWalletPassword(); })" />
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-outline-secondary" @onclick="() => showNewWalletPasswordModal = false">Cancel</button>
-                    <button class="btn btn-success" @onclick="ConfirmNewWalletPassword"
-                            disabled="@(string.IsNullOrWhiteSpace(newWalletPasswordInput))">
-                        Continue
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
-<!-- Wallet Backup Modal (Step 8) -->
+<!-- Wallet Backup Modal — shown BEFORE any payment is requested -->
 @if (showBackupModal && !string.IsNullOrEmpty(autoCreatedSeedWords))
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.7);">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title d-flex align-items-center gap-2">
                         <Icon IconName="alert" Width="24" Height="24" />
-                        Backup Your Wallet
+                        Save Your Recovery Phrase
                     </h5>
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-warning mb-3">
-                        <strong>Important:</strong> A wallet was automatically created for your investment.
-                        Please save your recovery phrase now. Without it, you cannot recover your funds.
+                        <strong>Important:</strong> A wallet was created in your browser for this investment.
+                        Save the recovery phrase below <strong>before sending any funds</strong>.
+                        It is the only way to recover your money if this browser's data is lost.
+                        You can import it into the Angor desktop app at any time.
                     </div>
                     <div class="bg-light rounded p-3 mb-3">
                         <small class="text-muted d-block mb-2">Recovery Phrase</small>
@@ -735,19 +742,161 @@
                                 var backupWords = autoCreatedSeedWords.Split(' ');
                                 for (int i = 0; i < backupWords.Length; i++)
                                 {
-                                    <span class="badge bg-secondary m-1">@(i + 1). @backupWords[i]</span>
+                                    <span class="seed-word"><span class="seed-index">@(i + 1).</span> @backupWords[i]</span>
                                 }
                             }
                         </div>
                     </div>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 mb-2">
                         <button class="btn btn-outline-secondary flex-grow-1" @onclick="CopyBackupSeed">
                             <Icon IconName="copy" Width="16" Height="16" class="me-1" />
-                            Copy Seed
+                            Copy
                         </button>
-                        <button class="btn btn-success flex-grow-1" @onclick="CloseBackupModal">
-                            I've Saved My Seed
+                        <button class="btn btn-outline-secondary flex-grow-1" @onclick="DownloadBackupSeed">
+                            <Icon IconName="receive" Width="16" Height="16" class="me-1" />
+                            Download
                         </button>
+                    </div>
+                    <button class="btn btn-success w-100" @onclick="ConfirmBackupSaved">
+                        I've Saved My Recovery Phrase — Continue
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Connection Settings Modal (indexers + relays) -->
+@if (showConnectionModal && connectionSettings != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.7);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title d-flex align-items-center gap-2">
+                        <Icon IconName="settings" Width="24" Height="24" />
+                        Connection Settings
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="() => showConnectionModal = false"></button>
+                </div>
+                <div class="modal-body">
+
+                    <h6 class="mb-2">Indexers</h6>
+                    <p class="text-muted small mb-2">The indexer used to look up projects and broadcast transactions.</p>
+                    @foreach (var indexer in connectionSettings.Indexers)
+                    {
+                        <div class="d-flex align-items-center gap-2 bg-light rounded p-2 mb-2">
+                            <input type="radio" name="primary-indexer" checked="@indexer.IsPrimary"
+                                   @onchange="() => SetPrimaryIndexerUrl(indexer)" />
+                            <span class="badge @(indexer.Status == UrlStatus.Online ? "bg-success" : "bg-secondary")">
+                                @(indexer.Status == UrlStatus.Online ? "online" : indexer.Status == UrlStatus.Offline ? "offline" : "?")
+                            </span>
+                            <span class="text-break small flex-grow-1" style="word-break: break-all;">@indexer.Url</span>
+                            <button class="btn btn-sm btn-outline-danger flex-shrink-0" title="Remove"
+                                    @onclick="() => RemoveIndexerUrl(indexer)" disabled="@(connectionSettings.Indexers.Count <= 1)">
+                                <Icon IconName="delete" Width="14" Height="14" />
+                            </button>
+                        </div>
+                    }
+                    <div class="input-group mb-4">
+                        <input type="text" class="form-control" placeholder="https://indexer.example.com"
+                               @bind="newIndexerUrl" />
+                        <button class="btn btn-outline-success" @onclick="AddIndexerUrl"
+                                disabled="@string.IsNullOrWhiteSpace(newIndexerUrl)">Add</button>
+                    </div>
+
+                    <h6 class="mb-2">Nostr Relays</h6>
+                    <p class="text-muted small mb-2">Relays used to fetch project data and exchange messages with the founder.</p>
+                    @foreach (var relay in connectionSettings.Relays)
+                    {
+                        <div class="d-flex align-items-center gap-2 bg-light rounded p-2 mb-2">
+                            <span class="badge @(relay.Status == UrlStatus.Online ? "bg-success" : "bg-secondary")">
+                                @(relay.Status == UrlStatus.Online ? "online" : relay.Status == UrlStatus.Offline ? "offline" : "?")
+                            </span>
+                            <span class="text-break small flex-grow-1" style="word-break: break-all;">@relay.Url</span>
+                            <button class="btn btn-sm btn-outline-danger flex-shrink-0" title="Remove"
+                                    @onclick="() => RemoveRelayUrl(relay)" disabled="@(connectionSettings.Relays.Count <= 1)">
+                                <Icon IconName="delete" Width="14" Height="14" />
+                            </button>
+                        </div>
+                    }
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="wss://relay.example.com"
+                               @bind="newRelayUrl" />
+                        <button class="btn btn-outline-success" @onclick="AddRelayUrl"
+                                disabled="@string.IsNullOrWhiteSpace(newRelayUrl)">Add</button>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-success btn-sm" @onclick="() => showConnectionModal = false">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Delete Wallet Modal — shows the seed one last time, requires explicit confirmation -->
+@if (showDeleteWalletModal)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.7);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title d-flex align-items-center gap-2">
+                        <Icon IconName="delete" Width="24" Height="24" />
+                        Delete Wallet From This Browser
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CloseDeleteWalletModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger mb-3">
+                        <strong>This is permanent.</strong> The wallet will be removed from this browser.
+                        Your funds and investments stay on the Bitcoin network, but they can only be
+                        accessed again by importing the recovery phrase below into the Angor app.
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(deleteWalletSeedWords))
+                    {
+                        <div class="bg-light rounded p-3 mb-3">
+                            <small class="text-muted d-block mb-2">Recovery Phrase — your last chance to save it</small>
+                            <div class="word-box-container">
+                                @{
+                                    var deleteWords = deleteWalletSeedWords.Split(' ');
+                                    for (int i = 0; i < deleteWords.Length; i++)
+                                    {
+                                        <span class="seed-word"><span class="seed-index">@(i + 1).</span> @deleteWords[i]</span>
+                                    }
+                                }
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mb-3">
+                            <button class="btn btn-outline-secondary flex-grow-1" @onclick="CopyDeleteWalletSeed">
+                                <Icon IconName="copy" Width="16" Height="16" class="me-1" />
+                                Copy
+                            </button>
+                            <button class="btn btn-outline-secondary flex-grow-1" @onclick="DownloadDeleteWalletSeed">
+                                <Icon IconName="receive" Width="16" Height="16" class="me-1" />
+                                Download
+                            </button>
+                        </div>
+                    }
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="confirm-delete-wallet"
+                               @bind="deleteWalletConfirmed" />
+                        <label class="form-check-label small" for="confirm-delete-wallet">
+                            I have saved my recovery phrase and understand the wallet cannot be
+                            restored from this browser after deletion.
+                        </label>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-danger" @onclick="DeleteWalletFromBrowser"
+                                disabled="@(!deleteWalletConfirmed)">
+                            Delete Wallet Permanently
+                        </button>
+                        <button class="btn btn-outline-secondary" @onclick="CloseDeleteWalletModal">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -760,30 +909,50 @@
     [Parameter]
     public string ProjectId { get; set; }
 
+    private const string EphemeralKeyStorageKey = "angor-ephemeral-wallet-key";
+
     private Project? project;
+    private bool loadingProject = true;
+    private string? loadError;
     private bool buildSpinner;
     private bool investSpinner;
     private bool publishSpinner;
     private bool refreshSpinner;
-    private bool showCreateModal;
+    private bool showUseFundsModal;
     private bool founder;
     private bool invested;
+    private string? investedTransactionId;
+
+    // Project stats
+    private long totalRaisedSats;
+    private int totalInvestors;
+    private int fundingProgressPercent;
 
     // Wallet-optional invest flow
     private bool walletAvailable;
     private bool walletAutoCreated;
-    private bool fundsReceivedOnNewWallet;
+    private bool walletNeedsPassword;
+    private bool confirmDiscardWallet;
+    private bool backupConfirmed;
     private bool showInvoiceModal;
     private bool showPaymentMethodModal;
-    private bool showNewWalletPasswordModal;
     private bool paymentReceived;
     private bool invoiceProcessing;
     private bool showBackupModal;
     private string? invoiceAddress;
     private string? invoiceStatusMessage;
     private string? autoCreatedSeedWords;
-    private string? newWalletPasswordInput;
     private CancellationTokenSource? invoiceMonitorCts;
+
+    // Auto-publish guard
+    private bool autoPublishStarted;
+
+    // Periodic signature polling while waiting for founder approval
+    private CancellationTokenSource? signaturePollCts;
+    private static readonly TimeSpan SignaturePollInterval = TimeSpan.FromSeconds(30);
+
+    // Network auto-detection guard (retry on the alternate network at most once)
+    private bool networkRetryAttempted;
 
     // Lightning payment flow
     private bool showLightningInvoiceModal;
@@ -804,19 +973,54 @@
     public InvestmentModel Investment { get; set; } = new() { InvestmentAmountBtc = 0.01m };
     private List<StageBreakdown> StagesBreakdown { get; set; } = new();
 
-    // Amount presets for quick selection
     private decimal[] AmountPresets = { 0.001m, 0.005m, 0.01m, 0.05m, 0.1m };
 
-    // Pattern selection (for Fund/Subscribe project types)
+    /// <summary>
+    /// Whether the current amount will need the founder to sign before publishing.
+    /// Uses the same shared threshold logic as Send(): Invest always needs approval,
+    /// Fund only above the penalty threshold, Subscribe never.
+    /// </summary>
+    private bool RequiresFounderApproval => project?.ProjectInfo?.ProjectType switch
+    {
+        ProjectType.Invest => true,
+        ProjectType.Fund => _InvestorTransactionActions.IsInvestmentAbovePenaltyThreshold(
+            project.ProjectInfo, Investment.InvestmentAmountBtc.ToUnitSatoshi()),
+        _ => false
+    };
+
+    /// <summary>The Fund project's approval threshold in BTC, when one is configured.</summary>
+    private decimal? FundApprovalThresholdBtc =>
+        project?.ProjectInfo is { ProjectType: ProjectType.Fund, PenaltyThreshold: > 0 } info
+            ? Money.Satoshis(info.PenaltyThreshold.Value).ToUnit(MoneyUnit.BTC)
+            : null;
+
     private bool ShowPatternSelector => AvailablePatterns?.Any() == true;
     private List<DynamicStagePattern>? AvailablePatterns { get; set; }
     private DynamicStagePattern? SelectedPattern { get; set; }
 
+    // Connection settings (indexers/relays)
+    private bool showConnectionModal;
+    private SettingsInfo? connectionSettings;
+    private string? newIndexerUrl;
+    private string? newRelayUrl;
+
+    // Delete-wallet flow
+    private bool showDeleteWalletModal;
+    private bool deleteWalletConfirmed;
+    private string? deleteWalletSeedWords;
+
     protected override async Task OnInitializedAsync()
     {
-        NavMenuState.SetActivePage("invest");
+        // Network/settings initialization is done by EmptyLayout before this runs.
+
+        // Allow the linking site (e.g. angor hub) to hand over a known-good indexer:
+        // /invest/{id}?indexer=https://indexer.example.com — added as primary and persisted.
+        ApplyIndexerFromQueryString();
 
         walletAvailable = hasWallet;
+
+        // If a previous session created an ephemeral wallet, restore its key so no password prompts appear.
+        await TryPrimeEphemeralKeyAsync();
 
         var findProject = storage.GetInvestmentProjects()
             .FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
@@ -826,6 +1030,8 @@
             var investmentProject = findProject as InvestorProject;
             project = investmentProject;
             invested = investmentProject?.InvestedInProject() ?? false;
+            investedTransactionId = investmentProject?.TransactionId;
+            OnProjectLoaded();
         }
         else
         {
@@ -836,32 +1042,26 @@
             {
                 founder = true;
                 project = founderProject;
+                OnProjectLoaded();
             }
             else
             {
                 project = SessionStorage.GetProjectById(ProjectId);
 
-                if (project?.ProjectInfo == null)
+                if (project?.ProjectInfo != null)
                 {
-                    NavigationManager.NavigateTo($"/view/{ProjectId}");
+                    OnProjectLoaded();
+                }
+                else
+                {
+                    // Deep link — fetch the project from the indexer and Nostr relays.
+                    await LoadRemoteProjectAsync();
                     return;
                 }
             }
         }
 
-        if (!applicationLogicService.IsInvestmentWindowOpen(project?.ProjectInfo))
-        {
-            notificationComponent.ShowNotificationMessage("You cannot invest in this project.", 5);
-            NavigationManager.NavigateTo($"/view/{ProjectId}");
-            return;
-        }
-
-        LoadAvailablePatterns();
-        UpdateStagesBreakdown();
-        if (walletAvailable)
-        {
-            await LoadWalletBalance();
-        }
+        loadingProject = false;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -869,17 +1069,330 @@
         if (firstRender && walletAvailable)
         {
             await RefreshSignatures();
+            StartSignaturePolling();
             StateHasChanged();
         }
     }
 
+    /// <summary>
+    /// While an investment is waiting for founder approval, re-check the relays every
+    /// 30 seconds (same as clicking "Check Now"). Stops on its own once the state
+    /// changes (approved/cancelled/published) or the page is disposed.
+    /// </summary>
+    private void StartSignaturePolling()
+    {
+        if (signaturePollCts != null)
+            return; // already polling
+
+        if (project is not InvestorProject waiting || !waiting.WaitingForFounderResponse())
+            return;
+
+        signaturePollCts = new CancellationTokenSource();
+        var token = signaturePollCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                while (!token.IsCancellationRequested)
+                {
+                    await Task.Delay(SignaturePollInterval, token);
+
+                    if (invested || project is not InvestorProject stillWaiting || !stillWaiting.WaitingForFounderResponse())
+                        break;
+
+                    if (!passwordComponent.HasPassword())
+                        continue; // cannot decrypt without the key; keep waiting
+
+                    _Logger.LogInformation("Auto-checking for founder signatures...");
+                    await InvokeAsync(ScanForPendingSignatures);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // page disposed or flow completed
+            }
+            catch (Exception ex)
+            {
+                _Logger.LogWarning(ex, "Signature polling stopped unexpectedly");
+            }
+            finally
+            {
+                signaturePollCts?.Dispose();
+                signaturePollCts = null;
+            }
+        }, token);
+    }
+
+    public void Dispose()
+    {
+        signaturePollCts?.Cancel();
+        invoiceMonitorCts?.Cancel();
+        lightningMonitorCts?.Cancel();
+    }
+
+    /// <summary>
+    /// Fetch project data from the indexer, then project info + profile metadata from relays,
+    /// then merge the project's own relay list (NIP-65) into settings.
+    /// The network is validated against the project info pulled from Nostr; if the project
+    /// lives on a different network (and no wallet exists locally) we switch automatically.
+    /// </summary>
+    private async Task LoadRemoteProjectAsync()
+    {
+        try
+        {
+            var projectIndexerData = await _IndexerService.GetProjectByIdAsync(ProjectId);
+
+            if (projectIndexerData == null)
+            {
+                // The project may live on the other network — retry once if it is safe to switch.
+                if (!networkRetryAttempted && !hasWallet)
+                {
+                    networkRetryAttempted = true;
+                    var alternate = network.IsMainnet ? "Angornet" : "Main";
+                    _Logger.LogInformation("Project {ProjectId} not found on {Network}, retrying on {Alternate}", ProjectId, network.Name, alternate);
+                    SwitchNetwork(alternate);
+                    await LoadRemoteProjectAsync();
+                    return;
+                }
+
+                loadError = "The project was not found.";
+                loadingProject = false;
+                StateHasChanged();
+                return;
+            }
+
+            var pendingProject = new Project { CreationTransactionId = projectIndexerData.TrxId };
+
+            _RelayService.LookupProjectsInfoByEventIds<ProjectInfo>(projectInfo =>
+                {
+                    if (projectInfo is null)
+                        return;
+
+                    if (pendingProject is { ProjectInfo: null }) { pendingProject.ProjectInfo = projectInfo; }
+                },
+                () =>
+                {
+                    if (pendingProject.ProjectInfo == null)
+                    {
+                        loadError = "Project not found on the relays.";
+                        loadingProject = false;
+                        InvokeAsync(StateHasChanged);
+                        return;
+                    }
+
+                    // The project info from Nostr tells us which network it belongs to.
+                    if (!EnsureNetworkMatchesProject(pendingProject.ProjectInfo))
+                        return;
+
+                    _RelayService.LookupNostrProfileForNPub(
+                        (projectNpub, metadata) =>
+                        {
+                            if (pendingProject is { Metadata: null }) { pendingProject.Metadata = metadata; }
+                        },
+                        () =>
+                        {
+                            project = pendingProject;
+
+                            if (!SessionStorage.IsProjectInStorageById(project.ProjectInfo.ProjectIdentifier))
+                            {
+                                SessionStorage.StoreProject(project);
+                            }
+
+                            // Discover the project's relay list from its Nostr profile (NIP-65)
+                            MergeProjectRelays(project.ProjectInfo.NostrPubKey);
+
+                            OnProjectLoaded();
+                            loadingProject = false;
+                            InvokeAsync(StateHasChanged);
+                        },
+                        pendingProject.ProjectInfo.NostrPubKey);
+                }, projectIndexerData.NostrEventId);
+        }
+        catch (Exception ex)
+        {
+            loadError = $"An error occurred: {ex.Message}";
+            loadingProject = false;
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// Validate the configured network against the project's NetworkName (from the Nostr event).
+    /// Returns true when the networks match. When they don't: switches network automatically if
+    /// no wallet exists locally (safe), otherwise shows an explanatory error.
+    /// </summary>
+    private bool EnsureNetworkMatchesProject(ProjectInfo projectInfo)
+    {
+        var targetNetwork = NormalizeNetworkName(projectInfo.NetworkName);
+
+        if (targetNetwork == null || string.Equals(targetNetwork, network.Name, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (!hasWallet)
+        {
+            _Logger.LogInformation("Project is on {Target}, current network is {Current} — switching", targetNetwork, network.Name);
+            SwitchNetwork(targetNetwork);
+            // Full reload so every service re-initializes on the correct network.
+            NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+            return false;
+        }
+
+        loadError = $"This project is on the {targetNetwork} network, but this browser has a wallet on {network.Name}. " +
+                    "Open this link in a different browser profile, or change the network in the Angor app settings.";
+        loadingProject = false;
+        InvokeAsync(StateHasChanged);
+        return false;
+    }
+
+    /// <summary>
+    /// Switch the app to another network. Only called when no wallet exists locally,
+    /// so wiping the (settings/session) storage is safe. Mirrors Settings.razor's ChangeNetwork.
+    /// </summary>
+    private void SwitchNetwork(string networkName)
+    {
+        storage.WipeStorage();
+        SessionStorage.WipeSession();
+
+        _networkService.CheckAndSetNetwork(NavigationManager.Uri.ToLower(), networkName);
+        _networkService.AddSettingsIfNotExist();
+        network = _networkConfiguration.GetNetwork();
+    }
+
+    private static string? NormalizeNetworkName(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return null;
+
+        return name.Trim().ToLowerInvariant() switch
+        {
+            "main" or "mainnet" or "bitcoin" => "Main",
+            "angornet" or "testnet" or "test" => "Angornet",
+            "signet" => "Signet",
+            "testnet4" => "Testnet4",
+            "regtest" => "Regtest",
+            _ => name
+        };
+    }
+
+    private void OnProjectLoaded()
+    {
+        if (project?.ProjectInfo == null)
+            return;
+
+        if (!invested && !founder && !applicationLogicService.IsInvestmentWindowOpen(project.ProjectInfo))
+        {
+            loadError = "The investment window for this project is closed.";
+            project = null;
+            return;
+        }
+
+        LoadAvailablePatterns();
+        UpdateStagesBreakdown();
+        _ = LoadProjectStats();
+
+        if (walletAvailable)
+        {
+            _ = LoadWalletBalance();
+        }
+    }
+
+    private async Task LoadProjectStats()
+    {
+        try
+        {
+            var data = await _IndexerService.GetProjectStatsAsync(project!.ProjectInfo.ProjectIdentifier);
+
+            if (data.stats != null)
+            {
+                totalInvestors = (int)data.stats.InvestorCount;
+                totalRaisedSats = data.stats.AmountInvested;
+
+                if (project.ProjectInfo.TargetAmount > 0)
+                {
+                    fundingProgressPercent = (int)(totalRaisedSats * 100 / project.ProjectInfo.TargetAmount);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _Logger.LogWarning(ex, "Failed to load project stats");
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// Look up the project's relay list from its Nostr profile (NIP-65, kind 10002)
+    /// and merge any new relays into the local settings so signature exchange
+    /// happens on relays the founder actually reads.
+    /// </summary>
+    private void MergeProjectRelays(string nostrPubKey)
+    {
+        if (string.IsNullOrEmpty(nostrPubKey))
+            return;
+
+        try
+        {
+            _RelayService.LookupRelayListForNPubs(
+                (pubkey, relayTags) =>
+                {
+                    var relays = relayTags
+                        .Select(tag => tag.AdditionalData.FirstOrDefault())
+                        .Where(url => !string.IsNullOrEmpty(url))
+                        .Select(url => url!.TrimEnd('/'))
+                        .ToList();
+
+                    if (!relays.Any())
+                        return;
+
+                    var settings = storage.GetSettingsInfo();
+                    var known = settings.Relays.Select(r => r.Url.TrimEnd('/')).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                    bool added = false;
+
+                    foreach (var relay in relays)
+                    {
+                        if (known.Add(relay))
+                        {
+                            settings.Relays.Add(new SettingsUrl { Name = string.Empty, Url = relay });
+                            added = true;
+                        }
+                    }
+
+                    if (added)
+                    {
+                        storage.SetSettingsInfo(settings);
+                        _Logger.LogInformation("Merged {Count} relays from project profile", relays.Count);
+                    }
+                },
+                null,
+                nostrPubKey);
+        }
+        catch (Exception ex)
+        {
+            _Logger.LogWarning(ex, "Failed to look up project relay list");
+        }
+    }
+
+    private string TruncateAbout(string about)
+    {
+        const int max = 280;
+        return about.Length <= max ? about : about[..max] + "…";
+    }
+
     private void LoadAvailablePatterns()
     {
-        // Load dynamic stage patterns if applicable
-        // For standard invest projects, no patterns are shown
         AvailablePatterns = project?.ProjectInfo?.AllowDynamicStages ?? false
             ? project.ProjectInfo.DynamicStagePatterns
             : null;
+
+        // Auto-select the first pattern so Fund/Subscribe projects work out of the box.
+        if (AvailablePatterns?.Any() == true && SelectedPattern == null)
+        {
+            SelectPattern(AvailablePatterns.First());
+        }
     }
 
     private void OnAmountChanged(ChangeEventArgs e)
@@ -900,6 +1413,14 @@
     private void SelectPattern(DynamicStagePattern pattern)
     {
         SelectedPattern = pattern;
+
+        // Subscribe patterns may fix the investment amount.
+        if (pattern.HasFixedAmount)
+        {
+            Investment.InvestmentAmountBtc = Money.Satoshis(pattern.Amount!.Value).ToUnit(MoneyUnit.BTC);
+        }
+
+        UpdateStagesBreakdown();
         StateHasChanged();
     }
 
@@ -907,7 +1428,31 @@
     {
         StagesBreakdown.Clear();
 
-        if (project?.ProjectInfo?.Stages == null)
+        if (project?.ProjectInfo == null)
+            return;
+
+        if (project.ProjectInfo.AllowDynamicStages)
+        {
+            // Fund/Subscribe: stages are derived from the selected pattern, not ProjectInfo.Stages.
+            if (SelectedPattern == null)
+                return;
+
+            var stages = DynamicStageHelper.ComputeStagesFromPattern(SelectedPattern, DateTime.UtcNow.Date);
+            int dynamicIndex = 1;
+            foreach (var stage in stages)
+            {
+                StagesBreakdown.Add(new StageBreakdown
+                {
+                    StageNumber = dynamicIndex++,
+                    AmountBtc = Investment.InvestmentAmountBtc * (stage.AmountToRelease / 100),
+                    StageDateTime = stage.ReleaseDate,
+                    DaysFromStartDate = (stage.ReleaseDate - DateTime.UtcNow.Date).Days
+                });
+            }
+            return;
+        }
+
+        if (project.ProjectInfo.Stages == null)
             return;
 
         int index = 1;
@@ -933,6 +1478,520 @@
         {
             notificationComponent.ShowErrorMessage(e.Message, e);
         }
+    }
+
+    // --- Ephemeral (no-password) wallet key handling ---
+
+    /// <summary>
+    /// If this browser has an ephemeral wallet key stored alongside the encrypted wallet,
+    /// prime the password cache with it so the user is never prompted for a password.
+    /// The key is verified against the wallet — a stale key is discarded.
+    /// </summary>
+    private async Task TryPrimeEphemeralKeyAsync()
+    {
+        try
+        {
+            if (!hasWallet)
+                return;
+
+            var storedKey = await JS.InvokeAsync<string?>("localStorage.getItem", EphemeralKeyStorageKey);
+            if (string.IsNullOrEmpty(storedKey))
+            {
+                // Wallet exists but was created with a user password (e.g. in the full Angor app).
+                walletNeedsPassword = true;
+                return;
+            }
+
+            // Verify the key actually decrypts this wallet (guards against stale keys).
+            var wallet = _walletStorage.GetWallet();
+            var decrypted = await encryption.DecryptData(wallet.EncryptedData, storedKey);
+            if (string.IsNullOrEmpty(decrypted))
+            {
+                _Logger.LogWarning("Stored ephemeral key does not match the wallet — discarding");
+                walletNeedsPassword = true;
+                return;
+            }
+
+            _PasswordCacheService.Data = storedKey;
+            _PasswordCacheService.SetTimer(TimeSpan.FromHours(24));
+        }
+        catch (Exception ex)
+        {
+            _Logger.LogWarning(ex, "Failed to restore ephemeral wallet key");
+            walletNeedsPassword = true;
+        }
+    }
+
+    /// <summary>
+    /// Discard a password-protected wallet the user cannot unlock and create a fresh
+    /// ephemeral wallet for this investment. Permanent — requires the confirm step in the UI.
+    /// </summary>
+    private async Task DiscardWalletAndStartFresh()
+    {
+        try
+        {
+            _walletStorage.DeleteWallet();
+            storage.DeleteAccountInfo(network.Name);
+            await JS.InvokeVoidAsync("localStorage.removeItem", EphemeralKeyStorageKey);
+            _PasswordCacheService.Data = null;
+
+            hasWallet = false;
+            walletAvailable = false;
+            walletNeedsPassword = false;
+            confirmDiscardWallet = false;
+            WalletBalance = new();
+
+            await AutoCreateWallet();
+        }
+        catch (Exception e)
+        {
+            notificationComponent.ShowErrorMessage($"Failed to reset wallet: {e.Message}", e);
+        }
+    }
+
+    // --- Invest flow ---
+
+    /// <summary>
+    /// Main entry point when the user clicks Invest.
+    /// No wallet: create one silently and show the seed backup first.
+    /// Wallet with sufficient balance (e.g. leftover from a previous session): offer to use it.
+    /// Otherwise: payment method choice (on-chain address / Lightning).
+    /// </summary>
+    private async Task HandleInvestClick()
+    {
+        if (!ValidateInvestmentAmount()) return;
+
+        if (!walletAvailable)
+        {
+            await AutoCreateWallet();
+            return;
+        }
+
+        // Check if funds from a previous session already cover this investment.
+        if (!walletNeedsPassword)
+        {
+            buildSpinner = true;
+            StateHasChanged();
+            try
+            {
+                WalletBalance = await _walletUIService.RefreshWalletBalance();
+            }
+            catch (Exception ex)
+            {
+                _Logger.LogWarning(ex, "Failed to refresh wallet balance");
+            }
+            finally
+            {
+                buildSpinner = false;
+            }
+
+            if (WalletBalance.TotalBalance >= Investment.InvestmentAmountBtc.ToUnitSatoshi())
+            {
+                showUseFundsModal = true;
+                StateHasChanged();
+                return;
+            }
+        }
+
+        showPaymentMethodModal = true;
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Invest straight from the existing wallet balance — no payment, no confirmation modal.
+    /// Builds, signs and submits through the same pipeline as the invoice flows.
+    /// </summary>
+    private async Task UseAvailableFunds()
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            passwordComponent.ShowPassword(InvestFromWalletBalance);
+        }
+        else
+        {
+            await InvestFromWalletBalance();
+        }
+    }
+
+    private void PayAnotherWay()
+    {
+        showUseFundsModal = false;
+        showPaymentMethodModal = true;
+        StateHasChanged();
+    }
+
+    private async Task InvestFromWalletBalance()
+    {
+        investSpinner = true;
+        StateHasChanged();
+        await Task.Delay(10);
+
+        try
+        {
+            var words = await passwordComponent.GetWalletAsync();
+            var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
+
+            var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
+            feeData.FeeEstimations.Fees.Clear();
+            feeData.FeeEstimations.Fees.AddRange(fetchFees);
+
+            var feeList = feeData.FeeEstimations.Fees;
+            feeData.SelectedFeeEstimation = feeList.Count > 2
+                ? feeList[feeList.Count / 2]
+                : feeList.First();
+
+            InvestorPubKey = _derivationOperations.DeriveInvestorKey(words, project.ProjectInfo.FounderKey);
+
+            long investmentAmount = Investment.InvestmentAmountBtc.ToUnitSatoshi();
+            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(
+                project.ProjectInfo, CreateFundingParameters(InvestorPubKey, investmentAmount));
+
+            signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
+                accountBalanceInfo.AccountInfo.GetNextChangeReceiveAddress(),
+                unSignedTransaction, words, accountBalanceInfo.AccountInfo,
+                feeData.SelectedFeeEstimation.FeeRate);
+
+            showUseFundsModal = false;
+            await Send();
+        }
+        catch (Exception e)
+        {
+            notificationComponent.ShowErrorMessage(e.Message, e);
+        }
+        finally
+        {
+            investSpinner = false;
+            showUseFundsModal = false;
+        }
+
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Create a wallet on the fly with a random encryption key (no user password).
+    /// The key is stored next to the encrypted wallet in localStorage; the recovery
+    /// phrase (shown to the user before any payment) is the real safety net.
+    /// </summary>
+    private async Task AutoCreateWallet()
+    {
+        buildSpinner = true;
+        StateHasChanged();
+        await Task.Delay(10);
+
+        try
+        {
+            var seedWords = _WalletOperations.GenerateWalletWords();
+            autoCreatedSeedWords = seedWords;
+
+            // Random throwaway encryption key instead of a user password
+            var ephemeralKey = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
+
+            var walletWords = new WalletWords { Words = seedWords };
+            var accountInfo = _WalletOperations.BuildAccountInfoForWalletWords(walletWords);
+            await _WalletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
+
+            var encrypted = await encryption.EncryptData(walletWords.ConvertToString(), ephemeralKey);
+            _walletStorage.SaveWalletWords(new Angor.Shared.Models.Wallet { EncryptedData = encrypted });
+            storage.SetAccountInfo(network.Name, accountInfo);
+
+            var founderKeyCollection = _derivationOperations.DeriveProjectKeys(walletWords, _networkConfiguration.GetAngorKey());
+            _walletStorage.SetFounderKeys(founderKeyCollection);
+
+            // Persist the key alongside the wallet and prime the password cache
+            await JS.InvokeVoidAsync("localStorage.setItem", EphemeralKeyStorageKey, ephemeralKey);
+            _PasswordCacheService.Data = ephemeralKey;
+            _PasswordCacheService.SetTimer(TimeSpan.FromHours(24));
+
+            walletAvailable = true;
+            walletAutoCreated = true;
+            hasWallet = true;
+
+            // Show the recovery phrase BEFORE any payment is requested
+            backupConfirmed = false;
+            showBackupModal = true;
+        }
+        catch (Exception e)
+        {
+            notificationComponent.ShowErrorMessage($"Failed to create wallet: {e.Message}", e);
+        }
+        finally
+        {
+            buildSpinner = false;
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// User confirmed they saved the recovery phrase — proceed to payment method choice.
+    /// </summary>
+    private void ConfirmBackupSaved()
+    {
+        showBackupModal = false;
+
+        if (!backupConfirmed && !invested)
+        {
+            backupConfirmed = true;
+            showPaymentMethodModal = true;
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task PayWithAddress()
+    {
+        showPaymentMethodModal = false;
+        if (!passwordComponent.HasPassword())
+        {
+            passwordComponent.ShowPassword(async () => await StartInvoiceFlow());
+        }
+        else
+        {
+            await StartInvoiceFlow();
+        }
+    }
+
+    private async Task Send()
+    {
+        if (!passwordComponent.HasPassword())
+        {
+            investSpinner = false;
+            notificationComponent.ShowErrorMessage("Wallet password expired");
+            return;
+        }
+
+        investSpinner = true;
+        StateHasChanged();
+        await Task.Delay(10);
+
+        try
+        {
+            project = new InvestorProject
+            {
+                ProjectInfo = project!.ProjectInfo,
+                Metadata = project.Metadata,
+                SignedTransactionHex = signedTransaction!.Transaction!.ToHex(),
+                CreationTransactionId = project.CreationTransactionId,
+                AmountInvested = Investment.InvestmentAmountBtc.ToUnitSatoshi(),
+                InvestorPublicKey = InvestorPubKey ?? throw new ArgumentNullException("The investor pub key is not populated")
+            };
+
+            var investorProject = (InvestorProject)project;
+            investorProject.SignaturesInfo = new()
+            {
+                ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
+            };
+
+            var strippedInvestmentTransaction = network.CreateTransaction(investorProject.SignedTransactionHex);
+            strippedInvestmentTransaction.Inputs.ForEach(f => { f.WitScript = WitScript.Empty; });
+
+            var accountInfo = storage.GetAccountInfo(network.Name);
+            var words = await passwordComponent.GetWalletAsync();
+
+            var investorNostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
+            var nostrPrivateKeyHex = Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes());
+            var releaseAddress = accountInfo.GetNextReceiveAddress();
+
+            // Threshold check (mirrors the desktop flow):
+            // - Invest projects always need founder approval (penalty/recovery paths).
+            // - Fund projects only need approval above the penalty threshold.
+            // - Subscribe (and below-threshold Fund) publish directly — no approval round-trip.
+            bool needsFounderSignatures = project.ProjectInfo.ProjectType switch
+            {
+                ProjectType.Invest => true,
+                ProjectType.Fund => _InvestorTransactionActions.IsInvestmentAbovePenaltyThreshold(
+                    project.ProjectInfo, investorProject.AmountInvested ?? 0),
+                _ => false
+            };
+
+            if (!needsFounderSignatures)
+            {
+                await PublishDirectlyAsync(investorProject, nostrPrivateKeyHex);
+                return;
+            }
+
+            SignRecoveryRequest signRecoveryRequest = new()
+            {
+                ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
+                InvestmentTransactionHex = strippedInvestmentTransaction.ToHex(),
+                UnfundedReleaseAddress = releaseAddress,
+            };
+
+            var sigJson = serializer.Serialize(signRecoveryRequest);
+            var encryptedContent = await encryption.EncryptNostrContentAsync(
+                nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey, sigJson);
+
+            var investmentSigsRequest = _SignService.RequestInvestmentSigs(encryptedContent, nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey,
+                response =>
+                {
+                    if (response.Accepted)
+                    {
+                        notificationComponent.ShowNotificationMessage("Signature request sent to the founder", 5);
+                    }
+                    else
+                    {
+                        notificationComponent.ShowErrorMessage($"Failed to send the request to the {response.CommunicatorName} relay");
+                    }
+                });
+
+            investorProject.SignaturesInfo!.TimeOfSignatureRequest = investmentSigsRequest.eventTime;
+            investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
+            investorProject.InvestorNPub = NostrHelper.GetPubKeyHexFromPrivateKeyHex(nostrPrivateKeyHex);
+            investorProject.UnfundedReleaseAddress = releaseAddress;
+
+            storage.AddInvestmentProject(investorProject);
+
+            foreach (var input in strippedInvestmentTransaction.Inputs)
+                accountInfo.UtxoReservedForInvestment.Add(input.PrevOut.ToString());
+
+            storage.SetAccountInfo(network.Name, accountInfo);
+
+            _SignService.LookupSignatureForInvestmentRequest(
+                investorProject.InvestorNPub,
+                investorProject.ProjectInfo.NostrPubKey,
+                investorProject.SignaturesInfo.TimeOfSignatureRequest.Value,
+                investorProject.SignaturesInfo.SignatureRequestEventId,
+                signatures => HandleSignatureReceivedAsync(nostrPrivateKeyHex, signatures));
+
+            notificationComponent.ShowNotificationMessage("Signature request sent", 5);
+            StartSignaturePolling();
+        }
+        catch (Exception e)
+        {
+            notificationComponent.ShowErrorMessage(e.Message, e);
+        }
+        finally
+        {
+            investSpinner = false;
+        }
+
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Publish a below-threshold (or Subscribe) investment straight to the blockchain —
+    /// no founder approval needed. Notifies the founder over Nostr so the investment
+    /// still shows up in their list.
+    /// </summary>
+    private async Task PublishDirectlyAsync(InvestorProject investorProject, string nostrPrivateKeyHex)
+    {
+        var publishError = await _indexerService.PublishTransactionAsync(signedTransaction!.Transaction!.ToHex());
+
+        if (!string.IsNullOrEmpty(publishError))
+        {
+            notificationComponent.ShowErrorMessage("Transaction failed", publishError);
+            return;
+        }
+
+        investorProject.CompleteProjectInvestment(signedTransaction.Transaction);
+        storage.AddInvestmentProject(investorProject);
+
+        var accountInfo = storage.GetAccountInfo(network.Name);
+        var unspentInfo = SessionStorage.GetUnconfirmedInboundFunds();
+        var spendUtxos = _WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, signedTransaction.Transaction);
+        storage.SetAccountInfo(network.Name, accountInfo);
+        unspentInfo.AddRange(spendUtxos);
+        SessionStorage.SetUnconfirmedInboundFunds(unspentInfo);
+
+        // Best-effort founder notification (the transaction is already on-chain).
+        try
+        {
+            var notification = new InvestmentNotification
+            {
+                ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
+                TransactionId = signedTransaction.Transaction.GetHash().ToString()
+            };
+
+            var encryptedNotification = await encryption.EncryptNostrContentAsync(
+                nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey, serializer.Serialize(notification));
+
+            _SignService.NotifyInvestmentCompleted(
+                encryptedNotification, nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey, _ => { });
+        }
+        catch (Exception ex)
+        {
+            _Logger.LogWarning(ex, "Failed to notify founder of direct investment");
+        }
+
+        invested = true;
+        investedTransactionId = signedTransaction.Transaction.GetHash().ToString();
+        showInvoiceModal = false;
+        showLightningInvoiceModal = false;
+        notificationComponent.ShowNotificationMessage("Invested in project", 5);
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Notification payload sent to the founder for direct (no-approval) investments.
+    /// Mirrors Angor.Sdk.Funding.Investor.Operations.InvestmentNotification.
+    /// </summary>
+    private class InvestmentNotification
+    {
+        public string ProjectIdentifier { get; set; } = string.Empty;
+        public string TransactionId { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Founder signatures received over Nostr — validate and publish automatically (one-click invest).
+    /// </summary>
+    private async Task HandleSignatureReceivedAsync(string? nostrPrivateKeyHex, string encryptedSignatures)
+    {
+        try
+        {
+            if (project is not InvestorProject investorProject || investorProject.ReceivedFounderSignatures())
+                return;
+
+            var signatureJson = await encryption.DecryptNostrContentAsync(
+                nostrPrivateKeyHex, project.ProjectInfo.NostrPubKey, encryptedSignatures);
+
+            var res = serializer.Deserialize<SignatureInfo>(signatureJson);
+
+            if (res.ProjectIdentifier == investorProject.SignaturesInfo?.ProjectIdentifier)
+            {
+                investorProject.SignaturesInfo.Signatures = res.Signatures;
+                StateHasChanged();
+
+                // Auto-publish — the user should not have to come back and click again.
+                if (!autoPublishStarted)
+                {
+                    autoPublishStarted = true;
+                    await InvokeAsync(PublishSignedTransactionAsync);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // This runs as a relay-subscription callback — never let a failure vanish silently.
+            _Logger.LogError(ex, "Failed to process founder signature response");
+            notificationComponent.ShowErrorMessage($"Failed to process the founder's response: {ex.Message}", ex);
+            StateHasChanged();
+        }
+    }
+
+    private async Task CancelInvestment()
+    {
+        if (project is not InvestorProject investorProject || investorProject.SignaturesInfo == null)
+        {
+            notificationComponent.ShowErrorMessage("Missing project details, unable to cancel");
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(investorProject.SignedTransactionHex))
+        {
+            signedTransaction ??= new TransactionInfo();
+            signedTransaction.Transaction ??= network.CreateTransaction(investorProject.SignedTransactionHex);
+            var accountInfo = storage.GetAccountInfo(network.Name);
+
+            foreach (var input in signedTransaction.Transaction.Inputs)
+                accountInfo.UtxoReservedForInvestment.Remove(input.PrevOut.ToString());
+
+            storage.SetAccountInfo(network.Name, accountInfo);
+        }
+
+        storage.RemoveInvestmentProject(project.ProjectInfo.ProjectIdentifier);
+        investorProject.SignaturesInfo = null;
+        autoPublishStarted = false;
+        project = SessionStorage.GetProjectById(ProjectId);
+        StateHasChanged();
     }
 
     private async Task RefreshSignatures()
@@ -991,242 +2050,6 @@
         StateHasChanged();
     }
 
-    private async Task InvestFundsAndCheckPassword()
-    {
-        if (!passwordComponent.HasPassword())
-        {
-            passwordComponent.ShowPassword(InvestFunds);
-        }
-        else
-        {
-            await InvestFunds();
-        }
-    }
-
-    private async Task InvestFunds()
-    {
-        bool isTestnet = !network.IsMainnet;
-        bool debugMode = storage.GetDebugMode();
-        decimal maxInvestmentBtc = isTestnet ? decimal.MaxValue : 0.2m;
-        decimal minInvestmentBtc = 0.0001m;
-
-        if (Investment.InvestmentAmountBtc < minInvestmentBtc)
-        {
-            notificationComponent.ShowErrorMessage($"Minimum investment amount is {minInvestmentBtc} BTC");
-            return;
-        }
-
-        if ((!isTestnet && !debugMode) && Investment.InvestmentAmountBtc > maxInvestmentBtc)
-        {
-            notificationComponent.ShowErrorMessage($"Maximum investment amount is {maxInvestmentBtc} BTC on mainnet");
-            return;
-        }
-
-        var totalPercent = project!.ProjectInfo.Stages.Sum(s => s.AmountToRelease);
-        if (Math.Abs(totalPercent - 100) > 0.01m)
-        {
-            notificationComponent.ShowErrorMessage("The stages must sum to 100%");
-            return;
-        }
-
-        if (project is InvestorProject ip && ip.InvestedInProject())
-        {
-            notificationComponent.ShowErrorMessage("You already invested");
-            return;
-        }
-
-        buildSpinner = true;
-        StateHasChanged();
-        await Task.Delay(10);
-
-        try
-        {
-            var words = await passwordComponent.GetWalletAsync();
-            var accountBalanceInfo = await _walletUIService.RefreshWalletBalance();
-
-            var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
-            feeData.FeeEstimations.Fees.Clear();
-            feeData.FeeEstimations.Fees.AddRange(fetchFees);
-            feeData.SelectedFeeEstimation = feeData.FeeEstimations.Fees.First();
-
-            InvestorPubKey = _derivationOperations.DeriveInvestorKey(words, project.ProjectInfo.FounderKey);
-
-            long investmentAmount = Investment.InvestmentAmountBtc.ToUnitSatoshi();
-            unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(project.ProjectInfo, InvestorPubKey, investmentAmount);
-
-            if (_featureFlagService.IsFeatureHWSupportEnabled())
-            {
-                var psbt = _PsbtOperations.CreatePsbtForTransaction(unSignedTransaction, accountBalanceInfo.AccountInfo, feeData.SelectedFeeEstimation.FeeRate);
-                signedTransaction = _PsbtOperations.SignPsbt(psbt, words);
-            }
-            else
-            {
-                signedTransaction = _WalletOperations.AddInputsAndSignTransaction(
-                    accountBalanceInfo.AccountInfo.GetNextChangeReceiveAddress(),
-                    unSignedTransaction, words, accountBalanceInfo.AccountInfo,
-                    feeData.SelectedFeeEstimation.FeeRate);
-            }
-
-            showCreateModal = true;
-        }
-        catch (Exception e)
-        {
-            notificationComponent.ShowErrorMessage(e.Message, e);
-        }
-        finally
-        {
-            buildSpinner = false;
-        }
-
-        StateHasChanged();
-    }
-
-    private async Task Send()
-    {
-        if (!passwordComponent.HasPassword())
-        {
-            investSpinner = false;
-            showCreateModal = false;
-            notificationComponent.ShowErrorMessage("Wallet password expired");
-            return;
-        }
-
-        investSpinner = true;
-        StateHasChanged();
-        await Task.Delay(10);
-
-        try
-        {
-            project = new InvestorProject
-            {
-                ProjectInfo = project!.ProjectInfo,
-                Metadata = project.Metadata,
-                SignedTransactionHex = signedTransaction!.Transaction!.ToHex(),
-                CreationTransactionId = project.CreationTransactionId,
-                AmountInvested = Investment.InvestmentAmountBtc.ToUnitSatoshi(),
-                InvestorPublicKey = InvestorPubKey ?? throw new ArgumentNullException("The investor pub key is not populated")
-            };
-
-            var investorProject = (InvestorProject)project;
-            investorProject.SignaturesInfo = new()
-            {
-                ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
-            };
-
-            var strippedInvestmentTransaction = network.CreateTransaction(investorProject.SignedTransactionHex);
-            strippedInvestmentTransaction.Inputs.ForEach(f => { f.WitScript = WitScript.Empty; });
-
-            var accountInfo = storage.GetAccountInfo(network.Name);
-            var words = await passwordComponent.GetWalletAsync();
-
-            var investorNostrPrivateKey = _derivationOperations.DeriveProjectNostrPrivateKey(words, project.ProjectInfo.FounderKey);
-            var nostrPrivateKeyHex = Encoders.Hex.EncodeData(investorNostrPrivateKey.ToBytes());
-            var releaseAddress = accountInfo.GetNextReceiveAddress();
-
-            SignRecoveryRequest signRecoveryRequest = new()
-            {
-                ProjectIdentifier = investorProject.ProjectInfo.ProjectIdentifier,
-                InvestmentTransactionHex = strippedInvestmentTransaction.ToHex(),
-                UnfundedReleaseAddress = releaseAddress,
-            };
-
-            var sigJson = serializer.Serialize(signRecoveryRequest);
-            var encryptedContent = await encryption.EncryptNostrContentAsync(
-                nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey, sigJson);
-
-            var investmentSigsRequest = _SignService.RequestInvestmentSigs(encryptedContent, nostrPrivateKeyHex, investorProject.ProjectInfo.NostrPubKey,
-                response =>
-                {
-                    if (response.Accepted)
-                    {
-                        notificationComponent.ShowNotificationMessage("Signature request sent to the founder", 5);
-                    }
-                    else
-                    {
-                        notificationComponent.ShowErrorMessage($"Failed to send the request to the {response.CommunicatorName} relay");
-                    }
-                });
-
-            investorProject.SignaturesInfo!.TimeOfSignatureRequest = investmentSigsRequest.eventTime;
-            investorProject.SignaturesInfo!.SignatureRequestEventId = investmentSigsRequest.eventId;
-            investorProject.InvestorNPub = NostrHelper.GetPubKeyHexFromPrivateKeyHex(nostrPrivateKeyHex);
-            investorProject.UnfundedReleaseAddress = releaseAddress;
-
-            storage.AddInvestmentProject(investorProject);
-
-            foreach (var input in strippedInvestmentTransaction.Inputs)
-                accountInfo.UtxoReservedForInvestment.Add(input.PrevOut.ToString());
-
-            storage.SetAccountInfo(network.Name, accountInfo);
-
-            _SignService.LookupSignatureForInvestmentRequest(
-                investorProject.InvestorNPub,
-                investorProject.ProjectInfo.NostrPubKey,
-                investorProject.SignaturesInfo.TimeOfSignatureRequest.Value,
-                investorProject.SignaturesInfo.SignatureRequestEventId,
-                signatures => HandleSignatureReceivedAsync(nostrPrivateKeyHex, signatures));
-
-            notificationComponent.ShowNotificationMessage("Signature request sent", 5);
-            ShowBackupIfNeeded();
-        }
-        catch (Exception e)
-        {
-            notificationComponent.ShowErrorMessage(e.Message, e);
-            CheckAndShowBackupIfNeeded();
-        }
-        finally
-        {
-            showCreateModal = false;
-            investSpinner = false;
-            passwordComponent.ClearPassword();
-        }
-
-        StateHasChanged();
-    }
-
-    private async Task HandleSignatureReceivedAsync(string? nostrPrivateKeyHex, string encryptedSignatures)
-    {
-        if (project is not InvestorProject investorProject || investorProject.ReceivedFounderSignatures())
-            return;
-
-        var signatureJson = await encryption.DecryptNostrContentAsync(
-            nostrPrivateKeyHex, project.ProjectInfo.NostrPubKey, encryptedSignatures);
-
-        var res = serializer.Deserialize<SignatureInfo>(signatureJson);
-
-        if (res.ProjectIdentifier == investorProject.SignaturesInfo?.ProjectIdentifier)
-        {
-            investorProject.SignaturesInfo.Signatures = res.Signatures;
-            StateHasChanged();
-        }
-    }
-
-    private async Task CancelInvestment()
-    {
-        if (project is not InvestorProject investorProject || investorProject.SignaturesInfo == null)
-        {
-            notificationComponent.ShowErrorMessage("Missing project details, unable to cancel");
-            return;
-        }
-
-        if (!string.IsNullOrEmpty(investorProject.SignedTransactionHex))
-        {
-            signedTransaction ??= new TransactionInfo();
-            signedTransaction.Transaction ??= network.CreateTransaction(investorProject.SignedTransactionHex);
-            var accountInfo = storage.GetAccountInfo(network.Name);
-
-            foreach (var input in signedTransaction.Transaction.Inputs)
-                accountInfo.UtxoReservedForInvestment.Remove(input.PrevOut.ToString());
-
-            storage.SetAccountInfo(network.Name, accountInfo);
-        }
-
-        storage.RemoveInvestmentProject(project.ProjectInfo.ProjectIdentifier);
-        investorProject.SignaturesInfo = null;
-        project = SessionStorage.GetProjectById(ProjectId);
-        StateHasChanged();
-    }
-
     private async Task PublishSignedTransactionAsync()
     {
         publishSpinner = true;
@@ -1245,6 +2068,7 @@
             if (!validSignatures)
             {
                 notificationComponent.ShowErrorMessage("The signatures returned from the founder failed validation");
+                autoPublishStarted = false;
                 return;
             }
 
@@ -1253,6 +2077,7 @@
             if (!string.IsNullOrEmpty(publishError))
             {
                 notificationComponent.ShowErrorMessage("Transaction failed", publishError);
+                autoPublishStarted = false;
                 return;
             }
 
@@ -1270,16 +2095,22 @@
             unspentInfo.AddRange(spendUtxos);
             SessionStorage.SetUnconfirmedInboundFunds(unspentInfo);
 
+            // Success — stay on this page and show the confirmation state.
+            invested = true;
+            investedTransactionId = signedTransaction.Transaction.GetHash().ToString();
+            showInvoiceModal = false;
+            showLightningInvoiceModal = false;
             notificationComponent.ShowNotificationMessage("Invested in project", 5);
-            NavigationManager.NavigateTo($"/view/{project.ProjectInfo.ProjectIdentifier}");
         }
         catch (Exception e)
         {
             notificationComponent.ShowErrorMessage(e.Message, e);
+            autoPublishStarted = false;
         }
         finally
         {
             publishSpinner = false;
+            StateHasChanged();
         }
     }
 
@@ -1303,136 +2134,8 @@
         public int DaysFromStartDate { get; set; }
     }
 
-    // --- Wallet-Optional Invest Flow Methods (Steps 4-8) ---
+    // --- Invoice (send-to-address) flow ---
 
-    /// <summary>
-    /// Main entry point when user clicks "Invest" or "Continue to Confirmation".
-    /// Routes to the appropriate flow based on wallet availability and balance.
-    /// </summary>
-    private async Task HandleInvestClick()
-    {
-        // Validate amount first
-        if (!ValidateInvestmentAmount()) return;
-
-        if (walletAvailable)
-        {
-            // Wallet exists — show payment method choice
-            // "Pay with Wallet" will only appear if balance is sufficient
-            showPaymentMethodModal = true;
-            StateHasChanged();
-        }
-        else
-        {
-            // No wallet - show password prompt to create one
-            newWalletPasswordInput = null;
-            showNewWalletPasswordModal = true;
-            StateHasChanged();
-        }
-    }
-
-    /// <summary>
-    /// Step 7: User chose "Pay with Wallet" from payment method modal.
-    /// </summary>
-    private async Task PayWithWallet()
-    {
-        showPaymentMethodModal = false;
-        await InvestFundsAndCheckPassword();
-    }
-
-    /// <summary>
-    /// Step 7: User chose "Send to Address" from payment method modal.
-    /// </summary>
-    private async Task PayWithAddress()
-    {
-        showPaymentMethodModal = false;
-        if (!passwordComponent.HasPassword())
-        {
-            passwordComponent.ShowPassword(async () => await StartInvoiceFlow());
-        }
-        else
-        {
-            await StartInvoiceFlow();
-        }
-    }
-
-    /// <summary>
-    /// Step 4: User confirmed password for new wallet creation.
-    /// </summary>
-    private async Task ConfirmNewWalletPassword()
-    {
-        if (string.IsNullOrWhiteSpace(newWalletPasswordInput))
-        {
-            notificationComponent.ShowErrorMessage("Password is required");
-            return;
-        }
-
-        showNewWalletPasswordModal = false;
-        await AutoCreateWalletAndShowInvoice();
-    }
-
-    /// <summary>
-    /// Step 4: Auto-create a wallet on the fly and then show the invoice modal.
-    /// </summary>
-    private async Task AutoCreateWalletAndShowInvoice()
-    {
-        buildSpinner = true;
-        StateHasChanged();
-        await Task.Delay(10);
-
-        try
-        {
-            // Generate wallet words
-            var seedWords = _WalletOperations.GenerateWalletWords();
-            autoCreatedSeedWords = seedWords;
-
-            // Use password from the new wallet password modal
-            var password = newWalletPasswordInput;
-            if (string.IsNullOrEmpty(password))
-            {
-                notificationComponent.ShowErrorMessage("Password is required to create a wallet");
-                return;
-            }
-
-            // Build account info
-            var walletWords = new WalletWords { Words = seedWords };
-            var accountInfo = _WalletOperations.BuildAccountInfoForWalletWords(walletWords);
-            await _WalletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
-
-            // Encrypt and save
-            var encrypted = await encryption.EncryptData(walletWords.ConvertToString(), password);
-            _walletStorage.SaveWalletWords(new Angor.Shared.Models.Wallet { EncryptedData = encrypted });
-            storage.SetAccountInfo(network.Name, accountInfo);
-
-            // Derive and save founder keys
-            var founderKeyCollection = _derivationOperations.DeriveProjectKeys(walletWords, _networkConfiguration.GetAngorKey());
-            _walletStorage.SetFounderKeys(founderKeyCollection);
-
-            // Update state
-            walletAvailable = true;
-            walletAutoCreated = true;
-            hasWallet = true;
-
-            // Set password in cache so passwordComponent.GetWalletAsync() works for subsequent calls
-            _PasswordCacheService.Data = password;
-            _PasswordCacheService.SetTimer(TimeSpan.FromMinutes(5));
-
-            // Show payment method choice (on-chain address or Lightning)
-            showPaymentMethodModal = true;
-        }
-        catch (Exception e)
-        {
-            notificationComponent.ShowErrorMessage($"Failed to create wallet: {e.Message}", e);
-        }
-        finally
-        {
-            buildSpinner = false;
-            StateHasChanged();
-        }
-    }
-
-    /// <summary>
-    /// Start the invoice flow for an existing wallet (get address, show modal, monitor).
-    /// </summary>
     private async Task StartInvoiceFlow()
     {
         buildSpinner = true;
@@ -1463,9 +2166,6 @@
         }
     }
 
-    /// <summary>
-    /// Show the invoice modal and start polling for funds.
-    /// </summary>
     private async Task ShowInvoiceAndMonitor()
     {
         paymentReceived = false;
@@ -1478,7 +2178,6 @@
         {
             var requiredSats = Investment.InvestmentAmountBtc.ToUnitSatoshi();
 
-            // Poll for funds using the shared service
             var detectedUtxos = await _addressPollingService.WaitForFundsAsync(
                 invoiceAddress!,
                 requiredSats,
@@ -1488,7 +2187,6 @@
 
             if (detectedUtxos.Count == 0)
             {
-                // Timeout or cancelled
                 if (!invoiceMonitorCts.Token.IsCancellationRequested)
                 {
                     notificationComponent.ShowNotificationMessage("Payment timed out. Please try again.", 5);
@@ -1498,14 +2196,11 @@
                 return;
             }
 
-            // Funds received!
             paymentReceived = true;
-            if (walletAutoCreated) fundsReceivedOnNewWallet = true;
             invoiceProcessing = true;
             invoiceStatusMessage = "Preparing investment transaction...";
             StateHasChanged();
 
-            // Update account info with detected UTXOs
             invoiceStatusMessage = "Updating account information...";
             StateHasChanged();
             var accountInfo = storage.GetAccountInfo(network.Name);
@@ -1522,7 +2217,6 @@
                 storage.SetAccountInfo(network.Name, accountInfo);
             }
 
-            // Build and submit the investment directly (no confirmation dialog)
             invoiceStatusMessage = "Fetching fee estimates...";
             StateHasChanged();
             await BuildAndSubmitFromAddress(accountInfo);
@@ -1530,7 +2224,6 @@
         catch (Exception e)
         {
             notificationComponent.ShowErrorMessage($"Error: {e.Message}", e);
-            CheckAndShowBackupIfNeeded();
         }
         finally
         {
@@ -1539,40 +2232,31 @@
         }
     }
 
-    /// <summary>
-    /// Step 6: Build the investment transaction from the funded address and submit it directly.
-    /// Selects the medium fee and skips the confirmation dialog.
-    /// </summary>
     private async Task BuildAndSubmitFromAddress(AccountInfo accountInfo)
     {
         try
         {
             var words = await passwordComponent.GetWalletAsync();
 
-            // Get fee estimation and select medium fee
             invoiceStatusMessage = "Fetching fee estimates...";
             StateHasChanged();
             var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
             feeData.FeeEstimations.Fees.Clear();
             feeData.FeeEstimations.Fees.AddRange(fetchFees);
 
-            // Select medium fee (middle of the list) instead of highest
             var feeList = feeData.FeeEstimations.Fees;
             feeData.SelectedFeeEstimation = feeList.Count > 2
                 ? feeList[feeList.Count / 2]
                 : feeList.First();
 
-            // Derive investor key
             invoiceStatusMessage = "Building investment transaction...";
             StateHasChanged();
             InvestorPubKey = _derivationOperations.DeriveInvestorKey(words, project!.ProjectInfo.FounderKey);
 
-            // Create the unsigned investment transaction
             long investmentAmount = Investment.InvestmentAmountBtc.ToUnitSatoshi();
             unSignedTransaction = _InvestorTransactionActions.CreateInvestmentTransaction(
-                project.ProjectInfo, InvestorPubKey, investmentAmount);
+                project.ProjectInfo, CreateFundingParameters(InvestorPubKey, investmentAmount));
 
-            // Sign using UTXOs from the specific funded address
             invoiceStatusMessage = "Signing transaction...";
             StateHasChanged();
             var changeAddress = accountInfo.GetNextChangeReceiveAddress();
@@ -1584,7 +2268,6 @@
                 accountInfo,
                 feeData.SelectedFeeEstimation.FeeRate);
 
-            // Submit directly — skip the confirmation dialog
             invoiceStatusMessage = "Sending signature request to founder...";
             StateHasChanged();
             await Send();
@@ -1592,7 +2275,6 @@
         catch (Exception e)
         {
             notificationComponent.ShowErrorMessage($"Failed to build transaction: {e.Message}", e);
-            CheckAndShowBackupIfNeeded();
         }
     }
 
@@ -1600,15 +2282,11 @@
     {
         invoiceMonitorCts?.Cancel();
         showInvoiceModal = false;
-        CheckAndShowBackupIfNeeded();
         StateHasChanged();
     }
 
-    // --- Lightning Payment Flow Methods ---
+    // --- Lightning payment flow ---
 
-    /// <summary>
-    /// User chose "Pay with Lightning" from payment method modal.
-    /// </summary>
     private async Task PayWithLightning()
     {
         showPaymentMethodModal = false;
@@ -1622,10 +2300,6 @@
         }
     }
 
-    /// <summary>
-    /// Create a Boltz reverse submarine swap and show the Lightning invoice.
-    /// User pays the Lightning invoice → Boltz sends BTC on-chain to the receive address.
-    /// </summary>
     private async Task StartLightningFlow()
     {
         lightningLoading = true;
@@ -1639,7 +2313,6 @@
 
         try
         {
-            // Get receive address
             var accountInfo = storage.GetAccountInfo(network.Name);
             invoiceAddress = accountInfo.GetNextReceiveAddress();
 
@@ -1651,18 +2324,13 @@
                 return;
             }
 
-            // Derive a claim public key for the Boltz swap
             var words = await passwordComponent.GetWalletAsync();
             var claimPubKey = _derivationOperations.DeriveInvestorKey(words, project!.ProjectInfo.FounderKey);
 
-            // Calculate the required on-chain amount in sats
-            // Must include: investment amount + Angor fee + estimated miner fee
-            // so the Lightning invoice covers the full cost of the investment transaction
             long investmentSats = Investment.InvestmentAmountBtc.ToUnitSatoshi();
             int angorFeePercentage = _networkConfiguration.GetAngorInvestFeePercentage;
             long angorFee = (investmentSats * angorFeePercentage) / 100;
 
-            // Estimate investment tx vSize: overhead + 1 P2WPKH input + (stageCount + 2) P2WPKH outputs
             int stageCount = project!.ProjectInfo.Stages?.Count ?? 1;
             const int txOverhead = 10;
             const int inputSize = 68;
@@ -1673,7 +2341,6 @@
 
             long requiredSats = investmentSats + angorFee + estimatedMinerFee;
 
-            // Calculate the Lightning invoice amount (includes Boltz fees)
             _Logger.LogInformation("Calculating Lightning invoice amount for {RequiredSats} sats on-chain", requiredSats);
             var invoiceAmountResult = await _boltzSwapService.CalculateInvoiceAmountAsync(requiredSats);
 
@@ -1687,7 +2354,6 @@
                 return;
             }
 
-            // Create the Boltz reverse submarine swap
             _Logger.LogInformation(
                 "Creating Boltz reverse swap: invoice amount={InvoiceAmount} sats, destination={Address}, claimKey={Key}",
                 invoiceAmountResult.Value, invoiceAddress, claimPubKey[..8] + "...");
@@ -1717,7 +2383,6 @@
 
             StateHasChanged();
 
-            // Start monitoring the swap and proceed when funds arrive on-chain
             await MonitorLightningSwapAndProceed(accountInfo, requiredSats);
         }
         catch (Exception e)
@@ -1733,10 +2398,6 @@
         }
     }
 
-    /// <summary>
-    /// Monitor the Boltz swap status. Once the lockup tx is in mempool, claim the funds
-    /// using our preimage (only we have it), then poll our address for the claimed funds.
-    /// </summary>
     private async Task MonitorLightningSwapAndProceed(AccountInfo accountInfo, long requiredSats)
     {
         lightningMonitorCts = new CancellationTokenSource();
@@ -1744,7 +2405,6 @@
 
         try
         {
-            // Phase 1: Poll Boltz status until lockup tx is on-chain
             _Logger.LogInformation("Starting Boltz swap monitoring for {SwapId}", lightningSwapId);
             BoltzSwapStatus? lockupStatus = null;
             var maxAttempts = 360;
@@ -1778,7 +2438,6 @@
                         break;
 
                     case SwapState.TransactionClaimed:
-                        // Already claimed somehow — skip straight to address polling
                         _Logger.LogInformation("Swap {SwapId} already claimed", lightningSwapId);
                         lockupStatus = status;
                         break;
@@ -1812,13 +2471,11 @@
             paymentReceived = true;
             invoiceProcessing = true;
 
-            // Phase 2: Claim the funds using our preimage (only we have it)
             if (lockupStatus.Status != SwapState.TransactionClaimed)
             {
                 lightningStatusMessage = "Lockup detected! Claiming funds...";
                 StateHasChanged();
 
-                // Get lockup tx hex — from status or via indexer
                 var lockupTxHex = lockupStatus.TransactionHex;
                 if (string.IsNullOrEmpty(lockupTxHex) && !string.IsNullOrEmpty(lockupStatus.TransactionId))
                 {
@@ -1842,7 +2499,6 @@
                     return;
                 }
 
-                // Derive claim private key (same path as the public key used at swap creation)
                 var words = await passwordComponent.GetWalletAsync();
                 var claimPrivateKey = _derivationOperations.DeriveInvestorPrivateKey(words, project!.ProjectInfo.FounderKey);
 
@@ -1875,10 +2531,6 @@
                 StateHasChanged();
             }
 
-            // Phase 3: Poll our address for the claimed funds
-            // We poll directly instead of using _addressPollingService because:
-            // - The claim tx fee means the amount is slightly less than requiredSats
-            // - The UTXO may already be confirmed (blockIndex > 0), not just in mempool
             _Logger.LogInformation("Polling for any funds at {Address}", invoiceAddress);
 
             List<UtxoData> detectedUtxos = new();
@@ -1917,9 +2569,7 @@
                 return;
             }
 
-            // Phase 4: Build and submit investment
             _Logger.LogInformation("Funds detected for swap {SwapId}, building investment", lightningSwapId);
-            if (walletAutoCreated) fundsReceivedOnNewWallet = true;
             lightningStatusMessage = "Building investment transaction...";
             StateHasChanged();
 
@@ -1946,7 +2596,6 @@
         {
             _Logger.LogError(e, "Error in Lightning swap flow for {SwapId}", lightningSwapId);
             notificationComponent.ShowErrorMessage($"Error: {e.Message}", e);
-            CheckAndShowBackupIfNeeded();
         }
         finally
         {
@@ -1959,13 +2608,30 @@
     {
         lightningMonitorCts?.Cancel();
         showLightningInvoiceModal = false;
-        CheckAndShowBackupIfNeeded();
         StateHasChanged();
     }
 
-    private bool ValidateInvestmentAmount()
+    /// <summary>
+    /// Build the FundingParameters for the transaction based on the project type.
+    /// Invest uses fixed project stages; Fund/Subscribe use the selected dynamic pattern
+    /// (pattern id + start date are encoded in the OP_RETURN).
+    /// </summary>
+    private FundingParameters CreateFundingParameters(string investorKey, long investmentAmount)
     {
-        bool isTestnet = !network.IsMainnet;
+        var info = project!.ProjectInfo;
+
+        return info.ProjectType switch
+        {
+            ProjectType.Fund => FundingParameters.CreateForFund(
+                info, investorKey, investmentAmount, SelectedPattern!.PatternId, DateTime.UtcNow.Date),
+            ProjectType.Subscribe => FundingParameters.CreateForSubscribe(
+                info, investorKey, investmentAmount, SelectedPattern!.PatternId, DateTime.UtcNow.Date),
+            _ => FundingParameters.CreateForInvest(info, investorKey, investmentAmount)
+        };
+    }
+
+    private bool ValidateInvestmentAmount()
+    {        bool isTestnet = !network.IsMainnet;
         bool debugMode = storage.GetDebugMode();
         decimal maxInvestmentBtc = isTestnet ? decimal.MaxValue : 0.2m;
         decimal minInvestmentBtc = 0.0001m;
@@ -1982,11 +2648,31 @@
             return false;
         }
 
-        var totalPercent = project!.ProjectInfo.Stages.Sum(s => s.AmountToRelease);
-        if (Math.Abs(totalPercent - 100) > 0.01m)
+        if (project!.ProjectInfo.AllowDynamicStages)
         {
-            notificationComponent.ShowErrorMessage("The stages must sum to 100%");
-            return false;
+            // Fund/Subscribe: a funding pattern is required instead of fixed stages.
+            if (SelectedPattern == null)
+            {
+                notificationComponent.ShowErrorMessage("Please select a funding pattern");
+                return false;
+            }
+
+            if (SelectedPattern.HasFixedAmount &&
+                Investment.InvestmentAmountBtc.ToUnitSatoshi() != SelectedPattern.Amount!.Value)
+            {
+                notificationComponent.ShowErrorMessage(
+                    $"This pattern requires a fixed amount of {Money.Satoshis(SelectedPattern.Amount.Value).ToUnit(MoneyUnit.BTC)} {network.CoinTicker}");
+                return false;
+            }
+        }
+        else
+        {
+            var totalPercent = project.ProjectInfo.Stages.Sum(s => s.AmountToRelease);
+            if (Math.Abs(totalPercent - 100) > 0.01m)
+            {
+                notificationComponent.ShowErrorMessage("The stages must sum to 100%");
+                return false;
+            }
         }
 
         if (project is InvestorProject ip && ip.InvestedInProject())
@@ -1998,25 +2684,344 @@
         return true;
     }
 
+    // --- Connection settings (indexers/relays) ---
+
     /// <summary>
-    /// Step 8: Check if we need to show the backup modal and show it if needed.
+    /// If the URL carries an ?indexer= parameter (e.g. passed by angor hub, which already
+    /// knows a working indexer for this project), add it as the primary indexer and persist it.
     /// </summary>
-    private void CheckAndShowBackupIfNeeded()
+    private void ApplyIndexerFromQueryString()
     {
-        if (fundsReceivedOnNewWallet && !string.IsNullOrEmpty(autoCreatedSeedWords))
+        try
         {
-            showBackupModal = true;
+            var uri = new Uri(NavigationManager.Uri);
+            var query = uri.Query.TrimStart('?');
+            if (string.IsNullOrEmpty(query))
+                return;
+
+            string? indexerParam = query.Split('&')
+                .Select(pair => pair.Split('=', 2))
+                .Where(kv => kv.Length == 2 && kv[0].Equals("indexer", StringComparison.OrdinalIgnoreCase))
+                .Select(kv => Uri.UnescapeDataString(kv[1]))
+                .FirstOrDefault();
+
+            if (string.IsNullOrWhiteSpace(indexerParam))
+                return;
+
+            var normalized = NormalizeHttpUrl(indexerParam);
+            if (normalized == null)
+            {
+                _Logger.LogWarning("Ignoring invalid indexer URL from query string: {Url}", indexerParam);
+                return;
+            }
+
+            var settings = storage.GetSettingsInfo();
+            var existing = settings.Indexers.FirstOrDefault(i => i.Url.Equals(normalized, StringComparison.OrdinalIgnoreCase));
+
+            if (existing == null)
+            {
+                existing = new SettingsUrl { Name = string.Empty, Url = normalized };
+                settings.Indexers.Add(existing);
+            }
+
+            foreach (var indexer in settings.Indexers)
+                indexer.IsPrimary = indexer == existing;
+
+            storage.SetSettingsInfo(settings);
+            _Logger.LogInformation("Using indexer from URL parameter: {Url}", normalized);
+
+            _ = _networkService.CheckServices(true);
+        }
+        catch (Exception ex)
+        {
+            _Logger.LogWarning(ex, "Failed to apply indexer from query string");
         }
     }
 
-    /// <summary>
-    /// Step 8: Called after successful investment or in Send() finally block.
-    /// </summary>
-    private void ShowBackupIfNeeded()
+    private async Task OpenConnectionModal()
     {
-        if (walletAutoCreated && !string.IsNullOrEmpty(autoCreatedSeedWords))
+        connectionSettings = storage.GetSettingsInfo();
+        showConnectionModal = true;
+        StateHasChanged();
+
+        // Refresh online/offline status in the background.
+        await _networkService.CheckServices(true);
+        connectionSettings = storage.GetSettingsInfo();
+        StateHasChanged();
+    }
+
+    private void SetPrimaryIndexerUrl(SettingsUrl indexer)
+    {
+        foreach (var idx in connectionSettings!.Indexers)
+            idx.IsPrimary = idx.Url == indexer.Url;
+
+        storage.SetSettingsInfo(connectionSettings);
+        StateHasChanged();
+    }
+
+    private void AddIndexerUrl()
+    {
+        var normalized = NormalizeHttpUrl(newIndexerUrl);
+        if (normalized == null)
+        {
+            notificationComponent.ShowErrorMessage("Invalid indexer URL. Must be http(s)://...");
+            return;
+        }
+
+        if (connectionSettings!.Indexers.Any(a => a.Url.Equals(normalized, StringComparison.OrdinalIgnoreCase)))
+        {
+            notificationComponent.ShowErrorMessage("This indexer is already in the list.");
+            return;
+        }
+
+        var entry = new SettingsUrl { Name = string.Empty, Url = normalized };
+        connectionSettings.Indexers.Add(entry);
+
+        // A user-added indexer becomes primary — that's why they added it.
+        foreach (var idx in connectionSettings.Indexers)
+            idx.IsPrimary = idx == entry;
+
+        storage.SetSettingsInfo(connectionSettings);
+        newIndexerUrl = null;
+        _ = _networkService.CheckServices(true);
+        StateHasChanged();
+    }
+
+    private void RemoveIndexerUrl(SettingsUrl indexer)
+    {
+        if (connectionSettings!.Indexers.Count <= 1)
+            return;
+
+        connectionSettings.Indexers.Remove(indexer);
+
+        if (indexer.IsPrimary && connectionSettings.Indexers.Any())
+            connectionSettings.Indexers.First().IsPrimary = true;
+
+        storage.SetSettingsInfo(connectionSettings);
+        StateHasChanged();
+    }
+
+    private void AddRelayUrl()
+    {
+        if (string.IsNullOrWhiteSpace(newRelayUrl) ||
+            !Uri.TryCreate(newRelayUrl, UriKind.Absolute, out var uri) ||
+            uri.Scheme is not ("ws" or "wss"))
+        {
+            notificationComponent.ShowErrorMessage("Invalid relay URL. Must be ws(s)://...");
+            return;
+        }
+
+        var normalized = new Uri($"{uri.Scheme}://{uri.Host}").AbsoluteUri.TrimEnd('/');
+
+        if (connectionSettings!.Relays.Any(a => a.Url.Equals(normalized, StringComparison.OrdinalIgnoreCase)))
+        {
+            notificationComponent.ShowErrorMessage("This relay is already in the list.");
+            return;
+        }
+
+        connectionSettings.Relays.Add(new SettingsUrl { Name = string.Empty, Url = normalized });
+        storage.SetSettingsInfo(connectionSettings);
+        newRelayUrl = null;
+        _ = _networkService.CheckServices(true);
+        StateHasChanged();
+    }
+
+    private void RemoveRelayUrl(SettingsUrl relay)
+    {
+        if (connectionSettings!.Relays.Count <= 1)
+            return;
+
+        connectionSettings.Relays.Remove(relay);
+
+        if (relay.IsPrimary && connectionSettings.Relays.Any())
+            connectionSettings.Relays.First().IsPrimary = true;
+
+        storage.SetSettingsInfo(connectionSettings);
+        StateHasChanged();
+    }
+
+    private static string? NormalizeHttpUrl(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return null;
+
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            return null;
+
+        if (uri.Scheme is not ("http" or "https"))
+            return null;
+
+        return $"{uri.Scheme}://{uri.Authority}".TrimEnd('/');
+    }
+
+    // --- Delete-wallet flow ---
+
+    /// <summary>
+    /// Open the delete-wallet modal. Blocked while an investment is waiting for founder
+    /// approval — deleting the wallet then would orphan the pending request.
+    /// The seed is decrypted and shown one last time inside the modal.
+    /// </summary>
+    private async Task OpenDeleteWalletModal()
+    {
+        if (project is InvestorProject waiting && waiting.WaitingForFounderResponse())
+        {
+            notificationComponent.ShowErrorMessage(
+                "An investment is waiting for founder approval. Cancel it or wait for it to complete before deleting the wallet.");
+            return;
+        }
+
+        deleteWalletConfirmed = false;
+        deleteWalletSeedWords = null;
+
+        // Try to show the seed one last time (silent with the ephemeral key).
+        try
+        {
+            var words = await passwordComponent.TryGetWalletAsync();
+            deleteWalletSeedWords = words?.Words;
+        }
+        catch (Exception ex)
+        {
+            _Logger.LogWarning(ex, "Could not decrypt wallet for final seed display");
+        }
+
+        if (deleteWalletSeedWords == null && !string.IsNullOrEmpty(autoCreatedSeedWords))
+        {
+            deleteWalletSeedWords = autoCreatedSeedWords;
+        }
+
+        showDeleteWalletModal = true;
+        StateHasChanged();
+    }
+
+    private void CloseDeleteWalletModal()
+    {
+        showDeleteWalletModal = false;
+        deleteWalletSeedWords = null;
+        deleteWalletConfirmed = false;
+        StateHasChanged();
+    }
+
+    private async Task DeleteWalletFromBrowser()
+    {
+        if (!deleteWalletConfirmed)
+            return;
+
+        try
+        {
+            _walletStorage.DeleteWallet();
+            storage.DeleteAccountInfo(network.Name);
+            await JS.InvokeVoidAsync("localStorage.removeItem", EphemeralKeyStorageKey);
+            _PasswordCacheService.Data = null;
+
+            // Investment records belong to the deleted wallet — without its keys they
+            // cannot be signed or recovered from this browser, so remove them as well.
+            foreach (var investment in storage.GetInvestmentProjects().ToList())
+            {
+                storage.RemoveInvestmentProject(investment.ProjectInfo.ProjectIdentifier);
+            }
+
+            hasWallet = false;
+            walletAvailable = false;
+            walletAutoCreated = false;
+            walletNeedsPassword = false;
+            backupConfirmed = false;
+            autoCreatedSeedWords = null;
+            deleteWalletSeedWords = null;
+            WalletBalance = new();
+
+            // Reset the page to the fresh not-invested state.
+            invested = false;
+            investedTransactionId = null;
+            autoPublishStarted = false;
+            project = SessionStorage.GetProjectById(ProjectId);
+
+            if (project?.ProjectInfo == null)
+            {
+                // Session cache is gone — do a full reload to refetch the project.
+                NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+                return;
+            }
+
+            OnProjectLoaded();
+
+            showDeleteWalletModal = false;
+            notificationComponent.ShowNotificationMessage("Wallet deleted from this browser", 5);
+        }
+        catch (Exception e)
+        {
+            notificationComponent.ShowErrorMessage($"Failed to delete wallet: {e.Message}", e);
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task CopyDeleteWalletSeed()
+    {
+        if (!string.IsNullOrEmpty(deleteWalletSeedWords))
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", deleteWalletSeedWords);
+            notificationComponent.ShowNotificationMessage("Recovery phrase copied to clipboard", 3);
+        }
+    }
+
+    private async Task DownloadDeleteWalletSeed()
+    {
+        if (!string.IsNullOrEmpty(deleteWalletSeedWords))
+        {
+            var content = $"Angor wallet recovery phrase\r\nCreated: {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC\r\nProject: {ProjectId}\r\n\r\n{deleteWalletSeedWords}\r\n\r\nImport this phrase into the Angor desktop app (https://angor.io) to recover your funds.";
+            await JS.InvokeVoidAsync("window.angor.downloadText", "angor-recovery-phrase.txt", content);
+        }
+    }
+
+    // --- Seed backup helpers ---
+
+    /// <summary>
+    /// Show the recovery phrase on demand. If it is no longer in memory (e.g. after a page
+    /// reload), decrypt the stored wallet — the ephemeral key primed in the password cache
+    /// makes this silent; otherwise the password prompt appears.
+    /// </summary>
+    private async Task ShowRecoveryPhraseAsync()
+    {
+        if (!string.IsNullOrEmpty(autoCreatedSeedWords))
         {
             showBackupModal = true;
+            StateHasChanged();
+            return;
+        }
+
+        if (!passwordComponent.HasPassword())
+        {
+            passwordComponent.ShowPassword(DecryptAndShowRecoveryPhrase);
+        }
+        else
+        {
+            await DecryptAndShowRecoveryPhrase();
+        }
+    }
+
+    private async Task DecryptAndShowRecoveryPhrase()
+    {
+        try
+        {
+            var words = await passwordComponent.TryGetWalletAsync();
+
+            if (words == null || string.IsNullOrEmpty(words.Words))
+            {
+                _PasswordCacheService.Data = null;
+                notificationComponent.ShowErrorMessage("Could not unlock the wallet with that password.");
+                return;
+            }
+
+            autoCreatedSeedWords = words.Words;
+            showBackupModal = true;
+        }
+        catch (Exception e)
+        {
+            _PasswordCacheService.Data = null;
+            notificationComponent.ShowErrorMessage("Could not unlock the wallet. Wrong password?", e);
+        }
+        finally
+        {
             StateHasChanged();
         }
     }
@@ -2026,15 +3031,17 @@
         if (!string.IsNullOrEmpty(autoCreatedSeedWords))
         {
             await JS.InvokeVoidAsync("navigator.clipboard.writeText", autoCreatedSeedWords);
-            notificationComponent.ShowNotificationMessage("Seed copied to clipboard", 3);
+            notificationComponent.ShowNotificationMessage("Recovery phrase copied to clipboard", 3);
         }
     }
 
-    private void CloseBackupModal()
+    private async Task DownloadBackupSeed()
     {
-        showBackupModal = false;
-        autoCreatedSeedWords = null; // Clear sensitive data
-        StateHasChanged();
+        if (!string.IsNullOrEmpty(autoCreatedSeedWords))
+        {
+            var content = $"Angor wallet recovery phrase\r\nCreated: {DateTime.UtcNow:yyyy-MM-dd HH:mm} UTC\r\nProject: {ProjectId}\r\n\r\n{autoCreatedSeedWords}\r\n\r\nImport this phrase into the Angor desktop app (https://angor.io) to recover your funds.";
+            await JS.InvokeVoidAsync("window.angor.downloadText", "angor-recovery-phrase.txt", content);
+        }
     }
 
     private static string GenerateQRCode(string content)
@@ -2045,7 +3052,3 @@
         return Convert.ToBase64String(pngByteQRCode.GetGraphic(6));
     }
 }
-
-
-
-

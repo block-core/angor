@@ -35,6 +35,9 @@ jobs:
     - name: Add .nojekyll file
       run: touch ${{ env.OUTPUT_PATH }}/wwwroot/.nojekyll
 
+    - name: Set custom domain (app.angor.io)
+      run: echo "app.angor.io" > ${{ env.OUTPUT_PATH }}/wwwroot/CNAME
+
     - name: Minify JS files
       run: |
         npm install uglify-js -g
