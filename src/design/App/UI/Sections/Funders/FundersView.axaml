@@ -211,6 +211,36 @@
                     </i:Icon.Styles>
                 </i:Icon>
             </Button>
+            <!-- Auto-approve toggle — available even before the first request arrives -->
+            <Border Background="{DynamicResource Surface}"
+                    BorderBrush="{DynamicResource Stroke}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="16,12"
+                    Margin="24"
+                    MaxWidth="480"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Bottom">
+                <DockPanel>
+                    <ToggleSwitch Name="EmptyAutoApproveToggle"
+                                  DockPanel.Dock="Right"
+                                  IsChecked="{Binding AutoApproveEnabled}"
+                                  OnContent="{x:Null}"
+                                  OffContent="{x:Null}"
+                                  VerticalAlignment="Center"
+                                  Margin="12,0,0,0" />
+                    <StackPanel Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Text="Auto-approve requests"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextStrong}" />
+                        <TextBlock Text="New funding requests are checked and approved automatically in the background"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
         </Panel>
 
         <!-- ═══════════════════════════════════════════════════════ -->
@@ -307,6 +337,39 @@
                     </Button>
                     </StackPanel>
                 </DockPanel>
+
+                <!-- ═══════════════════════════════════════ -->
+                <!-- AUTO-APPROVE TOGGLE                     -->
+                <!-- Background worker (FundersMonitor)      -->
+                <!-- approves new requests automatically      -->
+                <!-- ═══════════════════════════════════════ -->
+                <Border Background="{DynamicResource Surface}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1"
+                        CornerRadius="12"
+                        Padding="16,12"
+                        Margin="0,0,0,16">
+                    <DockPanel>
+                        <ToggleSwitch Name="AutoApproveToggle"
+                                      AutomationProperties.AutomationId="FundersAutoApproveToggle"
+                                      DockPanel.Dock="Right"
+                                      IsChecked="{Binding AutoApproveEnabled}"
+                                      OnContent="{x:Null}"
+                                      OffContent="{x:Null}"
+                                      VerticalAlignment="Center"
+                                      Margin="12,0,0,0" />
+                        <StackPanel Spacing="2" VerticalAlignment="Center">
+                            <TextBlock Text="Auto-approve requests"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextStrong}" />
+                            <TextBlock Text="New funding requests are checked and approved automatically in the background"
+                                       FontSize="12"
+                                       Foreground="{DynamicResource TextMuted}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
 
                 <!-- ═══════════════════════════════════════ -->
                 <!-- FILTER TABS                             -->

@@ -3,6 +3,8 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
+using Angor.Sdk.Funding.Shared;
+using App.UI.Shell;
 using Microsoft.Extensions.Logging;
 
 namespace App.UI.Shared.Services;
@@ -37,11 +39,19 @@ public record FunderRecord(
 /// </summary>
 public sealed class FundersMonitor : IDisposable
 {
-    private static readonly TimeSpan PollInterval = TimeSpan.FromMinutes(2);
+    /// <summary>Baseline poll interval. Each poll re-sends REQ filters on the already-open
+    /// relay websockets (EOSE usually within a few seconds), so polling is cheap; the
+    /// refresh lock coalesces overlaps if a sync ever runs longer than the interval.</summary>
+    private static readonly TimeSpan PollInterval = TimeSpan.FromMinutes(1);
+
+    /// <summary>Faster cadence while auto-approve is on — an investor is actively waiting
+    /// for the founder's signatures, so keep their wait short.</summary>
+    private static readonly TimeSpan AutoApprovePollInterval = TimeSpan.FromSeconds(30);
 
     private readonly IFounderAppService _founderAppService;
     private readonly IProjectAppService _projectAppService;
     private readonly IWalletContext _walletContext;
+    private readonly PrototypeSettings _settings;
     private readonly ILogger<FundersMonitor> _logger;
 
     private readonly SemaphoreSlim _refreshLock = new(1, 1);
@@ -85,11 +95,13 @@ public sealed class FundersMonitor : IDisposable
         IFounderAppService founderAppService,
         IProjectAppService projectAppService,
         IWalletContext walletContext,
+        PrototypeSettings settings,
         ILogger<FundersMonitor> logger)
     {
         _founderAppService = founderAppService;
         _projectAppService = projectAppService;
         _walletContext = walletContext;
+        _settings = settings;
         _logger = logger;
     }
 
@@ -110,6 +122,16 @@ public sealed class FundersMonitor : IDisposable
             .Subscribe(unit => { _ = RefreshAsync(); })
             .DisposeWith(_disposables);
 
+        // When the founder switches auto-approve on, run a refresh immediately so any
+        // requests already waiting get approved without waiting for the next poll.
+        // The relay websockets stay open between polls (auto-reconnect after 30s if
+        // dropped); each refresh just re-sends the REQ filters on the existing client.
+        _settings.WhenAnyValue(x => x.IsAutoApproveEnabled)
+            .DistinctUntilChanged()
+            .Where(enabled => enabled)
+            .Subscribe(enabled => { _ = RefreshAsync(); })
+            .DisposeWith(_disposables);
+
         _ = Task.Run(() => PollLoopAsync(_loopCts.Token));
     }
 
@@ -122,7 +144,7 @@ public sealed class FundersMonitor : IDisposable
             while (!token.IsCancellationRequested)
             {
                 await RefreshAsync();
-                await Task.Delay(PollInterval, token);
+                await Task.Delay(_settings.IsAutoApproveEnabled ? AutoApprovePollInterval : PollInterval, token);
             }
         }
         catch (OperationCanceledException)
@@ -189,11 +211,56 @@ public sealed class FundersMonitor : IDisposable
                 }
             }
 
+            // Cancel + reinvest with the same investor key produces multiple handshakes
+            // for the same (project, investor) pair. Only the most recent one reflects
+            // the investor's current request — older entries are superseded, so showing
+            // them would duplicate the investor in the list and skew the pending badge.
+            records = records
+                .GroupBy(r => (r.WalletId, r.ProjectIdentifier, PubKey: r.InvestorNostrPubKey))
+                .SelectMany(g => g.Key.PubKey.Length == 0
+                    ? g.AsEnumerable() // no pubkey to correlate on — keep all
+                    : new[] { g.OrderByDescending(r => r.CreatedOn).First() })
+                .ToList();
+
+            // ── Auto-approve: sign every newly discovered pending request ──
+            // Signing is unattended: seed words resolve via the OS-secured key store,
+            // so no password prompt is required. Runs before change-detection so the
+            // "awaiting your approval" notification is replaced by "auto-approved".
+            var autoApprovedIds = new HashSet<string>();
+            var autoApproveMessages = new List<string>();
+            if (_settings.IsAutoApproveEnabled)
+            {
+                List<FunderRecord> pending;
+                lock (_stateLock)
+                {
+                    pending = records
+                        .Where(r => r.Status == InvestmentStatus.PendingFounderSignatures
+                                    && r.EventId.Length > 0
+                                    && r.InvestmentTransactionHex.Length > 0
+                                    && !_locallyApproved.Contains(r.EventId))
+                        .GroupBy(r => r.EventId)
+                        .Select(g => g.First())
+                        .ToList();
+                }
+
+                foreach (var record in pending)
+                {
+                    if (await TryAutoApproveAsync(record))
+                    {
+                        autoApprovedIds.Add(record.EventId);
+                        autoApproveMessages.Add(
+                            $"Auto-approved funding request for \"{record.ProjectTitle}\" — {FormatBtc(record.AmountSats)}");
+                    }
+                }
+            }
+
             List<string> notifications;
             lock (_stateLock)
             {
-                notifications = DetectChanges(records);
+                notifications = DetectChanges(records, autoApprovedIds);
                 _snapshot = records;
+                // Overlay auto-approvals so the UI shows them as approved immediately.
+                _locallyApproved.UnionWith(autoApprovedIds);
                 // Drop local-approval overlays once the synced status caught up.
                 _locallyApproved.RemoveWhere(id =>
                     records.Any(r => r.EventId == id && r.Status != InvestmentStatus.PendingFounderSignatures));
@@ -203,6 +270,8 @@ public sealed class FundersMonitor : IDisposable
                     .ToDictionary(g => g.Key, g => g.First().Status);
                 HasLoaded = true;
             }
+
+            notifications.AddRange(autoApproveMessages);
 
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
@@ -249,9 +318,49 @@ public sealed class FundersMonitor : IDisposable
         return record.Status;
     }
 
+    /// <summary>
+    /// Approve a single pending request via the SDK (builds recovery signatures and
+    /// publishes the encrypted DM to the investor). Returns true on success.
+    /// </summary>
+    private async Task<bool> TryAutoApproveAsync(FunderRecord record)
+    {
+        try
+        {
+            var investment = new Angor.Sdk.Funding.Founder.Domain.Investment(
+                record.EventId,
+                DateTime.UtcNow,
+                record.InvestmentTransactionHex,
+                record.InvestorNostrPubKey,
+                record.AmountSats,
+                InvestmentStatus.PendingFounderSignatures);
+
+            var result = await _founderAppService.ApproveInvestment(
+                new ApproveInvestment.ApproveInvestmentRequest(
+                    new WalletId(record.WalletId),
+                    new ProjectId(record.ProjectIdentifier),
+                    investment));
+
+            if (result.IsSuccess) return true;
+
+            _logger.LogWarning(
+                "FundersMonitor: auto-approve failed for request {EventId} in project {ProjectId}: {Error}",
+                record.EventId, record.ProjectIdentifier, result.Error);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "FundersMonitor: auto-approve threw for request {EventId} in project {ProjectId}",
+                record.EventId, record.ProjectIdentifier);
+            return false;
+        }
+    }
+
     /// <summary>Compare against the previous poll and build notification messages.
+    /// Requests in <paramref name="autoApprovedIds"/> are skipped — the caller raises
+    /// an "auto-approved" message for them instead.
     /// Must be called under <see cref="_stateLock"/>.</summary>
-    private List<string> DetectChanges(List<FunderRecord> records)
+    private List<string> DetectChanges(List<FunderRecord> records, HashSet<string> autoApprovedIds)
     {
         var notifications = new List<string>();
 
@@ -262,6 +371,7 @@ public sealed class FundersMonitor : IDisposable
         foreach (var record in records)
         {
             if (record.EventId.Length == 0) continue;
+            if (autoApprovedIds.Contains(record.EventId)) continue;
 
             if (!_previousStatuses.TryGetValue(record.EventId, out var previous))
             {

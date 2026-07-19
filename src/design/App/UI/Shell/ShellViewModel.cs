@@ -208,6 +208,12 @@ public partial class PrototypeSettings : ReactiveObject
     /// </summary>
     [Reactive] private HashSet<string> walletsNeedingBackup = new();
 
+    /// <summary>
+    /// When true, the FundersMonitor automatically approves pending investment
+    /// signing requests as soon as they are discovered during a background poll.
+    /// </summary>
+    [Reactive] private bool isAutoApproveEnabled;
+
     public PrototypeSettings(IStore store, ILogger<PrototypeSettings> logger)
     {
         _store = store;
@@ -229,6 +235,7 @@ public partial class PrototypeSettings : ReactiveObject
                         IsDebugMode = result.Value.IsDebugMode;
                         SelectedWalletId = result.Value.SelectedWalletId;
                         WalletsNeedingBackup = result.Value.WalletsNeedingBackup ?? new HashSet<string>();
+                        IsAutoApproveEnabled = result.Value.IsAutoApproveEnabled;
 
                         // Set IsDarkTheme last — its WhenAnyValue subscription
                         // applies the theme, so we want the other fields settled first.
@@ -268,7 +275,7 @@ public partial class PrototypeSettings : ReactiveObject
             });
 
         // Persist after visible state changes so disk I/O never competes with the theme flip.
-        this.WhenAnyValue(x => x.IsDebugMode, x => x.IsDarkTheme, x => x.SelectedWalletId, x => x.WalletsNeedingBackup)
+        this.WhenAnyValue(x => x.IsDebugMode, x => x.IsDarkTheme, x => x.SelectedWalletId, x => x.WalletsNeedingBackup, x => x.IsAutoApproveEnabled)
             .Skip(1)
             .Throttle(TimeSpan.FromMilliseconds(250), RxSchedulers.TaskpoolScheduler)
             .Subscribe(_ => ScheduleSaveSettings());
@@ -284,6 +291,7 @@ public partial class PrototypeSettings : ReactiveObject
         bool? currentDarkTheme = IsDarkTheme;
         string? currentWalletId = SelectedWalletId;
         HashSet<string> currentBackupSet = new(WalletsNeedingBackup);
+        bool currentAutoApprove = IsAutoApproveEnabled;
         CancellationToken token = saveSettingsCts.Token;
 
         Task.Run(async () =>
@@ -295,6 +303,7 @@ public partial class PrototypeSettings : ReactiveObject
                 IsDarkTheme = currentDarkTheme,
                 SelectedWalletId = currentWalletId,
                 WalletsNeedingBackup = currentBackupSet,
+                IsAutoApproveEnabled = currentAutoApprove,
             });
 
             if (!token.IsCancellationRequested && saveResult.IsFailure)
@@ -323,6 +332,7 @@ public partial class PrototypeSettings : ReactiveObject
             IsDarkTheme = IsDarkTheme,
             SelectedWalletId = SelectedWalletId,
             WalletsNeedingBackup = new HashSet<string>(WalletsNeedingBackup),
+            IsAutoApproveEnabled = IsAutoApproveEnabled,
         });
 
         if (saveResult.IsFailure)
@@ -356,6 +366,7 @@ public partial class PrototypeSettings : ReactiveObject
         public bool? IsDarkTheme { get; set; }
         public string? SelectedWalletId { get; set; }
         public HashSet<string>? WalletsNeedingBackup { get; set; }
+        public bool IsAutoApproveEnabled { get; set; }
     }
 }
 
