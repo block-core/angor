@@ -546,6 +546,7 @@
                                         CornerRadius="8"
                                         Padding="16">
                                     <SelectableTextBlock Text="{Binding SeedWords}"
+                                               AutomationProperties.AutomationId="SettingsSeedWordsText"
                                                FontSize="14"
                                                FontFamily="Cascadia Mono, Consolas, monospace"
                                                Foreground="{DynamicResource CreateWalletSeedText}"
