@@ -148,46 +148,42 @@
                                             BorderBrush="{DynamicResource PrimaryGreenBrush}"
                                             BorderThickness="1.5"
                                             IsVisible="{Binding IsCurrentUser}">
-                                        <Panel>
-                                            <Border Background="{DynamicResource PrimaryGreenBrush}"
-                                                    CornerRadius="4"
-                                                    Padding="6,2"
-                                                    HorizontalAlignment="Right"
-                                                    VerticalAlignment="Top"
-                                                    Margin="0,-4,4,0">
-                                                <TextBlock Text="You"
-                                                           FontSize="10"
-                                                           FontWeight="Bold"
-                                                           Foreground="White" />
-                                            </Border>
-                                            <Grid ColumnDefinitions="40,*,120,100,100">
-                                                <TextBlock Grid.Column="0" Text="{Binding Rank}"
-                                                           FontSize="13" FontWeight="Bold"
-                                                           Foreground="{DynamicResource PrimaryGreenBrush}"
-                                                           VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="1" Text="{Binding ShortKey}"
+                                        <Grid ColumnDefinitions="40,*,120,100,100">
+                                            <TextBlock Grid.Column="0" Text="{Binding Rank}"
+                                                       FontSize="13" FontWeight="Bold"
+                                                       Foreground="{DynamicResource PrimaryGreenBrush}"
+                                                       VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding ShortKey}"
                                                            FontSize="13" FontWeight="Bold"
                                                            FontFamily="Consolas,Courier New,monospace"
                                                            Foreground="{DynamicResource TextStrong}"
-                                                           VerticalAlignment="Center"
                                                            TextTrimming="CharacterEllipsis" />
-                                                <TextBlock Grid.Column="2" Text="{Binding TotalInvested}"
-                                                           FontSize="13" FontWeight="Bold"
-                                                           Foreground="{DynamicResource TextStrong}"
-                                                           HorizontalAlignment="Right"
-                                                           VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="3" Text="{Binding SharePercentage}"
-                                                           FontSize="13" FontWeight="Bold"
-                                                           Foreground="{DynamicResource PrimaryGreenBrush}"
-                                                           HorizontalAlignment="Right"
-                                                           VerticalAlignment="Center" />
-                                                <TextBlock Grid.Column="4" Text="{Binding ClaimedPercentage}"
-                                                           FontSize="13" FontWeight="Bold"
-                                                           Foreground="#F7931A"
-                                                           HorizontalAlignment="Right"
-                                                           VerticalAlignment="Center" />
-                                            </Grid>
-                                        </Panel>
+                                                <Border Background="{DynamicResource PrimaryGreenBrush}"
+                                                        CornerRadius="4"
+                                                        Padding="6,2">
+                                                    <TextBlock Text="You"
+                                                               FontSize="10"
+                                                               FontWeight="Bold"
+                                                               Foreground="White" />
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="2" Text="{Binding TotalInvested}"
+                                                       FontSize="13" FontWeight="Bold"
+                                                       Foreground="{DynamicResource TextStrong}"
+                                                       HorizontalAlignment="Right"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="3" Text="{Binding SharePercentage}"
+                                                       FontSize="13" FontWeight="Bold"
+                                                       Foreground="{DynamicResource PrimaryGreenBrush}"
+                                                       HorizontalAlignment="Right"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="4" Text="{Binding ClaimedPercentage}"
+                                                       FontSize="13" FontWeight="Bold"
+                                                       Foreground="#F7931A"
+                                                       HorizontalAlignment="Right"
+                                                       VerticalAlignment="Center" />
+                                        </Grid>
                                     </Border>
                                     <!-- Normal row for other investors -->
                                     <Border Padding="8,8"
