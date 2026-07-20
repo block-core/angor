@@ -46,7 +46,8 @@ public class InvestorBreakdownViewModel
         GetInvestorShares.GetInvestorSharesResponse data,
         string projectName,
         string projectType,
-        string currencySymbol)
+        string currencySymbol,
+        string currentInvestorPublicKey = "")
     {
         ProjectName = projectName;
         ProjectType = projectType;
@@ -79,7 +80,9 @@ public class InvestorBreakdownViewModel
                 AmountClaimed = ((double)new Amount(investor.AmountClaimedByFounder).Sats.ToUnitBtc())
                     .ToString("F8", CultureInfo.InvariantCulture),
                 ClaimedPercentage = $"{investor.ClaimedPercentage:F2}%",
-                CurrencySymbol = currencySymbol
+                CurrencySymbol = currencySymbol,
+                IsCurrentUser = !string.IsNullOrEmpty(currentInvestorPublicKey)
+                    && string.Equals(key, currentInvestorPublicKey, StringComparison.OrdinalIgnoreCase)
             });
         }
     }

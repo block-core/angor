@@ -112,7 +112,8 @@ public static class GetInvestments
                         // For Fund projects this is "as of now" since new funds can be added.
                         SharePercentage = ComputeSharePercentage(
                             investment?.TotalAmount > 0 ? investment.TotalAmount : investmentRecord.InvestedAmountSats,
-                            stats.stats?.AmountInvested ?? 0)
+                            stats.stats?.AmountInvested ?? 0),
+                        InvestorPublicKey = investmentRecord.InvestorPubKey ?? ""
                     };
 
                     if (investment != null && investment.TotalAmount > 0)

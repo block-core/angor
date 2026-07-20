@@ -422,7 +422,8 @@ public partial class InvestmentDetailView : UserControl
                 result.Value,
                 investVm.ProjectName,
                 investVm.ProjectType,
-                currencySymbol)
+                currencySymbol,
+                investVm.InvestorPublicKey)
         };
 
         shellVm.ShowModal(breakdownView);

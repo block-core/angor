@@ -299,6 +299,8 @@ public class InvestmentViewModel : INotifyPropertyChanged
     public string InvestmentWalletId { get; set; } = "";
     /// <summary>Transaction ID/hash of the investment</summary>
     public string InvestmentTransactionId { get; set; } = "";
+    /// <summary>Investor's public key (hex) for identifying current user in breakdown</summary>
+    public string InvestorPublicKey { get; set; } = "";
     public ObservableCollection<InvestmentStageViewModel> Stages { get; set; } = new();
 
     // ── Recovery State (replaces simplified string-based PenaltyState) ──
@@ -772,7 +774,8 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable, INetworkS
                         SharePercentage = dto.SharePercentage,
                         ClaimedPercentage = dto.ClaimedPercentage,
                         AmountClaimedByFounder = ((double)new Amount(dto.AmountClaimedByFounder).Sats.ToUnitBtc())
-                            .ToString("F8", CultureInfo.InvariantCulture)
+                            .ToString("F8", CultureInfo.InvariantCulture),
+                        InvestorPublicKey = dto.InvestorPublicKey ?? ""
                     };
 
                     // Carry over recovery state from previous load so per-investment recovery

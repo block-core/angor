@@ -64,6 +64,12 @@ public class InvestedProjectDto
     /// Percentage of this investor's total that has been claimed by the founder (0-100).
     /// </summary>
     public double ClaimedPercentage { get; set; }
+
+    /// <summary>
+    /// The investor's public key (hex) for this investment, used to identify the current user
+    /// in the investor breakdown view.
+    /// </summary>
+    public string InvestorPublicKey { get; set; } = "";
 }
 
 public enum FounderStatus
