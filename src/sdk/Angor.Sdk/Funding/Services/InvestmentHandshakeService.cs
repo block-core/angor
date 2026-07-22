@@ -329,7 +329,17 @@ public class InvestmentHandshakeService(
                             break;
                         case InvestmentMessageType.Approval:
                             // For approvals, we need to extract the event identifier from the content/tags
-                            // The pubKey here is the founder's pubKey, and we need the referenced event ID
+                            // The pubKey here is the author's pubKey, and we need the referenced event ID.
+                            // Only the project's Nostr key can author a valid approval - anyone can publish
+                            // an event addressed to the project (p-tag) with the approval subject, so events
+                            // authored by any other key are spoofed and must be ignored.
+                            if (!string.Equals(pubKey, projectNostrPubKey, StringComparison.OrdinalIgnoreCase))
+                            {
+                                logger.Warning(
+                                    "Ignoring spoofed approval event {EventId} authored by {Author}; expected project pubkey {Expected}",
+                                    id, pubKey, projectNostrPubKey);
+                                break;
+                            }
                             approvals.Add(new ApprovalInfo(pubKey, created, id));
                             break;
                     }
