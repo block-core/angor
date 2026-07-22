@@ -963,6 +963,98 @@
                         </Border>
                     </Grid>
 
+                    <!-- ═══════════════════════════════════════ -->
+                    <!-- YOUR SHARE STATISTICS                    -->
+                    <!-- Shows investor's share of total pool     -->
+                    <!-- ═══════════════════════════════════════ -->
+                    <Grid ColumnDefinitions="*,*,*" Margin="0,0,0,0">
+                        <!-- Your Share -->
+                        <Border Grid.Column="0"
+                                Background="{DynamicResource StatsDetailInnerBackground}"
+                                CornerRadius="12"
+                                Padding="20"
+                                Margin="0,0,8,0"
+                                BorderBrush="{DynamicResource StatsDetailInnerBorder}"
+                                BorderThickness="2">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="{Binding ShareLabel}"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource StatsDetailLabel}" />
+                                <TextBlock Text="{Binding SharePercentageDisplay}"
+                                           FontSize="24"
+                                           FontWeight="Bold"
+                                           Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                <TextBlock Text="of total pool"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource StatsDetailSubtext}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Claimed by Founder -->
+                        <Border Grid.Column="1"
+                                Background="{DynamicResource StatsDetailInnerBackground}"
+                                CornerRadius="12"
+                                Padding="20"
+                                Margin="8,0,8,0"
+                                BorderBrush="{DynamicResource StatsDetailInnerBorder}"
+                                BorderThickness="2">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Claimed by Founder"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource StatsDetailLabel}" />
+                                <TextBlock Text="{Binding ClaimedPercentageDisplay}"
+                                           FontSize="24"
+                                           FontWeight="Bold"
+                                           Foreground="#F7931A" />
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="{Binding AmountClaimedByFounder}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource StatsDetailSubtext}" />
+                                    <TextBlock Text="{Binding CurrencySymbol}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource StatsDetailSubtext}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- View Investors Button -->
+                        <Border Grid.Column="2"
+                                Background="{DynamicResource StatsDetailInnerBackground}"
+                                CornerRadius="12"
+                                Padding="20"
+                                Margin="8,0,0,0"
+                                BorderBrush="{DynamicResource StatsDetailInnerBorder}"
+                                BorderThickness="2">
+                            <StackPanel Spacing="8" VerticalAlignment="Center">
+                                <TextBlock Text="Investor Breakdown"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource StatsDetailLabel}" />
+                                <Button Name="ViewInvestorsButton"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Center"
+                                        Padding="14,8"
+                                        Background="Transparent"
+                                        BorderBrush="{DynamicResource PrimaryGreenBrush}"
+                                        BorderThickness="2"
+                                        CornerRadius="8">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <i:Icon Value="fa-solid fa-chart-pie"
+                                               FontSize="14"
+                                               Foreground="{DynamicResource PrimaryGreenBrush}"
+                                               VerticalAlignment="Center" />
+                                        <TextBlock Text="View All"
+                                                   FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
                     <!-- Funding Progress Bar -->
                     <!-- Vue: .progress-section .progress-header flex space-between -->
                     <StackPanel Spacing="8">

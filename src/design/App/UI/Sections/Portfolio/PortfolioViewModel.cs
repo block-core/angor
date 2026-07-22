@@ -299,6 +299,8 @@ public class InvestmentViewModel : INotifyPropertyChanged
     public string InvestmentWalletId { get; set; } = "";
     /// <summary>Transaction ID/hash of the investment</summary>
     public string InvestmentTransactionId { get; set; } = "";
+    /// <summary>Investor's public key (hex) for identifying current user in breakdown</summary>
+    public string InvestorPublicKey { get; set; } = "";
     public ObservableCollection<InvestmentStageViewModel> Stages { get; set; } = new();
 
     // ── Recovery State (replaces simplified string-based PenaltyState) ──
@@ -513,6 +515,40 @@ public class InvestmentViewModel : INotifyPropertyChanged
         "subscription" => "Your Subscription",
         _ => "Your Investment"
     };
+
+    // ── Share / Statistics ──
+
+    /// <summary>Your share of total investment as a percentage (0-100)</summary>
+    public double SharePercentage { get; set; }
+
+    /// <summary>Formatted share percentage for display (e.g. "12.50%")</summary>
+    public string SharePercentageDisplay => SharePercentage > 0
+        ? $"{SharePercentage:F2}%"
+        : "—";
+
+    /// <summary>
+    /// Share label with context: for Fund projects notes that share is "as of now"
+    /// since new funds can always be added.
+    /// </summary>
+    public string ShareLabel => ProjectType switch
+    {
+        "fund" => "Your Share (as of now)",
+        _ => "Your Share"
+    };
+
+    /// <summary>Amount claimed by founder from your share (in BTC display format)</summary>
+    public string AmountClaimedByFounder { get; set; } = "0.00000000";
+
+    /// <summary>Percentage of your investment claimed by the founder</summary>
+    public double ClaimedPercentage { get; set; }
+
+    /// <summary>Formatted claimed percentage for display</summary>
+    public string ClaimedPercentageDisplay => ClaimedPercentage > 0
+        ? $"{ClaimedPercentage:F2}%"
+        : "—";
+
+    /// <summary>Whether there is any claimed amount to show</summary>
+    public bool HasClaimedAmount => ClaimedPercentage > 0;
 }
 
 /// <summary>
@@ -734,7 +770,12 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable, INetworkS
                     ProjectIdentifier = dto.Id ?? "",
                         InvestmentWalletId = wallet.Id.Value,
                         InvestmentTransactionId = dto.InvestmentId ?? "",
-                        CurrencySymbol = _currencyService.Symbol
+                        CurrencySymbol = _currencyService.Symbol,
+                        SharePercentage = dto.SharePercentage,
+                        ClaimedPercentage = dto.ClaimedPercentage,
+                        AmountClaimedByFounder = ((double)new Amount(dto.AmountClaimedByFounder).Sats.ToUnitBtc())
+                            .ToString("F8", CultureInfo.InvariantCulture),
+                        InvestorPublicKey = dto.InvestorPublicKey ?? ""
                     };
 
                     // Carry over recovery state from previous load so per-investment recovery

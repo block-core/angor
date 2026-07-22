@@ -4,6 +4,7 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.VisualTree;
 using Angor.Shared.Services;
+using App.UI.Shared.Services;
 using App.UI.Shared;
 using App.UI.Shell;
 using App.UI.Shared.Helpers;
@@ -289,6 +290,10 @@ public partial class InvestmentDetailView : UserControl
             case "ViewTransactionButton":
                 OpenTransactionInBrowser();
                 break;
+
+            case "ViewInvestorsButton":
+                _ = ShowInvestorBreakdownAsync();
+                break;
         }
     }
 
@@ -426,5 +431,40 @@ public partial class InvestmentDetailView : UserControl
         {
             ExplorerHelper.OpenTransaction(networkService, investVm.InvestmentTransactionId);
         }
+    }
+
+    /// <summary>
+    /// Load investor shares from the SDK and show the breakdown modal.
+    /// </summary>
+    private async Task ShowInvestorBreakdownAsync()
+    {
+        if (DataContext is not InvestmentViewModel investVm) return;
+        if (string.IsNullOrEmpty(investVm.ProjectIdentifier)) return;
+
+        var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
+        if (shellVm == null) return;
+
+        var projectAppService = App.Services.GetService<Angor.Sdk.Funding.Projects.IProjectAppService>();
+        if (projectAppService == null) return;
+
+        var result = await projectAppService.GetInvestorShares(
+            new Angor.Sdk.Funding.Shared.ProjectId(investVm.ProjectIdentifier));
+
+        if (result.IsFailure) return;
+
+        var currencyService = App.Services.GetService<ICurrencyService>();
+        var currencySymbol = currencyService?.Symbol ?? "BTC";
+
+        var breakdownView = new InvestorBreakdownView
+        {
+            DataContext = new InvestorBreakdownViewModel(
+                result.Value,
+                investVm.ProjectName,
+                investVm.ProjectType,
+                currencySymbol,
+                investVm.InvestorPublicKey)
+        };
+
+        shellVm.ShowModal(breakdownView);
     }
 }
