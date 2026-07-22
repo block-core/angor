@@ -154,9 +154,12 @@
                                        TextTrimming="CharacterEllipsis"
                                        Height="42" />
 
-                            <!-- 4. Stats Row 1: investor count (left) + raised BTC (right) -->
+                            <!-- 4. Stats Row 1: investor count (left) + raised BTC (right).
+                                 While StatsPending, a "Syncing…" affordance replaces the
+                                 numbers so a loading card isn't mistaken for 0 funders. -->
                             <DockPanel>
-                                <StackPanel Orientation="Horizontal" Spacing="4" DockPanel.Dock="Left">
+                                <StackPanel x:Name="PART_InvestorRow"
+                                            Orientation="Horizontal" Spacing="4" DockPanel.Dock="Left">
                                     <TextBlock Text="{TemplateBinding InvestorCount}"
                                                FontSize="13"
                                                Foreground="{DynamicResource TextMuted}"
@@ -166,17 +169,33 @@
                                                Foreground="{DynamicResource TextMuted}"
                                                VerticalAlignment="Center" />
                                 </StackPanel>
-                                <StackPanel x:Name="PART_RaisedRow"
-                                            Orientation="Horizontal" Spacing="4"
-                                            HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <StackPanel x:Name="PART_StatsPendingRow"
+                                            Orientation="Horizontal" Spacing="6"
+                                            DockPanel.Dock="Left"
+                                            IsVisible="False">
+                                    <i:Icon Value="fa-solid fa-arrows-rotate"
+                                            FontSize="11"
+                                            Foreground="{DynamicResource TextMuted}"
+                                            VerticalAlignment="Center" />
+                                    <TextBlock Text="Syncing funding data…"
+                                               FontSize="13"
+                                               FontStyle="Italic"
+                                               Foreground="{DynamicResource TextMuted}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                                <DockPanel x:Name="PART_RaisedRow"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <TextBlock Text="BTC"
+                                               DockPanel.Dock="Right"
+                                               Margin="4,0,0,0"
+                                               FontSize="13"
+                                               Foreground="{DynamicResource TextMuted}" />
                                     <TextBlock Text="{TemplateBinding Raised}"
                                                FontSize="13"
                                                FontWeight="Bold"
+                                               TextTrimming="CharacterEllipsis"
                                                Foreground="{DynamicResource TextStrong}" />
-                                    <TextBlock Text="BTC"
-                                               FontSize="13"
-                                               Foreground="{DynamicResource TextMuted}" />
-                                </StackPanel>
+                                </DockPanel>
                             </DockPanel>
 
                             <!-- 5. Stats Row 2: target/goal label (left) + target amount (right) -->
@@ -313,11 +332,22 @@
     </Style>
 
     <!-- Hide amounts when ShowAmounts=False -->
-    <Style Selector="controls|ProjectCard[ShowAmounts=False] /template/ StackPanel#PART_RaisedRow">
+    <Style Selector="controls|ProjectCard[ShowAmounts=False] /template/ DockPanel#PART_RaisedRow">
         <Setter Property="IsVisible" Value="False" />
     </Style>
     <Style Selector="controls|ProjectCard[ShowAmounts=False] /template/ DockPanel#PART_TargetRow">
         <Setter Property="IsVisible" Value="False" />
+    </Style>
+
+    <!-- Stats pending: swap the funders/raised numbers for a "Syncing…" affordance -->
+    <Style Selector="controls|ProjectCard[StatsPending=True] /template/ StackPanel#PART_InvestorRow">
+        <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="controls|ProjectCard[StatsPending=True] /template/ DockPanel#PART_RaisedRow">
+        <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="controls|ProjectCard[StatsPending=True] /template/ StackPanel#PART_StatsPendingRow">
+        <Setter Property="IsVisible" Value="True" />
     </Style>
 
     <!-- Show action buttons when ShowManageFunds=True (My Projects page) -->

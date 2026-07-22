@@ -478,12 +478,16 @@
                                             <Button Name="QuickAmountButton" Classes="Unstyled QuickAmountBtn"
                                                     CornerRadius="8" Padding="10,8" Margin="4"
                                                     Cursor="Hand"
+                                                    MinWidth="0"
+                                                    HorizontalAlignment="Stretch"
+                                                    HorizontalContentAlignment="Center"
                                                     BorderThickness="1"
                                                     CommandParameter="{Binding}">
                                                 <StackPanel HorizontalAlignment="Center" Spacing="2">
                                                     <TextBlock Classes="QuickAmountValue"
                                                                Text="{Binding AmountText}"
                                                                FontSize="15" FontWeight="Bold"
+                                                               TextTrimming="CharacterEllipsis"
                                                                HorizontalAlignment="Center" />
                                                     <TextBlock Classes="QuickAmountLabel"
                                                                Text="{Binding Label}"

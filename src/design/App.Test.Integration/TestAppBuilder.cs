@@ -16,7 +16,11 @@ namespace App.Test.Integration;
 public class TestAppBuilder
 {
     public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<TestApp>()
-        .UseHeadless(new AvaloniaHeadlessPlatformOptions())
+        // Real Skia text shaping/metrics (UseHeadlessDrawing=false): without it the
+        // headless stub font manager inflates text widths ~2x, which breaks the
+        // layout-regression assertions and any size-sensitive test.
+        .UseSkia()
+        .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false })
         .UseReactiveUI(b => b.WithAvalonia());
 
     public static void RefreshServicesForCurrentProfile()

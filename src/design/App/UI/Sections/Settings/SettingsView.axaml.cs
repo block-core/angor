@@ -43,16 +43,7 @@ public partial class SettingsView : UserControl, ISectionView
         _scrollableView = this.GetLogicalDescendants().OfType<ScrollableView>().FirstOrDefault();
         CacheModalControls();
 
-        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
-            .Subscribe(isCompact =>
-            {
-                if (_scrollableView != null)
-                    _scrollableView.ContentPadding = isCompact
-                        ? new Thickness(16, 16, 16, 96)
-                        : new Thickness(24);
-
-                ApplyNetworkModalLayout(isCompact);
-            });
+        SubscribeToLayoutMode();
 
         // Mobile perf: detach the settings cards below the fold AND both modals
         // from the visual tree until first render is painted, then re-insert
@@ -126,6 +117,30 @@ public partial class SettingsView : UserControl, ISectionView
                 }, Avalonia.Threading.DispatcherPriority.ApplicationIdle);
             }
         }
+    }
+
+    /// <summary>Idempotent responsive-layout subscription — re-created on every logical-tree attach because OnDetachedFromLogicalTree disposes it (views are cached and re-attached on section switches).</summary>
+    private void SubscribeToLayoutMode()
+    {
+        if (_layoutSubscription != null) return;
+        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
+            .Subscribe(isCompact =>
+            {
+                if (_scrollableView != null)
+                    _scrollableView.ContentPadding = isCompact
+                        ? new Thickness(16, 16, 16, 96)
+                        : new Thickness(24);
+
+                ApplyNetworkModalLayout(isCompact);
+            });
+    }
+
+    protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToLogicalTree(e);
+        // Re-create the responsive subscription — views are cached and re-attached on
+        // section switches; the subscription is disposed on detach.
+        SubscribeToLayoutMode();
     }
 
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)

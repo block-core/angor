@@ -714,7 +714,7 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable, INetworkS
                             : dto.RequestedOn?.ToString("dd MMM yyyy") ?? "",
                         EndDate = dto.EndDate > DateTime.MinValue
                             ? dto.EndDate.ToString("dd MMM yyyy")
-                            : "",
+                            : "Open Ended",
                         TransactionDate = (dto.TransactionDate ?? dto.RequestedOn)?.ToString("dd MMM yyyy") ?? "",
                         TypeLabel = typeLabel,
                         StatusText = statusText,

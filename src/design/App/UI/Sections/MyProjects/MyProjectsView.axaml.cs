@@ -90,6 +90,13 @@ public partial class MyProjectsView : UserControl, ISectionView
         // ── Responsive layout: 380px sidebar + content (desktop) → stacked (compact) ──
         // Observe both CurrentMode and WindowWidth to handle the xl (>=1280px) breakpoint
         // which determines sidebar 256 vs 380 px on non-compact layouts.
+        SubscribeToLayoutMode();
+    }
+
+    /// <summary>Idempotent responsive-layout subscription — re-created on every logical-tree attach because OnDetachedFromLogicalTree disposes it (views are cached and re-attached on section switches).</summary>
+    private void SubscribeToLayoutMode()
+    {
+        if (_layoutSubscription != null) return;
         _layoutSubscription = LayoutModeService.Instance
             .WhenAnyValue(x => x.CurrentMode, x => x.WindowWidth, (m, _) => m)
             .DistinctUntilChanged(mode => (mode, LayoutModeService.Instance.WindowWidth >= 1280))
@@ -161,11 +168,21 @@ public partial class MyProjectsView : UserControl, ISectionView
             Grid.SetRow(_myProjectsSidebar, 0);
             _myProjectsSidebar.Margin = new Avalonia.Thickness(0, 0, columnGap, 0);
             _myProjectsSidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch;
-            // Restore card styling. ClearValue works for DynamicResource-bound properties
-            // (Background, BoxShadow), but reverts literal XAML values to the type default
-            // (0) — so Padding and BorderThickness must be set back explicitly, not cleared.
-            _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.BackgroundProperty);
-            _myProjectsSidebar.ClearValue(Avalonia.Controls.Border.BoxShadowProperty);
+            // Restore card styling. ClearValue does NOT work here: the XAML
+            // DynamicResource assignment is itself a local value, so clearing it
+            // removes the binding permanently (sidebar stayed chrome-less after
+            // mobile → desktop resize). Resolve the theme resources explicitly.
+            if (this.TryFindResource("Surface", ActualThemeVariant, out var surfaceRes))
+            {
+                _myProjectsSidebar.Background = surfaceRes switch
+                {
+                    Avalonia.Media.IBrush brush => brush,
+                    Avalonia.Media.Color color => new Avalonia.Media.Immutable.ImmutableSolidColorBrush(color),
+                    _ => _myProjectsSidebar.Background,
+                };
+            }
+            if (this.TryFindResource("ItemShadow", ActualThemeVariant, out var shadowRes) && shadowRes is Avalonia.Media.BoxShadows shadow)
+                _myProjectsSidebar.BoxShadow = shadow;
             _myProjectsSidebar.BorderThickness = new Avalonia.Thickness(1);
             _myProjectsSidebar.Padding = new Avalonia.Thickness(24);
 
@@ -324,6 +341,10 @@ public partial class MyProjectsView : UserControl, ISectionView
     protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
     {
         base.OnAttachedToLogicalTree(e);
+
+        // Re-create the responsive subscription — views are cached and re-attached on
+        // section switches; the subscription is disposed on detach.
+        SubscribeToLayoutMode();
 
         if (DataContext is not MyProjectsViewModel vm) return;
 

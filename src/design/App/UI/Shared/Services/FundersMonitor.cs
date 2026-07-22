@@ -173,43 +173,29 @@ public sealed class FundersMonitor : IDisposable
             var wallets = _walletContext.Wallets.ToList();
             if (wallets.Count == 0) return;
 
-            var records = new List<FunderRecord>();
-
-            foreach (var wallet in wallets)
+            // Fetch all wallets' project lists in parallel, then all projects'
+            // investment handshakes in parallel. Each GetProjectInvestments is a
+            // Nostr relay scan that can take many seconds — running them
+            // sequentially made the Funders tab take N×M round-trips to load.
+            var projectsByWallet = await Task.WhenAll(wallets.Select(async wallet =>
             {
                 var projectsResult = await _projectAppService.GetFounderProjects(wallet.Id);
+                return (wallet, projectsResult);
+            }));
+
+            var investmentTasks = new List<Task<IReadOnlyList<FunderRecord>>>();
+            foreach (var (wallet, projectsResult) in projectsByWallet)
+            {
                 if (projectsResult.IsFailure) continue;
 
                 foreach (var project in projectsResult.Value.Projects)
                 {
                     if (project.Id == null) continue;
-
-                    var investmentsResult = await _founderAppService.GetProjectInvestments(
-                        new GetProjectInvestments.GetProjectInvestmentsRequest(wallet.Id, project.Id));
-
-                    if (investmentsResult.IsFailure)
-                    {
-                        _logger.LogWarning(
-                            "FundersMonitor: GetProjectInvestments failed for project {ProjectId}: {Error}",
-                            project.Id.Value, investmentsResult.Error);
-                        continue;
-                    }
-
-                    foreach (var investment in investmentsResult.Value.Investments)
-                    {
-                        records.Add(new FunderRecord(
-                            investment.EventId ?? "",
-                            wallet.Id.Value,
-                            project.Id.Value,
-                            project.Name ?? "Unknown Project",
-                            investment.CreatedOn,
-                            investment.InvestmentTransactionHex ?? "",
-                            investment.InvestorNostrPubKey ?? "",
-                            investment.Amount,
-                            investment.Status));
-                    }
+                    investmentTasks.Add(FetchProjectRecordsAsync(wallet.Id, project.Id, project.Name));
                 }
             }
+
+            var records = (await Task.WhenAll(investmentTasks)).SelectMany(r => r).ToList();
 
             // Cancel + reinvest with the same investor key produces multiple handshakes
             // for the same (project, investor) pair. Only the most recent one reflects
@@ -335,6 +321,36 @@ public sealed class FundersMonitor : IDisposable
         }
 
         return record.Status;
+    }
+
+    /// <summary>Fetch all investment handshakes for one project and map them to records.
+    /// Failures are logged and yield an empty list so one bad project doesn't fail the poll.</summary>
+    private async Task<IReadOnlyList<FunderRecord>> FetchProjectRecordsAsync(
+        WalletId walletId, ProjectId projectId, string? projectName)
+    {
+        var investmentsResult = await _founderAppService.GetProjectInvestments(
+            new GetProjectInvestments.GetProjectInvestmentsRequest(walletId, projectId));
+
+        if (investmentsResult.IsFailure)
+        {
+            _logger.LogWarning(
+                "FundersMonitor: GetProjectInvestments failed for project {ProjectId}: {Error}",
+                projectId.Value, investmentsResult.Error);
+            return Array.Empty<FunderRecord>();
+        }
+
+        return investmentsResult.Value.Investments
+            .Select(investment => new FunderRecord(
+                investment.EventId ?? "",
+                walletId.Value,
+                projectId.Value,
+                projectName ?? "Unknown Project",
+                investment.CreatedOn,
+                investment.InvestmentTransactionHex ?? "",
+                investment.InvestorNostrPubKey ?? "",
+                investment.Amount,
+                investment.Status))
+            .ToList();
     }
 
     /// <summary>

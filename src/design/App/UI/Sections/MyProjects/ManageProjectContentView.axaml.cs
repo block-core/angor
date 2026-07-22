@@ -30,7 +30,7 @@ public partial class ManageProjectContentView : UserControl
     private Border? _manageTxStatsCard;
     private StackPanel? _contentStack;
     private Grid? _projectIdGrid;
-    private StackPanel? _projectIdActions;
+    private Grid? _projectIdActions;
 
     public ManageProjectContentView()
     {
@@ -68,9 +68,16 @@ public partial class ManageProjectContentView : UserControl
         _manageTxStatsCard = this.FindControl<Border>("ManageTxStatsCard");
         _contentStack = this.FindControl<StackPanel>("ContentStack");
         _projectIdGrid = this.FindControl<Grid>("ProjectIdGrid");
-        _projectIdActions = this.FindControl<StackPanel>("ProjectIdActions");
+        _projectIdActions = this.FindControl<Grid>("ProjectIdActions");
 
         // Subscribe to layout mode changes
+        SubscribeToLayoutMode();
+    }
+
+    /// <summary>Idempotent responsive-layout subscription — re-created on every logical-tree attach because OnDetachedFromLogicalTree disposes it (views are cached and re-attached on section switches).</summary>
+    private void SubscribeToLayoutMode()
+    {
+        if (_layoutSubscription != null) return;
         _layoutSubscription = LayoutModeService.Instance
             .WhenAnyValue(x => x.IsCompact)
             .Subscribe(ApplyResponsiveLayout);
@@ -116,6 +123,9 @@ public partial class ManageProjectContentView : UserControl
                 Grid.SetColumn(_projectIdActions, 0);
                 Grid.SetRow(_projectIdActions, 2);
                 _projectIdActions.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
+                // Text buttons share the row width so the trio never overflows narrow phones
+                var aCols = _projectIdActions.ColumnDefinitions;
+                if (aCols.Count >= 5) { aCols[0].Width = GridLength.Star; aCols[2].Width = GridLength.Star; }
             }
             else
             {
@@ -124,6 +134,8 @@ public partial class ManageProjectContentView : UserControl
                 Grid.SetColumn(_projectIdActions, 1);
                 Grid.SetRow(_projectIdActions, 0);
                 _projectIdActions.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right;
+                var aColsD = _projectIdActions.ColumnDefinitions;
+                if (aColsD.Count >= 5) { aColsD[0].Width = GridLength.Auto; aColsD[2].Width = GridLength.Auto; }
             }
         }
 
@@ -217,6 +229,14 @@ public partial class ManageProjectContentView : UserControl
         Grid.SetColumn(card, col);
         Grid.SetRow(card, 0);
         card.Margin = margin;
+    }
+
+    protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToLogicalTree(e);
+        // Re-create the responsive subscription — views are cached and re-attached on
+        // section switches; the subscription is disposed on detach.
+        SubscribeToLayoutMode();
     }
 
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)

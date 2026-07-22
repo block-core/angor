@@ -389,6 +389,7 @@
                                         Target="{Binding TargetAmount}"
                                         TargetLabel="{Binding TargetLabel}"
                                         Progress="{Binding Progress}"
+                                        StatsPending="{Binding IsStatsPending}"
                                         ProjectType="{Binding TypePillValue}"
                                         Status="{Binding Status}"
                                         Banner="{Binding BannerUrl}"

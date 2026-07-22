@@ -248,14 +248,28 @@ public partial class HomeView : UserControl, ISectionView
     /// Also force a fresh measure/arrange pass because star-sized grid cols/rows
     /// can carry stale widths from the previous available size.
     /// </summary>
+    /// <summary>Idempotent responsive-layout subscription — re-created on every logical-tree attach because OnDetachedFromLogicalTree disposes it (views are cached and re-attached on section switches).</summary>
+    private void SubscribeToLayoutMode()
+    {
+        if (_layoutSubscription != null) return;
+        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
+            .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
+    }
+
+    protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToLogicalTree(e);
+        // Re-create the responsive subscription — views are cached and re-attached on
+        // section switches; the subscription is disposed on detach.
+        SubscribeToLayoutMode();
+    }
+
     protected override void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
 
-        // Re-subscribe (idempotent: dispose any stale subscription first).
-        _layoutSubscription?.Dispose();
-        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
-            .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
+        // Re-subscribe (idempotent).
+        SubscribeToLayoutMode();
 
         ApplyResponsiveLayout(LayoutModeService.Instance.IsCompact);
         _homeGrid?.InvalidateMeasure();
