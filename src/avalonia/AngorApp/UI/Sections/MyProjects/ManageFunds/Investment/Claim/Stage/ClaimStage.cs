@@ -169,7 +169,8 @@ namespace AngorApp.UI.Sections.MyProjects.ManageFunds.Investment.Claim.Stage
                 .Select(t => new SpendTransactionDto
                 {
                     InvestorAddress = t.Address,
-                    StageId = t.StageId
+                    StageId = t.StageId,
+                    InvestmentStageIndex = t.StageId
                 })
                 .ToList();
 

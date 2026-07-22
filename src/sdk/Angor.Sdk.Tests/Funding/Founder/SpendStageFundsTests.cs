@@ -68,8 +68,8 @@ public class SpendStageFundsTests
         // Arrange
         var toSpend = new List<SpendTransactionDto>
         {
-            new SpendTransactionDto { InvestorAddress = "addr1", StageId = 0 },
-            new SpendTransactionDto { InvestorAddress = "addr2", StageId = 1 }
+            new SpendTransactionDto { InvestorAddress = "addr1", StageId = 0, InvestmentStageIndex = 0 },
+            new SpendTransactionDto { InvestorAddress = "addr2", StageId = 1, InvestmentStageIndex = 1 }
         };
 
         var request = new SpendStageFunds.SpendStageFundsRequest(
@@ -176,7 +176,7 @@ public class SpendStageFundsTests
 
         _mockAngorIndexerService
             .Setup(x => x.GetInvestmentAsync(It.IsAny<string>(), It.IsAny<string>()))
-            .ReturnsAsync((ProjectInvestment?)null);
+            .ReturnsAsync(new ProjectInvestment { TransactionId = "tx-id-1" });
 
         _mockTransactionService
             .Setup(x => x.GetTransactionHexByIdAsync(It.IsAny<string>()))
@@ -229,8 +229,7 @@ public class SpendStageFundsTests
         _mockFounderTransactionActions
             .Setup(x => x.SpendFounderStage(
                 It.IsAny<ProjectInfo>(),
-                It.IsAny<IEnumerable<string>>(),
-                It.IsAny<int>(),
+                It.IsAny<IEnumerable<StageTransactionInput>>(),
                 It.IsAny<Script>(),
                 It.IsAny<AngorKey>(),
                 It.IsAny<FeeEstimation>()))
@@ -253,7 +252,7 @@ public class SpendStageFundsTests
     {
         var toSpend = new List<SpendTransactionDto>
         {
-            new SpendTransactionDto { InvestorAddress = "investor-addr-1", StageId = 0 }
+            new SpendTransactionDto { InvestorAddress = "investor-addr-1", StageId = 0, InvestmentStageIndex = 0 }
         };
 
         return new SpendStageFunds.SpendStageFundsRequest(

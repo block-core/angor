@@ -28,6 +28,13 @@ public class UtxoTransactionViewModel : INotifyPropertyChanged
     public string Amount { get; set; } = "0";
     public bool IsSpent { get; set; }
 
+    /// <summary>
+    /// Stage index within the investment transaction itself (0-based).
+    /// Can differ from the displayed stage number for Fund/Subscribe projects,
+    /// where stages are grouped by release date across investments.
+    /// </summary>
+    public int InvestmentStageIndex { get; set; }
+
     private bool _isSelected;
     public bool IsSelected
     {
@@ -479,7 +486,8 @@ public partial class ManageProjectViewModel : ReactiveObject
                     {
                         TxId = tx.InvestorAddress,
                         Amount = tx.Amount.Sats.ToUnitBtc().ToString("F8", CultureInfo.InvariantCulture),
-                        IsSpent = false
+                        IsSpent = false,
+                        InvestmentStageIndex = tx.InvestmentStageIndex
                     });
                 }
 
@@ -489,7 +497,8 @@ public partial class ManageProjectViewModel : ReactiveObject
                     {
                         TxId = tx.InvestorAddress,
                         Amount = tx.Amount.Sats.ToUnitBtc().ToString("F8", CultureInfo.InvariantCulture),
-                        IsSpent = true
+                        IsSpent = true,
+                        InvestmentStageIndex = tx.InvestmentStageIndex
                     });
                 }
 
@@ -536,7 +545,8 @@ public partial class ManageProjectViewModel : ReactiveObject
             var toSpend = selectedTransactions.Select(t => new SpendTransactionDto
             {
                 InvestorAddress = t.TxId,
-                StageId = stageIndex
+                StageId = stageIndex,
+                InvestmentStageIndex = t.InvestmentStageIndex
             });
 
             // FeeEstimation.FeeRate is in sat/kB; the UI fee picker returns sat/vByte.
