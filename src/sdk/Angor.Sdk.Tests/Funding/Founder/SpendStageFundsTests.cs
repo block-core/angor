@@ -248,6 +248,89 @@ public class SpendStageFundsTests
         result.Value.TransactionDraft.TransactionFee.Should().Be(new Amount(1500));
     }
 
+    [Fact]
+    public async Task Handle_MixedBucket_BuildsPerInputStageNumbers()
+    {
+        // Arrange — two UTXOs from the same date bucket (same StageId) but with different
+        // per-investment stage indices: the early investor's stage 2 shares a release date
+        // with the late investor's stage 1. Each input must carry its own stage number so
+        // the correct taproot script is rebuilt per investment.
+        var toSpend = new List<SpendTransactionDto>
+        {
+            new SpendTransactionDto { InvestorAddress = "early-investor", StageId = 1, InvestmentStageIndex = 1 },
+            new SpendTransactionDto { InvestorAddress = "late-investor", StageId = 1, InvestmentStageIndex = 0 }
+        };
+
+        var request = new SpendStageFunds.SpendStageFundsRequest(
+            new WalletId("wallet-1"),
+            new ProjectId("project-1"),
+            new FeeEstimation { Confirmations = 1, FeeRate = 10_000 },
+            toSpend);
+
+        var network = SetupNetwork();
+        SetupProject();
+        SetupProjectKeys();
+        SetupSeedwords();
+
+        _mockAngorIndexerService
+            .Setup(x => x.GetInvestmentAsync(It.IsAny<string>(), "early-investor"))
+            .ReturnsAsync(new ProjectInvestment { TransactionId = "tx-early" });
+        _mockAngorIndexerService
+            .Setup(x => x.GetInvestmentAsync(It.IsAny<string>(), "late-investor"))
+            .ReturnsAsync(new ProjectInvestment { TransactionId = "tx-late" });
+
+        _mockTransactionService
+            .Setup(x => x.GetTransactionHexByIdAsync("tx-early"))
+            .ReturnsAsync("hex-early");
+        _mockTransactionService
+            .Setup(x => x.GetTransactionHexByIdAsync("tx-late"))
+            .ReturnsAsync("hex-late");
+
+        var balanceInfo = new AccountBalanceInfo();
+        var accountInfo = new AccountInfo
+        {
+            ChangeAddressesInfo = new List<AddressInfo>
+            {
+                new AddressInfo { Address = "tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx", HasHistory = false }
+            }
+        };
+        balanceInfo.UpdateAccountBalanceInfo(accountInfo, new List<UtxoData>());
+        _mockWalletAccountBalanceService
+            .Setup(x => x.RefreshAccountBalanceInfoAsync(It.IsAny<WalletId>()))
+            .ReturnsAsync(Result.Success(balanceInfo));
+
+        List<StageTransactionInput>? capturedInputs = null;
+        var signedTx = network.CreateTransaction();
+        _mockFounderTransactionActions
+            .Setup(x => x.SpendFounderStage(
+                It.IsAny<ProjectInfo>(),
+                It.IsAny<IEnumerable<StageTransactionInput>>(),
+                It.IsAny<Script>(),
+                It.IsAny<AngorKey>(),
+                It.IsAny<FeeEstimation>()))
+            .Callback<ProjectInfo, IEnumerable<StageTransactionInput>, Script, AngorKey, FeeEstimation>(
+                (_, inputs, _, _, _) => capturedInputs = inputs.ToList())
+            .Returns(new Angor.Shared.Models.TransactionInfo
+            {
+                Transaction = signedTx,
+                TransactionFee = 1500
+            });
+
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        capturedInputs.Should().NotBeNull();
+        capturedInputs.Should().HaveCount(2);
+
+        var earlyInput = capturedInputs!.Single(i => i.TransactionHex == "hex-early");
+        earlyInput.StageNumber.Should().Be(2, "the early investor's UTXO is their second stage");
+
+        var lateInput = capturedInputs!.Single(i => i.TransactionHex == "hex-late");
+        lateInput.StageNumber.Should().Be(1, "the late investor's UTXO is their first stage");
+    }
+
     private static SpendStageFunds.SpendStageFundsRequest CreateRequest()
     {
         var toSpend = new List<SpendTransactionDto>
