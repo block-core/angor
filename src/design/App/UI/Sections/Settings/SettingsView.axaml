@@ -470,16 +470,20 @@
                                     <Run Text="Current: " />
                                     <Run Text="{Binding CurrencyDisplay}" FontWeight="Bold" />
                                 </TextBlock>
-                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                <DockPanel>
                                     <i:Icon Value="fa-solid fa-dollar-sign"
+                                           DockPanel.Dock="Left"
                                            FontSize="20"
+                                           Margin="0,0,12,0"
+                                           VerticalAlignment="Center"
                                            Foreground="{DynamicResource PrimaryGreenBrush}" />
                                     <TextBlock Text="Currency Display"
                                                FontSize="18"
                                                FontWeight="Bold"
+                                               TextWrapping="Wrap"
                                                Foreground="{DynamicResource TextStrong}"
                                                VerticalAlignment="Center" />
-                                </StackPanel>
+                                </DockPanel>
                             </DockPanel>
                         </Border>
                         <Border Padding="24">

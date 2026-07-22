@@ -183,17 +183,19 @@
                                                Foreground="{DynamicResource TextMuted}"
                                                VerticalAlignment="Center" />
                                 </StackPanel>
-                                <StackPanel x:Name="PART_RaisedRow"
-                                            Orientation="Horizontal" Spacing="4"
-                                            HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <DockPanel x:Name="PART_RaisedRow"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <TextBlock Text="BTC"
+                                               DockPanel.Dock="Right"
+                                               Margin="4,0,0,0"
+                                               FontSize="13"
+                                               Foreground="{DynamicResource TextMuted}" />
                                     <TextBlock Text="{TemplateBinding Raised}"
                                                FontSize="13"
                                                FontWeight="Bold"
+                                               TextTrimming="CharacterEllipsis"
                                                Foreground="{DynamicResource TextStrong}" />
-                                    <TextBlock Text="BTC"
-                                               FontSize="13"
-                                               Foreground="{DynamicResource TextMuted}" />
-                                </StackPanel>
+                                </DockPanel>
                             </DockPanel>
 
                             <!-- 5. Stats Row 2: target/goal label (left) + target amount (right) -->
@@ -330,7 +332,7 @@
     </Style>
 
     <!-- Hide amounts when ShowAmounts=False -->
-    <Style Selector="controls|ProjectCard[ShowAmounts=False] /template/ StackPanel#PART_RaisedRow">
+    <Style Selector="controls|ProjectCard[ShowAmounts=False] /template/ DockPanel#PART_RaisedRow">
         <Setter Property="IsVisible" Value="False" />
     </Style>
     <Style Selector="controls|ProjectCard[ShowAmounts=False] /template/ DockPanel#PART_TargetRow">
@@ -341,7 +343,7 @@
     <Style Selector="controls|ProjectCard[StatsPending=True] /template/ StackPanel#PART_InvestorRow">
         <Setter Property="IsVisible" Value="False" />
     </Style>
-    <Style Selector="controls|ProjectCard[StatsPending=True] /template/ StackPanel#PART_RaisedRow">
+    <Style Selector="controls|ProjectCard[StatsPending=True] /template/ DockPanel#PART_RaisedRow">
         <Setter Property="IsVisible" Value="False" />
     </Style>
     <Style Selector="controls|ProjectCard[StatsPending=True] /template/ StackPanel#PART_StatsPendingRow">

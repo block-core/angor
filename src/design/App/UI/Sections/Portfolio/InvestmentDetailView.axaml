@@ -1011,18 +1011,21 @@
                     Padding="24">
                 <StackPanel Spacing="24">
                     <!-- Header — Vue: .card-header with bitcoin icon + title -->
-                    <StackPanel Orientation="Horizontal" Spacing="12">
+                    <DockPanel>
                         <i:Icon Value="fa-brands fa-bitcoin"
+                               DockPanel.Dock="Left"
                                FontSize="22"
+                               Margin="0,0,12,0"
                                Foreground="{DynamicResource TextMutedBrush}"
                                VerticalAlignment="Center" />
                         <TextBlock FontSize="20"
                                    FontWeight="Bold"
+                                   TextWrapping="Wrap"
                                    Foreground="{DynamicResource TextStrongBrush}"
                                    VerticalAlignment="Center">
                             <Run Text="{Binding AmountNoun, Mode=OneWay}" /><Run Text=" Information" />
                         </TextBlock>
-                    </StackPanel>
+                    </DockPanel>
 
                     <!-- Vue: .stats-grid — 4 stat cards in a row, each with icon + label + value -->
                     <Grid Name="InfoGrid4" ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,Auto,Auto,Auto">

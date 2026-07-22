@@ -359,6 +359,21 @@ public partial class PrototypeSettings : ReactiveObject
     /// <summary>Check if a wallet needs backup.</summary>
     public bool DoesWalletNeedBackup(string walletId) => WalletsNeedingBackup.Contains(walletId);
 
+    /// <summary>
+    /// Reset user-behavior settings after a data wipe. Auto-approve MUST be turned
+    /// off — leaving it enabled would let a freshly wiped founder profile silently
+    /// sign investment requests using a stale preference. Wallet-related fields are
+    /// cleared because the wallets they referenced no longer exist. Cosmetic
+    /// preferences (theme, debug mode) are preserved. The property setters trigger
+    /// the throttled persist subscription, so the reset also lands on disk.
+    /// </summary>
+    public void ResetAfterDataWipe()
+    {
+        IsAutoApproveEnabled = false;
+        SelectedWalletId = null;
+        WalletsNeedingBackup = new HashSet<string>();
+    }
+
     private class PrototypeSettingsData
     {
         public bool IsDebugMode { get; set; }
@@ -1176,6 +1191,7 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
     {
         _signatureStore.Clear();
         _portfolioVm.ResetAfterDataWipe();
+        _prototypeSettings.ResetAfterDataWipe();
         InvestedBalanceDisplay = "0.0000 " + _currencyService.Symbol;
         ToastMessage = null;
         ModalContent = null;
