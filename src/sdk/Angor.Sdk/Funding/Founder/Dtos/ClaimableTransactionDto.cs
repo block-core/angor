@@ -22,4 +22,15 @@ public record ClaimableTransactionDto
     public ClaimStatus ClaimStatus { get; set; }
     public DateTime? DynamicReleaseDate { get; set; }
 
+    // ── Debug/diagnostic data (decoded from the investment transaction OP_RETURN) ──
+
+    /// <summary>The investment transaction id this UTXO belongs to.</summary>
+    public string? TransactionId { get; init; }
+
+    /// <summary>Decoded investment start date from the OP_RETURN (Fund/Subscribe only).</summary>
+    public DateTime? InvestmentStartDate { get; init; }
+
+    /// <summary>Decoded pattern id from the OP_RETURN (Fund/Subscribe only).</summary>
+    public byte? PatternId { get; init; }
+
 }

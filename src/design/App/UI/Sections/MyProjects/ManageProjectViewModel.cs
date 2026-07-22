@@ -19,6 +19,29 @@ using App.UI.Shared;
 namespace App.UI.Sections.MyProjects;
 
 /// <summary>
+/// One investment transaction in the Debug Info modal — decoded OP_RETURN data
+/// (start date, pattern) plus the per-stage release schedule for that investment.
+/// </summary>
+public class DebugInvestmentViewModel
+{
+    public string TransactionId { get; set; } = "";
+    public string InvestorKey { get; set; } = "";
+    public string InvestmentStartDate { get; set; } = "";
+    public string PatternId { get; set; } = "";
+    public ObservableCollection<DebugStageRowViewModel> Stages { get; } = new();
+}
+
+/// <summary>A single stage row inside a Debug Info investment card.</summary>
+public class DebugStageRowViewModel
+{
+    public string StageLabel { get; set; } = "";
+    public string ReleaseDate { get; set; } = "";
+    public string Amount { get; set; } = "";
+    public string Status { get; set; } = "";
+    public string DisplayBucket { get; set; } = "";
+}
+
+/// <summary>
 /// Represents a single UTXO transaction in the claim/release/spent modals.
 /// Vue ref: ManageFunds.vue lines ~300-400 (available-transaction-item, spent-transaction-item).
 /// </summary>
@@ -184,6 +207,10 @@ public partial class ManageProjectViewModel : ReactiveObject
     // ── Spent/Returned Modals ──
     [Reactive] public partial bool ShowSpentModal { get; set; }
 
+    // ── Debug Info Modal ──
+    [Reactive] public partial bool ShowDebugModal { get; set; }
+    public ObservableCollection<DebugInvestmentViewModel> DebugInvestments { get; } = new();
+
     // ── Form State ──
     [Reactive] public partial string WalletPassword { get; set; }
     [Reactive] public partial bool IsClaiming { get; set; }
@@ -196,6 +223,51 @@ public partial class ManageProjectViewModel : ReactiveObject
         SelectedStageIndex >= 0 && SelectedStageIndex < Stages.Count
             ? Stages[SelectedStageIndex]
             : null;
+
+    /// <summary>Raw claimable DTOs from the last SDK load — used to build the debug view.</summary>
+    private List<ClaimableTransactionDto> lastClaimableTransactions = new();
+
+    /// <summary>
+    /// Builds the debug info (per-investment decoded OP_RETURN data + stage schedule)
+    /// from the last loaded claimable transactions and opens the Debug Info modal.
+    /// </summary>
+    public void OpenDebugModal()
+    {
+        DebugInvestments.Clear();
+
+        var byInvestment = lastClaimableTransactions
+            .GroupBy(t => t.TransactionId ?? t.InvestorAddress)
+            .OrderBy(g => g.Min(t => t.DynamicReleaseDate ?? DateTime.MaxValue));
+
+        foreach (var group in byInvestment)
+        {
+            var first = group.First();
+
+            var investment = new DebugInvestmentViewModel
+            {
+                TransactionId = first.TransactionId ?? "(unknown)",
+                InvestorKey = first.InvestorAddress,
+                InvestmentStartDate = first.InvestmentStartDate?.ToString("yyyy-MM-dd") ?? "n/a (fixed stages)",
+                PatternId = first.PatternId?.ToString() ?? "n/a"
+            };
+
+            foreach (var tx in group.OrderBy(t => t.InvestmentStageIndex))
+            {
+                investment.Stages.Add(new DebugStageRowViewModel
+                {
+                    StageLabel = $"Stage {tx.InvestmentStageIndex + 1}",
+                    ReleaseDate = tx.DynamicReleaseDate?.ToString("yyyy-MM-dd") ?? "",
+                    Amount = tx.Amount.Sats.ToUnitBtc().ToString("F8", CultureInfo.InvariantCulture),
+                    Status = tx.ClaimStatus.ToString(),
+                    DisplayBucket = $"shown as Stage {tx.StageNumber}"
+                });
+            }
+
+            DebugInvestments.Add(investment);
+        }
+
+        ShowDebugModal = true;
+    }
 
     public ManageProjectViewModel(
         MyProjectItemViewModel project,
@@ -434,6 +506,7 @@ public partial class ManageProjectViewModel : ReactiveObject
 
             Stages.Clear();
             var transactions = result.Value.Transactions.ToList();
+            lastClaimableTransactions = transactions;
             double totalAmount = 0;
             double availableAmount = 0;
             int spentCount = 0;

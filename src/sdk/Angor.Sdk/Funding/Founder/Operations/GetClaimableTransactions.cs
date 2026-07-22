@@ -37,6 +37,9 @@ public static class GetClaimableTransactions
                            DynamicReleaseDate = stageData.StageDate,
                            InvestorAddress = item.InvestorPublicKey,
                            ClaimStatus = DetermineClaimStatus(item, stageData),
+                           TransactionId = item.Trxid,
+                           InvestmentStartDate = item.InvestmentStartDate,
+                           PatternId = item.PatternId,
                        }));
 
             return Result.Success(new GetClaimableTransactionsResponse(list));

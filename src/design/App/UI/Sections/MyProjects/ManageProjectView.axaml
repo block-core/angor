@@ -186,6 +186,31 @@
                     </Button>
                 </Border>
 
+                <!-- Debug Info button (icon only) — decoded OP_RETURN + per-investment stage dates -->
+                <Border Classes="FloatingBtn"
+                        Background="{DynamicResource FloatingBtnBg}"
+                        BorderBrush="{DynamicResource FloatingBtnBorder}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        BoxShadow="{DynamicResource FloatingBtnShadow}"
+                        Width="44" Height="44"
+                        VerticalAlignment="Center"
+                        Cursor="Hand"
+                        RenderTransform="translate(0px, 0px)">
+                    <Border.Transitions>
+                        <Transitions>
+                            <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" />
+                            <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
+                        </Transitions>
+                    </Border.Transitions>
+                    <Button Name="DebugInfoButton" Classes="NavBtn" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Cursor="Hand"
+                            ToolTip.Tip="Debug: decoded investment data"
+                            AutomationProperties.AutomationId="ManageProjectDebugButton">
+                        <i:Icon Value="fa-solid fa-bug" FontSize="14" Foreground="{DynamicResource TextStrong}"
+                                HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Button>
+                </Border>
+
                 <!-- Share button (icon only) -->
                 <!-- Vue: .share-button-floating — w44 h44 -->
                 <Border Classes="FloatingBtn"

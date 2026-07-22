@@ -64,6 +64,10 @@ public partial class ManageProjectModalsView : UserControl
         WireClick("SpentModalCloseBtn", () => { if (Vm != null) Vm.ShowSpentModal = false; });
         WireClick("SpentModalDoneBtn", () => { if (Vm != null) Vm.ShowSpentModal = false; });
 
+        // ── Debug Info ──
+        WireClick("DebugModalCloseBtn", () => { if (Vm != null) Vm.ShowDebugModal = false; });
+        WireClick("DebugModalDoneBtn", () => { if (Vm != null) Vm.ShowDebugModal = false; });
+
         // ── Modal backdrop clicks (close on click outside the card) ──
         WireBackdropClose("ClaimModalOverlay", () => { if (Vm != null) Vm.ShowClaimModal = false; });
         WireBackdropClose("PasswordModalOverlay", () => { if (Vm != null) Vm.ShowPasswordModal = false; });
@@ -72,6 +76,7 @@ public partial class ManageProjectModalsView : UserControl
         WireBackdropClose("ReleasePasswordModalOverlay", () => { if (Vm != null) Vm.ShowReleaseFundsPasswordModal = false; });
         WireBackdropClose("ReleaseSuccessModalOverlay", () => { if (Vm != null) Vm.ShowReleaseFundsSuccessModal = false; });
         WireBackdropClose("SpentModalOverlay", () => { if (Vm != null) Vm.ShowSpentModal = false; });
+        WireBackdropClose("DebugModalOverlay", () => { if (Vm != null) Vm.ShowDebugModal = false; });
 
         // ── UTXO item toggle (click on row toggles selection in claim modal) ──
         var claimList = this.FindControl<ItemsControl>("ClaimUtxoList");
