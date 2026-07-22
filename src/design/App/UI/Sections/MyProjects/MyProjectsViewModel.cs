@@ -17,17 +17,24 @@ namespace App.UI.Sections.MyProjects;
 
 /// <summary>
 /// A deployed project shown in the My Projects list after wizard completion.
+/// Stats (raised / funders / progress) load asynchronously from the indexer, so
+/// those fields are reactive and <see cref="IsStatsPending"/> drives a per-card
+/// "loading" affordance — a plain zero would be indistinguishable from an
+/// unfunded project.
 /// </summary>
-public class MyProjectItemViewModel
+public partial class MyProjectItemViewModel : ReactiveObject
 {
     public string Name { get; set; } = "";
     public string Description { get; set; } = "";
     public string ProjectType { get; set; } = "investment";
     public string TargetAmount { get; set; } = "0.00000000";
     public string Status { get; set; } = "Open";
-    public int InvestorCount { get; set; }
-    public string Raised { get; set; } = "0.00000000";
-    public double Progress { get; set; }
+    [Reactive] private int investorCount;
+    [Reactive] private string raised = "0.00000000";
+    [Reactive] private double progress;
+    /// <summary>True while the indexer stats fetch is in flight — the card shows a
+    /// pending indicator instead of misleading zeros.</summary>
+    [Reactive] private bool isStatsPending;
     public string? BannerUrl { get; set; }
     public string? LogoUrl { get; set; }
     public string StartDate { get; set; } = "";
@@ -129,10 +136,10 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable, INetwork
         try
         {
             var wallets = _walletContext.Wallets.ToList();
-            var loadedProjects = await Task.Run(async () =>
+            var (loadedProjects, statsPlan) = await Task.Run(async () =>
             {
                 var projects = new List<MyProjectItemViewModel>();
-                var statsTasks = new List<Task>();
+                var plan = new List<(MyProjectItemViewModel Item, double TargetBtc)>();
 
                 foreach (var wallet in wallets)
                 {
@@ -170,27 +177,38 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable, INetwork
                         };
                         projects.Add(item);
 
-                        // GetFounderProjects only returns project metadata — fetch live
-                        // funding stats (raised / investor count / progress) from the
-                        // indexer so the cards don't show 0/empty. Run in parallel.
+                        // GetFounderProjects only returns project metadata — live
+                        // funding stats come from the indexer afterwards. Mark the
+                        // card as pending so it doesn't show misleading zeros.
                         if (!string.IsNullOrEmpty(item.ProjectIdentifier))
-                            statsTasks.Add(PopulateProjectStatsAsync(item, targetBtc));
+                        {
+                            item.IsStatsPending = true;
+                            plan.Add((item, targetBtc));
+                        }
                     }
                 }
 
-                await Task.WhenAll(statsTasks);
-                return projects;
+                return (projects, plan);
             });
 
             if (myGeneration != _loadGeneration)
                 return;
 
+            // Show the cards immediately — stats stream in per-card as the indexer
+            // responds instead of blocking the whole grid on the slowest call.
             Projects.Clear();
             foreach (var project in loadedProjects)
                 Projects.Add(project);
 
             this.RaisePropertyChanged(nameof(HasProjects));
             this.RaisePropertyChanged(nameof(TotalRaised));
+
+            _ = Task.Run(async () =>
+            {
+                await Task.WhenAll(statsPlan.Select(p => PopulateProjectStatsAsync(p.Item, p.TargetBtc)));
+                if (myGeneration == _loadGeneration)
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() => this.RaisePropertyChanged(nameof(TotalRaised)));
+            });
         }
         catch (Exception ex)
         {
@@ -225,13 +243,21 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable, INetwork
             var stats = statsResult.Value;
             var raisedBtc = (double)stats.TotalInvested.ToUnitBtc();
 
-            item.Raised = raisedBtc.ToString("F8", CultureInfo.InvariantCulture);
-            item.InvestorCount = stats.TotalInvestors ?? 0;
-            item.Progress = targetBtc > 0 ? Math.Min(100, raisedBtc / targetBtc * 100) : 0;
+            // Marshal to the UI thread — the items are bound to live cards.
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                item.Raised = raisedBtc.ToString("F8", CultureInfo.InvariantCulture);
+                item.InvestorCount = stats.TotalInvestors ?? 0;
+                item.Progress = targetBtc > 0 ? Math.Min(100, raisedBtc / targetBtc * 100) : 0;
+            });
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to load stats for founder project {ProjectId}", item.ProjectIdentifier);
+        }
+        finally
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => item.IsStatsPending = false);
         }
     }
 

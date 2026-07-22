@@ -362,7 +362,11 @@ public class ProjectItemViewModel : INotifyPropertyChanged
             FounderKey = dto.FounderPubKey ?? "",
             NostrNpub = dto.NostrNpubKeyHex ?? "",
             StartDate = dto.FundingStartDate.ToString("dd MMM yyyy"),
-            EndDate = dto.FundingEndDate.ToString("dd MMM yyyy"),
+            // Fund-type projects are open-ended: FundingEndDate is never set (stays
+            // DateTime.MinValue) and would render as "01 Jan 0001".
+            EndDate = dto.FundingEndDate > DateTime.MinValue
+                ? dto.FundingEndDate.ToString("dd MMM yyyy")
+                : "Open Ended",
             PenaltyDays = dto.PenaltyDuration.Days.ToString(),
             PenaltyThresholdSats = dto.PenaltyThreshold,
             Stages = stages,

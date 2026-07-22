@@ -109,6 +109,18 @@ dotnet test --filter "DisplayName~GetProjectInvestmentsHandler_WhenProjectNotFou
 dotnet test --filter "ClassName=Angor.Sdk.Tests.Funding.Founder.FounderAppServiceTests"
 ```
 
+## UI Layout-Regression Tests (headless)
+
+`src/design/App.Test.Integration/LayoutRegression/` renders key views headlessly (real theme, real Skia text metrics) at breakpoint widths (360/390/767/768/1023/1280) and asserts:
+- no overlapping siblings and no children overflowing parent panels (`LayoutAsserts.FindViolations`)
+- responsive layout toggles both directions AND survives detach/re-attach (views are cached across section switches)
+
+```bash
+dotnet test src/design/App.Test.Integration/App.Test.Integration.csproj --filter "FullyQualifiedName~LayoutRegression"
+```
+
+Fast (seconds) and network-free — run after ANY view/style change in src/design/App. When adding a new section view, add it to `LayoutRegressionTests` with worst-case data. Pitfalls these tests exist to catch: `UserControl.Foo` style selectors never match derived views (use `ns|ConcreteView.Foo`); inline attributes (Orientation/Margin/Padding) silently beat style setters; disposing a LayoutModeService subscription on detach without re-subscribing on attach kills responsiveness permanently.
+
 ## UAT (End-to-End UI) Tests
 
 The `App.Test.Uat` project contains end-to-end tests that launch real `App.Desktop` processes with Avalonia windows, driven via an HTTP automation server. The automation server is compiled only in Debug builds (`#if DEBUG`).

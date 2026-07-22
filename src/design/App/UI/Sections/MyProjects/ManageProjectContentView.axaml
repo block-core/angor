@@ -16,18 +16,71 @@
     -->
 
     <!-- Compact (mobile) style overrides — toggled by Classes.Set("Compact", true) in code-behind.
-         Vue: @media (max-width: 768px) stage-header-left/stage-pills flex-column full width. -->
+         Vue: @media (max-width: 768px) stage-header-left/stage-pills flex-column full width.
+         IMPORTANT: orientation must be set HERE (not inline on the panels) — inline
+         attribute values beat style setters, which silently disables the mobile layout. -->
     <UserControl.Styles>
-        <!-- Stage header: stack left-section above right-section on mobile -->
-        <Style Selector="UserControl.Compact StackPanel.StageHeaderLeft">
+        <!-- Stage header: row on desktop, stacked on mobile -->
+        <Style Selector="StackPanel.StageHeaderLeft">
+            <Setter Property="Orientation" Value="Horizontal" />
+            <Setter Property="Spacing" Value="12" />
+        </Style>
+        <Style Selector="mp|ManageProjectContentView.Compact StackPanel.StageHeaderLeft">
             <Setter Property="Orientation" Value="Vertical" />
             <Setter Property="Spacing" Value="12" />
         </Style>
-        <!-- Stage pills: stretch full width, stack vertically on mobile -->
-        <Style Selector="UserControl.Compact StackPanel.StagePills">
+        <!-- Stage pills: row on desktop; stacked full width on mobile -->
+        <Style Selector="StackPanel.StagePills">
+            <Setter Property="Orientation" Value="Horizontal" />
+            <Setter Property="Spacing" Value="8" />
+        </Style>
+        <Style Selector="mp|ManageProjectContentView.Compact StackPanel.StagePills">
             <Setter Property="Orientation" Value="Vertical" />
             <Setter Property="HorizontalAlignment" Value="Stretch" />
             <Setter Property="Spacing" Value="8" />
+        </Style>
+        <!-- Pill text centered when pills go full width on mobile -->
+        <Style Selector="mp|ManageProjectContentView.Compact StackPanel.StagePills TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+        </Style>
+        <!-- Stage header badges ("Spent by founder" / "x of x claimable") live in the
+             header top-right on desktop; on mobile they overlay the header content,
+             so hide them here — the claimable badge re-renders full-width in the
+             action button stack instead. -->
+        <Style Selector="mp|ManageProjectContentView.Compact StackPanel.StageHeaderBadges">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <!-- Stage action buttons: row on desktop; single full-width column on mobile -->
+        <Style Selector="StackPanel.StageActions">
+            <Setter Property="Orientation" Value="Horizontal" />
+            <Setter Property="Spacing" Value="12" />
+        </Style>
+        <Style Selector="mp|ManageProjectContentView.Compact StackPanel.StageActions">
+            <Setter Property="Orientation" Value="Vertical" />
+            <Setter Property="Spacing" Value="8" />
+        </Style>
+        <!-- Mobile-only claimable badge below "Available in X days" -->
+        <Style Selector="Panel.StageClaimableMobile">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="mp|ManageProjectContentView.Compact Panel.StageClaimableMobile">
+            <Setter Property="IsVisible" Value="True" />
+        </Style>
+        <!-- ProjectId action buttons: padding lives in styles (inline would beat the
+             Compact override). Slimmer on mobile so Edit/View/Copy fit 360px. -->
+        <Style Selector="Grid#ProjectIdActions Button">
+            <Setter Property="Padding" Value="12,6" />
+        </Style>
+        <Style Selector="mp|ManageProjectContentView.Compact Grid#ProjectIdActions Button">
+            <Setter Property="Padding" Value="6,6" />
+        </Style>
+        <!-- Icons add 20px per button — drop them on mobile so the labels fit 360px.
+             The copy button is icon-only, so its icon is explicitly kept visible. -->
+        <Style Selector="mp|ManageProjectContentView.Compact Grid#ProjectIdActions Button i|Icon">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="mp|ManageProjectContentView.Compact Grid#ProjectIdActions Button#CopyProjectIdBtn i|Icon">
+            <Setter Property="IsVisible" Value="True" />
         </Style>
     </UserControl.Styles>
 
@@ -61,18 +114,23 @@
                 </StackPanel>
 
                 <!-- Right: Action buttons -->
-                <!-- Vue: .project-id-actions — gap 8 -->
-                <StackPanel x:Name="ProjectIdActions" Grid.Column="1" Orientation="Horizontal" Spacing="8"
-                            VerticalAlignment="Center">
+                <!-- Vue: .project-id-actions — gap 8. Grid (not StackPanel) so the
+                     text buttons can share/shrink width on compact instead of
+                     overflowing the card on narrow phones. -->
+                <Grid x:Name="ProjectIdActions" Grid.Column="1"
+                      ColumnDefinitions="Auto,8,Auto,8,Auto"
+                      VerticalAlignment="Center">
                     <!-- Edit Project button -->
                     <!-- Vue: .edit-project-button — pad 6 12, rounded 6, border #d1d5db, color #4B7C5A, font 13px -->
                     <Button Name="EditProjectButton"
+                            Grid.Column="0"
                             Classes="NoPressShift"
                             Background="Transparent"
                             BorderBrush="{DynamicResource StrokeSubtle}"
                             BorderThickness="1"
                             CornerRadius="6"
-                            Padding="12,6">
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <i:Icon Value="fa-solid fa-pen"
                                    FontSize="14"
@@ -80,17 +138,20 @@
                             <TextBlock Text="Edit Project"
                                        FontSize="13" FontWeight="Medium"
                                        Foreground="{DynamicResource ProjectActionBtnText}"
+                                       TextTrimming="CharacterEllipsis"
                                        VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
 
                     <!-- See Live Project button -->
-                    <Button Classes="NoPressShift"
+                    <Button Grid.Column="2"
+                            Classes="NoPressShift"
                             Background="Transparent"
                             BorderBrush="{DynamicResource StrokeSubtle}"
                             BorderThickness="1"
                             CornerRadius="6"
-                            Padding="12,6">
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <i:Icon Value="fa-solid fa-eye"
                                    FontSize="14"
@@ -98,6 +159,7 @@
                             <TextBlock Text="See Live Project"
                                        FontSize="13" FontWeight="Medium"
                                        Foreground="{DynamicResource ProjectActionBtnText}"
+                                       TextTrimming="CharacterEllipsis"
                                        VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
@@ -105,6 +167,7 @@
                     <!-- Copy button (icon only) -->
                     <!-- Vue: .copy-button — pad 8, rounded 6, color #6b7280 -->
                     <Button Name="CopyProjectIdBtn"
+                            Grid.Column="4"
                             Classes="NoPressShift"
                             Background="Transparent"
                             BorderThickness="0"
@@ -112,7 +175,7 @@
                             Padding="8">
                         <i:Icon Value="fa-solid fa-copy" FontSize="16" Foreground="{DynamicResource ProjectIdLabel}" />
                     </Button>
-                </StackPanel>
+                </Grid>
             </Grid>
         </Border>
 
@@ -472,7 +535,7 @@
                                         <Grid Classes="StageHeader" ColumnDefinitions="*,Auto">
                                             <!-- Left: Stage number + pills -->
                                             <!-- Vue: .stage-header-left — gap 12 -->
-                                            <StackPanel Classes="StageHeaderLeft" Grid.Column="0" Orientation="Horizontal" Spacing="12"
+                                            <StackPanel Classes="StageHeaderLeft" Grid.Column="0"
                                                         VerticalAlignment="Center">
                                                 <!-- Vue: .stage-number — 16px, 600, #1a1a1a/#fafafa -->
                                                 <TextBlock Text="{Binding Number, StringFormat=Stage {0}}"
@@ -482,7 +545,7 @@
 
                                                 <!-- Pills -->
                                                 <!-- Vue: .stage-pills — gap 8 -->
-                                                <StackPanel Classes="StagePills" Orientation="Horizontal" Spacing="8"
+                                                <StackPanel Classes="StagePills"
                                                             VerticalAlignment="Center">
                                                     <!-- BTC pill -->
                                                     <!-- Vue: .stage-pill — pad 4 12, rounded 16, font 12px 600 -->
@@ -517,7 +580,8 @@
 
                                             <!-- Right: status badges -->
                                             <!-- Vue: .stage-header-right — gap 12 -->
-                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12"
+                                            <StackPanel Grid.Column="1" Classes="StageHeaderBadges"
+                                                        Orientation="Horizontal" Spacing="12"
                                                         VerticalAlignment="Center">
                                                 <!-- "Spent by founder" badge (when fully spent) -->
                                                 <!-- Vue: .spent-by-founder-button — pad 8 16, rounded 6, color #f59e0b, border 1px #f59e0b -->
@@ -565,8 +629,8 @@
                                     </StackPanel>
 
                                     <!-- Action Buttons -->
-                                    <!-- Vue: flex gap-3 mt-4 -->
-                                    <StackPanel Orientation="Horizontal" Spacing="12"
+                                    <!-- Vue: flex gap-3 mt-4. Mobile (Compact): vertical stack, full width. -->
+                                    <StackPanel Classes="StageActions"
                                                 Margin="0,16,0,0">
                                         <!-- Claim button (available && canClaim) -->
                                         <!-- Vue: .claim-button — green gradient, white text, rounded 8, pad 12 16, full width -->
@@ -622,6 +686,24 @@
                                                 FontSize="14" FontWeight="SemiBold">
                                             <TextBlock Text="{Binding AvailableInDaysText}" FontWeight="SemiBold" />
                                         </Button>
+
+                                        <!-- Mobile-only claimable badge ("x of x claimable") — the desktop
+                                             header badge is hidden on Compact, so it stacks here instead,
+                                             full width beneath the buttons. -->
+                                        <Panel Classes="StageClaimableMobile">
+                                            <Border IsVisible="{Binding HasUnspentTransactions}"
+                                                    Background="Transparent"
+                                                    BorderBrush="{DynamicResource PrimaryGreenBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="8"
+                                                    Padding="16,12"
+                                                    HorizontalAlignment="Stretch">
+                                                <TextBlock Text="{Binding ClaimableInfoText, FallbackValue='Funds Available'}"
+                                                           FontSize="13" FontWeight="SemiBold"
+                                                           HorizontalAlignment="Center"
+                                                           Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                            </Border>
+                                        </Panel>
                                     </StackPanel>
                                 </StackPanel>
                             </Border>

@@ -45,6 +45,13 @@ jobs:
       
       - name: Test Angor.Shared.Tests
         run: dotnet test src/shared/Angor.Shared.Tests/Angor.Shared.Tests.csproj -c Release --verbosity normal --collect:"XPlat Code Coverage"
+
+      # Headless UI layout-regression suite: renders key views at phone/tablet/desktop
+      # breakpoints and asserts no overlapping/overflowing elements + responsive
+      # subscriptions surviving detach/re-attach. Must run in Debug (matches the
+      # automation-enabled TestApp) and is filtered to the fast, network-free tests.
+      - name: Test UI layout regression (headless)
+        run: dotnet test src/design/App.Test.Integration/App.Test.Integration.csproj -c Debug --filter "FullyQualifiedName~LayoutRegression" --verbosity normal
       
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4

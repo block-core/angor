@@ -62,30 +62,7 @@ public partial class FundersView : UserControl, ISectionView
         _approveAllText = this.FindControl<TextBlock>("ApproveAllText");
 
         // ── Responsive layout: adjust padding for tab bar clearance ──
-        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
-            .Subscribe(isCompact =>
-            {
-                Classes.Set("Mobile", isCompact || isDeviceMobile);
-
-                // Adjust ListBox bottom margin for mobile tab bar clearance
-                var listBox = this.FindControl<ListBox>("SignaturesListPanel");
-                if (listBox != null)
-                    listBox.Margin = isCompact
-                        ? new Thickness(16, 0, 16, 96)
-                        : new Thickness(24, 0, 24, 24);
-
-                if (_fundersTitleIcon != null)
-                {
-                    _fundersTitleIcon.Width = isCompact ? 32 : 40;
-                    _fundersTitleIcon.Height = isCompact ? 32 : 40;
-                }
-
-                if (_fundersTitleText != null)
-                    _fundersTitleText.FontSize = isCompact ? 22 : 24;
-
-                if (_approveAllText != null)
-                    _approveAllText.Text = isCompact ? "Approve" : "Approve All";
-            });
+        SubscribeToLayoutMode();
 
         var totalMs = sw.ElapsedMilliseconds + initMs;
         App.Services.GetRequiredService<ILoggerFactory>()
@@ -149,12 +126,46 @@ public partial class FundersView : UserControl, ISectionView
         shellVm?.ShowToast(message);
     }
 
+    /// <summary>Idempotent responsive-layout subscription — re-created on every logical-tree attach because OnDetachedFromLogicalTree disposes it (views are cached and re-attached on section switches).</summary>
+    private void SubscribeToLayoutMode()
+    {
+        if (_layoutSubscription != null) return;
+        bool isDeviceMobile = OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
+        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
+            .Subscribe(isCompact =>
+            {
+                Classes.Set("Mobile", isCompact || isDeviceMobile);
+
+                // Adjust ListBox bottom margin for mobile tab bar clearance
+                var listBox = this.FindControl<ListBox>("SignaturesListPanel");
+                if (listBox != null)
+                    listBox.Margin = isCompact
+                        ? new Thickness(16, 0, 16, 96)
+                        : new Thickness(24, 0, 24, 24);
+
+                if (_fundersTitleIcon != null)
+                {
+                    _fundersTitleIcon.Width = isCompact ? 32 : 40;
+                    _fundersTitleIcon.Height = isCompact ? 32 : 40;
+                }
+
+                if (_fundersTitleText != null)
+                    _fundersTitleText.FontSize = isCompact ? 22 : 24;
+
+                if (_approveAllText != null)
+                    _approveAllText.Text = isCompact ? "Approve" : "Approve All";
+            });
+    }
+
     protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
     {
         base.OnAttachedToLogicalTree(e);
         // Re-subscribe when the cached view is re-added to the tree
         // (the subscriptions were disposed in OnDetachedFromLogicalTree).
         SubscribeToVisibility();
+        // Re-create the responsive subscription — views are cached and re-attached on
+        // section switches; the subscription is disposed on detach.
+        SubscribeToLayoutMode();
     }
 
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)

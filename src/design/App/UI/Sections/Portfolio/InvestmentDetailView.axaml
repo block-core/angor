@@ -963,6 +963,98 @@
                         </Border>
                     </Grid>
 
+                    <!-- ═══════════════════════════════════════ -->
+                    <!-- YOUR SHARE STATISTICS                    -->
+                    <!-- Shows investor's share of total pool     -->
+                    <!-- ═══════════════════════════════════════ -->
+                    <Grid ColumnDefinitions="*,*,*" Margin="0,0,0,0">
+                        <!-- Your Share -->
+                        <Border Grid.Column="0"
+                                Background="{DynamicResource StatsDetailInnerBackground}"
+                                CornerRadius="12"
+                                Padding="20"
+                                Margin="0,0,8,0"
+                                BorderBrush="{DynamicResource StatsDetailInnerBorder}"
+                                BorderThickness="2">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="{Binding ShareLabel}"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource StatsDetailLabel}" />
+                                <TextBlock Text="{Binding SharePercentageDisplay}"
+                                           FontSize="24"
+                                           FontWeight="Bold"
+                                           Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                <TextBlock Text="of total pool"
+                                           FontSize="11"
+                                           Foreground="{DynamicResource StatsDetailSubtext}" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Claimed by Founder -->
+                        <Border Grid.Column="1"
+                                Background="{DynamicResource StatsDetailInnerBackground}"
+                                CornerRadius="12"
+                                Padding="20"
+                                Margin="8,0,8,0"
+                                BorderBrush="{DynamicResource StatsDetailInnerBorder}"
+                                BorderThickness="2">
+                            <StackPanel Spacing="8">
+                                <TextBlock Text="Claimed by Founder"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource StatsDetailLabel}" />
+                                <TextBlock Text="{Binding ClaimedPercentageDisplay}"
+                                           FontSize="24"
+                                           FontWeight="Bold"
+                                           Foreground="#F7931A" />
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="{Binding AmountClaimedByFounder}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource StatsDetailSubtext}" />
+                                    <TextBlock Text="{Binding CurrencySymbol}"
+                                               FontSize="11"
+                                               Foreground="{DynamicResource StatsDetailSubtext}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- View Investors Button -->
+                        <Border Grid.Column="2"
+                                Background="{DynamicResource StatsDetailInnerBackground}"
+                                CornerRadius="12"
+                                Padding="20"
+                                Margin="8,0,0,0"
+                                BorderBrush="{DynamicResource StatsDetailInnerBorder}"
+                                BorderThickness="2">
+                            <StackPanel Spacing="8" VerticalAlignment="Center">
+                                <TextBlock Text="Investor Breakdown"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           Foreground="{DynamicResource StatsDetailLabel}" />
+                                <Button Name="ViewInvestorsButton"
+                                        HorizontalAlignment="Stretch"
+                                        HorizontalContentAlignment="Center"
+                                        Padding="14,8"
+                                        Background="Transparent"
+                                        BorderBrush="{DynamicResource PrimaryGreenBrush}"
+                                        BorderThickness="2"
+                                        CornerRadius="8">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <i:Icon Value="fa-solid fa-chart-pie"
+                                               FontSize="14"
+                                               Foreground="{DynamicResource PrimaryGreenBrush}"
+                                               VerticalAlignment="Center" />
+                                        <TextBlock Text="View All"
+                                                   FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource PrimaryGreenBrush}" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
                     <!-- Funding Progress Bar -->
                     <!-- Vue: .progress-section .progress-header flex space-between -->
                     <StackPanel Spacing="8">
@@ -1011,18 +1103,21 @@
                     Padding="24">
                 <StackPanel Spacing="24">
                     <!-- Header — Vue: .card-header with bitcoin icon + title -->
-                    <StackPanel Orientation="Horizontal" Spacing="12">
+                    <DockPanel>
                         <i:Icon Value="fa-brands fa-bitcoin"
+                               DockPanel.Dock="Left"
                                FontSize="22"
+                               Margin="0,0,12,0"
                                Foreground="{DynamicResource TextMutedBrush}"
                                VerticalAlignment="Center" />
                         <TextBlock FontSize="20"
                                    FontWeight="Bold"
+                                   TextWrapping="Wrap"
                                    Foreground="{DynamicResource TextStrongBrush}"
                                    VerticalAlignment="Center">
                             <Run Text="{Binding AmountNoun, Mode=OneWay}" /><Run Text=" Information" />
                         </TextBlock>
-                    </StackPanel>
+                    </DockPanel>
 
                     <!-- Vue: .stats-grid — 4 stat cards in a row, each with icon + label + value -->
                     <Grid Name="InfoGrid4" ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,Auto,Auto,Auto">
@@ -1149,9 +1244,16 @@
                     BoxShadow="{DynamicResource ItemShadow}"
                     Padding="24">
                 <StackPanel Spacing="16">
-                    <!-- Header row — Vue: .card-header flex space-between -->
-                    <DockPanel Margin="0,0,0,8">
-                        <StackPanel Orientation="Horizontal" Spacing="12" DockPanel.Dock="Left">
+                    <!-- Header row — Vue: .card-header flex space-between.
+                         Grid (not DockPanel) so ApplyResponsiveLayout can drop the
+                         Recover button to its own full-width row on mobile instead
+                         of letting it overlay the title. -->
+                    <Grid Name="ScheduleHeaderGrid"
+                          ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto"
+                          Margin="0,0,0,8">
+                        <StackPanel Grid.Column="0" Grid.Row="0"
+                                    Orientation="Horizontal" Spacing="12"
+                                    VerticalAlignment="Center">
                             <Viewbox Width="24" Height="24" VerticalAlignment="Center">
                                 <Path Data="{StaticResource NavIconDocument}"
                                       Stroke="{DynamicResource TextMutedBrush}"
@@ -1166,15 +1268,25 @@
                                        Foreground="{DynamicResource TextStrongBrush}"
                                        VerticalAlignment="Center" />
                         </StackPanel>
-                        <!-- Recover Funds button — Vue: .recover-funds-button-light bg:#F7931A -->
-                        <!-- Dynamic text/icon based on PenaltyState: none→"Recover Funds", pending→"Claim Penalties", canRelease→"Release Funds" -->
+                        <!-- Recover Funds button — design-system green primary action.
+                             Dynamic text/icon based on PenaltyState: none→"Recover Funds", pending→"Claim Penalties", canRelease→"Release Funds" -->
                         <Button Name="RecoverFundsButton"
+                                Grid.Column="1" Grid.Row="0"
                                 HorizontalAlignment="Right"
-                                Padding="20,10"
-                                Background="#F7931A"
+                                HorizontalContentAlignment="Center"
+                                VerticalAlignment="Center"
+                                Height="44"
+                                Padding="20,0"
                                 CornerRadius="8"
+                                BorderThickness="0"
                                 IsVisible="{Binding ShowRecoverButton}"
                                 Cursor="Hand">
+                            <Button.Background>
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                    <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
+                                    <GradientStop Color="#3D6448" Offset="1" />
+                                </LinearGradientBrush>
+                            </Button.Background>
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <i:Icon Value="{Binding PenaltyButtonIcon}" FontSize="14"
                                         Foreground="White" VerticalAlignment="Center" />
@@ -1184,7 +1296,7 @@
                                            Foreground="White" />
                             </StackPanel>
                         </Button>
-                    </DockPanel>
+                    </Grid>
 
                     <!-- Desktop table view (hidden on mobile) -->
                     <StackPanel Name="StagesTableDesktop" Spacing="16">

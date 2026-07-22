@@ -507,7 +507,7 @@
                                                         TextWrapping="Wrap" />
 
                                             <!-- Funding info — Vue: .investment-stats flex justify-between -->
-                                            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto"
+                                            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto"
                                                   Margin="0,4,0,0">
                                                 <TextBlock Grid.Row="0" Grid.Column="0"
                                                            Text="Funding:"
@@ -525,11 +525,25 @@
                                                 <TextBlock Grid.Row="1" Grid.Column="0"
                                                            Text="Date:"
                                                            FontSize="13"
-                                                           Foreground="{DynamicResource TextMuted}" />
+                                                           Foreground="{DynamicResource TextMuted}"
+                                                           Margin="0,0,0,8" />
                                                 <TextBlock Grid.Row="1" Grid.Column="1"
                                                            Text="{Binding FundingDate}"
                                                            FontSize="13"
                                                            Foreground="{DynamicResource TextMuted}"
+                                                           HorizontalAlignment="Right"
+                                                           TextTrimming="CharacterEllipsis" />
+
+                                                <!-- Share of total -->
+                                                <TextBlock Grid.Row="2" Grid.Column="0"
+                                                           Text="{Binding ShareLabel}"
+                                                           FontSize="13"
+                                                           Foreground="{DynamicResource TextMuted}" />
+                                                <TextBlock Grid.Row="2" Grid.Column="1"
+                                                           Text="{Binding SharePercentageDisplay}"
+                                                           FontSize="14"
+                                                           FontWeight="Bold"
+                                                           Foreground="{DynamicResource PrimaryGreenBrush}"
                                                            HorizontalAlignment="Right"
                                                            TextTrimming="CharacterEllipsis" />
                                             </Grid>

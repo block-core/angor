@@ -200,6 +200,13 @@ public partial class ProjectDetailView : UserControl
         _navSpacer = this.FindControl<Panel>("NavSpacer");
 
         // ── Responsive layout switching ──
+        SubscribeToLayoutMode();
+    }
+
+    /// <summary>Idempotent responsive-layout subscription — re-created on every logical-tree attach because OnDetachedFromLogicalTree disposes it (views are cached and re-attached on section switches).</summary>
+    private void SubscribeToLayoutMode()
+    {
+        if (_layoutSubscription != null) return;
         _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
             .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
     }
@@ -613,6 +620,14 @@ public partial class ProjectDetailView : UserControl
                 container.Cursor = new Cursor(StandardCursorType.Hand);
             }
         }
+    }
+
+    protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToLogicalTree(e);
+        // Re-create the responsive subscription — views are cached and re-attached on
+        // section switches; the subscription is disposed on detach.
+        SubscribeToLayoutMode();
     }
 
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)

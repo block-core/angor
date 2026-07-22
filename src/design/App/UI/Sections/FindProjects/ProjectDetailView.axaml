@@ -428,36 +428,6 @@
             </Grid>
 
             <!-- ═══════════════════════════════════════ -->
-            <!-- PROJECT DESCRIPTION CARD                -->
-            <!-- Loaded from the project profile content  -->
-            <!-- ═══════════════════════════════════════ -->
-            <Border Background="{DynamicResource Surface}"
-                    BorderBrush="{DynamicResource Stroke}"
-                    BorderThickness="1"
-                    CornerRadius="16"
-                    Padding="24"
-                    BoxShadow="{DynamicResource ItemShadow}"
-                    IsVisible="{Binding HasDisplayDescription}">
-                <StackPanel Spacing="12">
-                    <StackPanel Orientation="Horizontal" Spacing="12">
-                        <i:Icon Value="fa-solid fa-align-left"
-                                FontSize="22"
-                                Foreground="{DynamicResource TextStrongBrush}"
-                                VerticalAlignment="Center" />
-                        <TextBlock Text="Project Description"
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   Foreground="{DynamicResource TextStrongBrush}"
-                                   VerticalAlignment="Center" />
-                    </StackPanel>
-                    <!-- Long descriptions are authored in markdown (EditProfile says
-                         "Markdown is supported") — render it instead of raw text. -->
-                    <controls:MarkdownTextBlock Markdown="{Binding DisplayDescription}"
-                                                BaseFontSize="15" />
-                </StackPanel>
-            </Border>
-
-            <!-- ═══════════════════════════════════════ -->
             <!-- PROJECT STATISTICS CARD                  -->
             <!-- Vue: stats-detail-card, orange gradient  -->
             <!-- ═══════════════════════════════════════ -->
@@ -794,6 +764,36 @@
                             </StackPanel>
                         </Border>
                     </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ═══════════════════════════════════════ -->
+            <!-- PROJECT DESCRIPTION CARD                -->
+            <!-- Loaded from the project profile content  -->
+            <!-- ═══════════════════════════════════════ -->
+            <Border Background="{DynamicResource Surface}"
+                    BorderBrush="{DynamicResource Stroke}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    Padding="24"
+                    BoxShadow="{DynamicResource ItemShadow}"
+                    IsVisible="{Binding HasDisplayDescription}">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <i:Icon Value="fa-solid fa-align-left"
+                                FontSize="22"
+                                Foreground="{DynamicResource TextStrongBrush}"
+                                VerticalAlignment="Center" />
+                        <TextBlock Text="Project Description"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource TextStrongBrush}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                    <!-- Long descriptions are authored in markdown (EditProfile says
+                         "Markdown is supported") — render it instead of raw text. -->
+                    <controls:MarkdownTextBlock Markdown="{Binding DisplayDescription}"
+                                                BaseFontSize="15" />
                 </StackPanel>
             </Border>
 

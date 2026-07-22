@@ -29,7 +29,7 @@ public partial class FindProjectsView : UserControl, ISectionView
     private TextBlock? _discoverProjectsTitle;
     private Border? _searchContainer;
     private TextBox? _searchBox;
-    private StackPanel? _searchErrorContainer;
+    private Grid? _searchErrorContainer;
 
     // Lazy-mounted drill-down children — materialised on first visibility
     // to avoid the ~1800-line XAML inflate cost on the initial tab switch.
@@ -57,7 +57,7 @@ public partial class FindProjectsView : UserControl, ISectionView
         _headerGrid = this.FindControl<Grid>("FindProjectsHeaderGrid");
         _discoverProjectsTitle = this.FindControl<TextBlock>("DiscoverProjectsTitle");
         _searchContainer = this.FindControl<Border>("SearchContainer");
-        _searchErrorContainer = this.FindControl<StackPanel>("SearchErrorContainer");
+        _searchErrorContainer = this.FindControl<Grid>("SearchErrorContainer");
 
         // Wire refresh button
         var refreshBtn = this.FindControl<Button>("RefreshProjectsButton");
@@ -116,8 +116,7 @@ public partial class FindProjectsView : UserControl, ISectionView
 
         sw.Restart();
         // ── Responsive layout: adjust bottom padding for tab bar clearance ──
-        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
-            .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
+        SubscribeToLayoutMode();
         var layoutMs = sw.ElapsedMilliseconds;
 
         App.Services.GetRequiredService<ILoggerFactory>()
@@ -125,6 +124,14 @@ public partial class FindProjectsView : UserControl, ISectionView
             .LogInformation(
                 "[FindProjectsView.ctor] init={Init}ms dc={Dc}ms find={Find}ms sub={Sub}ms layout={Layout}ms",
                 initMs, dcMs, findMs, subMs, layoutMs);
+    }
+
+    /// <summary>Idempotent responsive-layout subscription — re-created on every logical-tree attach because OnDetachedFromLogicalTree disposes it (views are cached and re-attached on section switches).</summary>
+    private void SubscribeToLayoutMode()
+    {
+        if (_layoutSubscription != null) return;
+        _layoutSubscription = LayoutModeService.Instance.WhenAnyValue(x => x.IsCompact)
+            .Subscribe(isCompact => ApplyResponsiveLayout(isCompact));
     }
 
     private void ApplyResponsiveLayout(bool isCompact)
@@ -283,6 +290,10 @@ public partial class FindProjectsView : UserControl, ISectionView
     protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
     {
         base.OnAttachedToLogicalTree(e);
+
+        // Re-create the responsive subscription — views are cached and re-attached on
+        // section switches; the subscription is disposed on detach.
+        SubscribeToLayoutMode();
 
         // Re-subscribe if subscriptions were disposed (view re-attached from cache)
         if (_visibilitySubscription == null)
