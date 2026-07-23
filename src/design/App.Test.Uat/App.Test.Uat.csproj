@@ -25,6 +25,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\App\App.csproj" />
+    <!-- UAT tests launch the App.Desktop executable (Angor2) as a child process.
+         Build it as part of this project so tests never run against a stale binary,
+         but don't reference its assembly. -->
+    <ProjectReference Include="..\App.Desktop\App.Desktop.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>
