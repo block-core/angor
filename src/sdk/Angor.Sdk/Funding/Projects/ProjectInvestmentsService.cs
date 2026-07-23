@@ -304,24 +304,19 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
             ProjectIdentifier = project.ProjectIdentifier
         };
 
-        // Stage outputs are always the taproot outputs at index >= 2 of the actual transaction.
-        // Transaction structure: index 0 = Angor fee, index 1 = OP_RETURN, index 2+ = stage outputs.
+        // Stage outputs are the taproot outputs of the actual transaction, ordered by index.
         // Never use project.Stages.Count here: Fund/Subscribe investments have dynamic stage counts,
-        // and never assume the last output is change (there may be no change output at all).
-        var stageCount = investmentTransaction.Outputs.AsIndexedOutputs()
-            .Count(o => o.N >= 2 && o.TxOut.ScriptPubKey.IsTaprooOutput());
+        // and never assume positions (fee outputs may change) or that the last output is change.
+        var stageOutputs = trxInfo.Outputs
+            .Where(o => !string.IsNullOrEmpty(o.ScriptPubKey) && Script.FromHex(o.ScriptPubKey).IsTaprooOutput())
+            .OrderBy(o => o.Index)
+            .ToList();
 
-        logger.LogInformation("[ScanInvestmentSpends] stageCount={StageCount}, projectStagesCount={ProjectStagesCount}", stageCount, project.Stages?.Count ?? 0);
+        logger.LogInformation("[ScanInvestmentSpends] stageCount={StageCount}, projectStagesCount={ProjectStagesCount}", stageOutputs.Count, project.Stages?.Count ?? 0);
 
-        for (int stageIndex = 0; stageIndex < stageCount; stageIndex++)
+        for (int stageIndex = 0; stageIndex < stageOutputs.Count; stageIndex++)
         {
-            var output = trxInfo.Outputs.FirstOrDefault(f => f.Index == stageIndex + 2);
-
-            if (output == null)
-            {
-                logger.LogWarning("[ScanInvestmentSpends] Stage {StageIndex}: no output at index {Index}, skipping", stageIndex, stageIndex + 2);
-                continue;
-            }
+            var output = stageOutputs[stageIndex];
 
             logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: SpentInTransaction={SpentTxId}", stageIndex, output.SpentInTransaction ?? "null");
 
@@ -387,9 +382,7 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
                             // Sum the actual stage (taproot) outputs. Do not use SkipLast(1) to
                             // exclude change - there may be no change output, in which case the
                             // last output is a real stage output.
-                            var totalsats = investmentTransaction.Outputs.AsIndexedOutputs()
-                                .Where(o => o.N >= 2 && o.TxOut.ScriptPubKey.IsTaprooOutput())
-                                .Sum(o => o.TxOut.Value.Satoshi);
+                            var totalsats = stageOutputs.Sum(s => s.Balance);
                             response.AmountInRecovery = totalsats;
                             
                             logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: Penalty recovery, Set RecoveryTransactionId={TxId}", stageIndex, output.SpentInTransaction);

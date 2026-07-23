@@ -204,13 +204,20 @@ public static class GetRecoveryStatus
         {
             //TODO handle unconfirmed outbound transactions
             
-            var output = transactionInfo.Outputs.FirstOrDefault(o => o.Index == item.StageIndex + 2);
+            // Stage outputs are the taproot outputs ordered by index (same selection used to build
+            // the stage items in FindInvestments), so the stage index maps directly by position.
+            var stageOutputs = transactionInfo.Outputs
+                .Where(o => Script.FromHex(o.ScriptPubKey).IsTaprooOutput())
+                .OrderBy(o => o.Index)
+                .ToList();
 
-            if (output == null)
+            if (item.StageIndex >= stageOutputs.Count)
             {
-                logger.LogWarning("[CheckTxSpending] Stage {StageIndex}: no output at index {Index}, skipping", item.StageIndex, item.StageIndex + 2);
+                logger.LogWarning("[CheckTxSpending] Stage {StageIndex}: no matching taproot output (found {Count}), skipping", item.StageIndex, stageOutputs.Count);
                 return Result.Success();
             }
+
+            var output = stageOutputs[item.StageIndex];
 
             logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: SpentInTransaction={SpentTxId}, UnfundedReleaseTxId={UnfundedTxId}, RecoveryTxId={RecoveryTxId}", 
                 item.StageIndex, output.SpentInTransaction ?? "null", lookup.Value.UnfundedReleaseTransactionId ?? "null", lookup.Value.RecoveryTransactionId ?? "null");
@@ -254,7 +261,7 @@ public static class GetRecoveryStatus
 
                         var input = spentInTransaction?.Inputs.FirstOrDefault(input =>
                             input.InputTransactionId == transactionInfo.TransactionId &&
-                            input.InputIndex == item.StageIndex + 2);
+                            input.InputIndex == output.Index);
 
                         logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: spentInTransaction found={Found}, input found={InputFound}", 
                             item.StageIndex, spentInTransaction != null, input != null);
