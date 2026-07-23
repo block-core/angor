@@ -166,7 +166,10 @@ public class GetPenalties
                     var expieryDate = Utils.UnixTimeToDateTime(recoveryTransaction.Timestamp)
                         .AddDays(penaltyProject.Project.PenaltyDuration.Days);
                     penaltyProject.DaysLeftForPenalty = (expieryDate.Date - DateTimeOffset.UtcNow.Date).Days;
-                    penaltyProject.IsExpired = (expieryDate - DateTimeOffset.UtcNow).Days <= 0;
+                    // Penalty release is timelocked; the network validates it against the chain
+                    // tip's median-time-past, which lags wall-clock time. Apply a safety buffer
+                    // so the release is never offered before the network will accept it.
+                    penaltyProject.IsExpired = (expieryDate.Add(TimelockSafety.MedianTimePastBuffer) - DateTimeOffset.UtcNow) <= TimeSpan.Zero;
                 }
             }
             catch (Exception e)

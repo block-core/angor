@@ -566,15 +566,31 @@ public partial class ManageProjectViewModel : ReactiveObject
             _logger.LogError("SubmitTransactionFromDraft failed while claiming stage funds for project {ProjectId}: {Error}",
                 Project.ProjectIdentifier,
                 publishResult.Error);
-            ToastRequested?.Invoke($"Failed to claim stage funds: {publishResult.Error}");
+            ToastRequested?.Invoke($"Failed to claim stage funds: {ToFriendlyClaimError(publishResult.Error)}");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "ClaimStageFundsAsync threw exception for project {ProjectId}", Project.ProjectIdentifier);
-            ToastRequested?.Invoke($"Failed to claim stage funds: {ex.Message}");
+            ToastRequested?.Invoke($"Failed to claim stage funds: {ToFriendlyClaimError(ex.Message)}");
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Maps raw node/broadcast errors to actionable messages. A "non-final" rejection means
+    /// the stage timelock has not yet been reached on-chain: Bitcoin evaluates locktimes
+    /// against the tip's median-time-past, which lags wall-clock time by roughly an hour.
+    /// </summary>
+    private static string ToFriendlyClaimError(string error)
+    {
+        if (error.Contains("non-final", StringComparison.OrdinalIgnoreCase))
+        {
+            return "The network has not confirmed the stage unlock time yet (block time lags "
+                   + "real time by up to an hour or two). Please try again in about an hour.";
+        }
+
+        return error;
     }
 
     /// <summary>

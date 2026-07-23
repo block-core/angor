@@ -530,4 +530,72 @@ public class GetClaimableTransactionsTests
         result.Value.Transactions.First().ClaimStatus.Should().Be(ClaimStatus.SpentByFounder,
             "Spent status should take priority over future release date");
     }
+
+    [Fact]
+    public async Task Handle_WhenReleaseDateJustPassed_ShowsLockedDuringMedianTimePastBuffer()
+    {
+        // Arrange — regression for the "non-final" broadcast rejection: the release date has
+        // passed by wall-clock time, but the network validates nLockTime against the chain
+        // tip's median-time-past, which lags wall clock by up to ~2 hours. The stage must
+        // stay Locked during the safety buffer so the founder is not offered a claim that
+        // bitcoind would reject.
+        var walletId = new WalletId("wallet-1");
+        var projectId = new ProjectId("project-1");
+        var request = new GetClaimableTransactions.GetClaimableTransactionsRequest(walletId, projectId);
+
+        var stageData = new StageData
+        {
+            StageIndex = 0,
+            StageDate = DateTime.UtcNow.AddMinutes(-30), // passed by wall clock, within the buffer
+            IsDynamic = true,
+            Items = new List<StageDataTrx>
+            {
+                new StageDataTrx { Amount = 50_000, IsSpent = false, InvestorPublicKey = "investor-pub-1" }
+            }
+        };
+
+        _mockProjectInvestmentsService
+            .Setup(x => x.ScanFullInvestments(projectId.Value))
+            .ReturnsAsync(Result.Success<IEnumerable<StageData>>(new[] { stageData }));
+
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Transactions.First().ClaimStatus.Should().Be(ClaimStatus.Locked,
+            "median-time-past may not have reached the release date yet");
+    }
+
+    [Fact]
+    public async Task Handle_WhenReleaseDatePassedBeyondBuffer_ShowsUnspent()
+    {
+        // Arrange — once the safety buffer has elapsed, median-time-past has caught up and
+        // the stage is genuinely claimable.
+        var walletId = new WalletId("wallet-1");
+        var projectId = new ProjectId("project-1");
+        var request = new GetClaimableTransactions.GetClaimableTransactionsRequest(walletId, projectId);
+
+        var stageData = new StageData
+        {
+            StageIndex = 0,
+            StageDate = DateTime.UtcNow.AddHours(-3), // past the 2-hour buffer
+            IsDynamic = true,
+            Items = new List<StageDataTrx>
+            {
+                new StageDataTrx { Amount = 50_000, IsSpent = false, InvestorPublicKey = "investor-pub-1" }
+            }
+        };
+
+        _mockProjectInvestmentsService
+            .Setup(x => x.ScanFullInvestments(projectId.Value))
+            .ReturnsAsync(Result.Success<IEnumerable<StageData>>(new[] { stageData }));
+
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Transactions.First().ClaimStatus.Should().Be(ClaimStatus.Unspent);
+    }
 }

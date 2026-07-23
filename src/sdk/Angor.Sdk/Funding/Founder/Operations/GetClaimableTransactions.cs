@@ -71,8 +71,11 @@ public static class GetClaimableTransactions
                 };
             }
 
-            // Check if stage release date hasn't been reached yet (works for both dynamic and fixed stages)
-            if (stageData.StageDate > DateTime.UtcNow)
+            // Check if the stage timelock has been reached on-chain (works for both dynamic and
+            // fixed stages). The network validates nLockTime against the chain tip's
+            // median-time-past, which lags wall-clock time — without the safety buffer the UI
+            // offers claims that bitcoind rejects as "non-final" right after the release date.
+            if (stageData.StageDate.Add(TimelockSafety.MedianTimePastBuffer) > DateTime.UtcNow)
             {
                 return ClaimStatus.Locked;
             }
