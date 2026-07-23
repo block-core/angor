@@ -12,6 +12,9 @@ using App.UI.Sections.MyProjects.EditProfile;
 using App.UI.Sections.Portfolio;
 using App.UI.Sections.Settings;
 using App.UI.Shared;
+using App.UI.Shared.PaymentFlow;
+using App.UI.Shared.Services;
+using Angor.Sdk.Common;
 using App.UI.Shared.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
@@ -358,6 +361,60 @@ public class LayoutRegressionTests
 
         violations.Should().BeEmpty(
             $"CreateProjectView step {step} must not have overlapping/overflowing elements at width {width}:\n" +
+            string.Join("\n", violations));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // PaymentFlowView — "Use an existing wallet" modal (issue #920:
+    // Fund Deployment label overlapped by the amount; wallet card cramping)
+    // ═══════════════════════════════════════════════════════════════════
+
+    [AvaloniaTheory]
+    [MemberData(nameof(Viewports))]
+    public void PaymentFlowView_wallet_selector_has_no_overlaps_or_overflow(double width, double height)
+    {
+        var services = global::App.App.Services;
+        var config = new PaymentFlowConfig
+        {
+            AmountSats = 100_000_000, // 1.00000000 — worst-case width amount
+            Title = "Fund Deployment",
+            SuccessTitle = "Deployed",
+            SuccessButtonText = "Go to My Projects",
+            OnSuccessButtonClicked = () => { },
+            OnPaymentReceived = (_, _, _) => Task.FromResult(CSharpFunctionalExtensions.Result.Success()),
+        };
+        var logger = services.GetRequiredService<Microsoft.Extensions.Logging.ILoggerFactory>()
+            .CreateLogger("PaymentFlowLayoutTest");
+        var vm = ActivatorUtilities.CreateInstance<PaymentFlowViewModel>(
+            services, config, logger);
+
+        var view = new PaymentFlowView { DataContext = vm };
+
+        // Wallet context is empty in tests: exercise the wallet-card template with
+        // worst-case fabricated wallets (long name, long balance, pending balance).
+        var w1 = new WalletInfo(
+            new WalletId("test-1"),
+            "A Very Long Wallet Name That Must Not Overlap The Balance", "TBTC")
+        {
+            TotalBalanceSats = 123_456_789,
+            UnconfirmedBalanceSats = 12_345_678,
+            IsSelected = true,
+        };
+        var w2 = new WalletInfo(
+            new WalletId("test-2"), "Angor Wallet", "TBTC")
+        {
+            TotalBalanceSats = 0,
+        };
+        view.AttachedToVisualTree += (_, _) =>
+        {
+            if (view.FindControl<ItemsControl>("WalletsList") is { } list)
+                list.ItemsSource = new[] { w1, w2 };
+        };
+
+        var violations = RenderAndAudit(view, width, height);
+
+        violations.Should().BeEmpty(
+            $"PaymentFlowView must not have overlapping/overflowing elements at {width}x{height}:\n" +
             string.Join("\n", violations));
     }
 
