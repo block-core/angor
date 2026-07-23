@@ -2460,6 +2460,56 @@ public static class AutomationFlows
     }
 
     /// <summary>
+    /// Navigate to Find Projects and return the number of projects in the live list,
+    /// optionally waiting until at least MinCount projects have loaded.
+    /// </summary>
+    public static async Task<GetFindProjectsCountResponse> GetFindProjectsCountAsync(
+        IServiceProvider services,
+        GetFindProjectsCountRequest req)
+    {
+        try
+        {
+            var window = await RequireWindowAsync();
+            await NavigateToAsync(window, "Find Projects");
+
+            var findProjectsVm = await Dispatcher.UIThread.InvokeAsync(() => GetFindProjectsViewModel(window));
+            if (findProjectsVm == null)
+            {
+                return new GetFindProjectsCountResponse { Success = false, Error = "FindProjectsViewModel not found" };
+            }
+
+            var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(Math.Max(1, req.TimeoutSeconds));
+            var count = 0;
+            while (DateTime.UtcNow < deadline)
+            {
+                count = await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    Dispatcher.UIThread.RunJobs();
+                    return findProjectsVm.Projects.Count;
+                });
+
+                if (count >= req.MinCount)
+                {
+                    return new GetFindProjectsCountResponse { Success = true, Count = count };
+                }
+
+                await Task.Delay(PollInterval);
+            }
+
+            return new GetFindProjectsCountResponse
+            {
+                Success = false,
+                Count = count,
+                Error = $"Find Projects list did not reach {req.MinCount} projects within {req.TimeoutSeconds}s (last count: {count})",
+            };
+        }
+        catch (Exception ex)
+        {
+            return new GetFindProjectsCountResponse { Success = false, Error = ex.Message };
+        }
+    }
+
+    /// <summary>
     /// Cancel an investment at Step 1 (before founder approval) or Step 2 (after approval, before confirm).
     /// </summary>
     public static async Task<CancelInvestmentResponse> CancelInvestmentAsync(

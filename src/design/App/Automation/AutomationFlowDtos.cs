@@ -611,6 +611,30 @@ public static class AutomationFlowDtos
         public string? Error { get; init; }
     }
 
+    public sealed class GetFindProjectsCountRequest
+    {
+        /// <summary>
+        /// Minimum number of projects to wait for before returning (0 = return immediately after load).
+        /// </summary>
+        [JsonPropertyName("minCount")]
+        public int MinCount { get; init; }
+
+        [JsonPropertyName("timeoutSeconds")]
+        public int TimeoutSeconds { get; init; } = 60;
+    }
+
+    public sealed class GetFindProjectsCountResponse
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; init; }
+
+        [JsonPropertyName("count")]
+        public int Count { get; init; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; init; }
+    }
+
     public sealed class ImportWalletRequest
     {
         [JsonPropertyName("seedWords")]
