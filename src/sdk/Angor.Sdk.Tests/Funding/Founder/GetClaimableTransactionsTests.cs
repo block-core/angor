@@ -4,6 +4,7 @@ using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Shared;
+using Angor.Shared;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 using FluentAssertions;
@@ -14,12 +15,15 @@ namespace Angor.Sdk.Tests.Funding.Founder;
 public class GetClaimableTransactionsTests
 {
     private readonly Mock<IProjectInvestmentsService> _mockProjectInvestmentsService;
+    private readonly Mock<INetworkConfiguration> _mockNetworkConfiguration;
     private readonly GetClaimableTransactions.GetClaimableTransactionsHandler _sut;
 
     public GetClaimableTransactionsTests()
     {
         _mockProjectInvestmentsService = new Mock<IProjectInvestmentsService>();
-        _sut = new GetClaimableTransactions.GetClaimableTransactionsHandler(_mockProjectInvestmentsService.Object);
+        _mockNetworkConfiguration = new Mock<INetworkConfiguration>();
+        _mockNetworkConfiguration.Setup(x => x.GetDebugMode()).Returns(false);
+        _sut = new GetClaimableTransactions.GetClaimableTransactionsHandler(_mockProjectInvestmentsService.Object, _mockNetworkConfiguration.Object);
     }
 
     [Fact]
@@ -597,5 +601,40 @@ public class GetClaimableTransactionsTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.Transactions.First().ClaimStatus.Should().Be(ClaimStatus.Unspent);
+    }
+
+    [Fact]
+    public async Task Handle_WhenDebugMode_BufferIsDisabledAndStageIsImmediatelyClaimable()
+    {
+        // Arrange — UAT/integration tests run in debug mode and create projects with
+        // same-day payouts; the safety buffer must not delay claimability there.
+        _mockNetworkConfiguration.Setup(x => x.GetDebugMode()).Returns(true);
+
+        var walletId = new WalletId("wallet-1");
+        var projectId = new ProjectId("project-1");
+        var request = new GetClaimableTransactions.GetClaimableTransactionsRequest(walletId, projectId);
+
+        var stageData = new StageData
+        {
+            StageIndex = 0,
+            StageDate = DateTime.UtcNow.AddMinutes(-1), // just passed, within the normal buffer
+            IsDynamic = true,
+            Items = new List<StageDataTrx>
+            {
+                new StageDataTrx { Amount = 50_000, IsSpent = false, InvestorPublicKey = "investor-pub-1" }
+            }
+        };
+
+        _mockProjectInvestmentsService
+            .Setup(x => x.ScanFullInvestments(projectId.Value))
+            .ReturnsAsync(Result.Success<IEnumerable<StageData>>(new[] { stageData }));
+
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Transactions.First().ClaimStatus.Should().Be(ClaimStatus.Unspent,
+            "debug mode disables the median-time-past buffer so tests are not delayed");
     }
 }

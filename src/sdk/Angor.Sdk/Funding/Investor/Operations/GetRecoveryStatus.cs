@@ -176,7 +176,7 @@ public static class GetRecoveryStatus
             // network against the chain tip's median-time-past, which lags wall-clock time.
             // Apply a safety buffer so the user is never offered a spend that bitcoind would
             // reject as "non-final".
-            var safeNow = DateTime.UtcNow - TimelockSafety.MedianTimePastBuffer;
+            var safeNow = DateTime.UtcNow - TimelockSafety.BufferFor(networkConfiguration);
 
             var isEndOfProject = projectInfo.ExpiryDate < safeNow;
 

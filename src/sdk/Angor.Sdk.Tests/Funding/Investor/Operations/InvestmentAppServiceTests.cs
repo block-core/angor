@@ -428,7 +428,8 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
             _mockAngorIndexerService.Object,
             _mockTransactionService.Object,
             _mockProjectInvestmentsService.Object,
-            _mockProjectService.Object);
+            _mockProjectService.Object,
+            _fixture.NetworkConfiguration);
         
         var request = new GetPenalties.GetPenaltiesRequest(walletId);
 
@@ -456,7 +457,8 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
             _mockAngorIndexerService.Object,
             _mockTransactionService.Object,
             _mockProjectInvestmentsService.Object,
-            _mockProjectService.Object);
+            _mockProjectService.Object,
+            _fixture.NetworkConfiguration);
         
         var request = new GetPenalties.GetPenaltiesRequest(walletId);
 
@@ -484,7 +486,8 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
             _mockAngorIndexerService.Object,
             _mockTransactionService.Object,
             _mockProjectInvestmentsService.Object,
-            _mockProjectService.Object);
+            _mockProjectService.Object,
+            _fixture.NetworkConfiguration);
         
         var request = new GetPenalties.GetPenaltiesRequest(walletId);
 
@@ -530,7 +533,8 @@ public class InvestmentAppServiceTests : IClassFixture<TestNetworkFixture>
             _mockAngorIndexerService.Object,
             _mockTransactionService.Object,
             _mockProjectInvestmentsService.Object,
-            _mockProjectService.Object);
+            _mockProjectService.Object,
+            _fixture.NetworkConfiguration);
         
         var request = new GetPenalties.GetPenaltiesRequest(walletId);
 

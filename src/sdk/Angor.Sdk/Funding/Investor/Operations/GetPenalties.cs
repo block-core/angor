@@ -5,6 +5,7 @@ using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
+using Angor.Shared;
 using Angor.Shared.Services;
 using NBitcoin;
 using CSharpFunctionalExtensions;
@@ -23,7 +24,8 @@ public class GetPenalties
         IAngorIndexerService angorIndexerService,
         ITransactionService transactionService,
         IProjectInvestmentsService investmentsService,
-        IProjectService projectService) : IRequestHandler<GetPenaltiesRequest, Result<GetPenaltiesResponse>>
+        IProjectService projectService,
+        INetworkConfiguration networkConfiguration) : IRequestHandler<GetPenaltiesRequest, Result<GetPenaltiesResponse>>
     {
 
         public async Task<Result<GetPenaltiesResponse>> Handle(GetPenaltiesRequest request,
@@ -169,7 +171,7 @@ public class GetPenalties
                     // Penalty release is timelocked; the network validates it against the chain
                     // tip's median-time-past, which lags wall-clock time. Apply a safety buffer
                     // so the release is never offered before the network will accept it.
-                    penaltyProject.IsExpired = (expieryDate.Add(TimelockSafety.MedianTimePastBuffer) - DateTimeOffset.UtcNow) <= TimeSpan.Zero;
+                    penaltyProject.IsExpired = (expieryDate.Add(TimelockSafety.BufferFor(networkConfiguration)) - DateTimeOffset.UtcNow) <= TimeSpan.Zero;
                 }
             }
             catch (Exception e)

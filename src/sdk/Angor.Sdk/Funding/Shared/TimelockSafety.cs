@@ -1,3 +1,5 @@
+using Angor.Shared;
+
 namespace Angor.Sdk.Funding.Shared;
 
 /// <summary>
@@ -16,4 +18,14 @@ public static class TimelockSafety
     /// so that MTP has caught up by the time the user is offered the spend.
     /// </summary>
     public static readonly TimeSpan MedianTimePastBuffer = TimeSpan.FromHours(2);
+
+    /// <summary>
+    /// The buffer to apply for the current configuration. Debug mode (used by UAT and
+    /// integration tests, which create projects with same-day payouts and zero penalty
+    /// days) disables the buffer so timelocked actions become available immediately.
+    /// </summary>
+    public static TimeSpan BufferFor(INetworkConfiguration networkConfiguration)
+    {
+        return networkConfiguration.GetDebugMode() ? TimeSpan.Zero : MedianTimePastBuffer;
+    }
 }
