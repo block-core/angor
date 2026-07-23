@@ -1,16 +1,13 @@
 #!/usr/bin/env node
 
-// Fetch and decrypt the latest Angor log export, with optional Discord upload.
+// Fetch and decrypt the latest Angor log export.
 //
 // Usage:
-//   node fetch-latest.mjs [--event <eventId>] [--no-upload] [output.zip]
+//   node fetch-latest.mjs [--event <eventId>] [output.zip]
 //
-// Config file (same directory, gitignored): fetch-config.json
-//   {
-//     "nsec": "nsec1...",                        // support nsec (required)
-//     "discordWebhookUrl": "https://discord...", // optional: enables upload prompt
-//     "outputDir": "C:\\Users\\me\\Downloads"    // optional: default save location
-//   }
+// Config: .env file in the same directory (gitignored):
+//   SUPPORT_NSEC=nsec1...
+//   OUTPUT_DIR=C:\Users\me\Downloads     (optional)
 
 import { nip04, nip44, nip19, getPublicKey } from 'nostr-tools';
 import { SimplePool } from 'nostr-tools/pool';
@@ -18,7 +15,6 @@ import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { join, dirname } from 'path';
 import { homedir } from 'os';
-import { createInterface } from 'readline/promises';
 import 'websocket-polyfill';
 
 const DEFAULT_RELAYS = [
@@ -29,33 +25,35 @@ const DEFAULT_RELAYS = [
 ];
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
-const configPath = join(scriptDir, 'fetch-config.json');
+const envPath = join(scriptDir, '.env');
 
-if (!existsSync(configPath)) {
-  console.error(`ERROR: config file not found: ${configPath}`);
-  console.error('Create it with: { "nsec": "nsec1...", "discordWebhookUrl": "https://discord.com/api/webhooks/..." }');
+// Minimal .env parser
+const config = {};
+if (existsSync(envPath)) {
+  for (const line of readFileSync(envPath, 'utf8').split('\n')) {
+    const m = line.match(/^\s*([A-Z_]+)\s*=\s*(.+?)\s*$/);
+    if (m && !line.trim().startsWith('#')) config[m[1]] = m[2];
+  }
+}
+
+const nsec = process.env.SUPPORT_NSEC || config.SUPPORT_NSEC;
+if (!nsec || nsec.includes('PASTE')) {
+  console.error(`ERROR: SUPPORT_NSEC not set. Create ${envPath} containing:`);
+  console.error('SUPPORT_NSEC=nsec1...');
   process.exit(1);
 }
 
-const config = JSON.parse(readFileSync(configPath, 'utf8'));
-if (!config.nsec) {
-  console.error('ERROR: "nsec" missing from fetch-config.json');
-  process.exit(1);
-}
-
-const privateKeyHex = config.nsec.startsWith('nsec1')
-  ? Buffer.from(nip19.decode(config.nsec).data).toString('hex')
-  : config.nsec.toLowerCase();
+const privateKeyHex = nsec.startsWith('nsec1')
+  ? Buffer.from(nip19.decode(nsec).data).toString('hex')
+  : nsec.toLowerCase();
 const supportPubkey = getPublicKey(Buffer.from(privateKeyHex, 'hex'));
 
 // --- Args ---
 const args = process.argv.slice(2);
 let eventIdArg = null;
-let noUpload = false;
 let outputArg = null;
 for (let i = 0; i < args.length; i++) {
   if (args[i] === '--event') eventIdArg = args[++i];
-  else if (args[i] === '--no-upload') noUpload = true;
   else outputArg = args[i];
 }
 
@@ -124,33 +122,10 @@ if (blobContent.includes('?iv=')) {
 const zipBytes = Buffer.from(zipBase64, 'base64');
 
 const stamp = new Date(event.created_at * 1000).toISOString().replace(/[:T]/g, '-').slice(0, 19);
-const outDir = config.outputDir || join(homedir(), 'Downloads');
+const outDir = config.OUTPUT_DIR || join(homedir(), 'Downloads');
 const outputPath = outputArg || join(outDir, `angor-log-${stamp}.zip`);
 writeFileSync(outputPath, zipBytes);
 console.log(`Saved: ${outputPath} (${zipBytes.length} bytes)`);
-
-// --- Optional Discord upload ---
-if (config.discordWebhookUrl && !noUpload) {
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  const answer = await rl.question('Upload decrypted zip to Discord channel? [y/N] ');
-  rl.close();
-
-  if (answer.trim().toLowerCase() === 'y') {
-    if (zipBytes.length > 10 * 1024 * 1024) {
-      console.error('ERROR: zip exceeds Discord 10MB webhook limit; not uploading');
-    } else {
-      const meta = dmContent.split('\n').slice(1).join('\n');
-      const form = new FormData();
-      form.append('payload_json', JSON.stringify({
-        content: `📦 Decrypted log export\n${meta}`,
-      }));
-      form.append('files[0]', new Blob([zipBytes], { type: 'application/zip' }), `angor-log-${stamp}.zip`);
-      const up = await fetch(config.discordWebhookUrl, { method: 'POST', body: form });
-      if (up.ok) console.log('Uploaded to Discord.');
-      else console.error(`ERROR: Discord upload failed: ${up.status} ${await up.text().catch(() => '')}`);
-    }
-  }
-}
 
 pool.close(DEFAULT_RELAYS);
 process.exit(0);
