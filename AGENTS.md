@@ -3,11 +3,11 @@
 ## Project Overview
 
 Angor is a Bitcoin investment platform with two frontends:
-- **Avalonia desktop/mobile app** (primary, .NET 9) in `src/avalonia/`
-- **Blazor WASM web app** (legacy, .NET 8) in `src/webapp/`
+- **App** (primary, new Avalonia rewrite, .NET 9) in `src/design/` — full founder + investor functionality
+- **Blazor WASM web app** (legacy, .NET 8) in `src/webapp/` — investor-only (investing flow); founder spend/claim is NOT used here
+- **Avalonia desktop/mobile app** (dead code, .NET 9) in `src/avalonia/` — superseded by `src/design/`, do not modify
 - **Shared library** (.NET 8) in `src/shared/`
 - **SDK** (.NET 9) in `src/sdk/`
-- **App** (new Avalonia rewrite) in `src/design/`
 - **CLI / MCP server** (.NET 10) in `src/cli/`
 
 ## Repository Structure

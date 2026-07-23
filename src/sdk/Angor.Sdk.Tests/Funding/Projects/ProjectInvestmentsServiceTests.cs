@@ -364,6 +364,166 @@ public class ProjectInvestmentsServiceTests : IClassFixture<TestNetworkFixture>
 
     #endregion
 
+    #region ScanDynamicTypeInvestments Tests
+
+    /// <summary>
+    /// Regression test: a Fund investor who invests after the payout day gets a shifted
+    /// schedule, so their stages land in different date buckets than earlier investors'.
+    /// Each distinct release date must become its own stage with a sequential StageIndex —
+    /// previously two buckets could share an index (e.g. the last bucket of each investor),
+    /// which merged/lost a stage when consumers grouped by stage number.
+    /// </summary>
+    [Fact]
+    public async Task ScanFullInvestments_FundInvestorsWithShiftedSchedules_CreatesDistinctStagePerReleaseDate()
+    {
+        // Arrange
+        var (project, projectInfo) = CreateFundProject();
+
+        // Investor A starts Feb 1 → stages Feb 15, Mar 15, Apr 15
+        // Investor B starts Feb 20 (after the payout day) → stages Mar 15, Apr 15, May 15
+        var (trxA, investorKeyA) = CreateFundInvestment(projectInfo, new DateTime(2030, 2, 1, 0, 0, 0, DateTimeKind.Utc));
+        var (trxB, investorKeyB) = CreateFundInvestment(projectInfo, new DateTime(2030, 2, 20, 0, 0, 0, DateTimeKind.Utc));
+
+        SetupMocksForInvestments(project, (trxA, investorKeyA), (trxB, investorKeyB));
+
+        // Act
+        var result = await _sut.ScanFullInvestments(project.Id.Value);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        var stages = result.Value.ToList();
+
+        // 4 distinct release dates: Feb 15 (A only), Mar 15 (A+B), Apr 15 (A+B), May 15 (B only)
+        stages.Should().HaveCount(4);
+
+        // Stage indices must be sequential after ordering by date so no two buckets collide
+        stages.Select(s => s.StageIndex).Should().Equal(0, 1, 2, 3);
+
+        stages[0].StageDate.Date.Should().Be(new DateTime(2030, 2, 15));
+        stages[1].StageDate.Date.Should().Be(new DateTime(2030, 3, 15));
+        stages[2].StageDate.Date.Should().Be(new DateTime(2030, 4, 15));
+        stages[3].StageDate.Date.Should().Be(new DateTime(2030, 5, 15));
+
+        stages[0].Items.Should().HaveCount(1, "only investor A has a Feb 15 stage");
+        stages[1].Items.Should().HaveCount(2, "A's stage 2 and B's stage 1 share Mar 15");
+        stages[2].Items.Should().HaveCount(2, "A's stage 3 and B's stage 2 share Apr 15");
+        stages[3].Items.Should().HaveCount(1, "only investor B has a May 15 stage");
+
+        // Total UTXOs must be preserved: 2 investors x 3 stages
+        stages.Sum(s => s.Items.Count).Should().Be(6);
+    }
+
+    [Fact]
+    public async Task ScanFullInvestments_FundMixedBucket_ItemsKeepPerInvestmentStageIndex()
+    {
+        // Arrange
+        var (project, projectInfo) = CreateFundProject();
+
+        var (trxA, investorKeyA) = CreateFundInvestment(projectInfo, new DateTime(2030, 2, 1, 0, 0, 0, DateTimeKind.Utc));
+        var (trxB, investorKeyB) = CreateFundInvestment(projectInfo, new DateTime(2030, 2, 20, 0, 0, 0, DateTimeKind.Utc));
+
+        SetupMocksForInvestments(project, (trxA, investorKeyA), (trxB, investorKeyB));
+
+        // Act
+        var result = await _sut.ScanFullInvestments(project.Id.Value);
+
+        // Assert — in the shared Mar 15 bucket, each item keeps the stage index of its own
+        // investment transaction (required to rebuild the correct taproot script for spending)
+        result.IsSuccess.Should().BeTrue();
+        var marchBucket = result.Value.Single(s => s.StageDate.Date == new DateTime(2030, 3, 15));
+
+        var itemA = marchBucket.Items.Single(i => i.InvestorPublicKey == investorKeyA);
+        itemA.StageIndex.Should().Be(1, "Mar 15 is investor A's second stage (0-based index 1)");
+
+        var itemB = marchBucket.Items.Single(i => i.InvestorPublicKey == investorKeyB);
+        itemB.StageIndex.Should().Be(0, "Mar 15 is investor B's first stage (0-based index 0)");
+    }
+
+    private (Project project, ProjectInfo projectInfo) CreateFundProject()
+    {
+        const string angorRootKey =
+            "tpubD8JfN1evVWPoJmLgVg6Usq2HEW9tLqm6CyECAADnH5tyQosrL6NuhpL9X1cQCbSmndVrgLSGGdbRqLfUbE6cRqUbrHtDJgSyQEY2Uu7WwTL";
+
+        var words = new WalletWords { Words = TestNetworkFixture.TestWalletWords };
+        var founderKey = _fixture.DerivationOperations.DeriveFounderKey(words, 1);
+        var founderRecoveryKey = _fixture.DerivationOperations.DeriveFounderRecoveryKey(words, founderKey);
+        var projectIdentifier = _fixture.DerivationOperations.DeriveAngorKey(angorRootKey, founderKey);
+
+        var project = TestDataBuilder.CreateProject()
+            .WithId(projectIdentifier)
+            .WithProjectType(ProjectType.Fund)
+            .WithFounderKey(founderKey)
+            .WithFounderRecoveryKey(founderRecoveryKey)
+            .WithDynamicStagePatterns(new List<DynamicStagePattern>
+            {
+                new DynamicStagePattern
+                {
+                    PatternId = 0,
+                    Name = "3-Month Fund (15th of month)",
+                    Frequency = StageFrequency.Monthly,
+                    StageCount = 3,
+                    PayoutDayType = PayoutDayType.SpecificDayOfMonth,
+                    PayoutDay = 15
+                }
+            })
+            .Build();
+
+        return (project, project.ToProjectInfo());
+    }
+
+    private (Transaction trx, string investorKey) CreateFundInvestment(ProjectInfo projectInfo, DateTime investmentStartDate)
+    {
+        var investorKey = NBitcoin.DataEncoders.Encoders.Hex.EncodeData(new Key().PubKey.ToBytes());
+
+        var parameters = FundingParameters.CreateForFund(
+            projectInfo,
+            investorKey,
+            Money.Coins(0.1m).Satoshi,
+            0, // patternId
+            investmentStartDate);
+
+        var trx = _fixture.InvestorTransactionActions.CreateInvestmentTransaction(projectInfo, parameters);
+
+        return (trx, investorKey);
+    }
+
+    private void SetupMocksForInvestments(Project project, params (Transaction trx, string investorKey)[] investments)
+    {
+        _mockProjectService
+            .Setup(x => x.GetAsync(It.Is<ProjectId>(p => p.Value == project.Id.Value)))
+            .ReturnsAsync(Result.Success(project));
+
+        _mockAngorIndexerService
+            .Setup(x => x.GetInvestmentsAsync(project.Id.Value))
+            .ReturnsAsync(investments.Select(i => new ProjectInvestment
+            {
+                TransactionId = i.trx.GetHash().ToString(),
+                InvestorPublicKey = i.investorKey
+            }).ToList());
+
+        foreach (var (trx, _) in investments)
+        {
+            var txId = trx.GetHash().ToString();
+
+            _mockTransactionService
+                .Setup(x => x.GetTransactionHexByIdAsync(txId))
+                .ReturnsAsync(trx.ToHex());
+
+            // Build a QueryTransaction with all outputs unspent
+            var queryBuilder = TestDataBuilder.CreateQueryTransaction().WithTransactionId(txId);
+            for (int i = 0; i < trx.Outputs.Count; i++)
+            {
+                queryBuilder.AddOutput(i, trx.Outputs[i].Value.Satoshi);
+            }
+
+            _mockTransactionService
+                .Setup(x => x.GetTransactionInfoByIdAsync(txId))
+                .ReturnsAsync(queryBuilder.Build());
+        }
+    }
+
+    #endregion
+
     #region Helper Methods
 
     /// <summary>

@@ -11,10 +11,11 @@ namespace App.Test.Uat;
 /// founder claim stage 1, founder release remaining, all investors unfundedRelease.
 ///
 /// Investor1: invest → cancel before approval (Step 1) → reinvest
-/// Investor2: invest → founder approves just this one → cancel after approval (Step 2) → reinvest
+/// Investor2: invest → founder approves just this one (manual path) → cancel after approval (Step 2) → reinvest
 /// Investor3: invest normally (0.02 BTC)
 /// Investor4: invest normally (0.03 BTC)
-/// Founder approves all 4 remaining investments, all confirm.
+/// Founder enables the auto-approve toggle; FundersMonitor approves all 4 remaining
+/// investments unattended, all investors confirm.
 /// Founder claims stage 1, releases remaining stages.
 /// All 4 investors claim via unfundedRelease.
 /// </summary>
@@ -195,17 +196,19 @@ public class MultiInvestClaimAndRecoverTest
         });
         invest4.Success.Should().BeTrue(invest4.Error);
 
-        // ── Founder approves all 4 remaining investments ──
-        Log(FounderProfile, "Approving all 4 investments...");
-        var approve = await founderHost.Client.ApproveInvestmentsAsync(new ApproveInvestmentsRequest
-        {
-            ProjectIdentifier = projectId,
-            ExpectedCount = 4,
-            Batch = true,
-        });
-        approve.Success.Should().BeTrue(approve.Error);
+        // ── Founder enables auto-approve; all 4 remaining investments are approved unattended ──
+        // (Manual per-row approval is covered above by investor2's first investment.)
+        Log(FounderProfile, "Enabling auto-approve toggle on Funders page...");
+        await founderHost.Client.NavigateAsync("Funders");
+        await founderHost.Client.WaitForControlAsync("FundersAutoApproveToggle", TimeSpan.FromMinutes(2));
+        await founderHost.Client.ClickAsync("FundersAutoApproveToggle");
 
-        // ── All 4 investors confirm ──
+        // The toggle writes through to the shared PrototypeSettings singleton
+        await founderHost.Client.WaitForVmPropertyAsync(
+            "PrototypeSettings", "IsAutoApproveEnabled", "True", TimeSpan.FromSeconds(30));
+        Log(FounderProfile, "Auto-approve enabled — waiting for FundersMonitor to approve all 4 investments...");
+
+        // ── All 4 investors confirm (each confirm waits for its approval to arrive) ──
         Log(Investor1Profile, "Confirming investment...");
         var confirm1 = await investor1Host.Client.ConfirmInvestmentAsync(new ConfirmInvestmentRequest { ProjectIdentifier = projectId });
         confirm1.Success.Should().BeTrue(confirm1.Error);

@@ -282,7 +282,7 @@ public static class FounderCommands
         cmd.SetHandler(async (string walletId, string projectId, long feeRate, int stageId, string[] addresses) =>
         {
             var fee = new FeeEstimation { FeeRate = feeRate * 1000, Confirmations = 1 };
-            var toSpend = addresses.Select(a => new SpendTransactionDto { InvestorAddress = a, StageId = stageId }).ToArray();
+            var toSpend = addresses.Select(a => new SpendTransactionDto { InvestorAddress = a, StageId = stageId, InvestmentStageIndex = stageId }).ToArray();
 
             var result = await founderService.SpendStageFunds(
                 new SpendStageFunds.SpendStageFundsRequest(new WalletId(walletId), new ProjectId(projectId), fee, toSpend));

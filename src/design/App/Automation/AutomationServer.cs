@@ -522,6 +522,14 @@ public sealed class AutomationServer : IDisposable
                 return (200, result);
             }
 
+            // POST /flows/get-find-projects-count
+            if (method == "POST" && path == "/flows/get-find-projects-count")
+            {
+                var req = Deserialize<GetFindProjectsCountRequest>(body);
+                var result = await AutomationFlows.GetFindProjectsCountAsync(services, req);
+                return (200, result);
+            }
+
             return (404, new ActionResponse { Success = false, Error = $"Unknown route: {method} {path}" });
         }
         catch (Exception ex)
@@ -575,6 +583,14 @@ public sealed class AutomationServer : IDisposable
         if (control is not Button button)
         {
             return new ActionResponse { Success = false, Error = $"Button '{id}' not found" };
+        }
+
+        // Raising ClickEvent alone doesn't flip toggles — set IsChecked so two-way bindings fire.
+        if (button is Avalonia.Controls.Primitives.ToggleButton toggle)
+        {
+            toggle.IsChecked = !(toggle.IsChecked ?? false);
+            Dispatcher.UIThread.RunJobs();
+            return new ActionResponse { Success = true };
         }
 
         button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, button));

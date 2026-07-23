@@ -412,6 +412,13 @@ public sealed class TestAutomationClient : IDisposable
         return await PostAsync<GetBalanceResponse>("/flows/get-balance", request, ct);
     }
 
+    public async Task<GetFindProjectsCountResponse> GetFindProjectsCountAsync(
+        GetFindProjectsCountRequest request,
+        CancellationToken ct = default)
+    {
+        return await PostAsync<GetFindProjectsCountResponse>("/flows/get-find-projects-count", request, ct);
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // HTTP Helpers
     // ═══════════════════════════════════════════════════════════════════

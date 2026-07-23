@@ -536,6 +536,65 @@ public class GetClaimableTransactionsTests
     }
 
     [Fact]
+    public async Task Handle_MixedDateBucket_ExposesPerInvestmentStageIndex()
+    {
+        // Arrange — a Fund/Subscribe date bucket can mix items with different per-investment
+        // stage indices (a later investor's stage 1 shares the release date with an earlier
+        // investor's stage 2). The DTO must expose the per-item index for spending, while
+        // StageId/StageNumber reflect the display bucket.
+        var walletId = new WalletId("wallet-1");
+        var projectId = new ProjectId("project-1");
+        var request = new GetClaimableTransactions.GetClaimableTransactionsRequest(walletId, projectId);
+
+        var stageData = new StageData
+        {
+            StageIndex = 1, // second date bucket
+            StageDate = DateTime.UtcNow.AddDays(-1),
+            IsDynamic = true,
+            Items = new List<StageDataTrx>
+            {
+                new StageDataTrx
+                {
+                    Amount = 10_000,
+                    IsSpent = false,
+                    InvestorPublicKey = "early-investor",
+                    StageIndex = 1 // their second stage
+                },
+                new StageDataTrx
+                {
+                    Amount = 20_000,
+                    IsSpent = false,
+                    InvestorPublicKey = "late-investor",
+                    StageIndex = 0 // their first stage, shifted schedule
+                }
+            }
+        };
+
+        _mockProjectInvestmentsService
+            .Setup(x => x.ScanFullInvestments(projectId.Value))
+            .ReturnsAsync(Result.Success<IEnumerable<StageData>>(new[] { stageData }));
+
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        var transactions = result.Value.Transactions.ToList();
+        transactions.Should().HaveCount(2);
+
+        var earlyInvestorTx = transactions.Single(t => t.InvestorAddress == "early-investor");
+        earlyInvestorTx.StageId.Should().Be(1);
+        earlyInvestorTx.StageNumber.Should().Be(2);
+        earlyInvestorTx.InvestmentStageIndex.Should().Be(1);
+
+        var lateInvestorTx = transactions.Single(t => t.InvestorAddress == "late-investor");
+        lateInvestorTx.StageId.Should().Be(1, "both items belong to the same date bucket");
+        lateInvestorTx.StageNumber.Should().Be(2);
+        lateInvestorTx.InvestmentStageIndex.Should().Be(0,
+            "the late investor's first stage landed in the second date bucket");
+    }
+
+    [Fact]
     public async Task Handle_WhenReleaseDateJustPassed_ShowsLockedDuringMedianTimePastBuffer()
     {
         // Arrange — regression for the "non-final" broadcast rejection: the release date has

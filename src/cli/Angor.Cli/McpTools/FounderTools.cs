@@ -103,12 +103,12 @@ public class FounderTools(IFounderAppService founderService, IProjectAppService 
             : $"Error: {result.Error}";
     }
 
-    [McpServerTool, Description("Spend funds from a project stage. Creates a transaction draft.")]
+    [McpServerTool, Description("Spend funds from a project stage. Creates a transaction draft. For Fund/Subscribe projects, investmentStageIndex is the 0-based stage index within the investment transaction (defaults to stageId).")]
     public async Task<string> FounderSpendStage(string walletId, string projectId, long feeRateSatPerVb,
-        int stageId, string investorAddress)
+        int stageId, string investorAddress, int? investmentStageIndex = null)
     {
         var fee = new FeeEstimation { FeeRate = feeRateSatPerVb * 1000, Confirmations = 1 };
-        var toSpend = new[] { new SpendTransactionDto { InvestorAddress = investorAddress, StageId = stageId } };
+        var toSpend = new[] { new SpendTransactionDto { InvestorAddress = investorAddress, StageId = stageId, InvestmentStageIndex = investmentStageIndex ?? stageId } };
 
         var result = await founderService.SpendStageFunds(
             new SpendStageFunds.SpendStageFundsRequest(new WalletId(walletId), new ProjectId(projectId), fee, toSpend));
