@@ -304,18 +304,19 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
             ProjectIdentifier = project.ProjectIdentifier
         };
 
-        // For Invest projects, use Stages.Count. For Fund/Subscribe (dynamic), determine from taproot outputs.
-        // Transaction structure: index 0 = Angor fee, index 1 = OP_RETURN, index 2+ = stage outputs
-        var stageCount = project.Stages?.Count > 0
-            ? project.Stages.Count
-            : investmentTransaction.Outputs.AsIndexedOutputs()
-                .Count(o => o.TxOut.ScriptPubKey.IsTaprooOutput());
+        // Stage outputs are the taproot outputs of the actual transaction, ordered by index.
+        // Never use project.Stages.Count here: Fund/Subscribe investments have dynamic stage counts,
+        // and never assume positions (fee outputs may change) or that the last output is change.
+        var stageOutputs = trxInfo.Outputs
+            .Where(o => !string.IsNullOrEmpty(o.ScriptPubKey) && Script.FromHex(o.ScriptPubKey).IsTaprooOutput())
+            .OrderBy(o => o.Index)
+            .ToList();
 
-        logger.LogInformation("[ScanInvestmentSpends] stageCount={StageCount}, projectStagesCount={ProjectStagesCount}", stageCount, project.Stages?.Count ?? 0);
+        logger.LogInformation("[ScanInvestmentSpends] stageCount={StageCount}, projectStagesCount={ProjectStagesCount}", stageOutputs.Count, project.Stages?.Count ?? 0);
 
-        for (int stageIndex = 0; stageIndex < stageCount; stageIndex++)
+        for (int stageIndex = 0; stageIndex < stageOutputs.Count; stageIndex++)
         {
-            var output = trxInfo.Outputs.First(f => f.Index == stageIndex + 2);
+            var output = stageOutputs[stageIndex];
 
             logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: SpentInTransaction={SpentTxId}", stageIndex, output.SpentInTransaction ?? "null");
 
@@ -377,7 +378,11 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
                             }
 
                             response.RecoveryTransactionId = output.SpentInTransaction;
-                            var totalsats = trxInfo.Outputs.SkipLast(1).Sum(s => s.Balance);
+
+                            // Sum the actual stage (taproot) outputs. Do not use SkipLast(1) to
+                            // exclude change - there may be no change output, in which case the
+                            // last output is a real stage output.
+                            var totalsats = stageOutputs.Sum(s => s.Balance);
                             response.AmountInRecovery = totalsats;
                             
                             logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: Penalty recovery, Set RecoveryTransactionId={TxId}", stageIndex, output.SpentInTransaction);
@@ -388,11 +393,16 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
                             if (spentRecoveryInfo == null)
                                 return response;
 
-                            if (spentRecoveryInfo.Outputs.SkipLast(1)
-                                .Any(_ => !string.IsNullOrEmpty(_.SpentInTransaction)))
+                            // Penalty outputs are P2WSH timelock scripts. Filter by script type
+                            // instead of SkipLast(1), which wrongly assumes a change output exists.
+                            var spentPenaltyOutput = spentRecoveryInfo.Outputs
+                                .Where(o => !string.IsNullOrEmpty(o.ScriptPubKey)
+                                            && Script.FromHex(o.ScriptPubKey).IsScriptType(ScriptType.P2WSH))
+                                .FirstOrDefault(o => !string.IsNullOrEmpty(o.SpentInTransaction));
+
+                            if (spentPenaltyOutput != null)
                             {
-                                response.RecoveryReleaseTransactionId = spentRecoveryInfo.Outputs
-                                    .First(_ => !string.IsNullOrEmpty(_.SpentInTransaction)).SpentInTransaction;
+                                response.RecoveryReleaseTransactionId = spentPenaltyOutput.SpentInTransaction;
                             }
 
                             return response;
