@@ -101,9 +101,9 @@
                                 </Border>
                             </StackPanel>
                         </Border>
-                        <Grid ColumnDefinitions="*,24,*" Margin="24">
+                        <Grid Name="FundraisingDatesGrid" ColumnDefinitions="*,24,*" RowDefinitions="Auto,Auto" Margin="24">
                             <!-- Start Date -->
-                            <StackPanel Grid.Column="0" Spacing="8">
+                            <StackPanel Name="StartDatePanel" Grid.Column="0" Grid.Row="0" Spacing="8">
                                 <TextBlock Text="Start Date" FontSize="14" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" />
                                 <CalendarDatePicker Name="InvestStartDatePicker"
@@ -115,7 +115,7 @@
                             </StackPanel>
 
                             <!-- End Date -->
-                            <StackPanel Grid.Column="2" Spacing="8">
+                            <StackPanel Name="EndDatePanel" Grid.Column="2" Grid.Row="0" Spacing="8">
                                 <TextBlock Text="End Date *" FontSize="14" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" />
                                 <CalendarDatePicker Name="InvestEndDatePicker"

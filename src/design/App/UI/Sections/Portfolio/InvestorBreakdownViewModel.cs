@@ -24,15 +24,26 @@ public class InvestorShareRowViewModel
 /// <summary>
 /// ViewModel for the investor breakdown modal.
 /// Shows all investors in a project with their share percentages.
+///
+/// The modal opens optimistically: it is shown immediately in a loading state
+/// (IsLoading=true) while the share data is fetched, then populated via
+/// <see cref="ApplyData"/> — or flipped to an error state via <see cref="SetError"/>.
 /// </summary>
-public class InvestorBreakdownViewModel
+public partial class InvestorBreakdownViewModel : ReactiveObject
 {
     public string ProjectName { get; }
-    public string TotalInvested { get; }
-    public int TotalInvestors { get; }
     public string CurrencySymbol { get; }
     public string ProjectType { get; }
     public bool IsFundType { get; }
+
+    private readonly string _currentInvestorPublicKey;
+
+    [Reactive] private bool isLoading = true;
+    [Reactive] private bool hasError;
+    [Reactive] private string totalInvested = "0.00000000";
+    [Reactive] private int totalInvestors;
+
+    public bool HasData => !IsLoading && !HasError;
 
     /// <summary>
     /// Context note for Fund projects: "Shares are calculated as of now.
@@ -43,7 +54,6 @@ public class InvestorBreakdownViewModel
     public ObservableCollection<InvestorShareRowViewModel> Investors { get; } = new();
 
     public InvestorBreakdownViewModel(
-        GetInvestorShares.GetInvestorSharesResponse data,
         string projectName,
         string projectType,
         string currencySymbol,
@@ -53,14 +63,24 @@ public class InvestorBreakdownViewModel
         ProjectType = projectType;
         CurrencySymbol = currencySymbol;
         IsFundType = projectType == "fund";
-        TotalInvested = ((double)new Amount(data.TotalInvested).Sats.ToUnitBtc())
-            .ToString("F8", CultureInfo.InvariantCulture);
-        TotalInvestors = data.TotalInvestors;
+        _currentInvestorPublicKey = currentInvestorPublicKey;
 
         ShareContextNote = IsFundType
             ? "Shares are calculated as of now. New funds can always be added, which will change the percentages."
             : null;
 
+        this.WhenAnyValue(x => x.IsLoading, x => x.HasError)
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(HasData)));
+    }
+
+    /// <summary>Populate the modal with fetched share data and leave the loading state.</summary>
+    public void ApplyData(GetInvestorShares.GetInvestorSharesResponse data)
+    {
+        TotalInvested = ((double)new Amount(data.TotalInvested).Sats.ToUnitBtc())
+            .ToString("F8", CultureInfo.InvariantCulture);
+        TotalInvestors = data.TotalInvestors;
+
+        Investors.Clear();
         int rank = 1;
         foreach (var investor in data.Investors)
         {
@@ -80,10 +100,20 @@ public class InvestorBreakdownViewModel
                 AmountClaimed = ((double)new Amount(investor.AmountClaimedByFounder).Sats.ToUnitBtc())
                     .ToString("F8", CultureInfo.InvariantCulture),
                 ClaimedPercentage = $"{investor.ClaimedPercentage:F2}%",
-                CurrencySymbol = currencySymbol,
-                IsCurrentUser = !string.IsNullOrEmpty(currentInvestorPublicKey)
-                    && string.Equals(key, currentInvestorPublicKey, StringComparison.OrdinalIgnoreCase)
+                CurrencySymbol = CurrencySymbol,
+                IsCurrentUser = !string.IsNullOrEmpty(_currentInvestorPublicKey)
+                    && string.Equals(key, _currentInvestorPublicKey, StringComparison.OrdinalIgnoreCase)
             });
         }
+
+        HasError = false;
+        IsLoading = false;
+    }
+
+    /// <summary>Flip the modal into its error state (fetch failed).</summary>
+    public void SetError()
+    {
+        HasError = true;
+        IsLoading = false;
     }
 }

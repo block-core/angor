@@ -41,8 +41,6 @@ public partial class InvestmentDetailView : UserControl
     private StackPanel? _stagesTableDesktop;
     private ItemsControl? _stagesCardsMobile;
     private StackPanel? _contentStack;
-    private Grid? _scheduleHeaderGrid;
-    private Button? _recoverFundsButton;
 
     public InvestmentDetailView()
     {
@@ -73,8 +71,6 @@ public partial class InvestmentDetailView : UserControl
         _stagesTableDesktop = this.FindControl<StackPanel>("StagesTableDesktop");
         _stagesCardsMobile = this.FindControl<ItemsControl>("StagesCardsMobile");
         _contentStack = this.FindControl<StackPanel>("ContentStack");
-        _scheduleHeaderGrid = this.FindControl<Grid>("ScheduleHeaderGrid");
-        _recoverFundsButton = this.FindControl<Button>("RecoverFundsButton");
 
         SubscribeToLayoutMode();
     }
@@ -153,16 +149,6 @@ public partial class InvestmentDetailView : UserControl
             if (_stagesTableDesktop != null) _stagesTableDesktop.IsVisible = false;
             if (_stagesCardsMobile != null) _stagesCardsMobile.IsVisible = true;
 
-            // Recover button: drop to its own row, full width (stops it overlaying the title)
-            if (_recoverFundsButton != null)
-            {
-                Grid.SetColumn(_recoverFundsButton, 0);
-                Grid.SetRow(_recoverFundsButton, 1);
-                Grid.SetColumnSpan(_recoverFundsButton, 2);
-                _recoverFundsButton.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Stretch;
-                _recoverFundsButton.Margin = new Thickness(0, 12, 0, 0);
-            }
-
             // Bottom padding for tab bar clearance
             if (_contentStack != null) _contentStack.Margin = new Thickness(0, 0, 0, 96);
         }
@@ -220,16 +206,6 @@ public partial class InvestmentDetailView : UserControl
 
             if (_stagesTableDesktop != null) _stagesTableDesktop.IsVisible = true;
             if (_stagesCardsMobile != null) _stagesCardsMobile.IsVisible = false;
-
-            // Recover button: back to the header's right column
-            if (_recoverFundsButton != null)
-            {
-                Grid.SetColumn(_recoverFundsButton, 1);
-                Grid.SetRow(_recoverFundsButton, 0);
-                Grid.SetColumnSpan(_recoverFundsButton, 1);
-                _recoverFundsButton.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right;
-                _recoverFundsButton.Margin = new Thickness(0);
-            }
 
             if (_contentStack != null) _contentStack.Margin = new Thickness(0);
         }
@@ -462,7 +438,9 @@ public partial class InvestmentDetailView : UserControl
     }
 
     /// <summary>
-    /// Load investor shares from the SDK and show the breakdown modal.
+    /// Show the breakdown modal immediately (optimistic, in a loading state),
+    /// then load investor shares from the SDK and populate it. On failure the
+    /// modal flips to an inline error state — never a silent no-op button.
     /// </summary>
     private async Task ShowInvestorBreakdownAsync()
     {
@@ -475,24 +453,23 @@ public partial class InvestmentDetailView : UserControl
         var projectAppService = App.Services.GetService<Angor.Sdk.Funding.Projects.IProjectAppService>();
         if (projectAppService == null) return;
 
-        var result = await projectAppService.GetInvestorShares(
-            new Angor.Sdk.Funding.Shared.ProjectId(investVm.ProjectIdentifier));
-
-        if (result.IsFailure) return;
-
         var currencyService = App.Services.GetService<ICurrencyService>();
         var currencySymbol = currencyService?.Symbol ?? "BTC";
 
-        var breakdownView = new InvestorBreakdownView
-        {
-            DataContext = new InvestorBreakdownViewModel(
-                result.Value,
-                investVm.ProjectName,
-                investVm.ProjectType,
-                currencySymbol,
-                investVm.InvestorPublicKey)
-        };
+        var breakdownVm = new InvestorBreakdownViewModel(
+            investVm.ProjectName,
+            investVm.ProjectType,
+            currencySymbol,
+            investVm.InvestorPublicKey);
 
-        shellVm.ShowModal(breakdownView);
+        shellVm.ShowModal(new InvestorBreakdownView { DataContext = breakdownVm });
+
+        var result = await projectAppService.GetInvestorShares(
+            new Angor.Sdk.Funding.Shared.ProjectId(investVm.ProjectIdentifier));
+
+        if (result.IsSuccess)
+            breakdownVm.ApplyData(result.Value);
+        else
+            breakdownVm.SetError();
     }
 }

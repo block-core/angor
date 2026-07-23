@@ -139,16 +139,45 @@ public class MainActivity : AvaloniaMainActivity
     {
         if (e?.KeyCode == Keycode.Back)
         {
-            if (e.Action == KeyEventActions.Down && CanHandleShellBack())
+            // REGRESSION HOTSPOT (see PlatformBackRegressionTests in App.Test.Integration).
+            //
+            // Previous implementation consumed Down only when CanHandleShellBack() was true
+            // and Up only when TryHandleShellBack() succeeded. If app state changed between
+            // Down and Up (modal closing itself, async navigation), Android received an
+            // orphan Up (or a swallowed Down) and the back button silently stopped working.
+            //
+            // Deterministic contract: ALWAYS consume both Back events here. On Up, route
+            // to the in-app back ladder; if the app is at a root screen, perform the
+            // platform default (finish/minimize) ourselves via OnBackPressed.
+            if (e.Action == KeyEventActions.Down)
                 return true;
 
-            if (e.Action == KeyEventActions.Up && TryHandleShellBack())
+            if (e.Action == KeyEventActions.Up)
+            {
+                if (!TryHandleShellBack())
+                {
+                    _handlingPlatformBack = true;
+                    try
+                    {
+                        base.OnBackPressed();
+                    }
+                    finally
+                    {
+                        _handlingPlatformBack = false;
+                    }
+                }
+
                 return true;
+            }
         }
 
         return base.DispatchKeyEvent(e);
     }
 
+    /// <summary>
+    /// Gesture-navigation / predictive-back path (no key events are dispatched).
+    /// Mirrors DispatchKeyEvent: in-app back first, platform default otherwise.
+    /// </summary>
     public override void OnBackPressed()
     {
         if (_handlingPlatformBack)
@@ -161,16 +190,14 @@ public class MainActivity : AvaloniaMainActivity
             return;
 
         _handlingPlatformBack = true;
-        base.OnBackPressed();
-        _handlingPlatformBack = false;
-    }
-
-    private static bool CanHandleShellBack()
-    {
-        if (Dispatcher.UIThread.CheckAccess())
-            return ShellService.CanHandlePlatformBack();
-
-        return Dispatcher.UIThread.InvokeAsync(ShellService.CanHandlePlatformBack).GetAwaiter().GetResult();
+        try
+        {
+            base.OnBackPressed();
+        }
+        finally
+        {
+            _handlingPlatformBack = false;
+        }
     }
 
     private static bool TryHandleShellBack()
