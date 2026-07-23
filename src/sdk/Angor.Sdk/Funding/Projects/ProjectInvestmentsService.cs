@@ -304,18 +304,24 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
             ProjectIdentifier = project.ProjectIdentifier
         };
 
-        // For Invest projects, use Stages.Count. For Fund/Subscribe (dynamic), determine from taproot outputs.
-        // Transaction structure: index 0 = Angor fee, index 1 = OP_RETURN, index 2+ = stage outputs
-        var stageCount = project.Stages?.Count > 0
-            ? project.Stages.Count
-            : investmentTransaction.Outputs.AsIndexedOutputs()
-                .Count(o => o.TxOut.ScriptPubKey.IsTaprooOutput());
+        // Stage outputs are always the taproot outputs at index >= 2 of the actual transaction.
+        // Transaction structure: index 0 = Angor fee, index 1 = OP_RETURN, index 2+ = stage outputs.
+        // Never use project.Stages.Count here: Fund/Subscribe investments have dynamic stage counts,
+        // and never assume the last output is change (there may be no change output at all).
+        var stageCount = investmentTransaction.Outputs.AsIndexedOutputs()
+            .Count(o => o.N >= 2 && o.TxOut.ScriptPubKey.IsTaprooOutput());
 
         logger.LogInformation("[ScanInvestmentSpends] stageCount={StageCount}, projectStagesCount={ProjectStagesCount}", stageCount, project.Stages?.Count ?? 0);
 
         for (int stageIndex = 0; stageIndex < stageCount; stageIndex++)
         {
-            var output = trxInfo.Outputs.First(f => f.Index == stageIndex + 2);
+            var output = trxInfo.Outputs.FirstOrDefault(f => f.Index == stageIndex + 2);
+
+            if (output == null)
+            {
+                logger.LogWarning("[ScanInvestmentSpends] Stage {StageIndex}: no output at index {Index}, skipping", stageIndex, stageIndex + 2);
+                continue;
+            }
 
             logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: SpentInTransaction={SpentTxId}", stageIndex, output.SpentInTransaction ?? "null");
 
@@ -377,7 +383,13 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
                             }
 
                             response.RecoveryTransactionId = output.SpentInTransaction;
-                            var totalsats = trxInfo.Outputs.SkipLast(1).Sum(s => s.Balance);
+
+                            // Sum the actual stage (taproot) outputs. Do not use SkipLast(1) to
+                            // exclude change - there may be no change output, in which case the
+                            // last output is a real stage output.
+                            var totalsats = investmentTransaction.Outputs.AsIndexedOutputs()
+                                .Where(o => o.N >= 2 && o.TxOut.ScriptPubKey.IsTaprooOutput())
+                                .Sum(o => o.TxOut.Value.Satoshi);
                             response.AmountInRecovery = totalsats;
                             
                             logger.LogInformation("[ScanInvestmentSpends] Stage {StageIndex}: Penalty recovery, Set RecoveryTransactionId={TxId}", stageIndex, output.SpentInTransaction);
@@ -388,11 +400,16 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
                             if (spentRecoveryInfo == null)
                                 return response;
 
-                            if (spentRecoveryInfo.Outputs.SkipLast(1)
-                                .Any(_ => !string.IsNullOrEmpty(_.SpentInTransaction)))
+                            // Penalty outputs are P2WSH timelock scripts. Filter by script type
+                            // instead of SkipLast(1), which wrongly assumes a change output exists.
+                            var spentPenaltyOutput = spentRecoveryInfo.Outputs
+                                .Where(o => !string.IsNullOrEmpty(o.ScriptPubKey)
+                                            && Script.FromHex(o.ScriptPubKey).IsScriptType(ScriptType.P2WSH))
+                                .FirstOrDefault(o => !string.IsNullOrEmpty(o.SpentInTransaction));
+
+                            if (spentPenaltyOutput != null)
                             {
-                                response.RecoveryReleaseTransactionId = spentRecoveryInfo.Outputs
-                                    .First(_ => !string.IsNullOrEmpty(_.SpentInTransaction)).SpentInTransaction;
+                                response.RecoveryReleaseTransactionId = spentPenaltyOutput.SpentInTransaction;
                             }
 
                             return response;

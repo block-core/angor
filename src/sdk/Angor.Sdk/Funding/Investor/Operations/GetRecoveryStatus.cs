@@ -110,7 +110,7 @@ public static class GetRecoveryStatus
             // For all project types, stages correspond to Taproot outputs
             // Transaction structure: index 0 = Angor fee, index 1 = OP_RETURN, index 2+ = stage outputs
             var taprootOutputs = trxInfo.Outputs
-                .Where(o => Script.FromHex(o.ScriptPubKey).IsTaprooOutput())
+                .Where(o => o.Index >= 2 && Script.FromHex(o.ScriptPubKey).IsTaprooOutput())
                 .OrderBy(o => o.Index)
                 .ToList();
 
@@ -204,7 +204,13 @@ public static class GetRecoveryStatus
         {
             //TODO handle unconfirmed outbound transactions
             
-            var output = transactionInfo.Outputs.ElementAt(item.StageIndex + 2);
+            var output = transactionInfo.Outputs.FirstOrDefault(o => o.Index == item.StageIndex + 2);
+
+            if (output == null)
+            {
+                logger.LogWarning("[CheckTxSpending] Stage {StageIndex}: no output at index {Index}, skipping", item.StageIndex, item.StageIndex + 2);
+                return Result.Success();
+            }
 
             logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: SpentInTransaction={SpentTxId}, UnfundedReleaseTxId={UnfundedTxId}, RecoveryTxId={RecoveryTxId}", 
                 item.StageIndex, output.SpentInTransaction ?? "null", lookup.Value.UnfundedReleaseTransactionId ?? "null", lookup.Value.RecoveryTransactionId ?? "null");
@@ -289,8 +295,11 @@ public static class GetRecoveryStatus
                                         break;
                                     }
 
-                                    // P2WSH outputs = penalty timelock recovery
-                                    if (spentInTransaction.Outputs.SkipLast(1)
+                                    // P2WSH outputs = penalty timelock recovery. Filter by script type
+                                    // instead of SkipLast(1), which wrongly assumes a change output exists.
+                                    if (spentInTransaction.Outputs
+                                            .Where(o => !string.IsNullOrEmpty(o.ScriptPubKey)
+                                                        && Script.FromHex(o.ScriptPubKey).IsScriptType(ScriptType.P2WSH))
                                             .Any(o => !string.IsNullOrEmpty(o.SpentInTransaction)))
                                     {
                                         item.Status = "Recovered after penalty";
