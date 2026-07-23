@@ -28,6 +28,18 @@
         </Setter>
     </Style>
     
+    <!-- Two-column fill grid: items stretch to share the row equally and wrap
+         into balanced rows. Used for 4-item preset rows on compact widths. -->
+    <Style Selector=":is(ItemsControl).Grid2">
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <UniformGrid Columns="2" ColumnSpacing="10" RowSpacing="10" />
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style Selector=":is(ItemsControl).Vertical">
         <Setter Property="ItemsPanel">
             <Setter.Value>
@@ -52,10 +64,16 @@
         
         <ControlTheme x:Key="ButtonizedListBoxItem" TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
             <Setter Property="Padding" Value="10"></Setter>
-            <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
+            <!-- Standard preset-pill height: every preset pill matches the
+                 two-line target-amount pills so mixed rows align. -->
+            <Setter Property="MinHeight" Value="60" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <!-- Transparent + Stroke outline (matches DurPresetBtn); the old
+                 SurfaceHover fill read as a washed-out grey pill in dark mode -->
+            <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
             
             <Setter Property="CornerRadius" Value="10" />
 
@@ -73,10 +91,14 @@
         <ControlTheme x:Key="ButtonizedAccentListBoxItem" TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
             <Setter Property="Padding" Value="10" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
-            <Setter Property="Background" Value="{DynamicResource SurfaceHover}" />
+            <!-- Standard preset-pill height (see ButtonizedListBoxItem) -->
+            <Setter Property="MinHeight" Value="60" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <!-- Transparent + Stroke outline (matches DurPresetBtn) -->
+            <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="BorderBrush" Value="{DynamicResource Border}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
             <Setter Property="CornerRadius" Value="10" />
 
             <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">

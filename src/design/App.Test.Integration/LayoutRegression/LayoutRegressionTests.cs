@@ -329,16 +329,19 @@ public class LayoutRegressionTests
     // CreateProjectView — all 6 wizard steps at phone + desktop widths
     // ═══════════════════════════════════════════════════════════════════
 
-    public static TheoryData<int, double> CreateProjectSteps
+    public static TheoryData<string, int, double> CreateProjectSteps
     {
         get
         {
-            var data = new TheoryData<int, double>();
-            for (int step = 1; step <= 6; step++)
+            var data = new TheoryData<string, int, double>();
+            foreach (var type in new[] { "fund", "investment", "subscription" })
             {
-                data.Add(step, 360);
-                data.Add(step, 768);
-                data.Add(step, 1280);
+                for (int step = 1; step <= 6; step++)
+                {
+                    data.Add(type, step, 360);
+                    data.Add(type, step, 768);
+                    data.Add(type, step, 1280);
+                }
             }
 
             return data;
@@ -347,20 +350,23 @@ public class LayoutRegressionTests
 
     [AvaloniaTheory]
     [MemberData(nameof(CreateProjectSteps))]
-    public void CreateProjectView_step_has_no_overlaps_or_overflow(int step, double width)
+    public void CreateProjectView_step_has_no_overlaps_or_overflow(string projectType, int step, double width)
     {
         var vm = global::App.App.Services.GetRequiredService<CreateProjectViewModel>();
-        vm.SelectProjectType("fund");
+        vm.SelectProjectType(projectType);
         vm.ProjectName = "A Very Long Project Name That Stresses The Wizard Header Layout";
         vm.ProjectAbout = new string('x', 240);
         vm.GoToStep(step);
+        // Step 5 shows an interstitial welcome by default — the real form (presets,
+        // duration inputs, advanced editor) is what must be layout-audited.
+        vm.ShowStep5Welcome = false;
 
         var view = new CreateProjectView { DataContext = vm };
 
         var violations = RenderAndAudit(view, width, 900);
 
         violations.Should().BeEmpty(
-            $"CreateProjectView step {step} must not have overlapping/overflowing elements at width {width}:\n" +
+            $"CreateProjectView ({projectType}) step {step} must not have overlapping/overflowing elements at width {width}:\n" +
             string.Join("\n", violations));
     }
 

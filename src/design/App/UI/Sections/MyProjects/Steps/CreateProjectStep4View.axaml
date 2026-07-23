@@ -62,7 +62,7 @@
                             </StackPanel>
 
                             <!-- Quick-select amount presets — ListBox with ButtonizedListBoxItem -->
-                            <ListBox Name="InvestAmountPresets" Classes="Transparent HorizontalWrap"
+                            <ListBox Name="InvestAmountPresets" Classes="Transparent Horizontal"
                                      ItemContainerTheme="{StaticResource ButtonizedListBoxItem}"
                                      SelectionMode="Single">
                                 <ListBoxItem Tag="0.5">
@@ -131,7 +131,7 @@
                                            Margin="0,4,0,0" />
 
                                 <!-- Duration presets — ListBox with ButtonizedAccentListBoxItem -->
-                                <ListBox Name="DurationPresets" Classes="Transparent HorizontalWrap"
+                                <ListBox Name="DurationPresets" Classes="Transparent Horizontal"
                                          ItemContainerTheme="{StaticResource ButtonizedAccentListBoxItem}"
                                          SelectionMode="Single" Margin="0,4,0,0">
                                     <ListBoxItem Tag="1" Content="1 Month" FontSize="12" FontWeight="Bold" />
@@ -195,7 +195,7 @@
                             </StackPanel>
 
                             <!-- Quick-select amount presets — ListBox with ButtonizedListBoxItem -->
-                            <ListBox Name="FundAmountPresets" Classes="Transparent HorizontalWrap"
+                            <ListBox Name="FundAmountPresets" Classes="Transparent Horizontal"
                                      ItemContainerTheme="{StaticResource ButtonizedListBoxItem}"
                                      SelectionMode="Single">
                                 <ListBoxItem Tag="0.5">
@@ -305,7 +305,7 @@
                             </StackPanel>
 
                             <!-- Quick-select price presets — ListBox with ButtonizedListBoxItem -->
-                            <ListBox Name="SubPricePresets" Classes="Transparent HorizontalWrap"
+                            <ListBox Name="SubPricePresets" Classes="Transparent Horizontal"
                                      ItemContainerTheme="{StaticResource ButtonizedListBoxItem}"
                                      SelectionMode="Single">
                                 <ListBoxItem Tag="0.00001">
