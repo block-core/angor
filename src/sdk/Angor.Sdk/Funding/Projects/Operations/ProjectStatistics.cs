@@ -16,14 +16,19 @@ public static class ProjectStatistics
     {
         public async Task<Result<ProjectStatisticsDto>> Handle(ProjectStatsRequest request, CancellationToken cancellationToken)
         {
-            var stagesInformation = await projectInvestmentsService.ScanFullInvestments(request.ProjectId.Value);
+            // Run the investment scan and the project fetch concurrently — the scan
+            // does not depend on the project result and both hit the network.
+            var stagesInformationTask = projectInvestmentsService.ScanFullInvestments(request.ProjectId.Value);
+            var projectTask = projectService.GetAsync(request.ProjectId);
+
+            var stagesInformation = await stagesInformationTask;
 
             if (stagesInformation.IsFailure)
             {
                 return Result.Failure<ProjectStatisticsDto>(stagesInformation.Error);
             }
 
-            var project = await projectService.GetAsync(request.ProjectId);
+            var project = await projectTask;
             return Result.Try(() => CalculateTotalValues(stagesInformation.Value.ToList(), project.Value.ToProjectInfo()));
         }
 

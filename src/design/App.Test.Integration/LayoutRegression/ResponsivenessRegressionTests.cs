@@ -80,7 +80,7 @@ public class ResponsivenessRegressionTests
     }
 
     [AvaloniaFact]
-    public void MyProjectsView_sidebar_strips_desktop_chrome_on_mobile()
+    public void MyProjectsView_sidebar_hidden_on_mobile()
     {
         LayoutModeService.Instance.UpdateWidth(1280);
 
@@ -96,13 +96,13 @@ public class ResponsivenessRegressionTests
             sidebar.Should().NotBeNull();
 
             SetWidth(window, 390);
-            // On mobile the sidebar hero card must not render as an empty Surface box:
-            // background/border stripped, hero elements hidden, mobile actions shown.
-            sidebar!.Background.Should().BeNull("mobile sidebar must not render an empty background card");
-            view.FindControl<Grid>("SidebarStats")!.IsVisible.Should().BeFalse();
+            // On mobile the sidebar is removed entirely — no empty box; the content
+            // column shows the mobile action buttons instead.
+            sidebar!.IsVisible.Should().BeFalse("mobile must not render the sidebar at all");
             view.FindControl<StackPanel>("MobileActionPanel")!.IsVisible.Should().BeTrue();
 
             SetWidth(window, 1280);
+            sidebar.IsVisible.Should().BeTrue("desktop sidebar must come back");
             sidebar.Background.Should().NotBeNull("desktop sidebar chrome must come back");
             view.FindControl<Grid>("SidebarStats")!.IsVisible.Should().BeTrue();
         }
