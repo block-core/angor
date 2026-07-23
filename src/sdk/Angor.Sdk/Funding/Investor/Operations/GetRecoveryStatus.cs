@@ -172,12 +172,18 @@ public static class GetRecoveryStatus
             var isAboveThreshold = projectInfo.ProjectType == ProjectType.Fund
                 && investorTransactionActions.IsInvestmentAbovePenaltyThreshold(projectInfo, totalInvestmentAmount);
             
-            var isEndOfProject = projectInfo.ExpiryDate < DateTime.UtcNow;
+            // Timelocked spends (end-of-project CLTV, penalty release) are validated by the
+            // network against the chain tip's median-time-past, which lags wall-clock time.
+            // Apply a safety buffer so the user is never offered a spend that bitcoind would
+            // reject as "non-final".
+            var safeNow = DateTime.UtcNow - TimelockSafety.BufferFor(networkConfiguration);
+
+            var isEndOfProject = projectInfo.ExpiryDate < safeNow;
 
             var response = new InvestorProjectRecoveryDto
             {
                 HasUnspentItems = stageItems.Any(a => a.IsSpent == false),
-                HasSpendableItemsInPenalty = (stageItems.Any(a => a.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty) && DateTime.UtcNow > penaltyExpieryDate),
+                HasSpendableItemsInPenalty = (stageItems.Any(a => a.ScriptType == ProjectScriptTypeEnum.InvestorWithPenalty) && safeNow > penaltyExpieryDate),
                 EndOfProject = isEndOfProject,
                 IsAboveThreshold = isAboveThreshold,
                 TotalSpendable = stageItems.Where(a => !a.IsSpent).Sum(a => a.Amount),

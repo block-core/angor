@@ -3,6 +3,7 @@ using Angor.Sdk.Funding.Founder.Dtos;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Sdk.Funding.Shared;
+using Angor.Shared;
 using Angor.Shared.Models;
 using CSharpFunctionalExtensions;
 using MediatR;
@@ -15,7 +16,7 @@ public static class GetClaimableTransactions
 
     public record GetClaimableTransactionsResponse(IEnumerable<ClaimableTransactionDto> Transactions);
 
-    public class GetClaimableTransactionsHandler(IProjectInvestmentsService projectInvestmentsService) : IRequestHandler<GetClaimableTransactionsRequest, Result<GetClaimableTransactionsResponse>>
+    public class GetClaimableTransactionsHandler(IProjectInvestmentsService projectInvestmentsService, INetworkConfiguration networkConfiguration) : IRequestHandler<GetClaimableTransactionsRequest, Result<GetClaimableTransactionsResponse>>
     {
         public async Task<Result<GetClaimableTransactionsResponse>> Handle(GetClaimableTransactionsRequest request, CancellationToken cancellationToken)
         {
@@ -25,6 +26,8 @@ public static class GetClaimableTransactions
             {
                 return Result.Failure<GetClaimableTransactionsResponse>(resultList.Error);
             }
+
+            var timelockBuffer = TimelockSafety.BufferFor(networkConfiguration);
 
             var list = resultList.Value.SelectMany(stageData => stageData.Items
                     .Select<StageDataTrx, ClaimableTransactionDto>(item =>
@@ -36,7 +39,7 @@ public static class GetClaimableTransactions
                            Amount = new Amount(item.Amount),
                            DynamicReleaseDate = stageData.StageDate,
                            InvestorAddress = item.InvestorPublicKey,
-                           ClaimStatus = DetermineClaimStatus(item, stageData),
+                           ClaimStatus = DetermineClaimStatus(item, stageData, timelockBuffer),
                            TransactionId = item.Trxid,
                            InvestmentStartDate = item.InvestmentStartDate,
                            PatternId = item.PatternId,
@@ -45,7 +48,7 @@ public static class GetClaimableTransactions
             return Result.Success(new GetClaimableTransactionsResponse(list));
         }
 
-        private static ClaimStatus DetermineClaimStatus(StageDataTrx item, StageData stageData)
+        private static ClaimStatus DetermineClaimStatus(StageDataTrx item, StageData stageData, TimeSpan timelockBuffer)
         {
             // Check spent status first — a spent stage should always show as spent,
             // even if its release date is in the future
@@ -75,8 +78,11 @@ public static class GetClaimableTransactions
                 };
             }
 
-            // Check if stage release date hasn't been reached yet (works for both dynamic and fixed stages)
-            if (stageData.StageDate > DateTime.UtcNow)
+            // Check if the stage timelock has been reached on-chain (works for both dynamic and
+            // fixed stages). The network validates nLockTime against the chain tip's
+            // median-time-past, which lags wall-clock time — without the safety buffer the UI
+            // offers claims that bitcoind rejects as "non-final" right after the release date.
+            if (stageData.StageDate.Add(timelockBuffer) > DateTime.UtcNow)
             {
                 return ClaimStatus.Locked;
             }
