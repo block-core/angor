@@ -62,7 +62,7 @@
                             </StackPanel>
 
                             <!-- Quick-select amount presets — ListBox with ButtonizedListBoxItem -->
-                            <ListBox Name="InvestAmountPresets" Classes="Transparent Horizontal"
+                            <ListBox Name="InvestAmountPresets" Classes="Transparent HorizontalWrap"
                                      ItemContainerTheme="{StaticResource ButtonizedListBoxItem}"
                                      SelectionMode="Single">
                                 <ListBoxItem Tag="0.5">
@@ -101,9 +101,9 @@
                                 </Border>
                             </StackPanel>
                         </Border>
-                        <Grid ColumnDefinitions="*,24,*" Margin="24">
+                        <Grid Name="FundraisingDatesGrid" ColumnDefinitions="*,24,*" RowDefinitions="Auto,Auto" Margin="24">
                             <!-- Start Date -->
-                            <StackPanel Grid.Column="0" Spacing="8">
+                            <StackPanel Name="StartDatePanel" Grid.Column="0" Grid.Row="0" Spacing="8">
                                 <TextBlock Text="Start Date" FontSize="14" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" />
                                 <CalendarDatePicker Name="InvestStartDatePicker"
@@ -115,7 +115,7 @@
                             </StackPanel>
 
                             <!-- End Date -->
-                            <StackPanel Grid.Column="2" Spacing="8">
+                            <StackPanel Name="EndDatePanel" Grid.Column="2" Grid.Row="0" Spacing="8">
                                 <TextBlock Text="End Date *" FontSize="14" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" />
                                 <CalendarDatePicker Name="InvestEndDatePicker"
@@ -131,7 +131,7 @@
                                            Margin="0,4,0,0" />
 
                                 <!-- Duration presets — ListBox with ButtonizedAccentListBoxItem -->
-                                <ListBox Name="DurationPresets" Classes="Transparent Horizontal"
+                                <ListBox Name="DurationPresets" Classes="Transparent HorizontalWrap"
                                          ItemContainerTheme="{StaticResource ButtonizedAccentListBoxItem}"
                                          SelectionMode="Single" Margin="0,4,0,0">
                                     <ListBoxItem Tag="1" Content="1 Month" FontSize="12" FontWeight="Bold" />
@@ -195,7 +195,7 @@
                             </StackPanel>
 
                             <!-- Quick-select amount presets — ListBox with ButtonizedListBoxItem -->
-                            <ListBox Name="FundAmountPresets" Classes="Transparent Horizontal"
+                            <ListBox Name="FundAmountPresets" Classes="Transparent HorizontalWrap"
                                      ItemContainerTheme="{StaticResource ButtonizedListBoxItem}"
                                      SelectionMode="Single">
                                 <ListBoxItem Tag="0.5">
@@ -305,7 +305,7 @@
                             </StackPanel>
 
                             <!-- Quick-select price presets — ListBox with ButtonizedListBoxItem -->
-                            <ListBox Name="SubPricePresets" Classes="Transparent Horizontal"
+                            <ListBox Name="SubPricePresets" Classes="Transparent HorizontalWrap"
                                      ItemContainerTheme="{StaticResource ButtonizedListBoxItem}"
                                      SelectionMode="Single">
                                 <ListBoxItem Tag="0.00001">

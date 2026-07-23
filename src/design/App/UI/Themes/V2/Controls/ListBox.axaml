@@ -14,6 +14,19 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <!-- Like Horizontal, but items keep their natural width and wrap to the next
+         line when the container is too narrow (mobile). Prevents the char-by-char
+         text wrapping seen with UniformGrid on compact widths (issue #920). -->
+    <Style Selector=":is(ItemsControl).HorizontalWrap">
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Horizontal" ItemSpacing="10" LineSpacing="10" />
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
     
     <Style Selector=":is(ItemsControl).Vertical">
         <Setter Property="ItemsPanel">

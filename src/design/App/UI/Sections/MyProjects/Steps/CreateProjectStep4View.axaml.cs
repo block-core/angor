@@ -1,5 +1,8 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
+using App.UI.Shared;
 
 namespace App.UI.Sections.MyProjects.Steps;
 
@@ -11,15 +14,71 @@ public partial class CreateProjectStep4View : UserControl
     private ListBox? _subPricePresets;
     private ListBox? _durationPresets;
 
+    // Responsive layout — Fundraising Window dates stack on compact (issue #920)
+    private Grid? _fundraisingDatesGrid;
+    private StackPanel? _startDatePanel;
+    private StackPanel? _endDatePanel;
+    private IDisposable? _layoutSubscription;
+
     public CreateProjectStep4View()
     {
         InitializeComponent();
+        SubscribeToLayoutMode();
     }
 
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
         ResolveNamedElements();
+        ApplyResponsiveLayout(LayoutModeService.Instance.IsCompact);
+    }
+
+    /// <summary>Idempotent responsive-layout subscription — re-created on every logical-tree attach because OnDetachedFromLogicalTree disposes it (views are cached and re-attached on section switches).</summary>
+    private void SubscribeToLayoutMode()
+    {
+        if (_layoutSubscription != null) return;
+        _layoutSubscription = LayoutModeService.Instance
+            .WhenAnyValue(x => x.IsCompact)
+            .Subscribe(ApplyResponsiveLayout);
+    }
+
+    protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToLogicalTree(e);
+        SubscribeToLayoutMode();
+    }
+
+    protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = null;
+        base.OnDetachedFromLogicalTree(e);
+    }
+
+    /// <summary>
+    /// Compact: Start/End date columns stack into one column so the pickers and
+    /// the month-preset buttons get the full card width (issue #920).
+    /// </summary>
+    private void ApplyResponsiveLayout(bool isCompact)
+    {
+        if (_fundraisingDatesGrid == null || _startDatePanel == null || _endDatePanel == null) return;
+
+        if (isCompact)
+        {
+            _fundraisingDatesGrid.ColumnDefinitions[1].Width = new GridLength(0);
+            _fundraisingDatesGrid.ColumnDefinitions[2].Width = new GridLength(0);
+            Grid.SetColumn(_endDatePanel, 0);
+            Grid.SetRow(_endDatePanel, 1);
+            _endDatePanel.Margin = new Thickness(0, 20, 0, 0);
+        }
+        else
+        {
+            _fundraisingDatesGrid.ColumnDefinitions[1].Width = new GridLength(24);
+            _fundraisingDatesGrid.ColumnDefinitions[2].Width = GridLength.Star;
+            Grid.SetColumn(_endDatePanel, 2);
+            Grid.SetRow(_endDatePanel, 0);
+            _endDatePanel.Margin = new Thickness(0);
+        }
     }
 
     private CreateProjectViewModel? Vm => DataContext as CreateProjectViewModel;
@@ -30,6 +89,9 @@ public partial class CreateProjectStep4View : UserControl
         _fundAmountPresets = this.FindControl<ListBox>("FundAmountPresets");
         _subPricePresets = this.FindControl<ListBox>("SubPricePresets");
         _durationPresets = this.FindControl<ListBox>("DurationPresets");
+        _fundraisingDatesGrid = this.FindControl<Grid>("FundraisingDatesGrid");
+        _startDatePanel = this.FindControl<StackPanel>("StartDatePanel");
+        _endDatePanel = this.FindControl<StackPanel>("EndDatePanel");
 
         if (_investAmountPresets != null)
             _investAmountPresets.SelectionChanged += (_, _) => OnAmountPresetSelected(_investAmountPresets);
