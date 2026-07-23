@@ -110,7 +110,7 @@ public static class GetRecoveryStatus
             // For all project types, stages correspond to Taproot outputs
             // Transaction structure: index 0 = Angor fee, index 1 = OP_RETURN, index 2+ = stage outputs
             var taprootOutputs = trxInfo.Outputs
-                .Where(o => o.Index >= 2 && Script.FromHex(o.ScriptPubKey).IsTaprooOutput())
+                .Where(o => Script.FromHex(o.ScriptPubKey).IsTaprooOutput())
                 .OrderBy(o => o.Index)
                 .ToList();
 
