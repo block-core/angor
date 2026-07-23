@@ -438,7 +438,9 @@ public partial class InvestmentDetailView : UserControl
     }
 
     /// <summary>
-    /// Load investor shares from the SDK and show the breakdown modal.
+    /// Show the breakdown modal immediately (optimistic, in a loading state),
+    /// then load investor shares from the SDK and populate it. On failure the
+    /// modal flips to an inline error state — never a silent no-op button.
     /// </summary>
     private async Task ShowInvestorBreakdownAsync()
     {
@@ -451,24 +453,23 @@ public partial class InvestmentDetailView : UserControl
         var projectAppService = App.Services.GetService<Angor.Sdk.Funding.Projects.IProjectAppService>();
         if (projectAppService == null) return;
 
-        var result = await projectAppService.GetInvestorShares(
-            new Angor.Sdk.Funding.Shared.ProjectId(investVm.ProjectIdentifier));
-
-        if (result.IsFailure) return;
-
         var currencyService = App.Services.GetService<ICurrencyService>();
         var currencySymbol = currencyService?.Symbol ?? "BTC";
 
-        var breakdownView = new InvestorBreakdownView
-        {
-            DataContext = new InvestorBreakdownViewModel(
-                result.Value,
-                investVm.ProjectName,
-                investVm.ProjectType,
-                currencySymbol,
-                investVm.InvestorPublicKey)
-        };
+        var breakdownVm = new InvestorBreakdownViewModel(
+            investVm.ProjectName,
+            investVm.ProjectType,
+            currencySymbol,
+            investVm.InvestorPublicKey);
 
-        shellVm.ShowModal(breakdownView);
+        shellVm.ShowModal(new InvestorBreakdownView { DataContext = breakdownVm });
+
+        var result = await projectAppService.GetInvestorShares(
+            new Angor.Sdk.Funding.Shared.ProjectId(investVm.ProjectIdentifier));
+
+        if (result.IsSuccess)
+            breakdownVm.ApplyData(result.Value);
+        else
+            breakdownVm.SetError();
     }
 }

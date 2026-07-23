@@ -419,6 +419,54 @@ public class LayoutRegressionTests
     }
 
     // ═══════════════════════════════════════════════════════════════════
+    // InvestorBreakdownView — optimistic-loading modal (table→cards on mobile)
+    // ═══════════════════════════════════════════════════════════════════
+
+    [AvaloniaTheory]
+    [MemberData(nameof(Viewports))]
+    public void InvestorBreakdownView_has_no_overlaps_or_overflow(double width, double height)
+    {
+        var vm = new InvestorBreakdownViewModel(
+            "A Very Long Project Name That Stresses The Modal Header Layout",
+            "fund", "TBTC",
+            "aaaa000000000000000000000000000000000000000000000000000000000000");
+
+        // Worst-case rows: current-user highlight + long amounts.
+        var rows = new System.Collections.Generic.List<Angor.Sdk.Funding.Projects.Dtos.InvestorShareDto>();
+        for (int i = 0; i < 6; i++)
+        {
+            rows.Add(new Angor.Sdk.Funding.Projects.Dtos.InvestorShareDto(
+                i == 2
+                    ? "aaaa000000000000000000000000000000000000000000000000000000000000"
+                    : $"bbbb{i:D60}",
+                "", 123_456_789, 33.33, 12_345_678, 10.01));
+        }
+        vm.ApplyData(new Angor.Sdk.Funding.Projects.Operations.GetInvestorShares.GetInvestorSharesResponse(
+            370_370_367, rows.Count, rows));
+
+        var view = new InvestorBreakdownView { DataContext = vm };
+        var violations = RenderAndAudit(view, width, height);
+
+        violations.Should().BeEmpty(
+            $"InvestorBreakdownView must not have overlapping/overflowing elements at {width}x{height}:\n" +
+            string.Join("\n", violations));
+    }
+
+    [AvaloniaTheory]
+    [MemberData(nameof(Viewports))]
+    public void InvestorBreakdownView_loading_state_has_no_overlaps_or_overflow(double width, double height)
+    {
+        var vm = new InvestorBreakdownViewModel("Project", "fund", "TBTC");
+
+        var view = new InvestorBreakdownView { DataContext = vm };
+        var violations = RenderAndAudit(view, width, height);
+
+        violations.Should().BeEmpty(
+            $"InvestorBreakdownView (loading) must not have overlapping/overflowing elements at {width}x{height}:\n" +
+            string.Join("\n", violations));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
     // EditProfileView — tabs (faq/members/media/relays) with long content
     // ═══════════════════════════════════════════════════════════════════
 
