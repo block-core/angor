@@ -60,6 +60,10 @@ public partial class ManageProjectView : UserControl
         var shareBtn = this.FindControl<Button>("ShareButton");
         if (shareBtn != null) shareBtn.Click += OnShareClick;
 
+        // ── Debug Info button ──
+        var debugBtn = this.FindControl<Button>("DebugInfoButton");
+        if (debugBtn != null) debugBtn.Click += (_, _) => Vm?.OpenDebugModal();
+
         // ── Refresh button ──
         var refreshBtn = this.FindControl<Button>("RefreshButton");
         if (refreshBtn != null) refreshBtn.Click += OnRefreshClick;

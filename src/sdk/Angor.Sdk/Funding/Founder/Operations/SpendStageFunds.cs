@@ -42,8 +42,7 @@ public static class SpendStageFunds
             var groupedByStage = request.ToSpend.GroupBy(x => x.StageId).ToList();
             if (groupedByStage.Count > 1)
                 return Result.Failure<SpendStageFundsResponse>("You can only spend one stage at a time.");
-            
-            var selectedStageId = groupedByStage.First().Key;
+
             var network = networkConfiguration.GetNetwork();
 
             var project = await projectService.GetAsync(request.ProjectId);
@@ -58,21 +57,37 @@ public static class SpendStageFunds
             
             var founderContext = new FounderContext { ProjectInfo = project.Value.ToProjectInfo(), ProjectSeeders = new ProjectSeeders() };
 
-            var tasks = request.ToSpend.Select(x => GetInvestmentByInvestorKey(request.ProjectId.Value, x));
-            
-            var investmentTransactions = await Task.WhenAll(tasks);
-            founderContext.InvestmentTrasnactionsHex = investmentTransactions.Where(hex => hex != string.Empty).ToList();
-            
+            // Build one StageTransactionInput per selected UTXO, each carrying its own
+            // per-investment stage number. For Fund/Subscribe projects a date bucket can mix
+            // different per-investment stage indices (a later investor's stage 1 shares the
+            // release date with an earlier investor's stage 2), so a single stage number for
+            // all inputs would rebuild the wrong taproot script and fail to spend.
+            var stageInputTasks = request.ToSpend.Select(async x =>
+            {
+                var hex = await GetInvestmentByInvestorKey(request.ProjectId.Value, x);
+                return (hex, stageNumber: x.InvestmentStageIndex + 1);
+            });
+
+            var stageInputResults = await Task.WhenAll(stageInputTasks);
+
+            var stageTransactionInputs = stageInputResults
+                .Where(r => r.hex != string.Empty)
+                .Select(r => new StageTransactionInput(r.hex, r.stageNumber))
+                .ToList();
+
+            if (stageTransactionInputs.Count == 0)
+                return Result.Failure<SpendStageFundsResponse>("No investment transactions found for the selected UTXOs.");
+
+            founderContext.InvestmentTrasnactionsHex = stageTransactionInputs.Select(s => s.TransactionHex).ToList();
+
             var addressResult = await GetUnfundedReleaseAddress(request.WalletId);
             if (addressResult.IsFailure) 
                 return Result.Failure<SpendStageFundsResponse>("Could not get an unfunded release address");
             
             var addressScript = BitcoinAddress.Create(addressResult.Value, network.BitcoinNetwork).ScriptPubKey;
-            
-            int stageNumber = selectedStageId + 1;
 
             var signedTransaction = founderTransactionActions.SpendFounderStage(founderContext.ProjectInfo,
-                founderContext.InvestmentTrasnactionsHex, stageNumber, addressScript,
+                stageTransactionInputs, addressScript,
                 founderKey, request.SelectedFee); 
             
             return Result.Success(new SpendStageFundsResponse(new TransactionDraft

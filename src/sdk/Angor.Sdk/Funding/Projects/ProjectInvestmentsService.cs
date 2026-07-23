@@ -87,6 +87,10 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
                 item.InvestorPublicKey = projectInvestments
                     .First(p => p.TransactionId == item.Trxid)
                     .InvestorPublicKey;
+
+                // For Invest projects the per-investment stage index always matches the
+                // project-level stage index (fixed stages, same schedule for every investor).
+                item.StageIndex = stage.StageIndex;
             }
         }
 
@@ -173,10 +177,21 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
             }
         }
 
-        // Order by date for consistent ordering
+        // Order by date for consistent ordering.
+        // Reassign StageIndex sequentially — buckets are keyed by release date, and different
+        // investments can contribute different per-investment stage indices to the same bucket
+        // (e.g. a later investor's stage 1 lands in an earlier investor's stage 2 date).
+        // Without reassignment two buckets can share the same StageIndex (e.g. December and
+        // January both carrying index 5), which collides when consumers group by stage number
+        // and silently merges/loses a stage in the UI.
         var orderedList = stagesByDate.Values
             .OrderBy(s => s.StageDate)
             .ToList();
+
+        for (int i = 0; i < orderedList.Count; i++)
+        {
+            orderedList[i].StageIndex = i;
+        }
 
         return Result.Success<IEnumerable<StageData>>(orderedList);
     }

@@ -801,5 +801,136 @@
             </Border>
         </Panel>
 
+        <!-- ═══ MODAL 8: DEBUG INFO (decoded OP_RETURN + per-investment stage schedule) ═══ -->
+        <Panel Name="DebugModalOverlay"
+               IsVisible="{Binding ShowDebugModal}"
+               ZIndex="200"
+               Background="{DynamicResource ModalBackdrop}">
+            <Border Classes="ModalCard Wide"
+                    Background="{DynamicResource DetailCardBg}"
+                    BorderBrush="{DynamicResource ModalHeaderBorder}"
+                    BorderThickness="1"
+                    CornerRadius="16"
+                    BoxShadow="0 8 32 0 #40000000"
+                    ClipToBounds="True">
+                <StackPanel>
+                    <!-- Header -->
+                    <Border Padding="24"
+                            BorderBrush="{DynamicResource ModalHeaderBorder}"
+                            BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <i:Icon Value="fa-solid fa-bug" FontSize="16" Foreground="{DynamicResource TextStrong}" />
+                                <TextBlock Text="Debug: Investment Data"
+                                           FontSize="20" FontWeight="Bold"
+                                           Foreground="{DynamicResource TextStrong}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                            <Button Name="DebugModalCloseBtn" Classes="ModalCloseBtn" Grid.Column="1" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Body -->
+                    <StackPanel Margin="24" Spacing="16">
+                        <TextBlock Text="Decoded OP_RETURN data and per-investment stage schedule. Each investor's timeline starts from their own investment date, so the same displayed stage can contain different per-investment stage indices."
+                                   FontSize="13"
+                                   Foreground="{DynamicResource ModalDescriptionText}"
+                                   TextWrapping="Wrap" />
+
+                        <ScrollViewer MaxHeight="480" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding DebugInvestments}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="mp:DebugInvestmentViewModel">
+                                        <Border Background="{DynamicResource StageCardBg}"
+                                                BorderBrush="{DynamicResource StageCardBorder}"
+                                                BorderThickness="1"
+                                                CornerRadius="8"
+                                                Padding="16"
+                                                Margin="0,0,0,12">
+                                            <StackPanel Spacing="8">
+                                                <!-- Investment header -->
+                                                <StackPanel Spacing="2">
+                                                    <TextBlock Text="{Binding TransactionId, StringFormat=Tx: {0}}"
+                                                               FontSize="12"
+                                                               FontFamily="Courier New, monospace"
+                                                               Foreground="{DynamicResource TextStrong}"
+                                                               TextWrapping="Wrap"
+                                                               Classes="ExplorerTxLink"
+                                                               Cursor="Hand" />
+                                                    <TextBlock Text="{Binding InvestorKey, StringFormat=Investor: {0}}"
+                                                               FontSize="11"
+                                                               FontFamily="Courier New, monospace"
+                                                               Foreground="{DynamicResource TransactionStatLabel}"
+                                                               TextWrapping="Wrap" />
+                                                    <StackPanel Orientation="Horizontal" Spacing="16">
+                                                        <TextBlock Text="{Binding InvestmentStartDate, StringFormat=Start date: {0}}"
+                                                                   FontSize="12" FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource StageCardValue}" />
+                                                        <TextBlock Text="{Binding PatternId, StringFormat=Pattern: {0}}"
+                                                                   FontSize="12" FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource StageCardValue}" />
+                                                    </StackPanel>
+                                                </StackPanel>
+
+                                                <!-- Stage rows -->
+                                                <ItemsControl ItemsSource="{Binding Stages}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate x:DataType="mp:DebugStageRowViewModel">
+                                                            <Grid ColumnDefinitions="80,100,110,*,Auto" Margin="0,2,0,2">
+                                                                <TextBlock Grid.Column="0"
+                                                                           Text="{Binding StageLabel}"
+                                                                           FontSize="12" FontWeight="SemiBold"
+                                                                           Foreground="{DynamicResource TextStrong}" />
+                                                                <TextBlock Grid.Column="1"
+                                                                           Text="{Binding ReleaseDate}"
+                                                                           FontSize="12"
+                                                                           FontFamily="Courier New, monospace"
+                                                                           Foreground="{DynamicResource StageCardValue}" />
+                                                                <TextBlock Grid.Column="2"
+                                                                           Text="{Binding Amount}"
+                                                                           FontSize="12"
+                                                                           FontFamily="Courier New, monospace"
+                                                                           Foreground="{DynamicResource StageCardValue}" />
+                                                                <TextBlock Grid.Column="3"
+                                                                           Text="{Binding DisplayBucket}"
+                                                                           FontSize="11"
+                                                                           Foreground="{DynamicResource TransactionStatLabel}" />
+                                                                <TextBlock Grid.Column="4"
+                                                                           Text="{Binding Status}"
+                                                                           FontSize="12" FontWeight="SemiBold"
+                                                                           Foreground="{DynamicResource StagePillText}" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <!-- Close button (green gradient, full width) -->
+                        <Button Name="DebugModalDoneBtn"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                Padding="24,12"
+                                CornerRadius="8"
+                                BorderThickness="0"
+                                Foreground="White"
+                                FontSize="16" FontWeight="SemiBold">
+                            <Button.Background>
+                                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                    <GradientStop Color="{StaticResource PrimaryGreen}" Offset="0" />
+                                    <GradientStop Color="#3D6448" Offset="1" />
+                                </LinearGradientBrush>
+                            </Button.Background>
+                            <TextBlock Text="Close" FontWeight="SemiBold" />
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Panel>
+
     </Panel>
 </UserControl>

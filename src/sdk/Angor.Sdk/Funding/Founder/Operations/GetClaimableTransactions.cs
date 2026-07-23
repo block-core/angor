@@ -32,10 +32,14 @@ public static class GetClaimableTransactions
                        {
                            StageId = stageData.StageIndex,
                            StageNumber = stageData.StageIndex + 1,
+                           InvestmentStageIndex = item.StageIndex,
                            Amount = new Amount(item.Amount),
                            DynamicReleaseDate = stageData.StageDate,
                            InvestorAddress = item.InvestorPublicKey,
                            ClaimStatus = DetermineClaimStatus(item, stageData),
+                           TransactionId = item.Trxid,
+                           InvestmentStartDate = item.InvestmentStartDate,
+                           PatternId = item.PatternId,
                        }));
 
             return Result.Success(new GetClaimableTransactionsResponse(list));

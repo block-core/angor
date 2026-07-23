@@ -34,6 +34,10 @@ public partial class InvestmentDetailView : UserControl
     private Border? _info4Card1;
     private Border? _info4Card2;
     private Border? _info4Card3;
+    private Grid? _shareStatsGrid;
+    private Border? _shareCard0;
+    private Border? _shareCard1;
+    private Border? _shareCard2;
     private StackPanel? _stagesTableDesktop;
     private ItemsControl? _stagesCardsMobile;
     private StackPanel? _contentStack;
@@ -62,6 +66,10 @@ public partial class InvestmentDetailView : UserControl
         _info4Card1 = this.FindControl<Border>("Info4Card1");
         _info4Card2 = this.FindControl<Border>("Info4Card2");
         _info4Card3 = this.FindControl<Border>("Info4Card3");
+        _shareStatsGrid = this.FindControl<Grid>("ShareStatsGrid");
+        _shareCard0 = this.FindControl<Border>("ShareCard0");
+        _shareCard1 = this.FindControl<Border>("ShareCard1");
+        _shareCard2 = this.FindControl<Border>("ShareCard2");
         _stagesTableDesktop = this.FindControl<StackPanel>("StagesTableDesktop");
         _stagesCardsMobile = this.FindControl<ItemsControl>("StagesCardsMobile");
         _contentStack = this.FindControl<StackPanel>("ContentStack");
@@ -132,6 +140,16 @@ public partial class InvestmentDetailView : UserControl
             SetInfoCardCompact(_info4Card2, 2);
             SetInfoCardCompact(_info4Card3, 3);
 
+            // Share stats grid: collapse cols 1-2, stack cards vertically
+            if (_shareStatsGrid != null)
+            {
+                for (int i = 1; i < _shareStatsGrid.ColumnDefinitions.Count; i++)
+                    _shareStatsGrid.ColumnDefinitions[i].Width = new GridLength(0);
+            }
+            SetStatCardCompact(_shareCard0, 0);
+            SetStatCardCompact(_shareCard1, 1);
+            SetStatCardCompact(_shareCard2, 2);
+
             if (_stagesTableDesktop != null) _stagesTableDesktop.IsVisible = false;
             if (_stagesCardsMobile != null) _stagesCardsMobile.IsVisible = true;
 
@@ -189,6 +207,16 @@ public partial class InvestmentDetailView : UserControl
             SetInfoCardDesktop(_info4Card1, 1, new Thickness(8, 0, 8, 0));
             SetInfoCardDesktop(_info4Card2, 2, new Thickness(8, 0, 8, 0));
             SetInfoCardDesktop(_info4Card3, 3, new Thickness(8, 0, 0, 0));
+
+            // Share stats grid: restore cols to Star, cards back to their columns
+            if (_shareStatsGrid != null)
+            {
+                for (int i = 1; i < _shareStatsGrid.ColumnDefinitions.Count; i++)
+                    _shareStatsGrid.ColumnDefinitions[i].Width = GridLength.Star;
+            }
+            SetStatCardDesktop(_shareCard0, 0, new Thickness(0, 0, 8, 0));
+            SetStatCardDesktop(_shareCard1, 1, new Thickness(8, 0, 8, 0));
+            SetStatCardDesktop(_shareCard2, 2, new Thickness(8, 0, 0, 0));
 
             if (_stagesTableDesktop != null) _stagesTableDesktop.IsVisible = true;
             if (_stagesCardsMobile != null) _stagesCardsMobile.IsVisible = false;

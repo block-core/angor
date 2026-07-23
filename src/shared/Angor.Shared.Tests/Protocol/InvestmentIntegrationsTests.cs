@@ -1115,5 +1115,103 @@ namespace Angor.Test.Protocol
             TransactionValidation.ThanTheTransactionHasNoErrors(investor1RecoverStage2.Transaction,
                 investorInvTrx.Outputs.AsCoins().Where(c => c.Amount > 0));
         }
+
+        /// <summary>
+        /// Regression test: two Fund investors with shifted schedules share a release date —
+        /// investor 1 (starts Feb 1) has their stage 2 on Mar 15, while investor 2 (starts
+        /// Feb 20, after the payout day) has their stage 1 on Mar 15. The founder must be
+        /// able to claim both UTXOs in a single transaction by providing each input its own
+        /// per-investment stage number, otherwise the wrong taproot script is rebuilt and
+        /// the spend fails validation.
+        /// </summary>
+        [Fact]
+        public void FundTransaction_MixedSchedules_FounderClaimsSharedDateBucket_Test()
+        {
+            var network = Networks.Bitcoin.Testnet();
+
+            var words = new WalletWords { Words = new Mnemonic(Wordlist.English, WordCount.Twelve).ToString() };
+
+            var founderKey = _derivationOperations.DeriveFounderPrivateKey(words, 1);
+            var founderReceiveAddress = new Key().PubKey.ScriptPubKey;
+
+            var projectInfo = new ProjectInfo
+            {
+                Version = 2,
+                ProjectType = ProjectType.Fund,
+                TargetAmount = 0,
+                PenaltyDays = 0,
+                StartDate = new DateTime(2025, 2, 1, 0, 0, 0, DateTimeKind.Utc),
+                ExpiryDate = new DateTime(2026, 2, 1, 0, 0, 0, DateTimeKind.Utc),
+                PenaltyThreshold = Money.Coins(10).Satoshi, // both investors below threshold
+                FounderKey = _derivationOperations.DeriveFounderKey(words, 1),
+                FounderRecoveryKey = _derivationOperations.DeriveFounderRecoveryKey(words, _derivationOperations.DeriveFounderKey(words, 1)),
+                ProjectSeeders = new ProjectSeeders(),
+                DynamicStagePatterns = new List<DynamicStagePattern>
+                {
+                    new DynamicStagePattern
+                    {
+                        PatternId = 0,
+                        Name = "3-Month Fund (15th of month)",
+                        Frequency = StageFrequency.Monthly,
+                        StageCount = 3,
+                        PayoutDayType = PayoutDayType.SpecificDayOfMonth,
+                        PayoutDay = 15
+                    }
+                }
+            };
+            projectInfo.ProjectIdentifier = _derivationOperations.DeriveAngorKey(angorRootKey, projectInfo.FounderKey);
+
+            // Investor 1 starts Feb 1 → stages Feb 15, Mar 15, Apr 15
+            var investor1Key = new Key();
+            var investor1Parameters = FundingParameters.CreateForFund(
+                projectInfo,
+                Encoders.Hex.EncodeData(investor1Key.PubKey.ToBytes()),
+                Money.Coins(0.5m).Satoshi,
+                0,
+                new DateTime(2025, 2, 1, 0, 0, 0, DateTimeKind.Utc));
+
+            var investor1Trx = _investorTransactionActions.CreateInvestmentTransaction(projectInfo, investor1Parameters);
+            Assert.NotNull(investor1Trx);
+
+            // Investor 2 starts Feb 20 (after the 15th) → schedule shifts to Mar 15, Apr 15, May 15
+            var investor2Key = new Key();
+            var investor2Parameters = FundingParameters.CreateForFund(
+                projectInfo,
+                Encoders.Hex.EncodeData(investor2Key.PubKey.ToBytes()),
+                Money.Coins(0.3m).Satoshi,
+                0,
+                new DateTime(2025, 2, 20, 0, 0, 0, DateTimeKind.Utc));
+
+            var investor2Trx = _investorTransactionActions.CreateInvestmentTransaction(projectInfo, investor2Parameters);
+            Assert.NotNull(investor2Trx);
+
+            // The founder claims the shared Mar 15 date bucket:
+            // investor 1's stage 2 + investor 2's stage 1, each with its own stage number
+            var mixedBucketInputs = new[]
+            {
+                new StageTransactionInput(investor1Trx.ToHex(), 2),
+                new StageTransactionInput(investor2Trx.ToHex(), 1)
+            };
+
+            var founderClaimTrx = _founderTransactionActions.SpendFounderStage(
+                projectInfo,
+                mixedBucketInputs,
+                founderReceiveAddress,
+                founderKey,
+                _expectedFeeEstimation);
+
+            Assert.NotNull(founderClaimTrx);
+            Assert.NotNull(founderClaimTrx.Transaction);
+            Assert.Equal(2, founderClaimTrx.Transaction.Inputs.Count);
+
+            // Both stages unlock on Mar 15 — the locktime must match the shared release date
+            var expectedLockTime = Utils.DateTimeToUnixTime(new DateTime(2025, 3, 15, 0, 1, 0, DateTimeKind.Utc));
+            Assert.Equal(expectedLockTime, founderClaimTrx.Transaction.LockTime.Value);
+
+            // Full script validation — fails if the wrong taproot script was rebuilt for either input
+            TransactionValidation.ThanTheTransactionHasNoErrors(founderClaimTrx.Transaction,
+                investor1Trx.Outputs.AsCoins().Where(c => c.Amount > 0)
+                    .Concat(investor2Trx.Outputs.AsCoins().Where(c => c.Amount > 0)));
+        }
     }
 }
