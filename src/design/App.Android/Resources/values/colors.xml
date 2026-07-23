@@ -3,4 +3,6 @@
   <color name="splash_background">#FFFFFF</color>
   <!-- System bar color follows the current theme background -->
   <color name="system_bars">@color/splash_background</color>
+  <!-- Adaptive launcher icon background (Angor green) -->
+  <color name="icon_background">#5FAF78</color>
 </resources>

@@ -706,6 +706,7 @@
                                             <StackPanel Orientation="Horizontal" Spacing="6"
                                                         IsVisible="{Binding IsAmountPending}">
                                                 <i:Icon Value="fa-solid fa-arrows-rotate"
+                                                        Classes="Spin"
                                                         FontSize="12"
                                                         Foreground="{DynamicResource TextMuted}"
                                                         VerticalAlignment="Center" />
@@ -749,6 +750,7 @@
                                             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="6"
                                                         IsVisible="{Binding IsAmountPending}">
                                                 <i:Icon Value="fa-solid fa-arrows-rotate"
+                                                        Classes="Spin"
                                                         FontSize="12"
                                                         Foreground="{DynamicResource TextMuted}"
                                                         VerticalAlignment="Center" />
@@ -820,7 +822,7 @@
                                             IsVisible="{Binding IsExpanded}"
                                             BorderThickness="0,1,0,0"
                                             BorderBrush="{DynamicResource Stroke}"
-                                            Padding="0,16,0,0">
+                                            Padding="0,16,0,16">
                                         <StackPanel Spacing="8">
                                             <!-- Vue: text-sm font-medium text-gray-400/text-gray-600 -->
                                             <TextBlock Text="Investor npub"

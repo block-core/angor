@@ -18,7 +18,8 @@ namespace App.Android;
 [Activity(
     Label = "Angor",
     Theme = "@style/MyTheme.NoActionBar",
-    Icon = "@drawable/icon",
+    Icon = "@mipmap/icon",
+    RoundIcon = "@mipmap/icon_round",
     MainLauncher = true,
     ScreenOrientation = ScreenOrientation.Portrait,
     WindowSoftInputMode = SoftInput.AdjustNothing,
