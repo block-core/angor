@@ -35,24 +35,44 @@ public record PaymentFlowConfig
     public long OnChainRequiredSats => OnChainRequiredSatsOverride ?? AmountSats;
 
     /// <summary>
+    /// Optional: recalculates the on-chain required amount for the actual number of UTXOs
+    /// detected on the funding address. The signing code spends ALL UTXOs on the address
+    /// and pays ~68 vB per input, so if the user pays in multiple transactions the required
+    /// amount grows with each extra input. When set, the payment flow rechecks the received
+    /// total against this after funds arrive and keeps monitoring for the shortfall instead
+    /// of failing at signing. Null = no recheck (flows not restricted to the funding address).
+    /// </summary>
+    public Func<int, long>? OnChainRequiredForUtxoCount { get; init; }
+
+    /// <summary>
     /// Calculates the total on-chain amount needed for an investment transaction,
     /// including the Angor fee (1%) and estimated miner fee.
     /// Use this as <see cref="OnChainRequiredSatsOverride"/> for investment flows.
     /// </summary>
     public static long EstimateOnChainRequired(long investmentAmountSats, int stageCount, int feeRateSatsPerVbyte)
+        => EstimateOnChainRequired(investmentAmountSats, stageCount, feeRateSatsPerVbyte, inputCount: 1);
+
+    /// <summary>
+    /// Calculates the total on-chain amount needed for an investment transaction for a
+    /// specific number of funding inputs. The signing transaction spends all UTXOs on the
+    /// funding address, so each extra UTXO adds ~68 vB of miner fee.
+    /// </summary>
+    public static long EstimateOnChainRequired(long investmentAmountSats, int stageCount, int feeRateSatsPerVbyte, int inputCount)
     {
         const int AngorFeePercentage = 1;
         long angorFee = (investmentAmountSats * AngorFeePercentage) / 100;
 
         // Investment tx structure (same estimate as CreateLightningSwap):
         //   ~10.5 vB  tx overhead
-        //   ~68   vB  1 P2WPKH input
+        //   ~68   vB  per P2WPKH input (first input included in the 252 constant)
         //    43   vB  1 P2WSH output (angor fee)
         //   ~99   vB  1 OP_RETURN output
         //  N×43   vB  N P2TR stage outputs
         //    31   vB  1 P2WPKH change output
-        // Total ≈ 252 + (stageCount × 43) vbytes
-        int estimatedTxVbytes = 252 + (stageCount * 43);
+        // Total ≈ 252 + ((inputCount − 1) × 68) + (stageCount × 43) vbytes
+        const int InputVbytes = 68;
+        int extraInputs = Math.Max(0, inputCount - 1);
+        int estimatedTxVbytes = 252 + (extraInputs * InputVbytes) + (stageCount * 43);
         long estimatedMinerFee = feeRateSatsPerVbyte * estimatedTxVbytes;
 
         return investmentAmountSats + angorFee + estimatedMinerFee;
