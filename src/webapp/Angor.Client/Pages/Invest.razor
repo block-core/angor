@@ -36,7 +36,6 @@
 
 @inject ISerializer serializer
 @inject IEncryptionService encryption
-@inject INostrInvestmentStorageService _nostrInvestmentStorage
 
 <NotificationComponent @ref="notificationComponent" />
 <PasswordComponent @ref="passwordComponent" />
@@ -1418,6 +1417,11 @@ else
     private async Task SaveInvestmentsListToNostrAsync()
     {
         var words = await passwordComponent.GetWalletAsync();
+        var storageAccountKey = _derivationOperations.DeriveNostrStoragePubKeyHex(words);
+        var storageKey = _derivationOperations.DeriveNostrStorageKey(words);
+        var storageKeyHex = Encoders.Hex.EncodeData(storageKey.ToBytes());
+
+        var password = _derivationOperations.DeriveNostrStoragePassword(words);
 
         Investments investments = new()
         {
@@ -1433,11 +1437,16 @@ else
                                                     .ToList()
         };
 
-        var saveResult = await _nostrInvestmentStorage.SaveAsync(words, serializer.Serialize(investments));
-        if (saveResult.IsFailure)
+
+        var encrypted = await encryption.EncryptData(serializer.Serialize(investments), password);
+
+        _RelayService.SendDirectMessagesForPubKeyAsync(storageKeyHex, storageAccountKey, encrypted, x =>
         {
-            _Logger.LogWarning("Failed to save investments list to nostr: {Error}", saveResult.Error);
-        }
+            if (!x.Accepted)
+            {
+                //TODO need to handle failure to save the list of projects
+            }
+        });
     }
 
     public class InvestmentModel

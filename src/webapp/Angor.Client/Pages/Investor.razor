@@ -22,7 +22,6 @@
 @inject ISignService _SignService
 @inject ISerializer serializer
 @inject IEncryptionService _encryptionService
-@inject INostrInvestmentStorageService _nostrInvestmentStorage
 @inject IInvestorTransactionActions _InvestorTransactionActions
 
 @inherits BaseComponent
@@ -509,41 +508,45 @@
         RefreshBalanceTriggered = true;
 
         var words = await passwordComponent.GetWalletAsync();
+        var storageAccountKey = _DerivationOperations.DeriveNostrStoragePubKeyHex(words);
+        var password = _DerivationOperations.DeriveNostrStoragePassword(words);
 
         CheckSignatureFromFounder();
 
-        try
-        {
-            var loadResult = await _nostrInvestmentStorage.LoadAsync(words);
-            if (loadResult.IsFailure || string.IsNullOrEmpty(loadResult.Value))
-                return;
-
-            var projectIdList = serializer.Deserialize<Investments>(loadResult.Value);
-
-            bool foundNewProjects = false;
-            foreach (var investment in projectIdList.ProjectIdentifiers)
+        _RelayService.LookupDirectMessagesForPubKey(storageAccountKey, null, 1,
+            async x =>
             {
-                if (projects.Any(x => x.ProjectInfo.ProjectIdentifier == investment.ProjectIdentifier) ||
-                    scannedInvestments.ProjectIdentifiers.Any(x => x.ProjectIdentifier == investment.ProjectIdentifier))
-                    continue;
+                try
+                {
+                    var decrypted = await _encryptionService.DecryptData(x.Content, password);
 
-                _Logger.LogInformation($"Found scanned project {investment.ProjectIdentifier}");
+                    var projectIdList = serializer.Deserialize<Investments>(decrypted);
 
-                scannedInvestments.ProjectIdentifiers.Add(investment);
-                foundNewProjects = true;
-            }
+                    bool foundNewProjects = false;
+                    foreach (var investment in projectIdList.ProjectIdentifiers)
+                    {
+                        if (projects.Any(x => x.ProjectInfo.ProjectIdentifier == investment.ProjectIdentifier) ||
+                            scannedInvestments.ProjectIdentifiers.Any(x => x.ProjectIdentifier == investment.ProjectIdentifier))
+                            continue;
 
-            if (foundNewProjects)
-            {
-                addedProjectsFromEvent = true;
-                RefreshBalanceTriggered = true;
-                StateHasChanged();
-            }
-        }
-        catch (Exception e)
-        {
-            _Logger.LogError(e, "failed to get handle investment list event from relay");
-        }
+                        _Logger.LogInformation($"Found scanned project {investment.ProjectIdentifier}");
+
+                        scannedInvestments.ProjectIdentifiers.Add(investment);
+                        foundNewProjects = true;
+                    }
+
+                    if (foundNewProjects)
+                    {
+                        addedProjectsFromEvent = true;
+                        RefreshBalanceTriggered = true;
+                        StateHasChanged();
+                    }
+                }
+                catch (Exception e)
+                {
+                    _Logger.LogError(e, "failed to get handle investment list event from relay");
+                }
+            }, new[] { storageAccountKey });
     }
 
     //TODO David check if we should replace the logic to get all projects first and then get signatures for them?
