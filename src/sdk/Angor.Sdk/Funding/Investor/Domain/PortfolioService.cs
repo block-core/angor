@@ -126,7 +126,12 @@ public class PortfolioService(
 
         var savedLocally = await documentCollection.UpsertAsync(document => document.WalletId, doc);
 
-        return savedLocally.IsSuccess
+        // Push the updated (possibly empty) list to the relay as well. Without this, the
+        // relay would keep the removed investment and any lookup that falls back to the
+        // relay (fresh import, empty local cache) would resurrect the cancelled record.
+        var savedOnRelay = await PushInvestmentsRecordsToRelayAsync(walletId, investments);
+
+        return savedLocally.IsSuccess || savedOnRelay.IsSuccess
             ? Result.Success()
             : Result.Failure("Failed to save investment record");
     }
