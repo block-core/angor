@@ -16,6 +16,37 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
     IAngorIndexerService angorIndexerService, IInvestorTransactionActions investorTransactionActions,
     ITransactionService transactionService, ILogger<ProjectInvestmentsService> logger) : IProjectInvestmentsService
 {
+    // Cap on concurrent indexer round-trips. Projects can have hundreds of investors
+    // (and dynamic projects multiply that by stage count), so unbounded Task.WhenAll
+    // could fire thousands of simultaneous HTTP requests — enough to exhaust sockets
+    // or trip indexer rate limits. A small degree of parallelism captures nearly all
+    // of the latency win from overlapping round-trips without that risk.
+    private const int MaxConcurrentIndexerRequests = 12;
+
+    /// <summary>
+    /// Runs the given task factories with bounded concurrency, preserving input order in the result.
+    /// </summary>
+    private static async Task<TResult[]> RunBoundedAsync<TResult>(
+        IEnumerable<Func<Task<TResult>>> taskFactories, int maxConcurrency)
+    {
+        using var semaphore = new SemaphoreSlim(maxConcurrency);
+
+        var tasks = taskFactories.Select(async factory =>
+        {
+            await semaphore.WaitAsync();
+            try
+            {
+                return await factory();
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }).ToList(); // materialize so all tasks start (queued on the semaphore) before awaiting
+
+        return await Task.WhenAll(tasks);
+    }
+
     public async Task<Result<IEnumerable<StageData>>> ScanFullInvestments(string projectId)
     {
         var project = await projectService.GetAsync(new ProjectId(projectId));
@@ -66,13 +97,14 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
 
         foreach (var stage in stageDataList)
         {
-            var tasks = investmentsResult.Value.Select(tuple =>
+            var taskFactories = investmentsResult.Value.Select(tuple =>
                 (output: tuple.trxInfo?.Outputs.First(outp => outp.Index == stage.StageIndex + 2)
                 ?? null,
                  transaction: tuple.trx, index: stage.StageIndex))
-                .Select(x => CheckSpentFund(x.output, x.transaction, projectInfo, x.index));
+                .Select(x => (Func<Task<Result<StageDataTrx>>>)(() =>
+                    CheckSpentFund(x.output, x.transaction, projectInfo, x.index)));
 
-            var results = await Task.WhenAll(tasks);
+            var results = await RunBoundedAsync(taskFactories, MaxConcurrentIndexerRequests);
 
             var combinedResult = results.Combine();
 
@@ -106,6 +138,14 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
 
         // Dictionary to group stages by their release date
         var stagesByDate = new Dictionary<DateTime, StageData>();
+
+        // Collect all stage work items first so the spent-fund checks (each an
+        // indexer round-trip) can run with bounded parallelism instead of
+        // O(funders × stages) sequential awaits — this dominated the
+        // "Syncing funding data…" time.
+        var workItems = new List<(QueryTransactionOutput qouts, Transaction trx, int stageIndex,
+            DateTime releaseDate, ProjectInvestment investment, byte patternId,
+            DateTime? investmentStartDate, decimal percentagePerStage)>();
 
         foreach (var (trx, trxInfo) in investmentsResult.Value)
         {
@@ -145,35 +185,48 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
                         pattern,
                         stageIndex);
 
-                var stageDataResult = await CheckSpentFund(qouts, trx, project.ToProjectInfo(), stageIndex);
+                workItems.Add((qouts, trx, stageIndex, releaseDate, investment,
+                    fundingParams.PatternId, fundingParams.InvestmentStartDate, percentagePerStage));
+            }
+        }
 
-                if (stageDataResult.IsFailure)
-                    continue;
+        var projectInfo = project.ToProjectInfo();
+        var checkResults = await RunBoundedAsync(
+            workItems.Select(w => (Func<Task<Result<StageDataTrx>>>)(() =>
+                CheckSpentFund(w.qouts, w.trx, projectInfo, w.stageIndex))),
+            MaxConcurrentIndexerRequests);
 
-                var stageDataTrx = stageDataResult.Value;
-                stageDataTrx.InvestorPublicKey = investment.InvestorPublicKey;
-                stageDataTrx.DynamicReleaseDate = releaseDate;
-                stageDataTrx.PatternId = fundingParams.PatternId;
-                stageDataTrx.InvestmentStartDate = fundingParams.InvestmentStartDate;
-                stageDataTrx.StageIndex = stageIndex;
-                stageDataTrx.AmountPercentage = percentagePerStage;
+        for (int i = 0; i < workItems.Count; i++)
+        {
+            var w = workItems[i];
+            var stageDataResult = checkResults[i];
 
-                // Group by release date - if a StageData for this date already exists, add the trx to its items
-                var releaseDateKey = releaseDate.Date; // Use date only to group by day
-                if (stagesByDate.TryGetValue(releaseDateKey, out var existingStageData))
+            if (stageDataResult.IsFailure)
+                continue;
+
+            var stageDataTrx = stageDataResult.Value;
+            stageDataTrx.InvestorPublicKey = w.investment.InvestorPublicKey;
+            stageDataTrx.DynamicReleaseDate = w.releaseDate;
+            stageDataTrx.PatternId = w.patternId;
+            stageDataTrx.InvestmentStartDate = w.investmentStartDate;
+            stageDataTrx.StageIndex = w.stageIndex;
+            stageDataTrx.AmountPercentage = w.percentagePerStage;
+
+            // Group by release date - if a StageData for this date already exists, add the trx to its items
+            var releaseDateKey = w.releaseDate.Date; // Use date only to group by day
+            if (stagesByDate.TryGetValue(releaseDateKey, out var existingStageData))
+            {
+                existingStageData.Items.Add(stageDataTrx);
+            }
+            else
+            {
+                stagesByDate[releaseDateKey] = new StageData
                 {
-                    existingStageData.Items.Add(stageDataTrx);
-                }
-                else
-                {
-                    stagesByDate[releaseDateKey] = new StageData
-                    {
-                        StageIndex = stageIndex,
-                        StageDate = releaseDate,
-                        IsDynamic = true,
-                        Items = [stageDataTrx]
-                    };
-                }
+                    StageIndex = w.stageIndex,
+                    StageDate = w.releaseDate,
+                    IsDynamic = true,
+                    Items = [stageDataTrx]
+                };
             }
         }
 
@@ -200,15 +253,18 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
     {
         var network = networkConfiguration.GetNetwork();
 
-        var tasks = projectInvestments.Select(async investment =>
+        var taskFactories = projectInvestments.Select(investment =>
+            (Func<Task<(Transaction trx, QueryTransaction? trxInfo)>>)(async () =>
         {
-            var hex = await transactionService.GetTransactionHexByIdAsync(investment.TransactionId);
-            var trxInfo = await transactionService.GetTransactionInfoByIdAsync(investment.TransactionId);
-            var trx = network.CreateTransaction(hex); //TODO handle null or invalid hex
-            return (trx, trxInfo);
-        });
+            // Fetch hex and info concurrently — two independent indexer round-trips.
+            var hexTask = transactionService.GetTransactionHexByIdAsync(investment.TransactionId);
+            var trxInfoTask = transactionService.GetTransactionInfoByIdAsync(investment.TransactionId);
+            await Task.WhenAll(hexTask, trxInfoTask);
+            var trx = network.CreateTransaction(hexTask.Result); //TODO handle null or invalid hex
+            return (trx, trxInfo: trxInfoTask.Result);
+        }));
 
-        var results = await Task.WhenAll(tasks);
+        var results = await RunBoundedAsync(taskFactories, MaxConcurrentIndexerRequests);
         return Result.Success<IList<(Transaction trx, QueryTransaction? trxInfo)>>(results.ToList());
     }
 
