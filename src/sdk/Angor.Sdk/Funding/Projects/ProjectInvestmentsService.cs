@@ -107,13 +107,6 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
         // Dictionary to group stages by their release date
         var stagesByDate = new Dictionary<DateTime, StageData>();
 
-        // Collect all stage work items first so the spent-fund checks (each an
-        // indexer round-trip) can run in parallel instead of O(funders × stages)
-        // sequential awaits — this dominated the "Syncing funding data…" time.
-        var workItems = new List<(QueryTransactionOutput qouts, Transaction trx, int stageIndex,
-            DateTime releaseDate, ProjectInvestment investment, byte patternId,
-            DateTime? investmentStartDate, decimal percentagePerStage)>();
-
         foreach (var (trx, trxInfo) in investmentsResult.Value)
         {
             if (trxInfo == null)
@@ -152,46 +145,35 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
                         pattern,
                         stageIndex);
 
-                workItems.Add((qouts, trx, stageIndex, releaseDate, investment,
-                    fundingParams.PatternId, fundingParams.InvestmentStartDate, percentagePerStage));
-            }
-        }
+                var stageDataResult = await CheckSpentFund(qouts, trx, project.ToProjectInfo(), stageIndex);
 
-        var projectInfo = project.ToProjectInfo();
-        var checkResults = await Task.WhenAll(workItems.Select(w =>
-            CheckSpentFund(w.qouts, w.trx, projectInfo, w.stageIndex)));
+                if (stageDataResult.IsFailure)
+                    continue;
 
-        for (int i = 0; i < workItems.Count; i++)
-        {
-            var w = workItems[i];
-            var stageDataResult = checkResults[i];
+                var stageDataTrx = stageDataResult.Value;
+                stageDataTrx.InvestorPublicKey = investment.InvestorPublicKey;
+                stageDataTrx.DynamicReleaseDate = releaseDate;
+                stageDataTrx.PatternId = fundingParams.PatternId;
+                stageDataTrx.InvestmentStartDate = fundingParams.InvestmentStartDate;
+                stageDataTrx.StageIndex = stageIndex;
+                stageDataTrx.AmountPercentage = percentagePerStage;
 
-            if (stageDataResult.IsFailure)
-                continue;
-
-            var stageDataTrx = stageDataResult.Value;
-            stageDataTrx.InvestorPublicKey = w.investment.InvestorPublicKey;
-            stageDataTrx.DynamicReleaseDate = w.releaseDate;
-            stageDataTrx.PatternId = w.patternId;
-            stageDataTrx.InvestmentStartDate = w.investmentStartDate;
-            stageDataTrx.StageIndex = w.stageIndex;
-            stageDataTrx.AmountPercentage = w.percentagePerStage;
-
-            // Group by release date - if a StageData for this date already exists, add the trx to its items
-            var releaseDateKey = w.releaseDate.Date; // Use date only to group by day
-            if (stagesByDate.TryGetValue(releaseDateKey, out var existingStageData))
-            {
-                existingStageData.Items.Add(stageDataTrx);
-            }
-            else
-            {
-                stagesByDate[releaseDateKey] = new StageData
+                // Group by release date - if a StageData for this date already exists, add the trx to its items
+                var releaseDateKey = releaseDate.Date; // Use date only to group by day
+                if (stagesByDate.TryGetValue(releaseDateKey, out var existingStageData))
                 {
-                    StageIndex = w.stageIndex,
-                    StageDate = w.releaseDate,
-                    IsDynamic = true,
-                    Items = [stageDataTrx]
-                };
+                    existingStageData.Items.Add(stageDataTrx);
+                }
+                else
+                {
+                    stagesByDate[releaseDateKey] = new StageData
+                    {
+                        StageIndex = stageIndex,
+                        StageDate = releaseDate,
+                        IsDynamic = true,
+                        Items = [stageDataTrx]
+                    };
+                }
             }
         }
 
@@ -220,12 +202,10 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
 
         var tasks = projectInvestments.Select(async investment =>
         {
-            // Fetch hex and info concurrently — two independent indexer round-trips.
-            var hexTask = transactionService.GetTransactionHexByIdAsync(investment.TransactionId);
-            var trxInfoTask = transactionService.GetTransactionInfoByIdAsync(investment.TransactionId);
-            await Task.WhenAll(hexTask, trxInfoTask);
-            var trx = network.CreateTransaction(hexTask.Result); //TODO handle null or invalid hex
-            return (trx, trxInfo: trxInfoTask.Result);
+            var hex = await transactionService.GetTransactionHexByIdAsync(investment.TransactionId);
+            var trxInfo = await transactionService.GetTransactionInfoByIdAsync(investment.TransactionId);
+            var trx = network.CreateTransaction(hex); //TODO handle null or invalid hex
+            return (trx, trxInfo);
         });
 
         var results = await Task.WhenAll(tasks);
