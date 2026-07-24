@@ -10,6 +10,23 @@
         <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
     </Style>
 
+    <!-- Spinning icon for syncing/loading affordances: infinite 360° rotation -->
+    <Style Selector="i|Icon.Spin">
+        <Setter Property="RenderTransform">
+            <RotateTransform />
+        </Setter>
+        <Style.Animations>
+            <Animation Duration="0:0:1.2" IterationCount="Infinite">
+                <KeyFrame Cue="0%">
+                    <Setter Property="RotateTransform.Angle" Value="0" />
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="RotateTransform.Angle" Value="360" />
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
     <!-- Sizes -->
     <Style Selector="i|Icon.Icon-S">
         <Setter Property="FontSize" Value="14" />

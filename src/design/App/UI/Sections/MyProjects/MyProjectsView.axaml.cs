@@ -123,7 +123,9 @@ public partial class MyProjectsView : UserControl, ISectionView
         var cols = _projectListGrid.ColumnDefinitions;
         var rows = _projectListGrid.RowDefinitions;
 
-        // Hide sidebar hero content on compact — Vue mobile shows only action buttons
+        // Compact hides the sidebar entirely — Vue mobile shows only the action buttons
+        // (MobileActionPanel lives in the content column, not the sidebar).
+        _myProjectsSidebar.IsVisible = !isCompact;
         if (_sidebarLogo != null) _sidebarLogo.IsVisible = !isCompact;
         if (_sidebarTitle != null) _sidebarTitle.IsVisible = !isCompact;
         if (_sidebarSubtitle != null) _sidebarSubtitle.IsVisible = !isCompact;
@@ -141,15 +143,7 @@ public partial class MyProjectsView : UserControl, ISectionView
 
             Grid.SetColumn(_myProjectsSidebar, 0);
             Grid.SetRow(_myProjectsSidebar, 0);
-            _myProjectsSidebar.Margin = new Avalonia.Thickness(0, 0, 0, 16);
-            _myProjectsSidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top;
-            // Keep the same card inset as the funded projects sidebar; only strip
-            // desktop chrome so compact actions do not sit flush against the edge.
-            _myProjectsSidebar.Background = null;
-            _myProjectsSidebar.BorderThickness = new Avalonia.Thickness(0);
-            _myProjectsSidebar.BoxShadow = new Avalonia.Media.BoxShadows(default);
-            // Explicit (not ClearValue) so the literal XAML padding isn't reset to 0.
-            _myProjectsSidebar.Padding = new Avalonia.Thickness(24);
+            _myProjectsSidebar.Margin = new Avalonia.Thickness(0);
 
             Grid.SetColumn(_myProjectsContent, 0);
             Grid.SetRow(_myProjectsContent, 1);
@@ -168,22 +162,7 @@ public partial class MyProjectsView : UserControl, ISectionView
             Grid.SetRow(_myProjectsSidebar, 0);
             _myProjectsSidebar.Margin = new Avalonia.Thickness(0, 0, columnGap, 0);
             _myProjectsSidebar.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Stretch;
-            // Restore card styling. ClearValue does NOT work here: the XAML
-            // DynamicResource assignment is itself a local value, so clearing it
-            // removes the binding permanently (sidebar stayed chrome-less after
-            // mobile → desktop resize). Resolve the theme resources explicitly.
-            if (this.TryFindResource("Surface", ActualThemeVariant, out var surfaceRes))
-            {
-                _myProjectsSidebar.Background = surfaceRes switch
-                {
-                    Avalonia.Media.IBrush brush => brush,
-                    Avalonia.Media.Color color => new Avalonia.Media.Immutable.ImmutableSolidColorBrush(color),
-                    _ => _myProjectsSidebar.Background,
-                };
-            }
-            if (this.TryFindResource("ItemShadow", ActualThemeVariant, out var shadowRes) && shadowRes is Avalonia.Media.BoxShadows shadow)
-                _myProjectsSidebar.BoxShadow = shadow;
-            _myProjectsSidebar.BorderThickness = new Avalonia.Thickness(1);
+            RestoreSidebarChrome();
             _myProjectsSidebar.Padding = new Avalonia.Thickness(24);
 
             Grid.SetColumn(_myProjectsContent, 1);
@@ -193,6 +172,28 @@ public partial class MyProjectsView : UserControl, ISectionView
             // Outer padding matches Vue p-4 (16) at tablet, p-6 (24) at desktop
             _projectListGrid.Margin = new Avalonia.Thickness(gridPadding);
         }
+    }
+
+    /// <summary>
+    /// Restore card styling on the sidebar Border. ClearValue does NOT work here: the
+    /// XAML DynamicResource assignment is itself a local value, so clearing it removes
+    /// the binding permanently. Resolve the theme resources explicitly instead.
+    /// </summary>
+    private void RestoreSidebarChrome()
+    {
+        if (_myProjectsSidebar == null) return;
+        if (this.TryFindResource("Surface", ActualThemeVariant, out var surfaceRes))
+        {
+            _myProjectsSidebar.Background = surfaceRes switch
+            {
+                Avalonia.Media.IBrush brush => brush,
+                Avalonia.Media.Color color => new Avalonia.Media.Immutable.ImmutableSolidColorBrush(color),
+                _ => _myProjectsSidebar.Background,
+            };
+        }
+        if (this.TryFindResource("ItemShadow", ActualThemeVariant, out var shadowRes) && shadowRes is Avalonia.Media.BoxShadows shadow)
+            _myProjectsSidebar.BoxShadow = shadow;
+        _myProjectsSidebar.BorderThickness = new Avalonia.Thickness(1);
     }
 
     /// <summary>

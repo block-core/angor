@@ -36,6 +36,24 @@ public class SectionPanel : Panel
     {
         if (_sections.ContainsKey(key)) return;
 
+        // Android activity relaunch (config change outside ConfigurationChanges)
+        // rebuilds ShellView + SectionPanel, but the section views come from the
+        // ViewModel's cache and may still be parented to the previous (dead)
+        // SectionPanel. Detach from the old parent first or Children.Add throws
+        // "already has a visual parent" and crashes the app on relaunch.
+        switch (view.Parent)
+        {
+            case Panel oldPanel when oldPanel != this:
+                oldPanel.Children.Remove(view);
+                break;
+            case ContentControl oldContent:
+                oldContent.Content = null;
+                break;
+            case Decorator oldDecorator:
+                oldDecorator.Child = null;
+                break;
+        }
+
         view.IsVisible = false;
         _sections[key] = view;
 

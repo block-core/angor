@@ -243,6 +243,27 @@ public partial class PrototypeSettings : ReactiveObject
                             ? result.Value.IsDarkTheme
                             : null;
                     }
+
+                    // Icon-bake workaround: Optris i:Icon snapshots its Foreground brush
+                    // into the rendered image at construction — before the theme
+                    // dictionaries are reachable it bakes the black fallback. A
+                    // RequestedThemeVariant change re-fires every DynamicResource
+                    // foreground and re-bakes all icons. Settings-load with a theme
+                    // override triggers that flip via IsDarkTheme; first launch (no
+                    // settings) never does, leaving black icons in dark mode. Force
+                    // one flip once startup theming has settled.
+                    if ((!result.IsSuccess || !result.Value.HasThemeOverride) && Application.Current != null)
+                    {
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                        {
+                            if (Application.Current is not { } app) return;
+                            var osIsDark = app.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark;
+                            app.RequestedThemeVariant = osIsDark
+                                ? Avalonia.Styling.ThemeVariant.Light
+                                : Avalonia.Styling.ThemeVariant.Dark;
+                            app.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Default;
+                        }, Avalonia.Threading.DispatcherPriority.Loaded);
+                    }
                 });
             });
 
