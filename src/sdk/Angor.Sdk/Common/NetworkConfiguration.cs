@@ -79,8 +79,6 @@ public class NetworkConfiguration : INetworkConfiguration
                 new() { Name = "wss://relay2.angor.io", Url = "wss://relay2.angor.io", IsPrimary = true },
                 new() { Name = "wss://relay.damus.io", Url = "wss://relay.damus.io", IsPrimary = true },
                 new() { Name = "wss://nos.lol", Url = "wss://nos.lol", IsPrimary = true },
-                new() { Name = "wss://nostr-01.yakihonne.com", Url = "wss://nostr-01.yakihonne.com", IsPrimary = true },
-                new() { Name = "wss://nostr-02.yakihonne.com", Url = "wss://nostr-02.yakihonne.com", IsPrimary = true },
             };
         }
 

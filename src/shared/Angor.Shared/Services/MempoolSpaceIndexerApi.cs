@@ -131,12 +131,19 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
         var client = _clientFactory.CreateClient(key);
         client.BaseAddress = new Uri(indexer.Url);
-        client.Timeout = TimeSpan.FromSeconds(10);
+        // 30s rather than 10s: cold indexers (Fulcrum/electrs) can be slow to answer
+        // address queries, and the wallet gap-scan fans out many requests at once —
+        // a single slow response would otherwise fail receive-address generation.
+        client.Timeout = TimeSpan.FromSeconds(30);
 
         _clients.TryAdd(key, client);
 
+        _logger.LogInformation("Using indexer {IndexerUrl}", indexer.Url);
+
         return client;
     }
+
+    private static string IndexerHost(HttpClient client) => client.BaseAddress?.Host ?? "unknown";
 
     public async Task<string> PublishTransactionAsync(string trxHex)
     {
@@ -188,9 +195,17 @@ public class MempoolSpaceIndexerApi : IIndexerService
         var urlBalance = $"{MempoolApiRoute}/address/";
         var client = GetIndexerClient(); // Call once, reuse for all requests
 
-        var tasks = data.Select(x => client.GetAsync(urlBalance + x.Address));
-
-        var results = await Task.WhenAll(tasks);
+        HttpResponseMessage[] results;
+        try
+        {
+            var tasks = data.Select(x => client.GetAsync(urlBalance + x.Address));
+            results = await Task.WhenAll(tasks);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning("Address balance request to indexer {IndexerHost} failed: {Message}", IndexerHost(client), ex.Message);
+            throw new InvalidOperationException($"Indexer {IndexerHost(client)} did not respond: {ex.Message}", ex);
+        }
 
         var response = new List<AddressBalance>();
 
@@ -199,7 +214,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
             _networkService.CheckAndHandleError(apiResponse);
 
             if (!apiResponse.IsSuccessStatusCode)
-                throw new InvalidOperationException(apiResponse.ReasonPhrase);
+                throw new InvalidOperationException($"Indexer {IndexerHost(client)} returned an error: {apiResponse.ReasonPhrase}");
 
             var addressResponse = await apiResponse.Content.ReadFromJsonAsync<AddressResponse>(new JsonSerializerOptions()
             { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
@@ -223,11 +238,21 @@ public class MempoolSpaceIndexerApi : IIndexerService
         var client = GetIndexerClient(); // Call once, reuse for all requests
         var txsUrl = $"{MempoolApiRoute}/address/{address}/txs";
 
-        var response = await client.GetAsync(txsUrl);
+        HttpResponseMessage response;
+        try
+        {
+            response = await client.GetAsync(txsUrl);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning("UTXO request to indexer {IndexerHost} failed: {Message}", IndexerHost(client), ex.Message);
+            throw new InvalidOperationException($"Indexer {IndexerHost(client)} did not respond: {ex.Message}", ex);
+        }
+
         _networkService.CheckAndHandleError(response);
 
         if (!response.IsSuccessStatusCode)
-            throw new InvalidOperationException(response.ReasonPhrase);
+            throw new InvalidOperationException($"Indexer {IndexerHost(client)} returned an error: {response.ReasonPhrase}");
 
         var trx = await response.Content.ReadFromJsonAsync<List<MempoolTransaction>>(new JsonSerializerOptions()
         { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
