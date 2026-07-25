@@ -42,17 +42,20 @@
                     Background="{DynamicResource RecoveryModalBg}">
                 <Panel>
                     <StackPanel Spacing="4" VerticalAlignment="Center" Margin="0,0,40,0">
-                        <StackPanel Orientation="Horizontal" Spacing="12">
-                            <i:Icon Value="fa-solid fa-chart-pie"
+                        <Grid ColumnDefinitions="Auto,12,*">
+                            <i:Icon Grid.Column="0"
+                                   Value="fa-solid fa-chart-pie"
                                    FontSize="20"
                                    Foreground="{DynamicResource PrimaryGreenBrush}"
                                    VerticalAlignment="Center" />
-                            <TextBlock Text="Investor Breakdown"
+                            <TextBlock Grid.Column="2"
+                                       Text="Investor Breakdown"
                                        FontSize="20"
                                        FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}"
+                                       TextTrimming="CharacterEllipsis"
                                        VerticalAlignment="Center" />
-                        </StackPanel>
+                        </Grid>
                         <TextBlock Text="{Binding ProjectName}"
                                    FontSize="13"
                                    Foreground="{DynamicResource TextMuted}"

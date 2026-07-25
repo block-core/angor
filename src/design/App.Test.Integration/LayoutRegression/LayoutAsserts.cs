@@ -136,9 +136,22 @@ public static class LayoutAsserts
         return aCol <= bColEnd && bCol <= aColEnd && aRow <= bRowEnd && bRow <= aRowEnd;
     }
 
-    /// <summary>Translate a control's bounds into root coordinates (handles render transforms).</summary>
+    /// <summary>
+    /// Translate a control's layout bounds into root coordinates.
+    /// The element's own render transform is deliberately excluded: render transforms
+    /// (e.g. an infinite spinner's RotateTransform) animate the visual without moving
+    /// its layout slot, so including them makes results depend on which animation
+    /// frame the layout pass happens to catch — a source of flaky false positives.
+    /// Ancestor transforms still apply via the parent's translation.
+    /// </summary>
     private static Rect ToRootRect(Visual v, Visual root)
     {
+        if (!ReferenceEquals(v, root) && v.GetVisualParent() is Visual parent &&
+            parent.TranslatePoint(v.Bounds.Position, root) is { } layoutOrigin)
+        {
+            return new Rect(layoutOrigin, v.Bounds.Size);
+        }
+
         var origin = v.TranslatePoint(default, root) ?? default;
         return new Rect(origin, v.Bounds.Size);
     }
