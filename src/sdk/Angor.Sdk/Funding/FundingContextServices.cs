@@ -30,6 +30,7 @@ public static class FundingContextServices
 
         
         services.AddSingleton<IPortfolioService, PortfolioService>();
+        services.TryAddSingleton<INostrInvestmentStorageService, NostrInvestmentStorageService>();
         services.AddSingleton<IFounderProjectsService, FounderProjectsService>();
         //services.AddSingleton<IProjectRepository, ProjectRepository>();
         services.AddScoped<IProjectService, DocumentProjectService>();

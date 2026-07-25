@@ -42,20 +42,10 @@ public record PaymentFlowConfig
     public static long EstimateOnChainRequired(long investmentAmountSats, int stageCount, int feeRateSatsPerVbyte)
     {
         const int AngorFeePercentage = 1;
-        long angorFee = (investmentAmountSats * AngorFeePercentage) / 100;
 
-        // Investment tx structure (same estimate as CreateLightningSwap):
-        //   ~10.5 vB  tx overhead
-        //   ~68   vB  1 P2WPKH input
-        //    43   vB  1 P2WSH output (angor fee)
-        //   ~99   vB  1 OP_RETURN output
-        //  N×43   vB  N P2TR stage outputs
-        //    31   vB  1 P2WPKH change output
-        // Total ≈ 252 + (stageCount × 43) vbytes
-        int estimatedTxVbytes = 252 + (stageCount * 43);
-        long estimatedMinerFee = feeRateSatsPerVbyte * estimatedTxVbytes;
-
-        return investmentAmountSats + angorFee + estimatedMinerFee;
+        // Shared with the web app so invoice sizing and tx-build fee budgets never drift apart.
+        return Angor.Shared.Protocol.InvestmentFeeEstimator.EstimateOnChainRequired(
+            investmentAmountSats, AngorFeePercentage, stageCount, feeRateSatsPerVbyte);
     }
 
     /// <summary>Title for the invoice screen, e.g. "Pay to Invest" or "Fund Deployment".</summary>

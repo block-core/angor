@@ -204,7 +204,20 @@ public static class GetRecoveryStatus
         {
             //TODO handle unconfirmed outbound transactions
             
-            var output = transactionInfo.Outputs.ElementAt(item.StageIndex + 2);
+            // Stage outputs are the taproot outputs ordered by index (same selection used to build
+            // the stage items in FindInvestments), so the stage index maps directly by position.
+            var stageOutputs = transactionInfo.Outputs
+                .Where(o => Script.FromHex(o.ScriptPubKey).IsTaprooOutput())
+                .OrderBy(o => o.Index)
+                .ToList();
+
+            if (item.StageIndex >= stageOutputs.Count)
+            {
+                logger.LogWarning("[CheckTxSpending] Stage {StageIndex}: no matching taproot output (found {Count}), skipping", item.StageIndex, stageOutputs.Count);
+                return Result.Success();
+            }
+
+            var output = stageOutputs[item.StageIndex];
 
             logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: SpentInTransaction={SpentTxId}, UnfundedReleaseTxId={UnfundedTxId}, RecoveryTxId={RecoveryTxId}", 
                 item.StageIndex, output.SpentInTransaction ?? "null", lookup.Value.UnfundedReleaseTransactionId ?? "null", lookup.Value.RecoveryTransactionId ?? "null");
@@ -248,7 +261,7 @@ public static class GetRecoveryStatus
 
                         var input = spentInTransaction?.Inputs.FirstOrDefault(input =>
                             input.InputTransactionId == transactionInfo.TransactionId &&
-                            input.InputIndex == item.StageIndex + 2);
+                            input.InputIndex == output.Index);
 
                         logger.LogInformation("[CheckTxSpending] Stage {StageIndex}: spentInTransaction found={Found}, input found={InputFound}", 
                             item.StageIndex, spentInTransaction != null, input != null);
@@ -289,8 +302,11 @@ public static class GetRecoveryStatus
                                         break;
                                     }
 
-                                    // P2WSH outputs = penalty timelock recovery
-                                    if (spentInTransaction.Outputs.SkipLast(1)
+                                    // P2WSH outputs = penalty timelock recovery. Filter by script type
+                                    // instead of SkipLast(1), which wrongly assumes a change output exists.
+                                    if (spentInTransaction.Outputs
+                                            .Where(o => !string.IsNullOrEmpty(o.ScriptPubKey)
+                                                        && Script.FromHex(o.ScriptPubKey).IsScriptType(ScriptType.P2WSH))
                                             .Any(o => !string.IsNullOrEmpty(o.SpentInTransaction)))
                                     {
                                         item.Status = "Recovered after penalty";
