@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:mp="clr-namespace:App.UI.Sections.MyProjects"
+             xmlns:ctrl="clr-namespace:App.UI.Shared.Controls"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="680" d:DesignHeight="1200"
              x:Class="App.UI.Sections.MyProjects.Steps.CreateProjectStep5View"
@@ -76,6 +77,14 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderBrush" Value="{DynamicResource Stroke}" />
             <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+            <!-- Standard preset-pill height (matches ButtonizedListBoxItem pills) -->
+            <Setter Property="MinHeight" Value="60" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <!-- Row-level delete: borderless, red-tint hover (house RemoveBtn pattern) -->
+        <Style Selector="Button.RemoveStageBtn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource ErrorSoft}" />
         </Style>
         <Style Selector="Button.DurPresetBtn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource SurfaceLow}" />
@@ -165,16 +174,20 @@
                             <TextBlock Text="Project Length" FontSize="14" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
 
-                            <!-- Duration input + unit dropdown — Vue: flex gap-2, input w-1/2 + select w-1/2 -->
+                            <!-- Duration input + unit dropdown — Vue: flex gap-2, input w-1/2 + select w-1/2.
+                                 Both use the same fixed MinHeight so they always align. -->
                             <Grid ColumnDefinitions="*,*" HorizontalAlignment="Stretch">
                                 <TextBox Name="DurationValueInput"
                                          Text="{Binding DurationValue, Mode=TwoWay}"
                                          Watermark="0"
-                                         FontSize="16" Padding="12,12,16,12" CornerRadius="8" />
+                                         MinHeight="52" VerticalContentAlignment="Center"
+                                         FontSize="16" Padding="12,0,16,0" CornerRadius="8" />
                                 <ComboBox Name="DurationUnitCombo" Grid.Column="1" Margin="8,0,0,0"
                                           ItemsSource="{Binding DurationUnitOptions}"
                                           SelectedItem="{Binding DurationUnit, Mode=TwoWay}"
-                                          FontSize="16" Padding="12" CornerRadius="8"
+                                          MinHeight="52" VerticalContentAlignment="Center"
+                                          VerticalAlignment="Stretch"
+                                          FontSize="16" Padding="12,0,16,0" CornerRadius="8"
                                           HorizontalAlignment="Stretch" />
                             </Grid>
 
@@ -183,15 +196,16 @@
                             <ItemsControl Name="InvestDurationPresets" ItemsSource="{Binding DurationPresetItems}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <WrapPanel Orientation="Horizontal" />
+                                        <!-- Balanced rows dividing the full width: 5 → 3+2, 6 → 3+3 -->
+                                        <ctrl:BalancedWrapPanel MaxPerRow="3" ColumnSpacing="8" RowSpacing="8" />
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="mp:DurationPresetItem">
                                         <Button Classes="DurPresetBtn"
-                                                Margin="0,0,8,8"
                                                 Padding="16,10" CornerRadius="8"
                                                 BorderThickness="2"
+                                                HorizontalAlignment="Stretch"
                                                 HorizontalContentAlignment="Center"
                                                 FontSize="13" FontWeight="Bold"
                                                 Tag="{Binding}"
@@ -533,7 +547,9 @@
                                     BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
                                     Background="{DynamicResource SurfaceHover}">
                                 <StackPanel>
-                                    <Grid ColumnDefinitions="Auto,*,*,Auto" ColumnSpacing="12" Margin="14,12,14,12">
+                                    <!-- Fields stacked in one column (issue #920: side-by-side
+                                         columns squeezed the Release Date picker on mobile) -->
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12" Margin="14,12,14,12">
                                         <!-- Stage number badge -->
                                         <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18"
                                                 Background="{DynamicResource Accent}" VerticalAlignment="Top" Margin="0,4,0,0">
@@ -542,40 +558,45 @@
                                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
 
-                                        <!-- Percentage — NumericUpDown bound to decimal? bridge (avoids double↔decimal? mismatch) -->
-                                        <StackPanel Grid.Column="1" Spacing="4">
-                                            <TextBlock Text="Percentage %" FontSize="11" FontWeight="SemiBold"
-                                                       Foreground="{DynamicResource TextMuted}" />
-                                            <NumericUpDown Value="{Binding PercentageDecimal, Mode=TwoWay}"
-                                                           Minimum="0" Maximum="100"
-                                                           Increment="1" FormatString="0"
-                                                           FontSize="14" />
-                                            <TextBlock Text="Must be greater than 0" FontSize="11"
-                                                       Foreground="#ef4444"
-                                                       IsVisible="{Binding HasPercentageError}" />
-                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Spacing="10">
+                                            <!-- Percentage — NumericUpDown bound to decimal? bridge (avoids double↔decimal? mismatch) -->
+                                            <StackPanel Spacing="4">
+                                                <TextBlock Text="Percentage %" FontSize="11" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource TextMuted}" />
+                                                <NumericUpDown Value="{Binding PercentageDecimal, Mode=TwoWay}"
+                                                               Minimum="0" Maximum="100"
+                                                               Increment="1" FormatString="0"
+                                                               FontSize="14" />
+                                                <TextBlock Text="Must be greater than 0" FontSize="11"
+                                                           Foreground="#ef4444"
+                                                           IsVisible="{Binding HasPercentageError}" />
+                                            </StackPanel>
 
-                                        <!-- Release date picker + inline error -->
-                                        <StackPanel Grid.Column="2" Spacing="4">
-                                            <TextBlock Text="Release Date" FontSize="11" FontWeight="SemiBold"
-                                                       Foreground="{DynamicResource TextMuted}" />
-                                            <CalendarDatePicker
-                                                SelectedDate="{Binding ReleaseDateAsDateTime, Mode=TwoWay}"
-                                                FontSize="14" HorizontalAlignment="Stretch" />
-                                            <TextBlock Text="{Binding ReleaseDateError}" FontSize="11"
-                                                       Foreground="#ef4444" TextWrapping="Wrap"
-                                                       IsVisible="{Binding HasDateError}" />
+                                            <!-- Release date picker + inline error -->
+                                            <StackPanel Spacing="4">
+                                                <TextBlock Text="Release Date" FontSize="11" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource TextMuted}" />
+                                                <CalendarDatePicker
+                                                    SelectedDate="{Binding ReleaseDateAsDateTime, Mode=TwoWay}"
+                                                    FontSize="14" HorizontalAlignment="Stretch" />
+                                                <TextBlock Text="{Binding ReleaseDateError}" FontSize="11"
+                                                           Foreground="#ef4444" TextWrapping="Wrap"
+                                                           IsVisible="{Binding HasDateError}" />
+                                            </StackPanel>
                                         </StackPanel>
 
                                         <!-- Remove button -->
-                                        <Button Grid.Column="3" Name="RemoveStageButton"
+                                        <!-- Row-level delete — house pattern (see EditProfileView
+                                             RemoveBtn): borderless icon button, red-tint hover -->
+                                        <Button Grid.Column="2" Name="RemoveStageButton"
                                                 Tag="{Binding}"
+                                                Classes="RemoveStageBtn"
                                                 Background="Transparent"
-                                                BorderBrush="{DynamicResource ErrorBannerBorder}" BorderThickness="1"
+                                                BorderThickness="0"
                                                 CornerRadius="8" Padding="10,8"
                                                 VerticalAlignment="Top" Margin="0,20,0,0">
                                             <i:Icon Value="fa-solid fa-trash" FontSize="14"
-                                                    Foreground="{DynamicResource ErrorBannerText}" />
+                                                    Foreground="{DynamicResource PillRedText}" />
                                         </Button>
                                     </Grid>
                                 </StackPanel>
@@ -589,23 +610,23 @@
                     <!-- Complete: green -->
                     <Border IsVisible="{Binding AdvancedEditorTotalIsComplete}"
                             Padding="12,10" CornerRadius="8"
-                            Background="#f0fdf4" BorderBrush="#86efac" BorderThickness="1">
+                            Background="{DynamicResource PillGreenBg}" BorderBrush="{DynamicResource PillGreenBorder}" BorderThickness="1">
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <i:Icon Value="fa-solid fa-circle-check" FontSize="14" Foreground="#16a34a"
+                            <i:Icon Value="fa-solid fa-circle-check" FontSize="14" Foreground="{DynamicResource PillGreenText}"
                                     VerticalAlignment="Center" />
                             <TextBlock Text="{Binding AdvancedEditorTotalLabel}" FontSize="13" FontWeight="SemiBold"
-                                       Foreground="#16a34a" VerticalAlignment="Center" />
+                                       Foreground="{DynamicResource PillGreenText}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Border>
                     <!-- Incomplete: amber -->
                     <Border IsVisible="{Binding AdvancedEditorTotalIsIncomplete}"
                             Padding="12,10" CornerRadius="8"
-                            Background="#fffbeb" BorderBrush="#fde68a" BorderThickness="1">
+                            Background="{DynamicResource PillAmberBg}" BorderBrush="{DynamicResource PillAmberBorder}" BorderThickness="1">
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <i:Icon Value="fa-solid fa-circle-exclamation" FontSize="14" Foreground="#d97706"
+                            <i:Icon Value="fa-solid fa-circle-exclamation" FontSize="14" Foreground="{DynamicResource PillAmberText}"
                                     VerticalAlignment="Center" />
                             <TextBlock Text="{Binding AdvancedEditorTotalLabel}" FontSize="13" FontWeight="SemiBold"
-                                       Foreground="#d97706" VerticalAlignment="Center" />
+                                       Foreground="{DynamicResource PillAmberText}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Border>
                 </Panel>
@@ -613,8 +634,10 @@
                 <!-- Add Stage button -->
                 <Button Name="AddStageButton" Margin="20,0,20,12"
                         HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center"
                         Background="Transparent"
                         BorderBrush="{DynamicResource Stroke}" BorderThickness="1"
+                        MinHeight="52"
                         CornerRadius="10" Padding="16,12" FontSize="14"
                         Foreground="{DynamicResource TextMuted}">
                     <StackPanel Orientation="Horizontal" Spacing="8">
@@ -625,12 +648,12 @@
 
                 <!-- Stage guidelines: only shown when at least one stage has a date error -->
                 <Border Margin="20,0,20,16" Padding="12" CornerRadius="8"
-                        Background="#fffbeb" BorderBrush="#fde68a" BorderThickness="1"
+                        Background="{DynamicResource PillAmberBg}" BorderBrush="{DynamicResource PillAmberBorder}" BorderThickness="1"
                         IsVisible="{Binding HasAnyDateError}">
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <i:Icon Value="fa-solid fa-triangle-exclamation" FontSize="14" Foreground="#d97706"
+                        <i:Icon Value="fa-solid fa-triangle-exclamation" FontSize="14" Foreground="{DynamicResource PillAmberText}"
                                 VerticalAlignment="Top" Margin="0,2,0,0" />
-                        <TextBlock FontSize="12" Foreground="#d97706" TextWrapping="Wrap"
+                        <TextBlock FontSize="12" Foreground="{DynamicResource PillAmberText}" TextWrapping="Wrap"
                                    Text="Each release date must be after the funding end date." />
                     </StackPanel>
                 </Border>

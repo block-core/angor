@@ -1,4 +1,6 @@
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using App.UI.Shared;
 using Avalonia.Controls.Shapes;
 using Avalonia.Interactivity;
 using ReactiveUI;
@@ -40,11 +42,50 @@ public partial class CreateProjectStep5View : UserControl
     private Button? _selectedDurationPresetBtn;
 
     private IDisposable? _durationValueSubscription;
+    private IDisposable? _layoutSubscription;
     private bool _handlersWired;
 
     public CreateProjectStep5View()
     {
         InitializeComponent();
+        SubscribeToLayoutMode();
+    }
+
+    /// <summary>Idempotent responsive-layout subscription — re-created on every logical-tree attach because OnDetachedFromLogicalTree disposes it (views are cached and re-attached on section switches).</summary>
+    private void SubscribeToLayoutMode()
+    {
+        if (_layoutSubscription != null) return;
+        _layoutSubscription = LayoutModeService.Instance
+            .WhenAnyValue(x => x.IsCompact)
+            .Subscribe(ApplyResponsiveLayout);
+    }
+
+    protected override void OnAttachedToLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToLogicalTree(e);
+        SubscribeToLayoutMode();
+    }
+
+    protected override void OnDetachedFromLogicalTree(Avalonia.LogicalTree.LogicalTreeAttachmentEventArgs e)
+    {
+        _layoutSubscription?.Dispose();
+        _layoutSubscription = null;
+        base.OnDetachedFromLogicalTree(e);
+    }
+
+    /// <summary>
+    /// Compact: the 4-item frequency row becomes a 2x2 fill grid; desktop keeps a
+    /// single full-width row. (Duration presets use BalancedWrapPanel in AXAML at
+    /// all breakpoints.)
+    /// </summary>
+    private void ApplyResponsiveLayout(bool isCompact)
+    {
+        var freq = this.FindControl<ListBox>("InvestFrequencyPresets");
+        if (freq != null)
+        {
+            freq.Classes.Set("Horizontal", !isCompact);
+            freq.Classes.Set("Grid2", isCompact);
+        }
     }
 
     protected override void OnLoaded(RoutedEventArgs e)
@@ -53,6 +94,7 @@ public partial class CreateProjectStep5View : UserControl
         ResolveNamedElements();
         UpdatePayoutFreqVisuals();
         UpdateInstallmentVisuals();
+        ApplyResponsiveLayout(LayoutModeService.Instance.IsCompact);
 
         // Clear duration preset selection when user manually types a non-matching value,
         // or when the duration unit changes (items get regenerated)

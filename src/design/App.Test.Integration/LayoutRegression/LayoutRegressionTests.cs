@@ -12,6 +12,9 @@ using App.UI.Sections.MyProjects.EditProfile;
 using App.UI.Sections.Portfolio;
 using App.UI.Sections.Settings;
 using App.UI.Shared;
+using App.UI.Shared.PaymentFlow;
+using App.UI.Shared.Services;
+using Angor.Sdk.Common;
 using App.UI.Shared.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
@@ -326,16 +329,19 @@ public class LayoutRegressionTests
     // CreateProjectView — all 6 wizard steps at phone + desktop widths
     // ═══════════════════════════════════════════════════════════════════
 
-    public static TheoryData<int, double> CreateProjectSteps
+    public static TheoryData<string, int, double> CreateProjectSteps
     {
         get
         {
-            var data = new TheoryData<int, double>();
-            for (int step = 1; step <= 6; step++)
+            var data = new TheoryData<string, int, double>();
+            foreach (var type in new[] { "fund", "investment", "subscription" })
             {
-                data.Add(step, 360);
-                data.Add(step, 768);
-                data.Add(step, 1280);
+                for (int step = 1; step <= 6; step++)
+                {
+                    data.Add(type, step, 360);
+                    data.Add(type, step, 768);
+                    data.Add(type, step, 1280);
+                }
             }
 
             return data;
@@ -344,20 +350,125 @@ public class LayoutRegressionTests
 
     [AvaloniaTheory]
     [MemberData(nameof(CreateProjectSteps))]
-    public void CreateProjectView_step_has_no_overlaps_or_overflow(int step, double width)
+    public void CreateProjectView_step_has_no_overlaps_or_overflow(string projectType, int step, double width)
     {
         var vm = global::App.App.Services.GetRequiredService<CreateProjectViewModel>();
-        vm.SelectProjectType("fund");
+        vm.SelectProjectType(projectType);
         vm.ProjectName = "A Very Long Project Name That Stresses The Wizard Header Layout";
         vm.ProjectAbout = new string('x', 240);
         vm.GoToStep(step);
+        // Step 5 shows an interstitial welcome by default — the real form (presets,
+        // duration inputs, advanced editor) is what must be layout-audited.
+        vm.ShowStep5Welcome = false;
 
         var view = new CreateProjectView { DataContext = vm };
 
         var violations = RenderAndAudit(view, width, 900);
 
         violations.Should().BeEmpty(
-            $"CreateProjectView step {step} must not have overlapping/overflowing elements at width {width}:\n" +
+            $"CreateProjectView ({projectType}) step {step} must not have overlapping/overflowing elements at width {width}:\n" +
+            string.Join("\n", violations));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // PaymentFlowView — "Use an existing wallet" modal (issue #920:
+    // Fund Deployment label overlapped by the amount; wallet card cramping)
+    // ═══════════════════════════════════════════════════════════════════
+
+    [AvaloniaTheory]
+    [MemberData(nameof(Viewports))]
+    public void PaymentFlowView_wallet_selector_has_no_overlaps_or_overflow(double width, double height)
+    {
+        var services = global::App.App.Services;
+        var config = new PaymentFlowConfig
+        {
+            AmountSats = 100_000_000, // 1.00000000 — worst-case width amount
+            Title = "Fund Deployment",
+            SuccessTitle = "Deployed",
+            SuccessButtonText = "Go to My Projects",
+            OnSuccessButtonClicked = () => { },
+            OnPaymentReceived = (_, _, _) => Task.FromResult(CSharpFunctionalExtensions.Result.Success()),
+        };
+        var logger = services.GetRequiredService<Microsoft.Extensions.Logging.ILoggerFactory>()
+            .CreateLogger("PaymentFlowLayoutTest");
+        var vm = ActivatorUtilities.CreateInstance<PaymentFlowViewModel>(
+            services, config, logger);
+
+        var view = new PaymentFlowView { DataContext = vm };
+
+        // Wallet context is empty in tests: exercise the wallet-card template with
+        // worst-case fabricated wallets (long name, long balance, pending balance).
+        var w1 = new WalletInfo(
+            new WalletId("test-1"),
+            "A Very Long Wallet Name That Must Not Overlap The Balance", "TBTC")
+        {
+            TotalBalanceSats = 123_456_789,
+            UnconfirmedBalanceSats = 12_345_678,
+            IsSelected = true,
+        };
+        var w2 = new WalletInfo(
+            new WalletId("test-2"), "Angor Wallet", "TBTC")
+        {
+            TotalBalanceSats = 0,
+        };
+        view.AttachedToVisualTree += (_, _) =>
+        {
+            if (view.FindControl<ItemsControl>("WalletsList") is { } list)
+                list.ItemsSource = new[] { w1, w2 };
+        };
+
+        var violations = RenderAndAudit(view, width, height);
+
+        violations.Should().BeEmpty(
+            $"PaymentFlowView must not have overlapping/overflowing elements at {width}x{height}:\n" +
+            string.Join("\n", violations));
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // InvestorBreakdownView — optimistic-loading modal (table→cards on mobile)
+    // ═══════════════════════════════════════════════════════════════════
+
+    [AvaloniaTheory]
+    [MemberData(nameof(Viewports))]
+    public void InvestorBreakdownView_has_no_overlaps_or_overflow(double width, double height)
+    {
+        var vm = new InvestorBreakdownViewModel(
+            "A Very Long Project Name That Stresses The Modal Header Layout",
+            "fund", "TBTC",
+            "aaaa000000000000000000000000000000000000000000000000000000000000");
+
+        // Worst-case rows: current-user highlight + long amounts.
+        var rows = new System.Collections.Generic.List<Angor.Sdk.Funding.Projects.Dtos.InvestorShareDto>();
+        for (int i = 0; i < 6; i++)
+        {
+            rows.Add(new Angor.Sdk.Funding.Projects.Dtos.InvestorShareDto(
+                i == 2
+                    ? "aaaa000000000000000000000000000000000000000000000000000000000000"
+                    : $"bbbb{i:D60}",
+                "", 123_456_789, 33.33, 12_345_678, 10.01));
+        }
+        vm.ApplyData(new Angor.Sdk.Funding.Projects.Operations.GetInvestorShares.GetInvestorSharesResponse(
+            370_370_367, rows.Count, rows));
+
+        var view = new InvestorBreakdownView { DataContext = vm };
+        var violations = RenderAndAudit(view, width, height);
+
+        violations.Should().BeEmpty(
+            $"InvestorBreakdownView must not have overlapping/overflowing elements at {width}x{height}:\n" +
+            string.Join("\n", violations));
+    }
+
+    [AvaloniaTheory]
+    [MemberData(nameof(Viewports))]
+    public void InvestorBreakdownView_loading_state_has_no_overlaps_or_overflow(double width, double height)
+    {
+        var vm = new InvestorBreakdownViewModel("Project", "fund", "TBTC");
+
+        var view = new InvestorBreakdownView { DataContext = vm };
+        var violations = RenderAndAudit(view, width, height);
+
+        violations.Should().BeEmpty(
+            $"InvestorBreakdownView (loading) must not have overlapping/overflowing elements at {width}x{height}:\n" +
             string.Join("\n", violations));
     }
 
