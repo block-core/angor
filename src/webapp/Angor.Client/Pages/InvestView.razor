@@ -2240,7 +2240,7 @@
             // we will actually build with) — not just the bare investment amount.
             long investmentSats = Investment.InvestmentAmountBtc.ToUnitSatoshi();
             int angorFeePercentage = _networkConfiguration.GetAngorInvestFeePercentage;
-            int stageCount = project!.ProjectInfo.Stages?.Count ?? 1;
+            int stageCount = GetEffectiveStageCount();
             long feeRateSatsPerVbyte = await SelectBudgetedFeeRateAsync();
             onChainRequiredSats = InvestmentFeeEstimator.EstimateOnChainRequired(
                 investmentSats, angorFeePercentage, stageCount, feeRateSatsPerVbyte);
@@ -2353,6 +2353,17 @@
     }
 
     /// <summary>
+    /// Number of stage outputs the investment transaction will have.
+    /// Invest projects use the fixed stages from ProjectInfo; Fund/Subscribe projects
+    /// derive stages from the selected dynamic pattern (already chosen at this point —
+    /// auto-selected in LoadAvailablePatterns and validated before investing).
+    /// </summary>
+    private int GetEffectiveStageCount() =>
+        (project!.ProjectInfo.AllowDynamicStages
+            ? SelectedPattern?.StageCount
+            : project.ProjectInfo.Stages?.Count) ?? 1;
+
+    /// <summary>
     /// Fetches live fee estimates, selects the median (same selection the tx build uses)
     /// and records it as the budgeted rate for this payment flow.
     /// Returns the rate expressed in sats/vB for size-based amount estimates.
@@ -2419,7 +2430,7 @@
 
             long investmentSats = Investment.InvestmentAmountBtc.ToUnitSatoshi();
             int angorFeePercentage = _networkConfiguration.GetAngorInvestFeePercentage;
-            int stageCount = project!.ProjectInfo.Stages?.Count ?? 1;
+            int stageCount = GetEffectiveStageCount();
 
             // Budget the invoice with the LIVE fee rate (the same one the investment tx
             // will later be built with) plus claim-fee headroom, so the single claimed
