@@ -49,6 +49,7 @@ builder.Services.AddScoped<INetworkService, NetworkService>();
 builder.Services.AddScoped<IAddressPollingService, AddressPollingService>();
 
 builder.Services.AddTransient<IRelayService, RelayService>();
+builder.Services.AddScoped<INostrInvestmentStorageService, NostrInvestmentStorageService>();
 builder.Services.AddTransient<ISignService, SignService>();
 
 builder.Services.AddTransient<IFounderTransactionActions, FounderTransactionActions>();

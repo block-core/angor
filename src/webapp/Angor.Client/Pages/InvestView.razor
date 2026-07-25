@@ -44,6 +44,7 @@
 @inject IBoltzSwapService _boltzSwapService
 @inject IBoltzClaimService _boltzClaimService
 @inject IIndexerService _indexerService
+@inject INostrInvestmentStorageService _nostrInvestmentStorage
 
 <NotificationComponent @ref="notificationComponent" />
 <PasswordComponent @ref="passwordComponent" />
@@ -585,7 +586,11 @@
                 <div class="modal-body text-center">
                     <div class="bg-light rounded p-3 mb-3">
                         <small class="text-muted">Amount Required</small>
-                        <div class="fw-bold text-success fs-4">@Investment.InvestmentAmountBtc @network.CoinTicker</div>
+                        <div class="fw-bold text-success fs-4">@((onChainRequiredSats > 0 ? onChainRequiredSats.ToUnitBtc() : Investment.InvestmentAmountBtc)) @network.CoinTicker</div>
+                        @if (onChainRequiredSats > 0)
+                        {
+                            <small class="text-muted d-block">Includes Angor fee and estimated network fee</small>
+                        }
                     </div>
 
                     @if (!string.IsNullOrEmpty(invoiceAddress))
@@ -943,6 +948,12 @@
     private string? invoiceStatusMessage;
     private string? autoCreatedSeedWords;
     private CancellationTokenSource? invoiceMonitorCts;
+
+    // Fee budget shared between invoice sizing and the transaction build.
+    // Set when the invoice/lightning flow starts; consumed by BuildAndSubmitFromAddress
+    // so the tx is never built at a higher fee rate than was budgeted for.
+    private long budgetedFeeRateSatsPerVbyte;
+    private long onChainRequiredSats;
 
     // Auto-publish guard
     private bool autoPublishStarted;
@@ -1885,6 +1896,10 @@
         investorProject.CompleteProjectInvestment(signedTransaction.Transaction);
         storage.AddInvestmentProject(investorProject);
 
+        // Persist the investments list to Nostr so the investment is discoverable
+        // when the seed is imported on another device (desktop app, another browser).
+        await SaveInvestmentsListToNostrAsync();
+
         var accountInfo = storage.GetAccountInfo(network.Name);
         var unspentInfo = SessionStorage.GetUnconfirmedInboundFunds();
         var spendUtxos = _WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, signedTransaction.Transaction);
@@ -2084,6 +2099,10 @@
             investorProject.CompleteProjectInvestment(signedTransaction.Transaction);
             storage.UpdateInvestmentProject(investorProject);
 
+            // Persist the investments list to Nostr so the investment is discoverable
+            // when the seed is imported on another device (desktop app, another browser).
+            await SaveInvestmentsListToNostrAsync();
+
             var accountInfo = storage.GetAccountInfo(network.Name);
             var unspentInfo = SessionStorage.GetUnconfirmedInboundFunds();
             var spendUtxos = _WalletOperations.UpdateAccountUnconfirmedInfoWithSpentTransaction(accountInfo, signedTransaction.Transaction);
@@ -2118,6 +2137,44 @@
     {
         await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
         notificationComponent.ShowNotificationMessage("Copied to clipboard", 2);
+    }
+
+    /// <summary>
+    /// Saves the wallet's investments list to Nostr (encrypted self-DM on the derived
+    /// storage account). Shared mechanism with Invest.razor and the desktop app —
+    /// this is what makes investments recoverable after a seed import elsewhere.
+    /// Best-effort: the investment tx is already on-chain when this runs.
+    /// </summary>
+    private async Task SaveInvestmentsListToNostrAsync()
+    {
+        try
+        {
+            var words = await passwordComponent.GetWalletAsync();
+
+            Investments investments = new()
+            {
+                ProjectIdentifiers = storage.GetInvestmentProjects()
+                    .Where(x => x.InvestedInProject())
+                    .Select(x => new InvestmentState
+                    {
+                        ProjectIdentifier = x.ProjectInfo.ProjectIdentifier,
+                        InvestorPubKey = x.InvestorPublicKey,
+                        InvestmentTransactionHash = x.TransactionId,
+                        UnfundedReleaseAddress = x.UnfundedReleaseAddress,
+                    })
+                    .ToList()
+            };
+
+            var saveResult = await _nostrInvestmentStorage.SaveAsync(words, serializer.Serialize(investments));
+            if (saveResult.IsFailure)
+            {
+                _Logger.LogWarning("Failed to save investments list to nostr: {Error}", saveResult.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            _Logger.LogWarning(ex, "Failed to save investments list to nostr");
+        }
     }
 
     public class InvestmentModel
@@ -2170,17 +2227,28 @@
     {
         paymentReceived = false;
         invoiceProcessing = false;
+        onChainRequiredSats = 0;
+        budgetedFeeRateSatsPerVbyte = 0;
         showInvoiceModal = true;
         invoiceMonitorCts = new CancellationTokenSource();
         StateHasChanged();
 
         try
         {
-            var requiredSats = Investment.InvestmentAmountBtc.ToUnitSatoshi();
+            // The investment tx is built exclusively from UTXOs on the invoice address,
+            // so the user must send investment + angor fee + miner fee (at the live rate
+            // we will actually build with) — not just the bare investment amount.
+            long investmentSats = Investment.InvestmentAmountBtc.ToUnitSatoshi();
+            int angorFeePercentage = _networkConfiguration.GetAngorInvestFeePercentage;
+            int stageCount = GetEffectiveStageCount();
+            long feeRateSatsPerVbyte = await SelectBudgetedFeeRateAsync();
+            onChainRequiredSats = InvestmentFeeEstimator.EstimateOnChainRequired(
+                investmentSats, angorFeePercentage, stageCount, feeRateSatsPerVbyte);
+            StateHasChanged();
 
             var detectedUtxos = await _addressPollingService.WaitForFundsAsync(
                 invoiceAddress!,
-                requiredSats,
+                onChainRequiredSats,
                 TimeSpan.FromMinutes(30),
                 TimeSpan.FromSeconds(5),
                 invoiceMonitorCts.Token);
@@ -2238,16 +2306,15 @@
         {
             var words = await passwordComponent.GetWalletAsync();
 
-            invoiceStatusMessage = "Fetching fee estimates...";
-            StateHasChanged();
-            var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
-            feeData.FeeEstimations.Fees.Clear();
-            feeData.FeeEstimations.Fees.AddRange(fetchFees);
-
-            var feeList = feeData.FeeEstimations.Fees;
-            feeData.SelectedFeeEstimation = feeList.Count > 2
-                ? feeList[feeList.Count / 2]
-                : feeList.First();
+            // Use the fee rate that was budgeted when the invoice was sized. Re-fetching
+            // here could select a higher rate than the user paid for, making the single
+            // funding UTXO insufficient ("fee too low" / dust-change failures).
+            if (budgetedFeeRateSatsPerVbyte == 0 || feeData.SelectedFeeEstimation?.FeeRate is null or 0)
+            {
+                invoiceStatusMessage = "Fetching fee estimates...";
+                StateHasChanged();
+                await SelectBudgetedFeeRateAsync();
+            }
 
             invoiceStatusMessage = "Building investment transaction...";
             StateHasChanged();
@@ -2285,6 +2352,38 @@
         StateHasChanged();
     }
 
+    /// <summary>
+    /// Number of stage outputs the investment transaction will have.
+    /// Invest projects use the fixed stages from ProjectInfo; Fund/Subscribe projects
+    /// derive stages from the selected dynamic pattern (already chosen at this point —
+    /// auto-selected in LoadAvailablePatterns and validated before investing).
+    /// </summary>
+    private int GetEffectiveStageCount() =>
+        (project!.ProjectInfo.AllowDynamicStages
+            ? SelectedPattern?.StageCount
+            : project.ProjectInfo.Stages?.Count) ?? 1;
+
+    /// <summary>
+    /// Fetches live fee estimates, selects the median (same selection the tx build uses)
+    /// and records it as the budgeted rate for this payment flow.
+    /// Returns the rate expressed in sats/vB for size-based amount estimates.
+    /// </summary>
+    private async Task<long> SelectBudgetedFeeRateAsync()
+    {
+        var fetchFees = await _WalletOperations.GetFeeEstimationAsync();
+        feeData.FeeEstimations.Fees.Clear();
+        feeData.FeeEstimations.Fees.AddRange(fetchFees);
+
+        var feeList = feeData.FeeEstimations.Fees;
+        feeData.SelectedFeeEstimation = feeList.Count > 2
+            ? feeList[feeList.Count / 2]
+            : feeList.First();
+
+        // FeeEstimation.FeeRate is expressed in sats per kilo-vbyte.
+        budgetedFeeRateSatsPerVbyte = Math.Max(1L, (long)Math.Ceiling(feeData.SelectedFeeEstimation.FeeRate / 1000m));
+        return budgetedFeeRateSatsPerVbyte;
+    }
+
     // --- Lightning payment flow ---
 
     private async Task PayWithLightning()
@@ -2306,6 +2405,8 @@
         showLightningInvoiceModal = true;
         paymentReceived = false;
         invoiceProcessing = false;
+        onChainRequiredSats = 0;
+        budgetedFeeRateSatsPerVbyte = 0;
         lightningInvoiceString = null;
         lightningSwapId = null;
         lightningStatusMessage = "Creating Lightning invoice...";
@@ -2329,17 +2430,15 @@
 
             long investmentSats = Investment.InvestmentAmountBtc.ToUnitSatoshi();
             int angorFeePercentage = _networkConfiguration.GetAngorInvestFeePercentage;
-            long angorFee = (investmentSats * angorFeePercentage) / 100;
+            int stageCount = GetEffectiveStageCount();
 
-            int stageCount = project!.ProjectInfo.Stages?.Count ?? 1;
-            const int txOverhead = 10;
-            const int inputSize = 68;
-            const int outputSize = 31;
-            const int defaultFeeRateSatsPerVbyte = 2;
-            int estimatedVSize = txOverhead + inputSize + (stageCount + 2) * outputSize;
-            long estimatedMinerFee = estimatedVSize * defaultFeeRateSatsPerVbyte;
-
-            long requiredSats = investmentSats + angorFee + estimatedMinerFee;
+            // Budget the invoice with the LIVE fee rate (the same one the investment tx
+            // will later be built with) plus claim-fee headroom, so the single claimed
+            // UTXO can always cover the investment tx. Any surplus returns as change.
+            long feeRateSatsPerVbyte = await SelectBudgetedFeeRateAsync();
+            long requiredSats = InvestmentFeeEstimator.EstimateLightningRequired(
+                investmentSats, angorFeePercentage, stageCount, feeRateSatsPerVbyte);
+            onChainRequiredSats = requiredSats;
 
             _Logger.LogInformation("Calculating Lightning invoice amount for {RequiredSats} sats on-chain", requiredSats);
             var invoiceAmountResult = await _boltzSwapService.CalculateInvoiceAmountAsync(requiredSats);
