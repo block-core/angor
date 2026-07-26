@@ -166,6 +166,12 @@ public static class CompositionRoot
         services.AddSingleton<BlossomUploadService>();
         services.AddSingleton<ILogExportService, LogExportService>();
 
+        // Cloud seed-backup feature (NIP-44 outer + AES-GCM inner over Blossom blobs)
+        services.AddSingleton<Angor.Sdk.WalletExport.Blossom.IBackupBlossomClient, Angor.Sdk.WalletExport.Blossom.BackupBlossomClient>();
+        services.AddSingleton<Angor.Sdk.WalletExport.ICloudBackupService, Angor.Sdk.WalletExport.CloudBackupService>();
+        services.AddSingleton<Angor.Sdk.WalletExport.IBackupRecoveryService, Angor.Sdk.WalletExport.BackupRecoveryService>();
+        services.AddSingleton<Angor.Sdk.WalletExport.IWalletCloudBackupService, Angor.Sdk.WalletExport.WalletCloudBackupService>();
+
         // ── Shared singletons (replaces SharedViewModels static class) ──
         services.AddSingleton<SignatureStore>();
         services.AddSingleton<PrototypeSettings>();
