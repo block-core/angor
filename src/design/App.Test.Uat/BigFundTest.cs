@@ -48,7 +48,7 @@ public class BigFundTest
         Log(null, $"========== STARTING {nameof(BigFund)} ==========");
         Log(null, $"Run ID: {runId}");
 
-        await using var founderHost = await TestProcessHost.LaunchAsync(FounderProfile);
+        await using var founderHost = await TestHostFactory.LaunchAsync(FounderProfile);
         await founderHost.Client.WipeDataAsync();
         await founderHost.Client.EnableDebugModeAsync();
 
@@ -73,7 +73,7 @@ public class BigFundTest
 
         var project = new ProjectHandle(runId, projectName, createdProject.ProjectIdentifier!, createdProject.OwnerWalletId!);
 
-        var hosts = new Dictionary<string, TestProcessHost>(StringComparer.OrdinalIgnoreCase)
+        var hosts = new Dictionary<string, ITestHost>(StringComparer.OrdinalIgnoreCase)
         {
             [FounderProfile] = founderHost,
         };
@@ -171,8 +171,8 @@ public class BigFundTest
         }
     }
 
-    private static async Task<TestProcessHost> GetOrCreateHostAsync(
-        IDictionary<string, TestProcessHost> hosts,
+    private static async Task<ITestHost> GetOrCreateHostAsync(
+        IDictionary<string, ITestHost> hosts,
         string profileName,
         bool enableDebugMode)
     {
@@ -181,7 +181,7 @@ public class BigFundTest
             return existing;
         }
 
-        var host = await TestProcessHost.LaunchAsync(profileName);
+        var host = await TestHostFactory.LaunchAsync(profileName);
         await host.Client.WipeDataAsync();
         if (enableDebugMode)
         {

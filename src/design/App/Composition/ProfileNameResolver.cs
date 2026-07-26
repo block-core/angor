@@ -6,11 +6,28 @@ public static class ProfileNameResolver
 {
     public const string DefaultProfileName = "Default";
     public const string ProfileOption = "--profile";
+    public const string ProfileEnvVar = "ANGOR_PROFILE";
 
     public static string GetProfileName(string[]? args)
     {
+        var fromArgs = GetProfileNameFromArgs(args);
+        if (fromArgs != null)
+            return fromArgs;
+
+        // Fallback for platforms without command-line args (Android): the
+        // ANGOR_PROFILE env var is populated from debug.angor.profile via
+        // DebugTestConfig before the DI container is built.
+        var fromEnv = Environment.GetEnvironmentVariable(ProfileEnvVar)?.Trim();
+        if (!string.IsNullOrWhiteSpace(fromEnv))
+            return fromEnv;
+
+        return DefaultProfileName;
+    }
+
+    private static string? GetProfileNameFromArgs(string[]? args)
+    {
         if (args == null || args.Length == 0)
-            return DefaultProfileName;
+            return null;
 
         for (var index = 0; index < args.Length; index++)
         {
@@ -21,7 +38,7 @@ public static class ProfileNameResolver
             if (argument.StartsWith(ProfileOption + "=", StringComparison.OrdinalIgnoreCase))
             {
                 var value = argument.Substring(ProfileOption.Length + 1).Trim();
-                return string.IsNullOrWhiteSpace(value) ? DefaultProfileName : value;
+                return string.IsNullOrWhiteSpace(value) ? null : value;
             }
 
             if (!string.Equals(argument, ProfileOption, StringComparison.OrdinalIgnoreCase))
@@ -34,9 +51,9 @@ public static class ProfileNameResolver
                     return value;
             }
 
-            return DefaultProfileName;
+            return null;
         }
 
-        return DefaultProfileName;
+        return null;
     }
 }

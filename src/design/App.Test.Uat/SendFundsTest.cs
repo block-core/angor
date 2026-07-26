@@ -30,9 +30,9 @@ public class SendFundsTest
 
         // ── Launch 3 app instances ──
         Log("Launching 3 app instances...");
-        await using var hostA = await TestProcessHost.LaunchAsync(ProfileA);
-        await using var hostB = await TestProcessHost.LaunchAsync(ProfileB);
-        await using var hostC = await TestProcessHost.LaunchAsync(ProfileC);
+        await using var hostA = await TestHostFactory.LaunchAsync(ProfileA);
+        await using var hostB = await TestHostFactory.LaunchAsync(ProfileB);
+        await using var hostC = await TestHostFactory.LaunchAsync(ProfileC);
 
         await Task.WhenAll(
             WipeAndInit(hostA),
@@ -217,14 +217,14 @@ public class SendFundsTest
         Log($"========== {nameof(ThreeUsersSendToEachOther)} PASSED — {TotalRounds} rounds ==========");
     }
 
-    private static async Task WipeAndInit(TestProcessHost host)
+    private static async Task WipeAndInit(ITestHost host)
     {
         await host.Client.WipeDataAsync();
         await host.Client.SwitchNetworkAsync("Angornet");
         await host.Client.EnableDebugModeAsync();
     }
 
-    private static async Task<string> GetAddress(TestProcessHost host, string walletId, string label)
+    private static async Task<string> GetAddress(ITestHost host, string walletId, string label)
     {
         var resp = await host.Client.GetReceiveAddressAsync(new GetReceiveAddressRequest { WalletId = walletId });
         resp.Success.Should().BeTrue($"Failed to get receive address for {label}: {resp.Error}");
@@ -232,7 +232,7 @@ public class SendFundsTest
         return resp.Address!;
     }
 
-    private static async Task<double> GetBalance(TestProcessHost host, string walletId, string label)
+    private static async Task<double> GetBalance(ITestHost host, string walletId, string label)
     {
         var resp = await host.Client.GetBalanceAsync(new GetBalanceRequest { WalletId = walletId, Refresh = true });
         resp.Success.Should().BeTrue($"Failed to get balance for {label}: {resp.Error}");
