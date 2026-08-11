@@ -441,6 +441,14 @@ public partial class EditProfileView : UserControl
                 ? Avalonia.Layout.HorizontalAlignment.Stretch
                 : Avalonia.Layout.HorizontalAlignment.Left;
             _mdToolButtons.Margin = isCompact ? default : new Thickness(0, 0, 8, 0);
+
+            // Compact: cells govern width (can be <32px on small phones) — MinWidth
+            // would force the last buttons to escape the row. Desktop: 32px packing.
+            foreach (var child in _mdToolButtons.Children)
+            {
+                if (child is Button toolBtn)
+                    toolBtn.MinWidth = isCompact ? 0 : 32;
+            }
         }
     }
 

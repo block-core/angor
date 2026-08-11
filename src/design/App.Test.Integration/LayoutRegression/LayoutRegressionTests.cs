@@ -501,6 +501,41 @@ public class LayoutRegressionTests
             string.Join("\n", violations));
     }
 
+    /// <summary>
+    /// Project tab: markdown editor with formatting toolbar, Write/Preview toggle
+    /// and the quick-reference guide expanded (worst case for the toolbar rows).
+    /// </summary>
+    [AvaloniaTheory]
+    [MemberData(nameof(Viewports))]
+    public void EditProfileView_project_tab_has_no_overlaps_or_overflow(double width, double height)
+    {
+        var factory = global::App.App.Services
+            .GetRequiredService<Func<MyProjectItemViewModel, EditProfileViewModel>>();
+        var vm = factory(new MyProjectItemViewModel
+        {
+            Name = "A Very Long Project Name That Should Wrap Not Overlay Anything",
+            Description = new string('x', 200),
+            ProjectType = "fund",
+            ProjectIdentifier = "angor1qtest000000000000000000000000000000000",
+        });
+        vm.SetActiveTab("project");
+        vm.ProjectContent = "# Heading\n" + new string('m', 400) + "\n- item\n> quote";
+
+        var view = new EditProfileView { DataContext = vm };
+        // Worst case: markdown quick-reference guide expanded.
+        view.AttachedToVisualTree += (_, _) =>
+        {
+            if (view.FindControl<Border>("MdGuidePanel") is { } guide)
+                guide.IsVisible = true;
+        };
+
+        var violations = RenderAndAudit(view, width, height);
+
+        violations.Should().BeEmpty(
+            $"EditProfileView (project tab, markdown editor) must not have overlapping/overflowing elements at {width}x{height}:\n" +
+            string.Join("\n", violations));
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // Harness
     // ═══════════════════════════════════════════════════════════════════
