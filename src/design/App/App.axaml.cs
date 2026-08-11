@@ -22,6 +22,10 @@ public partial class App : Application
     {
         IconProvider.Current.Register<FontAwesomeIconProvider>();
 
+        // Repair stale icon bakes (Optris icons can bake a black snapshot before
+        // their Foreground resource resolves — see IconBakeFix docs).
+        UI.Shared.Helpers.IconBakeFix.Install();
+
         // Use disk-cached image loader so AdvancedImage (Header control) doesn't re-download
         // on every attach. Main project/investment images use ImageCacheService instead.
         ImageLoader.AsyncImageLoader = new DiskCachedWebImageLoader(

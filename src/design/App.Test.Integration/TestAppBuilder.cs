@@ -69,6 +69,9 @@ public class TestApp : Application
         if (!_iconProviderRegistered)
         {
             IconProvider.Current.Register<FontAwesomeIconProvider>();
+            // Same runtime guard the real app installs (App.axaml.cs) — repairs
+            // stale black icon bakes. DarkModeIconTests verify this behavior.
+            global::App.UI.Shared.Helpers.IconBakeFix.Install();
             _iconProviderRegistered = true;
         }
 
