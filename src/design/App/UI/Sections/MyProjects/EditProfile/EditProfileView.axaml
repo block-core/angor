@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ep="clr-namespace:App.UI.Sections.MyProjects.EditProfile"
+             xmlns:controls="clr-namespace:App.UI.Shared.Controls"
              xmlns:i="https://github.com/projektanker/icons.avalonia"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="900"
              x:Class="App.UI.Sections.MyProjects.EditProfile.EditProfileView"
@@ -130,6 +131,60 @@
         </Style>
         <Style Selector="Button.RemoveBtn:pointerover /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Background" Value="{DynamicResource ErrorSoft}" />
+        </Style>
+
+        <!-- ═══ Markdown editor helper ═══ -->
+        <!-- Toolbar formatting button: compact icon button in the editor header strip -->
+        <Style Selector="Button.MdTool">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="MinWidth" Value="32" />
+            <Setter Property="Height" Value="30" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.MdTool:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+        </Style>
+        <Style Selector="Button.MdTool:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+        </Style>
+
+        <!-- Write / Preview segmented toggle -->
+        <Style Selector="Button.MdMode">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="12,5" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+        <Style Selector="Button.MdMode:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+        </Style>
+        <Style Selector="Button.MdMode.ModeActive">
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
+        <Style Selector="Button.MdMode.ModeActive:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource Surface}" />
+        </Style>
+
+        <!-- Markdown cheat-sheet rows -->
+        <Style Selector="TextBlock.MdSyntax">
+            <Setter Property="FontFamily" Value="Cascadia Code,Consolas,monospace" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource TextStrong}" />
+        </Style>
+        <Style Selector="TextBlock.MdMeaning">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
         </Style>
     </UserControl.Styles>
 
@@ -722,15 +777,166 @@
                                        FontSize="13"
                                        Foreground="{DynamicResource TextMuted}"
                                        TextWrapping="Wrap" />
-                            <TextBox Classes="EditField"
-                                     Name="ProjectContentBox"
-                                     Text="{Binding ProjectContent}"
-                                     Watermark="Describe your project in detail..."
-                                     TextWrapping="Wrap"
-                                     AcceptsReturn="True"
-                                     Height="400"
-                                     FontFamily="Cascadia Code,Consolas,monospace"
-                                     FontSize="13" />
+
+                            <!-- ═══ Markdown editor: toolbar + write/preview + cheat sheet ═══ -->
+                            <Border Background="{DynamicResource SurfaceLow}"
+                                    BorderBrush="{DynamicResource Stroke}"
+                                    BorderThickness="1"
+                                    CornerRadius="8">
+                                <DockPanel>
+                                    <!-- Toolbar strip -->
+                                    <Border DockPanel.Dock="Top"
+                                            BorderBrush="{DynamicResource Stroke}"
+                                            BorderThickness="0,0,0,1"
+                                            Padding="8,6">
+                                        <DockPanel Name="MdToolbarPanel">
+                                            <!-- Write / Preview segmented toggle: right on desktop,
+                                                 full-width top row on mobile (see ApplyMarkdownToolbarLayout) -->
+                                            <Border Name="MdModeSwitch"
+                                                    DockPanel.Dock="Right"
+                                                    Background="{DynamicResource SurfaceLow}"
+                                                    BorderBrush="{DynamicResource Stroke}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="7"
+                                                    Padding="2"
+                                                    VerticalAlignment="Center">
+                                                <Grid Name="MdModeGrid" ColumnDefinitions="Auto,2,Auto">
+                                                    <Button Name="MdWriteBtn" Grid.Column="0" Classes="MdMode ModeActive"
+                                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <i:Icon Value="fa-solid fa-pen" FontSize="10" VerticalAlignment="Center" />
+                                                            <TextBlock Text="Write" VerticalAlignment="Center" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                    <Button Name="MdPreviewBtn" Grid.Column="2" Classes="MdMode"
+                                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <i:Icon Value="fa-solid fa-eye" FontSize="10" VerticalAlignment="Center" />
+                                                            <TextBlock Text="Preview" VerticalAlignment="Center" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </Grid>
+                                            </Border>
+
+                                            <!-- Formatting buttons: equal cells so mobile spreads them
+                                                 symmetrically edge-to-edge; desktop packs left at 32px -->
+                                            <UniformGrid Name="MdToolButtons" Rows="1"
+                                                         HorizontalAlignment="Left"
+                                                         VerticalAlignment="Center"
+                                                         Margin="0,0,8,0">
+                                                <Button Name="MdHeadingBtn" Classes="MdTool" ToolTip.Tip="Heading (## Heading)">
+                                                    <i:Icon Value="fa-solid fa-heading" FontSize="13" />
+                                                </Button>
+                                                <Button Name="MdBoldBtn" Classes="MdTool" ToolTip.Tip="Bold (**text**)">
+                                                    <i:Icon Value="fa-solid fa-bold" FontSize="13" />
+                                                </Button>
+                                                <Button Name="MdItalicBtn" Classes="MdTool" ToolTip.Tip="Italic (*text*)">
+                                                    <i:Icon Value="fa-solid fa-italic" FontSize="13" />
+                                                </Button>
+                                                <Border Width="1" Height="18" Background="{DynamicResource Stroke}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                <Button Name="MdLinkBtn" Classes="MdTool" ToolTip.Tip="Link ([title](https://…))">
+                                                    <i:Icon Value="fa-solid fa-link" FontSize="12" />
+                                                </Button>
+                                                <Button Name="MdImageBtn" Classes="MdTool" ToolTip.Tip="Image (![alt](https://…))">
+                                                    <i:Icon Value="fa-solid fa-image" FontSize="12" />
+                                                </Button>
+                                                <Border Width="1" Height="18" Background="{DynamicResource Stroke}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                <Button Name="MdListBtn" Classes="MdTool" ToolTip.Tip="Bulleted list (- item)">
+                                                    <i:Icon Value="fa-solid fa-list-ul" FontSize="12" />
+                                                </Button>
+                                                <Button Name="MdOrderedListBtn" Classes="MdTool" ToolTip.Tip="Numbered list (1. item)">
+                                                    <i:Icon Value="fa-solid fa-list-ol" FontSize="12" />
+                                                </Button>
+                                                <Button Name="MdQuoteBtn" Classes="MdTool" ToolTip.Tip="Quote (&gt; text)">
+                                                    <i:Icon Value="fa-solid fa-quote-left" FontSize="12" />
+                                                </Button>
+                                                <Button Name="MdCodeBtn" Classes="MdTool" ToolTip.Tip="Code (`code`)">
+                                                    <i:Icon Value="fa-solid fa-code" FontSize="12" />
+                                                </Button>
+                                            </UniformGrid>
+                                        </DockPanel>
+                                    </Border>
+
+                                    <!-- Editor / Preview -->
+                                    <Panel>
+                                        <TextBox Name="ProjectContentBox"
+                                                 Text="{Binding ProjectContent}"
+                                                 Watermark="Describe your project in detail..."
+                                                 TextWrapping="Wrap"
+                                                 AcceptsReturn="True"
+                                                 Height="400"
+                                                 Background="Transparent"
+                                                 BorderThickness="0"
+                                                 CornerRadius="0,0,8,8"
+                                                 Padding="12,10"
+                                                 Foreground="{DynamicResource TextStrong}"
+                                                 FontFamily="Cascadia Code,Consolas,monospace"
+                                                 FontSize="13" />
+                                        <ScrollViewer Name="MdPreviewScroll"
+                                                      Height="400"
+                                                      IsVisible="False"
+                                                      HorizontalScrollBarVisibility="Disabled">
+                                            <Panel Margin="12,10">
+                                                <controls:MarkdownTextBlock Name="MdPreviewBlock" BaseFontSize="14" />
+                                                <TextBlock Name="MdPreviewEmptyText"
+                                                           Text="Nothing to preview yet — switch to Write and start typing."
+                                                           FontSize="13"
+                                                           Foreground="{DynamicResource TextMuted}"
+                                                           IsVisible="False" />
+                                            </Panel>
+                                        </ScrollViewer>
+                                    </Panel>
+                                </DockPanel>
+                            </Border>
+
+                            <!-- Markdown quick reference (collapsible) -->
+                            <StackPanel Spacing="8">
+                                <Button Name="MdGuideToggleBtn"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Padding="4,2"
+                                        Cursor="Hand"
+                                        HorizontalAlignment="Left">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <i:Icon Name="MdGuideChevron" Value="fa-solid fa-chevron-right" FontSize="10"
+                                                Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
+                                        <i:Icon Value="fa-brands fa-markdown" FontSize="13"
+                                                Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center" />
+                                        <TextBlock Text="Markdown quick reference"
+                                                   FontSize="13"
+                                                   Foreground="{DynamicResource TextMuted}"
+                                                   VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Border Name="MdGuidePanel"
+                                        IsVisible="False"
+                                        Background="{DynamicResource SurfaceLow}"
+                                        BorderBrush="{DynamicResource Stroke}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Padding="16,12">
+                                    <Grid Name="MdGuideGrid" ColumnDefinitions="Auto,16,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
+                                        <TextBlock Grid.Row="0" Grid.Column="0" Classes="MdSyntax" Text="## Heading" />
+                                        <TextBlock Grid.Row="0" Grid.Column="2" Classes="MdMeaning" Text="Section heading (more # = smaller)" TextWrapping="Wrap" />
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Classes="MdSyntax" Text="**bold**" />
+                                        <TextBlock Grid.Row="1" Grid.Column="2" Classes="MdMeaning" Text="Bold text" TextWrapping="Wrap" />
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Classes="MdSyntax" Text="*italic*" />
+                                        <TextBlock Grid.Row="2" Grid.Column="2" Classes="MdMeaning" Text="Italic text" TextWrapping="Wrap" />
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Classes="MdSyntax" Text="[title](https://url)" />
+                                        <TextBlock Grid.Row="3" Grid.Column="2" Classes="MdMeaning" Text="Clickable link" TextWrapping="Wrap" />
+                                        <TextBlock Grid.Row="4" Grid.Column="0" Classes="MdSyntax" Text="![alt](https://url)" />
+                                        <TextBlock Grid.Row="4" Grid.Column="2" Classes="MdMeaning" Text="Embedded image (use Media tab to upload, then paste the URL)" TextWrapping="Wrap" />
+                                        <TextBlock Grid.Row="5" Grid.Column="0" Classes="MdSyntax" Text="- item" />
+                                        <TextBlock Grid.Row="5" Grid.Column="2" Classes="MdMeaning" Text="Bulleted list (1. item for numbered)" TextWrapping="Wrap" />
+                                        <TextBlock Grid.Row="6" Grid.Column="0" Classes="MdSyntax" Text="&gt; quote" />
+                                        <TextBlock Grid.Row="6" Grid.Column="2" Classes="MdMeaning" Text="Block quote" TextWrapping="Wrap" />
+                                        <TextBlock Grid.Row="7" Grid.Column="0" Classes="MdSyntax" Text="`code`" />
+                                        <TextBlock Grid.Row="7" Grid.Column="2" Classes="MdMeaning" Text="Inline code (``` on its own line for blocks)" TextWrapping="Wrap" />
+                                        <TextBlock Grid.Row="8" Grid.Column="0" Classes="MdSyntax" Text="---" />
+                                        <TextBlock Grid.Row="8" Grid.Column="2" Classes="MdMeaning" Text="Horizontal divider" TextWrapping="Wrap" />
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
                         </StackPanel>
                     </Border>
                 </StackPanel>
