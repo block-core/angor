@@ -24,9 +24,12 @@ if [[ "${1:-}" != "--skip-android" ]]; then
         adb shell monkey -p io.angor.app 1 >/dev/null
         echo "── Android app launched (io.angor.app) ──"
     else
-        echo "── No Android device: building APK only ──"
+        echo "── No Android device: building sideloadable APK ──"
+        # EmbedAssembliesIntoApk=true: Debug builds default to "fast deployment"
+        # (assemblies pushed over USB, NOT packed in the APK) — a sideloaded
+        # fast-deployment APK crashes instantly on launch.
         dotnet build "$ANDROID_PROJ" -t:SignAndroidPackage -f $TFM -c Debug \
-            -p:JavaSdkDirectory="$JAVA_HOME"
+            -p:JavaSdkDirectory="$JAVA_HOME" -p:EmbedAssembliesIntoApk=true
         echo "── APK: $APK ──"
     fi
 fi
