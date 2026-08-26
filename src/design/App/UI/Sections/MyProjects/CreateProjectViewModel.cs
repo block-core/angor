@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using App.UI.Shared.Helpers;
 using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Shared;
@@ -137,23 +138,11 @@ public partial class CreateProjectViewModel : ReactiveObject
     //  current-culture TryParse of "0.5" yields 5 or fails entirely).
     // ─────────────────────────────────────────────────────────────────
 
-    internal static bool TryParseUserAmount(string? text, out double value)
-    {
-        value = 0;
-        if (string.IsNullOrWhiteSpace(text)) return false;
-        var normalized = text.Trim().Replace(',', '.');
-        return double.TryParse(normalized, System.Globalization.NumberStyles.Float,
-            System.Globalization.CultureInfo.InvariantCulture, out value);
-    }
+    internal static bool TryParseUserAmount(string? text, out double value) =>
+        AmountParser.TryParseUserAmount(text, out value);
 
-    internal static bool TryParseUserAmount(string? text, out decimal value)
-    {
-        value = 0;
-        if (string.IsNullOrWhiteSpace(text)) return false;
-        var normalized = text.Trim().Replace(',', '.');
-        return decimal.TryParse(normalized, System.Globalization.NumberStyles.Float,
-            System.Globalization.CultureInfo.InvariantCulture, out value);
-    }
+    internal static bool TryParseUserAmount(string? text, out decimal value) =>
+        AmountParser.TryParseUserAmount(text, out value);
 
     // ── Wizard navigation state ──
     [Reactive] private int currentStep = 1;

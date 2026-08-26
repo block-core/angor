@@ -443,7 +443,7 @@ public partial class ManageProjectModalsView : UserControl
     /// </summary>
     private static double ParseBtc(string? amount)
     {
-        return double.TryParse(amount, NumberStyles.Float, CultureInfo.InvariantCulture, out var v) ? v : 0;
+        return AmountParser.ParseInvariantOrZero(amount);
     }
 
     /// <summary>
