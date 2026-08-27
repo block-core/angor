@@ -268,8 +268,7 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         if (string.IsNullOrEmpty(_walletId)) return;
 
         var address = AddressInput.Text?.Trim() ?? "";
-        if (!double.TryParse(AmountInput.Text, System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture, out var amount)) return;
+        if (!AmountParser.TryParseUserAmount(AmountInput.Text, out double amount)) return;
 
         // Disable send button and show spinner during operation
         var sendBtn = this.FindControl<Button>("BtnSend");
@@ -341,8 +340,7 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         }
 
         if (string.IsNullOrWhiteSpace(AmountInput.Text) ||
-            !double.TryParse(AmountInput.Text, System.Globalization.NumberStyles.Any,
-                System.Globalization.CultureInfo.InvariantCulture, out var amount))
+            !AmountParser.TryParseUserAmount(AmountInput.Text, out double amount))
         {
             AmountError.Text = "Amount must be greater than 0";
             AmountError.IsVisible = true;
