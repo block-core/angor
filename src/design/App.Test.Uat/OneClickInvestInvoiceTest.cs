@@ -41,12 +41,12 @@ public class OneClickInvestInvoiceTest
         Log($"Run ID: {runId}");
 
         // ── Launch founder and investor app processes ──
-        await using var founderHost = await TestProcessHost.LaunchAsync(FounderProfile);
+        await using var founderHost = await TestHostFactory.LaunchAsync(FounderProfile);
         await founderHost.Client.WipeDataAsync();
         await founderHost.Client.SwitchNetworkAsync("Angornet");
         await founderHost.Client.EnableDebugModeAsync();
 
-        await using var investorHost = await TestProcessHost.LaunchAsync(InvestorProfile);
+        await using var investorHost = await TestHostFactory.LaunchAsync(InvestorProfile);
         await investorHost.Client.WipeDataAsync();
         await investorHost.Client.SwitchNetworkAsync("Angornet");
         await investorHost.Client.EnableDebugModeAsync();

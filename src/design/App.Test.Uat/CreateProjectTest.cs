@@ -30,7 +30,7 @@ public class CreateProjectTest
         Log(null, $"========== STARTING {nameof(FullCreateAndEditProjectFlow)} ==========");
         Log(null, $"Run ID: {runId}");
 
-        await using var founderHost = await TestProcessHost.LaunchAsync(FounderProfile);
+        await using var founderHost = await TestHostFactory.LaunchAsync(FounderProfile);
         await founderHost.Client.WipeDataAsync();
         await founderHost.Client.SwitchNetworkAsync("Angornet");
         await founderHost.Client.EnableDebugModeAsync();

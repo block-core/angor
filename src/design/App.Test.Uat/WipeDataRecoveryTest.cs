@@ -29,7 +29,7 @@ public class WipeDataRecoveryTest
         Log($"========== STARTING {nameof(WipeDataWithRecoveryPurge_CleansWalletAndRecoveryFiles)} ==========");
         Log($"Run ID: {runId}");
 
-        await using var host = await TestProcessHost.LaunchAsync(Profile);
+        await using var host = await TestHostFactory.LaunchAsync(Profile);
 
         // ── Step 1: Clean slate ──
         Log("Step 1: Wiping data with recovery purge to start clean...");

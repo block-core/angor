@@ -10,7 +10,7 @@ namespace App.Test.Uat.Helpers;
 /// The child process runs with ANGOR_TEST_API=1, exposing an HTTP automation endpoint.
 /// Dispose kills the process.
 /// </summary>
-public sealed class TestProcessHost : IAsyncDisposable
+public sealed class TestProcessHost : ITestHost
 {
     private readonly Process process;
 

@@ -1119,7 +1119,7 @@ public static class AutomationFlows
 
     private static async Task<ProjectCreatedResponse> DeployProjectAsync(
         MyProjectsViewModel myProjectsVm,
-        Window window,
+        TopLevel window,
         string runId,
         string projectType)
     {
@@ -1221,7 +1221,7 @@ public static class AutomationFlows
         return new ProjectCreatedResponse { Success = false, Error = "Project did not appear after deploy" };
     }
 
-    private static async Task OpenCreateWizardAsync(MyProjectsViewModel myProjectsVm, Window window)
+    private static async Task OpenCreateWizardAsync(MyProjectsViewModel myProjectsVm, TopLevel window)
     {
         // Try clicking the LaunchFromListButton (project list view) or the EmptyState "Launch a Project" button
         var clicked = await Dispatcher.UIThread.InvokeAsync(() =>
@@ -1274,7 +1274,7 @@ public static class AutomationFlows
         await Task.Delay(500);
     }
 
-    private static async Task<string?> CreateWalletViaGenerateAsync(Window window)
+    private static async Task<string?> CreateWalletViaGenerateAsync(TopLevel window)
     {
         var addWalletBtn = await Dispatcher.UIThread.InvokeAsync(() => FindAddWalletButton(window));
         if (addWalletBtn == null)
@@ -1327,7 +1327,7 @@ public static class AutomationFlows
         return seedWords;
     }
 
-    private static async Task FundWalletViaFaucetAsync(Window window, FundsViewModel fundsVm, string walletId, string profileName)
+    private static async Task FundWalletViaFaucetAsync(TopLevel window, FundsViewModel fundsVm, string walletId, string profileName)
     {
         var deadline = DateTime.UtcNow + FaucetTimeout;
         var faucetRetryInterval = TimeSpan.FromSeconds(30);
@@ -1418,7 +1418,7 @@ public static class AutomationFlows
     }
 
     private static async Task<bool> ClickManageProjectClaimStageAsync(
-        Window window,
+        TopLevel window,
         MyProjectsViewModel myProjectsVm,
         MyProjectItemViewModel project,
         int stageNumber)
@@ -1483,7 +1483,7 @@ public static class AutomationFlows
     }
 
     private static async Task<bool> ClickManageProjectReleaseFundsAsync(
-        Window window,
+        TopLevel window,
         MyProjectsViewModel myProjectsVm,
         MyProjectItemViewModel project)
     {
@@ -1515,9 +1515,33 @@ public static class AutomationFlows
         return false;
     }
 
-    private static async Task NavigateToAsync(Window window, string section)
+    private static async Task NavigateToAsync(TopLevel window, string section)
     {
-        if (string.Equals(section, "Settings", StringComparison.OrdinalIgnoreCase))
+        var isMobile = await Dispatcher.UIThread.InvokeAsync(() =>
+            window.GetVisualDescendants().OfType<Border>().All(b => b.Name != "DesktopSidebar"));
+
+        if (isMobile)
+        {
+            // Mobile layout has no desktop sidebar/header — drive the ShellViewModel directly.
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var vm = GetShellVm(window);
+                if (string.Equals(section, "Settings", StringComparison.OrdinalIgnoreCase))
+                {
+                    vm.NavigateToSettings();
+                }
+                else
+                {
+                    var navItem = vm.NavEntries.OfType<NavItem>().FirstOrDefault(n =>
+                        string.Equals(n.Label, section, StringComparison.OrdinalIgnoreCase));
+                    if (navItem == null)
+                        throw new InvalidOperationException($"NavItem '{section}' not found in NavEntries");
+                    vm.SelectedNavItem = navItem;
+                }
+                Dispatcher.UIThread.RunJobs();
+            });
+        }
+        else if (string.Equals(section, "Settings", StringComparison.OrdinalIgnoreCase))
         {
             // Click the SettingsButton in the desktop header
             await ClickByNameAsync(window, "SettingsButton");
@@ -1551,7 +1575,7 @@ public static class AutomationFlows
         await Task.Delay(500);
     }
 
-    private static async Task ClickWalletCardButtonAsync(Window window, string automationId)
+    private static async Task ClickWalletCardButtonAsync(TopLevel window, string automationId)
     {
         var deadline = DateTime.UtcNow + UiTimeout;
         while (DateTime.UtcNow < deadline)
@@ -1580,40 +1604,40 @@ public static class AutomationFlows
         throw new TimeoutException($"Button '{automationId}' not found within timeout");
     }
 
-    private static async Task<Window> RequireWindowAsync()
+    private static async Task<TopLevel> RequireWindowAsync()
     {
         var window = await Dispatcher.UIThread.InvokeAsync(GetMainWindow);
         return window ?? throw new InvalidOperationException("Main window not available");
     }
 
-    private static Window? GetMainWindow()
+    private static TopLevel? GetMainWindow()
     {
-        return (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+        return AutomationRoot.Resolve();
     }
 
-    private static ShellViewModel GetShellVm(Window window)
+    private static ShellViewModel GetShellVm(TopLevel window)
     {
         var shellView = window.GetVisualDescendants().OfType<ShellView>().FirstOrDefault();
         return shellView?.DataContext as ShellViewModel
             ?? throw new InvalidOperationException("ShellViewModel not found");
     }
 
-    private static FundsViewModel? GetFundsViewModel(Window window)
+    private static FundsViewModel? GetFundsViewModel(TopLevel window)
     {
         return window.GetVisualDescendants().OfType<FundsView>().FirstOrDefault()?.DataContext as FundsViewModel;
     }
 
-    private static MyProjectsViewModel? GetMyProjectsViewModel(Window window)
+    private static MyProjectsViewModel? GetMyProjectsViewModel(TopLevel window)
     {
         return window.GetVisualDescendants().OfType<MyProjectsView>().FirstOrDefault()?.DataContext as MyProjectsViewModel;
     }
 
-    private static FindProjectsViewModel? GetFindProjectsViewModel(Window window)
+    private static FindProjectsViewModel? GetFindProjectsViewModel(TopLevel window)
     {
         return window.GetVisualDescendants().OfType<FindProjectsView>().FirstOrDefault()?.DataContext as FindProjectsViewModel;
     }
 
-    private static FundersViewModel? GetFundersViewModel(Window window)
+    private static FundersViewModel? GetFundersViewModel(TopLevel window)
     {
         return window.GetVisualDescendants().OfType<FundersView>().FirstOrDefault()?.DataContext as FundersViewModel;
     }
@@ -1629,7 +1653,7 @@ public static class AutomationFlows
         return root.GetVisualDescendants().OfType<T>().FirstOrDefault(c => c.Name == name);
     }
 
-    private static Button? FindAddWalletButton(Window window)
+    private static Button? FindAddWalletButton(TopLevel window)
     {
         var buttons = window.GetVisualDescendants().OfType<Button>().Where(b => b.IsVisible);
         foreach (var btn in buttons)
@@ -1664,7 +1688,7 @@ public static class AutomationFlows
     /// Try to click the ApproveButton with the matching Tag (signature Id) in the visual tree.
     /// Returns false if button not found (e.g. virtualized out of view).
     /// </summary>
-    private static async Task<bool> ClickApproveButtonByIdAsync(Window window, int signatureId)
+    private static async Task<bool> ClickApproveButtonByIdAsync(TopLevel window, int signatureId)
     {
         return await Dispatcher.UIThread.InvokeAsync(() =>
         {
@@ -1681,7 +1705,7 @@ public static class AutomationFlows
     /// <summary>
     /// Click the ManageButton whose Tag (InvestmentViewModel) matches the given projectIdentifier.
     /// </summary>
-    private static async Task ClickManageButtonByProjectAsync(Window window, string projectIdentifier)
+    private static async Task ClickManageButtonByProjectAsync(TopLevel window, string projectIdentifier)
     {
         var deadline = DateTime.UtcNow + UiTimeout;
         while (DateTime.UtcNow < deadline)
@@ -1717,7 +1741,7 @@ public static class AutomationFlows
     /// <summary>
     /// Click the FundPatternButton whose DataContext has the specified StageCount.
     /// </summary>
-    private static async Task ClickFundPatternByStageCountAsync(Window window, int stageCount)
+    private static async Task ClickFundPatternByStageCountAsync(TopLevel window, int stageCount)
     {
         var deadline = DateTime.UtcNow + UiTimeout;
         while (DateTime.UtcNow < deadline)
@@ -1755,7 +1779,7 @@ public static class AutomationFlows
     /// a wallet or jumped to invoice), returns without clicking — the caller should proceed
     /// directly to PayWithWalletButton or invoice handling.
     /// </summary>
-    private static async Task ClickFirstWalletButtonAsync(Window window)
+    private static async Task ClickFirstWalletButtonAsync(TopLevel window)
     {
         var deadline = DateTime.UtcNow + UiTimeout;
         while (DateTime.UtcNow < deadline)
@@ -1806,7 +1830,7 @@ public static class AutomationFlows
     /// click doesn't trigger the popup (e.g. due to UI timing or focus issues).
     /// </summary>
     private static async Task ClickWithConfirmRetryAsync(
-        Window window,
+        TopLevel window,
         string triggerButtonName,
         string confirmButtonName = "ConfirmButton",
         TimeSpan? confirmTimeout = null,
@@ -1848,7 +1872,7 @@ public static class AutomationFlows
     /// Click a Button found by Name (with optional wait+retry).
     /// Must be called from a background thread (dispatches to UI thread internally).
     /// </summary>
-    private static async Task ClickByNameAsync(Window window, string name, TimeSpan? timeout = null)
+    private static async Task ClickByNameAsync(TopLevel window, string name, TimeSpan? timeout = null)
     {
         var deadline = DateTime.UtcNow + (timeout ?? UiTimeout);
         while (DateTime.UtcNow < deadline)
@@ -1880,7 +1904,7 @@ public static class AutomationFlows
     /// beat after the preceding click advances the wizard step).
     /// Must be called from a background thread.
     /// </summary>
-    private static async Task TypeTextByNameAsync(Window window, string name, string text)
+    private static async Task TypeTextByNameAsync(TopLevel window, string name, string text)
     {
         var deadline = DateTime.UtcNow + UiTimeout;
         while (true)
@@ -1910,7 +1934,7 @@ public static class AutomationFlows
     /// Retries until the control appears in the visual tree.
     /// Must be called from a background thread.
     /// </summary>
-    private static async Task SetNumericByNameAsync(Window window, string name, decimal value)
+    private static async Task SetNumericByNameAsync(TopLevel window, string name, decimal value)
     {
         var deadline = DateTime.UtcNow + UiTimeout;
         while (true)
@@ -2127,7 +2151,7 @@ public static class AutomationFlows
     /// <summary>
     /// Set SelectedDate on a CalendarDatePicker found by Name.
     /// </summary>
-    private static async Task SetCalendarDateByNameAsync(Window window, string name, DateTime date)
+    private static async Task SetCalendarDateByNameAsync(TopLevel window, string name, DateTime date)
     {
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
@@ -2143,7 +2167,7 @@ public static class AutomationFlows
     /// <summary>
     /// Set SelectedItem on a ComboBox found by Name, matching by string value.
     /// </summary>
-    private static async Task SetComboBoxByNameAsync(Window window, string name, string value)
+    private static async Task SetComboBoxByNameAsync(TopLevel window, string name, string value)
     {
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
@@ -2162,7 +2186,7 @@ public static class AutomationFlows
     /// <summary>
     /// Click a ListBoxItem in a ListBox found by Name, matching by Tag value.
     /// </summary>
-    private static async Task ClickListBoxItemByTagAsync(Window window, string listBoxName, string tagValue)
+    private static async Task ClickListBoxItemByTagAsync(TopLevel window, string listBoxName, string tagValue)
     {
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
@@ -2191,7 +2215,7 @@ public static class AutomationFlows
     /// <summary>
     /// Click PART_ManageButton on a ProjectCard whose DataContext matches the given project.
     /// </summary>
-    private static async Task ClickPartManageButtonAsync(Window window, MyProjectItemViewModel project)
+    private static async Task ClickPartManageButtonAsync(TopLevel window, MyProjectItemViewModel project)
     {
         var deadline = DateTime.UtcNow + UiTimeout;
         while (DateTime.UtcNow < deadline)
@@ -2231,7 +2255,7 @@ public static class AutomationFlows
     /// <summary>
     /// Click PART_EditButton on a ProjectCard whose DataContext matches the given project.
     /// </summary>
-    private static async Task ClickPartEditButtonAsync(Window window, MyProjectItemViewModel project)
+    private static async Task ClickPartEditButtonAsync(TopLevel window, MyProjectItemViewModel project)
     {
         var deadline = DateTime.UtcNow + UiTimeout;
         while (DateTime.UtcNow < deadline)
