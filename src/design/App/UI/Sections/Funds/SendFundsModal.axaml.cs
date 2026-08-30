@@ -7,6 +7,7 @@ using Avalonia.VisualTree;
 using Angor.Shared.Services;
 using App.UI.Shared;
 using App.UI.Shared.Helpers;
+using App.UI.Shared.Services;
 using App.UI.Shell;
 using Branta.Classes;
 using Branta.Enums;
@@ -35,9 +36,13 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
     private string _lastTxId = "";
     private string? _brantaVerifyUrl;
     private CancellationTokenSource? _brantaLookupCts;
+    private bool _isSweepAll;
+    private bool _settingAmountProgrammatically;
 
     private ICurrencyService CurrencyService =>
         App.Services.GetRequiredService<ICurrencyService>();
+
+    public bool IsSweepAll => _isSweepAll;
 
     public SendFundsModal()
     {
@@ -46,10 +51,18 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
 
         // Clear errors on input (Vue: @input clears errors)
         AddressInput.TextChanged += OnAddressTextChanged;
-        AmountInput.TextChanged += (_, _) => ClearSendErrors();
+        AmountInput.TextChanged += (_, _) =>
+        {
+            ClearSendErrors();
+            if (!_settingAmountProgrammatically)
+                _isSweepAll = false;
+        };
 
         // Re-run lookup immediately when the on-chain toggle changes
         BrantaOnChainToggle.IsCheckedChanged += OnBrantaToggleChanged;
+
+        IQrCodeScanner scanner = App.Services.GetRequiredService<IQrCodeScanner>();
+        BtnScanQr.IsVisible = scanner.IsAvailable;
     }
 
     private async void OnAddressTextChanged(object? sender, TextChangedEventArgs e)
@@ -224,6 +237,10 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
                 _ = SendWithFeePopupAsync();
                 break;
 
+            case "BtnScanQr":
+                _ = ScanQrCodeAsync();
+                break;
+
             case "BtnCopyTxid":
                 ClipboardHelper.CopyToClipboard(this, _lastTxId);
                 break;
@@ -236,6 +253,49 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
             case "BtnDone":
                 GetShellVm()?.HideModal();
                 break;
+        }
+    }
+
+    private async Task ScanQrCodeAsync()
+    {
+        var shellVm = GetShellVm();
+        var log = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<SendFundsModal>();
+
+        try
+        {
+            IQrCodeScanner scanner = App.Services.GetRequiredService<IQrCodeScanner>();
+            string? content = await scanner.ScanAsync();
+            log.LogInformation("QR scan returned {Length} chars", content?.Length ?? 0);
+
+            // Native activity completion is not guaranteed to resume on Avalonia's
+            // dispatcher. Explicitly marshal the modal remount and all control
+            // mutations to the UI thread.
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                // Returning from the scanner activity can leave the shell's modal
+                // overlay stale (blur backdrop rendered without the card).
+                shellVm?.ShowModal(this);
+
+                if (content == null)
+                    return;
+
+                if (!BitcoinQrPaymentParser.TryParse(content, out BitcoinQrPayment? payment, out string? error))
+                {
+                    log.LogWarning("QR payload rejected: {Error}", error);
+                    AddressError.Text = error ?? "Unsupported QR code.";
+                    AddressError.IsVisible = true;
+                    return;
+                }
+
+                AddressInput.Text = payment!.Address;
+                if (payment.AmountBtc is decimal amount)
+                    AmountInput.Text = amount.ToString("0.########", System.Globalization.CultureInfo.InvariantCulture);
+            });
+        }
+        catch (Exception ex)
+        {
+            log.LogError(ex, "QR scan flow failed");
+            await Dispatcher.UIThread.InvokeAsync(() => shellVm?.ShowModal(this));
         }
     }
 
@@ -279,7 +339,7 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         if (sendBtnContent != null) sendBtnContent.IsVisible = false;
         if (sendBtnSpinner != null) sendBtnSpinner.IsVisible = true;
 
-        var (success, txId, error) = await fundsVm.SendAsync(_walletId, address, amount, feeRate);
+        var (success, txId, error) = await fundsVm.SendAsync(_walletId, address, amount, feeRate, _isSweepAll);
 
         if (sendBtn != null) sendBtn.IsEnabled = true;
         if (sendBtnContent != null) sendBtnContent.IsVisible = true;
@@ -288,8 +348,10 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         if (success && txId != null)
         {
             _lastTxId = txId;
-            SummaryAmount.Text = CurrencyService.FormatBtc(amount);
-            SummaryFee.Text = $"0.00001200 {CurrencyService.Symbol}";
+            SummaryAmount.Text = _isSweepAll ? "All available funds" : CurrencyService.FormatBtc(amount);
+            SummaryFee.Text = _isSweepAll
+                ? "Deducted from the sent amount"
+                : $"0.00001200 {CurrencyService.Symbol}";
             SummaryTxid.Text = txId;
             ShowStep("success");
         }
@@ -309,7 +371,18 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         if (double.TryParse(_walletBalance, System.Globalization.NumberStyles.Any,
                 System.Globalization.CultureInfo.InvariantCulture, out var bal))
         {
+            _settingAmountProgrammatically = true;
             AmountInput.Text = (bal * pct).ToString("F8", System.Globalization.CultureInfo.InvariantCulture);
+
+            // TextChanged may fire asynchronously (deferred to the next dispatcher
+            // cycle), so the _settingAmountProgrammatically guard in the handler
+            // can't protect _isSweepAll. Post the flag update AFTER all pending
+            // TextChanged callbacks have drained.
+            Dispatcher.UIThread.Post(() =>
+            {
+                _settingAmountProgrammatically = false;
+                _isSweepAll = pct >= 1;
+            });
         }
     }
 

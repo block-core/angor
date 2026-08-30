@@ -35,28 +35,10 @@ public partial class App : Application
 
         AvaloniaXamlLoader.Load(this);
 
-        // ── Mobile perf: neutralise BoxShadow resources on touch platforms ──
-        // Box-shadow rendering is one of the most expensive ops on Skia/Android.
-        // Overriding the three shared shadow resources to "no shadow" here cascades
-        // to every card across the app (ProjectCard, Portfolio, Settings, Funds,
-        // CreateProject, InvestmentDetail, ProjectDetail, etc.) without touching
-        // individual views. Desktop retains the full shadow palette unchanged.
-        //
-        // Cards keep their 1px border and rounded corners for visual identity;
-        // only the drop-shadow is removed on mobile.
-        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
-        {
-            var none = new Avalonia.Media.BoxShadows(default);
-            Resources["ItemShadow"] = none;
-            Resources["ItemShadowHover"] = none;
-            Resources["ItemShadowBig"] = none;
-            Resources["FloatingBtnShadow"] = none;
-            // Also neutralise button shadows used by Home's call-to-action
-            // buttons (wrapped in Border.ButtonShadow). These are per-button
-            // drop shadows that compound cost on Home's two hero cards.
-            Resources["PrimaryButtonShadow"] = none;
-            Resources["PrimaryButtonShadowHover"] = none;
-        }
+        // NOTE: mobile BoxShadow neutralisation removed — the original scroll-lag
+        // culprit was unbounded remote image decodes (fixed in 932f01ce) and the
+        // Avalonia 12 renderer handles shadows fine on Android. Full shadow
+        // palette is now shared across desktop and mobile.
     }
 
     public override void OnFrameworkInitializationCompleted()

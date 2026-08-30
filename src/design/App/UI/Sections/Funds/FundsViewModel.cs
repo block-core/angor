@@ -259,7 +259,7 @@ public partial class FundsViewModel : ReactiveObject, IDisposable, INetworkSwitc
     /// <summary>
     /// Import an existing wallet from user-provided seed words.
     /// </summary>
-    public async Task<bool> ImportWalletAsync(string walletName, string seedWords)
+    public async Task<(bool Success, string? Error)> ImportWalletAsync(string walletName, string seedWords)
     {
         _logger.LogInformation("Importing wallet '{WalletName}' from seed words", walletName);
 
@@ -276,28 +276,31 @@ public partial class FundsViewModel : ReactiveObject, IDisposable, INetworkSwitc
         {
             _logger.LogInformation("Wallet '{WalletName}' imported successfully (WalletId: {WalletId})", walletName, result.Value);
             await _walletContext.ReloadAsync();
-            return true;
+            return (true, null);
         }
 
         _logger.LogError("Failed to import wallet '{WalletName}': {Error}", walletName, result.Error);
-        return false;
+        return (false, result.Error);
     }
 
     /// <summary>
     /// Send funds from a wallet to a destination address.
     /// Returns the transaction ID on success.
     /// </summary>
-    public async Task<(bool Success, string? TxId, string? Error)> SendAsync(string walletId, string destinationAddress, double amountBtc, long feeRateSatsPerVByte)
+    public async Task<(bool Success, string? TxId, string? Error)> SendAsync(string walletId, string destinationAddress,
+        double amountBtc, long feeRateSatsPerVByte, bool sweepAll = false)
     {
+        _logger.LogInformation("SendAsync: walletId={WalletId} address={Address} amount={Amount} feeRate={FeeRate} sweepAll={SweepAll}",
+            walletId, destinationAddress, amountBtc, feeRateSatsPerVByte, sweepAll);
         try
         {
             var sats = ((decimal)amountBtc).ToUnitSatoshi();
             var id = new WalletId(walletId);
-            var result = await _walletAppService.SendAmount(
-                id,
-                new Amount(sats),
-                new Address(destinationAddress),
-                new DomainFeeRate(feeRateSatsPerVByte));
+            Result<TxId> result = sweepAll
+                ? await _walletAppService.SendAll(id, new Address(destinationAddress),
+                    new DomainFeeRate(feeRateSatsPerVByte))
+                : await _walletAppService.SendAmount(id, new Amount(sats), new Address(destinationAddress),
+                    new DomainFeeRate(feeRateSatsPerVByte));
 
             if (result.IsSuccess)
             {

@@ -21,6 +21,10 @@ public class TestAppBuilder
         // layout-regression assertions and any size-sensitive test.
         .UseSkia()
         .UseHeadless(new AvaloniaHeadlessPlatformOptions { UseHeadlessDrawing = false })
+        // Match the real app builders (Desktop Program.cs / Android MainApplication):
+        // the app font token is fonts:Inter#Inter, which only resolves when the
+        // embedded Inter collection is registered.
+        .WithInterFont()
         .UseReactiveUI(b => b.WithAvalonia());
 
     public static void RefreshServicesForCurrentProfile()

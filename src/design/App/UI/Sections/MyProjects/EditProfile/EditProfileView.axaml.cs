@@ -122,9 +122,6 @@ public partial class EditProfileView : UserControl
         _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<EditProfileView>();
         _blossomService = App.Services.GetRequiredService<BlossomUploadService>();
 
-        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
-            Classes.Add("Mobile");
-
         WireControls();
 
         DataContextChanged += OnDataContextChanged;

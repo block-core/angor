@@ -131,9 +131,30 @@ public class AndroidKeyStoreSecureKeyProvider : ISecureKeyProvider
         if (encryptedBytes.Length == 0)
             return new Dictionary<string, string>();
 
-        var decrypted = Decrypt(encryptedBytes);
-        var json = Encoding.UTF8.GetString(decrypted);
-        return JsonSerializer.Deserialize<Dictionary<string, string>>(json) ?? new Dictionary<string, string>();
+        try
+        {
+            var decrypted = Decrypt(encryptedBytes);
+            var json = Encoding.UTF8.GetString(decrypted);
+            return JsonSerializer.Deserialize<Dictionary<string, string>>(json) ?? new Dictionary<string, string>();
+        }
+        catch (Exception ex)
+        {
+            // wallet-keys.enc can outlive the KeyStore master key (e.g. app data
+            // restored to a device whose KeyStore doesn't hold the original key) —
+            // GCM then throws on every call, permanently bricking wallet create,
+            // import and read. Quarantine the stale file and start fresh instead.
+            global::Android.Util.Log.Error("AngorKeyProvider",
+                $"Failed to decrypt wallet-keys.enc — quarantining stale file: {ex}");
+            try
+            {
+                File.Move(_filePath, _filePath + $".stale-{DateTime.UtcNow:yyyyMMddHHmmss}", overwrite: false);
+            }
+            catch (Exception moveEx)
+            {
+                global::Android.Util.Log.Error("AngorKeyProvider", $"Failed to quarantine stale key file: {moveEx}");
+            }
+            return new Dictionary<string, string>();
+        }
     }
 
     private void SaveKeys(Dictionary<string, string> keys)

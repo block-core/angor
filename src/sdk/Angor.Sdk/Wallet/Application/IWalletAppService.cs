@@ -9,6 +9,7 @@ namespace Angor.Sdk.Wallet.Application;
 public interface IWalletAppService
 {
     Task<Result<TxId>> SendAmount(WalletId walletId, Amount amount, Address address, DomainFeeRate feeRate);
+    Task<Result<TxId>> SendAll(WalletId walletId, Address address, DomainFeeRate feeRate);
     Task<Result<IEnumerable<WalletMetadata>>> GetMetadatas();
     Task<Result<IEnumerable<BroadcastedTransaction>>> GetTransactions(WalletId walletId);
     Task<Result<Balance>> GetBalance(WalletId walletId);

@@ -37,6 +37,7 @@
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.5" />
     <PackageVersion Include="PanAndZoom" Version="11.3.6" />
     <PackageVersion Include="QRCoder" Version="1.6.0" />
+    <PackageVersion Include="ZXing.Net" Version="0.16.11" />
     <PackageVersion Include="ReactiveUI" Version="23.2.1" />
     <PackageVersion Include="ReactiveUI.SourceGenerators" Version="2.6.30">
       <PrivateAssets>all</PrivateAssets>
@@ -100,4 +101,4 @@
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.11" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.11" />
   </ItemGroup>
-</Project>
+</Project>

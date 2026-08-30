@@ -93,15 +93,46 @@
                         <StackPanel Spacing="4">
                             <TextBlock Text="Recipient Address" FontSize="13" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextMuted}" />
-                            <TextBox Name="AddressInput"
-                                     AutomationProperties.AutomationId="SendAddressInput"
-                                     Watermark="Enter Bitcoin address"
-                                     Background="{DynamicResource ModalInputBg}"
-                                     BorderBrush="{DynamicResource StrokeSubtle}"
-                                     CornerRadius="8"
-                                     Padding="12,10"
-                                     FontSize="14"
-                                     Foreground="{DynamicResource TextStrong}" />
+                            <Grid ColumnDefinitions="*,8,44">
+                                <TextBox Name="AddressInput"
+                                         Grid.Column="0"
+                                         AutomationProperties.AutomationId="SendAddressInput"
+                                         Watermark="Enter Bitcoin address"
+                                         Background="{DynamicResource ModalInputBg}"
+                                         BorderBrush="{DynamicResource StrokeSubtle}"
+                                         CornerRadius="8"
+                                         Padding="12,10"
+                                         FontSize="14"
+                                         Foreground="{DynamicResource TextStrong}" />
+                                <Button Name="BtnScanQr"
+                                        Grid.Column="2"
+                                        AutomationProperties.AutomationId="BtnScanSendQr"
+                                        AutomationProperties.Name="Scan Bitcoin QR code"
+                                        ToolTip.Tip="Scan Bitcoin QR code"
+                                        Width="44" Height="44" Padding="0"
+                                        CornerRadius="8"
+                                        Background="Transparent"
+                                        BorderBrush="{DynamicResource StrokeSubtle}"
+                                        BorderThickness="1"
+                                        IsVisible="False">
+                                    <!-- Viewfinder-corner frame around a QR glyph (mirrors the scanner reticle) -->
+                                    <Panel Width="24" Height="24">
+                                        <Canvas Width="24" Height="24">
+                                            <Path Data="M1.5,8 L1.5,4 C1.5,2.6 2.6,1.5 4,1.5 L8,1.5"
+                                                  Stroke="{DynamicResource PrimaryGreenBrush}" StrokeThickness="2" />
+                                            <Path Data="M16,1.5 L20,1.5 C21.4,1.5 22.5,2.6 22.5,4 L22.5,8"
+                                                  Stroke="{DynamicResource PrimaryGreenBrush}" StrokeThickness="2" />
+                                            <Path Data="M22.5,16 L22.5,20 C22.5,21.4 21.4,22.5 20,22.5 L16,22.5"
+                                                  Stroke="{DynamicResource PrimaryGreenBrush}" StrokeThickness="2" />
+                                            <Path Data="M8,22.5 L4,22.5 C2.6,22.5 1.5,21.4 1.5,20 L1.5,16"
+                                                  Stroke="{DynamicResource PrimaryGreenBrush}" StrokeThickness="2" />
+                                        </Canvas>
+                                        <i:Icon Value="fa-solid fa-qrcode" FontSize="11"
+                                                Foreground="{DynamicResource PrimaryGreenBrush}"
+                                                HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Panel>
+                                </Button>
+                            </Grid>
                             <!-- Per-payment opt-in for plain on-chain address verification -->
                             <CheckBox Name="BrantaOnChainToggle"
                                       Content="Verify on-chain address"

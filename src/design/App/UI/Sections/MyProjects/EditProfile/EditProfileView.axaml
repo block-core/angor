@@ -16,11 +16,6 @@
     -->
 
     <UserControl.Styles>
-        <!-- Mobile: shell owns the back bar; strip desktop hover shadows/transitions. -->
-        <Style Selector="ep|EditProfileView.Mobile Border.FloatingBtn">
-            <Setter Property="Transitions" Value="{x:Null}" />
-            <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />
-        </Style>
 
         <Style Selector="Border.FloatingBtn:pointerover">
             <Setter Property="RenderTransform" Value="translate(0px, -1px)" />
