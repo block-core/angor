@@ -30,7 +30,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         _okCalledOnSubscriptionClients = new();
     }
 
-    private ConcurrentDictionary<string, byte> GetAllConnectedRelayNames()
+    private ConcurrentDictionary<string, byte> GetAllConnectedRelayNames(bool includeDiscoveryRelays = false)
     {
         var allRelays = new ConcurrentDictionary<string, byte>();
 
@@ -38,17 +38,23 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         {
             foreach (var client in _nostrMultiWebsocketClient.Clients)
             {
-                allRelays.TryAdd(client.Communicator.Name, 0);
+                // Only track relays whose websocket is actually running. A relay that never
+                // completed the WS upgrade will never send EOSE, and its DisconnectionHappened
+                // already fired before any subscription was monitored — so including it here
+                // would block the "all relays sent EOSE" completion check forever.
+                if (client.Communicator.IsRunning)
+                    allRelays.TryAdd(client.Communicator.Name, 0);
             }
         }
 
-        // if (_nostrMultiWebsocketClientDiscovery != null)
-        // {
-        //     foreach (var client in _nostrMultiWebsocketClientDiscovery.Clients)
-        //     {
-        //         allRelays.Add(client.Communicator.Name);
-        //     }
-        // }
+        if (includeDiscoveryRelays && _nostrMultiWebsocketClientDiscovery != null)
+        {
+            foreach (var client in _nostrMultiWebsocketClientDiscovery.Clients)
+            {
+                if (client.Communicator.IsRunning)
+                    allRelays.TryAdd(client.Communicator.Name, 0);
+            }
+        }
 
         return allRelays;
     }
@@ -190,10 +196,10 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         return response;
     }
     
-    public bool MonitoringEoseReceivedOnSubscription(string subscription)
+    public bool MonitoringEoseReceivedOnSubscription(string subscription, bool includeDiscoveryRelays = false)
     {
         _logger.LogDebug($"Started monitoring subscription {subscription}");
-        var relayNames = GetAllConnectedRelayNames();
+        var relayNames = GetAllConnectedRelayNames(includeDiscoveryRelays);
         if (_eoseCalledOnSubscriptionClients.TryAdd(subscription, relayNames))
             return true;
         

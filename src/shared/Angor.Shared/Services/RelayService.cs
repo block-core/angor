@@ -380,12 +380,16 @@ namespace Angor.Shared.Services
         public void LookupRelayListForNPubs(Action<string, List<NostrEventTag>> onResponse, Action onEndOfStream, params string[] npubs)
         {
             var client = _communicationFactory.GetOrCreateClient(_networkService);
+            // NIP-65 relay lists (kind 10002) are published to the discovery ("purple pages") relays,
+            // so query them alongside the regular relays — the account's relay list is often only there.
+            var discoveryClient = _communicationFactory.GetOrCreateDiscoveryClients(_networkService);
 
             var subscriptionKey = Guid.NewGuid().ToString().Replace("-", "");
 
             if (!_subscriptionsHandling.RelaySubscriptionAdded(subscriptionKey))
             {
                 var subscription = client.Streams.EventStream
+                    .Merge(discoveryClient.Streams.EventStream)
                     .Where(_ => _.Subscription == subscriptionKey)
                     .Where(_ => _.Event is not null)
                     .Select(_ => _.Event)
@@ -404,14 +408,17 @@ namespace Angor.Shared.Services
 
             if (onEndOfStream != null)
             {
-                _subscriptionsHandling.TryAddEoseAction(subscriptionKey, onEndOfStream);
+                _subscriptionsHandling.TryAddEoseAction(subscriptionKey, onEndOfStream, includeDiscoveryRelays: true);
             }
 
-            client.Send(new NostrRequest(subscriptionKey, new NostrFilter
+            var request = new NostrRequest(subscriptionKey, new NostrFilter
             {
                 Authors = npubs,
                 Kinds = [NostrKind.RelayListMetadata],
-            }));
+            });
+
+            client.Send(request);
+            discoveryClient.Send(request);
         }
 
         public async Task<ProjectMetadata?> FetchProfileMetadataAsync(string nostrPubKeyHex)
