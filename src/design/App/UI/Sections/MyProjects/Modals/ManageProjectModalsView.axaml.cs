@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 using Angor.Shared.Services;
 using App.UI.Shared;
@@ -236,11 +237,11 @@ public partial class ManageProjectModalsView : UserControl
             if (stage == null) return;
 
             var selectedTxs = stage.AvailableTransactions.Where(t => t.IsSelected).ToList();
-            var selectedAmount = selectedTxs.Sum(t => double.TryParse(t.Amount, out var v) ? v : 0);
+            var selectedAmount = selectedTxs.Sum(t => ParseBtc(t.Amount));
 
             if (selectedAmount <= 0 || selectedTxs.Count == 0) return; // nothing selected
 
-            Vm.ClaimedAmount = selectedAmount.ToString("F8");
+            Vm.ClaimedAmount = selectedAmount.ToString("F8", CultureInfo.InvariantCulture);
 
             // Skip password modal — go directly to fee selection and claim.
             // NOTE: Keep claim modal visible during fee selection (#17) so user sees context.
@@ -332,9 +333,9 @@ public partial class ManageProjectModalsView : UserControl
             // Skip password modal — go directly to release.
             var totalRelease = Vm.Stages
                 .SelectMany(s => s.AvailableTransactions)
-                .Sum(t => double.TryParse(t.Amount, out var v) ? v : 0);
+                .Sum(t => ParseBtc(t.Amount));
 
-            Vm.ReleasedAmount = totalRelease.ToString("F8");
+            Vm.ReleasedAmount = totalRelease.ToString("F8", CultureInfo.InvariantCulture);
 
             Vm.IsReleasingFunds = true;
             var success = await Vm.ReleaseFundsToInvestorsAsync();
@@ -360,9 +361,9 @@ public partial class ManageProjectModalsView : UserControl
 
             var totalRelease = Vm.Stages
                 .SelectMany(s => s.AvailableTransactions)
-                .Sum(t => double.TryParse(t.Amount, out var v) ? v : 0);
+                .Sum(t => ParseBtc(t.Amount));
 
-            Vm.ReleasedAmount = totalRelease.ToString("F8");
+            Vm.ReleasedAmount = totalRelease.ToString("F8", CultureInfo.InvariantCulture);
 
             Vm.IsReleasingFunds = true;
             var confirmText = this.FindControl<TextBlock>("ConfirmReleaseText");
@@ -437,6 +438,17 @@ public partial class ManageProjectModalsView : UserControl
     // ─────────────────────────────────────────────────────────────────
     //  UTILITIES
     // ─────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Parses a BTC amount string that was formatted with InvariantCulture (dot decimal).
+    /// Must NOT use the current culture: on comma-decimal locales (e.g. de-DE, fr-FR)
+    /// culture-sensitive parsing of "0.05000000" fails or misparses, which made the
+    /// Claim button silently do nothing.
+    /// </summary>
+    private static double ParseBtc(string? amount)
+    {
+        return AmountParser.ParseInvariantOrZero(amount);
+    }
 
     /// <summary>
     /// Wires a Click handler on a named Button.

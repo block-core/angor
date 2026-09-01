@@ -109,7 +109,7 @@ public partial class SendFundsModalViewModel : ReactiveObject, IDisposable
         }
 
         if (string.IsNullOrWhiteSpace(AmountText) ||
-            !double.TryParse(AmountText, NumberStyles.Any, CultureInfo.InvariantCulture, out var amount))
+            !AmountParser.TryParseUserAmount(AmountText, out double amount))
         {
             AmountError = "Amount must be greater than 0";
             RaiseErrorProperties();

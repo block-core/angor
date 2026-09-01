@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using App.UI.Shared.Helpers;
 using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Funding.Projects.Domain;
 using Angor.Shared;
@@ -130,6 +131,19 @@ public partial class ProjectStageViewModel : ReactiveObject
 /// </summary>
 public partial class CreateProjectViewModel : ReactiveObject
 {
+    // ─────────────────────────────────────────────────────────────────
+    //  CULTURE-SAFE AMOUNT PARSING
+    //  User-typed amounts must tolerate both '.' and ',' decimal separators;
+    //  parsing must never depend on the OS culture (on comma-decimal locales
+    //  current-culture TryParse of "0.5" yields 5 or fails entirely).
+    // ─────────────────────────────────────────────────────────────────
+
+    internal static bool TryParseUserAmount(string? text, out double value) =>
+        AmountParser.TryParseUserAmount(text, out value);
+
+    internal static bool TryParseUserAmount(string? text, out decimal value) =>
+        AmountParser.TryParseUserAmount(text, out value);
+
     // ── Wizard navigation state ──
     [Reactive] private int currentStep = 1;
     [Reactive] private int maxStepReached = 1;
@@ -570,7 +584,7 @@ public partial class CreateProjectViewModel : ReactiveObject
                 if (ProjectType == "subscription")
                 {
                     if (string.IsNullOrWhiteSpace(SubscriptionPrice) ||
-                        !double.TryParse(SubscriptionPrice, out var subPrice) || subPrice <= 0)
+                        !TryParseUserAmount(SubscriptionPrice, out double subPrice) || subPrice <= 0)
                     {
                         FormError = "Please enter a valid subscription price";
                         TargetAmountError = "Subscription price is required";
@@ -581,7 +595,7 @@ public partial class CreateProjectViewModel : ReactiveObject
                 else if (ProjectType == "fund")
                 {
                     if (string.IsNullOrWhiteSpace(TargetAmount) ||
-                        !double.TryParse(TargetAmount, out var goalAmt) || goalAmt <= 0)
+                        !TryParseUserAmount(TargetAmount, out double goalAmt) || goalAmt <= 0)
                     {
                         FormError = "Please enter a valid goal amount";
                         TargetAmountError = "Goal amount is required";
@@ -592,7 +606,7 @@ public partial class CreateProjectViewModel : ReactiveObject
                 else // investment
                 {
                     if (string.IsNullOrWhiteSpace(TargetAmount) ||
-                        !double.TryParse(TargetAmount, out var targetAmt) || targetAmt <= 0)
+                        !TryParseUserAmount(TargetAmount, out double targetAmt) || targetAmt <= 0)
                     {
                         FormError = "Please enter a valid target amount";
                         TargetAmountError = "Target amount is required";
@@ -601,9 +615,7 @@ public partial class CreateProjectViewModel : ReactiveObject
                     }
 
                     // Production validation: target amount limits
-                    var amountResult = validator.ValidateTargetAmount((decimal)double.Parse(TargetAmount,
-                        System.Globalization.NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture));
+                    var amountResult = validator.ValidateTargetAmount((decimal)targetAmt);
                     if (!amountResult.IsValid)
                     {
                         FormError = amountResult.ErrorMessage!;
@@ -756,8 +768,7 @@ public partial class CreateProjectViewModel : ReactiveObject
     {
         // Parse target amount as BTC and convert to satoshis.
         // The UI always accepts BTC values (e.g. "1" = 1 BTC = 100_000_000 sats).
-        if (!decimal.TryParse(TargetAmount, System.Globalization.NumberStyles.Number,
-                System.Globalization.CultureInfo.InvariantCulture, out var tBtc) || tBtc <= 0)
+        if (!TryParseUserAmount(TargetAmount, out decimal tBtc) || tBtc <= 0)
             throw new InvalidOperationException(
                 $"Invalid target amount '{TargetAmount}'. Cannot deploy project without a valid target amount.");
         var targetSats = tBtc.ToUnitSatoshi();
@@ -851,8 +862,7 @@ public partial class CreateProjectViewModel : ReactiveObject
         // Invest projects have fixed stages and no approval threshold.
         long? penaltyThreshold = null;
         if (sdkProjectType == SdkProjectType.Fund &&
-            double.TryParse(ApprovalThreshold, System.Globalization.NumberStyles.Float,
-                System.Globalization.CultureInfo.InvariantCulture, out var thresholdBtc) && thresholdBtc > 0)
+            TryParseUserAmount(ApprovalThreshold, out double thresholdBtc) && thresholdBtc > 0)
         {
             penaltyThreshold = ((decimal)thresholdBtc).ToUnitSatoshi();
         }
@@ -929,7 +939,7 @@ public partial class CreateProjectViewModel : ReactiveObject
         var baseDate = InvestEndDate.HasValue
             ? InvestEndDate.Value
             : DateTime.TryParse(StartDate, out var sd) ? sd : DateTime.UtcNow;
-        var targetBtc = double.TryParse(TargetAmount, out var t) ? t : 1.0;
+        var targetBtc = TryParseUserAmount(TargetAmount, out double t) ? t : 1.0;
         var percentPerStage = 100.0 / stageCount;
 
         for (int i = 0; i < stageCount; i++)
@@ -947,7 +957,7 @@ public partial class CreateProjectViewModel : ReactiveObject
                 PercentageValue = pct,
                 ReleaseDate = FormatReleaseDateOrdinal(releaseDate),
                 ReleaseDateValue = DateOnly.FromDateTime(releaseDate),
-                AmountBtc = btcAmount.ToString("F4"),
+                AmountBtc = btcAmount.ToString("F4", System.Globalization.CultureInfo.InvariantCulture),
                 StageLabel = "Stage",
                 DisplayText = $"{pct}% ({btcAmount:F4} {_currencyService.Symbol}) released on {FormatReleaseDateOrdinal(releaseDate)}"
             });
@@ -972,10 +982,10 @@ public partial class CreateProjectViewModel : ReactiveObject
         // Vue: uses max of selected installment counts as the number of payouts
         var count = SelectedInstallmentCounts.Max();
         var baseDate = DateTime.TryParse(StartDate, out var sd) ? sd : DateTime.UtcNow;
-        var targetBtc = double.TryParse(TargetAmount, out var t) ? t : 1.0;
+        var targetBtc = TryParseUserAmount(TargetAmount, out double t) ? t : 1.0;
 
         // For subscription, use SubscriptionPrice as BTC
-        if (ProjectType == "subscription" && double.TryParse(SubscriptionPrice, out var subBtc))
+        if (ProjectType == "subscription" && TryParseUserAmount(SubscriptionPrice, out double subBtc))
             targetBtc = subBtc;
 
         var percentPerStage = 100.0 / count;
@@ -1009,7 +1019,7 @@ public partial class CreateProjectViewModel : ReactiveObject
                 PercentageValue = pct,
                 ReleaseDate = FormatReleaseDateOrdinal(releaseDate),
                 ReleaseDateValue = DateOnly.FromDateTime(releaseDate),
-                AmountBtc = (targetBtc * pct / 100).ToString("F4"),
+                AmountBtc = (targetBtc * pct / 100).ToString("F4", System.Globalization.CultureInfo.InvariantCulture),
                 StageLabel = label,
                 DisplayText = $"{pct}% paid on {FormatReleaseDateOrdinal(releaseDate)}"
             });
@@ -1334,7 +1344,7 @@ public partial class CreateProjectViewModel : ReactiveObject
 
         var baseDate = DateTime.TryParse(StartDate, out var sd) ? sd : DateTime.UtcNow;
         var percentPerStage = 100.0 / count;
-        var targetBtc = double.TryParse(TargetAmount, out var t) ? t : 1.0;
+        var targetBtc = TryParseUserAmount(TargetAmount, out double t) ? t : 1.0;
 
         for (int i = 0; i < count; i++)
         {
@@ -1354,7 +1364,7 @@ public partial class CreateProjectViewModel : ReactiveObject
                 PercentageValue = pct,
                 ReleaseDate = FormatReleaseDateOrdinal(releaseDate),
                 ReleaseDateValue = DateOnly.FromDateTime(releaseDate),
-                AmountBtc = (targetBtc * pct / 100).ToString("F4"),
+                AmountBtc = (targetBtc * pct / 100).ToString("F4", System.Globalization.CultureInfo.InvariantCulture),
                 StageLabel = label,
                 DisplayText = $"{pct}% paid on {FormatReleaseDateOrdinal(releaseDate)}"
             });
@@ -1715,7 +1725,7 @@ public partial class CreateProjectViewModel : ReactiveObject
             PercentageValue = 10,
             ReleaseDate = FormatReleaseDateOrdinal(today),
             ReleaseDateValue = DateOnly.FromDateTime(today),
-            AmountBtc = (targetBtc * 0.10).ToString("F4"),
+            AmountBtc = (targetBtc * 0.10).ToString("F4", System.Globalization.CultureInfo.InvariantCulture),
             StageLabel = "Stage",
             DisplayText = $"10% ({targetBtc * 0.10:F4} {_currencyService.Symbol}) released on {FormatReleaseDateOrdinal(today)}"
         });
@@ -1725,7 +1735,7 @@ public partial class CreateProjectViewModel : ReactiveObject
             PercentageValue = 30,
             ReleaseDate = FormatReleaseDateOrdinal(stage2Date),
             ReleaseDateValue = DateOnly.FromDateTime(stage2Date),
-            AmountBtc = (targetBtc * 0.30).ToString("F4"),
+            AmountBtc = (targetBtc * 0.30).ToString("F4", System.Globalization.CultureInfo.InvariantCulture),
             StageLabel = "Stage",
             DisplayText = $"30% ({targetBtc * 0.30:F4} {_currencyService.Symbol}) released on {FormatReleaseDateOrdinal(stage2Date)}"
         });
@@ -1735,7 +1745,7 @@ public partial class CreateProjectViewModel : ReactiveObject
             PercentageValue = 60,
             ReleaseDate = FormatReleaseDateOrdinal(stage3Date),
             ReleaseDateValue = DateOnly.FromDateTime(stage3Date),
-            AmountBtc = (targetBtc * 0.60).ToString("F4"),
+            AmountBtc = (targetBtc * 0.60).ToString("F4", System.Globalization.CultureInfo.InvariantCulture),
             StageLabel = "Stage",
             DisplayText = $"60% ({targetBtc * 0.60:F4} {_currencyService.Symbol}) released on {FormatReleaseDateOrdinal(stage3Date)}"
         });
