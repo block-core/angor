@@ -495,6 +495,7 @@ public class LayoutRegressionTests
         var view = new EditProfileView { DataContext = vm };
 
         var violations = RenderAndAudit(view, width, height);
+        vm.Dispose();
 
         violations.Should().BeEmpty(
             $"EditProfileView must not have overlapping/overflowing elements at {width}x{height}:\n" +
@@ -530,6 +531,7 @@ public class LayoutRegressionTests
         };
 
         var violations = RenderAndAudit(view, width, height);
+        vm.Dispose();
 
         violations.Should().BeEmpty(
             $"EditProfileView (project tab, markdown editor) must not have overlapping/overflowing elements at {width}x{height}:\n" +

@@ -107,6 +107,7 @@ public class DarkModeIconTests
         vm.SetActiveTab("project"); // realize the markdown editor toolbar
 
         AuditIcons(new EditProfileView { DataContext = vm }, nameof(EditProfileView));
+        vm.Dispose();
     }
 
     /// <summary>Covers ManageProject stage cards incl. the syncing/claim affordances.</summary>

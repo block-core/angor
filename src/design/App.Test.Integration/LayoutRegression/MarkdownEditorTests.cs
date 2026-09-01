@@ -241,6 +241,9 @@ public class MarkdownEditorTests
             Width = width, Height = 900,
             Content = new ScrollViewer { Content = view },
         };
+        // Dispose the VM with the window so its throttled image-preview subscriptions
+        // can't post to the dispatcher after the headless session is torn down.
+        window.Closed += (_, _) => vm.Dispose();
         window.Show();
         Dispatcher.UIThread.RunJobs();
         window.UpdateLayout();
