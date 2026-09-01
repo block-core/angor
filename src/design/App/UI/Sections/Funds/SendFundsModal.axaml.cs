@@ -37,7 +37,7 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
     private string? _brantaVerifyUrl;
     private CancellationTokenSource? _brantaLookupCts;
     private bool _isSweepAll;
-    private bool _settingAmountProgrammatically;
+    private string? _programmaticAmountText;
 
     private ICurrencyService CurrencyService =>
         App.Services.GetRequiredService<ICurrencyService>();
@@ -54,7 +54,10 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         AmountInput.TextChanged += (_, _) =>
         {
             ClearSendErrors();
-            if (!_settingAmountProgrammatically)
+            // Only a user edit (text differing from the value we set programmatically)
+            // clears sweep intent. Comparing values instead of using a timing-based
+            // guard keeps this correct whether TextChanged fires sync or deferred.
+            if (AmountInput.Text != _programmaticAmountText)
                 _isSweepAll = false;
         };
 
@@ -196,7 +199,9 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         FromWalletName.Text = name;
         FromWalletType.Text = type;
         FromBalance.Text = balance;
-        _walletBalance = balance.Replace($" {CurrencyService.Symbol}", "").Trim();
+        // Strip any ticker suffix ("0.001 BTC", "0.001 TBTC", ...) by keeping the
+        // leading numeric token, so parsing is not coupled to the active network's symbol.
+        _walletBalance = balance.Trim().Split(' ')[0];
         _walletId = walletId ?? "";
     }
 
@@ -370,18 +375,9 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         if (double.TryParse(_walletBalance, System.Globalization.NumberStyles.Any,
                 System.Globalization.CultureInfo.InvariantCulture, out var bal))
         {
-            _settingAmountProgrammatically = true;
-            AmountInput.Text = (bal * pct).ToString("F8", System.Globalization.CultureInfo.InvariantCulture);
-
-            // TextChanged may fire asynchronously (deferred to the next dispatcher
-            // cycle), so the _settingAmountProgrammatically guard in the handler
-            // can't protect _isSweepAll. Post the flag update AFTER all pending
-            // TextChanged callbacks have drained.
-            Dispatcher.UIThread.Post(() =>
-            {
-                _settingAmountProgrammatically = false;
-                _isSweepAll = pct >= 1;
-            });
+            _programmaticAmountText = (bal * pct).ToString("F8", System.Globalization.CultureInfo.InvariantCulture);
+            AmountInput.Text = _programmaticAmountText;
+            _isSweepAll = pct >= 1;
         }
     }
 
