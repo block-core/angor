@@ -13,6 +13,7 @@ public interface IWalletOperations
 {
     string GenerateWalletWords();
     Task<OperationResult<Transaction>> SendAmountToAddress(WalletWords walletWords, SendInfo sendInfo);
+    Task<OperationResult<Transaction>> SendAllToAddress(WalletWords walletWords, SendInfo sendInfo);
     AccountInfo BuildAccountInfoForWalletWords(WalletWords walletWords);
     Task UpdateDataForExistingAddressesAsync(AccountInfo accountInfo);
     Task UpdateAccountInfoWithNewAddressesAsync(AccountInfo accountInfo);

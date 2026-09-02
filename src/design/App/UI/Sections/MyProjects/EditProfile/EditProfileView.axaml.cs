@@ -10,6 +10,7 @@ using Avalonia.LogicalTree;
 using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 using App.UI.Shared;
+using App.UI.Shared.Controls;
 using App.UI.Shell;
 using App.UI.Shared.Services;
 using NBitcoin;
@@ -90,8 +91,7 @@ public partial class EditProfileView : UserControl
     private Button? _addRelayButton;
 
     // Tab buttons
-    private Button? _tabProfile;
-    private Button? _tabProject;
+    private Button? _tabProfile;    private Button? _tabProject;
     private Button? _tabFaq;
     private Button? _tabMembers;
     private Button? _tabMedia;
@@ -103,14 +103,24 @@ public partial class EditProfileView : UserControl
     private Button? _mobileTabMedia;
     private Button? _mobileTabRelays;
 
+    // Markdown editor helper controls
+    private TextBox? _projectContentBox;
+    private Button? _mdWriteBtn;
+    private Button? _mdPreviewBtn;
+    private ScrollViewer? _mdPreviewScroll;
+    private MarkdownTextBlock? _mdPreviewBlock;
+    private TextBlock? _mdPreviewEmptyText;
+    private Border? _mdGuidePanel;
+    private Optris.Icons.Avalonia.Icon? _mdGuideChevron;
+    private Border? _mdModeSwitch;
+    private Grid? _mdModeGrid;
+    private Avalonia.Controls.Primitives.UniformGrid? _mdToolButtons;
+
     public EditProfileView()
     {
         InitializeComponent();
         _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<EditProfileView>();
         _blossomService = App.Services.GetRequiredService<BlossomUploadService>();
-
-        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
-            Classes.Add("Mobile");
 
         WireControls();
 
@@ -242,7 +252,137 @@ public partial class EditProfileView : UserControl
 
         // Wire remove buttons in item templates via bubbling
         AddHandler(Button.ClickEvent, OnItemButtonClick, RoutingStrategies.Bubble);
+
+        WireMarkdownEditor();
     }
+
+    #region Markdown editor helper
+
+    private void WireMarkdownEditor()
+    {
+        _projectContentBox = this.FindControl<TextBox>("ProjectContentBox");
+        _mdWriteBtn = this.FindControl<Button>("MdWriteBtn");
+        _mdPreviewBtn = this.FindControl<Button>("MdPreviewBtn");
+        _mdPreviewScroll = this.FindControl<ScrollViewer>("MdPreviewScroll");
+        _mdPreviewBlock = this.FindControl<MarkdownTextBlock>("MdPreviewBlock");
+        _mdPreviewEmptyText = this.FindControl<TextBlock>("MdPreviewEmptyText");
+        _mdGuidePanel = this.FindControl<Border>("MdGuidePanel");
+        _mdGuideChevron = this.FindControl<Optris.Icons.Avalonia.Icon>("MdGuideChevron");
+        _mdModeSwitch = this.FindControl<Border>("MdModeSwitch");
+        _mdModeGrid = this.FindControl<Grid>("MdModeGrid");
+        _mdToolButtons = this.FindControl<Avalonia.Controls.Primitives.UniformGrid>("MdToolButtons");
+
+        if (_mdWriteBtn != null) _mdWriteBtn.Click += (_, _) => SetMarkdownPreviewMode(false);
+        if (_mdPreviewBtn != null) _mdPreviewBtn.Click += (_, _) => SetMarkdownPreviewMode(true);
+
+        WireMdToolButton("MdHeadingBtn", () => ApplyLinePrefix("## "));
+        WireMdToolButton("MdBoldBtn", () => WrapSelection("**", "**", "bold text"));
+        WireMdToolButton("MdItalicBtn", () => WrapSelection("*", "*", "italic text"));
+        WireMdToolButton("MdLinkBtn", () => WrapSelection("[", "](https://)", "link title"));
+        WireMdToolButton("MdImageBtn", () => WrapSelection("![", "](https://)", "image description"));
+        WireMdToolButton("MdListBtn", () => ApplyLinePrefix("- "));
+        WireMdToolButton("MdOrderedListBtn", () => ApplyLinePrefix("1. "));
+        WireMdToolButton("MdQuoteBtn", () => ApplyLinePrefix("> "));
+        WireMdToolButton("MdCodeBtn", () => WrapSelection("`", "`", "code"));
+
+        var guideToggle = this.FindControl<Button>("MdGuideToggleBtn");
+        if (guideToggle != null)
+            guideToggle.Click += (_, _) =>
+            {
+                var show = !(_mdGuidePanel?.IsVisible ?? false);
+                if (_mdGuidePanel != null) _mdGuidePanel.IsVisible = show;
+                if (_mdGuideChevron != null)
+                    _mdGuideChevron.Value = show ? "fa-solid fa-chevron-down" : "fa-solid fa-chevron-right";
+            };
+    }
+
+    private void WireMdToolButton(string name, Action action)
+    {
+        var btn = this.FindControl<Button>(name);
+        if (btn != null)
+            btn.Click += (_, _) => action();
+    }
+
+    /// <summary>Switches the description editor between Write (textbox) and Preview (rendered markdown).</summary>
+    private void SetMarkdownPreviewMode(bool preview)
+    {
+        if (_projectContentBox != null) _projectContentBox.IsVisible = !preview;
+        if (_mdPreviewScroll != null) _mdPreviewScroll.IsVisible = preview;
+        _mdWriteBtn?.Classes.Set("ModeActive", !preview);
+        _mdPreviewBtn?.Classes.Set("ModeActive", preview);
+
+        if (preview)
+        {
+            var text = _projectContentBox?.Text ?? string.Empty;
+            var empty = string.IsNullOrWhiteSpace(text);
+            if (_mdPreviewBlock != null)
+            {
+                _mdPreviewBlock.Markdown = empty ? null : text;
+                _mdPreviewBlock.IsVisible = !empty;
+            }
+            if (_mdPreviewEmptyText != null) _mdPreviewEmptyText.IsVisible = empty;
+        }
+        else
+        {
+            _projectContentBox?.Focus();
+        }
+    }
+
+    /// <summary>Wraps the current selection with markdown markers; inserts a placeholder (kept selected) when nothing is selected.</summary>
+    private void WrapSelection(string before, string after, string placeholder)
+    {
+        var box = _projectContentBox;
+        if (box == null || !box.IsVisible) return;
+
+        var text = box.Text ?? string.Empty;
+        var start = Math.Clamp(Math.Min(box.SelectionStart, box.SelectionEnd), 0, text.Length);
+        var end = Math.Clamp(Math.Max(box.SelectionStart, box.SelectionEnd), 0, text.Length);
+        var selected = end > start ? text[start..end] : placeholder;
+
+        box.Text = text[..start] + before + selected + after + text[end..];
+
+        // Keep the payload selected so the user can immediately type over the placeholder.
+        box.SelectionStart = start + before.Length;
+        box.SelectionEnd = start + before.Length + selected.Length;
+        box.Focus();
+    }
+
+    /// <summary>Toggles a markdown prefix (heading, list, quote) on every line covered by the selection/caret.</summary>
+    private void ApplyLinePrefix(string prefix)
+    {
+        var box = _projectContentBox;
+        if (box == null || !box.IsVisible) return;
+
+        var text = box.Text ?? string.Empty;
+        var start = Math.Clamp(Math.Min(box.SelectionStart, box.SelectionEnd), 0, text.Length);
+        var end = Math.Clamp(Math.Max(box.SelectionStart, box.SelectionEnd), 0, text.Length);
+
+        // Expand to full lines
+        var lineStart = text.LastIndexOf('\n', Math.Max(0, start - 1)) + 1;
+        var lineEnd = text.IndexOf('\n', end);
+        if (lineEnd < 0) lineEnd = text.Length;
+
+        var block = text[lineStart..lineEnd];
+        var lines = block.Split('\n');
+        var allPrefixed = lines.Length > 0 && Array.TrueForAll(lines, l => l.StartsWith(prefix, StringComparison.Ordinal));
+
+        for (var i = 0; i < lines.Length; i++)
+        {
+            lines[i] = allPrefixed
+                ? lines[i][prefix.Length..]
+                : prefix + lines[i];
+        }
+
+        var newBlock = string.Join('\n', lines);
+        box.Text = text[..lineStart] + newBlock + text[lineEnd..];
+
+        var caret = lineStart + newBlock.Length;
+        box.SelectionStart = caret;
+        box.SelectionEnd = caret;
+        box.Focus();
+    }
+
+    #endregion
 
     private void ApplyResponsiveLayout(bool isCompact)
     {
@@ -267,6 +407,46 @@ public partial class EditProfileView : UserControl
         ApplyInputGridLayout(_memberInputGrid, _addMemberButton, isCompact, 2);
         ApplyMediaInputLayout(isCompact);
         ApplyInputGridLayout(_relayInputGrid, _addRelayButton, isCompact, 2);
+        ApplyMarkdownToolbarLayout(isCompact);
+    }
+
+    /// <summary>
+    /// Mobile: Write/Preview toggle becomes a full-width top row (two equal halves);
+    /// formatting buttons spread symmetrically edge-to-edge beneath it.
+    /// Desktop: buttons pack left at 32px, toggle docks right.
+    /// </summary>
+    private void ApplyMarkdownToolbarLayout(bool isCompact)
+    {
+        if (_mdModeSwitch != null)
+        {
+            DockPanel.SetDock(_mdModeSwitch, isCompact ? Dock.Top : Dock.Right);
+            _mdModeSwitch.Margin = isCompact ? new Thickness(0, 0, 0, 8) : default;
+            _mdModeSwitch.HorizontalAlignment = isCompact
+                ? Avalonia.Layout.HorizontalAlignment.Stretch
+                : Avalonia.Layout.HorizontalAlignment.Right;
+        }
+
+        if (_mdModeGrid?.ColumnDefinitions.Count >= 3)
+        {
+            _mdModeGrid.ColumnDefinitions[0].Width = isCompact ? GridLength.Star : GridLength.Auto;
+            _mdModeGrid.ColumnDefinitions[2].Width = isCompact ? GridLength.Star : GridLength.Auto;
+        }
+
+        if (_mdToolButtons != null)
+        {
+            _mdToolButtons.HorizontalAlignment = isCompact
+                ? Avalonia.Layout.HorizontalAlignment.Stretch
+                : Avalonia.Layout.HorizontalAlignment.Left;
+            _mdToolButtons.Margin = isCompact ? default : new Thickness(0, 0, 8, 0);
+
+            // Compact: cells govern width (can be <32px on small phones) — MinWidth
+            // would force the last buttons to escape the row. Desktop: 32px packing.
+            foreach (var child in _mdToolButtons.Children)
+            {
+                if (child is Button toolBtn)
+                    toolBtn.MinWidth = isCompact ? 0 : 32;
+            }
+        }
     }
 
     private void ApplyProfileLayout(bool isCompact)

@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Reactive.Subjects;
+using System.Threading;
 using Angor.Sdk.Common;
 using Angor.Sdk.Wallet.Application;
 using Angor.Sdk.Wallet.Domain;
@@ -22,7 +23,8 @@ public class WalletContext : IWalletContext
 
     private readonly ObservableCollection<WalletInfo> _wallets = new();
     private readonly Subject<Unit> _walletsUpdated = new();
-    private bool _isReloading;
+    private readonly SemaphoreSlim _reloadLock = new(1, 1);
+    private bool _reloadRequested;
 
     public ReadOnlyObservableCollection<WalletInfo> Wallets { get; }
 
@@ -64,9 +66,29 @@ public class WalletContext : IWalletContext
 
     public async Task ReloadAsync()
     {
-        if (_isReloading) return;
-        _isReloading = true;
+        // Never drop a reload request: if one is already running (e.g. the startup
+        // fire-and-forget reload), queue a rerun so callers with fresh state — like
+        // a just-imported wallet — are guaranteed a reload that starts after their
+        // request. Previously this method silently returned, and on Android (which
+        // never re-reloads on tab activation) an imported wallet could never appear.
+        _reloadRequested = true;
+        await _reloadLock.WaitAsync();
+        try
+        {
+            while (_reloadRequested)
+            {
+                _reloadRequested = false;
+                await ReloadCoreAsync();
+            }
+        }
+        finally
+        {
+            _reloadLock.Release();
+        }
+    }
 
+    private async Task ReloadCoreAsync()
+    {
         try
         {
             _logger.LogInformation("WalletContext.ReloadAsync starting...");
@@ -118,10 +140,6 @@ public class WalletContext : IWalletContext
         catch (Exception ex)
         {
             _logger.LogError(ex, "WalletContext.ReloadAsync failed");
-        }
-        finally
-        {
-            _isReloading = false;
         }
     }
 

@@ -36,11 +36,12 @@ public partial class MediaItemViewModel : ReactiveObject
 /// Matches the tab structure of https://profile.angor.io/:
 /// Profile | Project | FAQ | Members | Media | Relays
 /// </summary>
-public partial class EditProfileViewModel : ReactiveObject
+public partial class EditProfileViewModel : ReactiveObject, IDisposable
 {
     private readonly MyProjectItemViewModel _project;
     private readonly IProjectAppService _projectAppService;
     private readonly ILogger<EditProfileViewModel> _logger;
+    private readonly CompositeDisposable _disposables = new();
 
     public event Action<string>? ToastRequested;
 
@@ -109,16 +110,20 @@ public partial class EditProfileViewModel : ReactiveObject
         // Add one empty FAQ item to start
         FaqItems.Add(new FaqItemViewModel());
 
-        // Load image previews when URLs change
+        // Load image previews when URLs change. These throttled subscriptions post back
+        // to the UI thread later — they MUST be disposed or they can fire after the
+        // dispatcher is gone (crashes headless test runs, leaks in the app).
         this.WhenAnyValue(x => x.ProfilePicture)
             .Throttle(TimeSpan.FromMilliseconds(500))
             .ObserveOn(RxSchedulers.MainThreadScheduler)
-            .Subscribe(url => ImageCacheService.LoadBitmapAsync(url, bmp => ProfilePictureBitmap = bmp, decodeWidth: 256));
+            .Subscribe(url => ImageCacheService.LoadBitmapAsync(url, bmp => ProfilePictureBitmap = bmp, decodeWidth: 256))
+            .DisposeWith(_disposables);
 
         this.WhenAnyValue(x => x.ProfileBanner)
             .Throttle(TimeSpan.FromMilliseconds(500))
             .ObserveOn(RxSchedulers.MainThreadScheduler)
-            .Subscribe(url => ImageCacheService.LoadBitmapAsync(url, bmp => ProfileBannerBitmap = bmp, decodeWidth: 1280));
+            .Subscribe(url => ImageCacheService.LoadBitmapAsync(url, bmp => ProfileBannerBitmap = bmp, decodeWidth: 1280))
+            .DisposeWith(_disposables);
 
         // Re-raise the computed Has*Error flags whenever the backing error text changes.
         this.WhenAnyValue(x => x.MemberError).Subscribe(_ => this.RaisePropertyChanged(nameof(HasMemberError)));
@@ -396,4 +401,6 @@ public partial class EditProfileViewModel : ReactiveObject
         if (Relays.Count > 1)
             Relays.Remove(url);
     }
+
+    public void Dispose() => _disposables.Dispose();
 }
