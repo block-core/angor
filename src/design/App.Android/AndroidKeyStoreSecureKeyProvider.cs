@@ -137,14 +137,16 @@ public class AndroidKeyStoreSecureKeyProvider : ISecureKeyProvider
             var json = Encoding.UTF8.GetString(decrypted);
             return JsonSerializer.Deserialize<Dictionary<string, string>>(json) ?? new Dictionary<string, string>();
         }
-        catch (Exception ex)
+        catch (Exception ex) when (IsPermanentlyUndecryptable(ex))
         {
-            // wallet-keys.enc can outlive the KeyStore master key (e.g. app data
-            // restored to a device whose KeyStore doesn't hold the original key) —
-            // GCM then throws on every call, permanently bricking wallet create,
-            // import and read. Quarantine the stale file and start fresh instead.
+            // Deterministic failure: the data can never be decrypted with the current
+            // KeyStore key (e.g. app data restored to a device whose KeyStore doesn't
+            // hold the original key — EnsureMasterKey then generates a NEW key and GCM
+            // tag verification fails forever), or the file itself is corrupt. Left in
+            // place this permanently bricks wallet create, import and read, so
+            // quarantine the stale file and start fresh instead.
             global::Android.Util.Log.Error("AngorKeyProvider",
-                $"Failed to decrypt wallet-keys.enc — quarantining stale file: {ex}");
+                $"wallet-keys.enc is permanently undecryptable — quarantining stale file: {ex}");
             try
             {
                 File.Move(_filePath, _filePath + $".stale-{DateTime.UtcNow:yyyyMMddHHmmss}", overwrite: false);
@@ -155,6 +157,43 @@ public class AndroidKeyStoreSecureKeyProvider : ISecureKeyProvider
             }
             return new Dictionary<string, string>();
         }
+        catch (Exception ex)
+        {
+            // Anything else may be transient (keystore daemon busy, binder/IPC failure,
+            // OEM quirk). Do NOT quarantine — the key file stays intact and the caller
+            // sees a failed operation that can simply be retried.
+            global::Android.Util.Log.Error("AngorKeyProvider",
+                $"Keystore access failed (possibly transient — NOT quarantining): {ex}");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// True when the exception proves the encrypted file can never be decrypted with
+    /// the current KeyStore key, so quarantining it is safe. Anything else (keystore
+    /// daemon busy, binder failures, OEM quirks) may be transient and must not
+    /// destroy the user's stored keys.
+    /// </summary>
+    private static bool IsPermanentlyUndecryptable(Exception ex)
+    {
+        return ex switch
+        {
+            // GCM auth tag mismatch: wrong key or tampered/corrupt ciphertext.
+            // Pure computation over the same inputs — fails identically forever.
+            AEADBadTagException => true,
+
+            // The OS explicitly declares the key permanently gone.
+            KeyPermanentlyInvalidatedException => true,
+
+            // Decryption succeeded but the payload isn't valid JSON — corrupt file.
+            JsonException => true,
+
+            // Truncated/garbled file: Decrypt()'s IV-length prefix and buffer math
+            // throw before any crypto happens.
+            IndexOutOfRangeException or ArgumentException => true,
+
+            _ => false,
+        };
     }
 
     private void SaveKeys(Dictionary<string, string> keys)
