@@ -66,16 +66,30 @@ public class DocumentProjectService(
             if (ids.Length == localLookup.Count)
                 return Result.Success(localLookup.OrderByDescending(p => p.StartingDate).AsEnumerable()); //all ids are in the local database, return them
 
-            var tasks = stringIds
+            var missingIds = stringIds
                    .Except(localLookup.Select(p => p.Id.Value)) //ids that are not in the local database
+                   .ToList();
+
+            var tasks = missingIds
                    .Select(id => Result.Try(() => angorIndexerService.GetProjectByIdAsync(id)));
 
-            var results = await Task.WhenAll(tasks).WaitAsync(TimeSpan.FromSeconds(10));
+            // 30s budget: mobile networks + per-id address-history fetches regularly
+            // blow through the previous 10s, which made founder project scans come
+            // back empty on phones while working fine on desktop.
+            var results = await Task.WhenAll(tasks).WaitAsync(TimeSpan.FromSeconds(30));
 
-            var indexerResults = results //TODO log the failures, we don't need an all or nothing approach here
+            var failures = results.Where(r => r.IsFailure).ToList();
+            if (failures.Count > 0)
+                logger.LogWarning("GetAllAsync: {FailureCount}/{Total} indexer lookups failed: {Errors}",
+                    failures.Count, missingIds.Count, string.Join("; ", failures.Select(f => f.Error).Distinct()));
+
+            var indexerResults = results
                  .Where(r => r is { IsSuccess: true, Value: not null })
                  .Select(r => r.Value!)
                  .ToList();
+
+            logger.LogInformation("GetAllAsync: {Found}/{Missing} missing project ids found on indexer ({Local} already local)",
+                indexerResults.Count, missingIds.Count, localLookup.Count);
 
             if (indexerResults.Count == 0)
                 return Result.Success(localLookup.OrderByDescending(p => p.StartingDate).AsEnumerable());
@@ -83,11 +97,22 @@ public class DocumentProjectService(
             var nostrEventIds = indexerResults.Select(r => r!.NostrEventId).ToArray();
             var projectInfo = await ProjectInfos(nostrEventIds);
             if (projectInfo.IsFailure || !projectInfo.Value.Any())
-                return Result.Failure<IEnumerable<Project>>("Project info not found in relay");
+            {
+                // Relays are flaky (especially on mobile) — don't turn a partial outage
+                // into a total failure; return what we have locally and let the next
+                // scan retry the relay lookup.
+                logger.LogWarning("GetAllAsync: indexer found {Count} projects but relay project info lookup failed ({Error}) — returning local results only",
+                    indexerResults.Count, projectInfo.IsFailure ? projectInfo.Error : "no events returned");
+                return Result.Success(localLookup.OrderByDescending(p => p.StartingDate).AsEnumerable());
+            }
 
             var metadataResult = await ProjectMetadatas(projectInfo.Value.Select(p => p.NostrPubKey).ToArray());
             if (metadataResult.IsFailure || !metadataResult.Value.Any())
-                return Result.Failure<IEnumerable<Project>>("Project metadata not found in relay");
+            {
+                logger.LogWarning("GetAllAsync: relay metadata lookup failed ({Error}) — returning local results only",
+                    metadataResult.IsFailure ? metadataResult.Error : "no metadata returned");
+                return Result.Success(localLookup.OrderByDescending(p => p.StartingDate).AsEnumerable());
+            }
 
             var lookupList = indexerResults.Select(data =>
                      {

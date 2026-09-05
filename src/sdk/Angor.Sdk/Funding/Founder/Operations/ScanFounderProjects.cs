@@ -27,6 +27,8 @@ public static class ScanFounderProjects
         IProjectService projectService,
         IFounderProjectsService founderProjectsService,
         IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection,
+        Wallet.Infrastructure.Interfaces.ISensitiveWalletDataProvider sensitiveWalletDataProvider,
+        Wallet.Infrastructure.Interfaces.IWalletFactory walletFactory,
         ILogger<ScanFounderProjectsHandler> logger) : IRequestHandler<ScanFounderProjectsRequest, Result<ScanFounderProjectsResponse>>
     {
         public async Task<Result<ScanFounderProjectsResponse>> Handle(ScanFounderProjectsRequest request, CancellationToken cancellationToken)
@@ -37,6 +39,38 @@ public static class ScanFounderProjects
             if (keysResult.IsFailure || keysResult.Value == null)
                 return Result.Failure<ScanFounderProjectsResponse>(
                     keysResult.IsFailure ? keysResult.Error : "No derived keys found for the given wallet.");
+
+            // Self-heal: builds affected by the ARM64 JIT derivation-collapse bug
+            // (docs/ai-docs/taproot-arm64-jit-bug.md) persisted key sets where every
+            // slot carries the same project identifier. Re-derive from the seed
+            // (OS-secured key store, no prompt) and persist the corrected set.
+            var distinctIds = keysResult.Value.Keys.Select(k => k.ProjectIdentifier).Distinct().Count();
+            if (distinctIds < keysResult.Value.Keys.Count)
+            {
+                logger.LogWarning(
+                    "ScanFounderProjects: wallet {WalletId} has collapsed derived keys ({Slots} slots, {Distinct} distinct ids) — rebuilding from seed",
+                    request.WalletId.Value, keysResult.Value.Keys.Count, distinctIds);
+
+                var sensitiveDataResult = await sensitiveWalletDataProvider.RequestSensitiveData(request.WalletId);
+                if (sensitiveDataResult.IsFailure)
+                    return Result.Failure<ScanFounderProjectsResponse>(
+                        $"Derived project keys are corrupted and the seed is unavailable to rebuild them: {sensitiveDataResult.Error}");
+
+                var rebuildResult = await walletFactory.RebuildFounderKeysAsync(
+                    sensitiveDataResult.Value.ToWalletWords(), request.WalletId);
+                if (rebuildResult.IsFailure)
+                    return Result.Failure<ScanFounderProjectsResponse>(
+                        $"Failed to rebuild derived project keys: {rebuildResult.Error}");
+
+                keysResult = await derivedProjectKeysCollection.FindByIdAsync(request.WalletId.Value);
+                if (keysResult.IsFailure || keysResult.Value == null)
+                    return Result.Failure<ScanFounderProjectsResponse>("Derived keys missing after rebuild.");
+
+                logger.LogInformation(
+                    "ScanFounderProjects: rebuilt derived keys for wallet {WalletId} — now {Distinct} distinct project ids",
+                    request.WalletId.Value,
+                    keysResult.Value.Keys.Select(k => k.ProjectIdentifier).Distinct().Count());
+            }
 
             var allDerivedIds = keysResult.Value.Keys
                 .Select(k => k.ProjectIdentifier)
@@ -50,6 +84,24 @@ public static class ScanFounderProjects
 
             // Step 3: Determine which derived keys we haven't checked yet
             var unknownIds = allDerivedIds.Except(knownIds).Select(id => new ProjectId(id)).ToArray();
+
+            logger.LogInformation(
+                "ScanFounderProjects: wallet {WalletId} — {DerivedCount} derived slots, {KnownCount} known locally, {UnknownCount} to scan. Derived ids: {DerivedIds}",
+                request.WalletId.Value, allDerivedIds.Count, knownIds.Count, unknownIds.Length,
+                string.Join(", ", allDerivedIds));
+
+            // Diagnostic for the ARM64 JIT derivation-collapse bug: all 15 slots deriving
+            // to the same key means BIP32/Angor-key derivation is broken on this runtime.
+            var storedKeys = keysResult.Value.Keys;
+            var distinctFounderKeys = storedKeys.Select(k => k.FounderKey).Distinct().Count();
+            var distinctNostr = storedKeys.Select(k => k.NostrPubKey).Distinct().Count();
+            if (allDerivedIds.Count < storedKeys.Count || distinctFounderKeys < storedKeys.Count)
+            {
+                logger.LogError(
+                    "ScanFounderProjects: DERIVATION COLLAPSE for wallet {WalletId} — {SlotCount} slots but only {DistinctIds} distinct project ids, {DistinctFounderKeys} distinct founder keys, {DistinctNostr} distinct nostr keys. First founder keys: {Keys}",
+                    request.WalletId.Value, storedKeys.Count, allDerivedIds.Count, distinctFounderKeys, distinctNostr,
+                    string.Join(", ", storedKeys.Take(3).Select(k => $"[{k.Index}]{k.FounderKey}")));
+            }
 
             // Step 4: Query the indexer/Nostr for the unknown keys to see if they exist on-chain
             var newRecords = new List<FounderProjectRecord>();
