@@ -67,7 +67,8 @@ Use the CLI for **testing and validation** (e.g., checking wallet balances, brow
 
 ### Deploying to USB-connected Android device (src/design rewrite)
 
-The new `App.Android` project requires `JavaSdkDirectory` set explicitly on macOS (the SDK can't auto-detect via `/usr/libexec/java_home`). Use openjdk@17:
+The new `App.Android` project uses OpenJDK 17. The dev runner detects Homebrew's JDK on macOS and the active
+`javac` installation on Linux; set `JAVA_HOME` explicitly to override detection.
 
 **Preferred: use the dev runner** — builds the APK (installs + launches on a connected device) and starts the desktop app, so both surfaces are validated each cycle:
 
@@ -90,6 +91,14 @@ adb shell monkey -p io.angor.app 1   # launch installed app
 # Verify device + package
 adb devices
 adb shell pm list packages | grep -i angor
+```
+
+On Linux, install the .NET 10 SDK, OpenJDK 17, Android platform tools, and the .NET Android workload. For
+Arch/Omarchy:
+
+```bash
+sudo pacman -S --needed dotnet-sdk jdk17-openjdk android-tools
+dotnet workload install android
 ```
 
 Package id is `io.angor.app`. When iterating on UI changes, deploy to BOTH desktop and the USB-connected Android in parallel so both surfaces are validated each cycle.

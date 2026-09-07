@@ -417,3 +417,5 @@ root/
 # macOS junk + local session notes
 .DS_Store
 .opencode-session-notes.md
+# macOS AppleDouble metadata (can be created when copying to non-Apple filesystems)
+._*
