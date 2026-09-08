@@ -7,6 +7,7 @@ using Avalonia.VisualTree;
 using Angor.Shared.Services;
 using App.UI.Shared;
 using App.UI.Shared.Helpers;
+using App.UI.Shared.Services;
 using App.UI.Shell;
 using Branta.Classes;
 using Branta.Enums;
@@ -35,9 +36,13 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
     private string _lastTxId = "";
     private string? _brantaVerifyUrl;
     private CancellationTokenSource? _brantaLookupCts;
+    private bool _isSweepAll;
+    private string? _programmaticAmountText;
 
     private ICurrencyService CurrencyService =>
         App.Services.GetRequiredService<ICurrencyService>();
+
+    public bool IsSweepAll => _isSweepAll;
 
     public SendFundsModal()
     {
@@ -46,10 +51,21 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
 
         // Clear errors on input (Vue: @input clears errors)
         AddressInput.TextChanged += OnAddressTextChanged;
-        AmountInput.TextChanged += (_, _) => ClearSendErrors();
+        AmountInput.TextChanged += (_, _) =>
+        {
+            ClearSendErrors();
+            // Only a user edit (text differing from the value we set programmatically)
+            // clears sweep intent. Comparing values instead of using a timing-based
+            // guard keeps this correct whether TextChanged fires sync or deferred.
+            if (AmountInput.Text != _programmaticAmountText)
+                _isSweepAll = false;
+        };
 
         // Re-run lookup immediately when the on-chain toggle changes
         BrantaOnChainToggle.IsCheckedChanged += OnBrantaToggleChanged;
+
+        IQrCodeScanner scanner = App.Services.GetRequiredService<IQrCodeScanner>();
+        BtnScanQr.IsVisible = scanner.IsAvailable;
     }
 
     private async void OnAddressTextChanged(object? sender, TextChangedEventArgs e)
@@ -183,7 +199,9 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         FromWalletName.Text = name;
         FromWalletType.Text = type;
         FromBalance.Text = balance;
-        _walletBalance = balance.Replace($" {CurrencyService.Symbol}", "").Trim();
+        // Strip any ticker suffix ("0.001 BTC", "0.001 TBTC", ...) by keeping the
+        // leading numeric token, so parsing is not coupled to the active network's symbol.
+        _walletBalance = balance.Trim().Split(' ')[0];
         _walletId = walletId ?? "";
     }
 
@@ -224,6 +242,10 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
                 _ = SendWithFeePopupAsync();
                 break;
 
+            case "BtnScanQr":
+                _ = ScanQrCodeAsync();
+                break;
+
             case "BtnCopyTxid":
                 ClipboardHelper.CopyToClipboard(this, _lastTxId);
                 break;
@@ -236,6 +258,49 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
             case "BtnDone":
                 GetShellVm()?.HideModal();
                 break;
+        }
+    }
+
+    private async Task ScanQrCodeAsync()
+    {
+        var shellVm = GetShellVm();
+        var log = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<SendFundsModal>();
+
+        try
+        {
+            IQrCodeScanner scanner = App.Services.GetRequiredService<IQrCodeScanner>();
+            string? content = await scanner.ScanAsync();
+            log.LogInformation("QR scan returned {Length} chars", content?.Length ?? 0);
+
+            // Native activity completion is not guaranteed to resume on Avalonia's
+            // dispatcher. Explicitly marshal the modal remount and all control
+            // mutations to the UI thread.
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                // Returning from the scanner activity can leave the shell's modal
+                // overlay stale (blur backdrop rendered without the card).
+                shellVm?.ShowModal(this);
+
+                if (content == null)
+                    return;
+
+                if (!BitcoinQrPaymentParser.TryParse(content, out BitcoinQrPayment? payment, out string? error))
+                {
+                    log.LogWarning("QR payload rejected: {Error}", error);
+                    AddressError.Text = error ?? "Unsupported QR code.";
+                    AddressError.IsVisible = true;
+                    return;
+                }
+
+                AddressInput.Text = payment!.Address;
+                if (payment.AmountBtc is decimal amount)
+                    AmountInput.Text = amount.ToString("0.########", System.Globalization.CultureInfo.InvariantCulture);
+            });
+        }
+        catch (Exception ex)
+        {
+            log.LogError(ex, "QR scan flow failed");
+            await Dispatcher.UIThread.InvokeAsync(() => shellVm?.ShowModal(this));
         }
     }
 
@@ -278,7 +343,7 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         if (sendBtnContent != null) sendBtnContent.IsVisible = false;
         if (sendBtnSpinner != null) sendBtnSpinner.IsVisible = true;
 
-        var (success, txId, error) = await fundsVm.SendAsync(_walletId, address, amount, feeRate);
+        var (success, txId, error) = await fundsVm.SendAsync(_walletId, address, amount, feeRate, _isSweepAll);
 
         if (sendBtn != null) sendBtn.IsEnabled = true;
         if (sendBtnContent != null) sendBtnContent.IsVisible = true;
@@ -287,8 +352,10 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         if (success && txId != null)
         {
             _lastTxId = txId;
-            SummaryAmount.Text = CurrencyService.FormatBtc(amount);
-            SummaryFee.Text = $"0.00001200 {CurrencyService.Symbol}";
+            SummaryAmount.Text = _isSweepAll ? "All available funds" : CurrencyService.FormatBtc(amount);
+            SummaryFee.Text = _isSweepAll
+                ? "Deducted from the sent amount"
+                : $"0.00001200 {CurrencyService.Symbol}";
             SummaryTxid.Text = txId;
             ShowStep("success");
         }
@@ -308,7 +375,9 @@ public partial class SendFundsModal : UserControl, IBackdropCloseable
         if (double.TryParse(_walletBalance, System.Globalization.NumberStyles.Any,
                 System.Globalization.CultureInfo.InvariantCulture, out var bal))
         {
-            AmountInput.Text = (bal * pct).ToString("F8", System.Globalization.CultureInfo.InvariantCulture);
+            _programmaticAmountText = (bal * pct).ToString("F8", System.Globalization.CultureInfo.InvariantCulture);
+            AmountInput.Text = _programmaticAmountText;
+            _isSweepAll = pct >= 1;
         }
     }
 

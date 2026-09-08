@@ -227,19 +227,95 @@ public class WalletAppService(
         }
     }
 
+    public async Task<Result<TxId>> SendAll(WalletId walletId, Address address, DomainFeeRate feeRate)
+    {
+        try
+        {
+            logger.LogInformation("SendAll: walletId={WalletId} address={Address} feeRate={FeeRate} sat/vB",
+                walletId.Value, address.Value, feeRate.SatsPerVByte);
+
+            var sensitiveDataResult = await sensitiveWalletDataProvider.RequestSensitiveData(walletId);
+            if (sensitiveDataResult.IsFailure)
+            {
+                logger.LogWarning("SendAll: sensitive data failed: {Error}", sensitiveDataResult.Error);
+                return Result.Failure<TxId>(sensitiveDataResult.Error);
+            }
+
+            var (seed, passphrase) = sensitiveDataResult.Value;
+            var walletWords = new WalletWords { Words = seed, Passphrase = passphrase.GetValueOrDefault("") };
+            var accountBalanceInfo = await accountBalanceService.RefreshAccountBalanceInfoAsync(walletId);
+            if (accountBalanceInfo.IsFailure)
+            {
+                logger.LogWarning("SendAll: balance refresh failed: {Error}", accountBalanceInfo.Error);
+                return Result.Failure<TxId>(accountBalanceInfo.Error);
+            }
+
+            AccountInfo accountInfo = accountBalanceInfo.Value.AccountInfo;
+            long spendable = accountInfo.AllAddresses()
+                .SelectMany(addressInfo => addressInfo.UtxoData)
+                .Where(utxo => !utxo.PendingSpent &&
+                    !accountInfo.UtxoReservedForInvestment.Contains(utxo.outpoint.ToString()))
+                .Sum(utxo => utxo.value);
+            logger.LogInformation("SendAll: spendable={Spendable} sats, confirmed={Confirmed}, unconfirmed={Unconfirmed}",
+                spendable, accountBalanceInfo.Value.TotalBalance, accountBalanceInfo.Value.TotalUnconfirmedBalance);
+
+            if (spendable <= 0)
+                return Result.Failure<TxId>("No spendable funds are available.");
+            List<UtxoDataWithPath> utxos = walletOperations.FindOutputsForTransaction(spendable, accountInfo);
+            logger.LogInformation("SendAll: selected {Count} UTXOs summing {Total} sats",
+                utxos.Count, utxos.Sum(u => u.UtxoData.value));
+
+            var sendInfo = new SendInfo
+            {
+                SendToAddress = address.Value,
+                FeeRate = feeRate.SatsPerVByte * 1000,
+                SendUtxos = utxos.ToDictionary(data => data.UtxoData.outpoint.ToString(), data => data),
+            };
+
+            var result = await walletOperations.SendAllToAddress(walletWords, sendInfo);
+            if (result.Success)
+                logger.LogInformation("SendAll: success txid={TxId}", result.Data.GetHash());
+            else
+                logger.LogWarning("SendAll: SendAllToAddress failed: {Error}", result.Message);
+
+            return result.Success
+                ? Result.Success(new TxId(result.Data.GetHash().ToString()))
+                : Result.Failure<TxId>(result.Message);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "SendAll: exception: {Message}", ex.Message);
+            return Result.Failure<TxId>($"Error sweeping wallet: {ex.Message}");
+        }
+    }
+
     public async Task<Result<WalletId>> CreateWallet(string name, string seedWords, Maybe<string> passphrase, BitcoinNetwork network)
     {
-        var wallet = await walletFactory.CreateWallet(name ?? SingleWalletName, seedWords, passphrase, network);
+        try
+        {
+            var wallet = await walletFactory.CreateWallet(name ?? SingleWalletName, seedWords, passphrase, network);
 
-        if (wallet.IsFailure)
-            return Result.Failure<WalletId>(wallet.Error);
+            if (wallet.IsFailure)
+                return Result.Failure<WalletId>(wallet.Error);
 
-        var accountInfoResult = await accountBalanceService.RefreshAccountBalanceInfoAsync(wallet.Value.Id);
+            // The wallet is fully persisted at this point. The initial gap-limit balance
+            // scan is best-effort: on flaky mobile connections (or an unreachable indexer)
+            // it must not fail the import — balances refresh on the next explicit refresh.
+            var accountInfoResult = await accountBalanceService.RefreshAccountBalanceInfoAsync(wallet.Value.Id);
 
-        if (accountInfoResult.IsFailure)
-            return Result.Failure<WalletId>(accountInfoResult.Error);
+            if (accountInfoResult.IsFailure)
+                logger.LogWarning("Initial balance scan failed for wallet {WalletId} (import still succeeds): {Error}",
+                    wallet.Value.Id.Value, accountInfoResult.Error);
 
-        return Result.Success(wallet.Value.Id);
+            return Result.Success(wallet.Value.Id);
+        }
+        catch (Exception ex)
+        {
+            // e.g. Android KeyStore Java exceptions must surface as readable failures,
+            // not raw exceptions escaping the Task.Run in the caller.
+            logger.LogError(ex, "CreateWallet failed for '{Name}'", name);
+            return Result.Failure<WalletId>($"Failed to create wallet: {ex.Message}");
+        }
     }
 
     public Task<Result<WalletId>> CreateWallet(string name, BitcoinNetwork network)
@@ -467,7 +543,7 @@ public class WalletAppService(
             var psbt = psbtOperations.CreatePsbtForTransaction(
                 unsignedTransaction, 
                 accountInfo, 
-                feeRate.SatsPerVByte, 
+                feeRate.SatsPerVByte * 1000,
                 utxoDataWithPaths: sendInfo.SendUtxos.Values.ToList()
             );
             

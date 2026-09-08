@@ -338,6 +338,33 @@ public class WalletOperations : IWalletOperations
         return new OperationResult<Transaction> { Success = false, Message = res };
     }
 
+    public async Task<OperationResult<Transaction>> SendAllToAddress(WalletWords walletWords, SendInfo sendInfo)
+    {
+        AngorNetwork network = _networkConfiguration.GetNetwork();
+        List<SigningCoin> signingCoins = GetUnspentOutputsForTransaction(
+            walletWords, sendInfo.SendUtxos.Values.ToList());
+
+        if (signingCoins.Count == 0)
+            return new OperationResult<Transaction> { Success = false, Message = "not enough funds" };
+
+        var builder = network.BitcoinNetwork.CreateTransactionBuilder()
+            .AddCoins(signingCoins.Select(sc => sc.Coin))
+            .AddKeys(signingCoins.Select(sc => sc.Key).ToArray())
+            .SendAll(BitcoinAddress.Create(sendInfo.SendToAddress, network.BitcoinNetwork))
+            .SendEstimatedFees(new FeeRate(Money.Satoshis(sendInfo.FeeRate)));
+
+        builder.ShuffleOutputs = false;
+
+        Transaction signedTransaction = builder.BuildTransaction(true);
+        if (signedTransaction.Outputs.Count != 1 || signedTransaction.Outputs[0].Value <= Money.Zero)
+            return new OperationResult<Transaction> { Success = false, Message = "not enough funds to cover the network fee" };
+
+        string publishError = await _indexerService.PublishTransactionAsync(signedTransaction.ToHex());
+        return string.IsNullOrEmpty(publishError)
+            ? new OperationResult<Transaction> { Success = true, Data = signedTransaction }
+            : new OperationResult<Transaction> { Success = false, Message = publishError };
+    }
+
     public List<UtxoData> UpdateAccountUnconfirmedInfoWithSpentTransaction(AccountInfo accountInfo, Transaction transaction)
     {
         AngorNetwork network = _networkConfiguration.GetNetwork();

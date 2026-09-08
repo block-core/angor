@@ -36,10 +36,6 @@ public partial class PortfolioView : UserControl, ISectionView
         DataContext = vm;
         AddHandler(Button.ClickEvent, OnButtonClick, RoutingStrategies.Bubble);
 
-        // Tag as Mobile so style sheet can strip hover transitions + BoxShadow
-        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
-            Classes.Add("Mobile");
-
         // When navigating back to Funded, clear any open detail view
         // so the user sees the list (not a stale detail screen from last time).
         vm.CloseInvestmentDetail();

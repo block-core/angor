@@ -144,7 +144,8 @@
                     </Button>
 
                     <!-- See Live Project button -->
-                    <Button Grid.Column="2"
+                    <Button Name="SeeLiveProjectButton"
+                            Grid.Column="2"
                             Classes="NoPressShift"
                             Background="Transparent"
                             BorderBrush="{DynamicResource StrokeSubtle}"

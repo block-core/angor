@@ -18,16 +18,6 @@
             <Setter Property="RenderTransform" Value="translate(0px, -4px)" />
             <Setter Property="BoxShadow" Value="{DynamicResource ItemShadowHover}" />
         </Style>
-        <!--
-            Mobile perf: strip hover transitions + BoxShadow on touch-only platforms.
-            Hover pseudo-selectors never fire on Android/iOS, so the transitions only
-            waste allocations and animator ticks. BoxShadow is one of the most expensive
-            Skia ops on mobile GPU. The .Mobile class is added by code-behind.
-        -->
-        <Style Selector="portfolio|PortfolioView.Mobile Border#InvestmentCardBorder">
-            <Setter Property="Transitions" Value="{x:Null}" />
-            <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />
-        </Style>
     </UserControl.Styles>
 
     <Panel AutomationProperties.AutomationId="PortfolioRootPanel">

@@ -14,10 +14,8 @@
 
     <!-- Vue: signature card hover — subtle shadow transition -->
     <UserControl.Styles>
-        <!-- Mobile: strip BoxShadow + transitions that waste GPU on touch devices -->
+        <!-- Mobile: tighter card padding on compact layouts -->
         <Style Selector="funders|FundersView.Mobile Border.SignatureCard">
-            <Setter Property="Transitions" Value="{x:Null}" />
-            <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />
             <Setter Property="Padding" Value="16" />
         </Style>
 

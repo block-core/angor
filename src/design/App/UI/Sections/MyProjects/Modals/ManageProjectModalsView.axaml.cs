@@ -45,7 +45,11 @@ public partial class ManageProjectModalsView : UserControl
         WireClick("ConfirmClaimBtn", OnConfirmClaimClick);
 
         // ── Success (Claim) ──
-        WireClick("GoToFundsBtn", () => { if (Vm != null) Vm.ShowSuccessModal = false; });
+        WireClick("GoToFundsBtn", () =>
+        {
+            if (Vm != null) Vm.ShowSuccessModal = false;
+            GetShellVm()?.NavigateToFunds();
+        });
         WireClick("SuccessCloseBtn", () => { if (Vm != null) Vm.ShowSuccessModal = false; });
 
         // ── Release Funds ──

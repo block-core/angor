@@ -3,8 +3,10 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
+using Avalonia.VisualTree;
 using App.UI.Shared;
 using App.UI.Shared.Helpers;
+using App.UI.Shell;
 using ReactiveUI;
 
 namespace App.UI.Sections.MyProjects;
@@ -56,6 +58,19 @@ public partial class ManageProjectContentView : UserControl
         var editBtn = this.FindControl<Button>("EditProjectButton");
         if (editBtn != null)
             editBtn.Click += (_, _) => EditProjectRequested?.Invoke();
+
+        // Wire See Live Project button — opens the public project profile
+        // (Find Projects → project detail) for this project's identifier.
+        var seeLiveBtn = this.FindControl<Button>("SeeLiveProjectButton");
+        if (seeLiveBtn != null)
+            seeLiveBtn.Click += (_, _) =>
+            {
+                if (DataContext is ManageProjectViewModel vm &&
+                    this.FindAncestorOfType<ShellView>()?.DataContext is ShellViewModel shellVm)
+                {
+                    shellVm.NavigateToProjectDetail(vm.ProjectId);
+                }
+            };
 
         // Cache responsive controls
         _manageStatsGrid = this.FindControl<Grid>("ManageStatsGrid");

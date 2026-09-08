@@ -321,10 +321,15 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
     /// </summary>
     private async Task ImportWalletViaSdkAsync(string walletName, string seedWords)
     {
-        if (Vm == null) return;
+        if (Vm == null)
+        {
+            _logger.LogError("ImportWalletViaSdkAsync: DataContext is not a FundsViewModel — cannot import");
+            ShellVm?.ShowToast("Wallet import failed: internal error (no view model). Please reopen this dialog.");
+            return;
+        }
 
         _logger.LogInformation("Importing wallet '{WalletName}' via SDK...", walletName);
-        var success = await Vm.ImportWalletAsync(walletName, seedWords);
+        var (success, error) = await Vm.ImportWalletAsync(walletName, seedWords);
         if (success)
         {
             _walletCreated = true;
@@ -333,8 +338,11 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         }
         else
         {
-            _logger.LogError("Failed to import wallet '{WalletName}'", walletName);
-            ShellVm?.ShowToast($"Failed to import wallet '{walletName}'. Please check the seed words and try again.");
+            _logger.LogError("Failed to import wallet '{WalletName}': {Error}", walletName, error);
+            // Surface the error inline in the modal (toasts auto-dismiss and are easy to miss)
+            SeedSuccess.IsVisible = false;
+            SeedError.Text = $"Import failed: {error ?? "unknown error"}";
+            SeedError.IsVisible = true;
         }
     }
 
@@ -366,7 +374,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         if (Vm == null || string.IsNullOrEmpty(_generatedSeedWords)) return;
 
         _logger.LogInformation("Creating wallet '{WalletName}' via SDK (generate flow)...", walletName);
-        var success = await Vm.ImportWalletAsync(walletName, _generatedSeedWords);
+        var (success, error) = await Vm.ImportWalletAsync(walletName, _generatedSeedWords);
         if (success)
         {
             _walletCreated = true;
@@ -375,8 +383,8 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         }
         else
         {
-            _logger.LogError("Failed to create wallet '{WalletName}' (generate flow)", walletName);
-            ShellVm?.ShowToast($"Failed to create wallet '{walletName}'. Please try again.");
+            _logger.LogError("Failed to create wallet '{WalletName}' (generate flow): {Error}", walletName, error);
+            ShellVm?.ShowToast($"Failed to create wallet: {error ?? "unknown error"}");
         }
     }
 

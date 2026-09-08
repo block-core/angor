@@ -27,6 +27,7 @@ namespace App.Android;
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
 public class MainActivity : AvaloniaMainActivity
 {
+    public static MainActivity? Current { get; private set; }
     private PerfTabReceiver? _perfReceiver;
     private bool _handlingPlatformBack;
 
@@ -53,6 +54,7 @@ public class MainActivity : AvaloniaMainActivity
     protected override void OnResume()
     {
         base.OnResume();
+        Current = this;
         GetLogger()?.LogInformation("Lifecycle: OnResume taskId={TaskId}", TaskId);
         _perfReceiver = new PerfTabReceiver();
         var filter = new IntentFilter("io.angor.app.PERF_TAB");
@@ -61,6 +63,7 @@ public class MainActivity : AvaloniaMainActivity
 
     protected override void OnPause()
     {
+        Current = null;
         GetLogger()?.LogInformation("Lifecycle: OnPause taskId={TaskId}", TaskId);
         base.OnPause();
         if (_perfReceiver != null)

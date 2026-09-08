@@ -453,7 +453,9 @@
     <StaticResource x:Key="CheckBoxCheckBackgroundFillCheckedPointerOver" ResourceKey="Accent" />
     <StaticResource x:Key="CheckBoxCheckBackgroundStrokeCheckedPointerOver" ResourceKey="Accent" />
     <Thickness x:Key="CheckBoxBorderThemeThickness">2</Thickness>
-    <StaticResource x:Key="CheckBoxCheckBackgroundStrokeUnchecked" ResourceKey="Stroke" />
+    <!-- Unchecked stroke must be clearly visible on dark surfaces — the generic
+         'Stroke' token (10% white/black) makes an unticked box invisible. -->
+    <StaticResource x:Key="CheckBoxCheckBackgroundStrokeUnchecked" ResourceKey="Labels" />
     <StaticResource x:Key="CheckBoxCheckBackgroundStrokeUncheckedPointerOver" ResourceKey="Accent" />
 
     <!-- Accent Button (fallback) -->

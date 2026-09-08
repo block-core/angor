@@ -24,4 +24,13 @@
          parent ="MyTheme.NoActionBar">
     <item name="android:windowIsTranslucent">false</item>
   </style>
+  <style name="MyTheme.Scanner" parent="@style/Theme.AppCompat.DayNight.NoActionBar">
+    <item name="android:windowActionBar">false</item>
+    <item name="android:windowNoTitle">true</item>
+    <item name="android:windowBackground">#000000</item>
+    <item name="android:navigationBarColor">#000000</item>
+    <item name="android:statusBarColor">#000000</item>
+    <item name="android:windowLightNavigationBar">false</item>
+    <item name="android:windowLightStatusBar">false</item>
+  </style>
 </resources>

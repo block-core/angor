@@ -5,8 +5,13 @@
     <!-- Icon utility styles — replaces Zafiro IconOptions attached properties.
          Projektanker icons use FontSize for sizing and Foreground for color. -->
 
-    <!-- Defaults: all i:Icon elements in UserControls get TextMuted color -->
-    <Style Selector=":is(UserControl) i|Icon">
+    <!-- Defaults: ALL i:Icon elements get TextMuted color.
+         CRITICAL: this must match everywhere (control templates, popups, flyouts —
+         not just UserControl subtrees). Optris.Icons.Avalonia.Icon bakes
+         `Foreground ?? Brushes.Black` into an IconImage snapshot; any icon that
+         never receives a Foreground renders permanently BLACK in dark mode.
+         Guarded by DarkModeIconTests in App.Test.Integration. -->
+    <Style Selector="i|Icon">
         <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
     </Style>
 

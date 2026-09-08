@@ -293,19 +293,10 @@
     </Style>
 
     <!--
-        Mobile perf: strip RenderTransform + BoxShadow transitions on touch-only
-        platforms. Hover-state pseudo selectors never match on Android/iOS, so
-        the transitions only cost us allocations and animator ticks. Setting
-        Transitions to null on the templated Border removes both.
-        Also strip BoxShadow entirely — Skia box-shadow rendering is one of the
-        most expensive ops on mobile GPU pipelines. Cards keep their border and
-        rounded corners for visual identity; desktop retains the shadow.
-        Measured: ~40-60% faster first-layout time on Pixel-class devices.
+        Mobile perf strip removed: shadows/transitions reinstated on touch platforms
+        after the real scroll-lag cause (unbounded image decodes) was fixed and
+        Avalonia 12's renderer proved fast enough.
     -->
-    <Style Selector="controls|ProjectCard.Mobile /template/ Border#PART_CardRoot">
-        <Setter Property="Transitions" Value="{x:Null}" />
-        <Setter Property="BoxShadow" Value="0 0 0 0 Transparent" />
-    </Style>
 
     <!-- Show correct type pill based on ProjectType value -->
     <Style Selector="controls|ProjectCard[ProjectType=Invest] /template/ ContentControl#PART_TypePillInvest">

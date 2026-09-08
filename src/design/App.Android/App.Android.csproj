@@ -34,6 +34,8 @@
     <ItemGroup>
         <PackageReference Include="Avalonia.Android" />
         <PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" />
+        <!-- Apache-2.0, local-only QR decoding; used by established Bitcoin wallets. -->
+        <PackageReference Include="ZXing.Net" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1,8 +1,15 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- Font families: matches Vue app.css angor-font-sans-serif -->
-    <FontFamily x:Key="FontFamilySans">Roboto</FontFamily>
+    <!-- Font families: matches Vue app.css angor-font-sans-serif.
+         Inter is bundled via WithInterFont() on every platform. MUST use the
+         embedded-collection URI form: a bare family name ("Inter") is looked up
+         in the SYSTEM font collection — absent on Android, where text then
+         renders blank (bare "Roboto" only ever worked because it's the Android
+         system font, while desktop silently fell back to Inter).
+         NOTE: the direct avares:// asset URI form DEADLOCKS the headless font
+         manager — do not switch to it. -->
+    <FontFamily x:Key="FontFamilySans">fonts:Inter#Inter</FontFamily>
 
     <!-- Spacing scale (4px base): 8, 12, 16, 24, 32, 48 -->
     <x:Double x:Key="Spacing2">8</x:Double>

@@ -69,11 +69,20 @@ Use the CLI for **testing and validation** (e.g., checking wallet balances, brow
 
 The new `App.Android` project requires `JavaSdkDirectory` set explicitly on macOS (the SDK can't auto-detect via `/usr/libexec/java_home`). Use openjdk@17:
 
+**Preferred: use the dev runner** — builds the APK (installs + launches on a connected device) and starts the desktop app, so both surfaces are validated each cycle:
+
+```bash
+./scripts/dev-run.sh                 # APK build/install + desktop run
+./scripts/dev-run.sh --skip-android  # desktop only
+```
+
+Manual equivalent:
+
 ```bash
 # One-shot install + launch on the connected device
 export JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
 dotnet build src/design/App.Android/App.Android.csproj \
-  -t:Install -f net9.0-android -c Debug \
+  -t:Install -f net10.0-android -c Debug \
   -p:JavaSdkDirectory=$JAVA_HOME \
   -p:AndroidAttachDebugger=false
 adb shell monkey -p io.angor.app 1   # launch installed app

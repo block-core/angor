@@ -21,6 +21,7 @@ public class MainApplication : AvaloniaAndroidApplication<global::App.App>
         global::App.App.PlatformServices = services =>
         {
             services.AddSingleton<Angor.Sdk.Wallet.Infrastructure.Interfaces.ISecureKeyProvider, AndroidKeyStoreSecureKeyProvider>();
+            services.AddSingleton<global::App.UI.Shared.Services.IQrCodeScanner, AndroidQrCodeScanner>();
         };
 
         return base.CustomizeAppBuilder(builder)

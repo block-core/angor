@@ -373,7 +373,7 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable, INetwork
     {
         CloseManageProject();
         CancelCreateWizard();
-        SelectedEditProject = null;
+        CloseEditProfile();
         Interlocked.Increment(ref _loadGeneration);
         IsLoading = false;
         ClearProjects();
@@ -396,10 +396,15 @@ public partial class MyProjectsViewModel : ReactiveObject, IDisposable, INetwork
 
     public void OpenEditProfile(MyProjectItemViewModel project)
     {
+        SelectedEditProject?.Dispose();
         SelectedEditProject = _editProfileFactory(project);
     }
 
-    public void CloseEditProfile() => SelectedEditProject = null;
+    public void CloseEditProfile()
+    {
+        SelectedEditProject?.Dispose();
+        SelectedEditProject = null;
+    }
 
     public void Dispose() => _disposables.Dispose();
 }

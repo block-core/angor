@@ -121,6 +121,7 @@ public static class CompositionRoot
 
         // Platform-specific secure key storage — registered before SDK services
         // so TryAddSingleton in WalletContextServices does not override.
+        services.AddSingleton<UI.Shared.Services.IQrCodeScanner, UI.Shared.Services.UnavailableQrCodeScanner>();
         platformServices?.Invoke(services);
         if (!services.Any(d => d.ServiceType == typeof(ISecureKeyProvider)))
         {

@@ -43,9 +43,7 @@ public class NavIconConverter : IValueConverter
 public partial class ShellView : UserControl
 {
     /// <summary>Heavy blur for modal backdrop — much more prominent than before.</summary>
-    /// <remarks>PERF: Reduced on mobile (radius 8 vs 20) to avoid GPU strain.</remarks>
-    private static readonly BlurEffect ModalBlurDesktop = new() { Radius = 20 };
-    private static readonly BlurEffect ModalBlurMobile = new() { Radius = 8 };
+    private static readonly BlurEffect ModalBlur = new() { Radius = 20 };
 
     /// <summary>Animation duration matching Vue prototype modal-fade: 250ms.</summary>
     private static readonly TimeSpan AnimDuration = TimeSpan.FromMilliseconds(250);
@@ -299,9 +297,8 @@ public partial class ShellView : UserControl
                         // Make the overlay visible
                         modalOverlay.IsVisible = true;
 
-                        // Apply blur to the shell grid (reduced on mobile for perf)
-                        _shellContent.Effect = LayoutModeService.Instance.IsCompact
-                            ? ModalBlurMobile : ModalBlurDesktop;
+                        // Apply blur to the shell grid
+                        _shellContent.Effect = ModalBlur;
 
                         // Force layout so the initial state is rendered
                         modalOverlay.InvalidateMeasure();
