@@ -26,10 +26,10 @@ public class McpToolDiscoveryTests
     [Theory]
     [InlineData(typeof(Angor.Cli.McpTools.WalletTools), 12)]
     [InlineData(typeof(Angor.Cli.McpTools.ProjectTools), 7)]
-    [InlineData(typeof(Angor.Cli.McpTools.FounderTools), 11)]
+    [InlineData(typeof(Angor.Cli.McpTools.FounderTools), 14)]
     [InlineData(typeof(Angor.Cli.McpTools.InvestorTools), 13)]
     [InlineData(typeof(Angor.Cli.McpTools.LightningTools), 2)]
-    [InlineData(typeof(Angor.Cli.McpTools.ConfigTools), 3)]
+    [InlineData(typeof(Angor.Cli.McpTools.ConfigTools), 5)]
     public void McpToolType_HasExpectedToolCount(Type toolType, int expectedCount)
     {
         var toolMethods = toolType.GetMethods(BindingFlags.Public | BindingFlags.Instance)
@@ -51,7 +51,7 @@ public class McpToolDiscoveryTests
                 .Where(m => m.GetCustomAttribute<McpServerToolAttribute>() != null))
             .Count();
 
-        // 12 + 7 + 11 + 13 + 2 + 3 = 48
-        totalTools.Should().Be(48, "total MCP tools across all tool types");
+        // 12 + 7 + 14 + 13 + 2 + 5 = 53
+        totalTools.Should().Be(53, "total MCP tools across all tool types");
     }
 }
