@@ -189,6 +189,58 @@ public class CreateProjectProfileTests
     }
 
     [Fact]
+    public async Task Handle_WhenNip65AckNeverArrives_ReturnsSuccessWithProfileEventId()
+    {
+        // Arrange
+        // Reproduces an unreachable discovery relay: PublishNip65List is invoked but no OK
+        // callback ever fires. The profile itself was already stored, so deployment must proceed.
+        var request = CreateValidRequest();
+        SetupSeedwords();
+        SetupDerivation();
+
+        var sut = new CreateProjectProfile.CreateProjectProfileHandler(
+            _mockSeedwordsProvider.Object,
+            _mockDerivationOperations.Object,
+            _mockAngorIndexerService.Object,
+            _mockRelayService.Object,
+            _mockDerivedProjectKeysCollection.Object,
+            _mockLogger.Object,
+            TimeSpan.FromMilliseconds(200));
+
+        _mockRelayService
+            .Setup(x => x.CreateNostrProfileAsync(
+                It.IsAny<Nostr.Client.Messages.Metadata.NostrMetadata>(),
+                It.IsAny<string>(),
+                It.IsAny<Action<NostrOkResponse>>()))
+            .Returns<Nostr.Client.Messages.Metadata.NostrMetadata, string, Action<NostrOkResponse>>(
+                (metadata, key, callback) =>
+                {
+                    callback(new NostrOkResponse
+                    {
+                        Accepted = true,
+                        EventId = "profile-event-id"
+                    });
+                    return Task.FromResult("profile-event-id");
+                });
+
+        _mockRelayService
+            .Setup(x => x.PublishNip65List(
+                It.IsAny<string>(),
+                It.IsAny<Action<NostrOkResponse>>()))
+            .Returns<string, Action<NostrOkResponse>>((key, callback) => "nip65-event-id");
+
+        // Act
+        var result = await sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.EventId.Should().Be("profile-event-id");
+        _mockRelayService.Verify(
+            x => x.PublishNip65List(It.IsAny<string>(), It.IsAny<Action<NostrOkResponse>>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task Handle_WhenSuccessful_DeriveNostrKeyFromFounderKey()
     {
         // Arrange
