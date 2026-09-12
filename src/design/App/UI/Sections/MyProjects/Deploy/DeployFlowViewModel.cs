@@ -6,6 +6,7 @@ using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Dtos;
+using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Wallet.Application;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Wallet.Domain;
@@ -243,11 +244,11 @@ public partial class DeployFlowViewModel : ReactiveObject
 
         // Step 4: Create blockchain transaction
         var txResult = await _projectAppService.CreateProject(
-            walletId, SelectedFeeRate, ProjectData, infoResult.Value.EventId, projectSeed);
+            walletId, new DomainFeerate(SelectedFeeRate), ProjectData, infoResult.Value.EventId, projectSeed);
         if (txResult.IsFailure)
         {
             _logger.LogError("Deploy: create blockchain transaction failed: {Error}", txResult.Error);
-            return Result.Failure("We could not prepare the on-chain deployment transaction. Check your wallet balance, fee rate, and spendable funds, then try again.");
+            return Result.Failure(DescribePrepareFailure(txResult.Error));
         }
 
         // Step 5: Publish to blockchain
@@ -256,10 +257,51 @@ public partial class DeployFlowViewModel : ReactiveObject
         if (publishResult.IsFailure)
         {
             _logger.LogError("Deploy: publish transaction failed: {Error}", publishResult.Error);
-            return Result.Failure("The deployment transaction was prepared, but the network rejected the broadcast. Please try again in a moment.");
+            return Result.Failure(DescribeBroadcastFailure(publishResult.Error));
         }
 
         return Result.Success();
+    }
+
+    /// <summary>Turn a raw transaction-build failure into something the user can act on.</summary>
+    private static string DescribePrepareFailure(string? error)
+    {
+        if (!string.IsNullOrEmpty(error) &&
+            error.Contains("not enough funds", StringComparison.OrdinalIgnoreCase))
+        {
+            return "There aren't enough spendable funds to cover the deployment amount plus the network fee. Add a little more to the wallet or lower the fee rate, then try again.";
+        }
+
+        return "We could not prepare the on-chain deployment transaction. Check your wallet balance, fee rate, and spendable funds, then try again.";
+    }
+
+    /// <summary>Turn a raw broadcast rejection into something the user can act on.
+    /// The node's reason arrives from the indexer as e.g.
+    /// {"error":"sendrawtransaction RPC error: {\"code\":-26,\"message\":\"dust\"}"}</summary>
+    private static string DescribeBroadcastFailure(string? error)
+    {
+        if (!string.IsNullOrEmpty(error))
+        {
+            if (error.Contains("dust", StringComparison.OrdinalIgnoreCase))
+            {
+                return "The network rejected the deployment because the leftover change would be too small to spend. Add a little more to the wallet or lower the fee rate, then try again.";
+            }
+
+            if (error.Contains("min relay fee not met", StringComparison.OrdinalIgnoreCase) ||
+                error.Contains("fee-too-low", StringComparison.OrdinalIgnoreCase) ||
+                error.Contains("insufficient fee", StringComparison.OrdinalIgnoreCase))
+            {
+                return "The network rejected the deployment because the fee was too low. Choose a higher fee rate and try again.";
+            }
+
+            if (error.Contains("missingorspent", StringComparison.OrdinalIgnoreCase) ||
+                error.Contains("txn-mempool-conflict", StringComparison.OrdinalIgnoreCase))
+            {
+                return "The coins used for this deployment have already been spent by another pending transaction. Wait for it to confirm, then try again.";
+            }
+        }
+
+        return "The deployment transaction was prepared, but the network rejected the broadcast. Please try again in a moment.";
     }
 
     /// <summary>Close the overlay without completing.
@@ -361,12 +403,12 @@ public partial class DeployFlowViewModel : ReactiveObject
 
             // Step 4: Create blockchain transaction
             DeployStatusText = "Building transaction...";
-            var txResult = await _projectAppService.CreateProject(walletId, SelectedFeeRate, ProjectData, infoEventId, projectSeed);
+            var txResult = await _projectAppService.CreateProject(walletId, new DomainFeerate(SelectedFeeRate), ProjectData, infoEventId, projectSeed);
             if (txResult.IsFailure)
             {
                 _logger.LogError("Deploy: create blockchain transaction failed: {Error}", txResult.Error);
                 DeployStatusText = "Couldn't prepare the transaction.";
-                DeployErrorMessage = "We could not prepare the on-chain deployment transaction. Check your wallet balance, fee rate, and spendable funds, then try again.";
+                DeployErrorMessage = DescribePrepareFailure(txResult.Error);
                 IsDeploying = false;
                 return;
             }
@@ -381,7 +423,7 @@ public partial class DeployFlowViewModel : ReactiveObject
             {
                 _logger.LogError("Deploy: publish transaction failed: {Error}", publishResult.Error);
                 DeployStatusText = "Couldn't broadcast the transaction.";
-                DeployErrorMessage = "The deployment transaction was prepared, but the network rejected the broadcast. Please try again in a moment.";
+                DeployErrorMessage = DescribeBroadcastFailure(publishResult.Error);
                 IsDeploying = false;
                 return;
             }
@@ -495,12 +537,12 @@ public partial class DeployFlowViewModel : ReactiveObject
 
             // Step 4: Create blockchain transaction
             DeployStatusText = "Building transaction...";
-            var txResult = await _projectAppService.CreateProject(walletId, SelectedFeeRate, ProjectData, infoEventId, projectSeed);
+            var txResult = await _projectAppService.CreateProject(walletId, new DomainFeerate(SelectedFeeRate), ProjectData, infoEventId, projectSeed);
             if (txResult.IsFailure)
             {
                 _logger.LogError("Deploy: create blockchain transaction failed: {Error}", txResult.Error);
                 DeployStatusText = "Couldn't prepare the transaction.";
-                DeployErrorMessage = "We could not prepare the on-chain deployment transaction. Check your wallet balance, fee rate, and spendable funds, then try again.";
+                DeployErrorMessage = DescribePrepareFailure(txResult.Error);
                 IsDeploying = false;
                 return;
             }
@@ -513,7 +555,7 @@ public partial class DeployFlowViewModel : ReactiveObject
             {
                 _logger.LogError("Deploy: publish transaction failed: {Error}", publishResult.Error);
                 DeployStatusText = "Couldn't broadcast the transaction.";
-                DeployErrorMessage = "The deployment transaction was prepared, but the network rejected the broadcast. Please try again in a moment.";
+                DeployErrorMessage = DescribeBroadcastFailure(publishResult.Error);
                 IsDeploying = false;
                 return;
             }

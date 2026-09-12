@@ -22,7 +22,7 @@ public interface IProjectAppService
     Task<Result<ScanFounderProjects.ScanFounderProjectsResponse>> ScanFounderProjects(WalletId walletId);
     Task<Result<CreateProjectProfileResponse>> CreateProjectProfile(WalletId walletId, ProjectSeedDto projectSeedDto, CreateProjectDto project);
     Task<Result<CreateProjectInfoResponse>> CreateProjectInfo(WalletId walletId, CreateProjectDto project, ProjectSeedDto projectSeedDto);
-    Task<Result<CreateProjectResponse>> CreateProject(WalletId walletId, long selectedFee, CreateProjectDto project, string projectInfoEventId, ProjectSeedDto projectSeedDto);
+    Task<Result<CreateProjectResponse>> CreateProject(WalletId walletId, DomainFeerate selectedFee, CreateProjectDto project, string projectInfoEventId, ProjectSeedDto projectSeedDto);
     Task<Result<ProjectStatisticsDto>> GetProjectStatistics(ProjectId projectId);
 
     /// <summary>

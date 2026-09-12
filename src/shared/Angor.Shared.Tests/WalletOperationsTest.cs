@@ -80,6 +80,43 @@ public class WalletOperationsTest : AngorTestData
         _sut.UpdateAccountInfoWithNewAddressesAsync(accountInfo).Wait();
     }
 
+    [Fact]
+    public void AddInputsAndSignTransaction_WhenChangeWouldBeDust_AddsItToTheFeeInsteadOfCreatingAnOutput()
+    {
+        // Regression: a project-deployment transaction funded with barely more than the
+        // Angor create fee left a ~200 sat change output, which relay nodes reject with
+        // "sendrawtransaction RPC error: {code:-26, message:dust}".
+        var words = new WalletWords { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
+
+        AccountInfo accountInfo = _sut.BuildAccountInfoForWalletWords(words);
+
+        const long utxoValue = 10348;
+        const long angorCreateFee = 10001;
+        AddCoins(accountInfo, 1, utxoValue);
+
+        var network = _networkConfiguration.Object.GetNetwork();
+        var projectTransaction = network.CreateTransaction();
+        projectTransaction.Outputs.Add(new TxOut(Money.Satoshis(angorCreateFee),
+            BitcoinAddress.Create(accountInfo.GetNextReceiveAddress()!, network.BitcoinNetwork).ScriptPubKey));
+        projectTransaction.Outputs.Add(new TxOut(Money.Zero, TxNullDataTemplate.Instance.GenerateScriptPubKey(new byte[32])));
+
+        // 1000 sat/kB == 1 sat/vByte, the protocol minimum
+        var result = _sut.AddInputsAndSignTransaction(
+            accountInfo.GetNextChangeReceiveAddress()!, projectTransaction, words, accountInfo, 1000);
+
+        var spendableOutputs = result.Transaction.Outputs
+            .Where(o => !o.ScriptPubKey.IsUnspendable)
+            .ToList();
+
+        Assert.All(spendableOutputs,
+            o => Assert.True(o.Value.Satoshi > ProtocolConstants.DustThresholdSats,
+                $"Output of {o.Value.Satoshi} sats is at or below the dust threshold of {ProtocolConstants.DustThresholdSats}"));
+
+        // The dust change went to the miner, so the whole UTXO is consumed by fee + outputs.
+        Assert.Equal(utxoValue - angorCreateFee, result.TransactionFee);
+        Assert.Single(spendableOutputs);
+    }
+
     private string GenerateScriptHex(string address, AngorNetwork network)
     {
         try

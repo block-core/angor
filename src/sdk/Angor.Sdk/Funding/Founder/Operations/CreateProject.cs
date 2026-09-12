@@ -23,7 +23,7 @@ public static class CreateProjectConstants
         /// </summary>
         public record CreateProjectRequest(
                 WalletId WalletId,
-                long SelectedFeeRate,
+                DomainFeerate SelectedFeeRate,
                 CreateProjectDto Project,
                 string ProjectInfoEventId,
                 ProjectSeedDto ProjectSeedDto) // Event ID from CreateProjectInfo
@@ -56,7 +56,8 @@ public static class CreateProjectConstants
                 var transactionInfo = await CreateProjectTransaction(
                       request.WalletId,
                       wallet.Value.ToWalletWords(),
-                      request.SelectedFeeRate,
+                      // IWalletOperations consumes fee rates in sat/kB; DomainFeerate carries sat/vByte.
+                      request.SelectedFeeRate.SatsPerKilobyte,
                       newProjectKeys.FounderKey,
                       newProjectKeys.ProjectIdentifier,
                       request.ProjectInfoEventId);
@@ -97,7 +98,7 @@ public static class CreateProjectConstants
             private async Task<Result<TransactionInfo>> CreateProjectTransaction(
                     WalletId walletId,
                     WalletWords words,
-                    long selectedFee,
+                    long feeRateSatsPerKb,
                     string founderKey,
                     string projectIdentifier,
                     string projectInfoEventId)
@@ -124,7 +125,7 @@ public static class CreateProjectConstants
                         unsignedTransaction,
                         words,
                         accountInfo,
-                        selectedFee);
+                        feeRateSatsPerKb);
 
                 return Result.Success(signedTransaction);
             }

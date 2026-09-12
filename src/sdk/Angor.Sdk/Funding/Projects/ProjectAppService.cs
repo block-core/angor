@@ -46,7 +46,7 @@ public class ProjectAppService(
         return mediator.Send(new CreateProjectInfoRequest(walletId, project, projectSeedDto));
     }
 
-    public Task<Result<CreateProjectResponse>> CreateProject(WalletId walletId, long selectedFee, CreateProjectDto project, string projectInfoEventId, ProjectSeedDto projectSeedDto)
+    public Task<Result<CreateProjectResponse>> CreateProject(WalletId walletId, DomainFeerate selectedFee, CreateProjectDto project, string projectInfoEventId, ProjectSeedDto projectSeedDto)
     {
         return mediator.Send(new CreateProjectRequest(walletId, selectedFee, project, projectInfoEventId, projectSeedDto));
     }

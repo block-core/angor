@@ -94,46 +94,110 @@ public class WalletOperations : IWalletOperations
         }
         else
         {
-            var builder = network.BitcoinNetwork.CreateTransactionBuilder()
-                .AddCoins(signingCoins.Select(sc => sc.Coin))
-                .AddKeys(signingCoins.Select(sc => sc.Key).ToArray())
-                .SetChange(BitcoinAddress.Create(changeAddress, network.BitcoinNetwork))
-                .SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)));
+            var outputsTotal = transaction.Outputs.Sum(o => o.Value.Satoshi);
 
-            builder.ShuffleOutputs = false;
-            builder.DustPrevention = false;
-
-            foreach (var output in transaction.Outputs)
+            TransactionBuilder NewBuilder(List<SigningCoin> coins)
             {
-                builder.Send(output.ScriptPubKey, output.Value);
+                var b = network.BitcoinNetwork.CreateTransactionBuilder()
+                    .AddCoins(coins.Select(sc => sc.Coin))
+                    .AddKeys(coins.Select(sc => sc.Key).ToArray())
+                    .SetChange(BitcoinAddress.Create(changeAddress, network.BitcoinNetwork));
+
+                b.ShuffleOutputs = false;
+                // Dust prevention is off because the OP_RETURN output carries Money.Zero and
+                // NBitcoin would drop it. Sub-dust change is handled explicitly below instead.
+                b.DustPrevention = false;
+
+                foreach (var output in transaction.Outputs)
+                {
+                    b.Send(output.ScriptPubKey, output.Value);
+                }
+
+                return b;
             }
 
+            long SumInputs(Transaction tx, List<SigningCoin> coins) =>
+                tx.Inputs.Sum(input =>
+                    coins.First(sc => sc.Coin.Outpoint.ToString() == input.PrevOut.ToString()).Coin.Amount.Satoshi);
 
-            var signTransaction = builder.BuildTransaction(true);
+            // FindOutputsForTransaction above only selects enough to cover the outputs, leaving
+            // nothing for the miner fee and often producing a sub-dust change output that relay
+            // nodes reject with "dust". Size the fee, then re-select coins to cover
+            // outputs + fee (+ dust headroom). Extra inputs grow the tx, so iterate.
+            const int maxAttempts = 5;
 
-            // find the coins used
-            long totaInInputs = 0;
-            long totaInOutputs = signTransaction.Outputs.Select(s => s.Value.Satoshi).Sum();
-
-            foreach (var input in signTransaction.Inputs)
+            for (var attempt = 0; ; attempt++)
             {
-                var foundInput = signingCoins.First(sc => sc.Coin.Outpoint.ToString() == input.PrevOut.ToString());
+                // Pass 1: estimate the fee from a fully built (and therefore correctly sized) tx.
+                var sizingBuilder = NewBuilder(signingCoins);
+                sizingBuilder.SendEstimatedFees(new FeeRate(Money.Satoshis(feeRate)));
+                var sizingTransaction = sizingBuilder.BuildTransaction(true);
 
-                totaInInputs += foundInput.Coin.Amount.Satoshi;
+                var txSize = sizingTransaction.GetVirtualSize();
+                var minimumFee = new FeeRate(Money.Satoshis(ProtocolConstants.MinFeeRateSatsPerKb)).GetFee(txSize).Satoshi;
+                var estimatedFee = SumInputs(sizingTransaction, signingCoins)
+                                   - sizingTransaction.Outputs.Sum(o => o.Value.Satoshi);
+
+                // Guard against the builder under-paying relative to the protocol minimum.
+                var totalFee = Math.Max(estimatedFee, minimumFee);
+                var totalAvailable = signingCoins.Sum(sc => sc.Coin.Amount.Satoshi);
+                var changeAmount = totalAvailable - outputsTotal - totalFee;
+
+                if (changeAmount < 0)
+                {
+                    if (attempt >= maxAttempts)
+                        throw new ApplicationException(
+                            $"Not enough funds, expected {(outputsTotal + totalFee).ToUnitBtc()} BTC, found {totalAvailable.ToUnitBtc()} BTC");
+
+                    // Re-select including the fee and dust headroom, then re-measure.
+                    var utxosWithFee = FindOutputsForTransaction(
+                        outputsTotal + totalFee + ProtocolConstants.DustThresholdSats, accountInfo);
+                    signingCoins = GetUnspentOutputsForTransaction(walletWords, utxosWithFee);
+                    continue;
+                }
+
+                if (changeAmount > 0 && changeAmount <= ProtocolConstants.DustThresholdSats)
+                {
+                    // Change is dust — give it to the miner instead of creating an output that
+                    // gets rejected with "dust". The tx shrinks, so the effective fee rate only rises.
+                    totalFee += changeAmount;
+                }
+
+                // Pass 2: rebuild with the exact fee. A fresh builder is required because
+                // SendFees/SendEstimatedFees accumulate on the same instance.
+                // The builder may pick a different coin subset than projected, so verify the
+                // built transaction and fold any remaining dust change into the fee.
+                var changeScript = BitcoinAddress.Create(changeAddress, network.BitcoinNetwork).ScriptPubKey;
+                Transaction signTransaction;
+                long actualFee;
+
+                for (var fixup = 0; ; fixup++)
+                {
+                    var finalBuilder = NewBuilder(signingCoins);
+                    finalBuilder.SendFees(Money.Satoshis(totalFee));
+                    signTransaction = finalBuilder.BuildTransaction(true);
+
+                    actualFee = SumInputs(signTransaction, signingCoins)
+                                - signTransaction.Outputs.Sum(o => o.Value.Satoshi);
+
+                    var actualChange = signTransaction.Outputs
+                        .Where(o => o.ScriptPubKey == changeScript)
+                        .Sum(o => o.Value.Satoshi);
+
+                    if (actualChange == 0 || actualChange > ProtocolConstants.DustThresholdSats)
+                        break;
+
+                    if (fixup >= maxAttempts)
+                        throw new ApplicationException(
+                            $"Unable to build a transaction without a dust change output ({actualChange} sats)");
+
+                    _logger.LogDebug(
+                        "Change output of {Change} sats is below the dust threshold, adding it to the fee", actualChange);
+                    totalFee += actualChange;
+                }
+
+                return new TransactionInfo { Transaction = signTransaction, TransactionFee = actualFee };
             }
-
-            var minerFee = totaInInputs - totaInOutputs;
-
-            var txSize = signTransaction.GetVirtualSize();
-            long minimumFee = new FeeRate(Money.Satoshis(1000)).GetFee(txSize).Satoshi; //1000 sats per kilobyte
-
-            if (minerFee >= minimumFee) //Fixed a bug in the builder that creates a fee that is too low
-                return new TransactionInfo { Transaction = signTransaction, TransactionFee = minerFee };
-            
-            builder.SendFees(Money.Satoshis(minimumFee));
-            signTransaction = builder.BuildTransaction(true);
-
-            return new TransactionInfo { Transaction = signTransaction, TransactionFee = minimumFee  };
         }
     }
 

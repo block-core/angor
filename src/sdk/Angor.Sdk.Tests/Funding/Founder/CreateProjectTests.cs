@@ -53,7 +53,7 @@ public class CreateProjectTests
         // Arrange
         var request = new CreateProjectConstants.CreateProject.CreateProjectRequest(
             new WalletId("wallet-1"),
-            10,
+            new DomainFeerate(10),
             CreateProjectDto(),
             "event-123",
             null!);
@@ -137,11 +137,37 @@ public class CreateProjectTests
         result.Value.TransactionDraft.TransactionId.Should().NotBeNullOrEmpty();
     }
 
+    [Fact]
+    public async Task Handle_WhenSuccessful_PassesFeeRateToWalletOperationsInSatsPerKilobyte()
+    {
+        // Arrange — DomainFeerate carries sat/vByte; IWalletOperations consumes sat/kB.
+        // Passing the raw sat/vByte value made every deploy transaction pay ~1 sat/vB,
+        // which left a sub-dust change output and got the broadcast rejected with "dust".
+        var request = new CreateProjectConstants.CreateProject.CreateProjectRequest(
+            new WalletId("wallet-1"),
+            new DomainFeerate(20),
+            CreateProjectDto(),
+            "event-123",
+            new ProjectSeedDto("founder-key", "recovery-key", "nostr-pub-key", "project-id"));
+        SetupSuccessfulFlow();
+
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        _mockWalletOperations.Verify(
+            x => x.AddInputsAndSignTransaction(
+                It.IsAny<string>(), It.IsAny<Transaction>(), It.IsAny<WalletWords>(),
+                It.IsAny<AccountInfo>(), 20_000),
+            Times.Once);
+    }
+
     private static CreateProjectConstants.CreateProject.CreateProjectRequest CreateValidRequest()
     {
         return new CreateProjectConstants.CreateProject.CreateProjectRequest(
             new WalletId("wallet-1"),
-            10,
+            new DomainFeerate(10),
             CreateProjectDto(),
             "event-123",
             new ProjectSeedDto("founder-key", "recovery-key", "nostr-pub-key", "project-id"));
