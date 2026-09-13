@@ -250,32 +250,46 @@
                 </ItemsControl>
 
                 <!-- Project cards in responsive grid -->
-                <ItemsControl ItemsSource="{Binding Projects}"
+                <!-- Virtualized grid: one VirtualizingStackPanel item = one row of cards. -->
+                <!-- Only visible rows are materialized; containers recycle on scroll.    -->
+                <ItemsControl Name="ProjectsItemsControl"
+                              ItemsSource="{Binding ProjectRows}"
                               IsVisible="{Binding !IsInitialLoad}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <controls:ResponsiveGrid MinItemWidth="320"
-                                                     ColumnSpacing="16"
-                                                     RowSpacing="16" />
+                            <VirtualizingStackPanel />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="fp:ProjectItemViewModel">
-                            <controls:ProjectCard
-                                ProjectName="{Binding ProjectName}"
-                                ShortDescription="{Binding ShortDescription}"
-                                InvestorCount="{Binding InvestorCount}"
-                                InvestorLabel="{Binding InvestorLabel}"
-                                Raised="{Binding Raised}"
-                                Target="{Binding Target}"
-                                TargetLabel="{Binding TargetLabel}"
-                                Progress="{Binding Progress}"
-                                ProjectType="{Binding ProjectType}"
-                                Status="{Binding Status}"
-                                HasInvested="{Binding HasInvested}"
-                                Banner="{Binding BannerUrl}"
-                                Avatar="{Binding AvatarUrl}"
-                                CurrencySymbol="{Binding $parent[UserControl].DataContext.CurrencySymbol}" />
+                        <DataTemplate x:DataType="fp:ProjectRowViewModel">
+                            <ItemsControl ItemsSource="{Binding Cards}"
+                                          Margin="0,0,0,16">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <controls:UniformRowPanel ColumnCount="{Binding ColumnCount}"
+                                                                  ColumnSpacing="16" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="fp:ProjectItemViewModel">
+                                        <controls:ProjectCard
+                                            ProjectName="{Binding ProjectName}"
+                                            ShortDescription="{Binding ShortDescription}"
+                                            InvestorCount="{Binding InvestorCount}"
+                                            InvestorLabel="{Binding InvestorLabel}"
+                                            Raised="{Binding Raised}"
+                                            Target="{Binding Target}"
+                                            TargetLabel="{Binding TargetLabel}"
+                                            Progress="{Binding Progress}"
+                                            ProjectType="{Binding ProjectType}"
+                                            Status="{Binding Status}"
+                                            HasInvested="{Binding HasInvested}"
+                                            Banner="{Binding BannerUrl}"
+                                            Avatar="{Binding AvatarUrl}"
+                                            CurrencySymbol="{Binding $parent[UserControl].DataContext.CurrencySymbol}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
