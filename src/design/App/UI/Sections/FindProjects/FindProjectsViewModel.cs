@@ -600,6 +600,34 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable, INetwo
 
     public ObservableCollection<ProjectItemViewModel> Projects { get; } = new();
 
+    /// <summary>
+    /// <see cref="Projects"/> re-chunked into rows of <see cref="CardColumnCount"/> cards so the
+    /// view can render them through a VirtualizingStackPanel (one item = one row): only visible
+    /// rows are materialized and recycled, instead of inflating every card in a plain
+    /// ResponsiveGrid panel. Rebuilt whenever Projects or the column count changes.
+    /// </summary>
+    public ObservableCollection<ProjectRowViewModel> ProjectRows { get; } = new();
+
+    /// <summary>
+    /// How many card columns fit the current view width. Set by the view's code-behind
+    /// (it owns the actual pixel width); changing it re-chunks <see cref="ProjectRows"/>.
+    /// </summary>
+    [Reactive] private int cardColumnCount = 1;
+
+    private void RebuildProjectRows()
+    {
+        var cols = Math.Max(1, CardColumnCount);
+        ProjectRows.Clear();
+        for (var i = 0; i < Projects.Count; i += cols)
+        {
+            var count = Math.Min(cols, Projects.Count - i);
+            var cards = new List<ProjectItemViewModel>(count);
+            for (var j = 0; j < count; j++)
+                cards.Add(Projects[i + j]);
+            ProjectRows.Add(new ProjectRowViewModel(cards, cols));
+        }
+    }
+
     private async Task LoadProfileDataAsync(ProjectItemViewModel project)
     {
         if (string.IsNullOrWhiteSpace(project.ProjectId) || project.ProfileLoaded || project.IsProfileLoading)
@@ -709,6 +737,23 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable, INetwo
                 h => _portfolioViewModel.Investments.CollectionChanged -= h)
             .Throttle(TimeSpan.FromMilliseconds(250))
             .Subscribe(_ => Avalonia.Threading.Dispatcher.UIThread.Post(UpdateHasInvestedFlags))
+            .DisposeWith(_disposables);
+
+        // Re-chunk virtualized rows when the flat project list changes. Chunking is
+        // O(n) and trivially cheap, so we rebuild synchronously per mutation (this also
+        // keeps headless tests deterministic — no throttle/dispatcher race)...
+        Projects.CollectionChanged += (_, _) =>
+        {
+            if (Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+                RebuildProjectRows();
+            else
+                Avalonia.Threading.Dispatcher.UIThread.Post(RebuildProjectRows);
+        };
+
+        // ...and when the view reports a width-driven column-count change.
+        this.WhenAnyValue(x => x.CardColumnCount)
+            .DistinctUntilChanged()
+            .Subscribe(_ => RebuildProjectRows())
             .DisposeWith(_disposables);
         var subscribeMs = sw.ElapsedMilliseconds;
 

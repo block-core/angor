@@ -36,6 +36,10 @@ public partial class FindProjectsView : UserControl, ISectionView
     private ProjectDetailView? _projectDetailView;
     private InvestPageView? _investPageView;
 
+    // Grid geometry shared with the projects grid in the axaml (MinItemWidth / ColumnSpacing).
+    private const double ProjectCardMinWidth = 320;
+    private const double ProjectCardColumnSpacing = 16;
+
     /// <summary>Design-time only.</summary>
     public FindProjectsView() => InitializeComponent();
 
@@ -48,6 +52,14 @@ public partial class FindProjectsView : UserControl, ISectionView
         sw.Restart();
         DataContext = vm;
         var dcMs = sw.ElapsedMilliseconds;
+
+        // Report the grid's column count to the VM so it can chunk projects into
+        // virtualized rows (one VirtualizingStackPanel item = one row of cards).
+        this.FindControl<ItemsControl>("ProjectsItemsControl")!
+            .GetObservable(BoundsProperty)
+            .Subscribe(bounds =>
+                vm.CardColumnCount = UniformRowPanel.ColumnCountForWidth(
+                    bounds.Width, ProjectCardMinWidth, ProjectCardColumnSpacing));
 
         sw.Restart();
         // Cache panels once
