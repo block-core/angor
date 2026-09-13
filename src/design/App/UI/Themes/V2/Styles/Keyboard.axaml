@@ -14,12 +14,12 @@
     <!-- ════════════════════════════════════════════════════════════════════ -->
     <Style Selector="Button:focus-visible, ToggleButton:focus-visible, ListBoxItem:focus-visible, ComboBox:focus-visible, CheckBox:focus-visible, MenuItem:focus-visible">
         <Setter Property="FocusAdorner">
-            <ControlTemplate>
+            <FocusAdornerTemplate>
                 <Border BorderBrush="{DynamicResource Brand}"
                         BorderThickness="2"
                         CornerRadius="8"
                         Margin="-3" />
-            </ControlTemplate>
+            </FocusAdornerTemplate>
         </Setter>
     </Style>
 
