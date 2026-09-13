@@ -32,6 +32,32 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<CreateWalletModal>();
 
         StoredWalletList.SelectionChanged += OnStoredWalletSelected;
+
+        // Live feedback: show a running word count under the seed input so users
+        // know how many words they've typed before hitting Import (12 or 24 needed).
+        SeedPhraseInput.TextChanged += (_, _) => UpdateSeedWordCountHint();
+    }
+
+    private void UpdateSeedWordCountHint()
+    {
+        var hint = this.FindControl<TextBlock>("SeedWordCountHint");
+        if (hint == null) return;
+
+        var words = (SeedPhraseInput.Text ?? "").Split(' ', System.StringSplitOptions.RemoveEmptyEntries).Length;
+        hint.IsVisible = words > 0;
+        hint.Text = words switch
+        {
+            12 => "12 words — ready to import",
+            24 => "24 words — ready to import",
+            < 12 => $"{words} / 12 words",
+            < 24 => $"{words} words — expected 24 total (or remove {words - 12})",
+            _ => $"{words} words — too many. A seed phrase has exactly 12 or 24 words."
+        };
+
+        // Theme-aware colouring via CSS classes (see UserControl.Styles): neutral while
+        // typing, .Valid (green) at exactly 12/24, .Invalid (red) when overlong.
+        hint.Classes.Set("Valid", words is 12 or 24);
+        hint.Classes.Set("Invalid", words > 24);
     }
 
     private FundsViewModel? Vm => DataContext as FundsViewModel;
@@ -140,7 +166,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
                     catch (Exception ex)
                     {
                         _logger.LogError(ex, "Unhandled exception during wallet creation");
-                        ShellVm?.ShowToast($"Wallet creation failed: {ex.Message}");
+                        ShellVm?.ShowToast($"Wallet creation failed: {ex.Message}", ToastSeverity.Error);
                     }
                     finally
                     {
@@ -254,13 +280,13 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
             else
             {
                 _logger.LogError("Failed to restore wallet {ShortId}: {Error}", wallet.ShortId, error);
-                ShellVm?.ShowToast($"Restore failed: {error}");
+                ShellVm?.ShowToast($"Restore failed: {error}", ToastSeverity.Error);
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception during wallet restore");
-            ShellVm?.ShowToast($"Restore failed: {ex.Message}");
+            ShellVm?.ShowToast($"Restore failed: {ex.Message}", ToastSeverity.Error);
         }
         finally
         {
@@ -308,7 +334,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception during wallet import");
-            ShellVm?.ShowToast($"Wallet import failed: {ex.Message}");
+            ShellVm?.ShowToast($"Wallet import failed: {ex.Message}", ToastSeverity.Error);
         }
         finally
         {
@@ -324,7 +350,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         if (Vm == null)
         {
             _logger.LogError("ImportWalletViaSdkAsync: DataContext is not a FundsViewModel — cannot import");
-            ShellVm?.ShowToast("Wallet import failed: internal error (no view model). Please reopen this dialog.");
+            ShellVm?.ShowToast("Wallet import failed: internal error (no view model). Please reopen this dialog.", ToastSeverity.Error);
             return;
         }
 
@@ -362,7 +388,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         else
         {
             _logger.LogError("GenerateSeedWords returned empty result");
-            ShellVm?.ShowToast("Failed to generate seed words. Please try again.");
+            ShellVm?.ShowToast("Failed to generate seed words. Please try again.", ToastSeverity.Error);
         }
     }
 
@@ -384,7 +410,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         else
         {
             _logger.LogError("Failed to create wallet '{WalletName}' (generate flow): {Error}", walletName, error);
-            ShellVm?.ShowToast($"Failed to create wallet: {error ?? "unknown error"}");
+            ShellVm?.ShowToast($"Failed to create wallet: {error ?? "unknown error"}", ToastSeverity.Error);
         }
     }
 
@@ -438,7 +464,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception during seed download");
-            ShellVm?.ShowToast($"Failed to save seed file: {ex.Message}");
+            ShellVm?.ShowToast($"Failed to save seed file: {ex.Message}", ToastSeverity.Error);
         }
     }
 }

@@ -80,8 +80,7 @@
                     </Panel>
 
                     <!-- Title — Vue: text-xl font-bold mb-3 tracking-tight uppercase -->
-                    <TextBlock Text="{TemplateBinding Title}"
-                               FontSize="20"
+                    <TextBlock Classes="Size-20" Text="{TemplateBinding Title}"
                                FontWeight="Bold"
                                LetterSpacing="2"
                                Foreground="{DynamicResource TextStrong}"

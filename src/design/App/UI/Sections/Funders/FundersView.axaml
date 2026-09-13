@@ -176,8 +176,7 @@
                     </Style>
                 </i:Icon.Styles>
             </i:Icon>
-            <TextBlock Text="Loading funders..."
-                       FontSize="15"
+            <TextBlock Classes="Size-15" Text="Loading funders..."
                        Foreground="{DynamicResource TextMutedBrush}"
                        HorizontalAlignment="Center" />
         </StackPanel>
@@ -238,12 +237,10 @@
                                   VerticalAlignment="Center"
                                   Margin="12,0,0,0" />
                     <StackPanel Spacing="2" VerticalAlignment="Center">
-                        <TextBlock Text="Auto-approve requests"
-                                   FontSize="14"
+                        <TextBlock Classes="Size-S" Text="Auto-approve requests"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextStrong}" />
-                        <TextBlock Text="New funding requests are checked and approved automatically in the background"
-                                   FontSize="12"
+                        <TextBlock Classes="Size-XS" Text="New funding requests are checked and approved automatically in the background"
                                    Foreground="{DynamicResource TextMuted}"
                                    TextWrapping="Wrap" />
                     </StackPanel>
@@ -286,9 +283,8 @@
                             </Viewbox>
                         </Border>
                         <!-- Vue: text-2xl font-bold -->
-                        <TextBlock Name="FundersTitleText"
+                        <TextBlock Classes="Size-24" Name="FundersTitleText"
                                    Text="Funders"
-                                   FontSize="24"
                                    FontWeight="Bold"
                                    Foreground="{DynamicResource TextStrong}"
                                    VerticalAlignment="Center" />
@@ -335,9 +331,8 @@
                                       StrokeJoin="Round"
                                       Width="24" Height="24" Stretch="Uniform" />
                             </Viewbox>
-                            <TextBlock Name="ApproveAllText"
+                            <TextBlock Classes="Size-S" Name="ApproveAllText"
                                        Text="Approve All"
-                                       FontSize="14"
                                        FontWeight="SemiBold"
                                        Foreground="White"
                                        VerticalAlignment="Center" />
@@ -367,12 +362,10 @@
                                       VerticalAlignment="Center"
                                       Margin="12,0,0,0" />
                         <StackPanel Spacing="2" VerticalAlignment="Center">
-                            <TextBlock Text="Auto-approve requests"
-                                       FontSize="14"
+                            <TextBlock Classes="Size-S" Text="Auto-approve requests"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextStrong}" />
-                            <TextBlock Text="New funding requests are checked and approved automatically in the background"
-                                       FontSize="12"
+                            <TextBlock Classes="Size-XS" Text="New funding requests are checked and approved automatically in the background"
                                        Foreground="{DynamicResource TextMuted}"
                                        TextWrapping="Wrap" />
                         </StackPanel>
@@ -395,8 +388,7 @@
                                     Padding="16,8">
                                 <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding WaitingCount, StringFormat='Waiting ({0})'}"
-                                                Classes="TabLabel"
-                                                FontSize="14"
+                                                Classes="TabLabel Size-S"
                                                 FontWeight="SemiBold" />
                                 </Grid>
                             </Border>
@@ -408,8 +400,7 @@
                                     Padding="16,8">
                                 <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding ApprovedCount, StringFormat='Approved ({0})'}"
-                                                Classes="TabLabel"
-                                                FontSize="14"
+                                                Classes="TabLabel Size-S"
                                                 FontWeight="SemiBold" />
                                 </Grid>
                             </Border>
@@ -445,13 +436,11 @@
                                       Width="24" Height="24" Stretch="Uniform" />
                             </Viewbox>
                         </Border>
-                        <TextBlock Text="{Binding FilterEmptyTitle}"
-                                   FontSize="20"
+                        <TextBlock Classes="Size-20" Text="{Binding FilterEmptyTitle}"
                                    FontWeight="Bold"
                                    Foreground="{DynamicResource TextStrong}"
                                    HorizontalAlignment="Center" />
-                        <TextBlock Text="{Binding FilterEmptyDescription}"
-                                   FontSize="14"
+                        <TextBlock Classes="Size-S" Text="{Binding FilterEmptyDescription}"
                                    Foreground="{DynamicResource TextMuted}"
                                    TextWrapping="Wrap"
                                    TextAlignment="Center"
@@ -537,8 +526,7 @@
                                                               StrokeJoin="Round"
                                                               Width="24" Height="24" Stretch="Uniform" />
                                                     </Viewbox>
-                                                    <TextBlock Text="Approve"
-                                                               FontSize="14"
+                                                    <TextBlock Classes="Size-S" Text="Approve"
                                                                FontWeight="SemiBold"
                                                                Foreground="White"
                                                                VerticalAlignment="Center" />
@@ -566,8 +554,7 @@
                                                               StrokeJoin="Round"
                                                               Width="24" Height="24" Stretch="Uniform" />
                                                     </Viewbox>
-                                                    <TextBlock Text="{Binding ApprovedLabel}"
-                                                               FontSize="14"
+                                                    <TextBlock Classes="Size-S" Text="{Binding ApprovedLabel}"
                                                                FontWeight="SemiBold"
                                                                Foreground="{DynamicResource StagePillText}"
                                                                VerticalAlignment="Center" />
@@ -580,7 +567,7 @@
                                                     Tag="{Binding Id}"
                                                     IsVisible="{Binding IsWaiting}"
                                                     Classes="FundersAction MobileAction"
-                                                    Background="#DC2626"
+                                                    Background="{DynamicResource DangerBrush}"
                                                     Foreground="White">
                                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                                     <Viewbox Width="16" Height="16" VerticalAlignment="Center">
@@ -591,8 +578,7 @@
                                                               StrokeJoin="Round"
                                                               Width="24" Height="24" Stretch="Uniform" />
                                                     </Viewbox>
-                                                    <TextBlock Text="Reject"
-                                                               FontSize="14"
+                                                    <TextBlock Classes="Size-S" Text="Reject"
                                                                FontWeight="SemiBold"
                                                                Foreground="White"
                                                                VerticalAlignment="Center" />
@@ -603,22 +589,21 @@
                                             <!-- Vue: bg-red-100 text-red-700 opacity-70 -->
                                             <Border IsVisible="{Binding IsRejected}"
                                                      Classes="FundersAction MobileAction"
-                                                    Background="#1ADC2626"
+                                                    Background="{DynamicResource DangerSoftBrush}"
                                                     VerticalAlignment="Center">
                                                 <StackPanel Orientation="Horizontal" Spacing="8"
                                                             VerticalAlignment="Center">
                                                     <Viewbox Width="16" Height="16" VerticalAlignment="Center">
                                                         <Path Data="{StaticResource XMark}"
-                                                              Stroke="#DC2626"
+                                                              Stroke="{DynamicResource DangerBrush}"
                                                               StrokeThickness="2"
                                                               StrokeLineCap="Round"
                                                               StrokeJoin="Round"
                                                               Width="24" Height="24" Stretch="Uniform" />
                                                     </Viewbox>
-                                                    <TextBlock Text="Rejected"
-                                                               FontSize="14"
+                                                    <TextBlock Classes="Size-S" Text="Rejected"
                                                                FontWeight="SemiBold"
-                                                               Foreground="#DC2626"
+                                                               Foreground="{DynamicResource DangerBrush}"
                                                                VerticalAlignment="Center" />
                                                 </StackPanel>
                                             </Border>
@@ -636,8 +621,7 @@
                                                            FontSize="16"
                                                            Foreground="{DynamicResource PrimaryGreenBrush}"
                                                            VerticalAlignment="Center" />
-                                                    <TextBlock Text="Has messages"
-                                                               FontSize="14"
+                                                    <TextBlock Classes="Size-S" Text="Has messages"
                                                                FontWeight="SemiBold"
                                                                Foreground="{DynamicResource PrimaryGreenBrush}"
                                                                VerticalAlignment="Center"
@@ -682,22 +666,19 @@
                                         <!-- Vue: flex items-center gap-4 flex-1 -->
                                         <StackPanel Spacing="8" Margin="0,0,16,0">
                                             <!-- Vue: text-base font-semibold mb-2 truncate — project title -->
-                                            <TextBlock Text="{Binding ProjectTitle}"
-                                                       FontSize="14"
+                                            <TextBlock Classes="Size-S" Text="{Binding ProjectTitle}"
                                                        FontWeight="SemiBold"
                                                        Foreground="{DynamicResource TextMuted}"
-                                                       TextTrimming="CharacterEllipsis" />
+                                                       TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding ProjectTitle}" />
 
                                             <!-- Vue: text-lg font-bold — amount (or syncing state while
                                                  the indexer hasn't returned the funding tx yet) -->
                                             <StackPanel Orientation="Horizontal" Spacing="4"
                                                         IsVisible="{Binding IsAmountKnown}">
-                                                <TextBlock Text="{Binding Amount}"
-                                                           FontSize="18"
+                                                <TextBlock Classes="Size-L" Text="{Binding Amount}"
                                                            FontWeight="Bold"
                                                            Foreground="{DynamicResource TextStrong}" />
-                                                <TextBlock Text="{Binding Currency}"
-                                                           FontSize="18"
+                                                <TextBlock Classes="Size-L" Text="{Binding Currency}"
                                                            FontWeight="Bold"
                                                            Foreground="{DynamicResource TextStrong}" />
                                             </StackPanel>
@@ -708,8 +689,7 @@
                                                         FontSize="12"
                                                         Foreground="{DynamicResource TextMuted}"
                                                         VerticalAlignment="Center" />
-                                                <TextBlock Text="Syncing amount…"
-                                                           FontSize="15"
+                                                <TextBlock Classes="Size-15" Text="Syncing amount…"
                                                            FontStyle="Italic"
                                                            Foreground="{DynamicResource TextMuted}"
                                                            VerticalAlignment="Center" />
@@ -721,8 +701,7 @@
                                                        FontSize="16"
                                                        Foreground="{DynamicResource TextMuted}"
                                                        VerticalAlignment="Center" />
-                                                <TextBlock FontSize="14"
-                                                           Foreground="{DynamicResource TextMuted}"
+                                                <TextBlock Classes="Size-S" Foreground="{DynamicResource TextMuted}"
                                                            VerticalAlignment="Center">
                                                     <Run Text="{Binding Date, Mode=OneWay}" />
                                                     <Run Text=" " />
@@ -736,12 +715,10 @@
                                         <Grid ColumnDefinitions="*,Auto">
                                             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4"
                                                         IsVisible="{Binding IsAmountKnown}">
-                                                <TextBlock Text="{Binding Amount}"
-                                                           FontSize="18"
+                                                <TextBlock Classes="Size-L" Text="{Binding Amount}"
                                                            FontWeight="Bold"
                                                            Foreground="{DynamicResource TextStrong}" />
-                                                <TextBlock Text="{Binding Currency}"
-                                                           FontSize="18"
+                                                <TextBlock Classes="Size-L" Text="{Binding Currency}"
                                                            FontWeight="Bold"
                                                            Foreground="{DynamicResource TextStrong}" />
                                             </StackPanel>
@@ -752,8 +729,7 @@
                                                         FontSize="12"
                                                         Foreground="{DynamicResource TextMuted}"
                                                         VerticalAlignment="Center" />
-                                                <TextBlock Text="Syncing amount…"
-                                                           FontSize="15"
+                                                <TextBlock Classes="Size-15" Text="Syncing amount…"
                                                            FontStyle="Italic"
                                                            Foreground="{DynamicResource TextMuted}"
                                                            VerticalAlignment="Center" />
@@ -762,9 +738,8 @@
                                             <StackPanel Grid.Column="1">
                                                 <Border Classes="SignatureStatusPill"
                                                         IsVisible="{Binding IsWaiting}"
-                                                        Background="#F7931A">
-                                                    <TextBlock Text="Waiting"
-                                                               FontSize="12"
+                                                        Background="{DynamicResource BitcoinAccentBrush}">
+                                                    <TextBlock Classes="Size-XS" Text="Waiting"
                                                                FontWeight="Bold"
                                                                Foreground="White" />
                                                 </Border>
@@ -773,16 +748,14 @@
                                                         Background="{DynamicResource PillGreenBg}"
                                                         BorderBrush="{DynamicResource StagePillBorder}"
                                                         BorderThickness="1">
-                                                    <TextBlock Text="{Binding ApprovedLabel}"
-                                                               FontSize="12"
+                                                    <TextBlock Classes="Size-XS" Text="{Binding ApprovedLabel}"
                                                                FontWeight="Bold"
                                                                Foreground="{DynamicResource StagePillText}" />
                                                 </Border>
                                                 <Border Classes="SignatureStatusPill"
                                                         IsVisible="{Binding IsRejected}"
-                                                        Background="#DC2626">
-                                                    <TextBlock Text="Rejected"
-                                                               FontSize="12"
+                                                        Background="{DynamicResource DangerBrush}">
+                                                    <TextBlock Classes="Size-XS" Text="Rejected"
                                                                FontWeight="Bold"
                                                                Foreground="White" />
                                                 </Border>
@@ -794,8 +767,7 @@
                                                     FontSize="14"
                                                     Foreground="{DynamicResource TextMuted}"
                                                     VerticalAlignment="Center" />
-                                            <TextBlock FontSize="14"
-                                                       Foreground="{DynamicResource TextMuted}"
+                                            <TextBlock Classes="Size-S" Foreground="{DynamicResource TextMuted}"
                                                        VerticalAlignment="Center">
                                                 <Run Text="{Binding Date, Mode=OneWay}" />
                                                 <Run Text=" " />
@@ -803,8 +775,7 @@
                                             </TextBlock>
                                         </StackPanel>
 
-                                        <TextBlock Text="{Binding ProjectTitle}"
-                                                   FontSize="14"
+                                        <TextBlock Classes="Size-S" Text="{Binding ProjectTitle}"
                                                    Foreground="{DynamicResource TextStrong}"
                                                    TextWrapping="Wrap" />
                                     </StackPanel>
@@ -823,8 +794,7 @@
                                             Padding="0,16,0,16">
                                         <StackPanel Spacing="8">
                                             <!-- Vue: text-sm font-medium text-gray-400/text-gray-600 -->
-                                            <TextBlock Text="Investor npub"
-                                                       FontSize="14"
+                                            <TextBlock Classes="Size-S" Text="Investor npub"
                                                        FontWeight="Medium"
                                                        Foreground="{DynamicResource TextMuted}" />
 
@@ -849,8 +819,7 @@
                                                         </Border>
                                                     </Button>
                                                     <!-- Vue: flex-1 text-sm break-all font-mono -->
-                                                    <TextBlock Text="{Binding Npub}"
-                                                               FontSize="13"
+                                                    <TextBlock Classes="Size-13" Text="{Binding Npub}"
                                                                FontFamily="Consolas, Menlo, monospace"
                                                                Foreground="{DynamicResource TextStrong}"
                                                                TextWrapping="Wrap" />
@@ -877,8 +846,7 @@
                                                                StrokeJoin="Round"
                                                                Width="24" Height="24" Stretch="Uniform" />
                                                      </Viewbox>
-                                                     <TextBlock Text="Approve"
-                                                                FontSize="14"
+                                                     <TextBlock Classes="Size-S" Text="Approve"
                                                                 FontWeight="SemiBold"
                                                                 Foreground="White"
                                                                 VerticalAlignment="Center" />
@@ -890,7 +858,7 @@
                                                      Tag="{Binding Id}"
                                                      IsVisible="{Binding IsWaiting}"
                                                      Classes="FundersAction MobileAction"
-                                                     Background="#DC2626"
+                                                     Background="{DynamicResource DangerBrush}"
                                                      Foreground="White">
                                                  <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
                                                      <Viewbox Width="16" Height="16" VerticalAlignment="Center">
@@ -901,8 +869,7 @@
                                                                StrokeJoin="Round"
                                                                Width="24" Height="24" Stretch="Uniform" />
                                                      </Viewbox>
-                                                     <TextBlock Text="Reject"
-                                                                FontSize="14"
+                                                     <TextBlock Classes="Size-S" Text="Reject"
                                                                 FontWeight="SemiBold"
                                                                 Foreground="White"
                                                                 VerticalAlignment="Center" />
@@ -926,8 +893,7 @@
                                                                StrokeJoin="Round"
                                                                Width="24" Height="24" Stretch="Uniform" />
                                                      </Viewbox>
-                                                     <TextBlock Text="{Binding ApprovedLabel}"
-                                                                FontSize="14"
+                                                     <TextBlock Classes="Size-S" Text="{Binding ApprovedLabel}"
                                                                 FontWeight="SemiBold"
                                                                 Foreground="{DynamicResource StagePillText}"
                                                                 VerticalAlignment="Center" />
@@ -942,16 +908,15 @@
                                                  <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
                                                      <Viewbox Width="16" Height="16" VerticalAlignment="Center">
                                                          <Path Data="{StaticResource XMark}"
-                                                               Stroke="#DC2626"
+                                                               Stroke="{DynamicResource DangerBrush}"
                                                                StrokeThickness="2"
                                                                StrokeLineCap="Round"
                                                                StrokeJoin="Round"
                                                                Width="24" Height="24" Stretch="Uniform" />
                                                      </Viewbox>
-                                                     <TextBlock Text="Rejected"
-                                                                FontSize="14"
+                                                     <TextBlock Classes="Size-S" Text="Rejected"
                                                                 FontWeight="SemiBold"
-                                                                Foreground="#DC2626"
+                                                                Foreground="{DynamicResource DangerBrush}"
                                                                 VerticalAlignment="Center" />
                                                  </StackPanel>
                                              </Border>

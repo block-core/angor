@@ -13,8 +13,7 @@
     <!-- ═══════════════════════════════════════ -->
     <StackPanel Spacing="24">
         <!-- Subtitle -->
-        <TextBlock Text="Add a banner and profile image for your project. Enter a URL or upload a file to a Blossom server."
-                   FontSize="14" Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" />
+        <TextBlock Classes="Size-S" Text="Add a banner and profile image for your project. Enter a URL or upload a file to a Blossom server." Foreground="{DynamicResource TextMuted}" TextWrapping="Wrap" />
 
         <!-- Preview card — shows the images from the URLs entered below.
              Banner area and avatar circle are click-targets for Pick & Upload. -->
@@ -32,13 +31,13 @@
                         <StackPanel Orientation="Horizontal" Spacing="8"
                                     HorizontalAlignment="Center" VerticalAlignment="Center">
                             <i:Icon Value="fa-solid fa-cloud-arrow-up" FontSize="20" Foreground="White" />
-                            <TextBlock Text="Click to upload banner" FontSize="14" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-S" Text="Click to upload banner" FontWeight="SemiBold"
                                        Foreground="White" VerticalAlignment="Center" />
                         </StackPanel>
                     </Border>
                     <Border Background="#80000000" CornerRadius="6" Padding="10,5"
                             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="12">
-                        <TextBlock Text="820x312px recommended" FontSize="11" Foreground="White" />
+                        <TextBlock Classes="Size-XXS" Text="820x312px recommended" Foreground="White" />
                     </Border>
                 </Panel>
 
@@ -68,18 +67,16 @@
                                             HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <i:Icon Value="fa-solid fa-cloud-arrow-up" FontSize="20" Foreground="White"
                                             HorizontalAlignment="Center" />
-                                    <TextBlock Text="Upload" FontSize="11" FontWeight="SemiBold"
+                                    <TextBlock Classes="Size-XXS" Text="Upload" FontWeight="SemiBold"
                                                Foreground="White" HorizontalAlignment="Center" />
                                 </StackPanel>
                             </Border>
                         </Panel>
                     </Border>
                     <StackPanel Spacing="4">
-                        <TextBlock Text="{Binding ProjectName, FallbackValue='Project Name'}"
-                                   FontSize="18" FontWeight="Bold"
+                        <TextBlock Classes="Size-L" Text="{Binding ProjectName, FallbackValue='Project Name'}" FontWeight="Bold"
                                    Foreground="{DynamicResource TextStrong}" />
-                        <TextBlock Text="{Binding ProjectAbout, FallbackValue='Project description'}"
-                                   FontSize="13" Foreground="{DynamicResource TextMuted}"
+                        <TextBlock Classes="Size-13" Text="{Binding ProjectAbout, FallbackValue='Project description'}" Foreground="{DynamicResource TextMuted}"
                                    TextWrapping="Wrap" />
                     </StackPanel>
                 </StackPanel>
@@ -95,13 +92,13 @@
                         <i:Icon Value="fa-solid fa-image" FontSize="14"
                                 Foreground="{DynamicResource PrimaryGreenBrush}"
                                 VerticalAlignment="Center" />
-                        <TextBlock Text="Banner Image" FontSize="16" FontWeight="Bold"
+                        <TextBlock Classes="Size-M" Text="Banner Image" FontWeight="Bold"
                                    Foreground="{DynamicResource TextStrong}" />
                     </StackPanel>
                 </Border>
                 <StackPanel Spacing="12" Margin="24">
                     <!-- Direct URL input -->
-                    <TextBlock Text="Image URL" FontSize="13" FontWeight="Medium"
+                    <TextBlock Classes="Size-13" Text="Image URL" FontWeight="Medium"
                                Foreground="{DynamicResource TextMuted}" />
                     <TextBox Name="BannerUrlTextBox"
                              Text="{Binding BannerUrl, Mode=TwoWay}"
@@ -112,8 +109,7 @@
                     <Grid ColumnDefinitions="*,Auto,*" Margin="0,4">
                         <Rectangle Grid.Column="0" Height="1" VerticalAlignment="Center"
                                    Fill="{DynamicResource Stroke}" />
-                        <TextBlock Grid.Column="1" Text="or upload to a Blossom server"
-                                   FontSize="12" Foreground="{DynamicResource TextMuted}"
+                        <TextBlock Classes="Size-XS" Grid.Column="1" Text="or upload to a Blossom server" Foreground="{DynamicResource TextMuted}"
                                    Margin="12,0" VerticalAlignment="Center" />
                         <Rectangle Grid.Column="2" Height="1" VerticalAlignment="Center"
                                    Fill="{DynamicResource Stroke}" />
@@ -151,14 +147,12 @@
                                     </Style>
                                 </i:Icon.Styles>
                             </i:Icon>
-                            <TextBlock Name="BannerUploadBtnText" Text="Upload image"
-                                       FontSize="14" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-S" Name="BannerUploadBtnText" Text="Upload image" FontWeight="SemiBold"
                                        Foreground="White" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <TextBlock Name="BannerStatusText"
+                    <TextBlock Classes="Size-XS" Name="BannerStatusText"
                                IsVisible="False"
-                               FontSize="12"
                                TextWrapping="Wrap"
                                Foreground="{DynamicResource TextMuted}" />
                 </StackPanel>
@@ -174,13 +168,13 @@
                         <i:Icon Value="fa-solid fa-circle-user" FontSize="14"
                                 Foreground="{DynamicResource PrimaryGreenBrush}"
                                 VerticalAlignment="Center" />
-                        <TextBlock Text="Profile Picture" FontSize="16" FontWeight="Bold"
+                        <TextBlock Classes="Size-M" Text="Profile Picture" FontWeight="Bold"
                                    Foreground="{DynamicResource TextStrong}" />
                     </StackPanel>
                 </Border>
                 <StackPanel Spacing="12" Margin="24">
                     <!-- Direct URL input -->
-                    <TextBlock Text="Image URL" FontSize="13" FontWeight="Medium"
+                    <TextBlock Classes="Size-13" Text="Image URL" FontWeight="Medium"
                                Foreground="{DynamicResource TextMuted}" />
                     <TextBox Name="ProfileUrlTextBox"
                              Text="{Binding ProfileUrl, Mode=TwoWay}"
@@ -191,8 +185,7 @@
                     <Grid ColumnDefinitions="*,Auto,*" Margin="0,4">
                         <Rectangle Grid.Column="0" Height="1" VerticalAlignment="Center"
                                    Fill="{DynamicResource Stroke}" />
-                        <TextBlock Grid.Column="1" Text="or upload to a Blossom server"
-                                   FontSize="12" Foreground="{DynamicResource TextMuted}"
+                        <TextBlock Classes="Size-XS" Grid.Column="1" Text="or upload to a Blossom server" Foreground="{DynamicResource TextMuted}"
                                    Margin="12,0" VerticalAlignment="Center" />
                         <Rectangle Grid.Column="2" Height="1" VerticalAlignment="Center"
                                    Fill="{DynamicResource Stroke}" />
@@ -230,14 +223,12 @@
                                     </Style>
                                 </i:Icon.Styles>
                             </i:Icon>
-                            <TextBlock Name="ProfileUploadBtnText" Text="Upload image"
-                                       FontSize="14" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-S" Name="ProfileUploadBtnText" Text="Upload image" FontWeight="SemiBold"
                                        Foreground="White" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <TextBlock Name="ProfileStatusText"
+                    <TextBlock Classes="Size-XS" Name="ProfileStatusText"
                                IsVisible="False"
-                               FontSize="12"
                                TextWrapping="Wrap"
                                Foreground="{DynamicResource TextMuted}" />
                 </StackPanel>

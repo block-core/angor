@@ -53,12 +53,11 @@
                         <i:Icon Grid.Column="0"
                                 Value="fa-solid fa-lock"
                                 FontSize="20"
-                                Foreground="#DC2626"
+                                Foreground="{DynamicResource DangerBrush}"
                                 VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2"
-                                   Text="Project NOSTR Private Keys"
-                                   FontSize="20" FontWeight="Bold"
-                                   Foreground="#DC2626"
+                        <TextBlock Classes="Size-20" Grid.Column="2"
+                                   Text="Project NOSTR Private Keys" FontWeight="Bold"
+                                   Foreground="{DynamicResource DangerBrush}"
                                    VerticalAlignment="Center" />
                         <Button Name="CloseButton" Classes="ModalCloseBtn" Grid.Column="3"
                                 Width="36" Height="36"
@@ -74,8 +73,7 @@
 
                         <!-- ── 1. Project ID ── -->
                         <StackPanel Margin="0,0,0,24">
-                            <TextBlock Text="Project ID"
-                                       FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-13" Text="Project ID" FontWeight="SemiBold"
                                        Foreground="{DynamicResource KeyFieldLabel}"
                                        Margin="0,0,0,8" />
                             <Grid ColumnDefinitions="*,8,Auto">
@@ -101,8 +99,7 @@
 
                         <!-- ── 2. Founder Key ── -->
                         <StackPanel Margin="0,0,0,24">
-                            <TextBlock Text="Founder Key"
-                                       FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-13" Text="Founder Key" FontWeight="SemiBold"
                                        Foreground="{DynamicResource KeyFieldLabel}"
                                        Margin="0,0,0,8" />
                             <Grid ColumnDefinitions="*,8,Auto">
@@ -128,8 +125,7 @@
 
                         <!-- ── 3. Recovery Key ── -->
                         <StackPanel Margin="0,0,0,24">
-                            <TextBlock Text="Recovery Key"
-                                       FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-13" Text="Recovery Key" FontWeight="SemiBold"
                                        Foreground="{DynamicResource KeyFieldLabel}"
                                        Margin="0,0,0,8" />
                             <Grid ColumnDefinitions="*,8,Auto">
@@ -155,8 +151,7 @@
 
                         <!-- ── 4. Nostr Public Key (npub) ── -->
                         <StackPanel Margin="0,0,0,24">
-                            <TextBlock Text="Nostr Public Key (npub)"
-                                       FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-13" Text="Nostr Public Key (npub)" FontWeight="SemiBold"
                                        Foreground="{DynamicResource KeyFieldLabel}"
                                        Margin="0,0,0,8" />
                             <Grid ColumnDefinitions="*,8,Auto">
@@ -182,8 +177,7 @@
 
                         <!-- ── 5. NIP-05 ── -->
                         <StackPanel Margin="0,0,0,24">
-                            <TextBlock Text="NIP-05"
-                                       FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-13" Text="NIP-05" FontWeight="SemiBold"
                                        Foreground="{DynamicResource KeyFieldLabel}"
                                        Margin="0,0,0,8" />
                             <Grid ColumnDefinitions="*,8,Auto">
@@ -209,8 +203,7 @@
 
                         <!-- ── 6. NOSTR private key (nsec) — with eye toggle ── -->
                         <StackPanel Margin="0,0,0,24">
-                            <TextBlock Text="NOSTR private key (nsec)"
-                                       FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-13" Text="NOSTR private key (nsec)" FontWeight="SemiBold"
                                        Foreground="{DynamicResource KeyFieldLabel}"
                                        Margin="0,0,0,8" />
                             <Grid ColumnDefinitions="*,8,Auto,8,Auto">
@@ -246,8 +239,7 @@
 
                         <!-- ── 7. NOSTR private key (hex) — with eye toggle ── -->
                         <StackPanel Margin="0,0,0,24">
-                            <TextBlock Text="NOSTR private key (hex)"
-                                       FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-13" Text="NOSTR private key (hex)" FontWeight="SemiBold"
                                        Foreground="{DynamicResource KeyFieldLabel}"
                                        Margin="0,0,0,8" />
                             <Grid ColumnDefinitions="*,8,Auto,8,Auto">
@@ -291,10 +283,9 @@
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <i:Icon Value="fa-solid fa-lock"
                                         FontSize="16"
-                                        Foreground="#DC2626"
+                                        Foreground="{DynamicResource DangerBrush}"
                                         VerticalAlignment="Center" />
-                                <TextBlock Text="Never share your private keys with anyone."
-                                           FontSize="13" FontWeight="SemiBold"
+                                <TextBlock Classes="Size-13" Text="Never share your private keys with anyone." FontWeight="SemiBold"
                                            Foreground="{DynamicResource RedWarningBannerText}"
                                            VerticalAlignment="Center"
                                            TextWrapping="Wrap" />

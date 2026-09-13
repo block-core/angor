@@ -63,9 +63,8 @@
                             </Style>
                         </i:Icon.Styles>
                     </i:Icon>
-                    <TextBlock Text="Scan for Projects"
-                               VerticalAlignment="Center"
-                               FontSize="13" FontWeight="SemiBold"
+                    <TextBlock Classes="Size-13" Text="Scan for Projects"
+                               VerticalAlignment="Center" FontWeight="SemiBold"
                                Foreground="{DynamicResource LightPrimaryButtonForeground}" />
                 </StackPanel>
             </Button>
@@ -108,16 +107,14 @@
                         </Panel>
 
                         <!-- Title (hidden on compact) -->
-                        <TextBlock Name="SidebarTitle" Text="ANGOR FOUNDER HUB"
-                                   FontSize="20"
+                        <TextBlock Classes="Size-20" Name="SidebarTitle" Text="ANGOR FOUNDER HUB"
                                    FontWeight="Bold"
                                    Foreground="{DynamicResource TextStrong}"
                                    HorizontalAlignment="Center"
                                    LetterSpacing="1" />
 
                         <!-- Subtitle (hidden on compact) -->
-                        <TextBlock Name="SidebarSubtitle" Text="Launch new projects and manage your existing fundraising campaigns."
-                                   FontSize="14"
+                        <TextBlock Classes="Size-S" Name="SidebarSubtitle" Text="Launch new projects and manage your existing fundraising campaigns."
                                    Foreground="{DynamicResource TextMuted}"
                                    TextWrapping="Wrap"
                                    TextAlignment="Center"
@@ -145,14 +142,12 @@
                                                Foreground="{DynamicResource TextMuted}" />
                                     </Border>
                                     <!-- Row 1: Value -->
-                                    <TextBlock Grid.Row="1" Text="{Binding Projects.Count}"
-                                               FontSize="20" FontWeight="Bold"
+                                    <TextBlock Classes="Size-20" Grid.Row="1" Text="{Binding Projects.Count}" FontWeight="Bold"
                                                Foreground="{DynamicResource TextStrong}"
                                                Margin="0,8,0,0"
                                                VerticalAlignment="Bottom" />
                                     <!-- Row 2: Label -->
-                                    <TextBlock Grid.Row="2" Text="Active Projects"
-                                               FontSize="12"
+                                    <TextBlock Classes="Size-XS" Grid.Row="2" Text="Active Projects"
                                                Foreground="{DynamicResource TextMuted}"
                                                Margin="0,8,0,0" />
                                 </Grid>
@@ -179,17 +174,14 @@
                                     <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="4"
                                                 Margin="0,8,0,0"
                                                 VerticalAlignment="Bottom">
-                                        <TextBlock Text="{Binding TotalRaised}"
-                                                   FontSize="18" FontWeight="Bold"
+                                        <TextBlock Classes="Size-L" Text="{Binding TotalRaised}" FontWeight="Bold"
                                                    Foreground="{DynamicResource TextStrong}" />
-                                        <TextBlock Text="BTC"
-                                                   FontSize="11"
+                                        <TextBlock Classes="Size-XXS" Text="BTC"
                                                    Foreground="{DynamicResource TextMuted}"
                                                    VerticalAlignment="Bottom" Margin="0,0,0,1" />
                                     </StackPanel>
                                     <!-- Row 2: Label -->
-                                    <TextBlock Grid.Row="2" Text="Total Raised"
-                                               FontSize="12"
+                                    <TextBlock Classes="Size-XS" Grid.Row="2" Text="Total Raised"
                                                Foreground="{DynamicResource TextMuted}"
                                                Margin="0,8,0,0" />
                                 </Grid>
@@ -225,8 +217,7 @@
                                     BorderBrush="{DynamicResource Stroke}"
                                     BorderThickness="2"
                                     CornerRadius="12">
-                                <TextBlock Text="How Funding Works"
-                                           FontSize="14" FontWeight="SemiBold"
+                                <TextBlock Classes="Size-S" Text="How Funding Works" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextMuted}" />
                             </Button>
                         </StackPanel>
@@ -274,8 +265,7 @@
                                             </Style>
                                         </i:Icon.Styles>
                                     </i:Icon>
-                                    <TextBlock Text="Scan for your projects"
-                                               FontSize="14" FontWeight="SemiBold"
+                                    <TextBlock Classes="Size-S" Text="Scan for your projects" FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextStrong}" />
                                 </StackPanel>
                             </Button>
@@ -289,8 +279,7 @@
                                 <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                     <i:Icon Value="fa-solid fa-plus" FontSize="14"
                                             Foreground="{DynamicResource TextStrong}" />
-                                    <TextBlock Text="Launch a Project"
-                                               FontSize="14" FontWeight="SemiBold"
+                                    <TextBlock Classes="Size-S" Text="Launch a Project" FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextStrong}" />
                                 </StackPanel>
                             </Button>
@@ -298,7 +287,7 @@
 
                         <!-- Header row -->
                         <Grid ColumnDefinitions="*,Auto">
-                            <TextBlock Text="My Projects" FontSize="24" FontWeight="Bold"
+                            <TextBlock Classes="Size-24" Text="My Projects" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center" />
                             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
@@ -338,9 +327,8 @@
                                                 </Style>
                                             </i:Icon.Styles>
                                         </i:Icon>
-                                        <TextBlock Text="Scan for Projects"
-                                                   VerticalAlignment="Center"
-                                                   FontSize="13" FontWeight="SemiBold"
+                                        <TextBlock Classes="Size-13" Text="Scan for Projects"
+                                                   VerticalAlignment="Center" FontWeight="SemiBold"
                                                    Foreground="{DynamicResource LightPrimaryButtonForeground}" />
                                     </StackPanel>
                                 </Button>

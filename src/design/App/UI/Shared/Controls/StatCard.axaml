@@ -41,19 +41,16 @@
                         Padding="16,12">
                     <StackPanel Spacing="4">
                         <!-- Label — Vue: text-xs text-muted uppercase tracking-wider -->
-                        <TextBlock Text="{TemplateBinding Label}"
-                                   FontSize="11"
+                        <TextBlock Classes="Size-XXS" Text="{TemplateBinding Label}"
                                    FontWeight="SemiBold"
                                    LetterSpacing="0.8"
                                    Foreground="{DynamicResource StatLabel}" />
                         <!-- Value + Unit row -->
                         <StackPanel Orientation="Horizontal" Spacing="4">
-                            <TextBlock Text="{TemplateBinding Value}"
-                                       FontSize="20"
+                            <TextBlock Classes="Size-20" Text="{TemplateBinding Value}"
                                        FontWeight="Bold"
                                        Foreground="{DynamicResource StatValue}" />
-                            <TextBlock Text="{TemplateBinding Unit}"
-                                       FontSize="12"
+                            <TextBlock Classes="Size-XS" Text="{TemplateBinding Unit}"
                                        FontWeight="SemiBold"
                                        VerticalAlignment="Bottom"
                                        Margin="0,0,0,2"

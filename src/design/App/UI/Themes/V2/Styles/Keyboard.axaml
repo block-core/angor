@@ -1,0 +1,33 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:i="https://github.com/projektanker/icons.avalonia">
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- KEYBOARD ACCESSIBILITY                                               -->
+    <!--                                                                      -->
+    <!-- 1. Global :focus-visible focus ring. The V2 theme replaces default   -->
+    <!--    control templates, so Fluent's per-template focus adorner parts   -->
+    <!--    no longer apply — until this style, Tab navigation was invisible. -->
+    <!--    Brand-coloured 2px ring drawn OUTSIDE the control bounds via a    -->
+    <!--    negative margin. Only shows for :focus-visible (keyboard focus),  -->
+    <!--    not pointer clicks.                                               -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <Style Selector="Button:focus-visible, ToggleButton:focus-visible, ListBoxItem:focus-visible, ComboBox:focus-visible, CheckBox:focus-visible, MenuItem:focus-visible">
+        <Setter Property="FocusAdorner">
+            <ControlTemplate>
+                <Border BorderBrush="{DynamicResource Brand}"
+                        BorderThickness="2"
+                        CornerRadius="8"
+                        Margin="-3" />
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <!-- Icon-only buttons must expose an accessible name + tooltip.           -->
+    <!-- ModalCloseBtnSmall renders an fa-xmark glyph with no text content.    -->
+    <Style Selector="Button.ModalCloseBtnSmall">
+        <Setter Property="ToolTip.Tip" Value="Close" />
+        <Setter Property="AutomationProperties.Name" Value="Close" />
+    </Style>
+
+</Styles>

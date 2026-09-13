@@ -38,7 +38,7 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
 
     public string AppVersion { get; } = GetVersion();
 
-    public event Action<string>? ToastRequested;
+    public event Action<string, ToastSeverity>? ToastRequested;
 
     private static string GetVersion()
     {
@@ -279,7 +279,7 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
             if (switchResult.IsFailure)
             {
                 _logger.LogError("Failed to switch network: {Error}", switchResult.Error);
-                ToastRequested?.Invoke("Failed to switch network. Please try again.");
+                ToastRequested?.Invoke("Failed to switch network. Please try again.", ToastSeverity.Error);
                 return;
             }
 
@@ -300,7 +300,7 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
 
             _shellViewModel.ResetAfterNetworkSwitch();
 
-            ToastRequested?.Invoke("Network updated successfully.");
+            ToastRequested?.Invoke("Network updated successfully.", ToastSeverity.Success);
 
             // Rebuild wallet balances for the new network on all platforms.
             // This used to be desktop-only, which left mobile showing
@@ -353,7 +353,7 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
             if (rebuildResult.IsFailure)
             {
                 _logger.LogError("Failed to rebuild wallet balances after network switch: {Error}", rebuildResult.Error);
-                ToastRequested?.Invoke("Network switched, but wallet data failed to refresh.");
+                ToastRequested?.Invoke("Network switched, but wallet data failed to refresh.", ToastSeverity.Warning);
                 return;
             }
 
@@ -362,7 +362,7 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to rebuild wallet balances after network switch");
-            ToastRequested?.Invoke("Network switched, but wallet data failed to refresh.");
+            ToastRequested?.Invoke("Network switched, but wallet data failed to refresh.", ToastSeverity.Warning);
         }
     }
 
@@ -421,7 +421,7 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to refresh indexer status");
-            ToastRequested?.Invoke("Failed to refresh indexer status.");
+            ToastRequested?.Invoke("Failed to refresh indexer status.", ToastSeverity.Error);
         }
         finally
         {
@@ -444,7 +444,7 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to refresh relay status");
-            ToastRequested?.Invoke("Failed to refresh relay status.");
+            ToastRequested?.Invoke("Failed to refresh relay status.", ToastSeverity.Error);
         }
         finally
         {
@@ -477,7 +477,7 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
             if (deleteDataResult.IsFailure)
             {
                 _logger.LogError("Failed to delete application data during wipe: {Error}", deleteDataResult.Error);
-                ToastRequested?.Invoke("Wipe data failed. Please try again.");
+                ToastRequested?.Invoke("Wipe data failed. Please try again.", ToastSeverity.Error);
                 return;
             }
 
@@ -499,7 +499,7 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
                 if (deleteRecoveryWalletFilesResult.IsFailure)
                 {
                     _logger.LogError("Failed to delete encrypted wallet recovery backups during wipe: {Error}", deleteRecoveryWalletFilesResult.Error);
-                    ToastRequested?.Invoke("Wipe data failed while deleting encrypted wallet backups. Please try again.");
+                    ToastRequested?.Invoke("Wipe data failed while deleting encrypted wallet backups. Please try again.", ToastSeverity.Error);
                     return;
                 }
             }
@@ -512,12 +512,12 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
 
             _shellViewModel.ResetAfterDataWipe();
             _logger.LogInformation("Wipe data completed — live shell state reset");
-            ToastRequested?.Invoke("All local data was wiped successfully.");
+            ToastRequested?.Invoke("All local data was wiped successfully.", ToastSeverity.Success);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "ConfirmWipeData failed");
-            ToastRequested?.Invoke($"Wipe data failed: {ex.Message}");
+            ToastRequested?.Invoke($"Wipe data failed: {ex.Message}", ToastSeverity.Error);
         }
     }
 
@@ -535,12 +535,12 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
             var result = await _logExportService.ExportAndSendAsync(wallet.Id.Value);
             ToastRequested?.Invoke(result.IsSuccess
                 ? "Logs exported and sent to support."
-                : $"Log export failed: {result.Error}");
+                : $"Log export failed: {result.Error}", result.IsSuccess ? ToastSeverity.Success : ToastSeverity.Error);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "ExportLogsAsync failed");
-            ToastRequested?.Invoke($"Log export failed: {ex.Message}");
+            ToastRequested?.Invoke($"Log export failed: {ex.Message}", ToastSeverity.Error);
         }
         finally
         {
@@ -555,7 +555,7 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
         var wallet = _walletContext.SelectedWallet;
         if (wallet == null)
         {
-            ToastRequested?.Invoke("No wallet selected.");
+            ToastRequested?.Invoke("No wallet selected.", ToastSeverity.Warning);
             return;
         }
 
@@ -566,7 +566,7 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
             if (result.IsFailure)
             {
                 _logger.LogError("Failed to load seed words: {Error}", result.Error);
-                ToastRequested?.Invoke("Failed to load seed words.");
+                ToastRequested?.Invoke("Failed to load seed words.", ToastSeverity.Error);
                 return;
             }
 
@@ -576,7 +576,7 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "LoadSeedWordsAsync failed");
-            ToastRequested?.Invoke($"Failed to load seed words: {ex.Message}");
+            ToastRequested?.Invoke($"Failed to load seed words: {ex.Message}", ToastSeverity.Error);
         }
         finally
         {

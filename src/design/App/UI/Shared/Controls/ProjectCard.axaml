@@ -137,16 +137,14 @@
                             </StackPanel>
 
                             <!-- 2. Title — Vue: 18px, font-weight 700, single line -->
-                            <TextBlock Text="{TemplateBinding ProjectName}"
-                                       FontSize="18"
+                            <TextBlock Classes="Size-L" Text="{TemplateBinding ProjectName}"
                                        FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}"
                                        TextTrimming="CharacterEllipsis"
                                        MaxLines="1" />
 
                             <!-- 3. Description — Vue: 14px, 2-line clamp, height ~42px -->
-                            <TextBlock Text="{Binding ShortDescription, RelativeSource={RelativeSource TemplatedParent}, Converter={x:Static helpers:MarkdownToPlainConverter.Instance}}"
-                                       FontSize="14"
+                            <TextBlock Classes="Size-S" Text="{Binding ShortDescription, RelativeSource={RelativeSource TemplatedParent}, Converter={x:Static helpers:MarkdownToPlainConverter.Instance}}"
                                        LineHeight="21"
                                        Foreground="{DynamicResource TextMuted}"
                                        TextWrapping="Wrap"
@@ -160,12 +158,10 @@
                             <DockPanel>
                                 <StackPanel x:Name="PART_InvestorRow"
                                             Orientation="Horizontal" Spacing="4" DockPanel.Dock="Left">
-                                    <TextBlock Text="{TemplateBinding InvestorCount}"
-                                               FontSize="13"
+                                    <TextBlock Classes="Size-13" Text="{TemplateBinding InvestorCount}"
                                                Foreground="{DynamicResource TextMuted}"
                                                VerticalAlignment="Center" />
-                                    <TextBlock Text="{TemplateBinding InvestorLabel}"
-                                               FontSize="13"
+                                    <TextBlock Classes="Size-13" Text="{TemplateBinding InvestorLabel}"
                                                Foreground="{DynamicResource TextMuted}"
                                                VerticalAlignment="Center" />
                                 </StackPanel>
@@ -178,21 +174,18 @@
                                             FontSize="11"
                                             Foreground="{DynamicResource TextMuted}"
                                             VerticalAlignment="Center" />
-                                    <TextBlock Text="Syncing funding data…"
-                                               FontSize="13"
+                                    <TextBlock Classes="Size-13" Text="Syncing funding data…"
                                                FontStyle="Italic"
                                                Foreground="{DynamicResource TextMuted}"
                                                VerticalAlignment="Center" />
                                 </StackPanel>
                                 <DockPanel x:Name="PART_RaisedRow"
                                            HorizontalAlignment="Right" VerticalAlignment="Center">
-                                    <TextBlock Text="BTC"
+                                    <TextBlock Classes="Size-13" Text="BTC"
                                                DockPanel.Dock="Right"
                                                Margin="4,0,0,0"
-                                               FontSize="13"
                                                Foreground="{DynamicResource TextMuted}" />
-                                    <TextBlock Text="{TemplateBinding Raised}"
-                                               FontSize="13"
+                                    <TextBlock Classes="Size-13" Text="{TemplateBinding Raised}"
                                                FontWeight="Bold"
                                                TextTrimming="CharacterEllipsis"
                                                Foreground="{DynamicResource TextStrong}" />
@@ -201,18 +194,15 @@
 
                             <!-- 5. Stats Row 2: target/goal label (left) + target amount (right) -->
                             <DockPanel x:Name="PART_TargetRow">
-                                <TextBlock Text="{TemplateBinding TargetLabel}"
-                                           FontSize="13"
+                                <TextBlock Classes="Size-13" Text="{TemplateBinding TargetLabel}"
                                            Foreground="{DynamicResource TextMuted}"
                                            DockPanel.Dock="Left"
                                            VerticalAlignment="Center" />
                                 <StackPanel Orientation="Horizontal" Spacing="4"
                                             HorizontalAlignment="Right" VerticalAlignment="Center">
-                                    <TextBlock Text="{TemplateBinding Target}"
-                                               FontSize="13"
+                                    <TextBlock Classes="Size-13" Text="{TemplateBinding Target}"
                                                Foreground="{DynamicResource TextMuted}" />
-                                    <TextBlock Text="BTC"
-                                               FontSize="13"
+                                    <TextBlock Classes="Size-13" Text="BTC"
                                                Foreground="{DynamicResource TextMuted}" />
                                 </StackPanel>
                             </DockPanel>
@@ -260,7 +250,7 @@
                                         FontSize="14" FontWeight="SemiBold">
                                     <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                                         <i:Icon Value="fa-solid fa-pen" FontSize="12" Foreground="{DynamicResource PrimaryGreenBrush}" />
-                                        <TextBlock Text="Edit" FontSize="14" FontWeight="SemiBold"
+                                        <TextBlock Classes="Size-S" Text="Edit" FontWeight="SemiBold"
                                                    VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
