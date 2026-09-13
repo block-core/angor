@@ -48,18 +48,16 @@
                                    FontSize="20"
                                    Foreground="{DynamicResource PrimaryGreenBrush}"
                                    VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="2"
+                            <TextBlock Classes="Size-20" Grid.Column="2"
                                        Text="Investor Breakdown"
-                                       FontSize="20"
                                        FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}"
                                        TextTrimming="CharacterEllipsis"
                                        VerticalAlignment="Center" />
                         </Grid>
-                        <TextBlock Text="{Binding ProjectName}"
-                                   FontSize="13"
+                        <TextBlock Classes="Size-13" Text="{Binding ProjectName}"
                                    Foreground="{DynamicResource TextMuted}"
-                                   TextTrimming="CharacterEllipsis" />
+                                   TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding ProjectName}" />
                     </StackPanel>
                     <Button Name="CloseButtonX" Classes="ModalBtn ModalCloseBtn"
                             HorizontalAlignment="Right" VerticalAlignment="Top" />
@@ -76,7 +74,7 @@
                         HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
                     <Border CornerRadius="8" Padding="24,12" HorizontalAlignment="Stretch"
                             Background="{DynamicResource ModalCancelBg}">
-                        <TextBlock Text="Close" FontSize="14" FontWeight="SemiBold"
+                        <TextBlock Classes="Size-S" Text="Close" FontWeight="SemiBold"
                                    Foreground="{DynamicResource ModalCancelFg}"
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center"
@@ -114,8 +112,7 @@
                                 </i:Icon.Styles>
                             </i:Icon>
                         </Panel>
-                        <TextBlock Text="Loading investor data..."
-                                   FontSize="14"
+                        <TextBlock Classes="Size-S" Text="Loading investor data..."
                                    Foreground="{DynamicResource TextMuted}"
                                    HorizontalAlignment="Center" />
                     </StackPanel>
@@ -127,8 +124,7 @@
                         <i:Icon Value="fa-solid fa-triangle-exclamation" FontSize="24"
                                 Foreground="{DynamicResource PillOrangeText}"
                                 HorizontalAlignment="Center" />
-                        <TextBlock Text="Could not load investor data. Please try again later."
-                                   FontSize="14"
+                        <TextBlock Classes="Size-S" Text="Could not load investor data. Please try again later."
                                    Foreground="{DynamicResource TextMuted}"
                                    TextWrapping="Wrap"
                                    TextAlignment="Center"
@@ -147,16 +143,13 @@
                                     CornerRadius="12"
                                     Padding="16">
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="Total Invested"
-                                               FontSize="12"
+                                    <TextBlock Classes="Size-XS" Text="Total Invested"
                                                Foreground="{DynamicResource TextMuted}" />
                                     <StackPanel Orientation="Horizontal" Spacing="4">
-                                        <TextBlock Text="{Binding TotalInvested}"
-                                                   FontSize="18"
+                                        <TextBlock Classes="Size-L" Text="{Binding TotalInvested}"
                                                    FontWeight="Bold"
                                                    Foreground="{DynamicResource TextStrong}" />
-                                        <TextBlock Text="{Binding CurrencySymbol}"
-                                                   FontSize="11"
+                                        <TextBlock Classes="Size-XXS" Text="{Binding CurrencySymbol}"
                                                    Foreground="{DynamicResource TextMuted}"
                                                    VerticalAlignment="Bottom" Margin="0,0,0,1" />
                                     </StackPanel>
@@ -169,11 +162,9 @@
                                     CornerRadius="12"
                                     Padding="16">
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="Total Investors"
-                                               FontSize="12"
+                                    <TextBlock Classes="Size-XS" Text="Total Investors"
                                                Foreground="{DynamicResource TextMuted}" />
-                                    <TextBlock Text="{Binding TotalInvestors}"
-                                               FontSize="18"
+                                    <TextBlock Classes="Size-L" Text="{Binding TotalInvestors}"
                                                FontWeight="Bold"
                                                Foreground="{DynamicResource TextStrong}" />
                                 </StackPanel>
@@ -192,8 +183,7 @@
                                        FontSize="14"
                                        Foreground="{DynamicResource PillOrangeText}"
                                        VerticalAlignment="Top" Margin="0,2,0,0" />
-                                <TextBlock Grid.Column="1" Text="{Binding ShareContextNote}"
-                                           FontSize="13"
+                                <TextBlock Classes="Size-13" Grid.Column="1" Text="{Binding ShareContextNote}"
                                            Foreground="{DynamicResource TextMuted}"
                                            TextWrapping="Wrap" />
                             </Grid>
@@ -204,22 +194,17 @@
                             <!-- Table header -->
                             <Grid ColumnDefinitions="40,*,120,80,80"
                                   Margin="0,4,0,0">
-                                <TextBlock Grid.Column="0" Text="#"
-                                           FontSize="12" FontWeight="SemiBold"
+                                <TextBlock Classes="Size-XS" Grid.Column="0" Text="#" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextMuted}" />
-                                <TextBlock Grid.Column="1" Text="Investor"
-                                           FontSize="12" FontWeight="SemiBold"
+                                <TextBlock Classes="Size-XS" Grid.Column="1" Text="Investor" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextMuted}" />
-                                <TextBlock Grid.Column="2" Text="Invested"
-                                           FontSize="12" FontWeight="SemiBold"
+                                <TextBlock Classes="Size-XS" Grid.Column="2" Text="Invested" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextMuted}"
                                            HorizontalAlignment="Right" />
-                                <TextBlock Grid.Column="3" Text="Share"
-                                           FontSize="12" FontWeight="SemiBold"
+                                <TextBlock Classes="Size-XS" Grid.Column="3" Text="Share" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextMuted}"
                                            HorizontalAlignment="Right" />
-                                <TextBlock Grid.Column="4" Text="Claimed"
-                                           FontSize="12" FontWeight="SemiBold"
+                                <TextBlock Classes="Size-XS" Grid.Column="4" Text="Claimed" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextMuted}"
                                            HorizontalAlignment="Right" />
                             </Grid>
@@ -239,37 +224,31 @@
                                                     BorderThickness="1.5"
                                                     IsVisible="{Binding IsCurrentUser}">
                                                 <Grid ColumnDefinitions="40,*,120,80,80">
-                                                    <TextBlock Grid.Column="0" Text="{Binding Rank}"
-                                                               FontSize="13" FontWeight="Bold"
+                                                    <TextBlock Classes="Size-13" Grid.Column="0" Text="{Binding Rank}" FontWeight="Bold"
                                                                Foreground="{DynamicResource PrimaryGreenBrush}"
                                                                VerticalAlignment="Center" />
                                                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding ShortKey}"
-                                                                   FontSize="13" FontWeight="Bold"
+                                                        <TextBlock Classes="Size-13" Text="{Binding ShortKey}" FontWeight="Bold"
                                                                    FontFamily="Consolas,Courier New,monospace"
                                                                    Foreground="{DynamicResource TextStrong}"
-                                                                   TextTrimming="CharacterEllipsis" />
+                                                                   TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding ShortKey}" />
                                                         <Border Background="{DynamicResource PrimaryGreenBrush}"
                                                                 CornerRadius="4"
                                                                 Padding="6,2">
-                                                            <TextBlock Text="You"
-                                                                       FontSize="10"
+                                                            <TextBlock Classes="Size-10" Text="You"
                                                                        FontWeight="Bold"
                                                                        Foreground="White" />
                                                         </Border>
                                                     </StackPanel>
-                                                    <TextBlock Grid.Column="2" Text="{Binding TotalInvested}"
-                                                               FontSize="13" FontWeight="Bold"
+                                                    <TextBlock Classes="Size-13" Grid.Column="2" Text="{Binding TotalInvested}" FontWeight="Bold"
                                                                Foreground="{DynamicResource TextStrong}"
                                                                HorizontalAlignment="Right"
                                                                VerticalAlignment="Center" />
-                                                    <TextBlock Grid.Column="3" Text="{Binding SharePercentage}"
-                                                               FontSize="13" FontWeight="Bold"
+                                                    <TextBlock Classes="Size-13" Grid.Column="3" Text="{Binding SharePercentage}" FontWeight="Bold"
                                                                Foreground="{DynamicResource PrimaryGreenBrush}"
                                                                HorizontalAlignment="Right"
                                                                VerticalAlignment="Center" />
-                                                    <TextBlock Grid.Column="4" Text="{Binding ClaimedPercentage}"
-                                                               FontSize="13" FontWeight="Bold"
+                                                    <TextBlock Classes="Size-13" Grid.Column="4" Text="{Binding ClaimedPercentage}" FontWeight="Bold"
                                                                Foreground="{DynamicResource PillOrangeText}"
                                                                HorizontalAlignment="Right"
                                                                VerticalAlignment="Center" />
@@ -281,28 +260,23 @@
                                                     BorderThickness="0,0,0,1"
                                                     IsVisible="{Binding !IsCurrentUser}">
                                                 <Grid ColumnDefinitions="40,*,120,80,80">
-                                                    <TextBlock Grid.Column="0" Text="{Binding Rank}"
-                                                               FontSize="13"
+                                                    <TextBlock Classes="Size-13" Grid.Column="0" Text="{Binding Rank}"
                                                                Foreground="{DynamicResource TextMuted}"
                                                                VerticalAlignment="Center" />
-                                                    <TextBlock Grid.Column="1" Text="{Binding ShortKey}"
-                                                               FontSize="13"
+                                                    <TextBlock Classes="Size-13" Grid.Column="1" Text="{Binding ShortKey}"
                                                                FontFamily="Consolas,Courier New,monospace"
                                                                Foreground="{DynamicResource TextStrong}"
                                                                VerticalAlignment="Center"
-                                                               TextTrimming="CharacterEllipsis" />
-                                                    <TextBlock Grid.Column="2" Text="{Binding TotalInvested}"
-                                                               FontSize="13"
+                                                               TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding ShortKey}" />
+                                                    <TextBlock Classes="Size-13" Grid.Column="2" Text="{Binding TotalInvested}"
                                                                Foreground="{DynamicResource TextStrong}"
                                                                HorizontalAlignment="Right"
                                                                VerticalAlignment="Center" />
-                                                    <TextBlock Grid.Column="3" Text="{Binding SharePercentage}"
-                                                               FontSize="13" FontWeight="Bold"
+                                                    <TextBlock Classes="Size-13" Grid.Column="3" Text="{Binding SharePercentage}" FontWeight="Bold"
                                                                Foreground="{DynamicResource PrimaryGreenBrush}"
                                                                HorizontalAlignment="Right"
                                                                VerticalAlignment="Center" />
-                                                    <TextBlock Grid.Column="4" Text="{Binding ClaimedPercentage}"
-                                                               FontSize="13"
+                                                    <TextBlock Classes="Size-13" Grid.Column="4" Text="{Binding ClaimedPercentage}"
                                                                Foreground="{DynamicResource PillOrangeText}"
                                                                HorizontalAlignment="Right"
                                                                VerticalAlignment="Center" />
@@ -335,45 +309,41 @@
                                         <StackPanel Spacing="8">
                                             <!-- Row 1: rank + key + You badge -->
                                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                                <TextBlock Text="{Binding Rank, StringFormat='#{0}'}"
-                                                           FontSize="13" FontWeight="Bold"
+                                                <TextBlock Classes="Size-13" Text="{Binding Rank, StringFormat='#{0}'}" FontWeight="Bold"
                                                            Foreground="{DynamicResource TextMuted}"
                                                            VerticalAlignment="Center" />
-                                                <TextBlock Text="{Binding ShortKey}"
-                                                           FontSize="13" FontWeight="SemiBold"
+                                                <TextBlock Classes="Size-13" Text="{Binding ShortKey}" FontWeight="SemiBold"
                                                            FontFamily="Consolas,Courier New,monospace"
                                                            Foreground="{DynamicResource TextStrong}"
                                                            TextTrimming="CharacterEllipsis"
-                                                           VerticalAlignment="Center" />
+                                                           VerticalAlignment="Center" ToolTip.Tip="{Binding ShortKey}" />
                                                 <Border Background="{DynamicResource PrimaryGreenBrush}"
                                                         CornerRadius="4" Padding="6,2"
                                                         IsVisible="{Binding IsCurrentUser}"
                                                         VerticalAlignment="Center">
-                                                    <TextBlock Text="You" FontSize="10" FontWeight="Bold" Foreground="White" />
+                                                    <TextBlock Classes="Size-10" Text="You" FontWeight="Bold" Foreground="White" />
                                                 </Border>
                                             </StackPanel>
                                             <!-- Row 2: invested -->
                                             <Grid ColumnDefinitions="*,Auto">
-                                                <TextBlock Grid.Column="0" Text="Invested" FontSize="12"
+                                                <TextBlock Classes="Size-XS" Grid.Column="0" Text="Invested"
                                                            Foreground="{DynamicResource TextMuted}" />
-                                                <TextBlock Grid.Column="1" FontSize="13" FontWeight="SemiBold"
+                                                <TextBlock Classes="Size-13" Grid.Column="1" FontWeight="SemiBold"
                                                            Foreground="{DynamicResource TextStrong}">
                                                     <Run Text="{Binding TotalInvested}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol}" />
                                                 </TextBlock>
                                             </Grid>
                                             <!-- Row 3: share + claimed -->
                                             <Grid ColumnDefinitions="*,Auto">
-                                                <TextBlock Grid.Column="0" Text="Share" FontSize="12"
+                                                <TextBlock Classes="Size-XS" Grid.Column="0" Text="Share"
                                                            Foreground="{DynamicResource TextMuted}" />
-                                                <TextBlock Grid.Column="1" Text="{Binding SharePercentage}"
-                                                           FontSize="13" FontWeight="Bold"
+                                                <TextBlock Classes="Size-13" Grid.Column="1" Text="{Binding SharePercentage}" FontWeight="Bold"
                                                            Foreground="{DynamicResource PrimaryGreenBrush}" />
                                             </Grid>
                                             <Grid ColumnDefinitions="*,Auto">
-                                                <TextBlock Grid.Column="0" Text="Claimed" FontSize="12"
+                                                <TextBlock Classes="Size-XS" Grid.Column="0" Text="Claimed"
                                                            Foreground="{DynamicResource TextMuted}" />
-                                                <TextBlock Grid.Column="1" Text="{Binding ClaimedPercentage}"
-                                                           FontSize="13" FontWeight="SemiBold"
+                                                <TextBlock Classes="Size-13" Grid.Column="1" Text="{Binding ClaimedPercentage}" FontWeight="SemiBold"
                                                            Foreground="{DynamicResource PillOrangeText}" />
                                             </Grid>
                                         </StackPanel>

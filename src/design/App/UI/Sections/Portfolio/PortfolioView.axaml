@@ -73,9 +73,8 @@
                             </Style>
                         </i:Icon.Styles>
                     </i:Icon>
-                    <TextBlock Text="Refresh"
-                               VerticalAlignment="Center"
-                               FontSize="13" FontWeight="SemiBold"
+                    <TextBlock Classes="Size-13" Text="Refresh"
+                               VerticalAlignment="Center" FontWeight="SemiBold"
                                Foreground="{DynamicResource LightPrimaryButtonForeground}" />
                 </StackPanel>
             </Button>
@@ -120,16 +119,14 @@
                         </Panel>
 
                         <!-- Title -->
-                        <TextBlock Text="PORTFOLIO"
-                                   FontSize="20"
+                        <TextBlock Classes="Size-20" Text="PORTFOLIO"
                                    FontWeight="Bold"
                                    Foreground="{DynamicResource TextStrong}"
                                    HorizontalAlignment="Center"
                                    LetterSpacing="1" />
 
                         <!-- Subtitle -->
-                        <TextBlock Text="Track your investments and portfolio performance."
-                                   FontSize="14"
+                        <TextBlock Classes="Size-S" Text="Track your investments and portfolio performance."
                                    Foreground="{DynamicResource TextMuted}"
                                    TextWrapping="Wrap"
                                    TextAlignment="Center"
@@ -161,19 +158,19 @@
                                             </Style>
                                         </i:Icon.Styles>
                                     </i:Icon>
-                                    <TextBlock Text="Refresh" FontSize="13" FontWeight="SemiBold"
+                                    <TextBlock Classes="Size-13" Text="Refresh" FontWeight="SemiBold"
                                                Foreground="White" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
                             <Button Name="PenaltiesButton" Classes="MobileAction" Padding="20,8"
-                                    Background="#F7931A" CornerRadius="8"
+                                    Background="{DynamicResource BitcoinAccentBrush}" CornerRadius="8"
                                     Cursor="Hand">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
                                     <i:Icon Value="fa-solid fa-lock"
                                            FontSize="14"
                                            Foreground="White"
                                            VerticalAlignment="Center" />
-                                    <TextBlock Text="Penalties" FontSize="13" FontWeight="SemiBold"
+                                    <TextBlock Classes="Size-13" Text="Penalties" FontWeight="SemiBold"
                                                Foreground="White" VerticalAlignment="Center" />
                                 </StackPanel>
                             </Button>
@@ -197,12 +194,10 @@
                                                FontSize="14"
                                                Foreground="{DynamicResource TextMuted}" />
                                     </Border>
-                                    <TextBlock Grid.Row="1" Text="{Binding FundedProjects}"
-                                               FontSize="20" FontWeight="Bold"
+                                    <TextBlock Classes="Size-20" Grid.Row="1" Text="{Binding FundedProjects}" FontWeight="Bold"
                                                Foreground="{DynamicResource TextStrong}"
                                                Margin="0,8,0,0" />
-                                    <TextBlock Grid.Row="2" Text="Funded Projects"
-                                               FontSize="12"
+                                    <TextBlock Classes="Size-XS" Grid.Row="2" Text="Funded Projects"
                                                Foreground="{DynamicResource TextMuted}"
                                                Margin="0,8,0,0" />
                                 </Grid>
@@ -226,16 +221,13 @@
                                     </Border>
                                     <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="4"
                                                 Margin="0,8,0,0">
-                                        <TextBlock Text="{Binding TotalInvested}"
-                                                   FontSize="18" FontWeight="Bold"
+                                        <TextBlock Classes="Size-L" Text="{Binding TotalInvested}" FontWeight="Bold"
                                                    Foreground="{DynamicResource TextStrong}" />
-                                        <TextBlock Text="BTC"
-                                                   FontSize="11"
+                                        <TextBlock Classes="Size-XXS" Text="BTC"
                                                    Foreground="{DynamicResource TextMuted}"
                                                    VerticalAlignment="Bottom" Margin="0,0,0,1" />
                                     </StackPanel>
-                                    <TextBlock Grid.Row="2" Text="Total invested"
-                                               FontSize="12"
+                                    <TextBlock Classes="Size-XS" Grid.Row="2" Text="Total invested"
                                                Foreground="{DynamicResource TextMuted}"
                                                Margin="0,8,0,0" />
                                 </Grid>
@@ -258,16 +250,13 @@
                                     </Border>
                                     <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="4"
                                                 Margin="0,8,0,0">
-                                        <TextBlock Text="{Binding RecoveredToPenalty}"
-                                                   FontSize="18" FontWeight="Bold"
+                                        <TextBlock Classes="Size-L" Text="{Binding RecoveredToPenalty}" FontWeight="Bold"
                                                    Foreground="{DynamicResource TextStrong}" />
-                                        <TextBlock Text="BTC"
-                                                   FontSize="11"
+                                        <TextBlock Classes="Size-XXS" Text="BTC"
                                                    Foreground="{DynamicResource TextMuted}"
                                                    VerticalAlignment="Bottom" Margin="0,0,0,1" />
                                     </StackPanel>
-                                    <TextBlock Grid.Row="2" Text="Recovered to penalty"
-                                               FontSize="12"
+                                    <TextBlock Classes="Size-XS" Grid.Row="2" Text="Recovered to penalty"
                                                Foreground="{DynamicResource TextMuted}"
                                                TextWrapping="Wrap"
                                                Margin="0,8,0,0" />
@@ -289,12 +278,10 @@
                                                FontSize="14"
                                                Foreground="{DynamicResource TextMuted}" />
                                     </Border>
-                                    <TextBlock Grid.Row="1" Text="{Binding ProjectsInRecovery}"
-                                               FontSize="20" FontWeight="Bold"
+                                    <TextBlock Classes="Size-20" Grid.Row="1" Text="{Binding ProjectsInRecovery}" FontWeight="Bold"
                                                Foreground="{DynamicResource TextStrong}"
                                                Margin="0,8,0,0" />
-                                    <TextBlock Grid.Row="2" Text="Projects in Recovery"
-                                               FontSize="12"
+                                    <TextBlock Classes="Size-XS" Grid.Row="2" Text="Projects in Recovery"
                                                Foreground="{DynamicResource TextMuted}"
                                                TextWrapping="Wrap"
                                                Margin="0,8,0,0" />
@@ -330,30 +317,30 @@
                                 <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,12,0">
                                     <i:Icon Value="fa-solid fa-file-lines" FontSize="12"
                                             Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding FundedProjects}" FontSize="13" FontWeight="Bold"
+                                    <TextBlock Classes="Size-13" Text="{Binding FundedProjects}" FontWeight="Bold"
                                                Foreground="{DynamicResource TextStrong}" VerticalAlignment="Center" />
-                                    <TextBlock Text="funded" FontSize="12"
+                                    <TextBlock Classes="Size-XS" Text="funded"
                                                Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,12,0">
-                                    <TextBlock Text="·" FontSize="13"
+                                    <TextBlock Classes="Size-13" Text="·"
                                                Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
                                     <i:Icon Value="fa-brands fa-bitcoin" FontSize="12"
                                             Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding TotalInvested}" FontSize="13" FontWeight="Bold"
+                                    <TextBlock Classes="Size-13" Text="{Binding TotalInvested}" FontWeight="Bold"
                                                Foreground="{DynamicResource TextStrong}" VerticalAlignment="Center" />
-                                    <TextBlock Text="BTC" FontSize="11"
+                                    <TextBlock Classes="Size-XXS" Text="BTC"
                                                Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="4"
                                             IsVisible="{Binding HasRecoveryProjects}">
-                                    <TextBlock Text="·" FontSize="13"
+                                    <TextBlock Classes="Size-13" Text="·"
                                                Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
                                     <i:Icon Value="fa-solid fa-triangle-exclamation" FontSize="11"
                                             Foreground="#E5A536" VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding ProjectsInRecovery}" FontSize="13" FontWeight="Bold"
+                                    <TextBlock Classes="Size-13" Text="{Binding ProjectsInRecovery}" FontWeight="Bold"
                                                Foreground="#E5A536" VerticalAlignment="Center" />
-                                    <TextBlock Text="recovery" FontSize="12"
+                                    <TextBlock Classes="Size-XS" Text="recovery"
                                                Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
                                 </StackPanel>
                             </WrapPanel>
@@ -386,7 +373,7 @@
                                     </i:Icon>
                                 </Button>
                                 <Button Name="MobilePenaltiesButton" Classes="MobileAction IconOnly" Padding="8,6" CornerRadius="8"
-                                        Background="#F7931A" Cursor="Hand">
+                                        Background="{DynamicResource BitcoinAccentBrush}" Cursor="Hand">
                                     <i:Icon Value="fa-solid fa-lock" FontSize="13"
                                             Foreground="White" />
                                 </Button>
@@ -395,8 +382,7 @@
                     </Border>
 
                     <!-- Section heading -->
-                    <TextBlock Text="Your Investments"
-                               FontSize="24"
+                    <TextBlock Classes="Size-24" Text="Your Investments"
                                FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}" />
 
@@ -490,8 +476,7 @@
                                             </WrapPanel>
 
                                             <!-- Project name — Vue: .investment-title font-size:16px font-weight:700 -->
-                                            <TextBlock Text="{Binding ProjectName}"
-                                                        FontSize="16"
+                                            <TextBlock Classes="Size-M" Text="{Binding ProjectName}"
                                                         FontWeight="Bold"
                                                         Foreground="{DynamicResource TextStrong}"
                                                         TextWrapping="Wrap" />
@@ -499,56 +484,48 @@
                                             <!-- Funding info — Vue: .investment-stats flex justify-between -->
                                             <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto"
                                                   Margin="0,4,0,0">
-                                                <TextBlock Grid.Row="0" Grid.Column="0"
+                                                <TextBlock Classes="Size-13" Grid.Row="0" Grid.Column="0"
                                                            Text="Funding:"
-                                                           FontSize="13"
                                                            Foreground="{DynamicResource TextMuted}"
                                                            Margin="0,0,0,8" />
-                                                <TextBlock Grid.Row="0" Grid.Column="1"
+                                                <TextBlock Classes="Size-S" Grid.Row="0" Grid.Column="1"
                                                            Text="{Binding FundingAmount}"
-                                                           FontSize="14"
                                                            FontWeight="Bold"
                                                            Foreground="{DynamicResource TextStrong}"
                                                            HorizontalAlignment="Right"
-                                                           TextTrimming="CharacterEllipsis" />
+                                                           TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding FundingAmount}" />
 
-                                                <TextBlock Grid.Row="1" Grid.Column="0"
+                                                <TextBlock Classes="Size-13" Grid.Row="1" Grid.Column="0"
                                                            Text="Date:"
-                                                           FontSize="13"
                                                            Foreground="{DynamicResource TextMuted}"
                                                            Margin="0,0,0,8" />
-                                                <TextBlock Grid.Row="1" Grid.Column="1"
+                                                <TextBlock Classes="Size-13" Grid.Row="1" Grid.Column="1"
                                                            Text="{Binding FundingDate}"
-                                                           FontSize="13"
                                                            Foreground="{DynamicResource TextMuted}"
                                                            HorizontalAlignment="Right"
-                                                           TextTrimming="CharacterEllipsis" />
+                                                           TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding FundingDate}" />
 
                                                 <!-- Share of total -->
-                                                <TextBlock Grid.Row="2" Grid.Column="0"
+                                                <TextBlock Classes="Size-13" Grid.Row="2" Grid.Column="0"
                                                            Text="{Binding ShareLabel}"
-                                                           FontSize="13"
                                                            Foreground="{DynamicResource TextMuted}" />
-                                                <TextBlock Grid.Row="2" Grid.Column="1"
+                                                <TextBlock Classes="Size-S" Grid.Row="2" Grid.Column="1"
                                                            Text="{Binding SharePercentageDisplay}"
-                                                           FontSize="14"
                                                            FontWeight="Bold"
                                                            Foreground="{DynamicResource PrimaryGreenBrush}"
                                                            HorizontalAlignment="Right"
-                                                           TextTrimming="CharacterEllipsis" />
+                                                           TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding SharePercentageDisplay}" />
                                             </Grid>
 
                                             <!-- Payment Progress (subscription/fund type with payment plan) -->
                                             <!-- Vue: .subscription-payment-bar-container -->
                                             <StackPanel IsVisible="{Binding HasPaymentPlan}">
                                                 <DockPanel Margin="0,4,0,0">
-                                                    <TextBlock Text="Payment Progress"
-                                                               FontSize="13"
+                                                    <TextBlock Classes="Size-13" Text="Payment Progress"
                                                                Foreground="{DynamicResource TextMuted}"
                                                                DockPanel.Dock="Left"
                                                                VerticalAlignment="Center" />
-                                                    <TextBlock HorizontalAlignment="Right"
-                                                               FontSize="13"
+                                                    <TextBlock Classes="Size-13" HorizontalAlignment="Right"
                                                                Foreground="{DynamicResource PrimaryGreenBrush}"
                                                                FontWeight="Bold"
                                                                VerticalAlignment="Center">
@@ -639,8 +616,7 @@
                                                            FontSize="14"
                                                            Foreground="{DynamicResource PrimaryGreenBrush}"
                                                            VerticalAlignment="Center" />
-                                                    <TextBlock Text="Manage"
-                                                               FontSize="14"
+                                                    <TextBlock Classes="Size-S" Text="Manage"
                                                                FontWeight="SemiBold"
                                                                Foreground="{DynamicResource PrimaryGreenBrush}" />
                                                 </StackPanel>

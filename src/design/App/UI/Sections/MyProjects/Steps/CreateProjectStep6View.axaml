@@ -26,7 +26,7 @@
                                    FontSize="18"
                                    Foreground="White" />
                         </Border>
-                        <TextBlock Text="Project Profile" FontSize="16" FontWeight="Bold"
+                        <TextBlock Classes="Size-M" Text="Project Profile" FontWeight="Bold"
                                    Foreground="{DynamicResource TextStrong}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
@@ -34,25 +34,25 @@
                 <StackPanel Spacing="16" Margin="24">
                     <!-- Name -->
                     <Grid ColumnDefinitions="140,*">
-                        <TextBlock Text="Name" FontSize="14"
+                        <TextBlock Classes="Size-S" Text="Name"
                                    Foreground="{DynamicResource Accent}" />
-                        <TextBlock Grid.Column="1" Text="{Binding ProjectName}" FontSize="14"
+                        <TextBlock Classes="Size-S" Grid.Column="1" Text="{Binding ProjectName}"
                                    Foreground="{DynamicResource TextStrong}" FontWeight="Bold"
                                    HorizontalAlignment="Right" />
                     </Grid>
                     <!-- About -->
                     <Grid ColumnDefinitions="140,*">
-                        <TextBlock Text="About" FontSize="14"
+                        <TextBlock Classes="Size-S" Text="About"
                                    Foreground="{DynamicResource Accent}" />
-                        <TextBlock Grid.Column="1" Text="{Binding ProjectAbout}" FontSize="14"
+                        <TextBlock Classes="Size-S" Grid.Column="1" Text="{Binding ProjectAbout}"
                                    Foreground="{DynamicResource TextStrong}" FontWeight="Bold"
                                    HorizontalAlignment="Right" TextWrapping="Wrap" />
                     </Grid>
                     <!-- Website -->
                     <Grid ColumnDefinitions="140,*">
-                        <TextBlock Text="Website" FontSize="14"
+                        <TextBlock Classes="Size-S" Text="Website"
                                    Foreground="{DynamicResource Accent}" />
-                        <TextBlock Grid.Column="1" Text="{Binding ProjectWebsite}" FontSize="14"
+                        <TextBlock Classes="Size-S" Grid.Column="1" Text="{Binding ProjectWebsite}"
                                    Foreground="{DynamicResource TextStrong}" FontWeight="Bold"
                                    HorizontalAlignment="Right" />
                     </Grid>
@@ -66,7 +66,7 @@
             <StackPanel>
                 <Border Padding="24" CornerRadius="11,11,0,0">
                     <Border.Background>
-                        <SolidColorBrush Color="#F7931A" Opacity="0.08" />
+                        <SolidColorBrush Color="{StaticResource BitcoinOrange}" Opacity="0.08" />
                     </Border.Background>
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <Border Width="36" Height="36" CornerRadius="8"
@@ -75,7 +75,7 @@
                                    FontSize="18"
                                    Foreground="White" />
                         </Border>
-                        <TextBlock Text="Funding Configuration" FontSize="16" FontWeight="Bold"
+                        <TextBlock Classes="Size-M" Text="Funding Configuration" FontWeight="Bold"
                                    Foreground="{DynamicResource TextStrong}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
@@ -83,9 +83,9 @@
                 <StackPanel Spacing="16" Margin="24">
                     <!-- Target Amount -->
                     <Grid ColumnDefinitions="140,*">
-                        <TextBlock Text="{Binding TargetLabel}" FontSize="14"
+                        <TextBlock Classes="Size-S" Text="{Binding TargetLabel}"
                                    Foreground="{DynamicResource BitcoinAccent}" />
-                        <TextBlock Grid.Column="1" FontSize="14"
+                        <TextBlock Classes="Size-S" Grid.Column="1"
                                    Foreground="{DynamicResource TextStrong}" FontWeight="Bold"
                                    HorizontalAlignment="Right">
                             <TextBlock.Text>
@@ -97,25 +97,25 @@
                     </Grid>
                     <!-- Start Date -->
                     <Grid ColumnDefinitions="140,*">
-                        <TextBlock Text="Start Date" FontSize="14"
+                        <TextBlock Classes="Size-S" Text="Start Date"
                                    Foreground="{DynamicResource BitcoinAccent}" />
-                        <TextBlock Grid.Column="1" Text="{Binding StartDate}" FontSize="14"
+                        <TextBlock Classes="Size-S" Grid.Column="1" Text="{Binding StartDate}"
                                    Foreground="{DynamicResource TextStrong}" FontWeight="Bold"
                                    HorizontalAlignment="Right" />
                     </Grid>
                     <!-- End Date (investment only) -->
                     <Grid ColumnDefinitions="140,*" IsVisible="{Binding IsInvestment}">
-                        <TextBlock Text="End Date" FontSize="14"
+                        <TextBlock Classes="Size-S" Text="End Date"
                                    Foreground="{DynamicResource BitcoinAccent}" />
-                        <TextBlock Grid.Column="1" Text="{Binding EndDate}" FontSize="14"
+                        <TextBlock Classes="Size-S" Grid.Column="1" Text="{Binding EndDate}"
                                    Foreground="{DynamicResource TextStrong}" FontWeight="Bold"
                                    HorizontalAlignment="Right" />
                     </Grid>
                     <!-- Penalty Days (investment and fund) -->
                     <Grid ColumnDefinitions="140,*" IsVisible="{Binding !IsSubscription}">
-                        <TextBlock Text="Penalty Days" FontSize="14"
+                        <TextBlock Classes="Size-S" Text="Penalty Days"
                                    Foreground="{DynamicResource BitcoinAccent}" />
-                        <TextBlock Grid.Column="1" FontSize="14"
+                        <TextBlock Classes="Size-S" Grid.Column="1"
                                    Foreground="{DynamicResource TextStrong}" FontWeight="Bold"
                                    HorizontalAlignment="Right">
                             <Run Text="{Binding PenaltyDays, Mode=OneWay}" /><Run Text=" days" />
@@ -123,9 +123,9 @@
                     </Grid>
                     <!-- Approval Threshold (fund/subscription only) -->
                     <Grid ColumnDefinitions="140,*" IsVisible="{Binding !IsInvestment}">
-                        <TextBlock Text="Approval Threshold" FontSize="14"
+                        <TextBlock Classes="Size-S" Text="Approval Threshold"
                                    Foreground="{DynamicResource BitcoinAccent}" />
-                        <TextBlock Grid.Column="1" FontSize="14"
+                        <TextBlock Classes="Size-S" Grid.Column="1"
                                    Foreground="{DynamicResource TextStrong}" FontWeight="Bold"
                                    HorizontalAlignment="Right">
                             <Run Text="{Binding ApprovalThreshold, Mode=OneWay}" /><Run Text=" BTC" />
@@ -149,12 +149,12 @@
                                         Foreground="White"
                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
-                            <TextBlock Text="{Binding ScheduleTitle}" FontSize="16" FontWeight="Bold"
+                            <TextBlock Classes="Size-M" Text="{Binding ScheduleTitle}" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center" />
                         </StackPanel>
                         <!-- Payout summary text (e.g. "Monthly payouts (3 installments)") -->
-                        <TextBlock Text="{Binding ScheduleSummary}" FontSize="13"
+                        <TextBlock Classes="Size-13" Text="{Binding ScheduleSummary}"
                                    Foreground="{DynamicResource Accent}"
                                    HorizontalAlignment="Right" VerticalAlignment="Center"
                                    IsVisible="{Binding !IsInvestment}" />
@@ -169,15 +169,13 @@
                                         BorderBrush="{DynamicResource Accent}" BorderThickness="1"
                                         Background="{DynamicResource PrimaryGreenBrush04}">
                                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
-                                        <TextBlock Grid.Column="0"
-                                                   FontSize="14" Foreground="{DynamicResource Accent}"
+                                        <TextBlock Classes="Size-S" Grid.Column="0" Foreground="{DynamicResource Accent}"
                                                    FontWeight="SemiBold"
                                                    VerticalAlignment="Center"
                                                    TextWrapping="NoWrap">
                                             <Run Text="{Binding StageLabel, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding StageNumber, Mode=OneWay}" />
                                         </TextBlock>
-                                        <TextBlock Grid.Column="1"
-                                                   FontSize="14" Foreground="{DynamicResource Accent}"
+                                        <TextBlock Classes="Size-S" Grid.Column="1" Foreground="{DynamicResource Accent}"
                                                    FontWeight="Bold"
                                                    HorizontalAlignment="Right"
                                                    VerticalAlignment="Center"
@@ -211,11 +209,10 @@
                     </Viewbox>
                 </Border>
 
-                <TextBlock Text="Ready to Deploy" FontSize="20" FontWeight="Bold"
+                <TextBlock Classes="Size-20" Text="Ready to Deploy" FontWeight="Bold"
                            Foreground="{DynamicResource TextStrong}" TextAlignment="Center"
                            HorizontalAlignment="Center" />
-                <TextBlock Text="Your project is ready to be deployed on-chain. Click Deploy Now in the footer to begin."
-                           FontSize="14" Foreground="{DynamicResource TextMuted}"
+                <TextBlock Classes="Size-S" Text="Your project is ready to be deployed on-chain. Click Deploy Now in the footer to begin." Foreground="{DynamicResource TextMuted}"
                            TextAlignment="Center" HorizontalAlignment="Center"
                            TextWrapping="Wrap" MaxWidth="400" />
             </StackPanel>

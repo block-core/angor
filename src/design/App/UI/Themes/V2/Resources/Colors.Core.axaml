@@ -24,6 +24,19 @@
     <!-- Bitcoin -->
     <Color x:Key="BitcoinOrange">#F7931A</Color>
 
+    <!-- Semantic accent brushes — theme-invariant single source for danger/warning/Bitcoin
+         highlights. Views must reference these instead of literal hex values so the meaning
+         (danger, warning) can be re-tinted globally. DangerRed = tailwind red-600, Error = red-500. -->
+    <Color x:Key="DangerRed">#DC2626</Color>
+    <SolidColorBrush x:Key="DangerBrush" Color="{StaticResource DangerRed}" />
+    <SolidColorBrush x:Key="DangerBrightBrush" Color="{StaticResource Error}" />
+    <SolidColorBrush x:Key="DangerSoftBrush" Color="#1ADC2626" />
+    <Color x:Key="WarningOrange">#F97316</Color>
+    <SolidColorBrush x:Key="WarningBrush" Color="{StaticResource WarningOrange}" />
+    <SolidColorBrush x:Key="WarningBrightBrush" Color="#FF8C00" />
+    <SolidColorBrush x:Key="WarningSoftBrush" Color="#30FF8C00" />
+    <SolidColorBrush x:Key="BitcoinAccentBrush" Color="{StaticResource BitcoinOrange}" />
+
     <!-- Legacy aliases (for backward compatibility) -->
     <Color x:Key="Accent">#2D5A3D</Color>
     <Color x:Key="Dimmed">#9ca3af</Color>

@@ -85,8 +85,7 @@
                                   Fill="{DynamicResource TextStrongBrush}"
                                   Width="320" Height="512" Stretch="Uniform" />
                         </Viewbox>
-                        <TextBlock Text="Back"
-                                   FontSize="14"
+                        <TextBlock Classes="Size-S" Text="Back"
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource TextStrongBrush}"
                                    VerticalAlignment="Center" />
@@ -115,8 +114,7 @@
                             <i:Icon Value="fa-solid fa-arrows-rotate"
                                    FontSize="14"
                                    Foreground="{DynamicResource TextStrongBrush}" />
-                            <TextBlock Text="Refresh"
-                                       FontSize="14"
+                            <TextBlock Classes="Size-S" Text="Refresh"
                                        FontWeight="Medium"
                                        Foreground="{DynamicResource TextStrongBrush}"
                                        VerticalAlignment="Center" />
@@ -144,7 +142,7 @@
                                     </Style>
                                 </i:Icon.Styles>
                             </i:Icon>
-                            <TextBlock Text="Refresh" FontSize="14" FontWeight="Medium"
+                            <TextBlock Classes="Size-S" Text="Refresh" FontWeight="Medium"
                                        Foreground="{DynamicResource TextStrongBrush}"
                                        VerticalAlignment="Center" />
                         </StackPanel>
@@ -180,8 +178,7 @@
                                           Width="512" Height="512" Stretch="Uniform" />
                                 </Panel>
                             </Viewbox>
-                            <TextBlock Text="Agreement Signed"
-                                       FontSize="14"
+                            <TextBlock Classes="Size-S" Text="Agreement Signed"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource PrimaryGreenBrush}"
                                        VerticalAlignment="Center" />
@@ -217,8 +214,7 @@
                                               Width="512" Height="512" Stretch="Uniform" />
                                     </Panel>
                                 </Viewbox>
-                                <TextBlock FontSize="14"
-                                           FontWeight="SemiBold"
+                                <TextBlock Classes="Size-S" FontWeight="SemiBold"
                                            Foreground="{DynamicResource PrimaryGreenBrush}"
                                            VerticalAlignment="Center">
                                     <Run Text="Preview " /><Run Text="{Binding AmountNoun, Mode=OneWay}" />
@@ -238,15 +234,13 @@
                                         Background="{DynamicResource SurfaceLow}"
                                         BorderBrush="{DynamicResource Stroke}"
                                         BorderThickness="2">
-                                    <TextBlock Text="2"
-                                               FontSize="14"
+                                    <TextBlock Classes="Size-S" Text="2"
                                                FontWeight="Bold"
                                                Foreground="{DynamicResource TextMutedBrush}"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center" />
                                 </Border>
-                                <TextBlock FontSize="14"
-                                           FontWeight="Medium"
+                                <TextBlock Classes="Size-S" FontWeight="Medium"
                                            Foreground="{DynamicResource TextMutedBrush}"
                                            VerticalAlignment="Center">
                                     <Run Text="Preview " /><Run Text="{Binding AmountNoun, Mode=OneWay}" />
@@ -284,8 +278,7 @@
                                               Width="512" Height="512" Stretch="Uniform" />
                                     </Panel>
                                 </Viewbox>
-                                <TextBlock Text="Funds Transferred"
-                                           FontSize="14"
+                                <TextBlock Classes="Size-S" Text="Funds Transferred"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource PrimaryGreenBrush}"
                                            VerticalAlignment="Center" />
@@ -304,15 +297,13 @@
                                         Background="{DynamicResource SurfaceLow}"
                                         BorderBrush="{DynamicResource Stroke}"
                                         BorderThickness="2">
-                                    <TextBlock Text="3"
-                                               FontSize="14"
+                                    <TextBlock Classes="Size-S" Text="3"
                                                FontWeight="Bold"
                                                Foreground="{DynamicResource TextMutedBrush}"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center" />
                                 </Border>
-                                <TextBlock Text="Funds Transferred"
-                                           FontSize="14"
+                                <TextBlock Classes="Size-S" Text="Funds Transferred"
                                            FontWeight="Medium"
                                            Foreground="{DynamicResource TextMutedBrush}"
                                            VerticalAlignment="Center" />
@@ -358,13 +349,12 @@
                             <Border Width="32" Height="32" CornerRadius="16"
                                     Background="{DynamicResource SurfaceLow}"
                                     IsVisible="{Binding IsStep1}">
-                                <TextBlock Text="1" FontSize="14" FontWeight="Bold"
+                                <TextBlock Classes="Size-S" Text="1" FontWeight="Bold"
                                            Foreground="{DynamicResource TextMutedBrush}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                         </Panel>
-                        <TextBlock Text="Agreement Signed"
-                                   FontSize="14" FontWeight="SemiBold"
+                        <TextBlock Classes="Size-S" Text="Agreement Signed" FontWeight="SemiBold"
                                    Foreground="{DynamicResource PrimaryGreenBrush}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
@@ -389,12 +379,12 @@
                             <Border Width="32" Height="32" CornerRadius="16"
                                     Background="{DynamicResource SurfaceLow}"
                                     IsVisible="{Binding IsStep1}">
-                                <TextBlock Text="2" FontSize="14" FontWeight="Bold"
+                                <TextBlock Classes="Size-S" Text="2" FontWeight="Bold"
                                            Foreground="{DynamicResource TextMutedBrush}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                         </Panel>
-                        <TextBlock FontSize="14" FontWeight="SemiBold"
+                        <TextBlock Classes="Size-S" FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextMutedBrush}"
                                    VerticalAlignment="Center">
                             <Run Text="Preview " /><Run Text="{Binding AmountNoun, Mode=OneWay}" />
@@ -421,13 +411,12 @@
                             <Border Width="32" Height="32" CornerRadius="16"
                                     Background="{DynamicResource SurfaceLow}"
                                     IsVisible="{Binding !IsStep3}">
-                                <TextBlock Text="3" FontSize="14" FontWeight="Bold"
+                                <TextBlock Classes="Size-S" Text="3" FontWeight="Bold"
                                            Foreground="{DynamicResource TextMutedBrush}"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                         </Panel>
-                        <TextBlock Text="Funds Transferred"
-                                   FontSize="14" FontWeight="SemiBold"
+                        <TextBlock Classes="Size-S" Text="Funds Transferred" FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextMutedBrush}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
@@ -481,13 +470,11 @@
                         <!-- Content — Vue: .project-card-content-compact padding:48px 24px 24px -->
                         <StackPanel Spacing="8" Margin="24,48,24,24">
                             <!-- Title — Vue: .project-title-compact 24px bold -->
-                            <TextBlock Text="{Binding ProjectName}"
-                                       FontSize="24"
+                            <TextBlock Classes="Size-24" Text="{Binding ProjectName}"
                                        FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrongBrush}" />
                             <!-- Description — Vue: .project-description-compact 15px, color:#666 dark:#a0a0a0 -->
-                            <TextBlock Text="{Binding ShortDescription, Converter={x:Static helpers:MarkdownToPlainConverter.Instance}}"
-                                       FontSize="15"
+                            <TextBlock Classes="Size-15" Text="{Binding ShortDescription, Converter={x:Static helpers:MarkdownToPlainConverter.Instance}}"
                                        Foreground="{DynamicResource TextMutedBrush}"
                                        TextWrapping="Wrap"
                                        MaxLines="3" />
@@ -522,15 +509,13 @@
                             </Border>
 
                             <!-- Title — Vue: .waiting-title -->
-                            <TextBlock Text="Waiting for Approval"
-                                       FontSize="24"
+                            <TextBlock Classes="Size-24" Text="Waiting for Approval"
                                        FontWeight="Bold"
                                        Foreground="{DynamicResource WaitingCardTitle}"
                                        HorizontalAlignment="Center" />
 
                             <!-- Description — Vue: .waiting-description -->
-                            <TextBlock Text="The founder needs to sign a recovery agreement before you can invest. This ensures your funds can be recovered if the project doesn't succeed."
-                                       FontSize="14"
+                            <TextBlock Classes="Size-S" Text="The founder needs to sign a recovery agreement before you can invest. This ensures your funds can be recovered if the project doesn't succeed."
                                        FontWeight="Medium"
                                        Foreground="{DynamicResource WaitingCardSubtext}"
                                        HorizontalAlignment="Center"
@@ -550,8 +535,7 @@
                                          CornerRadius="8"
                                          IsEnabled="{Binding !IsCancelling}">
                                      <Panel>
-                                         <TextBlock Text="Cancel"
-                                                    FontSize="14"
+                                         <TextBlock Classes="Size-S" Text="Cancel"
                                                     FontWeight="SemiBold"
                                                     Foreground="{DynamicResource WaitingBtnFg}"
                                                     IsVisible="{Binding !IsCancelling}"
@@ -580,7 +564,7 @@
                                                      </Style>
                                                  </i:Icon.Styles>
                                              </i:Icon>
-                                             <TextBlock Text="Cancelling..." FontSize="14" FontWeight="SemiBold"
+                                             <TextBlock Classes="Size-S" Text="Cancelling..." FontWeight="SemiBold"
                                                         Foreground="{DynamicResource WaitingBtnFg}" />
                                          </StackPanel>
                                      </Panel>
@@ -592,8 +576,7 @@
                                          BorderThickness="1"
                                          CornerRadius="8">
                                      <Panel>
-                                         <TextBlock Text="Refresh"
-                                                    FontSize="14"
+                                         <TextBlock Classes="Size-S" Text="Refresh"
                                                     FontWeight="SemiBold"
                                                     Foreground="{DynamicResource WaitingBtnFg}"
                                                     IsVisible="{Binding !IsRefreshing}"
@@ -622,7 +605,7 @@
                                                      </Style>
                                                  </i:Icon.Styles>
                                              </i:Icon>
-                                             <TextBlock Text="Refresh" FontSize="14" FontWeight="SemiBold"
+                                             <TextBlock Classes="Size-S" Text="Refresh" FontWeight="SemiBold"
                                                         Foreground="{DynamicResource WaitingBtnFg}" />
                                          </StackPanel>
                                      </Panel>
@@ -632,8 +615,7 @@
                                         BorderBrush="{DynamicResource WaitingBtnBorder}"
                                         BorderThickness="1"
                                         CornerRadius="8">
-                                    <TextBlock Text="Message"
-                                               FontSize="14"
+                                    <TextBlock Classes="Size-S" Text="Message"
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource WaitingBtnFg}" />
                                 </Button>
@@ -665,8 +647,7 @@
                             </Border>
 
                             <!-- Title — Vue: .success-title -->
-                            <TextBlock Text="Transaction agreement signed ensuring you can recover your funds if the project does not succeed."
-                                       FontSize="16"
+                            <TextBlock Classes="Size-M" Text="Transaction agreement signed ensuring you can recover your funds if the project does not succeed."
                                        FontWeight="Bold"
                                        Foreground="{DynamicResource PreviewCardTitle}"
                                        HorizontalAlignment="Center"
@@ -695,8 +676,7 @@
                                                    FontSize="16"
                                                    Foreground="White"
                                                    VerticalAlignment="Center" />
-                                            <TextBlock FontSize="14"
-                                                       FontWeight="SemiBold"
+                                            <TextBlock Classes="Size-S" FontWeight="SemiBold"
                                                        Foreground="White"
                                                        VerticalAlignment="Center">
                                                 <Run Text="{Binding ActionVerb, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding TotalInvested, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" />
@@ -718,8 +698,7 @@
                                              CornerRadius="8"
                                              IsEnabled="{Binding !IsCancelling}">
                                          <Panel>
-                                             <TextBlock Text="Cancel"
-                                                        FontSize="14"
+                                             <TextBlock Classes="Size-S" Text="Cancel"
                                                         FontWeight="SemiBold"
                                                         Foreground="{DynamicResource PreviewCardTitle}"
                                                         IsVisible="{Binding !IsCancelling}"
@@ -748,7 +727,7 @@
                                                          </Style>
                                                      </i:Icon.Styles>
                                                  </i:Icon>
-                                                 <TextBlock Text="Cancelling..." FontSize="14" FontWeight="SemiBold"
+                                                 <TextBlock Classes="Size-S" Text="Cancelling..." FontWeight="SemiBold"
                                                             Foreground="{DynamicResource PreviewCardTitle}" />
                                              </StackPanel>
                                          </Panel>
@@ -757,8 +736,7 @@
                             </StackPanel>
 
                             <!-- Disclaimer -->
-                            <TextBlock Text="By investing, you acknowledge that early withdrawal requires a 90 day waiting period"
-                                       FontSize="11"
+                            <TextBlock Classes="Size-XXS" Text="By investing, you acknowledge that early withdrawal requires a 90 day waiting period"
                                        Foreground="{DynamicResource PreviewCardSubtext}"
                                        Opacity="0.8"
                                        HorizontalAlignment="Center"
@@ -794,16 +772,14 @@
                             </Viewbox>
 
                             <!-- Title -->
-                            <TextBlock FontSize="24"
-                                       FontWeight="Bold"
+                            <TextBlock Classes="Size-24" FontWeight="Bold"
                                        Foreground="White"
                                        HorizontalAlignment="Center">
                                 <Run Text="{Binding AmountNoun, Mode=OneWay}" /><Run Text=" Active" />
                             </TextBlock>
 
                             <!-- Subtitle -->
-                            <TextBlock Text="You are part of this project's success!"
-                                       FontSize="16"
+                            <TextBlock Classes="Size-M" Text="You are part of this project's success!"
                                        FontWeight="Medium"
                                        Foreground="#FFFFFFCC"
                                        HorizontalAlignment="Center"
@@ -821,8 +797,7 @@
                                     <i:Icon Value="fa-solid fa-arrow-up-right-from-square"
                                            FontSize="14"
                                            Foreground="#FFFFFFCC" />
-                                    <TextBlock Text="View Transaction Details"
-                                               FontSize="13"
+                                    <TextBlock Classes="Size-13" Text="View Transaction Details"
                                                Foreground="#FFFFFFCC"
                                                TextDecorations="Underline" />
                                 </StackPanel>
@@ -852,7 +827,7 @@
                                 BoxShadow="0 4 12 0 #4DF7931A">
                             <Border.Background>
                                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                    <GradientStop Color="#F7931A" Offset="0" />
+                                    <GradientStop Color="{StaticResource BitcoinOrange}" Offset="0" />
                                     <GradientStop Color="#FFA500" Offset="1" />
                                 </LinearGradientBrush>
                             </Border.Background>
@@ -860,8 +835,7 @@
                                    FontSize="20"
                                    Foreground="White" />
                         </Border>
-                        <TextBlock Text="Project Statistics"
-                                   FontSize="20"
+                        <TextBlock Classes="Size-20" Text="Project Statistics"
                                    FontWeight="Bold"
                                    Foreground="{DynamicResource StatsDetailLabel}"
                                    VerticalAlignment="Center" />
@@ -878,16 +852,13 @@
                                 BorderBrush="{DynamicResource StatsDetailInnerBorder}"
                                 BorderThickness="2">
                             <StackPanel Spacing="8">
-                                <TextBlock Text="{Binding TargetLabel}"
-                                           FontSize="13"
+                                <TextBlock Classes="Size-13" Text="{Binding TargetLabel}"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource StatsDetailLabel}" />
-                                <TextBlock Text="{Binding TargetAmount}"
-                                           FontSize="24"
+                                <TextBlock Classes="Size-24" Text="{Binding TargetAmount}"
                                            FontWeight="Bold"
                                            Foreground="{DynamicResource StatsDetailValue}" />
-                                <TextBlock Text="{Binding CurrencySymbol}"
-                                           FontSize="11"
+                                <TextBlock Classes="Size-XXS" Text="{Binding CurrencySymbol}"
                                            Foreground="{DynamicResource StatsDetailSubtext}" />
                             </StackPanel>
                         </Border>
@@ -901,16 +872,13 @@
                                 BorderBrush="{DynamicResource StatsDetailInnerBorder}"
                                 BorderThickness="2">
                             <StackPanel Spacing="8">
-                                <TextBlock Text="{Binding TotalRaisedLabel}"
-                                           FontSize="13"
+                                <TextBlock Classes="Size-13" Text="{Binding TotalRaisedLabel}"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource StatsDetailLabel}" />
-                                <TextBlock Text="{Binding TotalRaised}"
-                                           FontSize="24"
+                                <TextBlock Classes="Size-24" Text="{Binding TotalRaised}"
                                            FontWeight="Bold"
                                            Foreground="{DynamicResource StatsDetailValue}" />
-                                <TextBlock Text="{Binding CurrencySymbol}"
-                                           FontSize="11"
+                                <TextBlock Classes="Size-XXS" Text="{Binding CurrencySymbol}"
                                            Foreground="{DynamicResource StatsDetailSubtext}" />
                             </StackPanel>
                         </Border>
@@ -924,17 +892,14 @@
                                 BorderBrush="{DynamicResource StatsDetailInnerBorder}"
                                 BorderThickness="2">
                             <StackPanel Spacing="8">
-                                <TextBlock FontSize="13"
-                                           FontWeight="SemiBold"
+                                <TextBlock Classes="Size-13" FontWeight="SemiBold"
                                            Foreground="{DynamicResource StatsDetailLabel}">
                                     <Run Text="Total " /><Run Text="{Binding InvestorNoun, Mode=OneWay}" />
                                 </TextBlock>
-                                <TextBlock Text="{Binding TotalInvestors}"
-                                           FontSize="24"
+                                <TextBlock Classes="Size-24" Text="{Binding TotalInvestors}"
                                            FontWeight="Bold"
                                            Foreground="{DynamicResource StatsDetailValue}" />
-                                <TextBlock Text="{Binding InvestorNoun}"
-                                           FontSize="11"
+                                <TextBlock Classes="Size-XXS" Text="{Binding InvestorNoun}"
                                            Foreground="{DynamicResource StatsDetailSubtext}" />
                             </StackPanel>
                         </Border>
@@ -948,16 +913,13 @@
                                 BorderBrush="{DynamicResource StatsDetailInnerBorder}"
                                 BorderThickness="2">
                             <StackPanel Spacing="8">
-                                <TextBlock Text="{Binding YourAmountLabel}"
-                                           FontSize="13"
+                                <TextBlock Classes="Size-13" Text="{Binding YourAmountLabel}"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource StatsDetailLabel}" />
-                                <TextBlock Text="{Binding TotalInvested}"
-                                           FontSize="24"
+                                <TextBlock Classes="Size-24" Text="{Binding TotalInvested}"
                                            FontWeight="Bold"
                                            Foreground="{DynamicResource StatsDetailValue}" />
-                                <TextBlock Text="{Binding CurrencySymbol}"
-                                           FontSize="11"
+                                <TextBlock Classes="Size-XXS" Text="{Binding CurrencySymbol}"
                                            Foreground="{DynamicResource StatsDetailSubtext}" />
                             </StackPanel>
                         </Border>
@@ -977,16 +939,13 @@
                                 BorderBrush="{DynamicResource StatsDetailInnerBorder}"
                                 BorderThickness="2">
                             <StackPanel Spacing="8">
-                                <TextBlock Text="{Binding ShareLabel}"
-                                           FontSize="13"
+                                <TextBlock Classes="Size-13" Text="{Binding ShareLabel}"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource StatsDetailLabel}" />
-                                <TextBlock Text="{Binding SharePercentageDisplay}"
-                                           FontSize="24"
+                                <TextBlock Classes="Size-24" Text="{Binding SharePercentageDisplay}"
                                            FontWeight="Bold"
                                            Foreground="{DynamicResource PrimaryGreenBrush}" />
-                                <TextBlock Text="of total pool"
-                                           FontSize="11"
+                                <TextBlock Classes="Size-XXS" Text="of total pool"
                                            Foreground="{DynamicResource StatsDetailSubtext}" />
                             </StackPanel>
                         </Border>
@@ -1000,20 +959,16 @@
                                 BorderBrush="{DynamicResource StatsDetailInnerBorder}"
                                 BorderThickness="2">
                             <StackPanel Spacing="8">
-                                <TextBlock Text="Claimed by Founder"
-                                           FontSize="13"
+                                <TextBlock Classes="Size-13" Text="Claimed by Founder"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource StatsDetailLabel}" />
-                                <TextBlock Text="{Binding ClaimedPercentageDisplay}"
-                                           FontSize="24"
+                                <TextBlock Classes="Size-24" Text="{Binding ClaimedPercentageDisplay}"
                                            FontWeight="Bold"
-                                           Foreground="#F7931A" />
+                                           Foreground="{DynamicResource BitcoinAccentBrush}" />
                                 <StackPanel Orientation="Horizontal" Spacing="4">
-                                    <TextBlock Text="{Binding AmountClaimedByFounder}"
-                                               FontSize="11"
+                                    <TextBlock Classes="Size-XXS" Text="{Binding AmountClaimedByFounder}"
                                                Foreground="{DynamicResource StatsDetailSubtext}" />
-                                    <TextBlock Text="{Binding CurrencySymbol}"
-                                               FontSize="11"
+                                    <TextBlock Classes="Size-XXS" Text="{Binding CurrencySymbol}"
                                                Foreground="{DynamicResource StatsDetailSubtext}" />
                                 </StackPanel>
                             </StackPanel>
@@ -1028,8 +983,7 @@
                                 BorderBrush="{DynamicResource StatsDetailInnerBorder}"
                                 BorderThickness="2">
                             <StackPanel Spacing="8" VerticalAlignment="Center">
-                                <TextBlock Text="Investor Breakdown"
-                                           FontSize="13"
+                                <TextBlock Classes="Size-13" Text="Investor Breakdown"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource StatsDetailLabel}" />
                                 <Button Name="ViewInvestorsButton"
@@ -1045,8 +999,7 @@
                                                FontSize="14"
                                                Foreground="{DynamicResource PrimaryGreenBrush}"
                                                VerticalAlignment="Center" />
-                                        <TextBlock Text="View All"
-                                                   FontSize="14"
+                                        <TextBlock Classes="Size-S" Text="View All"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource PrimaryGreenBrush}" />
                                     </StackPanel>
@@ -1059,13 +1012,11 @@
                     <!-- Vue: .progress-section .progress-header flex space-between -->
                     <StackPanel Spacing="8">
                         <DockPanel>
-                            <TextBlock Text="{Binding ProgressLabel}"
-                                       FontSize="14"
+                            <TextBlock Classes="Size-S" Text="{Binding ProgressLabel}"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource StatsDetailLabel}"
                                        DockPanel.Dock="Left" />
-                            <TextBlock FontSize="16"
-                                       FontWeight="Bold"
+                            <TextBlock Classes="Size-M" FontWeight="Bold"
                                        Foreground="{DynamicResource ProgressPercentage}"
                                        HorizontalAlignment="Right">
                                 <Run Text="{Binding TotalRaised, Mode=OneWay}" /><Run Text=" / " /><Run Text="{Binding TargetAmount, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" />
@@ -1110,8 +1061,7 @@
                                Margin="0,0,12,0"
                                Foreground="{DynamicResource TextMutedBrush}"
                                VerticalAlignment="Center" />
-                        <TextBlock FontSize="20"
-                                   FontWeight="Bold"
+                        <TextBlock Classes="Size-20" FontWeight="Bold"
                                    TextWrapping="Wrap"
                                    Foreground="{DynamicResource TextStrongBrush}"
                                    VerticalAlignment="Center">
@@ -1131,7 +1081,7 @@
                                 BorderThickness="1">
                             <StackPanel Spacing="8">
                                 <DockPanel>
-                                    <TextBlock FontSize="13" FontWeight="SemiBold"
+                                    <TextBlock Classes="Size-13" FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextMutedBrush}"
                                                DockPanel.Dock="Left" VerticalAlignment="Center">
                                         <Run Text="{Binding AmountNoun, Mode=OneWay}" /><Run Text=" Start Date" />
@@ -1141,8 +1091,7 @@
                                             Foreground="{DynamicResource TextMutedBrush}"
                                             HorizontalAlignment="Right" VerticalAlignment="Center" />
                                 </DockPanel>
-                                <TextBlock Text="{Binding StartDate}"
-                                           FontSize="18"
+                                <TextBlock Classes="Size-L" Text="{Binding StartDate}"
                                            FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrongBrush}" />
                             </StackPanel>
@@ -1158,7 +1107,7 @@
                                 BorderThickness="1">
                             <StackPanel Spacing="8">
                                 <DockPanel>
-                                    <TextBlock FontSize="13" FontWeight="SemiBold"
+                                    <TextBlock Classes="Size-13" FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextMutedBrush}"
                                                DockPanel.Dock="Left" VerticalAlignment="Center">
                                         <Run Text="{Binding AmountNoun, Mode=OneWay}" /><Run Text=" End Date" />
@@ -1168,8 +1117,7 @@
                                             Foreground="{DynamicResource TextMutedBrush}"
                                             HorizontalAlignment="Right" VerticalAlignment="Center" />
                                 </DockPanel>
-                                <TextBlock Text="{Binding EndDate}"
-                                           FontSize="18"
+                                <TextBlock Classes="Size-L" Text="{Binding EndDate}"
                                            FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrongBrush}" />
                             </StackPanel>
@@ -1185,8 +1133,7 @@
                                 BorderThickness="1">
                             <StackPanel Spacing="8">
                                 <DockPanel>
-                                    <TextBlock Text="Transaction Date"
-                                               FontSize="13" FontWeight="SemiBold"
+                                    <TextBlock Classes="Size-13" Text="Transaction Date" FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextMutedBrush}"
                                                DockPanel.Dock="Left" VerticalAlignment="Center" />
                                      <i:Icon Value="fa-solid fa-clock"
@@ -1194,8 +1141,7 @@
                                             Foreground="{DynamicResource TextMutedBrush}"
                                             HorizontalAlignment="Right" VerticalAlignment="Center" />
                                 </DockPanel>
-                                <TextBlock Text="{Binding TransactionDate}"
-                                           FontSize="18"
+                                <TextBlock Classes="Size-L" Text="{Binding TransactionDate}"
                                            FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrongBrush}" />
                             </StackPanel>
@@ -1211,7 +1157,7 @@
                                 BorderThickness="1">
                             <StackPanel Spacing="8">
                                 <DockPanel>
-                                    <TextBlock FontSize="13" FontWeight="SemiBold"
+                                    <TextBlock Classes="Size-13" FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextMutedBrush}"
                                                DockPanel.Dock="Left" VerticalAlignment="Center">
                                         <Run Text="{Binding AmountNoun, Mode=OneWay}" /><Run Text=" Status" />
@@ -1222,8 +1168,7 @@
                                             HorizontalAlignment="Right" VerticalAlignment="Center" />
                                 </DockPanel>
                                 <!-- Status value — green if Approved, orange if Pending -->
-                                <TextBlock Text="{Binding ApprovalStatus}"
-                                           FontSize="18"
+                                <TextBlock Classes="Size-L" Text="{Binding ApprovalStatus}"
                                            FontWeight="Bold"
                                            Foreground="{DynamicResource Brand}" />
                             </StackPanel>
@@ -1259,8 +1204,7 @@
                                       StrokeJoin="Round"
                                       Width="24" Height="24" Stretch="Uniform" />
                             </Viewbox>
-                            <TextBlock Text="{Binding ScheduleTitle}"
-                                       FontSize="20"
+                            <TextBlock Classes="Size-20" Text="{Binding ScheduleTitle}"
                                        FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrongBrush}"
                                        VerticalAlignment="Center" />
@@ -1274,29 +1218,24 @@
                             CornerRadius="8"
                             Padding="16,12">
                         <Grid ColumnDefinitions="100,80,*,140,*">
-                            <TextBlock Grid.Column="0"
+                            <TextBlock Classes="Size-13" Grid.Column="0"
                                        Text="{Binding StageLabel}"
-                                       FontSize="13"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextMutedBrush}" />
-                            <TextBlock Grid.Column="1"
+                            <TextBlock Classes="Size-13" Grid.Column="1"
                                        Text="Stage %"
-                                       FontSize="13"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextMutedBrush}" />
-                            <TextBlock Grid.Column="2"
+                            <TextBlock Classes="Size-13" Grid.Column="2"
                                        Text="Release Date"
-                                       FontSize="13"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextMutedBrush}" />
-                            <TextBlock Grid.Column="3"
+                            <TextBlock Classes="Size-13" Grid.Column="3"
                                        Text="Status"
-                                       FontSize="13"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextMutedBrush}" />
-                            <TextBlock Grid.Column="4"
+                            <TextBlock Classes="Size-13" Grid.Column="4"
                                        Text="Amount"
-                                       FontSize="13"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextMutedBrush}"
                                        HorizontalAlignment="Right" />
@@ -1313,8 +1252,7 @@
                                         BorderThickness="0,0,0,1">
                                     <Grid ColumnDefinitions="100,80,*,140,*">
                                         <!-- Stage number — Vue: font-semibold -->
-                                        <TextBlock Grid.Column="0"
-                                                   FontSize="14"
+                                        <TextBlock Classes="Size-S" Grid.Column="0"
                                                    FontWeight="SemiBold"
                                                    VerticalAlignment="Center"
                                                    Foreground="{DynamicResource TextStrongBrush}">
@@ -1322,16 +1260,14 @@
                                         </TextBlock>
 
                                         <!-- Percentage -->
-                                        <TextBlock Grid.Column="1"
+                                        <TextBlock Classes="Size-S" Grid.Column="1"
                                                    Text="{Binding Percentage}"
-                                                   FontSize="14"
                                                    VerticalAlignment="Center"
                                                    Foreground="{DynamicResource TextStrongBrush}" />
 
                                         <!-- Release Date -->
-                                        <TextBlock Grid.Column="2"
+                                        <TextBlock Classes="Size-S" Grid.Column="2"
                                                    Text="{Binding ReleaseDate}"
-                                                   FontSize="14"
                                                    VerticalAlignment="Center"
                                                    Foreground="{DynamicResource TextStrongBrush}" />
 
@@ -1346,8 +1282,7 @@
                                                     BorderBrush="{DynamicResource BadgePendingBorder}"
                                                     BorderThickness="1"
                                                     IsVisible="{Binding IsStatusPending}">
-                                                <TextBlock Text="{Binding Status}"
-                                                           FontSize="12"
+                                                <TextBlock Classes="Size-XS" Text="{Binding Status}"
                                                            FontWeight="SemiBold"
                                                            Foreground="{DynamicResource BadgePendingForeground}" />
                                             </Border>
@@ -1359,8 +1294,7 @@
                                                     BorderBrush="{DynamicResource BadgeReleasedBorder}"
                                                     BorderThickness="1"
                                                     IsVisible="{Binding IsStatusReleased}">
-                                                <TextBlock Text="{Binding Status}"
-                                                           FontSize="12"
+                                                <TextBlock Classes="Size-XS" Text="{Binding Status}"
                                                            FontWeight="SemiBold"
                                                            Foreground="{DynamicResource BadgeReleasedForeground}" />
                                             </Border>
@@ -1372,8 +1306,7 @@
                                                     BorderBrush="{DynamicResource BadgeNotSpentBorder}"
                                                     BorderThickness="1"
                                                     IsVisible="{Binding IsStatusNotSpent}">
-                                                <TextBlock Text="{Binding Status}"
-                                                           FontSize="12"
+                                                <TextBlock Classes="Size-XS" Text="{Binding Status}"
                                                            FontWeight="SemiBold"
                                                            Foreground="{DynamicResource BadgeNotSpentForeground}" />
                                             </Border>
@@ -1385,16 +1318,14 @@
                                                     BorderBrush="{DynamicResource BadgeRecoveredBorder}"
                                                     BorderThickness="1"
                                                     IsVisible="{Binding IsStatusRecovered}">
-                                                <TextBlock Text="{Binding Status}"
-                                                           FontSize="12"
+                                                <TextBlock Classes="Size-XS" Text="{Binding Status}"
                                                            FontWeight="SemiBold"
                                                            Foreground="{DynamicResource BadgeRecoveredForeground}" />
                                             </Border>
                                         </Panel>
 
                                         <!-- Amount — Vue: color #2d5a3d light / #5FAF78 dark -->
-                                        <TextBlock Grid.Column="4"
-                                                   FontSize="14"
+                                        <TextBlock Classes="Size-S" Grid.Column="4"
                                                    FontWeight="SemiBold"
                                                    Foreground="{DynamicResource StageAmountGreen}"
                                                    VerticalAlignment="Center"
@@ -1422,7 +1353,7 @@
                                     <StackPanel Spacing="8">
                                         <!-- Row 1: Stage number + Status badge -->
                                         <DockPanel>
-                                            <TextBlock FontSize="15" FontWeight="SemiBold"
+                                            <TextBlock Classes="Size-15" FontWeight="SemiBold"
                                                        Foreground="{DynamicResource TextStrongBrush}"
                                                        VerticalAlignment="Center">
                                                 <Run Text="{Binding StagePrefix, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding StageNumber, Mode=OneWay}" />
@@ -1433,7 +1364,7 @@
                                                         BorderBrush="{DynamicResource BadgePendingBorder}"
                                                         BorderThickness="1"
                                                         IsVisible="{Binding IsStatusPending}">
-                                                    <TextBlock Text="{Binding Status}" FontSize="12" FontWeight="SemiBold"
+                                                    <TextBlock Classes="Size-XS" Text="{Binding Status}" FontWeight="SemiBold"
                                                                Foreground="{DynamicResource BadgePendingForeground}" />
                                                 </Border>
                                                 <Border CornerRadius="16" Padding="14,6"
@@ -1441,7 +1372,7 @@
                                                         BorderBrush="{DynamicResource BadgeReleasedBorder}"
                                                         BorderThickness="1"
                                                         IsVisible="{Binding IsStatusReleased}">
-                                                    <TextBlock Text="{Binding Status}" FontSize="12" FontWeight="SemiBold"
+                                                    <TextBlock Classes="Size-XS" Text="{Binding Status}" FontWeight="SemiBold"
                                                                Foreground="{DynamicResource BadgeReleasedForeground}" />
                                                 </Border>
                                                 <Border CornerRadius="16" Padding="14,6"
@@ -1449,7 +1380,7 @@
                                                         BorderBrush="{DynamicResource BadgeNotSpentBorder}"
                                                         BorderThickness="1"
                                                         IsVisible="{Binding IsStatusNotSpent}">
-                                                    <TextBlock Text="{Binding Status}" FontSize="12" FontWeight="SemiBold"
+                                                    <TextBlock Classes="Size-XS" Text="{Binding Status}" FontWeight="SemiBold"
                                                                Foreground="{DynamicResource BadgeNotSpentForeground}" />
                                                 </Border>
                                                 <Border CornerRadius="16" Padding="14,6"
@@ -1457,22 +1388,22 @@
                                                         BorderBrush="{DynamicResource BadgeRecoveredBorder}"
                                                         BorderThickness="1"
                                                         IsVisible="{Binding IsStatusRecovered}">
-                                                    <TextBlock Text="{Binding Status}" FontSize="12" FontWeight="SemiBold"
+                                                    <TextBlock Classes="Size-XS" Text="{Binding Status}" FontWeight="SemiBold"
                                                                Foreground="{DynamicResource BadgeRecoveredForeground}" />
                                                 </Border>
                                             </Panel>
                                         </DockPanel>
                                         <!-- Row 2: Percentage + Release Date -->
                                         <DockPanel>
-                                            <TextBlock FontSize="12" Foreground="{DynamicResource TextMutedBrush}">
+                                            <TextBlock Classes="Size-XS" Foreground="{DynamicResource TextMutedBrush}">
                                                 <Run Text="Stage: " /><Run Text="{Binding Percentage, Mode=OneWay}" />
                                             </TextBlock>
-                                            <TextBlock FontSize="12" Foreground="{DynamicResource TextMutedBrush}"
+                                            <TextBlock Classes="Size-XS" Foreground="{DynamicResource TextMutedBrush}"
                                                        HorizontalAlignment="Right"
                                                        Text="{Binding ReleaseDate}" />
                                         </DockPanel>
                                         <!-- Row 3: Amount -->
-                                        <TextBlock FontSize="13" FontWeight="SemiBold"
+                                        <TextBlock Classes="Size-13" FontWeight="SemiBold"
                                                    Foreground="{DynamicResource StageAmountGreen}">
                                             <Run Text="{Binding Amount, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding $parent[UserControl].DataContext.CurrencySymbol, Mode=OneWay}" />
                                         </TextBlock>
@@ -1504,8 +1435,7 @@
                                     HorizontalAlignment="Center" VerticalAlignment="Center">
                             <i:Icon Value="{Binding PenaltyButtonIcon}" FontSize="14"
                                     Foreground="White" VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding PenaltyButtonText}"
-                                       FontSize="14"
+                            <TextBlock Classes="Size-S" Text="{Binding PenaltyButtonText}"
                                        FontWeight="SemiBold"
                                        Foreground="White"
                                        VerticalAlignment="Center" />

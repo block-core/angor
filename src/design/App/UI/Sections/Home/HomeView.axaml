@@ -56,7 +56,7 @@
                                HorizontalAlignment="Center"
                                Text="Fund Projects" />
                     <!-- Description — Vue desktop: 20px leading-relaxed mb-8, mobile: text-xs mb-4 -->
-                    <TextBlock Name="FundCardDesc" FontSize="20"
+                    <TextBlock Classes="Size-20" Name="FundCardDesc"
                                LineHeight="32"
                                FontWeight="Normal"
                                Margin="0,0,0,32"
@@ -99,7 +99,7 @@
                                HorizontalAlignment="Center"
                                Text="Get Funded" />
                     <!-- Description — Vue desktop: 20px leading-relaxed mb-8, mobile: text-xs mb-4 -->
-                    <TextBlock Name="GetFundedCardDesc" FontSize="20"
+                    <TextBlock Classes="Size-20" Name="GetFundedCardDesc"
                                LineHeight="32"
                                FontWeight="Normal"
                                Margin="0,0,0,32"

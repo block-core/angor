@@ -120,10 +120,10 @@ public partial class FundersView : UserControl, ISectionView
         vm.ToastRequested += OnToastRequested;
     }
 
-    private void OnToastRequested(string message)
+    private void OnToastRequested(string message, ToastSeverity severity)
     {
         var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
-        shellVm?.ShowToast(message);
+        shellVm?.ShowToast(message, severity);
     }
 
     /// <summary>Idempotent responsive-layout subscription — re-created on every logical-tree attach because OnDetachedFromLogicalTree disposes it (views are cached and re-attached on section switches).</summary>

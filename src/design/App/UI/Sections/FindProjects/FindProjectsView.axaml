@@ -102,10 +102,9 @@
             <StackPanel Spacing="16">
                 <!-- Header with search bar and refresh button -->
                 <Grid Name="FindProjectsHeaderGrid" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto">
-                    <TextBlock Name="DiscoverProjectsTitle"
+                    <TextBlock Classes="Size-20" Name="DiscoverProjectsTitle"
                                Grid.Row="0" Grid.Column="0"
-                               Text="Discover Projects"
-                               FontSize="20" FontWeight="Bold"
+                               Text="Discover Projects" FontWeight="Bold"
                                VerticalAlignment="Center" />
                     <!-- Search bar -->
                     <Border Name="SearchContainer"
@@ -180,11 +179,10 @@
                                 Foreground="{DynamicResource TextMuted}"
                                 Margin="0,0,6,0"
                                 VerticalAlignment="Center" />
-                        <TextBlock Name="SearchErrorText"
+                        <TextBlock Classes="Size-XS" Name="SearchErrorText"
                                    Grid.Column="1"
                                    Text="{Binding SearchError}"
                                    Foreground="{DynamicResource TextMuted}"
-                                   FontSize="12"
                                    FontWeight="Medium"
                                    TextWrapping="Wrap"
                                    VerticalAlignment="Center" />
@@ -227,9 +225,8 @@
                                     </Style>
                                 </i:Icon.Styles>
                             </i:Icon>
-                            <TextBlock Text="Refresh"
-                                        VerticalAlignment="Center"
-                                        FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-13" Text="Refresh"
+                                        VerticalAlignment="Center" FontWeight="SemiBold"
                                         Foreground="{DynamicResource LightPrimaryButtonForeground}" />
                         </StackPanel>
                     </Button>
@@ -331,8 +328,7 @@
                                 </Style>
                             </i:Icon.Styles>
                         </i:Icon>
-                        <TextBlock VerticalAlignment="Center"
-                                   FontSize="14" FontWeight="SemiBold"
+                        <TextBlock Classes="Size-S" VerticalAlignment="Center" FontWeight="SemiBold"
                                    Text="Load More" />
                     </StackPanel>
                 </Button>

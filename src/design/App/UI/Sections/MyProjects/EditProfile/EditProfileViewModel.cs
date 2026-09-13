@@ -5,6 +5,7 @@ using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Projects.Operations;
 using Angor.Sdk.Funding.Shared;
 using Angor.Shared.Models;
+using App.UI.Shell;
 using App.UI.Shared.Helpers;
 using Avalonia.Media.Imaging;
 using Microsoft.Extensions.Logging;
@@ -43,7 +44,7 @@ public partial class EditProfileViewModel : ReactiveObject, IDisposable
     private readonly ILogger<EditProfileViewModel> _logger;
     private readonly CompositeDisposable _disposables = new();
 
-    public event Action<string>? ToastRequested;
+    public event Action<string, ToastSeverity>? ToastRequested;
 
     // ── Active tab ──
     [Reactive] private string activeTab = "profile";
@@ -220,7 +221,7 @@ public partial class EditProfileViewModel : ReactiveObject, IDisposable
             // Validate the free-form profile fields before publishing to relays.
             if (!ValidateProfileFields())
             {
-                ToastRequested?.Invoke("Please fix the highlighted fields before saving.");
+                ToastRequested?.Invoke("Please fix the highlighted fields before saving.", ToastSeverity.Warning);
                 return false;
             }
 
@@ -257,17 +258,17 @@ public partial class EditProfileViewModel : ReactiveObject, IDisposable
 
             if (result.IsFailure)
             {
-                ToastRequested?.Invoke($"Save failed: {result.Error}");
+                ToastRequested?.Invoke($"Save failed: {result.Error}", ToastSeverity.Error);
                 return false;
             }
 
-            ToastRequested?.Invoke("Profile saved successfully.");
+            ToastRequested?.Invoke("Profile saved successfully.", ToastSeverity.Success);
             return true;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "SaveAsync failed");
-            ToastRequested?.Invoke("An unexpected error occurred while saving.");
+            ToastRequested?.Invoke("An unexpected error occurred while saving.", ToastSeverity.Error);
             return false;
         }
         finally

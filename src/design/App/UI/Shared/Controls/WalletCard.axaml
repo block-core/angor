@@ -55,18 +55,16 @@
                                     MinWidth="0">
                             <!-- Top row: name left, balance right -->
                             <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Grid.Column="0"
+                                <TextBlock Classes="Size-15" Grid.Column="0"
                                            Text="{TemplateBinding WalletName}"
-                                           FontSize="15"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextStrong}"
                                            VerticalAlignment="Center"
                                            TextWrapping="NoWrap"
                                            TextTrimming="CharacterEllipsis" />
-                                <TextBlock Grid.Column="1"
+                                <TextBlock Classes="Size-15" Grid.Column="1"
                                            Text="{TemplateBinding Balance}"
                                            AutomationProperties.AutomationId="WalletCardBalanceText"
-                                           FontSize="15"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextStrong}"
                                            VerticalAlignment="Center" />
@@ -74,34 +72,29 @@
                             <!-- Pending balance row (yellow) — hidden when empty -->
                             <Grid ColumnDefinitions="*,Auto"
                                   IsVisible="{TemplateBinding PendingBalance, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                                <TextBlock Grid.Column="0"
+                                <TextBlock Classes="Size-XS" Grid.Column="0"
                                            Text="Pending"
-                                           FontSize="12"
                                            Foreground="#EAB308" />
-                                <TextBlock Grid.Column="1"
+                                <TextBlock Classes="Size-XS" Grid.Column="1"
                                            Text="{TemplateBinding PendingBalance}"
-                                           FontSize="12"
                                            FontWeight="SemiBold"
                                            Foreground="#EAB308" />
                             </Grid>
                             <!-- Reserved balance row (blue) — hidden when empty -->
                             <Grid ColumnDefinitions="*,Auto"
                                   IsVisible="{TemplateBinding ReservedBalance, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                                <TextBlock Grid.Column="0"
+                                <TextBlock Classes="Size-XS" Grid.Column="0"
                                            Text="Reserved"
-                                           FontSize="12"
                                            Foreground="#3B82F6" />
-                                <TextBlock Grid.Column="1"
+                                <TextBlock Classes="Size-XS" Grid.Column="1"
                                            Text="{TemplateBinding ReservedBalance}"
-                                           FontSize="12"
                                            FontWeight="SemiBold"
                                            Foreground="#3B82F6" />
                             </Grid>
                             <!-- Bottom row: type left, label pill right -->
                             <Grid ColumnDefinitions="*,Auto">
-                                <TextBlock Grid.Column="0"
+                                <TextBlock Classes="Size-XS" Grid.Column="0"
                                            Text="{TemplateBinding WalletType}"
-                                           FontSize="12"
                                            Foreground="{DynamicResource TextMuted}"
                                            TextWrapping="NoWrap"
                                            TextTrimming="CharacterEllipsis" />
@@ -112,8 +105,7 @@
                                         BorderThickness="1"
                                         CornerRadius="4"
                                         Padding="6,1">
-                                    <TextBlock Text="{TemplateBinding Label}"
-                                               FontSize="11"
+                                    <TextBlock Classes="Size-XXS" Text="{TemplateBinding Label}"
                                                Foreground="{DynamicResource PillGreenText}" />
                                 </Border>
                             </Grid>
@@ -144,8 +136,7 @@
                                         <GradientStop Color="#3D6448" Offset="1" />
                                     </LinearGradientBrush>
                                 </Button.Background>
-                                <TextBlock Text="Send"
-                                           FontSize="13"
+                                <TextBlock Classes="Size-13" Text="Send"
                                            FontWeight="SemiBold"
                                            Foreground="White"
                                            VerticalAlignment="Center" />
@@ -162,8 +153,7 @@
                                     BorderThickness="2"
                                     Cursor="Hand"
                                     ToolTip.Tip="Receive">
-                                <TextBlock Text="Receive"
-                                           FontSize="13"
+                                <TextBlock Classes="Size-13" Text="Receive"
                                            FontWeight="SemiBold"
                                            Foreground="{DynamicResource PrimaryGreenBrush}"
                                            VerticalAlignment="Center" />

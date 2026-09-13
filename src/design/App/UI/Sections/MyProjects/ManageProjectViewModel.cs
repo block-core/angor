@@ -9,6 +9,7 @@ using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Funding.Shared;
+using App.UI.Shell;
 using App.UI.Shared.Services;
 using Nostr.Client.Utils;
 using Microsoft.Extensions.Logging;
@@ -151,7 +152,7 @@ public partial class ManageProjectViewModel : ReactiveObject
     private readonly IWalletContext _walletContext;
     private readonly ILogger<ManageProjectViewModel> _logger;
 
-    public event Action<string>? ToastRequested;
+    public event Action<string, ToastSeverity>? ToastRequested;
 
     /// <summary>Currency symbol from ICurrencyService (e.g. "BTC", "TBTC").</summary>
     public string CurrencySymbol => _currencyService.Symbol;
@@ -633,7 +634,7 @@ public partial class ManageProjectViewModel : ReactiveObject
             {
                 _logger.LogError("SpendStageFunds failed for project {ProjectId}: {Error}", Project.ProjectIdentifier,
                     spendResult.Error);
-                ToastRequested?.Invoke($"Failed to claim stage funds: {spendResult.Error}");
+                ToastRequested?.Invoke($"Failed to claim stage funds: {spendResult.Error}", ToastSeverity.Error);
                 return false;
             }
 
@@ -649,12 +650,12 @@ public partial class ManageProjectViewModel : ReactiveObject
             _logger.LogError("SubmitTransactionFromDraft failed while claiming stage funds for project {ProjectId}: {Error}",
                 Project.ProjectIdentifier,
                 publishResult.Error);
-            ToastRequested?.Invoke($"Failed to claim stage funds: {ToFriendlyClaimError(publishResult.Error)}");
+            ToastRequested?.Invoke($"Failed to claim stage funds: {ToFriendlyClaimError(publishResult.Error)}", ToastSeverity.Error);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "ClaimStageFundsAsync threw exception for project {ProjectId}", Project.ProjectIdentifier);
-            ToastRequested?.Invoke($"Failed to claim stage funds: {ToFriendlyClaimError(ex.Message)}");
+            ToastRequested?.Invoke($"Failed to claim stage funds: {ToFriendlyClaimError(ex.Message)}", ToastSeverity.Error);
         }
 
         return false;
@@ -698,7 +699,7 @@ public partial class ManageProjectViewModel : ReactiveObject
                 _logger.LogError("GetReleasableTransactions failed for project {ProjectId}: {Error}",
                     Project.ProjectIdentifier,
                     releasableResult.Error);
-                ToastRequested?.Invoke($"Failed to release funds to investors: {releasableResult.Error}");
+                ToastRequested?.Invoke($"Failed to release funds to investors: {releasableResult.Error}", ToastSeverity.Error);
                 return false;
             }
 
@@ -711,7 +712,7 @@ public partial class ManageProjectViewModel : ReactiveObject
             {
                 _logger.LogWarning("ReleaseFundsToInvestorsAsync found no releasable transactions for project {ProjectId}",
                     Project.ProjectIdentifier);
-                ToastRequested?.Invoke("No releasable investor funds were found.");
+                ToastRequested?.Invoke("No releasable investor funds were found.", ToastSeverity.Warning);
                 return false;
             }
 
@@ -727,13 +728,13 @@ public partial class ManageProjectViewModel : ReactiveObject
 
             _logger.LogError("ReleaseFunds failed for project {ProjectId}: {Error}", Project.ProjectIdentifier,
                 releaseResult.Error);
-            ToastRequested?.Invoke($"Failed to release funds to investors: {releaseResult.Error}");
+            ToastRequested?.Invoke($"Failed to release funds to investors: {releaseResult.Error}", ToastSeverity.Error);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "ReleaseFundsToInvestorsAsync threw exception for project {ProjectId}",
                 Project.ProjectIdentifier);
-            ToastRequested?.Invoke($"Failed to release funds to investors: {ex.Message}");
+            ToastRequested?.Invoke($"Failed to release funds to investors: {ex.Message}", ToastSeverity.Error);
         }
 
         return false;

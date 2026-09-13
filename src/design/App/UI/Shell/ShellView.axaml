@@ -93,18 +93,18 @@
 
             <!-- Top bar (Vue: hidden lg:flex header) -->
             <DockPanel Name="DesktopHeader" Grid.Row="0" Grid.Column="1">
-                <TextBlock FontWeight="Bold" VerticalAlignment="Center" FontSize="20"
+                <TextBlock Classes="Size-20" FontWeight="Bold" VerticalAlignment="Center"
                            Text="{Binding SelectedSectionName}" />
                 <!-- Profile tag — small branded badge, visible only for non-default profiles -->
                 <Border IsVisible="{Binding ProfileName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                         Background="{DynamicResource Brand}"
                         CornerRadius="4" Padding="8,2"
                         VerticalAlignment="Center" Margin="12,0,0,0">
-                    <TextBlock Text="{Binding ProfileName}" FontSize="12" Foreground="White" />
+                    <TextBlock Classes="Size-XS" Text="{Binding ProfileName}" Foreground="White" />
                 </Border>
                 <!-- Backup warning — red badge, visible when selected wallet needs backup -->
                 <Border IsVisible="{Binding ShowBackupWarning}"
-                        Background="#DC2626"
+                        Background="{DynamicResource DangerBrush}"
                         CornerRadius="4" Padding="8,2"
                         VerticalAlignment="Center" Margin="12,0,0,0"
                         Cursor="Hand"
@@ -113,7 +113,7 @@
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <i:Icon Value="fa-solid fa-triangle-exclamation"
                                FontSize="12" Foreground="White" />
-                        <TextBlock Text="Backup Required" FontSize="12" Foreground="White" FontWeight="SemiBold" />
+                        <TextBlock Classes="Size-XS" Text="Backup Required" Foreground="White" FontWeight="SemiBold" />
                     </StackPanel>
                 </Border>
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Right" Spacing="16" Orientation="Horizontal">
@@ -158,8 +158,7 @@
                                       Stretch="Uniform" />
                             </Viewbox>
                             <!-- Wallet name -->
-                            <TextBlock Text="{Binding SelectedWalletName}"
-                                       FontSize="14"
+                            <TextBlock Classes="Size-S" Text="{Binding SelectedWalletName}"
                                        Foreground="{DynamicResource WalletSwitcherFg}"
                                        VerticalAlignment="Center"
                                        HorizontalAlignment="Center" />
@@ -170,13 +169,15 @@
                                     Margin="0,0,-26,0" />
                         </Panel>
                     </Button>
-                    <ToggleButton Classes="Widget" IsChecked="{Binding IsDarkThemeEnabled, Mode=TwoWay}">
+                    <ToggleButton Classes="Widget" IsChecked="{Binding IsDarkThemeEnabled, Mode=TwoWay}"
+                                  ToolTip.Tip="Toggle dark theme" AutomationProperties.Name="Toggle dark theme">
                         <ToggleButton.Content>
                             <i:Icon Value="fa-solid fa-sun" FontSize="16" />
                         </ToggleButton.Content>
                     </ToggleButton>
                     <Button Classes="Widget" Name="SettingsButton" Click="OnSettingsClick"
-                            AutomationProperties.AutomationId="SettingsButton">
+                            AutomationProperties.AutomationId="SettingsButton"
+                            ToolTip.Tip="Settings" AutomationProperties.Name="Settings">
                         <Panel Width="24" Height="24">
                             <Path Data="{StaticResource NavIconSettings}"
                                   Stroke="{DynamicResource TextMuted}"
@@ -221,17 +222,16 @@
                                         MinWidth="18" Height="18"
                                         CornerRadius="9"
                                         Padding="5,0"
-                                        Background="#F7931A"
+                                        Background="{DynamicResource BitcoinAccentBrush}"
                                         VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding BadgeText}"
-                                               FontSize="11" FontWeight="Bold"
+                                    <TextBlock Classes="Size-XXS" Text="{Binding BadgeText}" FontWeight="Bold"
                                                Foreground="White"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center" />
                                 </Border>
                                 <TextBlock Text="{Binding Label}"
                                            VerticalAlignment="Center"
-                                           TextTrimming="CharacterEllipsis" />
+                                           TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Label}" />
                             </DockPanel>
                         </DataTemplate>
                         <!-- Group header: gradient divider line + uppercase label
@@ -242,9 +242,8 @@
                                 <Rectangle Height="1" Margin="0,0,0,16"
                                            Fill="{DynamicResource NavGroupDivider}" />
                                 <!-- Group label -->
-                                <TextBlock Text="{Binding Title}"
+                                <TextBlock Classes="Size-S" Text="{Binding Title}"
                                            FontFamily="{StaticResource FontFamilySans}"
-                                           FontSize="14"
                                            FontWeight="ExtraBold"
                                            Foreground="{DynamicResource Brand}"
                                            LetterSpacing="1.4" />
@@ -364,7 +363,7 @@
                             Click="OnInvestorCtaClick">
                         <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
                             <i:Icon Value="fa-solid fa-bitcoin-sign" FontSize="16" Foreground="White" />
-                            <TextBlock Name="InvestorCtaText" Text="Invest" FontWeight="SemiBold" FontSize="14"
+                            <TextBlock Classes="Size-S" Name="InvestorCtaText" Text="Invest" FontWeight="SemiBold"
                                        Foreground="White" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
@@ -409,7 +408,7 @@
                         Click="OnInvestmentDetailBackClick">
                     <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
                         <i:Icon Value="fa-solid fa-chevron-left" FontSize="14" Foreground="White" />
-                        <TextBlock Text="Back to Investments" FontWeight="SemiBold" FontSize="14"
+                        <TextBlock Classes="Size-S" Text="Back to Investments" FontWeight="SemiBold"
                                    Foreground="White" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
@@ -438,7 +437,7 @@
                         Click="OnManageFundsBackClick">
                     <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
                         <i:Icon Value="fa-solid fa-chevron-left" FontSize="14" Foreground="White" />
-                        <TextBlock Text="Back to My Projects" FontWeight="SemiBold" FontSize="14"
+                        <TextBlock Classes="Size-S" Text="Back to My Projects" FontWeight="SemiBold"
                                    Foreground="White" VerticalAlignment="Center" />
                     </StackPanel>
                 </Button>
@@ -515,13 +514,12 @@
                                     MinWidth="16" Height="16"
                                     CornerRadius="8"
                                     Padding="4,0"
-                                    Background="#F7931A"
+                                    Background="{DynamicResource BitcoinAccentBrush}"
                                     HorizontalAlignment="Right"
                                     VerticalAlignment="Top"
                                     Margin="0,8,8,0">
-                                <TextBlock Name="FounderBadgeText"
-                                           Text="{Binding FounderBadgeText}"
-                                           FontSize="10" FontWeight="Bold"
+                                <TextBlock Classes="Size-10" Name="FounderBadgeText"
+                                           Text="{Binding FounderBadgeText}" FontWeight="Bold"
                                            Foreground="White"
                                            HorizontalAlignment="Center"
                                            VerticalAlignment="Center" />
@@ -609,6 +607,8 @@
                         VerticalAlignment="Center" />
                 <!-- Close cross — dismisses the toast -->
                 <Button Name="ToastCloseButton"
+                        AutomationProperties.Name="Dismiss notification"
+                        ToolTip.Tip="Dismiss"
                         DockPanel.Dock="Right"
                         Background="Transparent"
                         BorderThickness="0"
@@ -622,9 +622,8 @@
                             Foreground="{Binding #ToastText.Foreground}"
                             VerticalAlignment="Center" />
                 </Button>
-                <TextBlock Name="ToastText"
-                           Text="{Binding ToastMessage}"
-                           FontSize="14" FontWeight="Medium"
+                <TextBlock Classes="Size-S" Name="ToastText"
+                           Text="{Binding ToastMessage}" FontWeight="Medium"
                            Foreground="White"
                            TextWrapping="Wrap"
                            VerticalAlignment="Center" />

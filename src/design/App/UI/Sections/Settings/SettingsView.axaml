@@ -81,8 +81,7 @@
                                 <i:Icon Value="fa-solid fa-globe"
                                        FontSize="20"
                                        Foreground="{DynamicResource PrimaryGreenBrush}" />
-                                <TextBlock Text="Network"
-                                           FontSize="18"
+                                <TextBlock Classes="Size-L" Text="Network"
                                            FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}"
                                            VerticalAlignment="Center" />
@@ -111,7 +110,7 @@
                                         <TextBlock Text="Change Network" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
-                                <TextBlock VerticalAlignment="Center" FontSize="14" Foreground="{DynamicResource TextMuted}">
+                                <TextBlock Classes="Size-S" VerticalAlignment="Center" Foreground="{DynamicResource TextMuted}">
                                     <Run Text="Network Type: " />
                                     <Run Text="{Binding NetworkType, Mode=OneWay}" FontWeight="SemiBold" Foreground="{DynamicResource TextStrong}" />
                                 </TextBlock>
@@ -137,8 +136,7 @@
                                 <i:Icon Value="fa-solid fa-palette"
                                        FontSize="20"
                                        Foreground="{DynamicResource PrimaryGreenBrush}" />
-                                <TextBlock Text="Theme"
-                                           FontSize="18"
+                                <TextBlock Classes="Size-L" Text="Theme"
                                            FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}"
                                            VerticalAlignment="Center" />
@@ -156,12 +154,10 @@
                                      </ToggleButton.Content>
                                  </ToggleButton>
                                 <StackPanel Spacing="4" VerticalAlignment="Center">
-                                    <TextBlock Text="Dark Mode"
-                                               FontSize="14"
+                                    <TextBlock Classes="Size-S" Text="Dark Mode"
                                                FontWeight="Medium"
                                                Foreground="{DynamicResource TextStrong}" />
-                                    <TextBlock Text="Toggle between light and dark theme"
-                                               FontSize="13"
+                                    <TextBlock Classes="Size-13" Text="Toggle between light and dark theme"
                                                Foreground="{DynamicResource TextMuted}" />
                                 </StackPanel>
                             </DockPanel>
@@ -231,8 +227,7 @@
                                 <i:Icon Value="fa-solid fa-server"
                                        FontSize="20"
                                        Foreground="{DynamicResource PrimaryGreenBrush}" />
-                                <TextBlock Text="Indexer"
-                                               FontSize="18"
+                                <TextBlock Classes="Size-L" Text="Indexer"
                                                FontWeight="Bold"
                                                Foreground="{DynamicResource TextStrong}"
                                                VerticalAlignment="Center" />
@@ -284,7 +279,7 @@
                                                             Click="OnRemoveIndexer">
                                                         <i:Icon Value="fa-solid fa-trash"
                                                                FontSize="16"
-                                                               Foreground="#EF4444" />
+                                                               Foreground="{DynamicResource DangerBrightBrush}" />
                                                     </Button>
                                                     <!-- Default toggle -->
                                                     <Button DockPanel.Dock="Right"
@@ -314,19 +309,17 @@
                                                             CornerRadius="12"
                                                             VerticalAlignment="Center"
                                                             x:Name="StatusBadge">
-                                                        <TextBlock Text="{Binding Status}"
-                                                                   FontSize="12"
+                                                        <TextBlock Classes="Size-XS" Text="{Binding Status}"
                                                                    FontWeight="SemiBold"
                                                                    TextWrapping="NoWrap" />
                                                     </Border>
                                                     <!-- Link URL -->
-                                                    <TextBlock Text="{Binding Url}"
-                                                               FontSize="14"
+                                                    <TextBlock Classes="Size-S" Text="{Binding Url}"
                                                                FontWeight="Medium"
                                                                Foreground="{DynamicResource SettingsLinkFg}"
                                                                VerticalAlignment="Center"
                                                                TextWrapping="NoWrap"
-                                                               TextTrimming="CharacterEllipsis" />
+                                                               TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Url}" />
                                                 </DockPanel>
                                             </Border>
                                         </DataTemplate>
@@ -354,8 +347,7 @@
                                 <i:Icon Value="fa-solid fa-signal"
                                        FontSize="20"
                                        Foreground="{DynamicResource PrimaryGreenBrush}" />
-                                <TextBlock Text="Nostr Relays"
-                                           FontSize="18"
+                                <TextBlock Classes="Size-L" Text="Nostr Relays"
                                            FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}"
                                            VerticalAlignment="Center" />
@@ -406,7 +398,7 @@
                                                             Click="OnRemoveRelay">
                                                         <i:Icon Value="fa-solid fa-trash"
                                                                FontSize="16"
-                                                               Foreground="#EF4444" />
+                                                               Foreground="{DynamicResource DangerBrightBrush}" />
                                                     </Button>
                                                     <!-- Status badge -->
                                                     <Border DockPanel.Dock="Right"
@@ -415,29 +407,26 @@
                                                             CornerRadius="12"
                                                             VerticalAlignment="Center"
                                                             x:Name="RelayStatusBadge">
-                                                        <TextBlock Text="{Binding Status}"
-                                                                   FontSize="12"
+                                                        <TextBlock Classes="Size-XS" Text="{Binding Status}"
                                                                    FontWeight="SemiBold"
                                                                    TextWrapping="NoWrap" />
                                                     </Border>
                                                     <!-- Name -->
-                                                    <TextBlock DockPanel.Dock="Right"
+                                                    <TextBlock Classes="Size-S" DockPanel.Dock="Right"
                                                                Text="{Binding Name}"
-                                                               FontSize="14"
                                                                Foreground="{DynamicResource TextMuted}"
                                                                Margin="12,0"
                                                                VerticalAlignment="Center"
                                                                TextWrapping="NoWrap"
                                                                TextTrimming="CharacterEllipsis"
-                                                               MaxWidth="130" />
+                                                               MaxWidth="130" ToolTip.Tip="{Binding Name}" />
                                                     <!-- Link URL -->
-                                                    <TextBlock Text="{Binding Url}"
-                                                               FontSize="14"
+                                                    <TextBlock Classes="Size-S" Text="{Binding Url}"
                                                                FontWeight="Medium"
                                                                Foreground="{DynamicResource SettingsLinkFg}"
                                                                VerticalAlignment="Center"
                                                                TextWrapping="NoWrap"
-                                                               TextTrimming="CharacterEllipsis" />
+                                                               TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Url}" />
                                                 </DockPanel>
                                             </Border>
                                         </DataTemplate>
@@ -463,8 +452,7 @@
                                 BorderThickness="0,0,0,1"
                                 Padding="24,20">
                             <DockPanel>
-                                <TextBlock DockPanel.Dock="Right"
-                                           FontSize="14"
+                                <TextBlock Classes="Size-S" DockPanel.Dock="Right"
                                            Foreground="{DynamicResource TextMuted}"
                                            VerticalAlignment="Center">
                                     <Run Text="Current: " />
@@ -477,8 +465,7 @@
                                            Margin="0,0,12,0"
                                            VerticalAlignment="Center"
                                            Foreground="{DynamicResource PrimaryGreenBrush}" />
-                                    <TextBlock Text="Currency Display"
-                                               FontSize="18"
+                                    <TextBlock Classes="Size-L" Text="Currency Display"
                                                FontWeight="Bold"
                                                TextWrapping="Wrap"
                                                Foreground="{DynamicResource TextStrong}"
@@ -492,8 +479,7 @@
                                      WrapPanel so the ComboBox drops below the label on phones
                                      instead of overflowing the card. -->
                                 <WrapPanel Orientation="Horizontal">
-                                    <TextBlock Text="Select Currency:"
-                                               FontSize="14"
+                                    <TextBlock Classes="Size-S" Text="Select Currency:"
                                                FontWeight="Medium"
                                                Foreground="{DynamicResource TextMuted}"
                                                Margin="0,0,12,0"
@@ -506,8 +492,7 @@
                                     </ComboBox>
                                 </WrapPanel>
                                 <!-- Vue: .settings-help-text -->
-                                <TextBlock Text="{Binding CurrencyHelpText}"
-                                           FontSize="12"
+                                <TextBlock Classes="Size-XS" Text="{Binding CurrencyHelpText}"
                                            Foreground="{DynamicResource SettingsHelpText}" />
                             </StackPanel>
                         </Border>
@@ -531,8 +516,7 @@
                                 <i:Icon Value="fa-solid fa-key"
                                        FontSize="20"
                                        Foreground="{DynamicResource PrimaryGreenBrush}" />
-                                <TextBlock Text="Backup Account"
-                                           FontSize="18"
+                                <TextBlock Classes="Size-L" Text="Backup Account"
                                            FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}"
                                            VerticalAlignment="Center" />
@@ -540,8 +524,7 @@
                         </Border>
                         <Border Padding="24">
                             <StackPanel Spacing="20">
-                                <TextBlock Text="Your wallet seed phrase is the only way to recover your funds. Keep it safe and never share it with anyone."
-                                           FontSize="14"
+                                <TextBlock Classes="Size-S" Text="Your wallet seed phrase is the only way to recover your funds. Keep it safe and never share it with anyone."
                                            Foreground="{DynamicResource TextMuted}"
                                            TextWrapping="Wrap" />
 
@@ -552,9 +535,8 @@
                                         BorderThickness="1"
                                         CornerRadius="8"
                                         Padding="16">
-                                    <SelectableTextBlock Text="{Binding SeedWords}"
+                                    <SelectableTextBlock Classes="Size-S" Text="{Binding SeedWords}"
                                                AutomationProperties.AutomationId="SettingsSeedWordsText"
-                                               FontSize="14"
                                                FontFamily="Cascadia Mono, Consolas, monospace"
                                                Foreground="{DynamicResource CreateWalletSeedText}"
                                                TextWrapping="Wrap"
@@ -629,8 +611,7 @@
                                 <i:Icon Value="fa-solid fa-bug"
                                        FontSize="20"
                                        Foreground="{DynamicResource PrimaryGreenBrush}" />
-                                <TextBlock Text="Debug Mode"
-                                           FontSize="18"
+                                <TextBlock Classes="Size-L" Text="Debug Mode"
                                            FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}"
                                            VerticalAlignment="Center" />
@@ -645,12 +626,10 @@
                                               OnContent="Enabled"
                                               OffContent="Disabled" />
                                 <StackPanel Spacing="4" VerticalAlignment="Center">
-                                    <TextBlock Text="Enable Debug Features"
-                                               FontSize="14"
+                                    <TextBlock Classes="Size-S" Text="Enable Debug Features"
                                                FontWeight="Medium"
                                                Foreground="{DynamicResource TextStrong}" />
-                                    <TextBlock Text="Debug mode is only available on testnet networks. When enabled, additional debugging features will be available such as prepopulated project wizard data and relaxed validation."
-                                               FontSize="13"
+                                    <TextBlock Classes="Size-13" Text="Debug mode is only available on testnet networks. When enabled, additional debugging features will be available such as prepopulated project wizard data and relaxed validation."
                                                Foreground="{DynamicResource TextMuted}"
                                                TextWrapping="Wrap" />
                                 </StackPanel>
@@ -674,8 +653,7 @@
                                 <i:Icon Value="fa-solid fa-file-export"
                                        FontSize="20"
                                        Foreground="{DynamicResource PrimaryGreenBrush}" />
-                                <TextBlock Text="Export Logs"
-                                           FontSize="18"
+                                <TextBlock Classes="Size-L" Text="Export Logs"
                                            FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}"
                                            VerticalAlignment="Center" />
@@ -683,8 +661,7 @@
                         </Border>
                         <Border Padding="24">
                             <StackPanel Spacing="20">
-                                <TextBlock Text="Send application logs to support for troubleshooting. Logs are encrypted and sent via Nostr DM."
-                                           FontSize="14"
+                                <TextBlock Classes="Size-S" Text="Send application logs to support for troubleshooting. Logs are encrypted and sent via Nostr DM."
                                            Foreground="{DynamicResource TextMuted}"
                                            TextWrapping="Wrap" />
                                 <!-- WrapPanel: the two buttons don't fit side by side on
@@ -766,14 +743,12 @@
                                        FontSize="20"
                                        Margin="0,0,12,0"
                                        VerticalAlignment="Center"
-                                       Foreground="#EF4444" />
-                                <TextBlock Text="Danger Zone"
-                                           FontSize="18"
+                                       Foreground="{DynamicResource DangerBrightBrush}" />
+                                <TextBlock Classes="Size-L" Text="Danger Zone"
                                            FontWeight="Bold"
-                                           Foreground="#DC2626"
+                                           Foreground="{DynamicResource DangerBrush}"
                                            VerticalAlignment="Center" />
-                                <TextBlock Text="Irreversible actions"
-                                           FontSize="14"
+                                <TextBlock Classes="Size-S" Text="Irreversible actions"
                                            Foreground="{DynamicResource TextMuted}"
                                            VerticalAlignment="Center"
                                            Margin="8,0,0,0" />
@@ -808,8 +783,7 @@
                 </Border>
 
                 <!-- ═══ App Version ═══ -->
-                <TextBlock Text="{Binding AppVersion, StringFormat='Version {0}'}"
-                           FontSize="12"
+                <TextBlock Classes="Size-XS" Text="{Binding AppVersion, StringFormat='Version {0}'}"
                            Foreground="{DynamicResource TextMuted}"
                            HorizontalAlignment="Center"
                            Margin="0,8,0,0" />
@@ -871,8 +845,7 @@
                                       Width="20" Height="20"
                                       Stretch="Uniform" />
                             </Button>
-                            <TextBlock Text="Change Network"
-                                       FontSize="20"
+                            <TextBlock Classes="Size-20" Text="Change Network"
                                        FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center" />
@@ -889,8 +862,7 @@
                                     BorderThickness="1"
                                     CornerRadius="8"
                                     Padding="16">
-                                <TextBlock Foreground="{DynamicResource NetworkWarningText}"
-                                           FontSize="14"
+                                <TextBlock Classes="Size-S" Foreground="{DynamicResource NetworkWarningText}"
                                            TextWrapping="Wrap"
                                            LineHeight="21">
                                     <Run Text="Changing the network will remove your attached wallet on " />
@@ -920,7 +892,7 @@
                                               Stretch="Uniform"
                                               x:Name="CheckMainnet"
                                               IsVisible="False" />
-                                        <TextBlock Text="Mainnet" FontSize="14" FontWeight="Medium" />
+                                        <TextBlock Classes="Size-S" Text="Mainnet" FontWeight="Medium" />
                                     </DockPanel>
                                 </Button>
                                 <Button x:Name="BtnTestnet" Classes="NetworkOption"
@@ -945,7 +917,7 @@
                                               Stretch="Uniform"
                                               x:Name="CheckTestnet"
                                               IsVisible="False" />
-                                        <TextBlock Text="Testnet" FontSize="14" FontWeight="Medium" />
+                                        <TextBlock Classes="Size-S" Text="Testnet" FontWeight="Medium" />
                                     </DockPanel>
                                 </Button>
                                 <Button x:Name="BtnAngornet" Classes="NetworkOption"
@@ -968,7 +940,7 @@
                                               Stretch="Uniform"
                                               x:Name="CheckAngornet"
                                               IsVisible="False" />
-                                        <TextBlock Text="Angornet" FontSize="14" FontWeight="Medium" />
+                                        <TextBlock Classes="Size-S" Text="Angornet" FontWeight="Medium" />
                                     </DockPanel>
                                 </Button>
                                 <Button x:Name="BtnSignet" Classes="NetworkOption"
@@ -993,7 +965,7 @@
                                               Stretch="Uniform"
                                               x:Name="CheckSignet"
                                               IsVisible="False" />
-                                        <TextBlock Text="Signet" FontSize="14" FontWeight="Medium" />
+                                        <TextBlock Classes="Size-S" Text="Signet" FontWeight="Medium" />
                                     </DockPanel>
                                 </Button>
                                 <Button x:Name="BtnLiquid" Classes="NetworkOption"
@@ -1008,7 +980,7 @@
                                         BorderBrush="{DynamicResource NetworkOptionBorder}"
                                         BorderThickness="2">
                                     <DockPanel>
-                                        <TextBlock Text="Liquid" FontSize="14" FontWeight="Medium" />
+                                        <TextBlock Classes="Size-S" Text="Liquid" FontWeight="Medium" />
                                     </DockPanel>
                                 </Button>
                             </StackPanel>
@@ -1031,8 +1003,7 @@
                                           DockPanel.Dock="Left"
                                           Margin="0,0,12,0"
                                           VerticalAlignment="Top" />
-                                <TextBlock Text="By confirming, you agree to wiping all data from this device since you have a backup of your wallet words."
-                                           FontSize="14"
+                                <TextBlock Classes="Size-S" Text="By confirming, you agree to wiping all data from this device since you have a backup of your wallet words."
                                            Foreground="{DynamicResource TextMuted}"
                                            TextWrapping="Wrap"
                                            LineHeight="21"
@@ -1110,18 +1081,16 @@
                                       Width="20" Height="20"
                                       Stretch="Uniform" />
                             </Button>
-                            <TextBlock Text="Wipe Data"
-                                       FontSize="20"
+                            <TextBlock Classes="Size-20" Text="Wipe Data"
                                        FontWeight="Bold"
-                                       Foreground="#DC2626"
+                                       Foreground="{DynamicResource DangerBrush}"
                                        VerticalAlignment="Center" />
                         </DockPanel>
                     </Border>
                     <!-- Content -->
                     <Border Padding="24">
                         <StackPanel Spacing="24">
-                            <TextBlock Text="This action will permanently delete all local data. This cannot be undone."
-                                       FontSize="14"
+                            <TextBlock Classes="Size-S" Text="This action will permanently delete all local data. This cannot be undone."
                                        Foreground="{DynamicResource TextMuted}"
                                        TextWrapping="Wrap"
                                        LineHeight="22" />
@@ -1132,12 +1101,10 @@
                                           Margin="0,0,12,0"
                                           VerticalAlignment="Top" />
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="Delete recovery wallet files"
-                                               FontSize="14"
+                                    <TextBlock Classes="Size-S" Text="Delete recovery wallet files"
                                                FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextStrong}" />
-                                    <TextBlock Text="This will delete the encrypted wallet backups from the system."
-                                               FontSize="13"
+                                    <TextBlock Classes="Size-13" Text="This will delete the encrypted wallet backups from the system."
                                                Foreground="{DynamicResource TextMuted}"
                                                TextWrapping="Wrap"
                                                LineHeight="20" />
@@ -1155,7 +1122,7 @@
                                         Content="Cancel" />
                                 <Button Classes="MobileAction" Padding="20,10"
                                         AutomationProperties.AutomationId="BtnConfirmWipeData"
-                                        Background="#EF4444"
+                                        Background="{DynamicResource DangerBrightBrush}"
                                         Foreground="White"
                                         BorderThickness="0"
                                         CornerRadius="8"
