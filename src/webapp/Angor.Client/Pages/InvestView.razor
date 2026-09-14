@@ -166,7 +166,7 @@
     <div class="hub-invest-navigation">
         <div class="hub-invest-navigation-inner">
             <div class="hub-invest-navigation-left">
-                <a class="hub-back-button" href="@(HubBaseUrl + "/project/" + ProjectId + "/invest")"><span aria-hidden="true">←</span> Back</a>
+                <a class="hub-back-button" href="@(HubBaseUrl + "/project/" + ProjectId)"><span aria-hidden="true">←</span> Back</a>
                 <span class="hub-project-label">@(project.Metadata?.Name ?? project.ProjectInfo.ProjectIdentifier)</span>
             </div>
             <div class="hub-invest-navigation-actions">
@@ -435,9 +435,9 @@
         <!-- Action Button -->
         <div class="hub-payment-footer">
             <div class="hub-payment-footer-inner">
-                <a class="hub-mobile-back" href="@(HubBaseUrl + "/project/" + ProjectId + "/invest")">Back</a>
+                <a class="hub-mobile-back" href="@(HubBaseUrl + "/project/" + ProjectId)">Back</a>
                 <div class="hub-payment-footer-summary"><span>Amount to @PaymentAction</span><strong>@Investment.InvestmentAmountBtc @network.CoinTicker</strong></div>
-                <button type="button" class="btn btn-success w-100 btn-lg" @onclick="HandleInvestClick" disabled="@(buildSpinner || handoffPlanNeedsSelection)">
+                <button @ref="paymentButton" type="button" class="btn btn-success w-100 btn-lg" @onclick="HandleInvestClick" disabled="@(buildSpinner || handoffPlanNeedsSelection)">
                     @if (buildSpinner)
                     {
                         <span class="spinner-border spinner-border-sm me-2" role="status"></span>
@@ -530,6 +530,13 @@
             </div>
 
     </div>
+}
+
+@if (showAppDownloadModal)
+{
+    <AppDownloadModal DownloadUrl="@(HubBaseUrl + "/app")"
+                      OnClose="CloseAppDownloadModal"
+                      OnContinue="ContinueWithWeb" />
 }
 
 <!-- Use Available Funds Modal — shown when the browser wallet already covers the amount -->
@@ -928,6 +935,9 @@
     private bool investSpinner;
     private bool publishSpinner;
     private bool refreshSpinner;
+    private const long AppThresholdSats = 1_000_000; // Same 0.01 BTC threshold as the Hub.
+    private bool showAppDownloadModal;
+    private ElementReference paymentButton;
     private bool showUseFundsModal;
     private bool founder;
     private bool invested;
@@ -1643,6 +1653,26 @@
     /// </summary>
     private async Task HandleInvestClick()
     {
+        if (!ValidateInvestmentAmount()) return;
+
+        if (Investment.InvestmentAmountBtc.ToUnitSatoshi() >= AppThresholdSats)
+        {
+            showAppDownloadModal = true;
+            return;
+        }
+
+        await ContinueWithWeb();
+    }
+
+    private async Task CloseAppDownloadModal()
+    {
+        showAppDownloadModal = false;
+        await paymentButton.FocusAsync();
+    }
+
+    private async Task ContinueWithWeb()
+    {
+        showAppDownloadModal = false;
         if (!ValidateInvestmentAmount()) return;
 
         if (!walletAvailable)
