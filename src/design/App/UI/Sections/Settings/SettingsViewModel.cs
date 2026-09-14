@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Angor.Sdk.WalletExport;
 using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Services;
 using Angor.Sdk.Wallet.Application;
@@ -34,6 +35,8 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
     private readonly SignatureStore _signatureStore;
     private readonly ShellViewModel _shellViewModel;
     private readonly ILogger<SettingsViewModel> _logger;
+    private readonly IWalletCloudBackupService _cloudBackupService;
+    private readonly IBackupRecoveryService _backupRecoveryService;
     private readonly CompositeDisposable _disposables = new();
 
     public string AppVersion { get; } = GetVersion();
@@ -149,6 +152,8 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
         PortfolioViewModel portfolioViewModel,
         SignatureStore signatureStore,
         ShellViewModel shellViewModel,
+        IWalletCloudBackupService cloudBackupService,
+        IBackupRecoveryService backupRecoveryService,
         ILogger<SettingsViewModel> logger)
     {
         _networkService = networkService;
@@ -164,6 +169,8 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
         _portfolioViewModel = portfolioViewModel;
         _signatureStore = signatureStore;
         _shellViewModel = shellViewModel;
+        _cloudBackupService = cloudBackupService;
+        _backupRecoveryService = backupRecoveryService;
         _logger = logger;
 
         // Initialize currency display from the network configuration
@@ -195,6 +202,10 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
         this.WhenAnyValue(x => x.IsExportingLogs)
             .Subscribe(_ => this.RaisePropertyChanged(nameof(CanExportLogs)))
             .DisposeWith(_disposables);
+
+        // Surface cloud-backup state in the Settings card as soon as the page is constructed.
+        // Fire-and-forget: failures are already logged inside RefreshCloudBackupStatusAsync.
+        _ = RefreshCloudBackupStatusAsync();
     }
 
     /// <summary>
