@@ -1,0 +1,44 @@
+<div class="app-offer-overlay" @onclick="OnClose" @onkeydown="HandleKeyDown">
+    <section class="app-offer-panel" role="dialog" aria-modal="true" aria-labelledby="app-offer-title"
+             aria-describedby="app-offer-description" @onclick:stopPropagation="true">
+        <span class="app-offer-focus-guard" tabindex="0" @onfocus="() => webButton.FocusAsync().AsTask()"></span>
+        <div class="app-offer-header">
+            <h2 id="app-offer-title">Use The App</h2>
+            <button @ref="closeButton" type="button" class="app-offer-close" aria-label="Close" @onclick="OnClose">
+                <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <p id="app-offer-description">For enhanced security of your funds please download and use the app to make this payment</p>
+        <div class="app-offer-actions">
+            <a class="app-offer-download" href="@DownloadUrl">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download Now
+            </a>
+            <button @ref="webButton" type="button" class="app-offer-web" @onclick="OnContinue">Continue with web</button>
+        </div>
+        <span class="app-offer-focus-guard" tabindex="0" @onfocus="() => closeButton.FocusAsync().AsTask()"></span>
+    </section>
+</div>
+
+@code {
+    [Parameter] public string DownloadUrl { get; set; } = string.Empty;
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnContinue { get; set; }
+
+    private ElementReference closeButton;
+    private ElementReference webButton;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) await closeButton.FocusAsync();
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape") await OnClose.InvokeAsync();
+    }
+}
