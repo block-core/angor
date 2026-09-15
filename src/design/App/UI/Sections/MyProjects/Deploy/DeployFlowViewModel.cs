@@ -49,6 +49,7 @@ public partial class DeployFlowViewModel : ReactiveObject
     private readonly Func<BitcoinNetwork> _getNetwork;
     private readonly ILogger<DeployFlowViewModel> _logger;
     private readonly PrototypeSettings _prototypeSettings;
+    private readonly IFeeRateProvider _feeRateProvider;
     private CancellationTokenSource? _invoiceMonitorCts;
 
     // ── State ──
@@ -107,6 +108,7 @@ public partial class DeployFlowViewModel : ReactiveObject
         IWalletContext walletContext,
         Func<BitcoinNetwork> getNetwork,
         PrototypeSettings prototypeSettings,
+        IFeeRateProvider feeRateProvider,
         ILogger<DeployFlowViewModel> logger)
     {
         _walletAppService = walletAppService;
@@ -120,6 +122,13 @@ public partial class DeployFlowViewModel : ReactiveObject
         _getNetwork = getNetwork;
         _prototypeSettings = prototypeSettings;
         _logger = logger;
+        _feeRateProvider = feeRateProvider;
+
+        // Show() must stay synchronous (the view click handler and the integration tests
+        // depend on PaymentFlow existing as soon as Deploy() returns), so it reads
+        // IFeeRateProvider.Current. Warm the cache now — the wizard has several steps
+        // left before the user can reach deploy.
+        _feeRateProvider.Warm();
         // Initialize ReactiveCommands for async payment operations
         PayWithWalletCommand = ReactiveCommand.CreateFromTask(PayWithWalletAsync);
         PayWithWalletCommand.ThrownExceptions.Subscribe(ex =>
@@ -173,6 +182,11 @@ public partial class DeployFlowViewModel : ReactiveObject
         // since the view subscription fires immediately on IsVisible=true
         // and needs PaymentFlow to be ready.
         var deployFeeSats = NetworkConfiguration.AngorCreateFeeSats;
+
+        // The invoice path never opens the fee popup, so this is the only place its fee
+        // rate is chosen. Use the live standard rate rather than a hardcoded default,
+        // otherwise the invoice amount is budgeted at a rate the network isn't charging.
+        SelectedFeeRate = _feeRateProvider.Current.Standard;
         PaymentFlow = new PaymentFlowViewModel(
             _walletAppService,
             _investmentAppService,
