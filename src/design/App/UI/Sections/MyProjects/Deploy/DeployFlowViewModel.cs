@@ -10,6 +10,7 @@ using Angor.Sdk.Wallet.Application;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Wallet.Domain;
 using Angor.Shared.Integration.Lightning;
+using Angor.Shared.Protocol;
 using App.UI.Shared;
 using App.UI.Shared.PaymentFlow;
 using App.UI.Shared.Services;
@@ -58,6 +59,12 @@ public partial class DeployFlowViewModel : ReactiveObject
     [Reactive] private string deployStatusText = "Waiting for payment...";
     [Reactive] private long selectedFeeRate = 20;
     [Reactive] private string? deployErrorMessage;
+
+    /// <summary>
+    /// <see cref="SelectedFeeRate"/> converted to sat/kB, which is what NBitcoin's
+    /// FeeRate (and therefore IWalletOperations) consumes. The fee picker returns sat/vByte.
+    /// </summary>
+    private long SelectedFeeRateSatsPerKb => SelectedFeeRate * 1000;
 
     /// <summary>The reusable payment flow VM. Created when the deploy overlay is shown.</summary>
     public PaymentFlowViewModel? PaymentFlow { get; private set; }
@@ -165,7 +172,7 @@ public partial class DeployFlowViewModel : ReactiveObject
         // Create the reusable payment flow BEFORE setting IsVisible,
         // since the view subscription fires immediately on IsVisible=true
         // and needs PaymentFlow to be ready.
-        var deployFeeSats = 10_000L; // 0.0001 BTC deploy fee
+        var deployFeeSats = NetworkConfiguration.AngorCreateFeeSats;
         PaymentFlow = new PaymentFlowViewModel(
             _walletAppService,
             _investmentAppService,
@@ -181,6 +188,13 @@ public partial class DeployFlowViewModel : ReactiveObject
                 AmountSats = deployFeeSats,
                 StageCount = 0,
                 FeeRateSatsPerVbyte = (int)SelectedFeeRate,
+                // The deploy transaction pays the Angor create fee output AND its own miner
+                // fee, and must leave enough over that the change output clears the dust
+                // threshold — otherwise the node rejects the broadcast with "dust".
+                // Same tx shape as the investment base tx with no stage outputs.
+                OnChainRequiredSatsOverride = deployFeeSats
+                    + InvestmentFeeEstimator.EstimateInvestmentTxFee(0, SelectedFeeRate)
+                    + ProtocolConstants.DustThresholdSats,
                 Title = "Fund Deployment",
                 SuccessTitle = $"{projectName} Deployed!",
                 SuccessDescription = "Your project has been successfully deployed to the blockchain.",
@@ -243,7 +257,7 @@ public partial class DeployFlowViewModel : ReactiveObject
 
         // Step 4: Create blockchain transaction
         var txResult = await _projectAppService.CreateProject(
-            walletId, SelectedFeeRate, ProjectData, infoResult.Value.EventId, projectSeed);
+            walletId, SelectedFeeRateSatsPerKb, ProjectData, infoResult.Value.EventId, projectSeed);
         if (txResult.IsFailure)
         {
             _logger.LogError("Deploy: create blockchain transaction failed: {Error}", txResult.Error);
@@ -361,7 +375,7 @@ public partial class DeployFlowViewModel : ReactiveObject
 
             // Step 4: Create blockchain transaction
             DeployStatusText = "Building transaction...";
-            var txResult = await _projectAppService.CreateProject(walletId, SelectedFeeRate, ProjectData, infoEventId, projectSeed);
+            var txResult = await _projectAppService.CreateProject(walletId, SelectedFeeRateSatsPerKb, ProjectData, infoEventId, projectSeed);
             if (txResult.IsFailure)
             {
                 _logger.LogError("Deploy: create blockchain transaction failed: {Error}", txResult.Error);
@@ -495,7 +509,7 @@ public partial class DeployFlowViewModel : ReactiveObject
 
             // Step 4: Create blockchain transaction
             DeployStatusText = "Building transaction...";
-            var txResult = await _projectAppService.CreateProject(walletId, SelectedFeeRate, ProjectData, infoEventId, projectSeed);
+            var txResult = await _projectAppService.CreateProject(walletId, SelectedFeeRateSatsPerKb, ProjectData, infoEventId, projectSeed);
             if (txResult.IsFailure)
             {
                 _logger.LogError("Deploy: create blockchain transaction failed: {Error}", txResult.Error);
