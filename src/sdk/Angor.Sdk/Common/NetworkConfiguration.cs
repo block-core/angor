@@ -51,7 +51,6 @@ public class NetworkConfiguration : INetworkConfiguration
                 new() { Name = string.Empty, Url = "https://fulcrum.angor.online", IsPrimary = true },
                 new() { Name = string.Empty, Url = "https://electrs.angor.online", IsPrimary = false },
                 new() { Name = string.Empty, Url = "https://cyphermunkhouse.angor.online", IsPrimary = false },
-                new() { Name = string.Empty, Url = "https://indexer.angor.fund", IsPrimary = false },
             };
         }
 
@@ -59,8 +58,8 @@ public class NetworkConfiguration : INetworkConfiguration
         {
             return new List<SettingsUrl>
             {
-                new() { Name = string.Empty, Url = "https://test.indexer.angor.io", IsPrimary = false },
-                new() { Name = string.Empty, Url = "https://signet.angor.online", IsPrimary = true },
+                new() { Name = string.Empty, Url = "https://test.indexer.angor.io", IsPrimary = true },
+                new() { Name = string.Empty, Url = "https://signet.angor.online", IsPrimary = false },
                 new() { Name = string.Empty, Url = "https://signet2.angor.online", IsPrimary = false },
             };
         }
@@ -108,7 +107,6 @@ public class NetworkConfiguration : INetworkConfiguration
                 new() { Name = "fulcrum.angor.online", Url = "https://fulcrum.angor.online", IsPrimary = true },
                 new() { Name = "electrs.angor.online", Url = "https://electrs.angor.online", IsPrimary = false },
                 new() { Name = "cyphermunkhouse.angor.online", Url = "https://cyphermunkhouse.angor.online", IsPrimary = false },
-                new() { Name = "indexer.angor.fund", Url = "https://indexer.angor.fund", IsPrimary = false },
             };
         }
 
