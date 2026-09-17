@@ -100,7 +100,15 @@ public class ManageStageViewModel
     public ObservableCollection<UtxoTransactionViewModel> SpentTransactions { get; set; } = new();
 
     /// <summary>True when amount is 0 and all transactions are spent.</summary>
-    public bool IsFullySpent => AmountLeft == "0" && SpentTransactionCount > 0 && UnspentTransactionCount == 0;
+    /// <remarks>
+    /// Compares numerically: AmountLeft is formatted "F8" by the caller, so a string
+    /// comparison against "0" could never match and this was permanently false.
+    /// </remarks>
+    public bool IsFullySpent =>
+        double.TryParse(AmountLeft, NumberStyles.Float, CultureInfo.InvariantCulture, out var left)
+        && left == 0
+        && SpentTransactionCount > 0
+        && UnspentTransactionCount == 0;
 
     /// <summary>True when there are unspent transactions available.</summary>
     public bool HasUnspentTransactions => UnspentTransactionCount > 0;
@@ -218,6 +226,12 @@ public partial class ManageProjectViewModel : ReactiveObject
     [Reactive] public partial string ClaimedAmount { get; set; }
     [Reactive] public partial string ReleasedAmount { get; set; }
     [Reactive] public partial bool IsRefreshing { get; set; }
+
+    /// <summary>
+    /// Non-null when the claimable-transaction scan failed. Shown in the Manage Project
+    /// view so an empty stage list is never silently presented as "no funds".
+    /// </summary>
+    [Reactive] public partial string? ClaimLoadError { get; set; }
 
     public ManageStageViewModel? SelectedStage =>
         SelectedStageIndex >= 0 && SelectedStageIndex < Stages.Count
@@ -502,7 +516,20 @@ public partial class ManageProjectViewModel : ReactiveObject
             var result = await _founderAppService.GetClaimableTransactions(
                 new GetClaimableTransactions.GetClaimableTransactionsRequest(walletId, projectId));
 
-            if (result.IsFailure) return;
+            if (result.IsFailure)
+            {
+                // Never fail silently: an empty Stages list is indistinguishable from
+                // "funds lost" to the founder. Surface it so the cause is visible.
+                _logger.LogError(
+                    "GetClaimableTransactions failed for project {ProjectId}: {Error}",
+                    Project.ProjectIdentifier, result.Error);
+                ClaimLoadError =
+                    "We couldn't load the claimable funds for this project. Your funds are safe on-chain — " +
+                    "this is a display problem. Try Refresh, and check the logs for details.";
+                return;
+            }
+
+            ClaimLoadError = null;
 
             Stages.Clear();
             var transactions = result.Value.Transactions.ToList();
@@ -523,6 +550,21 @@ public partial class ManageProjectViewModel : ReactiveObject
                 var claimable = stageTransactions.Where(t => t.ClaimStatus == Angor.Sdk.Funding.Founder.Dtos.ClaimStatus.Unspent).ToList();
                 var locked = stageTransactions.Where(t => t.ClaimStatus == Angor.Sdk.Funding.Founder.Dtos.ClaimStatus.Locked).ToList();
                 var spent = stageTransactions.Where(t => t.ClaimStatus == Angor.Sdk.Funding.Founder.Dtos.ClaimStatus.SpentByFounder).ToList();
+
+                // Catch-all: Pending / WithdrawByInvestor / Invalid used to fall into no bucket at
+                // all, so the stage rendered with no button and 0.00000000 left — indistinguishable
+                // from lost funds. Surface them as spent-side rows so they are at least visible.
+                var other = stageTransactions
+                    .Except(claimable).Except(locked).Except(spent)
+                    .ToList();
+
+                if (other.Count > 0)
+                {
+                    _logger.LogWarning(
+                        "Stage {Stage} of project {ProjectId} has {Count} UTXO(s) in unhandled claim states: {States}",
+                        group.Key, Project.ProjectIdentifier, other.Count,
+                        string.Join(", ", other.Select(t => t.ClaimStatus).Distinct()));
+                }
 
                 // AmountLeft includes both claimable (Unspent) and locked transactions
                 var unspentAmount = claimable.Sum(t => t.Amount.Sats.ToUnitBtc()) + locked.Sum(t => t.Amount.Sats.ToUnitBtc());
@@ -564,7 +606,7 @@ public partial class ManageProjectViewModel : ReactiveObject
                     });
                 }
 
-                foreach (var tx in spent)
+                foreach (var tx in spent.Concat(other))
                 {
                     stage.SpentTransactions.Add(new UtxoTransactionViewModel
                     {
@@ -595,6 +637,9 @@ public partial class ManageProjectViewModel : ReactiveObject
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load claimable transactions for project {ProjectId}", Project.ProjectIdentifier);
+            ClaimLoadError =
+                "We couldn't load the claimable funds for this project. Your funds are safe on-chain — " +
+                "this is a display problem. Try Refresh, and check the logs for details.";
         }
     }
 

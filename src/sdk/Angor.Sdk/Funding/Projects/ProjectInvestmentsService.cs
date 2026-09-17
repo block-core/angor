@@ -40,7 +40,7 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
         }
         catch (Exception e)
         {
-            //TODO add logging
+            logger.LogError(e, "Failed to scan investments for project {ProjectId}", projectId);
             return Result.Failure<IEnumerable<StageData>>(e.Message);
         }
     }
@@ -66,27 +66,31 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
 
         foreach (var stage in stageDataList)
         {
+            // FirstOrDefault (not First): an indexer response that is missing the expected vout
+            // must degrade to a single skipped item, not throw and abort the whole project scan.
             var tasks = investmentsResult.Value.Select(tuple =>
-                (output: tuple.trxInfo?.Outputs.First(outp => outp.Index == stage.StageIndex + 2)
-                ?? null,
+                (output: tuple.trxInfo?.Outputs.FirstOrDefault(outp => outp.Index == stage.StageIndex + 2),
                  transaction: tuple.trx, index: stage.StageIndex))
                 .Select(x => CheckSpentFund(x.output, x.transaction, projectInfo, x.index));
 
             var results = await Task.WhenAll(tasks);
 
-            var combinedResult = results.Combine();
+            // Per-item tolerance: one unresolvable output (indexer lag, pruned tx, missing vout)
+            // must not blank out the founder's entire claim view. Log and keep the rest.
+            foreach (var failure in results.Where(r => r.IsFailure))
+            {
+                logger.LogWarning(
+                    "Skipping investment output for project {ProjectId} stage {StageIndex}: {Error}",
+                    project.Id.Value, stage.StageIndex, failure.Error);
+            }
 
-            if (combinedResult.IsFailure)
-                return Result.Failure<IEnumerable<StageData>>("Failed to process investment transactions: " +
-                                                              combinedResult.Error);
-
-            stage.Items = combinedResult.Value.ToList();
+            stage.Items = results.Where(r => r.IsSuccess).Select(r => r.Value).ToList();
 
             foreach (var item in stage.Items)
             {
                 item.InvestorPublicKey = projectInvestments
-                    .First(p => p.TransactionId == item.Trxid)
-                    .InvestorPublicKey;
+                    .FirstOrDefault(p => p.TransactionId == item.Trxid)
+                    ?.InvestorPublicKey ?? string.Empty;
 
                 // For Invest projects the per-investment stage index always matches the
                 // project-level stage index (fixed stages, same schedule for every investor).
@@ -224,6 +228,11 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
         var taprootOutputs = investmentTransaction.Outputs.AsIndexedOutputs()
                .Where(txout => txout.TxOut.ScriptPubKey.IsTaprooOutput())
                .ToArray();
+
+        if (stageIndex < 0 || stageIndex >= taprootOutputs.Length)
+            return Result.Failure<StageDataTrx>(
+                $"Investment transaction {investmentTransaction.GetHash()} has {taprootOutputs.Length} " +
+                $"taproot output(s); no output for stage index {stageIndex}");
 
         var txOut = taprootOutputs.ElementAt(stageIndex);
 

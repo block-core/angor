@@ -81,22 +81,41 @@ namespace Angor.Shared.Services
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
 
-            if (!_subscriptionsHanding.RelaySubscriptionAdded(projectNostrPubKey))
-            {
-                var subscription = nostrClient.Streams.EventStream
-                    .Where(_ => _.Subscription == projectNostrPubKey)
-                    .Where(_ => _.Event.Kind == NostrKind.EncryptedDm)
-                    .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Re:Investment offer")
-                    .Subscribe(_ => { action.Invoke(_.Event.Content); });
+            // A unique key per lookup. Previously this used the bare projectNostrPubKey, so a
+            // concurrent or recent lookup for the same project (e.g. PublishInvestment still in
+            // flight, or a retried recovery) meant the new `action` was never wired up — events
+            // went to the stale closure while TryAddEoseAction clobbered the previous caller's
+            // EOSE action. Both lookups then resolved as "no signatures found".
+            // Nostr subscription ids are capped at 64 chars.
+            var rawKey = $"sig_{sigRequestEventId}_{Guid.NewGuid():N}";
+            var subscriptionKey = rawKey.Substring(0, Math.Min(60, rawKey.Length));
 
-                _subscriptionsHanding.TryAddRelaySubscription(projectNostrPubKey, subscription);
+            var subscription = nostrClient.Streams.EventStream
+                .Where(_ => _.Subscription == subscriptionKey)
+                .Where(_ => _.Event.Kind == NostrKind.EncryptedDm)
+                .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Re:Investment offer")
+                .Subscribe(_ =>
+                {
+                    try
+                    {
+                        // Rx OnNext is synchronous, so the handler task cannot be awaited here.
+                        // Observe it anyway so a fault never becomes an unobserved task exception;
+                        // callers are responsible for surfacing their own errors.
+                        action.Invoke(_.Event.Content)
+                            .ContinueWith(t => { var observed = t.Exception; }, TaskContinuationOptions.OnlyOnFaulted);
+                    }
+                    catch
+                    {
+                        // Synchronous throw from the handler — callers handle their own reporting.
+                    }
+                });
 
-            }
+            _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
 
             if (onAllMessagesReceived != null)
-                _subscriptionsHanding.TryAddEoseAction(projectNostrPubKey, onAllMessagesReceived);
+                _subscriptionsHanding.TryAddEoseAction(subscriptionKey, onAllMessagesReceived);
 
-            nostrClient.Send(new NostrRequest(projectNostrPubKey, new NostrFilter
+            nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
                 Authors = new[] { projectNostrPubKey }, //From founder
                 P = new[] { investorNostrPubKey }, // To investor
