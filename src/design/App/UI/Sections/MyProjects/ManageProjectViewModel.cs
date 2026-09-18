@@ -519,13 +519,13 @@ public partial class ManageProjectViewModel : ReactiveObject
             if (result.IsFailure)
             {
                 // Never fail silently: an empty Stages list is indistinguishable from
-                // "funds lost" to the founder. Surface it so the cause is visible.
+                // "funds lost" to the founder. Show the actual reason so the cause is visible.
                 _logger.LogError(
                     "GetClaimableTransactions failed for project {ProjectId}: {Error}",
                     Project.ProjectIdentifier, result.Error);
                 ClaimLoadError =
-                    "We couldn't load the claimable funds for this project. Your funds are safe on-chain — " +
-                    "this is a display problem. Try Refresh, and check the logs for details.";
+                    $"We couldn't load the claimable funds for this project: {result.Error} " +
+                    "Your funds are safe on-chain — this is a display problem. Use Refresh to try again.";
                 return;
             }
 
@@ -638,8 +638,8 @@ public partial class ManageProjectViewModel : ReactiveObject
         {
             _logger.LogError(ex, "Failed to load claimable transactions for project {ProjectId}", Project.ProjectIdentifier);
             ClaimLoadError =
-                "We couldn't load the claimable funds for this project. Your funds are safe on-chain — " +
-                "this is a display problem. Try Refresh, and check the logs for details.";
+                $"We couldn't load the claimable funds for this project: {ex.Message} " +
+                "Your funds are safe on-chain — this is a display problem. Use Refresh to try again.";
         }
     }
 
