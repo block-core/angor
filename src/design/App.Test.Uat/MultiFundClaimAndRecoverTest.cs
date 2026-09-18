@@ -207,6 +207,12 @@ public class MultiFundClaimAndRecoverTest
         await using var investor3ColdHost = await TestProcessHost.LaunchAsync(Investor3Profile);
         await investor3ColdHost.Client.SwitchNetworkAsync("Angornet");
 
+        // Let the cold process finish its initial wallet + portfolio sync before starting the
+        // recovery. ExecuteRecoveryAsync is a single HTTP call that can internally consume two
+        // IndexerLag windows (20 min) against a 15 min client timeout, so wallet re-sync time
+        // must not be charged to it.
+        await WaitForColdStartSyncAsync(investor3ColdHost, projectId);
+
         Log(Investor3Profile, "Recovering via recovery (cold start)...");
         var recover3 = await investor3ColdHost.Client.ExecuteRecoveryAsync(new RecoveryRequest
         {
@@ -280,6 +286,38 @@ public class MultiFundClaimAndRecoverTest
             "indistinguishable from lost funds to the founder");
 
         Log(null, $"========== {nameof(MultiFundClaimAndRecover)} PASSED ==========");
+    }
+
+    /// <summary>
+    /// After a process restart the wallet and portfolio are rebuilt from the indexer, which can
+    /// take several minutes. Waits (via many short HTTP calls) until the investment is visible
+    /// again, so the subsequent single-call recovery flow starts from a synced process.
+    /// </summary>
+    private static async Task WaitForColdStartSyncAsync(TestProcessHost host, string projectId)
+    {
+        await host.Client.NavigateAsync("Funded");
+
+        var deadline = DateTime.UtcNow + TimeSpan.FromMinutes(10);
+        while (DateTime.UtcNow < deadline)
+        {
+            try
+            {
+                var count = await host.Client.GetVmPropertyAsync("PortfolioViewModel", "Investments.Count");
+                if (int.TryParse(count, out var n) && n > 0)
+                {
+                    Log(Investor3Profile, $"Cold start synced: {n} investment(s) visible.");
+                    return;
+                }
+            }
+            catch
+            {
+                // VM may not be constructed yet immediately after launch
+            }
+
+            await Task.Delay(TimeSpan.FromSeconds(5));
+        }
+
+        Log(Investor3Profile, "Cold start sync wait timed out; continuing anyway.");
     }
 
     /// <summary>
