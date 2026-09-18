@@ -10,6 +10,7 @@ using Angor.Sdk.Wallet.Application;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Wallet.Domain;
 using Angor.Shared.Integration.Lightning;
+using Angor.Shared.Protocol;
 using App.UI.Shared;
 using App.UI.Shared.PaymentFlow;
 using App.UI.Shared.Services;
@@ -48,6 +49,7 @@ public partial class DeployFlowViewModel : ReactiveObject
     private readonly Func<BitcoinNetwork> _getNetwork;
     private readonly ILogger<DeployFlowViewModel> _logger;
     private readonly PrototypeSettings _prototypeSettings;
+    private readonly IFeeRateProvider _feeRateProvider;
     private CancellationTokenSource? _invoiceMonitorCts;
 
     // ── State ──
@@ -58,6 +60,12 @@ public partial class DeployFlowViewModel : ReactiveObject
     [Reactive] private string deployStatusText = "Waiting for payment...";
     [Reactive] private long selectedFeeRate = 20;
     [Reactive] private string? deployErrorMessage;
+
+    /// <summary>
+    /// <see cref="SelectedFeeRate"/> converted to sat/kB, which is what NBitcoin's
+    /// FeeRate (and therefore IWalletOperations) consumes. The fee picker returns sat/vByte.
+    /// </summary>
+    private long SelectedFeeRateSatsPerKb => SelectedFeeRate * 1000;
 
     /// <summary>The reusable payment flow VM. Created when the deploy overlay is shown.</summary>
     public PaymentFlowViewModel? PaymentFlow { get; private set; }
@@ -100,6 +108,7 @@ public partial class DeployFlowViewModel : ReactiveObject
         IWalletContext walletContext,
         Func<BitcoinNetwork> getNetwork,
         PrototypeSettings prototypeSettings,
+        IFeeRateProvider feeRateProvider,
         ILogger<DeployFlowViewModel> logger)
     {
         _walletAppService = walletAppService;
@@ -113,6 +122,13 @@ public partial class DeployFlowViewModel : ReactiveObject
         _getNetwork = getNetwork;
         _prototypeSettings = prototypeSettings;
         _logger = logger;
+        _feeRateProvider = feeRateProvider;
+
+        // Show() must stay synchronous (the view click handler and the integration tests
+        // depend on PaymentFlow existing as soon as Deploy() returns), so it reads
+        // IFeeRateProvider.Current. Warm the cache now — the wizard has several steps
+        // left before the user can reach deploy.
+        _feeRateProvider.Warm();
         // Initialize ReactiveCommands for async payment operations
         PayWithWalletCommand = ReactiveCommand.CreateFromTask(PayWithWalletAsync);
         PayWithWalletCommand.ThrownExceptions.Subscribe(ex =>
@@ -165,7 +181,12 @@ public partial class DeployFlowViewModel : ReactiveObject
         // Create the reusable payment flow BEFORE setting IsVisible,
         // since the view subscription fires immediately on IsVisible=true
         // and needs PaymentFlow to be ready.
-        var deployFeeSats = 10_000L; // 0.0001 BTC deploy fee
+        var deployFeeSats = NetworkConfiguration.AngorCreateFeeSats;
+
+        // The invoice path never opens the fee popup, so this is the only place its fee
+        // rate is chosen. Use the live standard rate rather than a hardcoded default,
+        // otherwise the invoice amount is budgeted at a rate the network isn't charging.
+        SelectedFeeRate = _feeRateProvider.Current.Standard;
         PaymentFlow = new PaymentFlowViewModel(
             _walletAppService,
             _investmentAppService,
@@ -181,6 +202,13 @@ public partial class DeployFlowViewModel : ReactiveObject
                 AmountSats = deployFeeSats,
                 StageCount = 0,
                 FeeRateSatsPerVbyte = (int)SelectedFeeRate,
+                // The deploy transaction pays the Angor create fee output AND its own miner
+                // fee, and must leave enough over that the change output clears the dust
+                // threshold — otherwise the node rejects the broadcast with "dust".
+                // Same tx shape as the investment base tx with no stage outputs.
+                OnChainRequiredSatsOverride = deployFeeSats
+                    + InvestmentFeeEstimator.EstimateInvestmentTxFee(0, SelectedFeeRate)
+                    + ProtocolConstants.DustThresholdSats,
                 Title = "Fund Deployment",
                 SuccessTitle = $"{projectName} Deployed!",
                 SuccessDescription = "Your project has been successfully deployed to the blockchain.",
@@ -243,7 +271,7 @@ public partial class DeployFlowViewModel : ReactiveObject
 
         // Step 4: Create blockchain transaction
         var txResult = await _projectAppService.CreateProject(
-            walletId, SelectedFeeRate, ProjectData, infoResult.Value.EventId, projectSeed);
+            walletId, SelectedFeeRateSatsPerKb, ProjectData, infoResult.Value.EventId, projectSeed);
         if (txResult.IsFailure)
         {
             _logger.LogError("Deploy: create blockchain transaction failed: {Error}", txResult.Error);
@@ -361,7 +389,7 @@ public partial class DeployFlowViewModel : ReactiveObject
 
             // Step 4: Create blockchain transaction
             DeployStatusText = "Building transaction...";
-            var txResult = await _projectAppService.CreateProject(walletId, SelectedFeeRate, ProjectData, infoEventId, projectSeed);
+            var txResult = await _projectAppService.CreateProject(walletId, SelectedFeeRateSatsPerKb, ProjectData, infoEventId, projectSeed);
             if (txResult.IsFailure)
             {
                 _logger.LogError("Deploy: create blockchain transaction failed: {Error}", txResult.Error);
@@ -495,7 +523,7 @@ public partial class DeployFlowViewModel : ReactiveObject
 
             // Step 4: Create blockchain transaction
             DeployStatusText = "Building transaction...";
-            var txResult = await _projectAppService.CreateProject(walletId, SelectedFeeRate, ProjectData, infoEventId, projectSeed);
+            var txResult = await _projectAppService.CreateProject(walletId, SelectedFeeRateSatsPerKb, ProjectData, infoEventId, projectSeed);
             if (txResult.IsFailure)
             {
                 _logger.LogError("Deploy: create blockchain transaction failed: {Error}", txResult.Error);

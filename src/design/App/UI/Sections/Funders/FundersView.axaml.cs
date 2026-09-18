@@ -36,8 +36,8 @@ public partial class FundersView : UserControl, ISectionView
         sw.Restart();
         DataContext = vm;
 
-        // Strip hover transitions + BoxShadow on mobile — they never fire and waste GPU.
-        // Compact desktop previews should use the same layout as phones.
+        // .Mobile drives the compact signature layout; phones always use it,
+        // compact desktop previews should use the same layout as phones.
         bool isDeviceMobile = OperatingSystem.IsAndroid() || OperatingSystem.IsIOS();
         if (isDeviceMobile)
             Classes.Add("Mobile");

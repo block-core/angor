@@ -354,6 +354,65 @@ public class WalletOperationsTest : AngorTestData
         Assert.NotNull(operationResult.Data); // ensure data is saved
     }
 
+    [Fact]
+    public async Task SendAllToAddress_subtracts_fee_and_creates_no_change_output()
+    {
+        // Arrange
+        var network = _networkConfiguration.Object.GetNetwork();
+        var hdOperations = new HdOperations();
+        var indexer = new Mock<IIndexerService>();
+        indexer.Setup(x => x.PublishTransactionAsync(It.IsAny<string>())).ReturnsAsync(string.Empty);
+        var walletOperations = new WalletOperations(indexer.Object, hdOperations,
+            new NullLogger<WalletOperations>(), _networkConfiguration.Object);
+
+        var words = new WalletWords
+        {
+            Words = "suspect lesson reduce catalog melt lucky decade harvest plastic output hello panel",
+            Passphrase = ""
+        };
+        ExtKey accountKey = hdOperations.GetExtendedKey(words.Words, words.Passphrase);
+        Key inputKey = accountKey.Derive(new KeyPath("0/0")).PrivateKey;
+        string inputAddress = inputKey.PubKey.WitHash.GetAddress(network.BitcoinNetwork).ToString();
+        string destination = new Key().PubKey.WitHash.GetAddress(network.BitcoinNetwork).ToString();
+        const long inputSats = 100_000;
+        const long satsPerVByte = 20;
+
+        var sendInfo = new SendInfo
+        {
+            SendToAddress = destination,
+            FeeRate = satsPerVByte * 1000,
+            SendUtxos = new Dictionary<string, UtxoDataWithPath>
+            {
+                ["coin"] = new()
+                {
+                    HdPath = "m/0/0",
+                    UtxoData = new UtxoData
+                    {
+                        value = inputSats,
+                        address = inputAddress,
+                        scriptHex = BitcoinAddress.Create(inputAddress, network.BitcoinNetwork).ScriptPubKey.ToHex(),
+                        outpoint = new Outpoint(uint256.One.ToString(), 0),
+                        blockIndex = 1,
+                    }
+                }
+            }
+        };
+
+        // Act
+        OperationResult<Transaction> result = await walletOperations.SendAllToAddress(words, sendInfo);
+
+        // Assert
+        Assert.True(result.Success, result.Message);
+        Assert.Single(result.Data.Outputs);
+        long outputSats = result.Data.Outputs[0].Value.Satoshi;
+        long feeSats = inputSats - outputSats;
+        Assert.True(feeSats > 0);
+        Assert.InRange(feeSats, result.Data.GetVirtualSize() * satsPerVByte - satsPerVByte,
+            result.Data.GetVirtualSize() * satsPerVByte + satsPerVByte);
+        Assert.Equal(BitcoinAddress.Create(destination, network.BitcoinNetwork).ScriptPubKey,
+            result.Data.Outputs[0].ScriptPubKey);
+    }
+
 
     [Fact]
     public void GetUnspentOutputsForTransaction_ReturnsCorrectOutputs()

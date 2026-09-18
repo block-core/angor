@@ -383,7 +383,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "RefreshAllBalancesAsync failed");
-            ErrorMessage = "We couldn't prepare a receive address for this payment. Unlock the wallet and try again.";
+            ErrorMessage = DescribeAddressFailure(ex.Message);
             IsProcessing = false;
             _addressReadyTcs.TrySetCanceled();
             return;
@@ -398,7 +398,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "GetNextReceiveAddress threw");
-            ErrorMessage = "We couldn't prepare a receive address for this payment. Unlock the wallet and try again.";
+            ErrorMessage = DescribeAddressFailure(ex.Message);
             IsProcessing = false;
             _addressReadyTcs.TrySetCanceled();
             return;
@@ -406,7 +406,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         if (addressResult.IsFailure)
         {
             _logger.LogError("GetNextReceiveAddress failed: {Error}", addressResult.Error);
-            ErrorMessage = "We couldn't prepare a receive address for this payment. Unlock the wallet and try again.";
+            ErrorMessage = DescribeAddressFailure(addressResult.Error);
             IsProcessing = false;
             _addressReadyTcs.TrySetCanceled();
             return;
@@ -427,6 +427,24 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         {
             IsProcessing = false;
         }
+    }
+
+    /// <summary>
+    /// Builds a user-facing message for a failed receive-address preparation.
+    /// Distinguishes indexer/network failures (actionable: switch indexer in Settings)
+    /// from wallet issues (actionable: unlock the wallet).
+    /// </summary>
+    private static string DescribeAddressFailure(string? detail)
+    {
+        var isNetworkIssue = detail != null &&
+                             (detail.Contains("Indexer", StringComparison.OrdinalIgnoreCase) ||
+                              detail.Contains("timeout", StringComparison.OrdinalIgnoreCase) ||
+                              detail.Contains("canceled", StringComparison.OrdinalIgnoreCase) ||
+                              detail.Contains("HttpRequestException", StringComparison.OrdinalIgnoreCase));
+
+        return isNetworkIssue
+            ? $"We couldn't reach the Bitcoin indexer to prepare a receive address. Check your internet connection or select a different indexer in Settings, then try again. ({detail})"
+            : "We couldn't prepare a receive address for this payment. Unlock the wallet and try again.";
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -677,7 +695,9 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         var wallet = Wallets.FirstOrDefault();
         if (wallet?.Id is null || string.IsNullOrEmpty(OnChainAddress))
         {
-            ErrorMessage = "We couldn't start watching for your payment because the wallet wasn't ready. Please try again.";
+            // If address generation already reported a specific error (e.g. indexer
+            // unreachable), keep it — it tells the user how to fix the problem.
+            ErrorMessage ??= "We couldn't start watching for your payment because no receive address is available yet. Please try again.";
             return;
         }
 

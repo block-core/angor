@@ -7,6 +7,7 @@ using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Protocol;
 using Angor.Shared.Services;
+using Angor.Shared.Utilities;
 using NBitcoin;
 using CSharpFunctionalExtensions;
 using FluentAssertions;
@@ -437,6 +438,102 @@ public class ProjectInvestmentsServiceTests : IClassFixture<TestNetworkFixture>
 
         var itemB = marchBucket.Items.Single(i => i.InvestorPublicKey == investorKeyB);
         itemB.StageIndex.Should().Be(0, "Mar 15 is investor B's first stage (0-based index 0)");
+    }
+
+    /// <summary>
+    /// Guards the bounded-concurrency behaviour of the investment scan. Projects can have
+    /// hundreds of investors (× stages for Fund projects), so the scan must parallelize
+    /// indexer round-trips WITHOUT firing them all at once — unbounded Task.WhenAll would
+    /// mean thousands of simultaneous HTTP requests (socket exhaustion / rate limiting).
+    /// Each bounded slot may issue two concurrent requests (tx hex + tx info), so the
+    /// ceiling is 2 × MaxConcurrentIndexerRequests.
+    /// </summary>
+    [Fact]
+    public async Task ScanFullInvestments_ManyFundInvestors_LimitsConcurrentIndexerRequests()
+    {
+        // Arrange
+        const int investorCount = 30;
+        const int maxAllowedInFlight = 24; // 2 × MaxConcurrentIndexerRequests (12)
+
+        var (project, projectInfo) = CreateFundProject();
+
+        var investments = Enumerable.Range(0, investorCount)
+            .Select(_ => CreateFundInvestment(projectInfo, new DateTime(2030, 2, 1, 0, 0, 0, DateTimeKind.Utc)))
+            .ToArray();
+
+        _mockProjectService
+            .Setup(x => x.GetAsync(It.Is<ProjectId>(p => p.Value == project.Id.Value)))
+            .ReturnsAsync(Result.Success(project));
+
+        _mockAngorIndexerService
+            .Setup(x => x.GetInvestmentsAsync(project.Id.Value))
+            .ReturnsAsync(investments.Select(i => new ProjectInvestment
+            {
+                TransactionId = i.trx.GetHash().ToString(),
+                InvestorPublicKey = i.investorKey
+            }).ToList());
+
+        var inFlight = 0;
+        var maxObservedInFlight = 0;
+
+        async Task<T> TrackInFlight<T>(T value)
+        {
+            var current = Interlocked.Increment(ref inFlight);
+            int knownMax;
+            while (current > (knownMax = Volatile.Read(ref maxObservedInFlight)))
+            {
+                Interlocked.CompareExchange(ref maxObservedInFlight, current, knownMax);
+            }
+
+            await Task.Delay(20); // hold the slot long enough for overlap to be observable
+            Interlocked.Decrement(ref inFlight);
+            return value;
+        }
+
+        const string spentTxId = "spending-tx-id";
+
+        foreach (var (trx, _) in investments)
+        {
+            var txId = trx.GetHash().ToString();
+            var txHex = trx.ToHex();
+
+            _mockTransactionService
+                .Setup(x => x.GetTransactionHexByIdAsync(txId))
+                .Returns(() => TrackInFlight(txHex));
+
+            // All taproot stage outputs spent so CheckSpentFund makes an indexer call per stage
+            var queryBuilder = TestDataBuilder.CreateQueryTransaction().WithTransactionId(txId);
+            for (int i = 0; i < trx.Outputs.Count; i++)
+            {
+                if (trx.Outputs[i].ScriptPubKey.IsTaprooOutput())
+                    queryBuilder.AddOutput(i, trx.Outputs[i].Value.Satoshi, spentTxId);
+                else
+                    queryBuilder.AddOutput(i, trx.Outputs[i].Value.Satoshi);
+            }
+
+            var queryTransaction = queryBuilder.Build();
+
+            _mockTransactionService
+                .Setup(x => x.GetTransactionInfoByIdAsync(txId))
+                .Returns(() => TrackInFlight<QueryTransaction?>(queryTransaction));
+        }
+
+        var spendingTx = TestDataBuilder.CreateQueryTransaction().WithTransactionId(spentTxId).Build();
+        _mockTransactionService
+            .Setup(x => x.GetTransactionInfoByIdAsync(spentTxId))
+            .Returns(() => TrackInFlight<QueryTransaction?>(spendingTx));
+
+        // Act
+        var result = await _sut.ScanFullInvestments(project.Id.Value);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue(result.IsFailure ? result.Error : null);
+        result.Value.Sum(s => s.Items.Count).Should().Be(investorCount * 3, "every investor has 3 stages");
+
+        maxObservedInFlight.Should().BeGreaterThan(1,
+            "the scan should overlap indexer round-trips instead of awaiting them sequentially");
+        maxObservedInFlight.Should().BeLessThanOrEqualTo(maxAllowedInFlight,
+            "the scan must bound concurrent indexer requests so large projects don't exhaust sockets or trip rate limits");
     }
 
     private (Project project, ProjectInfo projectInfo) CreateFundProject()

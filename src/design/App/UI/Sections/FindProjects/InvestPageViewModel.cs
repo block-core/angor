@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using App.UI.Shared.Helpers;
 using System.Threading;
 using Angor.Sdk.Common;
 using CSharpFunctionalExtensions;
@@ -184,7 +185,9 @@ public partial class InvestPageViewModel : ReactiveObject, IDisposable
 
     // ── Computed totals ──
     public string TotalAmount => ComputeTotal();
-    public string FormattedAmount => string.IsNullOrWhiteSpace(InvestmentAmount) ? "0.00000000" : $"{ParseAmount():F8}";
+    public string FormattedAmount => string.IsNullOrWhiteSpace(InvestmentAmount)
+        ? "0.00000000"
+        : ParseAmount().ToString("F8", System.Globalization.CultureInfo.InvariantCulture);
     public string AngorFeeAmount => $"{ParseAmount() * Constants.AngorFeeRate:F8} {_currencyService.Symbol}";
 
     // Vue ref: subscription shows sats in transaction details
@@ -519,10 +522,8 @@ public partial class InvestPageViewModel : ReactiveObject, IDisposable
 
     private double ParseAmount()
     {
-        if (double.TryParse(InvestmentAmount, System.Globalization.NumberStyles.Float,
-            System.Globalization.CultureInfo.InvariantCulture, out var val))
-            return val;
-        return 0;
+        // User-typed field: tolerate both ',' and '.' decimal separators.
+        return AmountParser.TryParseUserAmount(InvestmentAmount, out double val) ? val : 0;
     }
 
     private string ComputeTotal()

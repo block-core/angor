@@ -33,9 +33,20 @@ public static class CreateProjectProfile
                 IAngorIndexerService angorIndexerService,
                 IRelayService relayService,
                 IGenericDocumentCollection<DerivedProjectKeys> derivedProjectKeysCollection,
-                ILogger<CreateProjectProfileHandler> logger) 
+                ILogger<CreateProjectProfileHandler> logger,
+                TimeSpan? nip65AckTimeout = null) 
         : IRequestHandler<CreateProjectProfileRequest, Result<CreateProjectProfileResponse>>
     {
+        /// <summary>
+        /// How long to wait for the NIP-65 relay list to be acknowledged before continuing.
+        /// NIP-65 is published to the discovery relays, which are a different (and smaller) set
+        /// than the relays that store the profile itself. If every discovery relay is unreachable
+        /// no OK ever arrives, so this wait is bounded to keep an outage there from blocking deployment.
+        /// </summary>
+        private static readonly TimeSpan DefaultNip65AckTimeout = TimeSpan.FromSeconds(10);
+
+        private TimeSpan Nip65AckTimeout { get; } = nip65AckTimeout ?? DefaultNip65AckTimeout;
+
         public async Task<Result<CreateProjectProfileResponse>> Handle(CreateProjectProfileRequest request, CancellationToken cancellationToken)
         {
             var wallet = await seedwordsProvider.GetSensitiveData(request.WalletId.Value);
@@ -82,38 +93,61 @@ public static class CreateProjectProfile
             };
 
             var nip65Published = 0;
+            CancellationTokenSource? nip65AckCts = null;
 
-            var resultId = await relayService.CreateNostrProfileAsync(
-                nostrMetadata,
-                nostrKey,
-                okResponse =>
-                  {
-                      if (!okResponse.Accepted)
+            try
+            {
+                var resultId = await relayService.CreateNostrProfileAsync(
+                    nostrMetadata,
+                    nostrKey,
+                    okResponse =>
                       {
-                          logger.LogDebug("Failed to store the project profile on relay for Project {ProjectName}: Communicator {CommunicatorName} - {Message}", project.ProjectName, okResponse.CommunicatorName, okResponse.Message);
-                          tcs.TrySetResult(Result.Failure<string>($"Failed to store the project profile on the relay: {okResponse.CommunicatorName} - {okResponse.Message}"));
-                          return;
-                      }
+                          if (!okResponse.Accepted)
+                          {
+                              logger.LogDebug("Failed to store the project profile on relay for Project {ProjectName}: Communicator {CommunicatorName} - {Message}", project.ProjectName, okResponse.CommunicatorName, okResponse.Message);
+                              tcs.TrySetResult(Result.Failure<string>($"Failed to store the project profile on the relay: {okResponse.CommunicatorName} - {okResponse.Message}"));
+                              return;
+                          }
 
-                      // The OK callback fires once per relay. Only publish NIP-65 once.
-                      if (Interlocked.CompareExchange(ref nip65Published, 1, 0) != 0)
-                          return;
+                          // The OK callback fires once per relay. Only publish NIP-65 once.
+                          if (Interlocked.CompareExchange(ref nip65Published, 1, 0) != 0)
+                              return;
 
-                      relayService.PublishNip65List(nostrKey, nip65OkResponse =>
-                      {
-                         if (tcs.Task.IsCompleted)
-                             return;
+                          // The profile is already stored at this point. NIP-65 is auxiliary discovery
+                          // metadata, so a discovery relay that never answers must not stall the deploy.
+                          nip65AckCts = new CancellationTokenSource(Nip65AckTimeout);
+                          nip65AckCts.Token.Register(() =>
+                          {
+                              if (tcs.Task.IsCompleted)
+                                  return;
 
-                         if (!nip65OkResponse.Accepted)
-                             logger.LogDebug("Failed to publish NIP-65 list for Project {ProjectName}", project.ProjectName);
+                              logger.LogWarning(
+                                  "NIP-65 list was not acknowledged within {Timeout}s for Project {ProjectName}; continuing because the project profile was stored successfully.",
+                                  Nip65AckTimeout.TotalSeconds, project.ProjectName);
 
-                         tcs.TrySetResult(!nip65OkResponse.Accepted ?
-                                    Result.Failure<string>("Failed to publish NIP-65 list")
-                                  : Result.Success(okResponse.EventId!));
-                      });
-              });
+                              tcs.TrySetResult(Result.Success(okResponse.EventId!));
+                          });
 
-            return await tcs.Task;
+                          relayService.PublishNip65List(nostrKey, nip65OkResponse =>
+                          {
+                             if (tcs.Task.IsCompleted)
+                                 return;
+
+                             if (!nip65OkResponse.Accepted)
+                                 logger.LogDebug("Failed to publish NIP-65 list for Project {ProjectName}", project.ProjectName);
+
+                             tcs.TrySetResult(!nip65OkResponse.Accepted ?
+                                        Result.Failure<string>("Failed to publish NIP-65 list")
+                                      : Result.Success(okResponse.EventId!));
+                          });
+                  });
+
+                return await tcs.Task;
+            }
+            finally
+            {
+                nip65AckCts?.Dispose();
+            }
         }
     }
 }

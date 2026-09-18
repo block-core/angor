@@ -121,6 +121,7 @@ public static class CompositionRoot
 
         // Platform-specific secure key storage — registered before SDK services
         // so TryAddSingleton in WalletContextServices does not override.
+        services.AddSingleton<UI.Shared.Services.IQrCodeScanner, UI.Shared.Services.UnavailableQrCodeScanner>();
         platformServices?.Invoke(services);
         if (!services.Any(d => d.ServiceType == typeof(ISecureKeyProvider)))
         {
@@ -139,6 +140,10 @@ public static class CompositionRoot
 
         // Currency symbol service — reads ticker from INetworkConfiguration
         services.AddSingleton<ICurrencyService, CurrencyService>();
+
+        // Network fee rates for the UI fee presets — fetched from the indexer,
+        // cached briefly, with hardcoded fallbacks when it is unreachable.
+        services.AddSingleton<IFeeRateProvider, FeeRateProvider>();
 
         // INetworkStorage override for integration tests that need to point at a local
         // docker stack (see src/design/App.Test.Integration/docker). When ANGOR_INDEXER_URL

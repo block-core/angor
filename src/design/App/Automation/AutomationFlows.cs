@@ -2287,9 +2287,20 @@ public static class AutomationFlows
             // Type the destination address into the SendAddressInput
             await TypeTextByNameAsync(window, "SendAddressInput",  req.DestinationAddress);
 
-            // Type the amount into the SendAmountInput
-            var amountStr = req.AmountBtc.ToString("F8", CultureInfo.InvariantCulture);
-            await TypeTextByNameAsync(window, "SendAmountInput", amountStr);
+            if (req.SweepAll)
+            {
+                // Click the 100% quick-percent button: fills the amount AND sets the
+                // sweep intent, routing the send through WalletAppService.SendAll
+                // (fee subtracted from the amount, single output, no change).
+                await ClickByNameAsync(window, "BtnPct100");
+                await Task.Delay(300);
+            }
+            else
+            {
+                // Type the amount into the SendAmountInput
+                var amountStr = req.AmountBtc.ToString("F8", CultureInfo.InvariantCulture);
+                await TypeTextByNameAsync(window, "SendAmountInput", amountStr);
+            }
 
             // Click the Send button (BtnSendConfirm) to trigger fee selection popup
             await ClickByNameAsync(window, "BtnSendConfirm");

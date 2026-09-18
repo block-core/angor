@@ -121,9 +121,15 @@ public class InvestorTransactionActions : IInvestorTransactionActions
                 var txIn = new TxIn(new OutPoint(output.Transaction, output.N)) { Sequence = new Sequence(TimeSpan.FromDays(projectInfo.PenaltyDays)) };
                 transaction.Inputs.Add(txIn);
 
-                // Set a fake WitScript (placeholder) for fee estimation
+                // Set a fake WitScript (placeholder) for fee estimation.
+                // These inputs are signed below with a DER-encoded ECDSA TransactionSignature
+                // (HashVersion.WitnessV0), which is up to 72 bytes including the sighash byte —
+                // not the 64 bytes of a Schnorr/taproot signature. Under-sizing the placeholder
+                // makes the broadcast transaction larger than the one the fee was computed from,
+                // which is rejected with "min relay fee not met" once the fee rate is at the
+                // network minimum. Matches the placeholder used in WalletOperations.
                 txIn.WitScript = new WitScript(
-                    Op.GetPushOp(new byte[64]),
+                    Op.GetPushOp(new byte[72]),
                     Op.GetPushOp(new byte[spendingScript.ToBytes().Length]));
 
                 transaction.Outputs[0].Value += output.TxOut.Value;
@@ -178,8 +184,12 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             investorReceiveAddress, investorPrivateKey, new NBitcoin.FeeRate(new NBitcoin.Money(feeEstimation.FeeRate)),
             projectScripts =>
             {
-                var controlBlock = _taprootScriptBuilder.CreateControlBlock(projectScripts, _ => _.EndOfProject);
-                var fakeSig = new byte[64];
+                    var controlBlock = _taprootScriptBuilder.CreateControlBlock(projectScripts, _ => _.EndOfProject);
+                    // 65 bytes, not 64: SpendingTransactionBuilder signs with an explicit
+                    // TaprootSigHash.All, which appends a sighash byte to the 64-byte Schnorr
+                    // signature. Under-sizing this makes the signed transaction larger than the
+                    // one the fee was computed from and the broadcast fails "min relay fee not met".
+                    var fakeSig = new byte[65];
                 return new NBitcoin.WitScript(NBitcoin.Op.GetPushOp(fakeSig),
                     NBitcoin.Op.GetPushOp(projectScripts.EndOfProject.ToBytes()),
                     NBitcoin.Op.GetPushOp(controlBlock.ToBytes()));
@@ -211,8 +221,9 @@ public class InvestorTransactionActions : IInvestorTransactionActions
             {
                 var result = _taprootScriptBuilder.CreateControlSeederSecrets(_, projectInfo.ProjectSeeders.Threshold, secrets.ToArray());
 
-                // use fake data for fee estimation
-                var fakeSig = new byte[64];
+                    // use fake data for fee estimation
+                    // 65 bytes: explicit TaprootSigHash.All appends a sighash byte (see above).
+                    var fakeSig = new byte[65];
 
                 List<Op> ops = new List<Op>();
 

@@ -555,6 +555,14 @@ public static class AutomationFlowDtos
 
         [JsonPropertyName("feeRateSatsPerVByte")]
         public long FeeRateSatsPerVByte { get; init; } = 1;
+
+        /// <summary>
+        /// When true, AmountBtc is ignored and the flow clicks the 100% quick-percent
+        /// button instead — exercising the real sweep-all path (SendAll, fee subtracted
+        /// from the amount, single output, no change).
+        /// </summary>
+        [JsonPropertyName("sweepAll")]
+        public bool SweepAll { get; init; }
     }
 
     public sealed class SendFundsResponse
