@@ -97,8 +97,8 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
 
         foreach (var stage in stageDataList)
         {
-            // FirstOrDefault (not First): an indexer response that is missing the expected vout
-            // must degrade to a single skipped item, not throw and abort the whole project scan.
+            // FirstOrDefault (not First): a missing vout must produce a describable failure
+            // ("Output not found") rather than an opaque "sequence contains no matching element".
             var taskFactories = investmentsResult.Value.Select(tuple =>
                 (output: tuple.trxInfo?.Outputs.FirstOrDefault(outp => outp.Index == stage.StageIndex + 2),
                  transaction: tuple.trx, index: stage.StageIndex))
@@ -107,22 +107,29 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
 
             var results = await RunBoundedAsync(taskFactories, MaxConcurrentIndexerRequests);
 
-            // Per-item tolerance: one unresolvable output (indexer lag, pruned tx, missing vout)
-            // must not blank out the founder's entire claim view. Log and keep the rest.
-            foreach (var failure in results.Where(r => r.IsFailure))
+            var combinedResult = results.Combine();
+
+            // Fail the whole scan if any item could not be resolved. Showing a partial set of
+            // UTXOs is worse than showing none: the founder cannot tell the difference between
+            // "these are all your funds" and "some are missing". The caller surfaces this error
+            // and the user retries with Refresh.
+            if (combinedResult.IsFailure)
             {
                 logger.LogWarning(
-                    "Skipping investment output for project {ProjectId} stage {StageIndex}: {Error}",
-                    project.Id.Value, stage.StageIndex, failure.Error);
+                    "Scan aborted for project {ProjectId} at stage {StageIndex}: {Error}",
+                    project.Id.Value, stage.StageIndex, combinedResult.Error);
+
+                return Result.Failure<IEnumerable<StageData>>(
+                    $"Could not read stage {stage.StageIndex + 1} from the indexer: {combinedResult.Error}");
             }
 
-            stage.Items = results.Where(r => r.IsSuccess).Select(r => r.Value).ToList();
+            stage.Items = combinedResult.Value.ToList();
 
             foreach (var item in stage.Items)
             {
                 item.InvestorPublicKey = projectInvestments
-                    .FirstOrDefault(p => p.TransactionId == item.Trxid)
-                    ?.InvestorPublicKey ?? string.Empty;
+                    .First(p => p.TransactionId == item.Trxid)
+                    .InvestorPublicKey;
 
                 // For Invest projects the per-investment stage index always matches the
                 // project-level stage index (fixed stages, same schedule for every investor).
