@@ -14,7 +14,7 @@ public class SuccessOperationResult : OperationResult
     }
 }
 
-public class OperationResult<T> : OperationResult 
+public class OperationResult<T> : OperationResult
 {
     public T? Data { get; set; }
 }

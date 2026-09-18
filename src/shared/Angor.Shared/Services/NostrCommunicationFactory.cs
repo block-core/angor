@@ -30,7 +30,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         _okCalledOnSubscriptionClients = new();
     }
 
-    private ConcurrentDictionary<string, byte> GetAllConnectedRelayNames()
+    private ConcurrentDictionary<string, byte> GetAllConnectedRelayNames(bool includeDiscoveryRelays = false)
     {
         var allRelays = new ConcurrentDictionary<string, byte>();
 
@@ -38,17 +38,23 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         {
             foreach (var client in _nostrMultiWebsocketClient.Clients)
             {
-                allRelays.TryAdd(client.Communicator.Name, 0);
+                // Only track relays whose websocket is actually running. A relay that never
+                // completed the WS upgrade will never send EOSE, and its DisconnectionHappened
+                // already fired before any subscription was monitored — so including it here
+                // would block the "all relays sent EOSE" completion check forever.
+                if (client.Communicator.IsRunning)
+                    allRelays.TryAdd(client.Communicator.Name, 0);
             }
         }
 
-        // if (_nostrMultiWebsocketClientDiscovery != null)
-        // {
-        //     foreach (var client in _nostrMultiWebsocketClientDiscovery.Clients)
-        //     {
-        //         allRelays.Add(client.Communicator.Name);
-        //     }
-        // }
+        if (includeDiscoveryRelays && _nostrMultiWebsocketClientDiscovery != null)
+        {
+            foreach (var client in _nostrMultiWebsocketClientDiscovery.Clients)
+            {
+                if (client.Communicator.IsRunning)
+                    allRelays.TryAdd(client.Communicator.Name, 0);
+            }
+        }
 
         return allRelays;
     }
@@ -77,7 +83,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
                 
                 var tryRemove = clientsReceivedList.TryRemove(x.CommunicatorName, out _);
                     
-                _logger.LogWarning("EOSE {x.Subscription} removed {x.CommunicatorName} - {tryRemove}",
+                _logger.LogDebug("EOSE {x.Subscription} removed {x.CommunicatorName} - {tryRemove}",
                     x.Subscription, x.CommunicatorName, tryRemove);
             }));
 
@@ -87,7 +93,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
                 if (_okCalledOnSubscriptionClients.TryGetValue(x.EventId ?? string.Empty, out var clientsReceivedList))
                 {
                     var tryRemove = clientsReceivedList.TryRemove(x.CommunicatorName, out _);
-                    _logger.LogWarning($"OK {x.EventId} accepted: {x.Accepted} removed ok {x.CommunicatorName} - {tryRemove}");
+                    _logger.LogDebug($"OK {x.EventId} accepted: {x.Accepted} removed ok {x.CommunicatorName} - {tryRemove}");
                 }
             }));
 
@@ -151,7 +157,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
                      
                 var tryRemove = clientsReceivedList.TryRemove(x.CommunicatorName, out _);
                     
-                _logger.LogWarning("EOSE {x.Subscription} removed {x.CommunicatorName} - {tryRemove}",
+                _logger.LogDebug("EOSE {x.Subscription} removed {x.CommunicatorName} - {tryRemove}",
                     x.Subscription, x.CommunicatorName, tryRemove);
             }));
             
@@ -161,7 +167,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
                 if (_okCalledOnSubscriptionClients.TryGetValue(x.EventId ?? string.Empty, out var clientsReceivedList))
                 {
                     var tryRemove = clientsReceivedList.TryRemove(x.CommunicatorName, out _);
-                    _logger.LogWarning($"OK {x.EventId} accepted: {x.Accepted} removed ok {x.CommunicatorName} - {tryRemove}");
+                    _logger.LogDebug($"OK {x.EventId} accepted: {x.Accepted} removed ok {x.CommunicatorName} - {tryRemove}");
                 } 
             }));
             
@@ -190,10 +196,10 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         return response;
     }
     
-    public bool MonitoringEoseReceivedOnSubscription(string subscription)
+    public bool MonitoringEoseReceivedOnSubscription(string subscription, bool includeDiscoveryRelays = false)
     {
         _logger.LogDebug($"Started monitoring subscription {subscription}");
-        var relayNames = GetAllConnectedRelayNames();
+        var relayNames = GetAllConnectedRelayNames(includeDiscoveryRelays);
         if (_eoseCalledOnSubscriptionClients.TryAdd(subscription, relayNames))
             return true;
         
@@ -259,9 +265,9 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         _serviceSubscriptions.Add(nostrCommunicator.DisconnectionHappened.Subscribe(e =>
         {
             if (e.Exception != null)
-                _logger.LogError(e.Exception,
-                    "Relay {relayName} disconnected, type: {Type}, reason: {CloseStatusDescription}", 
-                    relayName, e.Type, e.CloseStatusDescription);
+                _logger.LogWarning(
+                    "Relay {relayName} disconnected, type: {Type}, reason: {Reason}",
+                    relayName, e.Type, e.CloseStatusDescription ?? e.Exception.Message);
             else
                 _logger.LogDebug(
                     "Relay {relayName} disconnected, type: {Type}, reason: {CloseStatusDescription}", 
@@ -273,7 +279,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
             {
                 if (kvp.Value.TryRemove(relayName, out _))
                 {
-                    _logger.LogWarning(
+                    _logger.LogDebug(
                         "Removed disconnected relay {RelayName} from EOSE tracking for subscription {Subscription}",
                         relayName, kvp.Key);
                 }
@@ -283,7 +289,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
             {
                 if (kvp.Value.TryRemove(relayName, out _))
                 {
-                    _logger.LogWarning(
+                    _logger.LogDebug(
                         "Removed disconnected relay {RelayName} from OK tracking for event {EventId}",
                         relayName, kvp.Key);
                 }

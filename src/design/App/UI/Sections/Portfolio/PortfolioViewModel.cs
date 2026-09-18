@@ -953,8 +953,12 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable, INetworkS
             // is derived from the recovery transaction's nLockTime — confirm this value is correct
             // for all project types (invest/fund/subscribe) and edge cases (e.g. mid-stage recovery).
             investment.PenaltyDuration = recovery.PenaltyDays > 0 ? $"{recovery.PenaltyDays} days" : "";
-            var daysLeft = (recovery.ExpiryDate - DateTime.UtcNow).Days;
-            investment.PenaltyDaysRemaining = Math.Max(0, daysLeft);
+            // Round up: TimeSpan.Days truncates toward zero, so 23 hours left displayed as
+            // "0 days" while the wait was still in effect. Never show 0 unless it really elapsed.
+            var remaining = recovery.ExpiryDate - DateTime.UtcNow;
+            investment.PenaltyDaysRemaining = remaining <= TimeSpan.Zero
+                ? 0
+                : Math.Max(1, (int)Math.Ceiling(remaining.TotalDays));
 
             // Penalty-threshold logic only applies to Fund projects.
             // Invest/Subscribe projects should not take the UI shortcut that maps

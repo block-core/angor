@@ -44,10 +44,6 @@ public partial class FundsView : UserControl, ISectionView
         sw.Restart();
         DataContext = vm;
 
-        // Strip hover transitions + BoxShadow on mobile — they never fire and waste GPU
-        if (OperatingSystem.IsAndroid() || OperatingSystem.IsIOS())
-            Classes.Add("Mobile");
-
         CacheControls();
         SubscribeToLayoutMode();
 

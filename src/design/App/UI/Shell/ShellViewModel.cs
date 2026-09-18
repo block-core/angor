@@ -847,6 +847,49 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
     }
 
     /// <summary>
+    /// Navigate to the Find Projects section and open the live project detail
+    /// (public profile) for the given project identifier.
+    /// Called from ManageProject's "See Live Project" button.
+    /// </summary>
+    public void NavigateToProjectDetail(string projectId)
+    {
+        if (string.IsNullOrWhiteSpace(projectId))
+            return;
+
+        EnsureViewCreated("Find Projects");
+
+        var findItem = NavEntries.OfType<NavItem>().FirstOrDefault(n => n.Label == "Find Projects");
+        if (findItem != null)
+            SelectedNavItem = findItem;
+
+        // Selecting the nav item runs GetOrCreateView's onReuse which CLOSES any
+        // open project detail — open ours after that cycle has settled.
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            if (_viewCache.TryGetValue("Find Projects", out var view) &&
+                view is global::App.UI.Sections.FindProjects.FindProjectsView
+                {
+                    DataContext: global::App.UI.Sections.FindProjects.FindProjectsViewModel fpVm
+                })
+            {
+                fpVm.CloseInvestPage();
+
+                var existing = fpVm.Projects.FirstOrDefault(p => p.ProjectId == projectId);
+                if (existing != null)
+                {
+                    fpVm.OpenProjectDetail(existing);
+                    return;
+                }
+
+                // Not in the browse list (e.g. freshly deployed): resolve it the same
+                // way the search box does — fetches by ID and opens the detail page.
+                fpVm.SearchText = projectId;
+                _ = fpVm.SearchByProjectIdAsync();
+            }
+        }, Avalonia.Threading.DispatcherPriority.Background);
+    }
+
+    /// <summary>
     /// Select a wallet from the switcher modal.
     /// Delegates to IWalletContext.SelectedWallet, which handles deselect/select/persist.
     /// Vue: selectWallet(walletId) in App.vue.

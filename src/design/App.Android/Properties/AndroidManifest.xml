@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" android:installLocation="auto">
 	<uses-permission android:name="android.permission.INTERNET" />
-	<application android:label="Angor" android:icon="@drawable/Icon" />
+	<uses-permission android:name="android.permission.CAMERA" />
+	<uses-feature android:name="android.hardware.camera.any" android:required="false" />
+	<!-- usesCleartextTraffic: nostr profile metadata frequently carries plain
+	     http:// banner/avatar URLs on arbitrary user-chosen hosts; Android 9+
+	     blocks cleartext by default which silently broke those images.
+	     allowBackup=false: wallet key material (wallet-keys.enc) is encrypted by
+	     a device-bound KeyStore master key that is NOT backed up — restoring the
+	     file without the key bricks wallet operations, so never back it up. -->
+	<application android:label="Angor" android:icon="@drawable/Icon" android:usesCleartextTraffic="true" android:allowBackup="false" />
 </manifest>

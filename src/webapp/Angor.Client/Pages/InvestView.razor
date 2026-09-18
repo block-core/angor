@@ -55,7 +55,13 @@
         <img src="/assets/img/angor-logo.svg" alt="Angor" />
         <span>Angor Invest</span>
     </a>
-    <span class="hub-network-badge @(network.IsMainnet ? "" : "testnet")">@network.Name</span>
+    <span class="d-flex align-items-center gap-3">
+        <span class="hub-network-badge @(network.IsMainnet ? "" : "testnet")">@network.Name</span>
+        <a class="hub-link" href="/settings" title="Relay and indexer settings">
+            <Icon IconName="settings" Width="18" Height="18" />
+            <span class="d-none d-sm-inline ms-1">Settings</span>
+        </a>
+    </span>
 </header>
 
 @if (loadingProject)
@@ -63,6 +69,9 @@
     <div class="container mt-5 text-center">
         <div class="spinner-border text-success" role="status"></div>
         <p class="mt-3" style="color: var(--text-secondary);">Loading project...</p>
+        <p class="small text-muted">
+            Taking too long? Check your <a class="hub-link" href="/settings">relay and indexer settings</a>.
+        </p>
     </div>
     return;
 }
@@ -74,8 +83,9 @@
             <Icon IconName="info" Width="24" Height="24" class="me-2" />
             <span>@(loadError ?? "The project was not found.")</span>
         </div>
-        <div class="text-center mt-3">
+        <div class="text-center mt-3 d-flex justify-content-center gap-3 flex-wrap">
             <a class="hub-link" href="https://angor.io" target="_blank" rel="noopener">Browse projects on angor.io</a>
+            <a class="hub-link" href="/settings">Check relay &amp; indexer settings</a>
         </div>
     </div>
     return;
@@ -918,6 +928,7 @@
 
     private Project? project;
     private bool loadingProject = true;
+    private static readonly TimeSpan ProjectLoadTimeout = TimeSpan.FromSeconds(30);
     private string? loadError;
     private bool buildSpinner;
     private bool investSpinner;
@@ -1150,6 +1161,8 @@
     /// </summary>
     private async Task LoadRemoteProjectAsync()
     {
+        StartProjectLoadWatchdog();
+
         try
         {
             var projectIndexerData = await _IndexerService.GetProjectByIdAsync(ProjectId);
@@ -1226,6 +1239,36 @@
             loadingProject = false;
             StateHasChanged();
         }
+    }
+
+    /// <summary>
+    /// Overall timeout for the remote project load. The Nostr EOSE completion callback can be
+    /// lost when relays disconnect mid-flight (or never connect at all), which would leave the
+    /// page on the loading spinner forever — fall back to an error message instead.
+    /// </summary>
+    private void StartProjectLoadWatchdog()
+    {
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(ProjectLoadTimeout);
+
+            if (!loadingProject)
+                return;
+
+            _Logger.LogWarning("Project load timed out after {Timeout}s — relays did not complete", ProjectLoadTimeout.TotalSeconds);
+
+            await InvokeAsync(() =>
+            {
+                if (!loadingProject)
+                    return;
+
+                if (project?.ProjectInfo == null)
+                    loadError = "Could not load the project from the relays. Please check your connection and refresh the page.";
+
+                loadingProject = false;
+                StateHasChanged();
+            });
+        });
     }
 
     /// <summary>
@@ -1378,7 +1421,7 @@
                         _Logger.LogInformation("Merged {Count} relays from project profile", relays.Count);
                     }
                 },
-                null,
+                () => _Logger.LogDebug("NIP-65 relay list lookup completed (EOSE from all relays incl. discovery)"),
                 nostrPubKey);
         }
         catch (Exception ex)

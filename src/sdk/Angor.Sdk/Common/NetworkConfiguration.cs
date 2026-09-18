@@ -51,7 +51,6 @@ public class NetworkConfiguration : INetworkConfiguration
                 new() { Name = string.Empty, Url = "https://fulcrum.angor.online", IsPrimary = true },
                 new() { Name = string.Empty, Url = "https://electrs.angor.online", IsPrimary = false },
                 new() { Name = string.Empty, Url = "https://cyphermunkhouse.angor.online", IsPrimary = false },
-                new() { Name = string.Empty, Url = "https://indexer.angor.fund", IsPrimary = false },
             };
         }
 
@@ -59,8 +58,8 @@ public class NetworkConfiguration : INetworkConfiguration
         {
             return new List<SettingsUrl>
             {
-                new() { Name = string.Empty, Url = "https://test.indexer.angor.io", IsPrimary = false },
-                new() { Name = string.Empty, Url = "https://signet.angor.online", IsPrimary = true },
+                new() { Name = string.Empty, Url = "https://test.indexer.angor.io", IsPrimary = true },
+                new() { Name = string.Empty, Url = "https://signet.angor.online", IsPrimary = false },
                 new() { Name = string.Empty, Url = "https://signet2.angor.online", IsPrimary = false },
             };
         }
@@ -79,8 +78,6 @@ public class NetworkConfiguration : INetworkConfiguration
                 new() { Name = "wss://relay2.angor.io", Url = "wss://relay2.angor.io", IsPrimary = true },
                 new() { Name = "wss://relay.damus.io", Url = "wss://relay.damus.io", IsPrimary = true },
                 new() { Name = "wss://nos.lol", Url = "wss://nos.lol", IsPrimary = true },
-                new() { Name = "wss://nostr-01.yakihonne.com", Url = "wss://nostr-01.yakihonne.com", IsPrimary = true },
-                new() { Name = "wss://nostr-02.yakihonne.com", Url = "wss://nostr-02.yakihonne.com", IsPrimary = true },
             };
         }
 
@@ -110,7 +107,6 @@ public class NetworkConfiguration : INetworkConfiguration
                 new() { Name = "fulcrum.angor.online", Url = "https://fulcrum.angor.online", IsPrimary = true },
                 new() { Name = "electrs.angor.online", Url = "https://electrs.angor.online", IsPrimary = false },
                 new() { Name = "cyphermunkhouse.angor.online", Url = "https://cyphermunkhouse.angor.online", IsPrimary = false },
-                new() { Name = "indexer.angor.fund", Url = "https://indexer.angor.fund", IsPrimary = false },
             };
         }
 
@@ -148,7 +144,7 @@ public class NetworkConfiguration : INetworkConfiguration
         new()
         {
             new SettingsUrl { Name = "wss://purplerelay.com", Url = "wss://purplerelay.com" },
-            new SettingsUrl { Name = "wss://discovery.eu.nostria.app", Url = "wss://discovery.eu.nostria.app" },
+            new SettingsUrl { Name = "wss://indexer.openresist.com", Url = "wss://indexer.openresist.com" },
         };
 
     public string GetGenesisBlockHash()

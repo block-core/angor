@@ -72,18 +72,17 @@ public class NetworkConfiguration : INetworkConfiguration
                 new SettingsUrl { Name = "", Url = "https://fulcrum.angor.online", IsPrimary = true },
                 new SettingsUrl { Name = "", Url = "https://electrs.angor.online", IsPrimary = false },
                 new SettingsUrl { Name = "", Url = "https://cyphermunkhouse.angor.online", IsPrimary = false },
-                new SettingsUrl { Name = "", Url = "https://indexer.angor.fund", IsPrimary = false },
             };
         }
-        
+
         if (!currentNetwork.IsMainnet)
         {
             if (currentNetwork.Name == "Angornet")
             {
                 return new List<SettingsUrl>
                 {
-                    new SettingsUrl { Name = "", Url = "https://test.indexer.angor.io", IsPrimary = false },
-                    new SettingsUrl { Name = "", Url = "https://signet.angor.online", IsPrimary = true},
+                    new SettingsUrl { Name = "", Url = "https://test.indexer.angor.io", IsPrimary = true },
+                    new SettingsUrl { Name = "", Url = "https://signet.angor.online", IsPrimary = false},
                     new SettingsUrl { Name = "", Url = "https://signet2.angor.online", IsPrimary = false},
                 };
             }
@@ -118,8 +117,6 @@ public class NetworkConfiguration : INetworkConfiguration
                 new SettingsUrl { Name = "", Url = "wss://relay2.angor.io", IsPrimary = true },
                 new SettingsUrl { Name = "", Url = "wss://relay.damus.io", IsPrimary = true },
                 new SettingsUrl { Name = "", Url = "wss://nos.lol", IsPrimary = true },
-                new SettingsUrl { Name = "", Url = "wss://nostr-01.yakihonne.com", IsPrimary = true },
-                new SettingsUrl { Name = "", Url = "wss://nostr-02.yakihonne.com", IsPrimary = true },
             };
         }
 
@@ -149,7 +146,6 @@ public class NetworkConfiguration : INetworkConfiguration
                 new SettingsUrl { Name = "", Url = "https://fulcrum.angor.online", IsPrimary = true},
                 new SettingsUrl { Name = "", Url = "https://electrs.angor.online", IsPrimary = false },
                 new SettingsUrl { Name = "", Url = "https://cyphermunkhouse.angor.online", IsPrimary = false },
-                new SettingsUrl { Name = "", Url = "https://indexer.angor.fund", IsPrimary = false },
             };
         }
 
@@ -189,7 +185,7 @@ public class NetworkConfiguration : INetworkConfiguration
         return new List<SettingsUrl>
         {
             new SettingsUrl { Name = "wss://purplerelay.com", Url = "wss://purplerelay.com" },
-            new SettingsUrl { Name = "wss://discovery.eu.nostria.app", Url = "wss://discovery.eu.nostria.app" },
+            new SettingsUrl { Name = "wss://indexer.openresist.com", Url = "wss://indexer.openresist.com" },
         };
     }
 

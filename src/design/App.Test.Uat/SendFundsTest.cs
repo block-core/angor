@@ -59,10 +59,13 @@ public class SendFundsTest
         Log($"Wallet B: {idB}");
         Log($"Wallet C: {idC}");
 
-        // Track running balances
-        var balA = await GetBalance(hostA, idA, "A");
-        var balB = await GetBalance(hostB, idB, "B");
-        var balC = await GetBalance(hostC, idC, "C");
+        // Track running balances. Faucet funding may still be confirming/indexing when
+        // CreateWalletAndFund returns (it only waits for a NON-ZERO balance, and the
+        // faucet helper can even fire a second request on slow indexing) — so wait for
+        // each balance to stabilize before snapshotting the totals the invariant
+        // "total BTC never increases" is measured against.
+        var (balA, balB, balC) = await WaitForStableBalances(hostA, idA, hostB, idB, hostC, idC);
+        var initialTotal = balA + balB + balC;
 
         Log($"Initial balances — A: {balA:F8}, B: {balB:F8}, C: {balC:F8}");
 
@@ -178,33 +181,30 @@ public class SendFundsTest
 
             Log($"  Balances after round {round}: A={newBalA:F8}, B={newBalB:F8}, C={newBalC:F8}");
 
-            // Each user sent SendAmount and received SendAmount, so net change is -fees only.
-            // But with bursts, the math is trickier. Just verify all balances are positive
-            // and that no balance has mysteriously jumped up or dropped to zero.
-            newBalA.Should().BeGreaterThan(0, $"Round {round}: A balance should remain positive");
-            newBalB.Should().BeGreaterThan(0, $"Round {round}: B balance should remain positive");
-            newBalC.Should().BeGreaterThan(0, $"Round {round}: C balance should remain positive");
+            // NOTE: balances may legitimately display 0 mid-churn — a wallet that just
+            // spent its only UTXO shows nothing until the indexer reports the change
+            // output. Positivity is asserted in the final verification after settling;
+            // per-round we only enforce the money-conservation ceiling below.
 
-            // The total BTC across all 3 wallets should only decrease by fees (never increase).
-            // Allow tolerance for unconfirmed tx display differences.
-            var previousTotal = balA + balB + balC;
+            // The total BTC across all wallets must never exceed what the faucet put in
+            // (sends can only burn fees, never create money). NOTE: comparing against the
+            // PREVIOUS round is unsound — displayed balances dip while spends are pending
+            // (inputs optimistically marked spent before the indexer reports the change
+            // output) and recover a round later, which looks like an "increase".
             var currentTotal = newBalA + newBalB + newBalC;
-            currentTotal.Should().BeLessThanOrEqualTo(previousTotal + 0.001,
-                $"Round {round}: Total BTC should not increase (was {previousTotal:F8}, now {currentTotal:F8})");
+            currentTotal.Should().BeLessThanOrEqualTo(initialTotal + 0.001,
+                $"Round {round}: Total BTC must never exceed the initial funded total " +
+                $"(initial {initialTotal:F8}, now {currentTotal:F8})");
 
             balA = newBalA;
             balB = newBalB;
             balC = newBalC;
         }
 
-        // ── Final verification: refresh all and log ──
+        // ── Final verification: poll until balances settle (indexer catches up) ──
         Log("");
         Log("Final balance refresh...");
-        await Task.Delay(TimeSpan.FromSeconds(5));
-
-        var finalA = await GetBalance(hostA, idA, "A");
-        var finalB = await GetBalance(hostB, idB, "B");
-        var finalC = await GetBalance(hostC, idC, "C");
+        var (finalA, finalB, finalC) = await WaitForStableBalances(hostA, idA, hostB, idB, hostC, idC);
         var finalTotal = finalA + finalB + finalC;
 
         Log($"Final balances — A: {finalA:F8}, B: {finalB:F8}, C: {finalC:F8}");
@@ -214,7 +214,43 @@ public class SendFundsTest
         finalB.Should().BeGreaterThan(0, "B should still have funds after 10 rounds");
         finalC.Should().BeGreaterThan(0, "C should still have funds after 10 rounds");
 
-        Log($"========== {nameof(ThreeUsersSendToEachOther)} PASSED — {TotalRounds} rounds ==========");
+        // ── Sweep-all: C sends its ENTIRE balance to A via the 100% button ──
+        // Exercises the SendAll path (fee subtracted from amount, single output,
+        // no change) as opposed to the fixed-amount SendAmount path used above.
+        Log("");
+        Log($"Sweep-all: C ({finalC:F8} BTC) -> A via 100% button...");
+
+        var sweepAddr = await GetAddress(hostA, idA, "A");
+        var sweep = await hostC.Client.SendFundsAsync(new SendFundsRequest
+        {
+            WalletId = idC,
+            DestinationAddress = sweepAddr,
+            SweepAll = true,
+            FeeRateSatsPerVByte = FeeRate,
+        });
+        sweep.Success.Should().BeTrue($"Sweep-all C->A failed: {sweep.Error}");
+        Log($"Sweep tx: {sweep.TxId}");
+
+        // C must end up empty (fee came out of the swept amount, no change output),
+        // and A must receive the sweep. Poll: the indexer can lag the broadcast.
+        var sweepDeadline = DateTime.UtcNow + TimeSpan.FromMinutes(2);
+        double sweptC = double.MaxValue;
+        double sweptA = 0;
+        while (DateTime.UtcNow < sweepDeadline)
+        {
+            sweptC = await GetBalance(hostC, idC, "C");
+            sweptA = await GetBalance(hostA, idA, "A");
+            if (sweptC == 0 && sweptA > finalA) break;
+            await Task.Delay(TimeSpan.FromSeconds(5));
+        }
+
+        Log($"Post-sweep balances — A: {sweptA:F8}, C: {sweptC:F8}");
+        sweptC.Should().Be(0, "C swept its entire balance, no change output should remain");
+        sweptA.Should().BeGreaterThan(finalA, "A should have received C's swept funds");
+        sweptA.Should().BeLessThan(finalA + finalC,
+            "A receives C's balance minus the network fee (fee is subtracted from the swept amount)");
+
+        Log($"========== {nameof(ThreeUsersSendToEachOther)} PASSED — {TotalRounds} rounds + sweep ==========");
     }
 
     private static async Task WipeAndInit(TestProcessHost host)
@@ -224,8 +260,44 @@ public class SendFundsTest
         await host.Client.EnableDebugModeAsync();
     }
 
-    private static async Task<string> GetAddress(TestProcessHost host, string walletId, string label)
+    /// <summary>
+    /// Polls all three balances until two consecutive reads (10s apart) are identical
+    /// for every wallet, so late-confirming faucet transactions don't inflate totals
+    /// mid-test. Times out after 3 minutes and proceeds with the last reading.
+    /// </summary>
+    private static async Task<(double A, double B, double C)> WaitForStableBalances(
+        TestProcessHost hostA, string idA,
+        TestProcessHost hostB, string idB,
+        TestProcessHost hostC, string idC)
     {
+        var deadline = DateTime.UtcNow + TimeSpan.FromMinutes(3);
+        var prev = (A: -1.0, B: -1.0, C: -1.0);
+        while (true)
+        {
+            var current = (
+                A: await GetBalance(hostA, idA, "A"),
+                B: await GetBalance(hostB, idB, "B"),
+                C: await GetBalance(hostC, idC, "C"));
+
+            if (current == prev)
+            {
+                Log("Initial balances stable.");
+                return current;
+            }
+
+            if (DateTime.UtcNow >= deadline)
+            {
+                Log($"Balance stabilization timed out — proceeding with A={current.A:F8}, B={current.B:F8}, C={current.C:F8}");
+                return current;
+            }
+
+            Log($"Waiting for balances to stabilize... A={current.A:F8}, B={current.B:F8}, C={current.C:F8}");
+            prev = current;
+            await Task.Delay(TimeSpan.FromSeconds(10));
+        }
+    }
+
+    private static async Task<string> GetAddress(TestProcessHost host, string walletId, string label)    {
         var resp = await host.Client.GetReceiveAddressAsync(new GetReceiveAddressRequest { WalletId = walletId });
         resp.Success.Should().BeTrue($"Failed to get receive address for {label}: {resp.Error}");
         resp.Address.Should().NotBeNullOrEmpty($"Address for {label} should not be empty");

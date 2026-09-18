@@ -136,11 +136,11 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         _communicationFactory.ClearOkReceivedOnSubscriptionMonitoring(okResponse.EventId);
     }
 
-    public bool TryAddEoseAction(string subscriptionName, Action action)
+    public bool TryAddEoseAction(string subscriptionName, Action action, bool includeDiscoveryRelays = false)
     {
         if (action == null) throw new ArgumentNullException(nameof(action));
 
-        var add = _communicationFactory.MonitoringEoseReceivedOnSubscription(subscriptionName);
+        var add = _communicationFactory.MonitoringEoseReceivedOnSubscription(subscriptionName, includeDiscoveryRelays);
 
         if (!add)
             _logger.LogDebug($"Subscription {subscriptionName} is already being monitored");
@@ -189,6 +189,12 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         
         _communicationFactory
             .GetOrCreateClient(_networkService)
+            .Send(new NostrCloseRequest(subscriptionKey));
+
+        // Some lookups (e.g. NIP-65 relay lists) also send the REQ to the discovery relays;
+        // closing there too is harmless when the subscription was never opened on them.
+        _communicationFactory
+            .GetOrCreateDiscoveryClients(_networkService)
             .Send(new NostrCloseRequest(subscriptionKey));
        
         subscription.Dispose();

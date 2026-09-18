@@ -544,6 +544,19 @@ namespace Angor.Test.Protocol
 
             TransactionValidation.ThanTheTransactionHasNoErrors(releaseTransaction.Transaction, coins);
 
+            // The fee is computed from placeholder witnesses before signing. If those
+            // placeholders are smaller than the real signatures, the broadcast transaction is
+            // larger than the one the fee was based on and the effective fee rate drops below
+            // the requested one — which relay nodes reject with "min relay fee not met" once
+            // the requested rate is at the network minimum.
+            var releaseVirtualSize = releaseTransaction.Transaction.GetVirtualSize();
+            var requestedSatsPerVByte = _expectedFeeEstimation.FeeRate / 1000m;
+            var effectiveSatsPerVByte = releaseTransaction.TransactionFee / (decimal)releaseVirtualSize;
+
+            Assert.True(effectiveSatsPerVByte >= requestedSatsPerVByte,
+                $"Release transaction pays {releaseTransaction.TransactionFee} sats over {releaseVirtualSize} vB " +
+                $"= {effectiveSatsPerVByte:0.###} sat/vB, below the requested {requestedSatsPerVByte:0.###} sat/vB. " +
+                "The witness placeholder used for fee estimation is smaller than the real signature.");
         }
 
         [Theory]

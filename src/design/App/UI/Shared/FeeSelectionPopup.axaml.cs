@@ -2,12 +2,14 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using App.UI.Shell;
+using App.UI.Shared.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace App.UI.Shared;
 
 /// <summary>
 /// Reusable fee selection popup modal.
-/// Shows 3 preset fee rates (Priority=50, Standard=20, Economy=5 sat/vB),
+/// Shows 3 preset fee rates (Priority / Standard / Economy) fetched from the indexer,
 /// an optional custom fee rate input, and Cancel / Confirm buttons.
 /// Callers await the result via <see cref="ShowAsync"/>.
 /// Implements IBackdropCloseable for shell backdrop click handling.
@@ -17,7 +19,14 @@ public partial class FeeSelectionPopup : UserControl, IBackdropCloseable
     private readonly TaskCompletionSource<long?> _tcs = new();
 
     /// <summary>
-    /// Currently selected preset: "priority" (50), "standard" (20), "economy" (5).
+    /// Fee rates offered by the three presets, in sat/vB. Replaced with live indexer
+    /// values by <see cref="ShowAsync"/>; the fallback keeps the designer preview sane.
+    /// </summary>
+    private FeeRates _rates = FeeRates.Fallback;
+
+    /// <summary>
+    /// Currently selected preset: "priority", "standard" or "economy".
+    /// Rates for each come from <see cref="_rates"/>.
     /// Null when custom fee is active.
     /// </summary>
     private string _selectedPreset = "standard";
@@ -56,16 +65,33 @@ public partial class FeeSelectionPopup : UserControl, IBackdropCloseable
     /// <summary>
     /// Shows the fee selection popup as a shell modal and returns the selected fee rate.
     /// Returns null if the user cancels.
+    /// Preset rates come from the indexer; if it is unreachable the popup falls back to
+    /// <see cref="FeeRates.Fallback"/> rather than blocking.
     /// </summary>
     /// <param name="shellVm">The shell ViewModel to show the modal on.</param>
     /// <returns>Selected fee rate in sat/vB, or null if cancelled.</returns>
     public static async Task<long?> ShowAsync(ShellViewModel shellVm)
     {
+        var rates = await App.Services.GetRequiredService<IFeeRateProvider>().GetAsync();
+
         var popup = new FeeSelectionPopup();
+        popup.ApplyRates(rates);
         shellVm.ShowModal(popup);
         var result = await popup.Result;
         shellVm.HideModal();
         return result;
+    }
+
+    /// <summary>
+    /// Applies fee rates to the three presets, keeping the button values and the
+    /// displayed "N sat/vB" labels from drifting apart.
+    /// </summary>
+    private void ApplyRates(FeeRates rates)
+    {
+        _rates = rates;
+        FeePriorityRate.Text = $"{rates.Priority} sat/vB";
+        FeeStandardRate.Text = $"{rates.Standard} sat/vB";
+        FeeEconomyRate.Text = $"{rates.Economy} sat/vB";
     }
 
     /// <summary>
@@ -139,9 +165,9 @@ public partial class FeeSelectionPopup : UserControl, IBackdropCloseable
         {
             var rate = _selectedPreset switch
             {
-                "priority" => 50L,
-                "economy" => 5L,
-                _ => 20L // standard
+                "priority" => _rates.Priority,
+                "economy" => _rates.Economy,
+                _ => _rates.Standard
             };
             _tcs.TrySetResult(rate);
         }

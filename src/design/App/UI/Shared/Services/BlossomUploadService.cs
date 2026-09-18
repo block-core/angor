@@ -93,8 +93,9 @@ public class BlossomUploadService
                 return Result.Failure<string>("Server returned an invalid response");
             }
 
-            logger.LogInformation("Blossom upload successful: {Url}", descriptor.Url);
-            return Result.Success(descriptor.Url);
+            var blobUrl = NormalizeBlobUrl(descriptor.Url, baseUrl, fileBytes);
+            logger.LogInformation("Blossom upload successful: {Url}", blobUrl);
+            return Result.Success(blobUrl);
         }
         catch (TaskCanceledException)
         {
@@ -153,6 +154,38 @@ public class BlossomUploadService
 
         var base64Event = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(eventJson));
         return $"Nostr {base64Event}";
+    }
+
+    /// <summary>
+    /// Normalizes the download URL returned by the server. Some servers return malformed
+    /// URLs (e.g. a duplicated scheme like "https://https://host/sha" observed from
+    /// blossom.angor.io), which breaks the support log-download tooling. Since the blob
+    /// is content-addressed, fall back to the canonical BUD-01 form
+    /// <c>{serverBaseUrl}/{sha256}</c> whenever the returned URL is not a valid absolute URL.
+    /// </summary>
+    private string NormalizeBlobUrl(string returnedUrl, string baseUrl, byte[] fileBytes)
+    {
+        // Strip duplicated scheme prefixes ("https://https://host/..." -> "https://host/...")
+        var url = returnedUrl;
+        while (url.StartsWith("https://https://", StringComparison.OrdinalIgnoreCase) ||
+               url.StartsWith("https://http://", StringComparison.OrdinalIgnoreCase) ||
+               url.StartsWith("http://https://", StringComparison.OrdinalIgnoreCase) ||
+               url.StartsWith("http://http://", StringComparison.OrdinalIgnoreCase))
+        {
+            url = url.Substring(url.IndexOf("://", StringComparison.Ordinal) + 3);
+        }
+
+        if (Uri.TryCreate(url, UriKind.Absolute, out var uri) &&
+            (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+        {
+            return url;
+        }
+
+        var fileSha256 = Convert.ToHexString(SHA256.HashData(fileBytes)).ToLowerInvariant();
+        var canonical = $"{baseUrl}/{fileSha256}";
+        logger.LogWarning("Blossom server returned malformed blob URL '{Returned}'; using canonical '{Canonical}'",
+            returnedUrl, canonical);
+        return canonical;
     }
 
     private sealed class BlobDescriptorResponse

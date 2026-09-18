@@ -6,7 +6,7 @@ public interface IRelaySubscriptionsHandling
 {
     bool TryAddOKAction(string eventId, Action<NostrOkResponse> action);
     void HandleOkMessages(NostrOkResponse _);
-    bool TryAddEoseAction(string subscriptionName, Action action);
+    bool TryAddEoseAction(string subscriptionName, Action action, bool includeDiscoveryRelays = false);
     void HandleEoseMessages(NostrEoseResponse _);
     bool RelaySubscriptionAdded(string subscriptionKey);
     bool TryAddRelaySubscription(string subscriptionKey, IDisposable subscription, bool keepActive = false);

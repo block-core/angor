@@ -21,10 +21,18 @@ namespace App.UI.Shared.Helpers;
 /// </summary>
 public static class ImageCacheService
 {
-    private static readonly HttpClient Http = new()
+    private static readonly HttpClient Http = CreateHttpClient();
+
+    private static HttpClient CreateHttpClient()
     {
-        Timeout = TimeSpan.FromSeconds(30)
-    };
+        var client = new HttpClient
+        {
+            Timeout = TimeSpan.FromSeconds(30)
+        };
+        // Some image hosts reject UA-less requests with 403.
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("Angor/1.0");
+        return client;
+    }
 
     private static ILogger? _logger;
     private static ILogger Logger => _logger ??= App.Services.GetRequiredService<ILoggerFactory>().CreateLogger(nameof(ImageCacheService));
@@ -186,7 +194,10 @@ public static class ImageCacheService
             // 2. Download from network
             using var response = await Http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
             if (!response.IsSuccessStatusCode)
+            {
+                Logger.LogWarning("Image download for '{Url}' returned {Status}", url, (int)response.StatusCode);
                 return null;
+            }
 
             var bytes = await response.Content.ReadAsByteArrayAsync();
             if (bytes.Length == 0)

@@ -122,8 +122,11 @@ public class SeederTransactionActions : ISeederTransactionActions
             investorReceiveAddress, investorPrivateKey, new FeeRate(new Money(feeEstimation.FeeRate)),
             _ =>
             {
-                var controlBlock = _taprootScriptBuilder.CreateControlBlock(_, script => script.EndOfProject);
-                var fakeSig = new byte[64];
+                    var controlBlock = _taprootScriptBuilder.CreateControlBlock(_, script => script.EndOfProject);
+                    // 65 bytes, not 64: SpendingTransactionBuilder signs with an explicit
+                    // TaprootSigHash.All, which appends a sighash byte to the 64-byte Schnorr
+                    // signature. Under-sizing this fails "min relay fee not met" at low fee rates.
+                    var fakeSig = new byte[65];
                 return new WitScript(
                     Op.GetPushOp(fakeSig),
                     Op.GetPushOp(_.EndOfProject.ToBytes()),
