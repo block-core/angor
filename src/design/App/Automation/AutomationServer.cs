@@ -418,6 +418,14 @@ public sealed class AutomationServer : IDisposable
                 return (200, result);
             }
 
+            // POST /flows/inspect-claim-view
+            if (method == "POST" && path == "/flows/inspect-claim-view")
+            {
+                var req = Deserialize<InspectClaimViewRequest>(body);
+                var result = await AutomationFlows.InspectClaimViewAsync(services, req);
+                return (200, result);
+            }
+
             // POST /flows/recovery
             if (method == "POST" && path == "/flows/recovery")
             {

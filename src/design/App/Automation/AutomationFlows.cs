@@ -824,7 +824,7 @@ public static class AutomationFlows
         }
     }
 
-    public static async Task<ActionResponse> ClaimStageAsync(
+    public static async Task<ClaimStageResponse> ClaimStageAsync(
         IServiceProvider services,
         ClaimStageRequest req)
     {
@@ -836,14 +836,22 @@ public static class AutomationFlows
             var myProjectsVm = await Dispatcher.UIThread.InvokeAsync(() => GetMyProjectsViewModel(window));
             if (myProjectsVm == null)
             {
-                return new ActionResponse { Success = false, Error = "MyProjectsViewModel not found" };
+                return new ClaimStageResponse { Success = false, Error = "MyProjectsViewModel not found" };
             }
 
             var founderProject = await WaitForFounderProjectAsync(myProjectsVm, req.ProjectIdentifier);
             if (founderProject == null)
             {
-                return new ActionResponse { Success = false, Error = "Founder project not found" };
+                return new ClaimStageResponse { Success = false, Error = "Founder project not found" };
             }
+
+            // Observed claim-view state from the last poll, so failures report what was actually
+            // seen rather than just "did not complete".
+            var stagesCount = 0;
+            var availableCount = 0;
+            var spentCount = 0;
+            var totalCount = 0;
+            string? claimLoadError = null;
 
             var deadline = DateTime.UtcNow + IndexerLag;
             while (DateTime.UtcNow < deadline)
@@ -866,8 +874,15 @@ public static class AutomationFlows
                     await manageVm.LoadClaimableTransactionsAsync();
                     Dispatcher.UIThread.RunJobs();
 
-                    return manageVm.Stages.Any(s =>
-                        s.Number == req.StageNumber && s.AvailableTransactions.Count >= req.ExpectedUtxoCount);
+                    claimLoadError = manageVm.ClaimLoadError;
+                    stagesCount = manageVm.Stages.Count;
+
+                    var stage = manageVm.Stages.FirstOrDefault(s => s.Number == req.StageNumber);
+                    availableCount = stage?.AvailableTransactions.Count ?? 0;
+                    spentCount = stage?.SpentTransactions.Count ?? 0;
+                    totalCount = stage?.TotalTransactionCount ?? 0;
+
+                    return stage != null && availableCount >= req.ExpectedUtxoCount;
                 });
 
                 if (ready)
@@ -885,19 +900,135 @@ public static class AutomationFlows
             await Dispatcher.UIThread.InvokeAsync(() => myProjectsVm.CloseManageProject());
             await Task.Delay(200);
 
-            var clicked = await ClickManageProjectClaimStageAsync(window, myProjectsVm, founderProject, req.StageNumber);
+            ClaimStageResponse Failure(string error) => new()
+            {
+                Success = false,
+                Error = error,
+                StagesCount = stagesCount,
+                AvailableUtxoCount = availableCount,
+                SpentUtxoCount = spentCount,
+                TotalUtxoCount = totalCount,
+                ClaimLoadError = claimLoadError,
+            };
+
+            // The claim view must have loaded cleanly. Previously a scan failure left Stages
+            // empty and the flow proceeded anyway.
+            if (!string.IsNullOrEmpty(claimLoadError))
+            {
+                return Failure($"Claim view reported a load error: {claimLoadError}");
+            }
+
+            if (stagesCount == 0)
+            {
+                return Failure(
+                    "Claim view loaded zero stages — the UTXO section would not render for the founder.");
+            }
+
+            // ExpectedUtxoCount used to be only a polling predicate; the loop fell through on
+            // timeout and the flow continued. It is now a hard assertion.
+            if (availableCount < req.ExpectedUtxoCount)
+            {
+                return Failure(
+                    $"Stage {req.StageNumber} exposed {availableCount} claimable UTXO(s), " +
+                    $"expected at least {req.ExpectedUtxoCount} " +
+                    $"(stages={stagesCount}, spent={spentCount}, total={totalCount}).");
+            }
+
+            var clickError = await ClickManageProjectClaimStageAsync(window, myProjectsVm, founderProject, req.StageNumber);
 
             // Close manage panel so subsequent flows (e.g. ReleaseFunds) can find project cards
             await Dispatcher.UIThread.InvokeAsync(() => myProjectsVm.CloseManageProject());
             await Task.Delay(200);
 
-            return clicked
-                ? new ActionResponse { Success = true }
-                : new ActionResponse { Success = false, Error = "Claim stage flow did not complete" };
+            if (clickError != null)
+            {
+                return Failure(clickError);
+            }
+
+            return new ClaimStageResponse
+            {
+                Success = true,
+                StagesCount = stagesCount,
+                AvailableUtxoCount = availableCount,
+                SpentUtxoCount = spentCount,
+                TotalUtxoCount = totalCount,
+                ClaimLoadError = null,
+                SuccessModalShown = true,
+            };
         }
         catch (Exception ex)
         {
-            return new ActionResponse { Success = false, Error = ex.Message };
+            return new ClaimStageResponse { Success = false, Error = ex.Message };
+        }
+    }
+
+    /// <summary>
+    /// Loads the founder claim view and reports what it rendered, without claiming anything.
+    /// Used to assert the UTXO section survives states the claim flow never reaches — notably
+    /// WithdrawByInvestor / Pending, which only occur after investors have recovered.
+    /// </summary>
+    public static async Task<InspectClaimViewResponse> InspectClaimViewAsync(
+        IServiceProvider services,
+        InspectClaimViewRequest req)
+    {
+        try
+        {
+            var window = await RequireWindowAsync();
+            await NavigateToAsync(window, "My Projects");
+
+            var myProjectsVm = await Dispatcher.UIThread.InvokeAsync(() => GetMyProjectsViewModel(window));
+            if (myProjectsVm == null)
+            {
+                return new InspectClaimViewResponse { Success = false, Error = "MyProjectsViewModel not found" };
+            }
+
+            var founderProject = await WaitForFounderProjectAsync(myProjectsVm, req.ProjectIdentifier);
+            if (founderProject == null)
+            {
+                return new InspectClaimViewResponse { Success = false, Error = "Founder project not found" };
+            }
+
+            var result = await Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                await myProjectsVm.LoadFounderProjectsAsync();
+                var currentProject = myProjectsVm.Projects.FirstOrDefault(p =>
+                    string.Equals(p.ProjectIdentifier, req.ProjectIdentifier, StringComparison.Ordinal));
+                if (currentProject == null)
+                {
+                    return new InspectClaimViewResponse { Success = false, Error = "Project disappeared after reload" };
+                }
+
+                myProjectsVm.OpenManageProject(currentProject);
+                var manageVm = myProjectsVm.SelectedManageProject;
+                if (manageVm == null)
+                {
+                    return new InspectClaimViewResponse { Success = false, Error = "ManageProjectViewModel not found" };
+                }
+
+                await manageVm.LoadClaimableTransactionsAsync();
+                Dispatcher.UIThread.RunJobs();
+
+                var rendered = manageVm.Stages.Sum(s => s.AvailableTransactions.Count + s.SpentTransactions.Count);
+                var reported = manageVm.Stages.Sum(s => s.TotalTransactionCount);
+
+                return new InspectClaimViewResponse
+                {
+                    Success = true,
+                    StagesCount = manageVm.Stages.Count,
+                    RenderedUtxoCount = rendered,
+                    ReportedUtxoCount = reported,
+                    ClaimLoadError = manageVm.ClaimLoadError,
+                };
+            });
+
+            await Dispatcher.UIThread.InvokeAsync(() => myProjectsVm.CloseManageProject());
+            await Task.Delay(200);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            return new InspectClaimViewResponse { Success = false, Error = ex.Message };
         }
     }
 
@@ -1417,7 +1548,12 @@ public static class AutomationFlows
         return null;
     }
 
-    private static async Task<bool> ClickManageProjectClaimStageAsync(
+    /// <summary>
+    /// Drives the founder stage-claim UI. Returns null on success, or a description of what
+    /// went wrong. Completion requires the success modal — "not claiming any more" is NOT
+    /// treated as success, because that is also true when nothing was ever claimed.
+    /// </summary>
+    private static async Task<string?> ClickManageProjectClaimStageAsync(
         Window window,
         MyProjectsViewModel myProjectsVm,
         MyProjectItemViewModel project,
@@ -1427,6 +1563,7 @@ public static class AutomationFlows
         await ClickPartManageButtonAsync(window, project);
 
         // Wait for the stage claim button to appear and click it
+        var stageButtonFound = false;
         var deadline = DateTime.UtcNow + TimeSpan.FromMinutes(3);
         while (DateTime.UtcNow < deadline)
         {
@@ -1439,47 +1576,72 @@ public static class AutomationFlows
                 return true;
             });
 
-            if (stageClicked) break;
+            if (stageClicked)
+            {
+                stageButtonFound = true;
+                break;
+            }
             await Task.Delay(TimeSpan.FromMilliseconds(200));
+        }
+
+        if (!stageButtonFound)
+        {
+            // Previously the loop just fell through and the flow carried on regardless,
+            // so a stage that never rendered a claim button still reported success.
+            return $"Stage {stageNumber} claim button (StageClaimBtn) never became visible — " +
+                   "the UTXO section did not render.";
         }
 
         // Select all UTXOs for the stage by toggling IsSelected on each item
         // The UTXO toggle is driven by PointerPressed on UtxoItemBorder, which sets
         // utxo.IsSelected and updates checkbox CSS class. We set IsSelected directly
         // since PointerPressedEventArgs can't be easily synthesized in Avalonia.
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        var selectedCount = await Dispatcher.UIThread.InvokeAsync(() =>
         {
             var manageVm = myProjectsVm.SelectedManageProject;
-            if (manageVm?.SelectedStage?.AvailableTransactions != null)
+            var available = manageVm?.SelectedStage?.AvailableTransactions;
+            if (available == null) return 0;
+
+            foreach (var tx in available)
             {
-                foreach (var tx in manageVm.SelectedStage.AvailableTransactions)
-                {
-                    tx.IsSelected = true;
-                }
-                Dispatcher.UIThread.RunJobs();
+                tx.IsSelected = true;
             }
+            Dispatcher.UIThread.RunJobs();
+            return available.Count;
         });
         await Task.Delay(200);
+
+        if (selectedCount == 0)
+        {
+            return $"Stage {stageNumber} exposed no claimable UTXOs to select.";
+        }
 
         // Click ClaimSelectedBtn — triggers FeeSelectionPopup, then click ConfirmButton with retry
         await ClickWithConfirmRetryAsync(window, "ClaimSelectedBtn");
 
-        // Wait for claim to complete (success modal or IsClaiming becomes false)
+        // Wait for the claim to actually succeed. Only ShowSuccessModal counts.
         var claimDeadline = DateTime.UtcNow + TxTimeout;
         while (DateTime.UtcNow < claimDeadline)
         {
-            var completed = await Dispatcher.UIThread.InvokeAsync(() =>
+            var succeeded = await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 Dispatcher.UIThread.RunJobs();
-                var manageVm = myProjectsVm.SelectedManageProject;
-                return manageVm != null && (manageVm.ShowSuccessModal || !manageVm.IsClaiming);
+                return myProjectsVm.SelectedManageProject?.ShowSuccessModal == true;
             });
 
-            if (completed) return true;
+            if (succeeded) return null;
             await Task.Delay(TimeSpan.FromMilliseconds(500));
         }
 
-        return false;
+        var finalState = await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            var manageVm = myProjectsVm.SelectedManageProject;
+            return manageVm == null
+                ? "manage view was closed"
+                : $"IsClaiming={manageVm.IsClaiming}, ClaimLoadError={manageVm.ClaimLoadError ?? "<null>"}";
+        });
+
+        return $"Claim of stage {stageNumber} never reached the success modal ({finalState}).";
     }
 
     private static async Task<bool> ClickManageProjectReleaseFundsAsync(

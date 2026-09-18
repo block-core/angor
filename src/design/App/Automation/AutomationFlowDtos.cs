@@ -246,6 +246,80 @@ public static class AutomationFlowDtos
         public int ExpectedUtxoCount { get; init; }
     }
 
+    /// <summary>
+    /// Result of a claim-stage flow. Carries the observed claim-view state so tests can
+    /// assert on it directly instead of relying on a bare Success flag.
+    /// </summary>
+    public sealed class ClaimStageResponse
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; init; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; init; }
+
+        /// <summary>Number of stages the founder claim view loaded.</summary>
+        [JsonPropertyName("stagesCount")]
+        public int StagesCount { get; init; }
+
+        /// <summary>Claimable UTXOs observed on the requested stage before claiming.</summary>
+        [JsonPropertyName("availableUtxoCount")]
+        public int AvailableUtxoCount { get; init; }
+
+        /// <summary>Spent/other-status UTXOs observed on the requested stage before claiming.</summary>
+        [JsonPropertyName("spentUtxoCount")]
+        public int SpentUtxoCount { get; init; }
+
+        /// <summary>Total UTXOs the SDK reported for the requested stage.</summary>
+        [JsonPropertyName("totalUtxoCount")]
+        public int TotalUtxoCount { get; init; }
+
+        /// <summary>
+        /// Non-null when ManageProjectViewModel failed to load claimable transactions.
+        /// Must be null for a healthy claim view.
+        /// </summary>
+        [JsonPropertyName("claimLoadError")]
+        public string? ClaimLoadError { get; init; }
+
+        /// <summary>True when the claim success modal was actually shown.</summary>
+        [JsonPropertyName("successModalShown")]
+        public bool SuccessModalShown { get; init; }
+    }
+
+    /// <summary>
+    /// Read-only inspection of the founder claim view. Unlike ClaimStageRequest this claims
+    /// nothing — it exists so tests can assert the UTXO section still renders after investors
+    /// have recovered (i.e. once WithdrawByInvestor / Pending statuses are present).
+    /// </summary>
+    public sealed class InspectClaimViewRequest
+    {
+        [JsonPropertyName("projectIdentifier")]
+        public string ProjectIdentifier { get; init; } = "";
+    }
+
+    public sealed class InspectClaimViewResponse
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; init; }
+
+        [JsonPropertyName("error")]
+        public string? Error { get; init; }
+
+        [JsonPropertyName("stagesCount")]
+        public int StagesCount { get; init; }
+
+        /// <summary>Total UTXO rows rendered across every stage (available + spent/other).</summary>
+        [JsonPropertyName("renderedUtxoCount")]
+        public int RenderedUtxoCount { get; init; }
+
+        /// <summary>Sum of TotalTransactionCount across stages, as reported by the SDK.</summary>
+        [JsonPropertyName("reportedUtxoCount")]
+        public int ReportedUtxoCount { get; init; }
+
+        [JsonPropertyName("claimLoadError")]
+        public string? ClaimLoadError { get; init; }
+    }
+
     public sealed class RecoveryRequest
     {
         [JsonPropertyName("projectIdentifier")]

@@ -186,14 +186,29 @@ public class MultiFundClaimAndRecoverTest
             ExpectedUtxoCount = 4,
         });
         claim.Success.Should().BeTrue(claim.Error);
+        claim.ClaimLoadError.Should().BeNull("the founder claim view must load without errors");
+        claim.StagesCount.Should().Be(6, "the project was created with 6 monthly installments");
+        claim.AvailableUtxoCount.Should().Be(4, "2 below-threshold + 2 above-threshold investments");
+        claim.SuccessModalShown.Should().BeTrue("a claim that does not reach the success modal has not claimed anything");
 
         // ══════════════════════════════════════════════════════════════
         // Recovery paths
         // ══════════════════════════════════════════════════════════════
 
-        // Investor3 (above threshold): recovery → penaltyRelease
-        Log(Investor3Profile, "Recovering via recovery...");
-        var recover3 = await investor3Host.Client.ExecuteRecoveryAsync(new RecoveryRequest
+        // Investor3 (above threshold): recovery → penaltyRelease.
+        //
+        // Restart the investor process first. The founder-signature lookup is a live nostr
+        // query with no caching, and in a warm process the subscription for this project's
+        // pubkey is already open from PublishInvestment minutes earlier — which hides races
+        // and subscription-key collisions in the lookup. A cold process is what a real user
+        // has, and is the only configuration that reproduces "No founder signatures found".
+        Log(Investor3Profile, "Restarting process for a cold-start recovery...");
+        await investor3Host.DisposeAsync();
+        await using var investor3ColdHost = await TestProcessHost.LaunchAsync(Investor3Profile);
+        await investor3ColdHost.Client.SwitchNetworkAsync("Angornet");
+
+        Log(Investor3Profile, "Recovering via recovery (cold start)...");
+        var recover3 = await investor3ColdHost.Client.ExecuteRecoveryAsync(new RecoveryRequest
         {
             ProjectIdentifier = projectId,
             Action = "recovery",
@@ -201,10 +216,10 @@ public class MultiFundClaimAndRecoverTest
         recover3.Success.Should().BeTrue(recover3.Error);
 
         // ── Investor3 is now "In Penalty": verify the Penalties popup on the Funded tab shows it ──
-        await VerifyPenaltiesPopupAsync(investor3Host, projectId, projectName);
+        await VerifyPenaltiesPopupAsync(investor3ColdHost, projectId, projectName);
 
         Log(Investor3Profile, "Claiming via penaltyRelease...");
-        var penalty3 = await investor3Host.Client.ExecuteRecoveryAsync(new RecoveryRequest
+        var penalty3 = await investor3ColdHost.Client.ExecuteRecoveryAsync(new RecoveryRequest
         {
             ProjectIdentifier = projectId,
             Action = "penaltyRelease",
@@ -244,6 +259,25 @@ public class MultiFundClaimAndRecoverTest
             Action = "belowThreshold",
         });
         recover2.Success.Should().BeTrue(recover2.Error);
+
+        // ── Founder re-opens the claim view now that investors have recovered ──
+        // Every UTXO is now spent, many of them by investors (WithdrawByInvestor) rather than
+        // by the founder. Those statuses are only reachable at this point in the test, and a
+        // stage whose UTXOs all land outside the known buckets renders as an empty card —
+        // exactly the "UTXO section does not appear / investment is lost" report.
+        Log(FounderProfile, "Re-inspecting claim view after investor recoveries...");
+        var postRecovery = await founderHost.Client.InspectClaimViewAsync(new InspectClaimViewRequest
+        {
+            ProjectIdentifier = projectId,
+        });
+        postRecovery.Success.Should().BeTrue(postRecovery.Error);
+        postRecovery.ClaimLoadError.Should().BeNull(
+            "the claim view must still load after investors have recovered");
+        postRecovery.StagesCount.Should().Be(6, "the stage list must not collapse after recovery");
+        postRecovery.RenderedUtxoCount.Should().Be(
+            postRecovery.ReportedUtxoCount,
+            "every UTXO the SDK reports must be rendered in some bucket — dropped rows are " +
+            "indistinguishable from lost funds to the founder");
 
         Log(null, $"========== {nameof(MultiFundClaimAndRecover)} PASSED ==========");
     }
