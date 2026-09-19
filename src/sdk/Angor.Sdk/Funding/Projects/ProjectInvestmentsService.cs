@@ -71,7 +71,7 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
         }
         catch (Exception e)
         {
-            //TODO add logging
+            logger.LogError(e, "Failed to scan investments for project {ProjectId}", projectId);
             return Result.Failure<IEnumerable<StageData>>(e.Message);
         }
     }
@@ -97,9 +97,10 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
 
         foreach (var stage in stageDataList)
         {
+            // FirstOrDefault (not First): a missing vout must produce a describable failure
+            // ("Output not found") rather than an opaque "sequence contains no matching element".
             var taskFactories = investmentsResult.Value.Select(tuple =>
-                (output: tuple.trxInfo?.Outputs.First(outp => outp.Index == stage.StageIndex + 2)
-                ?? null,
+                (output: tuple.trxInfo?.Outputs.FirstOrDefault(outp => outp.Index == stage.StageIndex + 2),
                  transaction: tuple.trx, index: stage.StageIndex))
                 .Select(x => (Func<Task<Result<StageDataTrx>>>)(() =>
                     CheckSpentFund(x.output, x.transaction, projectInfo, x.index)));
@@ -108,9 +109,19 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
 
             var combinedResult = results.Combine();
 
+            // Fail the whole scan if any item could not be resolved. Showing a partial set of
+            // UTXOs is worse than showing none: the founder cannot tell the difference between
+            // "these are all your funds" and "some are missing". The caller surfaces this error
+            // and the user retries with Refresh.
             if (combinedResult.IsFailure)
-                return Result.Failure<IEnumerable<StageData>>("Failed to process investment transactions: " +
-                                                              combinedResult.Error);
+            {
+                logger.LogWarning(
+                    "Scan aborted for project {ProjectId} at stage {StageIndex}: {Error}",
+                    project.Id.Value, stage.StageIndex, combinedResult.Error);
+
+                return Result.Failure<IEnumerable<StageData>>(
+                    $"Could not read stage {stage.StageIndex + 1} from the indexer: {combinedResult.Error}");
+            }
 
             stage.Items = combinedResult.Value.ToList();
 
@@ -280,6 +291,11 @@ public class ProjectInvestmentsService(IProjectService projectService, INetworkC
         var taprootOutputs = investmentTransaction.Outputs.AsIndexedOutputs()
                .Where(txout => txout.TxOut.ScriptPubKey.IsTaprooOutput())
                .ToArray();
+
+        if (stageIndex < 0 || stageIndex >= taprootOutputs.Length)
+            return Result.Failure<StageDataTrx>(
+                $"Investment transaction {investmentTransaction.GetHash()} has {taprootOutputs.Length} " +
+                $"taproot output(s); no output for stage index {stageIndex}");
 
         var txOut = taprootOutputs.ElementAt(stageIndex);
 

@@ -143,9 +143,50 @@ public static class BuildUnfundedReleaseTransaction
             cts.Token.Register(() => { tcs.TrySetResult(Result.Success<SignatureInfo?>(null)); cts.Dispose(); });
 
             var projectPubKey = project.NostrPubKey;
-            
+
+            // See BuildRecoveryTransaction.LookupFounderSignatures: the relay's EOSE can otherwise
+            // beat the async decrypt/deserialize handler and discard signatures that did arrive.
+            var handlerGate = new object();
+            Task? handlerTask = null;
+
             signService.LookupReleaseSigs(pubKey, projectPubKey, null, eventId,
-                async content =>
+                content =>
+                {
+                    // Note: this callback is an Action<string>, so the previous `async content =>`
+                    // lambda was an async void — faults crashed the process and the result was
+                    // always decided by EOSE. Capture the task instead.
+                    var task = HandleReleaseSignatureEventAsync(content);
+                    lock (handlerGate)
+                    {
+                        handlerTask = task;
+                    }
+                },
+                () =>
+                {
+                    Task? inFlight;
+                    lock (handlerGate)
+                    {
+                        inFlight = handlerTask;
+                    }
+
+                    if (inFlight is null)
+                    {
+                        tcs.TrySetResult(Result.Success<SignatureInfo?>(null));
+                        return;
+                    }
+
+                    inFlight.ContinueWith(
+                        _ => tcs.TrySetResult(Result.Success<SignatureInfo?>(null)),
+                        TaskScheduler.Default);
+                });
+
+            await tcs.Task;
+
+            return tcs.Task.Result;
+
+            async Task HandleReleaseSignatureEventAsync(string content)
+            {
+                try
                 {
                     var signatures =
                         await decrypter.DecryptNostrContentAsync(privateKeyHex, projectPubKey, content);
@@ -153,13 +194,13 @@ public static class BuildUnfundedReleaseTransaction
                     var signatureInfo = serializer.Deserialize<SignatureInfo>(signatures);
 
                     tcs.TrySetResult(Result.Success<SignatureInfo?>(signatureInfo));
-                },
-                () => { if (!tcs.Task.IsCompleted) tcs.TrySetResult(result: Result.Success<SignatureInfo?>(null));});
-
-
-            await tcs.Task;
-
-            return tcs.Task.Result;
+                }
+                catch (Exception e)
+                {
+                    tcs.TrySetResult(Result.Failure<SignatureInfo?>(
+                        "Failed to process founder release signatures: " + e.Message));
+                }
+            }
         }
     }
 }

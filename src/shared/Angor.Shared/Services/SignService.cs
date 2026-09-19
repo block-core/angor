@@ -81,16 +81,38 @@ namespace Angor.Shared.Services
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
 
+            // NOTE: the subscription key is deliberately the bare projectNostrPubKey.
+            //
+            // A unique-per-lookup key looks more correct (it would avoid the collision described
+            // below) but it regresses badly in practice: subscriptions are only closed by
+            // HandleEoseMessages once EOSE has arrived from *every* relay, so a single dead or
+            // erroring relay means a unique-keyed subscription is never closed. Callers such as
+            // the portfolio refresh loop invoke this repeatedly, leaking one open REQ per call
+            // until relays hit their concurrent-subscription cap and stop answering — which
+            // manifests as investments never reaching the published state.
+            //
+            // Known limitation of the shared key: if a subscription for this project is already
+            // open, the new `action` is not wired up and TryAddEoseAction replaces the previous
+            // caller's EOSE action. Overlapping lookups for the same project can therefore
+            // resolve as "no signatures". Fixing that properly needs explicit per-lookup
+            // subscription lifetimes (close on completion rather than on EOSE), which is a
+            // larger change than this bugfix.
             if (!_subscriptionsHanding.RelaySubscriptionAdded(projectNostrPubKey))
             {
                 var subscription = nostrClient.Streams.EventStream
                     .Where(_ => _.Subscription == projectNostrPubKey)
                     .Where(_ => _.Event.Kind == NostrKind.EncryptedDm)
                     .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Re:Investment offer")
-                    .Subscribe(_ => { action.Invoke(_.Event.Content); });
+                    .Subscribe(_ =>
+                    {
+                        // Rx OnNext is synchronous, so the handler task cannot be awaited here.
+                        // Observe it anyway so a fault never becomes an unobserved task exception
+                        // (which crashes the process via the finalizer thread).
+                        action.Invoke(_.Event.Content)
+                            .ContinueWith(t => { var observed = t.Exception; }, TaskContinuationOptions.OnlyOnFaulted);
+                    });
 
                 _subscriptionsHanding.TryAddRelaySubscription(projectNostrPubKey, subscription);
-
             }
 
             if (onAllMessagesReceived != null)

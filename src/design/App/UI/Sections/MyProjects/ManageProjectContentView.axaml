@@ -515,6 +515,20 @@
                            LineHeight="21"
                            Margin="0,0,0,20" />
 
+                <!-- Claim scan failure — never present an empty stage list as "no funds" -->
+                <Border Background="#33EF4444"
+                        BorderBrush="#EF4444"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="12"
+                        Margin="0,0,0,16"
+                        IsVisible="{Binding ClaimLoadError, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <TextBlock Text="{Binding ClaimLoadError}"
+                               FontSize="13"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextStrong}" />
+                </Border>
+
                 <!-- Stage cards list -->
                 <ItemsControl Name="StagesItemsControl" ItemsSource="{Binding Stages}">
                     <ItemsControl.ItemTemplate>

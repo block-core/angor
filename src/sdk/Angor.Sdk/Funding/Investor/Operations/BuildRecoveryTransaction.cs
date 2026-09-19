@@ -135,8 +135,54 @@ public static class BuildRecoveryTransaction
 
             var projectPubKey = project.NostrPubKey;
 
+            // The relay sends EOSE immediately after the matching event, but the event handler
+            // below does slow async work (decrypt -> deserialize -> full Schnorr validation).
+            // SignService invokes the handler fire-and-forget, so without tracking the in-flight
+            // handler task the EOSE callback wins the TrySetResult race and a perfectly valid
+            // signature is reported as "No founder signatures found". Track the handler task and
+            // make EOSE wait for it before concluding that nothing arrived.
+            var handlerGate = new object();
+            Task? handlerTask = null;
+
             signService.LookupSignatureForInvestmentRequest(pubKey, projectPubKey, createdAt, eventId,
-                async content =>
+                content =>
+                {
+                    var task = HandleSignatureEventAsync(content);
+                    lock (handlerGate)
+                    {
+                        handlerTask = task;
+                    }
+                    return task;
+                },
+                () =>
+                {
+                    Task? inFlight;
+                    lock (handlerGate)
+                    {
+                        inFlight = handlerTask;
+                    }
+
+                    if (inFlight is null)
+                    {
+                        // No event was ever delivered for this subscription — genuinely nothing to find.
+                        tcs.TrySetResult(Result.Success<SignatureInfo?>(null));
+                        return;
+                    }
+
+                    // An event is being processed: let it settle the result first.
+                    // TrySetResult means the handler's outcome wins if it got there.
+                    inFlight.ContinueWith(
+                        _ => tcs.TrySetResult(Result.Success<SignatureInfo?>(null)),
+                        TaskScheduler.Default);
+                });
+
+            await tcs.Task;
+
+            return tcs.Task.Result;
+
+            async Task HandleSignatureEventAsync(string content)
+            {
+                try
                 {
                     var signatures =
                         await decrypter.DecryptNostrContentAsync(privateKeyHex, projectPubKey, content);
@@ -150,13 +196,15 @@ public static class BuildRecoveryTransaction
                     tcs.TrySetResult(validSignatures
                         ? Result.Success<SignatureInfo?>(signatureInfo)
                         : Result.Failure<SignatureInfo?>("Invalid signatures"));
-                },
-                () => { if (!tcs.Task.IsCompleted) tcs.TrySetResult(result: Result.Success<SignatureInfo?>(null)); });
-
-
-            await tcs.Task;
-
-            return tcs.Task.Result;
+                }
+                catch (Exception e)
+                {
+                    // This task is never awaited by SignService, so an unhandled exception here
+                    // used to vanish silently and degrade into the misleading 30s-timeout path.
+                    tcs.TrySetResult(Result.Failure<SignatureInfo?>(
+                        "Failed to process founder signatures: " + e.Message));
+                }
+            }
         }
     }
 }
