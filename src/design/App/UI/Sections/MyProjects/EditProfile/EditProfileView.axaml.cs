@@ -57,6 +57,8 @@ public partial class EditProfileView : UserControl
     private TextBlock? _mediaStatusText;
     private Button? _mediaUploadBtn;
     private Button? _mediaBrowseBtn;
+    private Button? _picBrowseBtn;
+    private Button? _bannerBrowseBtn;
 
     // Tab content panels
     private StackPanel? _profileTabContent;
@@ -222,6 +224,7 @@ public partial class EditProfileView : UserControl
         _picUploadBtn = this.FindControl<Button>("PicUploadBtn");
 
         var picBrowseBtn = this.FindControl<Button>("PicBrowseBtn");
+        _picBrowseBtn = picBrowseBtn;
         if (picBrowseBtn != null)
             picBrowseBtn.Click += (_, _) => _ = BrowseFileAsync(false);
         if (_picUploadBtn != null)
@@ -234,6 +237,7 @@ public partial class EditProfileView : UserControl
         _bannerUploadBtn = this.FindControl<Button>("BannerUploadBtn");
 
         var bannerBrowseBtn = this.FindControl<Button>("BannerBrowseBtn");
+        _bannerBrowseBtn = bannerBrowseBtn;
         if (bannerBrowseBtn != null)
             bannerBrowseBtn.Click += (_, _) => _ = BrowseFileAsync(true);
         if (_bannerUploadBtn != null)
@@ -722,10 +726,21 @@ public partial class EditProfileView : UserControl
 
     #region Blossom Upload
 
+    private bool _bannerBrowseInProgress;
+    private bool _picBrowseInProgress;
+    private bool _mediaBrowseInProgress;
+
     private async Task BrowseFileAsync(bool isBanner)
     {
+        if (isBanner ? _bannerBrowseInProgress : _picBrowseInProgress) return;
+
         var topLevel = TopLevel.GetTopLevel(this);
         if (topLevel == null) return;
+
+        var browseBtn = isBanner ? _bannerBrowseBtn : _picBrowseBtn;
+
+        if (isBanner) _bannerBrowseInProgress = true; else _picBrowseInProgress = true;
+        if (browseBtn != null) browseBtn.IsEnabled = false;
 
         try
         {
@@ -780,6 +795,11 @@ public partial class EditProfileView : UserControl
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Browse file failed");
+        }
+        finally
+        {
+            if (isBanner) _bannerBrowseInProgress = false; else _picBrowseInProgress = false;
+            if (browseBtn != null) browseBtn.IsEnabled = true;
         }
     }
 
@@ -889,8 +909,13 @@ public partial class EditProfileView : UserControl
 
     private async Task BrowseMediaFileAsync()
     {
+        if (_mediaBrowseInProgress) return;
+
         var topLevel = TopLevel.GetTopLevel(this);
         if (topLevel == null) return;
+
+        _mediaBrowseInProgress = true;
+        if (_mediaBrowseBtn != null) _mediaBrowseBtn.IsEnabled = false;
 
         try
         {
@@ -935,6 +960,11 @@ public partial class EditProfileView : UserControl
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Browse media file failed");
+        }
+        finally
+        {
+            _mediaBrowseInProgress = false;
+            if (_mediaBrowseBtn != null) _mediaBrowseBtn.IsEnabled = true;
         }
     }
 
