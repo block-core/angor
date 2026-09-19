@@ -13,6 +13,7 @@ namespace App.Test.Uat.Helpers;
 public sealed class TestProcessHost : IAsyncDisposable
 {
     private readonly Process process;
+    private bool disposed;
 
     public TestAutomationClient Client { get; }
     public string ProfileName { get; }
@@ -142,6 +143,12 @@ public sealed class TestProcessHost : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        // Idempotent: tests may restart a profile mid-run by disposing explicitly, and the
+        // enclosing `await using` will dispose again. Touching `process` after Dispose()
+        // throws, so guard rather than relying on that being safe.
+        if (disposed) return;
+        disposed = true;
+
         int pid = -1;
         try { pid = process.Id; } catch { }
 

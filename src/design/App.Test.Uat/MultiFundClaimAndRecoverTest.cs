@@ -186,12 +186,23 @@ public class MultiFundClaimAndRecoverTest
             ExpectedUtxoCount = 4,
         });
         claim.Success.Should().BeTrue(claim.Error);
+        claim.ClaimLoadError.Should().BeNull("the founder claim view must load without errors");
+        claim.StagesCount.Should().Be(6, "the project was created with 6 monthly installments");
+        claim.AvailableUtxoCount.Should().Be(4, "2 below-threshold + 2 above-threshold investments");
+        claim.SuccessModalShown.Should().BeTrue("a claim that does not reach the success modal has not claimed anything");
 
         // ══════════════════════════════════════════════════════════════
         // Recovery paths
         // ══════════════════════════════════════════════════════════════
 
         // Investor3 (above threshold): recovery → penaltyRelease
+        //
+        // NOTE: a cold-start variant of this step (restart the process first, so the founder
+        // signature lookup runs without a warm relay subscription) was tried and removed. On
+        // restart the app re-syncs the wallet from the indexer, and a failed balance fetch is
+        // currently rendered as a zero balance — which sends the recovery flow to the faucet
+        // for fee funds and hangs. Worth revisiting once balance refresh distinguishes
+        // "fetch failed" from "no funds".
         Log(Investor3Profile, "Recovering via recovery...");
         var recover3 = await investor3Host.Client.ExecuteRecoveryAsync(new RecoveryRequest
         {
@@ -244,6 +255,25 @@ public class MultiFundClaimAndRecoverTest
             Action = "belowThreshold",
         });
         recover2.Success.Should().BeTrue(recover2.Error);
+
+        // ── Founder re-opens the claim view now that investors have recovered ──
+        // Every UTXO is now spent, many of them by investors (WithdrawByInvestor) rather than
+        // by the founder. Those statuses are only reachable at this point in the test, and a
+        // stage whose UTXOs all land outside the known buckets renders as an empty card —
+        // exactly the "UTXO section does not appear / investment is lost" report.
+        Log(FounderProfile, "Re-inspecting claim view after investor recoveries...");
+        var postRecovery = await founderHost.Client.InspectClaimViewAsync(new InspectClaimViewRequest
+        {
+            ProjectIdentifier = projectId,
+        });
+        postRecovery.Success.Should().BeTrue(postRecovery.Error);
+        postRecovery.ClaimLoadError.Should().BeNull(
+            "the claim view must still load after investors have recovered");
+        postRecovery.StagesCount.Should().Be(6, "the stage list must not collapse after recovery");
+        postRecovery.RenderedUtxoCount.Should().Be(
+            postRecovery.ReportedUtxoCount,
+            "every UTXO the SDK reports must be rendered in some bucket — dropped rows are " +
+            "indistinguishable from lost funds to the founder");
 
         Log(null, $"========== {nameof(MultiFundClaimAndRecover)} PASSED ==========");
     }

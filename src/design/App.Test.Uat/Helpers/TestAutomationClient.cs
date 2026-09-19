@@ -314,11 +314,18 @@ public sealed class TestAutomationClient : IDisposable
         return await PostAsync<ConfirmInvestmentResponse>("/flows/confirm-investment", request, ct);
     }
 
-    public async Task<ActionResponse> ClaimStageAsync(
+    public async Task<ClaimStageResponse> ClaimStageAsync(
         ClaimStageRequest request,
         CancellationToken ct = default)
     {
-        return await PostAsync<ActionResponse>("/flows/claim-stage", request, ct);
+        return await PostAsync<ClaimStageResponse>("/flows/claim-stage", request, ct);
+    }
+
+    public async Task<InspectClaimViewResponse> InspectClaimViewAsync(
+        InspectClaimViewRequest request,
+        CancellationToken ct = default)
+    {
+        return await PostAsync<InspectClaimViewResponse>("/flows/inspect-claim-view", request, ct);
     }
 
     public async Task<RecoveryResponse> ExecuteRecoveryAsync(
