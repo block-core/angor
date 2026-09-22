@@ -30,6 +30,18 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         _okCalledOnSubscriptionClients = new();
     }
 
+    private async Task StartCommunicatorAsync(INostrCommunicator communicator)
+    {
+        try
+        {
+            await communicator.StartOrFail();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not connect to relay {Relay}; other relays remain available", communicator.Name);
+        }
+    }
+
     private ConcurrentDictionary<string, byte> GetAllConnectedRelayNames(bool includeDiscoveryRelays = false)
     {
         var allRelays = new ConcurrentDictionary<string, byte>();
@@ -99,7 +111,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
 
             _nostrMultiWebsocketClientDiscovery!.RegisterClient(client);
 
-            communicator.StartOrFail();
+            _ = StartCommunicatorAsync(communicator);
         }
 
         return _nostrMultiWebsocketClientDiscovery;
@@ -173,7 +185,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
             
             _nostrMultiWebsocketClient!.RegisterClient(client);
             
-            communicator.StartOrFail();
+            _ = StartCommunicatorAsync(communicator);
         }
     }
 

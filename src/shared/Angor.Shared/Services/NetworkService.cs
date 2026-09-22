@@ -248,7 +248,10 @@ namespace Angor.Shared.Services
         {
             if (!httpResponseMessage.IsSuccessStatusCode)
             {
-                if (httpResponseMessage.StatusCode == HttpStatusCode.NotFound)
+                // A missing transaction/address is not an unavailable server.
+                if ((int)httpResponseMessage.StatusCode >= 500
+                    || httpResponseMessage.StatusCode is HttpStatusCode.Forbidden
+                        or HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests)
                 {
                     var settings = _networkStorage.GetSettings();
 

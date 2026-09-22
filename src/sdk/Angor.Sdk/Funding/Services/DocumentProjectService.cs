@@ -286,14 +286,27 @@ public class DocumentProjectService(
 
                     return indexerData != null ? new ProjectId(eventInfo.Data.ProjectIdentifier) : null;
                 }
+                catch (HttpRequestException)
+                {
+                    // An unavailable server is not evidence that a project does not exist.
+                    throw;
+                }
                 catch
                 {
-                    // Skip projects that fail validation
                     return null;
                 }
             });
 
-        var results = await Task.WhenAll(validationTasks);
+        ProjectId?[] results;
+        try
+        {
+            results = await Task.WhenAll(validationTasks);
+        }
+        catch (HttpRequestException ex)
+        {
+            logger.LogWarning(ex, "Could not validate discovered projects");
+            return Result.Failure<IEnumerable<Project>>("Project servers are unavailable. Please try again shortly.");
+        }
         var validatedProjectIds = results.Where(id => id != null).Select(id => id!).ToList();
 
         if (!validatedProjectIds.Any())
@@ -303,35 +316,35 @@ public class DocumentProjectService(
         return await GetAllAsync(validatedProjectIds.ToArray());
     }
 
-    private Task<Result<IEnumerable<EventInfo<ProjectInfo>>>> QueryLatestNostrProjectEventsAsync(int limit)
+    private async Task<Result<IEnumerable<EventInfo<ProjectInfo>>>> QueryLatestNostrProjectEventsAsync(int limit)
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
-        var tcs = new TaskCompletionSource<Dictionary<string, EventInfo<ProjectInfo>>>();
-        var results = new Dictionary<string, EventInfo<ProjectInfo>>();
-
-        void OnNext(EventInfo<ProjectInfo> eventInfo)
+        // A failed relay can complete the first subscription before the others finish connecting.
+        // Retry once, silently, after allowing the remaining connections to settle.
+        for (int attempt = 0; attempt < 2; attempt++)
         {
-            // Deduplicate by project identifier using dictionary key
-            if (!string.IsNullOrEmpty(eventInfo.Data.ProjectIdentifier))
+            var completed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var results = new System.Collections.Concurrent.ConcurrentDictionary<string, EventInfo<ProjectInfo>>();
+            relayService.LookupLatestProjects<ProjectInfo>(eventInfo =>
             {
-                results.TryAdd(eventInfo.Data.ProjectIdentifier, eventInfo);
+                if (!string.IsNullOrEmpty(eventInfo.Data.ProjectIdentifier))
+                {
+                    results.TryAdd(eventInfo.Data.ProjectIdentifier, eventInfo);
+                }
+            }, () => completed.TrySetResult(), limit);
+
+            await Task.WhenAny(completed.Task, Task.Delay(TimeSpan.FromSeconds(10)));
+            if (!results.IsEmpty)
+            {
+                return Result.Success<IEnumerable<EventInfo<ProjectInfo>>>(results.Values.ToArray());
+            }
+            if (attempt == 0)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(2));
             }
         }
 
-        void OnCompleted() => tcs.TrySetResult(results);
-
-        relayService.LookupLatestProjects<ProjectInfo>(OnNext, OnCompleted, limit);
-
-        // Race between completion and timeout
-        var completedTask = Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(10), cts.Token));
-
-        if (completedTask.Result == tcs.Task)
-            return Task.FromResult(Result.Success(results.Values.AsEnumerable()));
-
-        // On timeout, return whatever we collected
-        return Task.FromResult(results.Any()
-               ? Result.Success(results.Values.AsEnumerable())
-               : Result.Failure<IEnumerable<EventInfo<ProjectInfo>>>("Timeout waiting for Nostr project events"));
+        return Result.Failure<IEnumerable<EventInfo<ProjectInfo>>>(
+            "Project discovery is unavailable. Please try again shortly.");
     }
 
     private Uri? TryGetUri(string uriString)
