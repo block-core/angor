@@ -72,18 +72,17 @@ public class NetworkConfiguration : INetworkConfiguration
                 new SettingsUrl { Name = "", Url = "https://fulcrum.angor.online", IsPrimary = true },
                 new SettingsUrl { Name = "", Url = "https://electrs.angor.online", IsPrimary = false },
                 new SettingsUrl { Name = "", Url = "https://cyphermunkhouse.angor.online", IsPrimary = false },
-                new SettingsUrl { Name = "", Url = "https://indexer.angor.fund", IsPrimary = false },
             };
         }
-        
+
         if (!currentNetwork.IsMainnet)
         {
             if (currentNetwork.Name == "Angornet")
             {
                 return new List<SettingsUrl>
                 {
-                    new SettingsUrl { Name = "", Url = "https://test.indexer.angor.io", IsPrimary = false },
-                    new SettingsUrl { Name = "", Url = "https://signet.angor.online", IsPrimary = true},
+                    new SettingsUrl { Name = "", Url = "https://test.indexer.angor.io", IsPrimary = true },
+                    new SettingsUrl { Name = "", Url = "https://signet.angor.online", IsPrimary = false},
                     new SettingsUrl { Name = "", Url = "https://signet2.angor.online", IsPrimary = false},
                 };
             }
@@ -147,7 +146,6 @@ public class NetworkConfiguration : INetworkConfiguration
                 new SettingsUrl { Name = "", Url = "https://fulcrum.angor.online", IsPrimary = true},
                 new SettingsUrl { Name = "", Url = "https://electrs.angor.online", IsPrimary = false },
                 new SettingsUrl { Name = "", Url = "https://cyphermunkhouse.angor.online", IsPrimary = false },
-                new SettingsUrl { Name = "", Url = "https://indexer.angor.fund", IsPrimary = false },
             };
         }
 

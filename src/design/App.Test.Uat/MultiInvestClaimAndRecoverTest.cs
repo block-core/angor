@@ -238,6 +238,10 @@ public class MultiInvestClaimAndRecoverTest
             ExpectedUtxoCount = 4,
         });
         claim.Success.Should().BeTrue(claim.Error);
+        claim.ClaimLoadError.Should().BeNull("the founder claim view must load without errors");
+        claim.StagesCount.Should().BeGreaterThan(0, "an empty stage list renders no UTXO section at all");
+        claim.AvailableUtxoCount.Should().Be(4, "4 investors funded this project");
+        claim.SuccessModalShown.Should().BeTrue("a claim that does not reach the success modal has not claimed anything");
 
         // ── Founder releases remaining stages ──
         Log(FounderProfile, "Releasing remaining stages...");
@@ -279,6 +283,22 @@ public class MultiInvestClaimAndRecoverTest
             Action = "unfundedRelease",
         });
         recovery4.Success.Should().BeTrue(recovery4.Error);
+
+        // ── Founder re-opens the claim view now that all investors have released ──
+        // See MultiFundClaimAndRecoverTest: WithdrawByInvestor / Pending statuses are only
+        // reachable here, and dropped UTXO rows look exactly like lost funds to the founder.
+        Log(FounderProfile, "Re-inspecting claim view after investor releases...");
+        var postRecovery = await founderHost.Client.InspectClaimViewAsync(new InspectClaimViewRequest
+        {
+            ProjectIdentifier = projectId,
+        });
+        postRecovery.Success.Should().BeTrue(postRecovery.Error);
+        postRecovery.ClaimLoadError.Should().BeNull(
+            "the claim view must still load after investors have released");
+        postRecovery.StagesCount.Should().BeGreaterThan(0, "the stage list must not collapse after release");
+        postRecovery.RenderedUtxoCount.Should().Be(
+            postRecovery.ReportedUtxoCount,
+            "every UTXO the SDK reports must be rendered in some bucket");
 
         Log(null, $"========== {nameof(MultiInvestClaimAndRecover)} PASSED ==========");
     }

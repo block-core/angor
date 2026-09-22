@@ -68,7 +68,7 @@ public static class ProjectStatistics
                 dto.NextStage = new NextStageDto
                 {
                     PercentageToRelease = CalculateStagePercentage(currentStage, isDynamicProject, projectInfo),
-                    ReleaseDate = currentStage.StageDate,
+                    ReleaseDate = nextStage?.StageDate ?? currentStage.StageDate,
                     DaysUntilRelease = nextStage != null ? (nextStage.StageDate - DateTime.UtcNow).Days : 0,
                     StageIndex = nextStage != null ? stagesInformation.IndexOf(nextStage) : stagesInformation.Count - 1,
                 };

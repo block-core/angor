@@ -374,6 +374,137 @@ public class ProjectAppServiceTests : IClassFixture<TestNetworkFixture>
     }
 
     [Fact]
+    public async Task ProjectStatsHandler_WhenAStageHasUnlocked_NextStageReleaseDateIsTheUpcomingStage()
+    {
+        // Regression test for the "Next Stage countdown stuck at 0" bug: ReleaseDate was
+        // populated from currentStage (already unlocked, in the past) instead of nextStage,
+        // so the countdown consumer's `ReleaseDate > UtcNow` check could never pass.
+
+        // Arrange
+        var projectId = "project-with-unlocked-stage";
+        var project = TestDataBuilder.CreateProject().WithId(projectId).WithStages(3).Build();
+
+        var pastStageDate = DateTime.UtcNow.AddDays(-5);
+        var upcomingStageDate = DateTime.UtcNow.AddDays(5);
+        var lastStageDate = DateTime.UtcNow.AddDays(15);
+
+        var stageData = new List<StageData>
+        {
+            TestDataBuilder.CreateStageData().WithStageIndex(0).WithStageDate(pastStageDate).Build(),
+            TestDataBuilder.CreateStageData().WithStageIndex(1).WithStageDate(upcomingStageDate).Build(),
+            TestDataBuilder.CreateStageData().WithStageIndex(2).WithStageDate(lastStageDate).Build()
+        };
+
+        _mockProjectInvestmentsService
+            .Setup(x => x.ScanFullInvestments(projectId))
+            .ReturnsAsync(Result.Success<IEnumerable<StageData>>(stageData));
+
+        _mockProjectService
+            .Setup(x => x.GetAsync(It.Is<ProjectId>(p => p.Value == projectId)))
+            .ReturnsAsync(Result.Success(project));
+
+        var handler = new ProjectStatistics.ProjectStatsHandler(
+            _mockProjectInvestmentsService.Object,
+            _mockProjectService.Object);
+        var request = new ProjectStatistics.ProjectStatsRequest(new ProjectId(projectId));
+
+        // Act
+        var result = await handler.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.NextStage.Should().NotBeNull();
+        result.Value.NextStage!.ReleaseDate.Should().Be(
+            upcomingStageDate, "the countdown must target the next upcoming stage, not the already-unlocked one");
+        result.Value.NextStage.ReleaseDate.Should().BeAfter(
+            DateTime.UtcNow, "the countdown UI only renders when ReleaseDate is in the future");
+        result.Value.NextStage.StageIndex.Should().Be(1);
+        result.Value.NextStage.DaysUntilRelease.Should().Be(4, "4 full days remain until UtcNow+5d");
+    }
+
+    [Fact]
+    public async Task ProjectStatsHandler_WhenAllStagesAreInThePast_NextStageReleaseDateFallsBackToLastStage()
+    {
+        // Arrange
+        var projectId = "project-fully-unlocked";
+        var project = TestDataBuilder.CreateProject().WithId(projectId).WithStages(2).Build();
+
+        var firstStageDate = DateTime.UtcNow.AddDays(-10);
+        var lastStageDate = DateTime.UtcNow.AddDays(-5);
+
+        var stageData = new List<StageData>
+        {
+            TestDataBuilder.CreateStageData().WithStageIndex(0).WithStageDate(firstStageDate).Build(),
+            TestDataBuilder.CreateStageData().WithStageIndex(1).WithStageDate(lastStageDate).Build()
+        };
+
+        _mockProjectInvestmentsService
+            .Setup(x => x.ScanFullInvestments(projectId))
+            .ReturnsAsync(Result.Success<IEnumerable<StageData>>(stageData));
+
+        _mockProjectService
+            .Setup(x => x.GetAsync(It.Is<ProjectId>(p => p.Value == projectId)))
+            .ReturnsAsync(Result.Success(project));
+
+        var handler = new ProjectStatistics.ProjectStatsHandler(
+            _mockProjectInvestmentsService.Object,
+            _mockProjectService.Object);
+        var request = new ProjectStatistics.ProjectStatsRequest(new ProjectId(projectId));
+
+        // Act
+        var result = await handler.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.NextStage.Should().NotBeNull();
+        result.Value.NextStage!.ReleaseDate.Should().Be(
+            lastStageDate, "with no upcoming stage the date falls back to the current (last unlocked) stage");
+        result.Value.NextStage.ReleaseDate.Should().BeBefore(
+            DateTime.UtcNow, "a fully-unlocked project must not render a countdown");
+        result.Value.NextStage.DaysUntilRelease.Should().Be(0);
+        result.Value.NextStage.StageIndex.Should().Be(1, "falls back to the last stage index");
+    }
+
+    [Fact]
+    public async Task ProjectStatsHandler_WhenAllStagesAreInTheFuture_NextStageReleaseDateIsTheEarliestStage()
+    {
+        // Arrange
+        var projectId = "project-not-started";
+        var project = TestDataBuilder.CreateProject().WithId(projectId).WithStages(2).Build();
+
+        var firstStageDate = DateTime.UtcNow.AddDays(3);
+        var lastStageDate = DateTime.UtcNow.AddDays(30);
+
+        var stageData = new List<StageData>
+        {
+            TestDataBuilder.CreateStageData().WithStageIndex(0).WithStageDate(firstStageDate).Build(),
+            TestDataBuilder.CreateStageData().WithStageIndex(1).WithStageDate(lastStageDate).Build()
+        };
+
+        _mockProjectInvestmentsService
+            .Setup(x => x.ScanFullInvestments(projectId))
+            .ReturnsAsync(Result.Success<IEnumerable<StageData>>(stageData));
+
+        _mockProjectService
+            .Setup(x => x.GetAsync(It.Is<ProjectId>(p => p.Value == projectId)))
+            .ReturnsAsync(Result.Success(project));
+
+        var handler = new ProjectStatistics.ProjectStatsHandler(
+            _mockProjectInvestmentsService.Object,
+            _mockProjectService.Object);
+        var request = new ProjectStatistics.ProjectStatsRequest(new ProjectId(projectId));
+
+        // Act
+        var result = await handler.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.NextStage.Should().NotBeNull();
+        result.Value.NextStage!.ReleaseDate.Should().Be(firstStageDate);
+        result.Value.NextStage.StageIndex.Should().Be(0);
+    }
+
+    [Fact]
     public async Task ProjectStatsHandler_CallsScanFullInvestments()
     {
         // Arrange
