@@ -626,9 +626,15 @@ public class WalletOperations : IWalletOperations
         {
             _logger.LogInformation($"fetching balance for account = {accountExtPubKey.ToString(network.BitcoinNetwork)} start index = {scanIndex} isChange = {isChange} gap = {gap}");
 
-            var newAddressesToCheck = Enumerable.Range(0, gap)
-                .Select(_ => GenerateAddressFromPubKey(scanIndex + _, network, isChange, accountExtPubKey))
-            .ToList();
+            var newAddressesToCheck = new List<AddressInfo>(gap);
+            for (int offset = 0; offset < gap; offset++)
+            {
+                newAddressesToCheck.Add(GenerateAddressFromPubKey(scanIndex + offset, network, isChange, accountExtPubKey));
+                // Browser WASM shares the UI thread. Let input and painting run
+                // between address derivations instead of blocking for a full batch.
+                if (OperatingSystem.IsBrowser())
+                    await Task.Delay(1);
+            }
 
             //check all new addresses for balance or a history
             addressesNotEmpty = await _indexerService.GetAdressBalancesAsync(newAddressesToCheck, true);

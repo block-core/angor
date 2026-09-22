@@ -697,7 +697,7 @@ html.hub-payment-page { scrollbar-gutter: stable; }
     .hub-invest-grid { padding-top: 0; }
 }
 .hub-invest-grid { align-items: stretch; }
-.hub-amount-column { display: flex; }
+.hub-amount-column { display: flex; flex-direction: column; gap: 24px; }
 .hub-amount-column > .invest-card { width: 100%; }
 html.hub-payment-page::-webkit-scrollbar, .hub-payment-page body::-webkit-scrollbar { width: 10px !important; height: 10px !important; }
 html.hub-payment-page::-webkit-scrollbar-track { background: transparent; }
@@ -711,3 +711,11 @@ html.hub-payment-page[data-payment-theme="light"]::-webkit-scrollbar-thumb { bac
 .hub-page .btn-close, .hub-page .btn-close-custom { box-sizing: border-box !important; }
 .hub-mobile-menu-heading .hub-icon-button { color: var(--text-secondary); }
 .hub-plan-option > span { display: block; color: var(--text-secondary); font-size: 13px; margin-top: 4px; }
+
+.hub-plan-option .hub-plan-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: var(--text); margin-top: 0; font-size: 16px; }
+.hub-plan-count { padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, #f97316 20%, transparent); color: #f97316; font-size: 12px; font-weight: 600; }
+.hub-plan-frequency { margin-left: auto; color: var(--text-secondary); font-size: 14px; }
+.hub-plan-option:focus-visible { outline: 2px solid #f97316; outline-offset: 3px; }
+@media (max-width: 767px) { .hub-amount-column { gap: 16px; } }
+
+.hub-page .transaction-value-code { min-width: 0; overflow-wrap: anywhere; }
