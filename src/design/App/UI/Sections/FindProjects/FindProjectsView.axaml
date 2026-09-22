@@ -232,6 +232,37 @@
                     </Button>
                 </Grid>
 
+                <Border IsVisible="{Binding HasLoadError}"
+                        Background="{DynamicResource Surface}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1" CornerRadius="16" Padding="24" Margin="0,0,0,16">
+                    <StackPanel Spacing="16" MaxWidth="480" HorizontalAlignment="Center">
+                        <i:Icon Value="fa-solid fa-cloud" FontSize="28"
+                                Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" />
+                        <TextBlock Text="{Binding LoadErrorTitle}" Classes="Size-20"
+                                   FontWeight="SemiBold" TextWrapping="Wrap" TextAlignment="Center"
+                                   Foreground="{DynamicResource TextStrong}" />
+                        <TextBlock Text="{Binding LoadErrorMessage}" Classes="Size-S"
+                                   TextWrapping="Wrap" TextAlignment="Center"
+                                   Foreground="{DynamicResource TextMuted}" />
+                        <Button Name="RetryProjectsButton" Classes="Primary MobileAction"
+                                Content="Try again" HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center" IsEnabled="{Binding !IsLoading}" />
+                        <Button Name="ConnectionSettingsButton" Classes="Secondary MobileAction"
+                                Content="Connection settings" HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center" />
+                    </StackPanel>
+                </Border>
+
+                <StackPanel IsVisible="{Binding IsEmpty}" Spacing="12" Margin="24">
+                    <TextBlock Text="No projects yet" Classes="Size-20" FontWeight="SemiBold"
+                               TextAlignment="Center" TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextStrong}" />
+                    <TextBlock Text="New projects will appear here. You can also search using a project ID."
+                               Classes="Size-S" TextWrapping="Wrap" TextAlignment="Center"
+                               Foreground="{DynamicResource TextMuted}" />
+                </StackPanel>
+
                 <!-- Skeleton placeholder grid — visible until first data arrives -->
                 <ItemsControl IsVisible="{Binding IsInitialLoad}">
                     <ItemsControl.ItemsPanel>

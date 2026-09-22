@@ -82,6 +82,17 @@ public partial class FindProjectsView : UserControl, ISectionView
             };
         }
 
+        this.FindControl<Button>("RetryProjectsButton")!.Click += (_, _) =>
+        {
+            if (DataContext is FindProjectsViewModel fvm)
+                _ = Task.Run(fvm.LoadProjectsFromSdkAsync);
+        };
+        this.FindControl<Button>("ConnectionSettingsButton")!.Click += (_, _) =>
+        {
+            if (this.FindLogicalAncestorOfType<ShellView>()?.DataContext is ShellViewModel shell)
+                shell.NavigateToSettings();
+        };
+
         // Wire search button and Enter key on search TextBox
         var searchBtn = this.FindControl<Button>("SearchButton");
         _searchBox = this.FindControl<TextBox>("SearchTextBox");

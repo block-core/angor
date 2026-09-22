@@ -374,17 +374,17 @@
                                 BorderThickness="1"
                                 CornerRadius="8"
                                 Padding="12">
-                            <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Grid ColumnDefinitions="Auto,*">
                                 <i:Icon Value="fa-solid fa-triangle-exclamation"
                                        FontSize="16"
                                        Foreground="{DynamicResource WarningBrightBrush}"
-                                       VerticalAlignment="Top" Margin="0,1,0,0" />
-                                <TextBlock Classes="Size-XS" Foreground="{DynamicResource TextMuted}"
+                                       VerticalAlignment="Top" Margin="0,1,10,0" />
+                                <TextBlock Grid.Column="1" Classes="Size-XS" Foreground="{DynamicResource TextMuted}"
                                            TextWrapping="Wrap"
                                            LineHeight="18">
                                     The downloaded file is <Run FontWeight="SemiBold" Foreground="{DynamicResource TextStrong}">not encrypted</Run> — anyone who gets it can spend your funds. Never keep it in Downloads or synced folders; write the words down on paper and delete the file instead.
                                 </TextBlock>
-                            </StackPanel>
+                            </Grid>
                         </Border>
 
                         <!-- Download Seed (amber) -->
