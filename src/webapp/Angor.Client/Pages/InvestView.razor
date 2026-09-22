@@ -38,6 +38,7 @@
 @inject NostrConversionHelper NostrHelper
 @inject IInvestorTransactionActions _InvestorTransactionActions
 @inject ISerializer serializer
+@inject WalletKeyService walletKeyService
 @inject IEncryptionService encryption
 @inject IAddressPollingService _addressPollingService
 @inject IWalletStorage _walletStorage
@@ -340,53 +341,35 @@
                             </div>
                         }
                     </div>
-            @if (ShowPatternSelector && AvailablePatterns?.Any() == true)
-            {
-                <div class="hub-pattern-section">
-                    @if (handoffPlanNeedsSelection)
-                    {
-                        <p class="alert alert-warning small" role="status">The selected plan is not offered by this project. Choose an available installment count and frequency below.</p>
-                    }
-                    <div class="fund-options-section">
-                        <span class="form-label">@InstallmentPrompt</span>
-                        <div class="fund-installments-options">
-                            @foreach (var count in AvailablePatterns.Select(p => p.StageCount).Distinct().OrderBy(count => count))
+                </div>
+                @if (ShowPatternSelector && AvailablePatterns?.Any() == true)
+                {
+                    <div class="invest-card invest-amount-card hub-pattern-card">
+                        <div class="card-header amount-card-header">
+                            <span class="bitcoin-icon-circle"><Icon IconName="calendar" Width="24" Height="24" /></span>
+                            <h3 class="card-title amount-card-title">Funding Pattern</h3>
+                        </div>
+                        <p class="helper-text">Select which installment schedule to use:</p>
+                        @if (handoffPlanNeedsSelection)
+                        {
+                            <p class="alert alert-warning small" role="status">The selected plan is not offered by this project. Choose an available funding pattern below.</p>
+                        }
+                        <div class="hub-plan-options">
+                            @foreach (var pattern in AvailablePatterns)
                             {
-                                <button type="button" class="fund-option-btn @(SelectedPattern?.StageCount == count ? "selected" : "")" aria-pressed="@(SelectedPattern?.StageCount == count ? "true" : "false")" @onclick="() => SelectInstallmentCount(count)"><span class="option-label">@count</span></button>
+                                <button type="button" class="hub-plan-option @(SelectedPattern == pattern ? "active" : "")"
+                                        aria-pressed="@(SelectedPattern == pattern ? "true" : "false")" @onclick="() => SelectPattern(pattern)">
+                                    <span class="hub-plan-heading">
+                                        <strong>@pattern.Name</strong>
+                                        <span class="hub-plan-count">@pattern.StageCount stages</span>
+                                        <span class="hub-plan-frequency">@pattern.Frequency</span>
+                                    </span>
+                                    <span class="hub-plan-description">@pattern.Description</span>
+                                </button>
                             }
                         </div>
                     </div>
-                    @if (!HasSinglePaymentFrequency)
-                    {
-                    <div class="fund-options-section">
-                        <span class="form-label">Frequency</span>
-                        <div class="fund-frequency-options">
-                            @foreach (var frequency in AvailablePatterns.Where(p => p.StageCount == SelectedPattern?.StageCount).Select(p => p.Frequency).Distinct())
-                            {
-                                <button type="button" class="fund-option-btn @(SelectedPattern?.Frequency == frequency ? "selected" : "")" aria-pressed="@(SelectedPattern?.Frequency == frequency ? "true" : "false")" @onclick="() => SelectPaymentFrequency(frequency)"><span class="option-label">@frequency</span></button>
-                            }
-                        </div>
-                    </div>
-                    }
-                    @if (AvailablePatterns.Count(p => p.StageCount == SelectedPattern?.StageCount && p.Frequency == SelectedPattern?.Frequency) > 1)
-                    {
-                        <div class="fund-options-section">
-                            <span class="form-label">Plan</span>
-                            <div class="hub-plan-options">
-                                @foreach (var pattern in AvailablePatterns.Where(p => p.StageCount == SelectedPattern?.StageCount && p.Frequency == SelectedPattern?.Frequency))
-                                {
-                                    <button type="button" class="hub-plan-option @(SelectedPattern == pattern ? "active" : "")" @onclick="() => SelectPattern(pattern)"><strong>@pattern.Name</strong><span>@pattern.Description</span></button>
-                                }
-                            </div>
-                        </div>
-                    }
-                    @if (SelectedPattern != null)
-                    {
-                        <p class="helper-text">@SelectedPattern.Name — @SelectedPattern.Description</p>
-                    }
-                </div>
-            }
-                </div>
+                }
             </div>
 
             <div class="invest-card stages-card">
@@ -660,9 +643,8 @@
                         <small class="text-muted d-block mb-1">On-Chain Address</small>
                         <div class="d-flex align-items-center justify-content-center gap-2">
                             <span class="text-break fw-bold small" style="word-break: break-all;">@invoiceAddress</span>
-                            <button class="btn btn-sm btn-outline-secondary flex-shrink-0" @onclick="() => CopyToClipboard(invoiceAddress)" aria-label="Copy Bitcoin address">
-                                <Icon IconName="copy" Width="16" Height="16" />
-                            </button>
+                            <CopyButton @key="invoiceAddress" Value="@invoiceAddress" Label="Copy Bitcoin address"
+                                        CssClass="btn btn-sm btn-outline-secondary flex-shrink-0" IconOnly="true" />
                         </div>
                     </div>
 
@@ -739,9 +721,8 @@
                                 <span class="text-break small" style="word-break: break-all; max-height: 80px; overflow-y: auto;">
                                     @lightningInvoiceString
                                 </span>
-                                <button class="btn btn-sm btn-outline-secondary flex-shrink-0" @onclick="() => CopyToClipboard(lightningInvoiceString!)" aria-label="Copy Lightning invoice">
-                                    <Icon IconName="copy" Width="16" Height="16" />
-                                </button>
+                                <CopyButton @key="lightningInvoiceString" Value="@lightningInvoiceString" Label="Copy Lightning invoice"
+                                            CssClass="btn btn-sm btn-outline-secondary flex-shrink-0" IconOnly="true" />
                             </div>
                         </div>
 
@@ -809,10 +790,7 @@
                         </div>
                     </div>
                     <div class="d-flex gap-2 mb-2">
-                        <button class="btn btn-outline-secondary flex-grow-1" @onclick="CopyBackupSeed">
-                            <Icon IconName="copy" Width="16" Height="16" class="me-1" />
-                            Copy
-                        </button>
+                        <SeedPhraseCopyButton Phrase="@autoCreatedSeedWords" />
                         <button class="btn btn-outline-secondary flex-grow-1" @onclick="DownloadBackupSeed">
                             <Icon IconName="receive" Width="16" Height="16" class="me-1" />
                             Download
@@ -862,10 +840,7 @@
                             </div>
                         </div>
                         <div class="d-flex gap-2 mb-3">
-                            <button class="btn btn-outline-secondary flex-grow-1" @onclick="CopyDeleteWalletSeed">
-                                <Icon IconName="copy" Width="16" Height="16" class="me-1" />
-                                Copy
-                            </button>
+                            <SeedPhraseCopyButton Phrase="@deleteWalletSeedWords" />
                             <button class="btn btn-outline-secondary flex-grow-1" @onclick="DownloadDeleteWalletSeed">
                                 <Icon IconName="receive" Width="16" Height="16" class="me-1" />
                                 Download
@@ -1039,6 +1014,10 @@
     protected override async Task OnInitializedAsync()
     {
         // Network/settings initialization is done by EmptyLayout before this runs.
+        // A returning visitor may still have the other network stored locally.
+        // Resolve that before applying the network-specific indexer from the Hub.
+        if (!ApplyNetworkFromQueryString())
+            return;
 
         // Allow the linking site (e.g. angor hub) to hand over a known-good indexer:
         // /invest/{id}?indexer=https://indexer.example.com — added as primary and persisted.
@@ -1485,24 +1464,6 @@
         UpdateStagesBreakdown();
     }
 
-    private bool HasSinglePaymentFrequency => AvailablePatterns?.Select(p => p.Frequency).Distinct().Count() == 1;
-    private string InstallmentPrompt => HasSinglePaymentFrequency
-        ? $"How many {AvailablePatterns!.First().Frequency.ToString().ToLowerInvariant()} payments?"
-        : "Installments";
-
-    private void SelectInstallmentCount(int count)
-    {
-        var pattern = AvailablePatterns?.FirstOrDefault(p => p.StageCount == count && p.Frequency == SelectedPattern?.Frequency)
-            ?? AvailablePatterns?.FirstOrDefault(p => p.StageCount == count);
-        if (pattern != null) SelectPattern(pattern);
-    }
-
-    private void SelectPaymentFrequency(StageFrequency frequency)
-    {
-        var pattern = AvailablePatterns?.FirstOrDefault(p => p.StageCount == SelectedPattern?.StageCount && p.Frequency == frequency);
-        if (pattern != null) SelectPattern(pattern);
-    }
-
     private void SelectPattern(DynamicStagePattern pattern)
     {
         handoffPlanNeedsSelection = false;
@@ -1800,16 +1761,23 @@
             // Random throwaway encryption key instead of a user password
             var ephemeralKey = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
 
-            var walletWords = new WalletWords { Words = seedWords };
+            using var walletWords = new WalletWords { Words = seedWords };
+            await walletKeyService.PrepareAsync(walletWords);
+            // Yield between CPU-bound key/address batches so the spinner can repaint.
+            await Task.Delay(1);
             var accountInfo = _WalletOperations.BuildAccountInfoForWalletWords(walletWords);
+            await Task.Delay(1);
             await _WalletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
             var encrypted = await encryption.EncryptData(walletWords.ConvertToString(), ephemeralKey);
-            _walletStorage.SaveWalletWords(new Angor.Shared.Models.Wallet { EncryptedData = encrypted });
+            // This temporary wallet only invests. Founder keys are derived by the
+            // full app when the recovery phrase is imported for project creation.
+            _walletStorage.SaveWalletWords(new Angor.Shared.Models.Wallet
+            {
+                EncryptedData = encrypted,
+                FounderKeys = new FounderKeyCollection()
+            });
             storage.SetAccountInfo(network.Name, accountInfo);
-
-            var founderKeyCollection = _derivationOperations.DeriveProjectKeys(walletWords, _networkConfiguration.GetAngorKey());
-            _walletStorage.SetFounderKeys(founderKeyCollection);
 
             // Persist the key alongside the wallet and prime the password cache
             await JS.InvokeVoidAsync("localStorage.setItem", EphemeralKeyStorageKey, ephemeralKey);
@@ -2900,6 +2868,25 @@
 
     // --- Connection settings (indexers/relays) ---
 
+    private bool ApplyNetworkFromQueryString()
+    {
+        var query = System.Web.HttpUtility.ParseQueryString(new Uri(NavigationManager.Uri).Query);
+        string? requestedNetwork = query["network"] is "Main" or "Angornet" ? query["network"] : null;
+        if (requestedNetwork == null || requestedNetwork == network.Name)
+            return true;
+
+        if (hasWallet)
+        {
+            loadError = $"This link is for {requestedNetwork}, but this browser has a wallet on {network.Name}. " +
+                        "Open this link in a different browser profile, or change the network in the Angor app settings.";
+            loadingProject = false;
+            return false;
+        }
+
+        SwitchNetwork(requestedNetwork);
+        return true;
+    }
+
     /// <summary>
     /// If the URL carries an ?indexer= parameter (e.g. passed by angor hub, which already
     /// knows a working indexer for this project), add it as the primary indexer and persist it.
@@ -3169,15 +3156,6 @@
         StateHasChanged();
     }
 
-    private async Task CopyDeleteWalletSeed()
-    {
-        if (!string.IsNullOrEmpty(deleteWalletSeedWords))
-        {
-            await JS.InvokeVoidAsync("navigator.clipboard.writeText", deleteWalletSeedWords);
-            notificationComponent.ShowNotificationMessage("Recovery phrase copied to clipboard", 3);
-        }
-    }
-
     private async Task DownloadDeleteWalletSeed()
     {
         if (!string.IsNullOrEmpty(deleteWalletSeedWords))
@@ -3237,15 +3215,6 @@
         finally
         {
             StateHasChanged();
-        }
-    }
-
-    private async Task CopyBackupSeed()
-    {
-        if (!string.IsNullOrEmpty(autoCreatedSeedWords))
-        {
-            await JS.InvokeVoidAsync("navigator.clipboard.writeText", autoCreatedSeedWords);
-            notificationComponent.ShowNotificationMessage("Recovery phrase copied to clipboard", 3);
         }
     }
 

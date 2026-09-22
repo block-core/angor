@@ -15,6 +15,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
     private NostrMultiWebsocketClient? _nostrMultiWebsocketClient;
     private NostrMultiWebsocketClient? _nostrMultiWebsocketClientDiscovery;
     private readonly List<IDisposable> _serviceSubscriptions;
+    private readonly ConcurrentDictionary<string, byte> _connectingRelays = new();
 
     private ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> _eoseCalledOnSubscriptionClients;
     private ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> _okCalledOnSubscriptionClients;
@@ -30,7 +31,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         _okCalledOnSubscriptionClients = new();
     }
 
-    private ConcurrentDictionary<string, byte> GetAllConnectedRelayNames(bool includeDiscoveryRelays = false)
+    private ConcurrentDictionary<string, byte> GetAllConnectedRelayNames(bool includeDiscoveryRelays = false, bool includeConnectingRelays = false)
     {
         var allRelays = new ConcurrentDictionary<string, byte>();
 
@@ -38,11 +39,10 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         {
             foreach (var client in _nostrMultiWebsocketClient.Clients)
             {
-                // Only track relays whose websocket is actually running. A relay that never
-                // completed the WS upgrade will never send EOSE, and its DisconnectionHappened
-                // already fired before any subscription was monitored — so including it here
-                // would block the "all relays sent EOSE" completion check forever.
-                if (client.Communicator.IsRunning)
+                // A connecting relay may hold the only copy of a requested event.
+                // Wait for its initial attempt, but exclude relays that already failed.
+                if (client.Communicator.IsRunning ||
+                    (includeConnectingRelays && _connectingRelays.ContainsKey(client.Communicator.Name)))
                     allRelays.TryAdd(client.Communicator.Name, 0);
             }
         }
@@ -51,7 +51,8 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         {
             foreach (var client in _nostrMultiWebsocketClientDiscovery.Clients)
             {
-                if (client.Communicator.IsRunning)
+                if (client.Communicator.IsRunning ||
+                    (includeConnectingRelays && _connectingRelays.ContainsKey(client.Communicator.Name)))
                     allRelays.TryAdd(client.Communicator.Name, 0);
             }
         }
@@ -99,7 +100,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
 
             _nostrMultiWebsocketClientDiscovery!.RegisterClient(client);
 
-            communicator.StartOrFail();
+            _ = StartRelayAsync(communicator);
         }
 
         return _nostrMultiWebsocketClientDiscovery;
@@ -173,7 +174,24 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
             
             _nostrMultiWebsocketClient!.RegisterClient(client);
             
-            communicator.StartOrFail();
+            _ = StartRelayAsync(communicator);
+        }
+    }
+
+    private async Task StartRelayAsync(INostrCommunicator communicator)
+    {
+        _connectingRelays.TryAdd(communicator.Name, 0);
+        try
+        {
+            await communicator.StartOrFail();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Initial connection failed for relay {RelayName}", communicator.Name);
+        }
+        finally
+        {
+            _connectingRelays.TryRemove(communicator.Name, out _);
         }
     }
 
@@ -199,7 +217,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
     public bool MonitoringEoseReceivedOnSubscription(string subscription, bool includeDiscoveryRelays = false)
     {
         _logger.LogDebug($"Started monitoring subscription {subscription}");
-        var relayNames = GetAllConnectedRelayNames(includeDiscoveryRelays);
+        var relayNames = GetAllConnectedRelayNames(includeDiscoveryRelays, includeConnectingRelays: true);
         if (_eoseCalledOnSubscriptionClients.TryAdd(subscription, relayNames))
             return true;
         
@@ -264,6 +282,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
 
         _serviceSubscriptions.Add(nostrCommunicator.DisconnectionHappened.Subscribe(e =>
         {
+            _connectingRelays.TryRemove(relayName, out _);
             if (e.Exception != null)
                 _logger.LogWarning(
                     "Relay {relayName} disconnected, type: {Type}, reason: {Reason}",
@@ -322,6 +341,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
     {
         _serviceSubscriptions.ForEach(subscription => subscription.Dispose());
         _serviceSubscriptions.Clear();
+        _connectingRelays.Clear();
         _nostrMultiWebsocketClient?.Dispose();
         _nostrMultiWebsocketClient = null;
         _eoseCalledOnSubscriptionClients = new();
