@@ -271,6 +271,11 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
             var resultsOutputs = await client.GetAsync(outspendsUrl);
 
+            _networkService.CheckAndHandleError(resultsOutputs);
+
+            if (!resultsOutputs.IsSuccessStatusCode)
+                throw new InvalidOperationException($"Indexer {IndexerHost(client)} returned an error: {resultsOutputs.ReasonPhrase}");
+
             var spentOutputsStatus = await resultsOutputs.Content.ReadFromJsonAsync<List<Outspent>>(new JsonSerializerOptions()
             { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
 
@@ -412,9 +417,12 @@ public class MempoolSpaceIndexerApi : IIndexerService
     {
         var urlSpent = $"{MempoolApiRoute}/tx/{transactionId}/outspends";
 
-        var responseSpent = await GetIndexerClient()
-            .GetAsync(urlSpent);
+        var client = GetIndexerClient();
+        var responseSpent = await client.GetAsync(urlSpent);
         _networkService.CheckAndHandleError(responseSpent);
+
+        if (!responseSpent.IsSuccessStatusCode)
+            throw new InvalidOperationException($"Indexer {IndexerHost(client)} returned an error: {responseSpent.ReasonPhrase}");
 
         var options = new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
         var spends = await responseSpent.Content.ReadFromJsonAsync<List<Outspent>>(options);
