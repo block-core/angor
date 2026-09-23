@@ -25,7 +25,13 @@ public class SettingsTest
         Log($"========== STARTING {nameof(SettingsThemeBackupAndNetworkSwitch)} ==========");
 
         await using var host = await TestProcessHost.LaunchAsync(Profile);
-        await host.Client.WipeDataAsync();
+        // Standard wipe intentionally preserves the wallet recovery file (wallets.json)
+        // so users can restore later. That means a leftover wallet from a previous test
+        // run can get reloaded by RebuildWalletsAfterNetworkSwitchAsync's WalletContext
+        // .ReloadAsync() during the network switch below, causing this test's "create a
+        // fresh wallet" step to silently skip generation (SeedWords ends up null). Use
+        // the full recovery-purge wipe here so this test starts from a truly clean slate.
+        await host.Client.WipeDataWithRecoveryPurgeAsync();
         await host.Client.SwitchNetworkAsync("Angornet");
         await host.Client.EnableDebugModeAsync();
 

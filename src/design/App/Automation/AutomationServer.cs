@@ -17,6 +17,7 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
 using App.UI.Shell;
+using App.UI.Sections.Funds;
 using App.UI.Shared.Services;
 using Microsoft.Extensions.DependencyInjection;
 using static App.Automation.AutomationDtos;
@@ -300,17 +301,34 @@ public sealed class AutomationServer : IDisposable
                     catch { /* body is optional, ignore parse errors */ }
                 }
                 var result = await Dispatcher.UIThread.InvokeAsync(() => WipeData(deleteRecoveryWalletFiles));
-                // ConfirmWipeData is async void — wait until the wallet context is actually cleared
+                // ConfirmWipeData is async void — wait until the wallet context is actually cleared.
+                // FundsViewModel rebuilds its SeedGroups collection asynchronously in response to
+                // IWalletContext.WalletsUpdated (posted via Dispatcher.UIThread.Post), so checking
+                // IWalletContext.Wallets alone is not enough: a subsequent CreateWalletAndFundAsync
+                // call can race against a stale (pre-wipe) SeedGroups snapshot and skip wallet
+                // creation, leaving SeedWords null. Wait for both to clear.
                 var wipeDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
                 while (DateTime.UtcNow < wipeDeadline)
                 {
-                    var walletsCleared = await Dispatcher.UIThread.InvokeAsync(() =>
+                    var cleared = await Dispatcher.UIThread.InvokeAsync(() =>
                     {
                         Dispatcher.UIThread.RunJobs();
                         var walletContext = services.GetService<IWalletContext>();
-                        return walletContext == null || !walletContext.Wallets.Any();
+                        var walletsCleared = walletContext == null || !walletContext.Wallets.Any();
+
+                        var fundsSeedGroupsCleared = true;
+                        var window = GetMainWindow();
+                        var shellVm = window?.GetVisualDescendants().OfType<ShellView>().FirstOrDefault()?.DataContext as ShellViewModel;
+                        if (shellVm != null
+                            && shellVm.ViewCache.TryGetValue("Funds", out var fundsViewObj)
+                            && fundsViewObj is FundsView { DataContext: FundsViewModel fundsVm })
+                        {
+                            fundsSeedGroupsCleared = !fundsVm.SeedGroups.Any();
+                        }
+
+                        return walletsCleared && fundsSeedGroupsCleared;
                     });
-                    if (walletsCleared) break;
+                    if (cleared) break;
                     await Task.Delay(100);
                 }
                 return (200, result);
