@@ -75,6 +75,41 @@ public class WalletAccountBalanceService(IWalletOperations walletOperations,
         return Result.Success(accountBalanceInfo);
     }
 
+    public async Task<Result<AccountBalanceInfo>> RefreshNextReceiveAddressAsync(WalletId walletId)
+    {
+        var accountBalanceInfoResult = await GetAccountBalanceInfoAsync(walletId);
+        if (accountBalanceInfoResult.IsFailure)
+            return accountBalanceInfoResult;
+
+        var accountBalanceInfo = accountBalanceInfoResult.Value;
+
+        // Intentionally skip UpdateDataForExistingAddressesAsync here: refreshing UTXO data for every
+        // historical address is only needed for accurate balance reporting, not for determining the
+        // next unused receive address. UpdateAccountInfoWithNewAddressesAsync always re-scans starting
+        // at AccountInfo.LastFetchIndex, which is the index of the last returned (possibly still-unused)
+        // address, so it still correctly detects if that address has since been used and advances to a
+        // fresh one - it's just bounded to a handful of indexer calls instead of one per known address.
+        var updateResult = await Result.Try(async () =>
+        {
+            await walletOperations.UpdateAccountInfoWithNewAddressesAsync(accountBalanceInfo.AccountInfo);
+        });
+
+        if (updateResult.IsFailure)
+            return Result.Failure<AccountBalanceInfo>(updateResult.Error);
+
+        await EncryptExtPubKeys(walletId, accountBalanceInfo.AccountInfo);
+
+        var upsertResult = await collection.UpsertAsync(x => x.WalletId,
+            new WalletAccountBalanceInfo { WalletId = walletId.Value, AccountBalanceInfo = accountBalanceInfo });
+
+        if (upsertResult.IsFailure)
+            return Result.Failure<AccountBalanceInfo>(upsertResult.Error);
+
+        await DecryptExtPubKeys(walletId, accountBalanceInfo.AccountInfo);
+
+        return Result.Success(accountBalanceInfo);
+    }
+
     /// <summary>
     /// Removes pending receive UTXOs that have been confirmed (now appear in actual UTXO data)
     /// </summary>
