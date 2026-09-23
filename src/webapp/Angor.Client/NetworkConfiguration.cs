@@ -68,8 +68,8 @@ public class NetworkConfiguration : INetworkConfiguration
 
             return new List<SettingsUrl>
             {
-                new SettingsUrl { Name = "", Url = "https://indexer.angor.io", IsPrimary = false },
-                new SettingsUrl { Name = "", Url = "https://fulcrum.angor.online", IsPrimary = true },
+                new SettingsUrl { Name = "", Url = "https://indexer.angor.io", IsPrimary = true },
+                new SettingsUrl { Name = "", Url = "https://fulcrum.angor.online", IsPrimary = false },
                 new SettingsUrl { Name = "", Url = "https://electrs.angor.online", IsPrimary = false },
                 new SettingsUrl { Name = "", Url = "https://cyphermunkhouse.angor.online", IsPrimary = false },
             };

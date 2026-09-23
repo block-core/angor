@@ -47,8 +47,8 @@ public class NetworkConfiguration : INetworkConfiguration
 
             return new List<SettingsUrl>
             {
-                new() { Name = string.Empty, Url = "https://indexer.angor.io", IsPrimary = false },
-                new() { Name = string.Empty, Url = "https://fulcrum.angor.online", IsPrimary = true },
+                new() { Name = string.Empty, Url = "https://indexer.angor.io", IsPrimary = true },
+                new() { Name = string.Empty, Url = "https://fulcrum.angor.online", IsPrimary = false },
                 new() { Name = string.Empty, Url = "https://electrs.angor.online", IsPrimary = false },
                 new() { Name = string.Empty, Url = "https://cyphermunkhouse.angor.online", IsPrimary = false },
             };
