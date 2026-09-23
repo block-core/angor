@@ -115,8 +115,8 @@ public class NetworkConfiguration : INetworkConfiguration
             return new List<SettingsUrl>
             {
                 new() { Name = "test.explorer.angor.io", Url = "https://test.explorer.angor.io", IsPrimary = false },
-                new() { Name = "signet.angor.online", Url = "https://signet.angor.online", IsPrimary = true },
-                new() { Name = "signet2.angor.online", Url = "https://signet2.angor.online", IsPrimary = false },
+                new() { Name = "signet.angor.online", Url = "https://signet.angor.online", IsPrimary = false },
+                new() { Name = "signet2.angor.online", Url = "https://signet2.angor.online", IsPrimary = true },
             };
         }
 
