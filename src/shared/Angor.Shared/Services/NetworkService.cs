@@ -14,6 +14,10 @@ namespace Angor.Shared.Services
         private readonly ILogger<NetworkService> _logger;
         private readonly INetworkConfiguration _networkConfiguration;
         public event Action OnStatusChanged;
+        public event EventHandler<IndexerUnreachableEventArgs>? IndexerUnreachable;
+
+        private readonly Dictionary<string, DateTime> _lastUnreachableNotification = new();
+        private static readonly TimeSpan UnreachableNotificationCooldown = TimeSpan.FromSeconds(20);
 
 
         public NetworkService(INetworkStorage networkStorage, IHttpClientFactory clientFactory, ILogger<NetworkService> logger, INetworkConfiguration networkConfiguration)
@@ -277,6 +281,46 @@ namespace Angor.Shared.Services
                     await CheckServices(true);
                 });
             }
+        }
+
+        public void NotifyIndexerUnreachable(string indexerUrl, string reason)
+        {
+            if (string.IsNullOrWhiteSpace(indexerUrl))
+                return;
+
+            lock (_lastUnreachableNotification)
+            {
+                if (_lastUnreachableNotification.TryGetValue(indexerUrl, out var lastNotified) &&
+                    DateTime.UtcNow - lastNotified < UnreachableNotificationCooldown)
+                {
+                    return;
+                }
+
+                _lastUnreachableNotification[indexerUrl] = DateTime.UtcNow;
+            }
+
+            try
+            {
+                var settings = _networkStorage.GetSettings();
+
+                var indexer = settings.Indexers.FirstOrDefault(a =>
+                    a.Url.Contains(indexerUrl, StringComparison.OrdinalIgnoreCase) ||
+                    (Uri.TryCreate(a.Url, UriKind.Absolute, out var uri) &&
+                     string.Equals(uri.Host, indexerUrl, StringComparison.OrdinalIgnoreCase)));
+
+                if (indexer != null)
+                {
+                    indexer.Status = UrlStatus.Offline;
+                    indexer.LastCheck = DateTime.UtcNow;
+                    _networkStorage.SetSettings(settings);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to mark indexer {IndexerUrl} offline", indexerUrl);
+            }
+
+            IndexerUnreachable?.Invoke(this, new IndexerUnreachableEventArgs(indexerUrl, reason));
         }
     }
 }
