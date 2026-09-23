@@ -22,7 +22,7 @@ namespace Angor.Sdk.Tests.Integration.Lightning;
 /// </summary>
 public class BoltzNetworkSwitchingTests
 {
-    private const string ExpectedMainnetHost = "api.boltz.exchange";
+    private const string ExpectedMainnetHost = "satsrouting.exchange";
     private const string ExpectedTestnetHost = "test.boltz.angor.io";
 
     [Fact]
@@ -151,18 +151,88 @@ public class BoltzNetworkSwitchingTests
     }
 
     /// <summary>
+    /// Boltz disabled swaps on their hosted mainnet API (see swapmarket.github.io), so the
+    /// mainnet configuration is now an ordered list of Boltz-v2-compatible backends. When the
+    /// primary backend fails, the service must fail over to the next one and pin it so that
+    /// swap-scoped calls (status, claim, websocket) hit the same provider.
+    /// </summary>
+    [Fact]
+    public async Task BoltzSwapService_WhenPrimaryBackendFails_FailsOverToNextAndPins()
+    {
+        var networkConfiguration = new NetworkConfiguration();
+        networkConfiguration.SetNetwork(AngorNetwork.Main());
+
+        var primaryHost = new Uri(BoltzConfiguration.MainnetUrls[0]).Host;
+        var fallbackHost = new Uri(BoltzConfiguration.MainnetUrls[1]).Host;
+
+        var handler = new RecordingHandler { FailingHosts = { primaryHost } };
+        var httpClient = new HttpClient(handler);
+        var config = new BoltzConfiguration { UseV2Prefix = true };
+
+        var service = new BoltzSwapService(
+            httpClient,
+            config,
+            networkConfiguration,
+            new NullLogger<BoltzSwapService>());
+
+        var result = await service.GetReverseSwapFeesAsync();
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(new[] { primaryHost, fallbackHost }, handler.RequestedHosts);
+
+        // The fallback backend must now be pinned: swap-scoped calls resolve to it.
+        Assert.Equal(fallbackHost, new Uri(config.ResolveBaseUrl(networkConfiguration)).Host);
+    }
+
+    [Fact]
+    public async Task BoltzSwapService_WhenAllBackendsFail_ReturnsFailure()
+    {
+        var networkConfiguration = new NetworkConfiguration();
+        networkConfiguration.SetNetwork(AngorNetwork.Main());
+
+        var handler = new RecordingHandler();
+        foreach (var url in BoltzConfiguration.MainnetUrls)
+            handler.FailingHosts.Add(new Uri(url).Host);
+
+        var httpClient = new HttpClient(handler);
+        var config = new BoltzConfiguration { UseV2Prefix = true };
+
+        var service = new BoltzSwapService(
+            httpClient,
+            config,
+            networkConfiguration,
+            new NullLogger<BoltzSwapService>());
+
+        var result = await service.GetReverseSwapFeesAsync();
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(BoltzConfiguration.MainnetUrls.Length, handler.RequestedHosts.Count);
+    }
+
+    /// <summary>
     /// Captures the URI of every outbound request and returns a minimal valid
     /// reverse-swap-info JSON body so the calling code does not fail before we
-    /// can inspect what URL it built.
+    /// can inspect what URL it built. Hosts in <see cref="FailingHosts"/> return 503.
     /// </summary>
     private sealed class RecordingHandler : HttpMessageHandler
     {
         public Uri? LastRequestUri { get; private set; }
+        public List<string> RequestedHosts { get; } = new();
+        public HashSet<string> FailingHosts { get; } = new();
 
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request, CancellationToken cancellationToken)
         {
             LastRequestUri = request.RequestUri;
+            RequestedHosts.Add(request.RequestUri!.Host);
+
+            if (FailingHosts.Contains(request.RequestUri!.Host))
+            {
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+                {
+                    Content = new StringContent("backend down")
+                });
+            }
 
             // Shape required by ReverseSwapInfoResponse so deserialisation succeeds.
             const string body = """

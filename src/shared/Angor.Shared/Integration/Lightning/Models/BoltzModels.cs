@@ -73,6 +73,13 @@ public class BoltzSubmarineSwap
 
     /// <summary>Swap status</summary>
     public SwapState Status { get; set; } = SwapState.Created;
+
+    /// <summary>
+    /// Host of the swap backend that created this swap (e.g. "satsrouting.exchange" or
+    /// "api.boltz.exchange"). Recorded for logging/support purposes since mainnet now
+    /// fails over between multiple Boltz-v2-compatible providers.
+    /// </summary>
+    public string ProviderHost { get; set; } = string.Empty;
 }
 
 public class BoltzClaimResponse

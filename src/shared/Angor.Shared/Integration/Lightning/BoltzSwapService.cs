@@ -57,6 +57,54 @@ public class BoltzSwapService : IBoltzSwapService
         return new Uri(new Uri(baseUrl), $"{_configuration.ApiPrefix}{relativePath}");
     }
 
+    private Uri BuildUri(string baseUrl, string relativePath)
+    {
+        return new Uri(new Uri(baseUrl), $"{_configuration.ApiPrefix}{relativePath}");
+    }
+
+    /// <summary>
+    /// Executes a request against each candidate Boltz-compatible backend in order until
+    /// one succeeds, then pins that backend for the current network so all subsequent
+    /// swap-scoped calls (status, claim, websocket) hit the same provider.
+    /// Used only for backend-agnostic entry points (fee lookup, swap creation) — calls
+    /// scoped to an existing swap must go to the pinned backend that created it.
+    /// </summary>
+    /// <summary>
+    /// Executes a request against each candidate Boltz-compatible backend in order until
+    /// one succeeds, then pins that backend for the current network so all subsequent
+    /// swap-scoped calls (status, claim, websocket) hit the same provider. Also returns
+    /// the host of the winning backend so callers can record it for logging/history.
+    /// Used only for backend-agnostic entry points (fee lookup, swap creation) — calls
+    /// scoped to an existing swap must go to the pinned backend that created it.
+    /// </summary>
+    private async Task<(Result<T> Result, string? ProviderHost)> ExecuteWithFailoverAsync<T>(
+        string operationName,
+        Func<string, Task<Result<T>>> attempt)
+    {
+        var candidates = _configuration.GetCandidateBaseUrls(_networkConfiguration);
+        Result<T> lastFailure = Result.Failure<T>($"No swap backends configured for {operationName}");
+
+        foreach (var baseUrl in candidates)
+        {
+            var result = await attempt(baseUrl);
+            if (result.IsSuccess)
+            {
+                _configuration.PinBaseUrl(_networkConfiguration, baseUrl);
+                var providerHost = new Uri(baseUrl).Host;
+                _logger.LogInformation(
+                    "Swap backend {ProviderHost} handled {Operation}", providerHost, operationName);
+                return (result, providerHost);
+            }
+
+            _logger.LogWarning(
+                "Swap backend {BaseUrl} failed for {Operation}: {Error}. Trying next backend.",
+                baseUrl, operationName, result.Error);
+            lastFailure = result;
+        }
+
+        return (lastFailure, null);
+    }
+
     /// <summary>
     /// Creates a reverse submarine swap (Lightning → On-chain).
     /// User pays a Lightning invoice, receives BTC on-chain.
@@ -110,22 +158,41 @@ public class BoltzSwapService : IBoltzSwapService
                 amountSats, onchainAddress);
             _logger.LogInformation("Request JSON: {Json}", requestJson);
 
-            var content = new StringContent(requestJson, System.Text.Encoding.UTF8);
-            content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
-            var response = await _httpClient.PostAsync(BuildUri("swap/reverse"), content);
-
-            if (!response.IsSuccessStatusCode)
+            var (responseResult, providerHost) = await ExecuteWithFailoverAsync("create reverse swap", async baseUrl =>
             {
-                var error = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Failed to create reverse swap: {StatusCode} - {Error}", response.StatusCode, error);
-                return Result.Failure<BoltzSubmarineSwap>($"Failed to create swap: {error}");
+                var content = new StringContent(requestJson, System.Text.Encoding.UTF8);
+                content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+                try
+                {
+                    var response = await _httpClient.PostAsync(BuildUri(baseUrl, "swap/reverse"), content);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var error = await response.Content.ReadAsStringAsync();
+                        _logger.LogError("Failed to create reverse swap: {StatusCode} - {Error}", response.StatusCode, error);
+                        return Result.Failure<CreateReverseSwapV2Response>($"Failed to create swap: {error}");
+                    }
+
+                    var parsed = await response.Content.ReadFromJsonAsync<CreateReverseSwapV2Response>(_jsonOptions);
+                    return parsed == null
+                        ? Result.Failure<CreateReverseSwapV2Response>("Failed to deserialize swap response")
+                        : Result.Success(parsed);
+                }
+                catch (HttpRequestException ex)
+                {
+                    return Result.Failure<CreateReverseSwapV2Response>($"Backend unreachable: {ex.Message}");
+                }
+                catch (TaskCanceledException ex)
+                {
+                    return Result.Failure<CreateReverseSwapV2Response>($"Backend timed out: {ex.Message}");
+                }
+            });
+
+            if (responseResult.IsFailure)
+            {
+                return Result.Failure<BoltzSubmarineSwap>(responseResult.Error);
             }
 
-            var swapResponse = await response.Content.ReadFromJsonAsync<CreateReverseSwapV2Response>(_jsonOptions);
-            if (swapResponse == null)
-            {
-                return Result.Failure<BoltzSubmarineSwap>("Failed to deserialize swap response");
-            }
+            var swapResponse = responseResult.Value;
 
             var swap = new BoltzSubmarineSwap
             {
@@ -145,12 +212,13 @@ public class BoltzSwapService : IBoltzSwapService
                 BlindingKey = swapResponse.BlindingKey,
                 Preimage = preimage,
                 PreimageHash = preimageHash,
-                Status = SwapState.Created
+                Status = SwapState.Created,
+                ProviderHost = providerHost ?? string.Empty
             };
 
             _logger.LogInformation(
-                "Reverse submarine swap created: ID={SwapId}, Invoice amount={Amount} sats, OnchainAmount={OnchainAmount}",
-                swap.Id, swap.InvoiceAmount, swap.ExpectedAmount);
+                "Reverse submarine swap created: ID={SwapId}, Invoice amount={Amount} sats, OnchainAmount={OnchainAmount}, Provider={ProviderHost}",
+                swap.Id, swap.InvoiceAmount, swap.ExpectedAmount, swap.ProviderHost);
 
             return Result.Success(swap);
         }
@@ -349,42 +417,58 @@ public class BoltzSwapService : IBoltzSwapService
     {
         try
         {
-            _logger.LogDebug("Fetching reverse swap fee information from Boltz");
+            _logger.LogDebug("Fetching reverse swap fee information from swap backend");
 
-            var response = await _httpClient.GetAsync(BuildUri("swap/reverse"));
-
-            if (!response.IsSuccessStatusCode)
+            var (result, _) = await ExecuteWithFailoverAsync("get reverse swap fees", async baseUrl =>
             {
-                var error = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Failed to get reverse swap fees: {StatusCode} - {Error}", response.StatusCode, error);
-                return Result.Failure<BoltzSwapFees>($"Failed to get swap fees: {error}");
-            }
+                try
+                {
+                    var response = await _httpClient.GetAsync(BuildUri(baseUrl, "swap/reverse"));
 
-            var feesResponse = await response.Content.ReadFromJsonAsync<ReverseSwapInfoResponse>(_jsonOptions);
-            if (feesResponse == null)
-            {
-                return Result.Failure<BoltzSwapFees>("Failed to deserialize fees response");
-            }
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var error = await response.Content.ReadAsStringAsync();
+                        _logger.LogError("Failed to get reverse swap fees: {StatusCode} - {Error}", response.StatusCode, error);
+                        return Result.Failure<BoltzSwapFees>($"Failed to get swap fees: {error}");
+                    }
 
-            var btcInfo = feesResponse.BTC?.BTC;
-            if (btcInfo == null)
-            {
-                return Result.Failure<BoltzSwapFees>("Invalid fees response: missing BTC pair info");
-            }
+                    var feesResponse = await response.Content.ReadFromJsonAsync<ReverseSwapInfoResponse>(_jsonOptions);
+                    if (feesResponse == null)
+                    {
+                        return Result.Failure<BoltzSwapFees>("Failed to deserialize fees response");
+                    }
 
-            var fees = new BoltzSwapFees
-            {
-                Percentage = btcInfo.Fees.Percentage,
-                MinerFees = btcInfo.Fees.MinerFees.Claim,
-                MinAmount = btcInfo.Limits.Minimal,
-                MaxAmount = btcInfo.Limits.Maximal
-            };
+                    var btcInfo = feesResponse.BTC?.BTC;
+                    if (btcInfo == null)
+                    {
+                        return Result.Failure<BoltzSwapFees>("Invalid fees response: missing BTC pair info");
+                    }
 
-            _logger.LogDebug(
-                "Reverse swap fees: {Percentage}% + {MinerFees} sats, limits: {Min}-{Max}",
-                fees.Percentage, fees.MinerFees, fees.MinAmount, fees.MaxAmount);
+                    var fees = new BoltzSwapFees
+                    {
+                        Percentage = btcInfo.Fees.Percentage,
+                        MinerFees = btcInfo.Fees.MinerFees.Claim,
+                        MinAmount = btcInfo.Limits.Minimal,
+                        MaxAmount = btcInfo.Limits.Maximal
+                    };
 
-            return Result.Success(fees);
+                    _logger.LogDebug(
+                        "Reverse swap fees from {BaseUrl}: {Percentage}% + {MinerFees} sats, limits: {Min}-{Max}",
+                        baseUrl, fees.Percentage, fees.MinerFees, fees.MinAmount, fees.MaxAmount);
+
+                    return Result.Success(fees);
+                }
+                catch (HttpRequestException ex)
+                {
+                    return Result.Failure<BoltzSwapFees>($"Backend unreachable: {ex.Message}");
+                }
+                catch (TaskCanceledException ex)
+                {
+                    return Result.Failure<BoltzSwapFees>($"Backend timed out: {ex.Message}");
+                }
+            });
+
+            return result;
         }
         catch (Exception ex)
         {
