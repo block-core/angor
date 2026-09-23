@@ -235,6 +235,36 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
     public async Task<List<UtxoData>?> FetchUtxoAsync(string address, int limit, int offset)
     {
+        // The wallet gap-scan fans out a FetchUtxoAsync call per address concurrently
+        // (see WalletOperations.UpdateDataForExistingAddressesAsync), which can trip a
+        // shared/loaded indexer into transient errors. Retry with backoff before
+        // giving up, matching PublishTransactionAsync's broadcast-retry pattern —
+        // this is a read, so retrying is always safe.
+        const int maxAttempts = 3;
+        Exception lastException = new InvalidOperationException("Unknown UTXO fetch error");
+
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                return await FetchUtxoInternalAsync(address);
+            }
+            catch (Exception ex)
+            {
+                lastException = ex;
+                _logger.LogWarning("FetchUtxoAsync attempt {Attempt}/{Max} failed for {Address}: {Message}",
+                    attempt, maxAttempts, address, ex.Message);
+
+                if (attempt < maxAttempts)
+                    await Task.Delay(TimeSpan.FromSeconds(2 * attempt));
+            }
+        }
+
+        throw lastException;
+    }
+
+    private async Task<List<UtxoData>?> FetchUtxoInternalAsync(string address)
+    {
         var client = GetIndexerClient(); // Call once, reuse for all requests
         var txsUrl = $"{MempoolApiRoute}/address/{address}/txs";
 
@@ -381,6 +411,36 @@ public class MempoolSpaceIndexerApi : IIndexerService
     }
 
     public async Task<QueryTransaction?> GetTransactionInfoByIdAsync(string transactionId)
+    {
+        // Called per-transaction when scanning claimable/spent stages across a
+        // project's investments — under concurrent multi-wallet activity this can
+        // fan out many simultaneous requests. Retry with backoff before giving up,
+        // matching PublishTransactionAsync's broadcast-retry pattern (this is a
+        // read, so retrying is always safe).
+        const int maxAttempts = 3;
+        Exception lastException = new InvalidOperationException("Unknown transaction fetch error");
+
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                return await GetTransactionInfoByIdInternalAsync(transactionId);
+            }
+            catch (Exception ex)
+            {
+                lastException = ex;
+                _logger.LogWarning("GetTransactionInfoByIdAsync attempt {Attempt}/{Max} failed for {TxId}: {Message}",
+                    attempt, maxAttempts, transactionId, ex.Message);
+
+                if (attempt < maxAttempts)
+                    await Task.Delay(TimeSpan.FromSeconds(2 * attempt));
+            }
+        }
+
+        throw lastException;
+    }
+
+    private async Task<QueryTransaction?> GetTransactionInfoByIdInternalAsync(string transactionId)
     {
         var client = GetIndexerClient(); // Call once, reuse for all requests
         var url = $"{MempoolApiRoute}/tx/{transactionId}";

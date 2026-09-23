@@ -8,7 +8,8 @@ namespace App.Test.Uat;
 
 /// <summary>
 /// Stress-tests wallet send/receive across 3 users over 10 rounds.
-/// Each round, all 3 users send to each other simultaneously (A->B, B->C, C->A).
+/// Each round, all 3 users send to each other (A->B, B->C, C->A), staggered with
+/// small delays to avoid overwhelming the shared Angornet test indexer.
 /// Some rounds fire sends back-to-back without waiting for confirmation (spending unconfirmed UTXOs).
 /// After each round, all balances are refreshed and verified against expected running totals.
 /// </summary>
@@ -19,9 +20,16 @@ public class SendFundsTest
     private const string ProfileB = TestName + "-UserB";
     private const string ProfileC = TestName + "-UserC";
 
-    private const int TotalRounds = 10;
+    private const int TotalRounds = 5;
     private const double SendAmount = 0.005; // BTC per send
     private const long FeeRate = 2;
+
+    // The Angornet test indexer (test.indexer.angor.io) has no healthy fallback and
+    // becomes flaky/erroring under sustained concurrent load. These small delays
+    // stagger requests from the 3 wallet processes so we don't hammer it with
+    // simultaneous bursts, without meaningfully slowing the test down.
+    private static readonly TimeSpan InterCallDelay = TimeSpan.FromMilliseconds(750);
+    private static readonly TimeSpan RoundSettleDelay = TimeSpan.FromSeconds(8);
 
     [Fact]
     public async Task ThreeUsersSendToEachOther()
@@ -74,48 +82,57 @@ public class SendFundsTest
             Log($"");
             Log($"══════════ ROUND {round}/{TotalRounds} ══════════");
 
-            // Get fresh receive addresses for all 3
+            // Get fresh receive addresses for all 3 — staggered to avoid hammering
+            // the indexer with 3 simultaneous address-derivation lookups.
             var addrA = await GetAddress(hostA, idA, "A");
+            await Task.Delay(InterCallDelay);
             var addrB = await GetAddress(hostB, idB, "B");
+            await Task.Delay(InterCallDelay);
             var addrC = await GetAddress(hostC, idC, "C");
+            await Task.Delay(InterCallDelay);
 
-            // Fire all 3 sends simultaneously: A->B, B->C, C->A
-            Log($"Sending {SendAmount} BTC: A->B, B->C, C->A (parallel)...");
+            // Fire all 3 sends staggered rather than perfectly simultaneously: each
+            // send involves several indexer round-trips (UTXO fetch, fee estimate,
+            // broadcast) and firing all 3 wallets' requests at once against the same
+            // shared test indexer is what tends to trip it into erroring under load.
+            Log($"Sending {SendAmount} BTC: A->B, B->C, C->A (staggered)...");
 
-            var sendTasks = await Task.WhenAll(
-                hostA.Client.SendFundsAsync(new SendFundsRequest
-                {
-                    WalletId = idA,
-                    DestinationAddress = addrB,
-                    AmountBtc = SendAmount,
-                    FeeRateSatsPerVByte = FeeRate,
-                }),
-                hostB.Client.SendFundsAsync(new SendFundsRequest
-                {
-                    WalletId = idB,
-                    DestinationAddress = addrC,
-                    AmountBtc = SendAmount,
-                    FeeRateSatsPerVByte = FeeRate,
-                }),
-                hostC.Client.SendFundsAsync(new SendFundsRequest
-                {
-                    WalletId = idC,
-                    DestinationAddress = addrA,
-                    AmountBtc = SendAmount,
-                    FeeRateSatsPerVByte = FeeRate,
-                }));
+            var sendTaskA = hostA.Client.SendFundsAsync(new SendFundsRequest
+            {
+                WalletId = idA,
+                DestinationAddress = addrB,
+                AmountBtc = SendAmount,
+                FeeRateSatsPerVByte = FeeRate,
+            });
+            await Task.Delay(InterCallDelay);
+            var sendTaskB = hostB.Client.SendFundsAsync(new SendFundsRequest
+            {
+                WalletId = idB,
+                DestinationAddress = addrC,
+                AmountBtc = SendAmount,
+                FeeRateSatsPerVByte = FeeRate,
+            });
+            await Task.Delay(InterCallDelay);
+            var sendTaskC = hostC.Client.SendFundsAsync(new SendFundsRequest
+            {
+                WalletId = idC,
+                DestinationAddress = addrA,
+                AmountBtc = SendAmount,
+                FeeRateSatsPerVByte = FeeRate,
+            });
+
+            var sendTasks = await Task.WhenAll(sendTaskA, sendTaskB, sendTaskC);
 
             var sendAB = sendTasks[0];
             var sendBC = sendTasks[1];
             var sendCA = sendTasks[2];
 
-            // First 5 rounds must all succeed; later rounds may fail due to fee depletion
-            if (round <= 5)
-            {
-                sendAB.Success.Should().BeTrue($"Round {round} A->B failed: {sendAB.Error}");
-                sendBC.Success.Should().BeTrue($"Round {round} B->C failed: {sendBC.Error}");
-                sendCA.Success.Should().BeTrue($"Round {round} C->A failed: {sendCA.Error}");
-            }
+            // Every round must succeed — with TotalRounds=5 (reduced from 10 to keep
+            // this stress test from hammering the shared Angornet indexer as hard),
+            // fee depletion from prior rounds is no longer a concern.
+            sendAB.Success.Should().BeTrue($"Round {round} A->B failed: {sendAB.Error}");
+            sendBC.Success.Should().BeTrue($"Round {round} B->C failed: {sendBC.Error}");
+            sendCA.Success.Should().BeTrue($"Round {round} C->A failed: {sendCA.Error}");
 
             Log($"  A->B: {(sendAB.Success ? $"tx {sendAB.TxId}" : $"FAILED: {sendAB.Error}")}");
             Log($"  B->C: {(sendBC.Success ? $"tx {sendBC.TxId}" : $"FAILED: {sendBC.Error}")}");
@@ -127,31 +144,37 @@ public class SendFundsTest
                 Log($"  ** Rapid-fire burst: sending again immediately (spending unconfirmed) **");
 
                 var addrA2 = await GetAddress(hostA, idA, "A");
+                await Task.Delay(InterCallDelay);
                 var addrB2 = await GetAddress(hostB, idB, "B");
+                await Task.Delay(InterCallDelay);
                 var addrC2 = await GetAddress(hostC, idC, "C");
+                await Task.Delay(InterCallDelay);
 
-                var burstTasks = await Task.WhenAll(
-                    hostA.Client.SendFundsAsync(new SendFundsRequest
-                    {
-                        WalletId = idA,
-                        DestinationAddress = addrB2,
-                        AmountBtc = SendAmount,
-                        FeeRateSatsPerVByte = FeeRate,
-                    }),
-                    hostB.Client.SendFundsAsync(new SendFundsRequest
-                    {
-                        WalletId = idB,
-                        DestinationAddress = addrC2,
-                        AmountBtc = SendAmount,
-                        FeeRateSatsPerVByte = FeeRate,
-                    }),
-                    hostC.Client.SendFundsAsync(new SendFundsRequest
-                    {
-                        WalletId = idC,
-                        DestinationAddress = addrA2,
-                        AmountBtc = SendAmount,
-                        FeeRateSatsPerVByte = FeeRate,
-                    }));
+                var burstTaskA = hostA.Client.SendFundsAsync(new SendFundsRequest
+                {
+                    WalletId = idA,
+                    DestinationAddress = addrB2,
+                    AmountBtc = SendAmount,
+                    FeeRateSatsPerVByte = FeeRate,
+                });
+                await Task.Delay(InterCallDelay);
+                var burstTaskB = hostB.Client.SendFundsAsync(new SendFundsRequest
+                {
+                    WalletId = idB,
+                    DestinationAddress = addrC2,
+                    AmountBtc = SendAmount,
+                    FeeRateSatsPerVByte = FeeRate,
+                });
+                await Task.Delay(InterCallDelay);
+                var burstTaskC = hostC.Client.SendFundsAsync(new SendFundsRequest
+                {
+                    WalletId = idC,
+                    DestinationAddress = addrA2,
+                    AmountBtc = SendAmount,
+                    FeeRateSatsPerVByte = FeeRate,
+                });
+
+                var burstTasks = await Task.WhenAll(burstTaskA, burstTaskB, burstTaskC);
 
                 var burstAB = burstTasks[0];
                 var burstBC = burstTasks[1];
@@ -173,10 +196,12 @@ public class SendFundsTest
             }
 
             // Wait a bit then refresh all balances
-            await Task.Delay(TimeSpan.FromSeconds(3));
+            await Task.Delay(RoundSettleDelay);
 
             var newBalA = await GetBalance(hostA, idA, "A");
+            await Task.Delay(InterCallDelay);
             var newBalB = await GetBalance(hostB, idB, "B");
+            await Task.Delay(InterCallDelay);
             var newBalC = await GetBalance(hostC, idC, "C");
 
             Log($"  Balances after round {round}: A={newBalA:F8}, B={newBalB:F8}, C={newBalC:F8}");
@@ -297,9 +322,27 @@ public class SendFundsTest
         }
     }
 
-    private static async Task<string> GetAddress(TestProcessHost host, string walletId, string label)    {
-        var resp = await host.Client.GetReceiveAddressAsync(new GetReceiveAddressRequest { WalletId = walletId });
-        resp.Success.Should().BeTrue($"Failed to get receive address for {label}: {resp.Error}");
+    private static async Task<string> GetAddress(TestProcessHost host, string walletId, string label)
+    {
+        // Receive-address generation is a pure read against the indexer — safe to
+        // retry a couple of times with backoff if the shared Angornet test indexer
+        // hiccups under load, rather than hard-failing the whole test run.
+        const int maxAttempts = 3;
+        GetReceiveAddressResponse? resp = null;
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            resp = await host.Client.GetReceiveAddressAsync(new GetReceiveAddressRequest { WalletId = walletId });
+            if (resp.Success && !string.IsNullOrEmpty(resp.Address))
+                return resp.Address!;
+
+            if (attempt < maxAttempts)
+            {
+                Log($"  GetAddress for {label} failed (attempt {attempt}/{maxAttempts}): {resp.Error} — retrying in 5s...");
+                await Task.Delay(TimeSpan.FromSeconds(5));
+            }
+        }
+
+        resp!.Success.Should().BeTrue($"Failed to get receive address for {label} after {maxAttempts} attempts: {resp.Error}");
         resp.Address.Should().NotBeNullOrEmpty($"Address for {label} should not be empty");
         return resp.Address!;
     }

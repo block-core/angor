@@ -19,6 +19,27 @@ public class WalletOperations : IWalletOperations
     private const int AccountIndex = 0; // for now only account 0
     private const int Purpose = 84; // for now only legacy
 
+    // Bounds how many indexer requests (UTXO/history lookups) this wallet fires at
+    // once during a gap-limit scan. Without this, UpdateDataForExistingAddressesAsync
+    // and FetchAddressesDataForPubKeyAsync fan out one request per address via
+    // Task.WhenAll — for a wallet with a long address history that can be dozens of
+    // simultaneous requests, which is enough to tip a shared/loaded indexer into
+    // erroring under concurrent use (e.g. multiple wallets refreshing at once).
+    private static readonly SemaphoreSlim IndexerRequestThrottle = new(8, 8);
+
+    private static async Task<T> ThrottledIndexerCallAsync<T>(Func<Task<T>> call)
+    {
+        await IndexerRequestThrottle.WaitAsync();
+        try
+        {
+            return await call();
+        }
+        finally
+        {
+            IndexerRequestThrottle.Release();
+        }
+    }
+
     public WalletOperations(IIndexerService indexerService, IHdOperations hdOperations, ILogger<WalletOperations> logger, INetworkConfiguration networkConfiguration)
     {
         _hdOperations = hdOperations;
@@ -687,7 +708,10 @@ public class WalletOperations : IWalletOperations
         return new AddressInfo { Address = address, HdPath = path };
     }
 
-    public async Task<(string address, List<UtxoData> data)> FetchUtxoForAddressAsync(string address)
+    public Task<(string address, List<UtxoData> data)> FetchUtxoForAddressAsync(string address) =>
+        ThrottledIndexerCallAsync(() => FetchUtxoForAddressInternalAsync(address));
+
+    private async Task<(string address, List<UtxoData> data)> FetchUtxoForAddressInternalAsync(string address)
     {
         // cap utxo count to maxutxo items, this is
         // mainly to get miner wallets to work fine
