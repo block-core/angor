@@ -136,7 +136,7 @@ public class WalletAppService(
                 return Result.Failure<Address>(sensitiveDataResult.Error);
             }
 
-            var accountBalanceInfo = await accountBalanceService.RefreshAccountBalanceInfoAsync(walletId);
+            var accountBalanceInfo = await accountBalanceService.RefreshNextReceiveAddressAsync(walletId);
 
             if (accountBalanceInfo.IsFailure)
                 return Result.Failure<Address>(accountBalanceInfo.Error);  
