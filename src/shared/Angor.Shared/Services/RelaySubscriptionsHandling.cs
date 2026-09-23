@@ -9,12 +9,29 @@ namespace Angor.Shared.Services;
 
 public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandling
 {
+    /// <summary>
+    /// Default deadline for a subscription to receive EOSE from all relays before it is
+    /// force-closed regardless of relay behaviour. Kept in line with the ~30s timeouts used by
+    /// callers such as <c>BuildRecoveryTransaction.LookupFounderSignatures</c>, with some margin.
+    /// </summary>
+    public static readonly TimeSpan DefaultSubscriptionTimeout = TimeSpan.FromSeconds(45);
+
     private ILogger<RelaySubscriptionsHandling> _logger;
     protected ConcurrentDictionary<string, IDisposable> relaySubscriptions;
     protected ConcurrentDictionary<string, Action> userEoseActions;
     protected ConcurrentDictionary<string, Action<NostrOkResponse>> OkVerificationActions;
 
     protected ConcurrentDictionary<string, string> relaySubscriptionsKeepActive;
+
+    /// <summary>
+    /// Per-subscription timers that force-close a subscription after <see cref="_subscriptionTimeout"/>
+    /// has elapsed, independent of whether every relay has sent EOSE. Subscriptions registered with
+    /// <c>keepActive: true</c> are intentionally long-lived (e.g. an ongoing DM listener) and are not
+    /// scheduled for timeout-based cleanup.
+    /// </summary>
+    protected ConcurrentDictionary<string, Timer> subscriptionTimeoutTimers;
+
+    private readonly TimeSpan _subscriptionTimeout;
 
     private INostrCommunicationFactory _communicationFactory;
     private INetworkService _networkService;
@@ -26,14 +43,21 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
     private IDisposable _eoseHandlingDiscoverySubscription;
 
     public RelaySubscriptionsHandling(ILogger<RelaySubscriptionsHandling> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService)
+        : this(logger, communicationFactory, networkService, DefaultSubscriptionTimeout)
+    {
+    }
+
+    public RelaySubscriptionsHandling(ILogger<RelaySubscriptionsHandling> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService, TimeSpan subscriptionTimeout)
     {
         _logger = logger;
         _communicationFactory = communicationFactory;
         _networkService = networkService;
+        _subscriptionTimeout = subscriptionTimeout;
         relaySubscriptions = new();
         userEoseActions = new();
         OkVerificationActions = new();
         relaySubscriptionsKeepActive = new();
+        subscriptionTimeoutTimers = new();
 
         var client = _communicationFactory.GetOrCreateClient(networkService); 
         
@@ -184,6 +208,8 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
 
     public void CloseSubscription(string subscriptionKey)
     {
+        CancelSubscriptionTimeout(subscriptionKey);
+
         if (!relaySubscriptions.TryRemove(subscriptionKey, out var subscription))
             return;
         
@@ -210,11 +236,49 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
     /// </summary>
     public void DisposeLocalSubscription(string subscriptionKey)
     {
+        CancelSubscriptionTimeout(subscriptionKey);
+
         if (relaySubscriptions.TryRemove(subscriptionKey, out var subscription))
         {
             subscription.Dispose();
             _logger.LogDebug($"Local subscription handler disposed (no CLOSE sent) - {subscriptionKey}");
         }
+    }
+
+    /// <summary>
+    /// Schedules a one-shot timer that force-closes the given subscription after
+    /// <see cref="_subscriptionTimeout"/> if it has not already been closed (e.g. via EOSE from
+    /// all relays, or an explicit caller-initiated close). This guards against a single relay
+    /// that never sends EOSE (stalls silently, or errors without a clean disconnect) leaving the
+    /// subscription - and its associated EOSE action - registered indefinitely.
+    /// </summary>
+    private void ScheduleSubscriptionTimeout(string subscriptionKey)
+    {
+        // Replace any pre-existing timer for this key so we never leak one.
+        if (subscriptionTimeoutTimers.TryRemove(subscriptionKey, out var previousTimer))
+            previousTimer.Dispose();
+
+        var timer = new Timer(state =>
+        {
+            if (!relaySubscriptions.ContainsKey(subscriptionKey))
+                return;
+
+            _logger.LogWarning(
+                "Subscription {SubscriptionKey} timed out after {Timeout} without EOSE from all relays; forcing cleanup",
+                subscriptionKey, _subscriptionTimeout);
+
+            userEoseActions.TryRemove(subscriptionKey, out _);
+            _communicationFactory.ClearEoseReceivedOnSubscriptionMonitoring(subscriptionKey);
+            CloseSubscription(subscriptionKey);
+        }, null, _subscriptionTimeout, Timeout.InfiniteTimeSpan);
+
+        subscriptionTimeoutTimers[subscriptionKey] = timer;
+    }
+
+    private void CancelSubscriptionTimeout(string subscriptionKey)
+    {
+        if (subscriptionTimeoutTimers.TryRemove(subscriptionKey, out var timer))
+            timer.Dispose();
     }
 
     public bool RelaySubscriptionAdded(string subscriptionKey)
@@ -233,6 +297,12 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
             {
                 relaySubscriptionsKeepActive.TryAdd(subscriptionKey, string.Empty);
             }
+            else
+            {
+                // keepActive subscriptions are intentionally long-lived (e.g. an ongoing DM
+                // listener) and are exempt from timeout-based cleanup.
+                ScheduleSubscriptionTimeout(subscriptionKey);
+            }
 
             return true;
         }
@@ -244,6 +314,8 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
     {
         _communicationFactory.RelayDisconnected -= OnRelayDisconnected;
         relaySubscriptions.Values.ToList().ForEach(_ => _.Dispose());
+        subscriptionTimeoutTimers.Values.ToList().ForEach(timer => timer.Dispose());
+        subscriptionTimeoutTimers.Clear();
         _okHandlingSubscription.Dispose();
         _eoseHandlingSubscription.Dispose();
         _okHandlingDiscoverySubscription.Dispose();
