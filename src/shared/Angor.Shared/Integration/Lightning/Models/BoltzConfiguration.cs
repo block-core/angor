@@ -3,13 +3,17 @@ using Angor.Shared.Networks;
 namespace Angor.Shared.Integration.Lightning.Models
 {
     /// <summary>
-    /// Configuration for Boltz swap service.
+    /// Configuration for Boltz-compatible swap services.
     /// The active base URL is resolved per-call via <see cref="ResolveBaseUrl"/>,
     /// so a runtime network switch (mainnet ↔ testnet) is honoured without rebuilding the container.
     /// </summary>
     public class BoltzConfiguration
     {
-        public const string MainnetUrl = "https://api.boltz.exchange";
+        // Boltz disabled swap creation on their hosted mainnet API (see swapmarket.github.io),
+        // so mainnet swaps are routed to SatsRouting, a Boltz-v2-compatible backend, instead.
+        // Kept here for easy switching back if Boltz re-enables swaps:
+        // public const string MainnetUrl = "https://api.boltz.exchange";
+        public const string MainnetUrl = "https://satsrouting.exchange";
         public const string TestnetUrl = "https://test.boltz.angor.io/";
 
         /// <summary>

@@ -110,9 +110,24 @@ public class BoltzSwapService : IBoltzSwapService
                 amountSats, onchainAddress);
             _logger.LogInformation("Request JSON: {Json}", requestJson);
 
+            var providerHost = new Uri(_configuration.ResolveBaseUrl(_networkConfiguration)).Host;
+
             var content = new StringContent(requestJson, System.Text.Encoding.UTF8);
             content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
-            var response = await _httpClient.PostAsync(BuildUri("swap/reverse"), content);
+
+            HttpResponseMessage response;
+            try
+            {
+                response = await _httpClient.PostAsync(BuildUri("swap/reverse"), content);
+            }
+            catch (HttpRequestException ex)
+            {
+                return Result.Failure<BoltzSubmarineSwap>($"Backend unreachable: {ex.Message}");
+            }
+            catch (TaskCanceledException ex)
+            {
+                return Result.Failure<BoltzSubmarineSwap>($"Backend timed out: {ex.Message}");
+            }
 
             if (!response.IsSuccessStatusCode)
             {
@@ -145,12 +160,13 @@ public class BoltzSwapService : IBoltzSwapService
                 BlindingKey = swapResponse.BlindingKey,
                 Preimage = preimage,
                 PreimageHash = preimageHash,
-                Status = SwapState.Created
+                Status = SwapState.Created,
+                ProviderHost = providerHost
             };
 
             _logger.LogInformation(
-                "Reverse submarine swap created: ID={SwapId}, Invoice amount={Amount} sats, OnchainAmount={OnchainAmount}",
-                swap.Id, swap.InvoiceAmount, swap.ExpectedAmount);
+                "Reverse submarine swap created: ID={SwapId}, Invoice amount={Amount} sats, OnchainAmount={OnchainAmount}, Provider={ProviderHost}",
+                swap.Id, swap.InvoiceAmount, swap.ExpectedAmount, swap.ProviderHost);
 
             return Result.Success(swap);
         }
@@ -351,7 +367,19 @@ public class BoltzSwapService : IBoltzSwapService
         {
             _logger.LogDebug("Fetching reverse swap fee information from Boltz");
 
-            var response = await _httpClient.GetAsync(BuildUri("swap/reverse"));
+            HttpResponseMessage response;
+            try
+            {
+                response = await _httpClient.GetAsync(BuildUri("swap/reverse"));
+            }
+            catch (HttpRequestException ex)
+            {
+                return Result.Failure<BoltzSwapFees>($"Backend unreachable: {ex.Message}");
+            }
+            catch (TaskCanceledException ex)
+            {
+                return Result.Failure<BoltzSwapFees>($"Backend timed out: {ex.Message}");
+            }
 
             if (!response.IsSuccessStatusCode)
             {

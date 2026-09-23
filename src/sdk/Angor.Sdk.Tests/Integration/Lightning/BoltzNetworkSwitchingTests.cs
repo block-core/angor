@@ -22,7 +22,7 @@ namespace Angor.Sdk.Tests.Integration.Lightning;
 /// </summary>
 public class BoltzNetworkSwitchingTests
 {
-    private const string ExpectedMainnetHost = "api.boltz.exchange";
+    private const string ExpectedMainnetHost = "satsrouting.exchange";
     private const string ExpectedTestnetHost = "test.boltz.angor.io";
 
     [Fact]
