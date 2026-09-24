@@ -101,6 +101,22 @@ public class WalletWords : IDisposable
         return cachedExtKey;
     }
 
+    /// <summary>
+    /// Prime the same master-key cache using a platform's asynchronous BIP-39 derivation.
+    /// Browser callers use Web Crypto so PBKDF2 does not block the UI thread.
+    /// </summary>
+    public async Task<ExtKey> GetOrDeriveExtKeyAsync(Func<string, string?, Task<ExtKey>> derive)
+    {
+        ObjectDisposedException.ThrowIf(disposed, this);
+        if (cachedExtKey != null)
+            return cachedExtKey;
+
+        ExtKey key = await derive(Words, Passphrase);
+        ObjectDisposedException.ThrowIf(disposed, this);
+        cachedExtKey ??= key;
+        return cachedExtKey;
+    }
+
     public string ConvertToString()
     {
         return JsonSerializer.Serialize(this);

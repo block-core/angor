@@ -1,0 +1,75 @@
+@using Microsoft.AspNetCore.Components.Web
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<header class="hub-header">
+    <div class="hub-header-inner">
+        <div class="hub-header-left">
+            <a class="hub-brand" href="@HubBaseUrl" title="Angor Home">
+                <img src="/assets/img/app-icon.png" alt="" width="32" height="32" />
+                <span>Angor</span>
+            </a>
+            <span class="hub-network-status @(IsMainnet ? "" : "testnet")" title="Payment network: @NetworkName">
+                <span class="hub-network-dot"></span>@(IsMainnet ? "Mainnet" : "Testnet")
+            </span>
+        </div>
+        <div class="hub-desktop-navigation">
+            <nav aria-label="Main navigation">@NavigationLinks</nav>
+            <button type="button" class="hub-icon-button" @onclick="OnSettingsRequested" aria-label="Settings">
+                <Icon IconName="settings" Width="20" Height="20" />
+            </button>
+            <button type="button" class="hub-icon-button" @onclick="ToggleTheme" aria-label="Toggle theme">
+                @ThemeIcon
+            </button>
+        </div>
+        <div class="hub-mobile-header-actions">
+        @if (HelpAvailable)
+        {
+            <button type="button" class="hub-help-button hub-mobile-help" @onclick="OnHelpRequested">Help</button>
+        }
+        <button type="button" class="hub-icon-button hub-menu-toggle" @onclick="OpenMenu" aria-label="Toggle mobile menu" aria-haspopup="dialog">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </button>
+        </div>
+    </div>
+</header>
+<dialog @ref="mobileMenu" class="hub-mobile-menu" aria-label="Menu">
+    <div class="hub-mobile-menu-heading"><strong>Menu</strong><button type="button" class="hub-icon-button" @onclick="CloseMenu" aria-label="Close mobile menu"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18" /></svg></button></div>
+    <div class="hub-mobile-menu-body">
+        <nav aria-label="Mobile navigation">@NavigationLinks</nav>
+        <section><h2>Network</h2><span class="hub-network-status @(IsMainnet ? "" : "testnet")"><span class="hub-network-dot"></span>@(IsMainnet ? "Mainnet" : "Testnet")</span></section>
+        <section><h2>Settings</h2><button type="button" class="hub-menu-action" @onclick="OpenSettings"><Icon IconName="settings" Width="20" Height="20" />Settings</button></section>
+        <section><h2>Theme</h2><button type="button" class="hub-menu-action" @onclick="ToggleTheme">@ThemeIcon @(Layout.IsLight ? "Light Mode" : "Dark Mode")</button></section>
+    </div>
+</dialog>
+
+@code {
+    [CascadingParameter] public EmptyLayout Layout { get; set; } = default!;
+    [Parameter] public bool IsMainnet { get; set; }
+    [Parameter] public string NetworkName { get; set; } = string.Empty;
+    [Parameter] public EventCallback OnSettingsRequested { get; set; }
+    [Parameter] public EventCallback OnHelpRequested { get; set; }
+    [Parameter] public bool HelpAvailable { get; set; }
+    private ElementReference mobileMenu;
+    private string HubBaseUrl => new Uri(Navigation.BaseUri).IsLoopback ? "http://localhost:4200" : "https://angor.io";
+    private string ProfileUrl => new Uri(Navigation.BaseUri).IsLoopback ? "http://localhost:4201/" : "https://profile.angor.io/angor-profile/";
+    private RenderFragment NavigationLinks => @<text>
+        <a href="@(HubBaseUrl + "/explore")">Projects</a>
+        <a href="@(HubBaseUrl + "/launch")">Launch</a>
+        <a href="@(HubBaseUrl + "/app")">App</a>
+        <a href="@ProfileUrl" target="_blank" rel="noopener noreferrer">Profile</a>
+        <a href="https://docs.angor.io" target="_blank" rel="noopener noreferrer">Docs</a>
+    </text>;
+    private RenderFragment ThemeIcon => @<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        @if (Layout.IsLight) { <circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l2 2m10 10l2 2M5 19l2-2M17 7l2-2" /> }
+        else { <path d="M20.5 13A9 9 0 0 1 11 3.5 9 9 0 1 0 20.5 13Z" /> }
+    </svg>;
+    private async Task ToggleTheme() => await Layout.ToggleThemeAsync();
+    private async Task OpenMenu() => await JS.InvokeVoidAsync("angorPayment.openMenu", mobileMenu);
+    private async Task CloseMenu() => await JS.InvokeVoidAsync("angorPayment.closeMenu", mobileMenu);
+    private async Task OpenSettings()
+    {
+        await CloseMenu();
+        await OnSettingsRequested.InvokeAsync();
+    }
+}

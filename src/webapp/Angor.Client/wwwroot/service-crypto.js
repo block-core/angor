@@ -81,3 +81,18 @@ const dec = new TextDecoder();
 
 window.encryptData = encryptData;
 window.decryptData = decryptData;
+// BIP-39 uses PBKDF2-HMAC-SHA512 with 2048 iterations and NFKD text.
+// Web Crypto runs this asynchronously instead of blocking the WASM UI thread.
+window.deriveWalletSeed = async function (mnemonic, passphrase = '') {
+    const password = enc.encode(mnemonic.normalize('NFKD'));
+    const salt = enc.encode(('mnemonic' + (passphrase || '')).normalize('NFKD'));
+    try {
+        const key = await crypto.subtle.importKey('raw', password, 'PBKDF2', false, ['deriveBits']);
+        return new Uint8Array(await crypto.subtle.deriveBits({
+            name: 'PBKDF2', hash: 'SHA-512', iterations: 2048, salt
+        }, key, 512));
+    } finally {
+        password.fill(0);
+        salt.fill(0);
+    }
+};

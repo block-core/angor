@@ -1,3 +1,16 @@
+@font-face {
+    font-family: 'Proxima Nova';
+    src: url('/assets/fonts/proxima-nova/proximanova_light.otf') format('opentype');
+    font-weight: 300;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Proxima Nova';
+    src: url('/assets/fonts/proxima-nova/proximanova_bold.otf') format('opentype');
+    font-weight: 600 700;
+    font-display: swap;
+}
+
 /* Angor Hub look-and-feel for the standalone invest page.
    Tokens copied from angor-hub (src/styles.css). Scoped under .hub-page. */
 
@@ -8,7 +21,7 @@
     --accent-dark: #4d9a6a;
     --text: #fafafa;
     --text-secondary: #a3a3a3;
-    --surface-card: #1a1a1a;
+    --surface-card: #101010;
     --surface-ground: #0a0a0a;
     --surface-hover: #2a2a2a;
     --border: #2a2a2a;
@@ -20,7 +33,7 @@
     min-height: 100vh;
     background: var(--surface-ground);
     color: var(--text);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Proxima Nova', system-ui, -apple-system, sans-serif;
 }
 
 .hub-page * {
@@ -266,28 +279,6 @@
     transition: width .7s ease;
 }
 
-/* opportunity CTA card (hub .opportunity-card) */
-.hub-opportunity {
-    background-image: linear-gradient(135deg, #2d5a3d 0%, #4a8f5f 100%);
-    color: #fff;
-    border-radius: 16px;
-    padding: 24px;
-    text-align: center;
-}
-
-.hub-opportunity .btn-white {
-    background: #fff;
-    color: #2d5a3d;
-    border-radius: 8px;
-    padding: .875rem 1.5rem;
-    font-weight: 600;
-    width: 100%;
-    border: none;
-    transition: all .2s ease;
-}
-
-.hub-opportunity .btn-white:hover { background: #f5f5f5; transform: translateY(-1px); }
-
 .hub-link { color: var(--accent); text-decoration: none; font-weight: 600; }
 .hub-link:hover { color: var(--accent-light); text-decoration: underline; }
 
@@ -320,3 +311,446 @@
     font-size: .85rem;
 }
 .hub-footer a { color: var(--accent); text-decoration: none; }
+
+/* Shared Hub surfaces carry through payment selection, invoices and recovery dialogs. */
+.hub-page {
+    position: relative;
+    isolation: isolate;
+    --bs-body-color: var(--text);
+    --bs-body-bg: var(--surface-ground);
+    --bs-border-color: var(--border);
+}
+.hub-page::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: var(--accent);
+    mask: url('/assets/img/hero-bg-pattern.svg') center / 120px 120px repeat;
+    opacity: .1;
+}
+.hub-page[data-theme="light"] {
+    --accent: #2d5a3d;
+    --accent-light: #3d6448;
+    --accent-dark: #254a32;
+    --text: #0a0a0a;
+    --text-secondary: #6b7280;
+    --surface-card: #fff;
+    --surface-ground: #fafafa;
+    --surface-hover: #f3f4f6;
+    --border: #e5e7eb;
+}
+.hub-page[data-theme="light"]::before { opacity: .07; }
+.hub-page[data-theme="light"] .btn-close { filter: none; }
+.hub-page :is(button, input, select, textarea) { font-family: inherit; }
+.hub-page :is(.card-body, .modal-body) { padding: 24px; }
+.hub-page :is(.card-header, .modal-header, .modal-footer) { padding: 16px 24px; }
+.hub-page .bg-light,
+.hub-page .invest-stage-card,
+.hub-page .invest-project-id-box {
+    background: var(--surface-ground) !important;
+    border: 1px solid var(--border);
+    border-radius: 12px !important;
+}
+.hub-page .form-control,
+.hub-page .form-select,
+.hub-page .input-group-text {
+    background: var(--surface-ground) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+    min-height: 44px;
+}
+.hub-page .btn { min-height: 44px; letter-spacing: normal; border-radius: 8px !important; }
+.hub-page .btn-sm { min-height: 36px; }
+.hub-page .text-success { color: var(--accent) !important; }
+.hub-page .modal { backdrop-filter: blur(6px); overflow-y: auto; padding: 16px; }
+.hub-page .modal-dialog { width: 100%; max-width: 480px; margin: 0 auto; min-height: calc(100% - 0px); }
+.hub-page .modal-dialog.modal-lg { max-width: 720px; }
+.hub-page .modal-content { max-height: calc(100dvh - 32px); overflow: hidden; box-shadow: 0 24px 80px #0006; }
+.hub-page .modal-body { overflow-y: auto; min-height: 0; }
+.hub-page .modal-header, .hub-page .modal-footer { flex-shrink: 0; }
+.hub-page .modal-title { font-size: 22px; line-height: 1.25; }
+.hub-page .modal-body img[alt="QR Code"] { background: white; padding: 12px; border-radius: 12px; }
+.hub-page .modal-body .text-break { overflow-wrap: anywhere; }
+.hub-page .btn-close { min-width: 32px; min-height: 32px; opacity: .8; }
+.hub-page :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.hub-page[data-theme="light"] .alert-success { color: #166534 !important; }
+.hub-page[data-theme="light"] .alert-info { color: #1e40af !important; }
+.hub-page[data-theme="light"] .alert-warning { color: #92400e !important; }
+.hub-page[data-theme="light"] .alert-danger { color: #991b1b !important; }
+.hub-header { height: 80px; padding: 0 24px; }
+.hub-header .hub-brand { font-size: 18px; font-weight: 600; }
+.hub-header .hub-brand img { width: 32px; height: 32px; }
+.hub-page .invest-view-page { max-width: 1280px; }
+@media (max-width: 640px) {
+    .hub-header { padding: 0 16px; }
+    .hub-page :is(.card-body, .modal-body) { padding: 20px; }
+    .hub-page :is(.card-header, .modal-header, .modal-footer) { padding: 16px 20px; }
+    .hub-page .modal { padding: 12px; }
+    .hub-page .modal-content { max-height: calc(100dvh - 24px); }
+    .hub-page .modal-title { font-size: 20px; }
+}
+
+.hub-page .hub-payment-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.hub-page .hub-payment-options .btn { padding: 20px 12px; border-width: 2px !important; }
+.hub-page .hub-payment-options .btn > div { flex-direction: column; gap: 12px; }
+.hub-page .hub-payment-options .btn > div > div { flex-direction: column; }
+.hub-page .hub-payment-options .text-start { text-align: center !important; }
+.hub-page .hub-payment-options small { display: block; font-size: 12px; margin-top: 6px; }
+.hub-page .modal-header { position: relative; justify-content: center; gap: 12px; }
+.hub-page .modal-title { padding-right: 24px; }
+.hub-page .modal-header .btn-close { position: absolute; right: 16px; top: 12px; margin: 0; }
+.hub-page .modal-body img[alt*="QR Code"] { background: white; padding: 12px; border-radius: 12px; }
+.hub-page .form-check-input { border-color: var(--border); background-color: var(--surface-ground); }
+.hub-page .form-check-input:checked { background-color: var(--accent); border-color: var(--accent); }
+.hub-page .btn-primary, .hub-page .btn-border { font-family: inherit; }
+@media (prefers-reduced-motion: reduce) {
+    .hub-page * { transition: none !important; }
+}
+
+/* Bridge legacy Bootstrap variables to the Hub palette, including nested controls. */
+.hub-page {
+    --angor-primary: var(--text);
+    --angor-secondary: var(--accent);
+    --angor-link: var(--accent);
+    --angor-accent: var(--border);
+    --angor-font-sans-serif: 'Proxima Nova', system-ui, -apple-system, sans-serif;
+    --angor-btn-font-family: var(--angor-font-sans-serif);
+    --form-label: var(--text-secondary);
+    --form-text: var(--text);
+    --form-bg: var(--surface-ground);
+    --form-border: var(--border);
+    --btn-border: var(--border);
+}
+.hub-page :is(h1, h2, h3, h4, h5, h6, p, span, label, small, strong, a, .btn) { font-family: inherit; }
+.hub-page .fw-bold { color: inherit !important; }
+.hub-page .hub-brand { color: var(--text) !important; }
+.hub-page .hub-link, .hub-page .hub-footer a { color: var(--accent) !important; }
+.hub-page .form-label { color: var(--text-secondary) !important; }
+.hub-header { height: 64px; padding: 0; background: color-mix(in srgb, var(--surface-ground) 85%, transparent); backdrop-filter: blur(12px); }
+.hub-header-inner { width: 100%; max-width: 1280px; margin: auto; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.hub-header-settings { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 8px; color: var(--text); background: transparent; border: 0; border-radius: 8px; }
+.hub-header-settings:hover { background: var(--surface-hover); }
+.hub-page .invest-view-page { padding-bottom: 100px; }
+.hub-payment-footer { position: fixed; bottom: 0; left: 0; right: 0; z-index: 60; border-top: 1px solid var(--border); background: var(--surface-card); padding: 16px; }
+.hub-payment-footer-inner { max-width: 1248px; margin: auto; display: flex; justify-content: flex-end; align-items: center; gap: 24px; }
+.hub-payment-footer .btn { width: auto !important; min-width: 220px; padding: 12px 24px; }
+.hub-payment-footer-summary { display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.hub-payment-footer-summary span { color: var(--text-secondary); }
+.hub-payment-footer-summary strong { color: var(--text); font-size: 18px; }
+.hub-page .btn-primary { background: #2d5a3d !important; color: white !important; border-color: transparent !important; }
+.hub-page .btn-border { background: var(--surface-card) !important; color: var(--text) !important; border-color: var(--border) !important; }
+.hub-page .btn-close-custom { color: var(--text); background: transparent; }
+.hub-page .modern-modal { background: var(--surface-card) !important; }
+.hub-page .modal-header .modal-title { margin: 0; }
+.hub-page .modal-content { border-radius: 16px !important; }
+.hub-page .modal-body img[alt*="QR Code"] { max-width: 100%; height: auto; }
+.hub-page .modal-body :is(.input-group, .text-break) { min-width: 0; }
+.hub-page .seed-word { margin: 0; padding: 8px; font-size: 14px; }
+.hub-page .word-box-container { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+
+/* Payment startup and project-loading states use the same theme from first paint. */
+.hub-boot-content { display: none; }
+html.hub-payment-page { color-scheme: dark; background: #0a0a0a; }
+html.hub-payment-page[data-payment-theme="light"] { color-scheme: light; background: #fafafa; }
+.hub-payment-page .loader-wrapper { background: #0a0a0a !important; color: #fafafa; }
+.hub-payment-page[data-payment-theme="light"] .loader-wrapper { background: #fafafa !important; color: #0a0a0a; }
+.hub-payment-page .loader-wrapper > .loader { display: none; }
+.hub-payment-page .hub-boot-content, .hub-loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 32px 20px; font-family: 'Proxima Nova', system-ui, sans-serif; }
+.hub-loading-state { min-height: calc(100dvh - 64px); }
+.hub-loading-mark { position: relative; width: 80px; height: 80px; display: grid; place-items: center; margin-bottom: 24px; }
+.hub-loading-mark img { width: 36px; height: 36px; }
+.hub-loading-ring { position: absolute; inset: 0; border: 2px solid #5faf7833; border-top-color: #5faf78; border-radius: 50%; animation: hub-loading-spin 1s linear infinite; }
+.hub-boot-content h1, .hub-loading-state h1 { color: inherit; font: 600 24px/1.3 'Proxima Nova', system-ui, sans-serif; margin: 0 0 8px; }
+.hub-boot-content p, .hub-loading-state p { color: #a3a3a3; font-size: 16px; margin: 0 0 12px; }
+[data-payment-theme="light"] .hub-boot-content p, [data-theme="light"] .hub-loading-state p { color: #6b7280; }
+.hub-payment-page #blazor-error-ui { background: #101010; color: #fafafa; border: 1px solid #ef4444; border-radius: 16px; font-family: 'Proxima Nova', system-ui, sans-serif; }
+.hub-payment-page #blazor-error-ui :is(strong, a) { color: inherit; }
+.hub-payment-page[data-payment-theme="light"] #blazor-error-ui { background: #fff; color: #0a0a0a; }
+@keyframes hub-loading-spin { to { transform: rotate(360deg); } }
+@media (max-width: 640px) {
+    .hub-explore-link { display: none; }
+    .hub-payment-footer { padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
+    .hub-payment-footer-inner { gap: 12px; }
+    .hub-payment-footer .btn { min-width: 0; flex: 1; padding: 12px; }
+    .hub-page .invest-view-page { padding-bottom: 120px; }
+}
+@media (prefers-reduced-motion: reduce) { .hub-loading-ring { animation: none; } }
+
+/* Match Hub navigation on desktop and its right-hand menu below 1024px. */
+.hub-header-left, .hub-desktop-navigation, .hub-desktop-navigation nav { display: flex; align-items: center; gap: 8px; }
+.hub-header-left { gap: 24px; }
+.hub-desktop-navigation nav a, .hub-mobile-menu nav a { color: var(--text) !important; font-weight: 500; padding: 8px 16px; border-radius: 8px; font-size: 14px; }
+.hub-desktop-navigation nav a:hover, .hub-mobile-menu nav a:hover, .hub-menu-action:hover, .hub-icon-button:hover { background: var(--surface-hover); }
+.hub-icon-button { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 0; border-radius: 50%; border: 0; background: transparent; color: var(--text); }
+.hub-network-status { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: #f7931a; }
+.hub-network-status.testnet { color: #28c025; }
+.hub-network-dot { width: 10px; height: 10px; border-radius: 50%; background: currentColor; }
+.hub-menu-toggle { display: none; }
+.hub-mobile-menu { position: fixed; inset: 0 0 0 auto; width: min(320px, 100%); height: 100dvh; max-height: 100dvh; max-width: 100%; margin: 0; padding: 0; color: var(--text); background: var(--surface-ground); border: 0; box-shadow: -16px 0 50px #0004; }
+.hub-mobile-menu::backdrop { background: #0009; backdrop-filter: blur(6px); }
+.hub-mobile-menu-heading { height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: 1px solid var(--border); font-size: 18px; }
+.hub-mobile-menu-body { padding: 16px; }
+.hub-mobile-menu nav { display: flex; flex-direction: column; gap: 8px; }
+.hub-mobile-menu nav a { padding: 12px 16px; font-size: 16px; }
+.hub-mobile-menu section { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); }
+.hub-mobile-menu h2 { color: var(--text-secondary); font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; padding: 0 16px; margin: 0 0 8px; }
+.hub-mobile-menu .hub-network-status { padding: 12px 16px; }
+.hub-menu-action { width: 100%; display: flex; align-items: center; gap: 12px; border: 0; padding: 12px 16px; color: var(--text); background: transparent; border-radius: 8px; font-size: 16px; }
+@media (max-width: 1023px) {
+    .hub-desktop-navigation { display: none; }
+    .hub-menu-toggle { display: inline-flex; }
+    .hub-header-left > .hub-network-status { display: none; }
+}
+.hub-page .btn { font-size: 16px; font-weight: 600; }
+.hub-page .btn-sm { font-size: 14px; }
+.hub-inline-link { display: inline; padding: 0; border: 0; background: transparent; color: var(--accent); font: inherit; font-weight: 600; }
+.hub-inline-link:hover { text-decoration: underline; }
+.hub-page .modal-body img[alt*="QR Code"] { border: 3px solid #f7931a; padding: 12px; max-width: 224px !important; }
+.hub-page .hub-payment-options .btn { min-width: 0; white-space: normal; }
+.hub-page .hub-payment-options svg { flex-shrink: 0; }
+
+/* Investment composition mirrors Hub; wallet and protocol details remain available below. */
+.hub-page .invest-view-page { margin-top: 0 !important; padding-top: 92px; }
+.hub-invest-navigation { position: fixed; top: 64px; left: 0; right: 0; z-index: 40; padding: 24px 16px 8px; pointer-events: none; }
+.hub-invest-navigation-inner { max-width: 1248px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.hub-invest-navigation-left { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.hub-back-button, .hub-project-label, .hub-invest-navigation-stats > span { pointer-events: auto; display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 12px 20px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-card); color: var(--text) !important; font-size: 15px; font-weight: 600; box-shadow: 0 2px 8px #0001; }
+.hub-back-button { flex-shrink: 0; }
+.hub-project-label { display: block; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.hub-invest-navigation-stats { display: flex; flex-shrink: 0; gap: 16px; }
+.hub-invest-navigation-stats > span { color: var(--text-secondary) !important; font-size: 13px; font-weight: 500; }
+.hub-invest-navigation-stats strong { color: var(--text); }
+.hub-invest-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; align-items: start; margin-bottom: 24px; }
+.hub-invest-grid > * { min-width: 0; }
+.hub-page .hub-invest-grid .card { border-radius: 12px !important; box-shadow: 0 2px 8px #0001 !important; }
+.hub-page .hub-invest-grid .card-header { border-bottom: 0 !important; padding: 24px 24px 0; margin-bottom: 0; min-height: 48px; }
+.hub-page .hub-invest-grid .card-header h5 { font-size: 18px; margin: 0; }
+.hub-page .hub-invest-grid .card-body { padding: 24px; }
+.hub-page .hub-amount-card { background: linear-gradient(to bottom right, #fff7ed, #fef3c7) !important; border-color: #fed7aa !important; }
+.hub-page[data-theme="dark"] .hub-amount-card { background: linear-gradient(to bottom right, #ea580c26, #fbbf2426) !important; border-color: #ea580c4d !important; }
+.hub-page .hub-amount-card h5 { color: #7c2d12; }
+.hub-page[data-theme="dark"] .hub-amount-card h5 { color: #fb923c; }
+.hub-bitcoin-icon { width: 40px; height: 40px; display: grid; place-items: center; background: #f97316; color: white; border-radius: 8px; font-size: 26px; flex-shrink: 0; }
+.hub-page #payment-amount { padding: 12px 16px; border-radius: 8px 0 0 8px; }
+.hub-quick-amounts { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+.hub-quick-amounts .btn { padding: 10px 2px; font-size: 14px; }
+.hub-quick-amounts .small { font-size: 11px; }
+.hub-pattern-section { margin-top: 16px; }
+.hub-page .list-group-item { color: var(--text); background: var(--surface-ground); border-color: var(--border); border-radius: 8px; margin-bottom: 8px; }
+.hub-page .list-group-item.active { background: color-mix(in srgb, var(--accent) 15%, var(--surface-ground)); border-color: var(--accent); }
+.hub-page .list-group-item.active .text-white-50 { color: var(--text-secondary) !important; }
+.hub-transaction-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.hub-transaction-row:first-child { padding-top: 0; }
+.hub-transaction-row:last-child { border-bottom: 0; }
+.hub-transaction-row > span:first-child { color: var(--text-secondary); }
+.hub-transaction-row > :last-child { text-align: right; }
+.hub-project-id { display: flex; align-items: center; min-width: 0; max-width: 65%; }
+.hub-project-id code { overflow-wrap: anywhere; color: var(--text); font-size: 12px; }
+.hub-project-id button { flex-shrink: 0; }
+.hub-wallet-section { margin: 24px 0; }
+.hub-page .hub-project-details { margin-top: 24px; }
+.hub-project-details summary { padding: 20px 24px; cursor: pointer; color: var(--text); font-weight: 600; }
+@media (max-width: 1240px) {
+    .hub-invest-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .hub-transaction-card { grid-column: 1 / -1; }
+}
+@media (max-width: 768px) {
+    .hub-invest-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+    .hub-invest-navigation-stats { display: none; }
+    .hub-invest-navigation-left { width: 100%; gap: 8px; }
+    .hub-project-label { flex: 1; }
+    .hub-back-button, .hub-project-label { padding: 12px; }
+    .hub-page .hub-invest-grid .card-header { padding: 20px 20px 0; }
+    .hub-page .hub-invest-grid .card-body { padding: 20px; }
+}
+.hub-page .card { --angor-card-color: var(--text); }
+.hub-page .hub-amount-card .input-group-text { color: var(--text-secondary) !important; padding: 0 12px; }
+.hub-page[data-theme="dark"] .hub-amount-card .form-label { color: #fdba74 !important; }
+.hub-page[data-theme="dark"] #payment-amount { background: #2a2a2a !important; border-color: #333 !important; }
+.hub-page .hub-transaction-row > strong { color: #f7931a; }
+.hub-page .hub-mobile-back { display: none; }
+@media (max-width: 768px) {
+    .hub-payment-footer { background: transparent; border: 0; pointer-events: none; }
+    .hub-payment-footer-inner { max-width: 480px; pointer-events: auto; gap: 10px; }
+    .hub-payment-footer-summary { display: none; }
+    .hub-page .hub-mobile-back { display: inline-flex; height: 52px; align-items: center; justify-content: center; padding: 0 24px; background: var(--surface-card); color: var(--text) !important; border: 1px solid var(--border); border-radius: 16px; font-weight: 600; }
+    .hub-page .hub-payment-footer .btn { height: 52px; border-radius: 16px !important; background: linear-gradient(135deg, #4b7c5a, #3d6448) !important; font-size: 15px; }
+}
+.hub-invest-navigation-actions { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+.hub-help-button { pointer-events: auto; height: 44px; padding: 12px 20px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-card); color: var(--text); font-size: 15px; font-weight: 600; }
+.hub-help-button:hover { background: var(--surface-hover); }
+@media (max-width: 768px) {
+    .hub-invest-navigation-inner { gap: 8px; }
+    .hub-invest-navigation-left { width: auto; flex: 1; }
+    .hub-invest-navigation-actions { gap: 0; }
+    .hub-help-button { padding: 12px; }
+}
+.hub-payment-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 24px; }
+.hub-payment-tabs button { padding: 10px 12px; min-height: 44px; border: 2px solid var(--border); border-radius: 12px; color: var(--text); background: var(--surface-ground); font-size: 14px; font-weight: 600; }
+.hub-payment-tabs button:hover:not(:disabled), .hub-payment-tabs button.active { border-color: #4b7c5a; background: color-mix(in srgb, #4b7c5a 20%, var(--surface-ground)); }
+.hub-payment-tabs button:disabled:not(.active) { opacity: .5; }
+.hub-payment-choice-hint { color: var(--text-secondary); font-size: 14px; text-align: center; margin: 0; }
+.hub-plan-options { display: grid; gap: 8px; }
+.hub-plan-option { width: 100%; padding: 16px; background: var(--surface-ground); color: var(--text); border: 2px solid var(--border); border-radius: 8px; text-align: left; }
+.hub-plan-option.active { border-color: #f97316; background: color-mix(in srgb, #f97316 10%, var(--surface-ground)); }
+.hub-page .hub-plan-option .text-white-50 { color: var(--text-secondary) !important; }
+
+/* One theme-aware close treatment for payment, help, errors and password dialogs. */
+.hub-page .btn-close, .hub-page .btn-close-custom {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 4px;
+    color: var(--text-secondary) !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 8px;
+    box-shadow: none;
+    filter: none !important;
+    opacity: 1;
+}
+.hub-page .btn-close::before, .hub-page .btn-close-custom::before {
+    content: '';
+    width: 24px;
+    height: 24px;
+    background: currentColor;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='m6 6 12 12M18 6 6 18' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.hub-page .btn-close-custom svg { display: none; }
+.hub-page .btn-close:hover, .hub-page .btn-close-custom:hover { color: var(--text) !important; background: var(--surface-hover) !important; }
+.hub-page .modal-header .btn-close, .hub-page .modal-header .btn-close-custom { position: absolute; right: 16px; top: 12px; margin: 0; }
+.hub-page .modal-header > div { padding-right: 24px; }
+.hub-page .modal-title { padding-left: 24px; padding-right: 24px; text-align: center; }
+
+/* Exact Tailwind container breakpoints used by Hub's header, form and footer. */
+.hub-page { --hub-container-width: 100%; }
+html.hub-payment-page { scrollbar-gutter: stable; }
+.hub-page .invest-view-page, .hub-header-inner, .hub-invest-navigation-inner, .hub-payment-footer-inner {
+    box-sizing: border-box; width: 100%; max-width: var(--hub-container-width); margin-left: auto; margin-right: auto; padding-left: 16px; padding-right: 16px;
+}
+.hub-invest-navigation { padding-left: 0; padding-right: 0; }
+.hub-payment-footer { padding-left: 0; padding-right: 0; }
+.hub-page .invest-view-page { padding-top: 76px; }
+.hub-invest-grid { padding-top: 8px; }
+@media (min-width: 640px) { .hub-page { --hub-container-width: 640px; } }
+@media (min-width: 768px) { .hub-page { --hub-container-width: 768px; } }
+@media (min-width: 1024px) { .hub-page { --hub-container-width: 1024px; } }
+@media (min-width: 1280px) { .hub-page { --hub-container-width: 1280px; } }
+@media (min-width: 1536px) { .hub-page { --hub-container-width: 1536px; } }
+@media (min-width: 769px) {
+    .hub-payment-footer { height: 80px; padding-top: 0; padding-bottom: 0; }
+    .hub-payment-footer-inner { height: 100%; padding-top: 20px; padding-bottom: 20px; }
+    .hub-payment-footer-summary { flex-direction: row; align-items: center; gap: 8px; }
+    .hub-payment-footer-summary strong { font-size: 16px; }
+    .hub-page .hub-payment-footer .btn { min-width: 0; padding: 14px 32px; background: linear-gradient(135deg, #4b7c5a, #3d6448) !important; border: 0 !important; }
+}
+@media (max-width: 768px) {
+    .hub-page .invest-view-page { padding-top: 16px; }
+    .hub-invest-navigation { position: static; padding: 0 0 16px; }
+    .hub-invest-navigation-inner { padding: 0; }
+    .hub-invest-navigation-left { visibility: hidden; }
+    .hub-payment-footer-inner { max-width: 512px; }
+}
+.hub-mobile-stats, .hub-mobile-header-actions { display: none; }
+@media (max-width: 1023px) {
+    .hub-mobile-header-actions { display: flex; align-items: center; gap: 8px; }
+    .hub-mobile-help { display: none; }
+}
+@media (max-width: 768px) {
+    .hub-invest-navigation { display: none; }
+    .hub-mobile-help { display: block; height: 36px; padding: 8px 12px; }
+    .hub-mobile-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 16px 0 24px; }
+    .hub-mobile-stats:has(> div:only-child) { grid-template-columns: 1fr; }
+    .hub-mobile-stats:empty { display: none; }
+    .hub-mobile-stats > div { display: flex; flex-direction: column; gap: 8px; padding: 12px 8px; text-align: center; background: var(--surface-card); border: 1px solid var(--border); border-radius: 12px; }
+    .hub-mobile-stats span { color: var(--text-secondary); text-transform: uppercase; font-size: 10px; font-weight: 600; letter-spacing: .5px; }
+    .hub-mobile-stats strong { color: var(--text); font-size: 16px; }
+    .hub-invest-grid { padding-top: 0; }
+}
+.hub-invest-grid { align-items: stretch; }
+.hub-amount-column { display: flex; flex-direction: column; gap: 24px; }
+.hub-amount-column > .invest-card { width: 100%; }
+html.hub-payment-page::-webkit-scrollbar, .hub-payment-page body::-webkit-scrollbar { width: 10px !important; height: 10px !important; }
+html.hub-payment-page::-webkit-scrollbar-track { background: transparent; }
+html.hub-payment-page::-webkit-scrollbar-thumb { background: #ffffff4d; border-radius: 5px; }
+html.hub-payment-page[data-payment-theme="light"]::-webkit-scrollbar-thumb { background: #0003; }
+.hub-header { border-bottom: 0; }
+.hub-header-inner { height: 64px; }
+@media (min-width: 769px) {
+    .hub-invest-grid { min-height: calc(100dvh - 268px); padding-bottom: 24px; }
+}
+.hub-page .btn-close, .hub-page .btn-close-custom { box-sizing: border-box !important; }
+.hub-mobile-menu-heading .hub-icon-button { color: var(--text-secondary); }
+.hub-plan-option > span { display: block; color: var(--text-secondary); font-size: 13px; margin-top: 4px; }
+
+.hub-plan-option .hub-plan-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: var(--text); margin-top: 0; font-size: 16px; }
+.hub-plan-count { padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, #f97316 20%, transparent); color: #f97316; font-size: 12px; font-weight: 600; }
+.hub-plan-frequency { margin-left: auto; color: var(--text-secondary); font-size: 14px; }
+.hub-plan-option:focus-visible { outline: 2px solid #f97316; outline-offset: 3px; }
+@media (max-width: 767px) { .hub-amount-column { gap: 16px; } }
+
+.hub-page .transaction-value-code { min-width: 0; overflow-wrap: anywhere; }
+
+/* Completion uses the same surfaces and controls as the payment form. */
+.hub-page .invest-view-page.hub-completed-page {
+    min-height: calc(100dvh - 64px);
+    margin-top: 0 !important;
+    padding-top: 96px;
+    padding-bottom: 0;
+    display: flex;
+    flex-direction: column;
+}
+.hub-confirmation-region {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 0;
+}
+.hub-confirmation {
+    width: 100%;
+    max-width: 560px;
+    padding: 36px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--surface-card);
+    text-align: center;
+    box-shadow: 0 12px 40px #0000000a;
+}
+.hub-confirmation-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 24px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--accent);
+}
+.hub-confirmation h1 { margin: 0 0 12px; font-size: 28px; font-weight: 600; line-height: 1.25; color: var(--text); }
+/* Blazor focuses the page heading on navigation; reserve outlines for controls. */
+.hub-page .hub-confirmation h1:focus { outline: none; }
+.hub-confirmation-description { margin: 0 auto 28px; max-width: 360px; color: var(--text-secondary); font-size: 16px; line-height: 1.6; }
+.hub-confirmation-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; }
+.hub-page .hub-confirmation-actions .btn { width: auto; min-height: 44px; padding: 12px 18px; font-size: 14px; }
+.hub-confirmation-recovery { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); font-size: 14px; line-height: 1.6; }
+.hub-confirmation-recovery p { margin: 0 0 6px; color: var(--text); font-weight: 600; }
+.hub-confirmation-recovery span { color: var(--text-secondary); }
+.hub-confirmation-delete { display: inline-block; margin-top: 20px; padding: 8px 0; border: 0; background: none; color: var(--text-secondary); font: inherit; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.hub-confirmation-delete:hover { color: var(--text); }
+.hub-completed-page .hub-footer { margin-top: 0; padding: 20px 0; }
+@media (max-width: 768px) {
+    .hub-page .invest-view-page.hub-completed-page { padding-top: 0; }
+    .hub-confirmation { padding: 28px 20px; }
+    .hub-confirmation h1 { font-size: 24px; }
+    .hub-confirmation-actions { flex-direction: column; }
+    .hub-page .hub-confirmation-actions .btn { width: 100%; }
+}
