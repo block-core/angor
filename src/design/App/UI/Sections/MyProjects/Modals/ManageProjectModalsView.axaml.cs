@@ -43,6 +43,7 @@ public partial class ManageProjectModalsView : UserControl
         WireClick("PasswordModalCloseBtn", () => { if (Vm != null) Vm.ShowPasswordModal = false; });
         WireClick("PasswordModalCancelBtn", () => { if (Vm != null) Vm.ShowPasswordModal = false; });
         WireClick("ConfirmClaimBtn", OnConfirmClaimClick);
+        WireClick("ClaimPasswordRevealBtn", () => TogglePasswordReveal("ClaimPasswordInput", "ClaimPasswordRevealIcon", "ClaimPasswordRevealBtn"));
 
         // ── Success (Claim) ──
         WireClick("GoToFundsBtn", () =>
@@ -61,6 +62,7 @@ public partial class ManageProjectModalsView : UserControl
         WireClick("ReleasePasswordModalCloseBtn", () => { if (Vm != null) Vm.ShowReleaseFundsPasswordModal = false; });
         WireClick("ReleasePasswordCancelBtn", () => { if (Vm != null) Vm.ShowReleaseFundsPasswordModal = false; });
         WireClick("ConfirmReleaseBtn", OnConfirmReleaseClick);
+        WireClick("ReleasePasswordRevealBtn", () => TogglePasswordReveal("ReleasePasswordInput", "ReleasePasswordRevealIcon", "ReleasePasswordRevealBtn"));
 
         // ── Success (Release) ──
         WireClick("ReleaseDoneBtn", () => { if (Vm != null) Vm.ShowReleaseFundsSuccessModal = false; });
@@ -104,9 +106,9 @@ public partial class ManageProjectModalsView : UserControl
             _subscribedVm.ToastRequested += OnToastRequested;
     }
 
-    private void OnToastRequested(string message)
+    private void OnToastRequested(string message, ToastSeverity severity)
     {
-        GetShellVm()?.ShowToast(message);
+        GetShellVm()?.ShowToast(message, severity);
     }
 
     // ─────────────────────────────────────────────────────────────────
@@ -261,7 +263,7 @@ public partial class ManageProjectModalsView : UserControl
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "OnClaimSelectedClick failed");
-            GetShellVm()?.ShowToast($"Claim failed: {ex.Message}");
+            GetShellVm()?.ShowToast($"Claim failed: {ex.Message}", ToastSeverity.Error);
         }
     }
 
@@ -299,7 +301,7 @@ public partial class ManageProjectModalsView : UserControl
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "OnConfirmClaimClick failed");
-            GetShellVm()?.ShowToast($"Claim failed: {ex.Message}");
+            GetShellVm()?.ShowToast($"Claim failed: {ex.Message}", ToastSeverity.Error);
         }
     }
 
@@ -349,7 +351,7 @@ public partial class ManageProjectModalsView : UserControl
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "OnReleaseFundsConfirmClick failed");
-            GetShellVm()?.ShowToast($"Release funds failed: {ex.Message}");
+            GetShellVm()?.ShowToast($"Release funds failed: {ex.Message}", ToastSeverity.Error);
         }
     }
 
@@ -383,7 +385,7 @@ public partial class ManageProjectModalsView : UserControl
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "OnConfirmReleaseClick failed");
-            GetShellVm()?.ShowToast($"Release failed: {ex.Message}");
+            GetShellVm()?.ShowToast($"Release failed: {ex.Message}", ToastSeverity.Error);
         }
     }
 
@@ -448,6 +450,22 @@ public partial class ManageProjectModalsView : UserControl
     private static double ParseBtc(string? amount)
     {
         return AmountParser.ParseInvariantOrZero(amount);
+    }
+
+    /// <summary>Toggles a password TextBox between masked and plain-text display, swapping the eye icon.</summary>
+    private void TogglePasswordReveal(string inputName, string iconName, string buttonName)
+    {
+        var input = this.FindControl<TextBox>(inputName);
+        var icon = this.FindControl<Optris.Icons.Avalonia.Icon>(iconName);
+        var btn = this.FindControl<Button>(buttonName);
+        if (input == null || icon == null) return;
+
+        var revealing = input.PasswordChar == '*';
+        input.PasswordChar = revealing ? '\0' : '*';
+        icon.Value = revealing ? "fa-solid fa-eye-slash" : "fa-solid fa-eye";
+        ToolTip.SetTip(btn, revealing ? "Hide password" : "Show password");
+        Avalonia.Automation.AutomationProperties.SetName(btn, revealing ? "Hide password" : "Show password");
+        input.Focus();
     }
 
     /// <summary>

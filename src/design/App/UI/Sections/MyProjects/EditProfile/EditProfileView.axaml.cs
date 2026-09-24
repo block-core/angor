@@ -661,10 +661,10 @@ public partial class EditProfileView : UserControl
         _subscribedVm = null;
     }
 
-    private void OnToastRequested(string message)
+    private void OnToastRequested(string message, ToastSeverity severity)
     {
         var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
-        shellVm?.ShowToast(message);
+        shellVm?.ShowToast(message, severity);
     }
 
     private async void OnSaveClick(object? sender, RoutedEventArgs e)

@@ -484,6 +484,11 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable, INetwo
 
     [Reactive] private ProjectItemViewModel? selectedProject;
     [Reactive] private InvestPageViewModel? investPageViewModel;
+    private int loadRequest;
+    [Reactive] private bool hasLoadError;
+    [Reactive] private string loadErrorTitle = "";
+    [Reactive] private string loadErrorMessage = "";
+    [Reactive] private bool isEmpty;
     [Reactive] private bool isLoading;
     [Reactive] private bool isInitialLoad = true;
     [Reactive] private string? searchText;
@@ -600,6 +605,34 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable, INetwo
 
     public ObservableCollection<ProjectItemViewModel> Projects { get; } = new();
 
+    /// <summary>
+    /// <see cref="Projects"/> re-chunked into rows of <see cref="CardColumnCount"/> cards so the
+    /// view can render them through a VirtualizingStackPanel (one item = one row): only visible
+    /// rows are materialized and recycled, instead of inflating every card in a plain
+    /// ResponsiveGrid panel. Rebuilt whenever Projects or the column count changes.
+    /// </summary>
+    public ObservableCollection<ProjectRowViewModel> ProjectRows { get; } = new();
+
+    /// <summary>
+    /// How many card columns fit the current view width. Set by the view's code-behind
+    /// (it owns the actual pixel width); changing it re-chunks <see cref="ProjectRows"/>.
+    /// </summary>
+    [Reactive] private int cardColumnCount = 1;
+
+    private void RebuildProjectRows()
+    {
+        var cols = Math.Max(1, CardColumnCount);
+        ProjectRows.Clear();
+        for (var i = 0; i < Projects.Count; i += cols)
+        {
+            var count = Math.Min(cols, Projects.Count - i);
+            var cards = new List<ProjectItemViewModel>(count);
+            for (var j = 0; j < count; j++)
+                cards.Add(Projects[i + j]);
+            ProjectRows.Add(new ProjectRowViewModel(cards, cols));
+        }
+    }
+
     private async Task LoadProfileDataAsync(ProjectItemViewModel project)
     {
         if (string.IsNullOrWhiteSpace(project.ProjectId) || project.ProfileLoaded || project.IsProfileLoading)
@@ -710,6 +743,23 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable, INetwo
             .Throttle(TimeSpan.FromMilliseconds(250))
             .Subscribe(_ => Avalonia.Threading.Dispatcher.UIThread.Post(UpdateHasInvestedFlags))
             .DisposeWith(_disposables);
+
+        // Re-chunk virtualized rows when the flat project list changes. Chunking is
+        // O(n) and trivially cheap, so we rebuild synchronously per mutation (this also
+        // keeps headless tests deterministic — no throttle/dispatcher race)...
+        Projects.CollectionChanged += (_, _) =>
+        {
+            if (Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+                RebuildProjectRows();
+            else
+                Avalonia.Threading.Dispatcher.UIThread.Post(RebuildProjectRows);
+        };
+
+        // ...and when the view reports a width-driven column-count change.
+        this.WhenAnyValue(x => x.CardColumnCount)
+            .DistinctUntilChanged()
+            .Subscribe(_ => RebuildProjectRows())
+            .DisposeWith(_disposables);
         var subscribeMs = sw.ElapsedMilliseconds;
 
         sw.Restart();
@@ -777,13 +827,23 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable, INetwo
     {
         // Capture the generation and network at start; if a network switch
         // happens while Latest() is in flight, the results are discarded.
+        int request = Interlocked.Increment(ref loadRequest);
         var generation = Volatile.Read(ref loadGeneration);
+        bool IsCurrent() => request == Volatile.Read(ref loadRequest)
+            && generation == Volatile.Read(ref loadGeneration);
         var networkName = App.Services.GetRequiredService<INetworkConfiguration>().GetNetwork().Name;
         var pl = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger("ProjectsLoad");
         var sw = System.Diagnostics.Stopwatch.StartNew();
         pl.LogInformation("[ProjectsLoad] t=0ms begin");
 
-        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => IsLoading = true);
+        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (!IsCurrent()) return;
+            IsLoading = true;
+            HasLoadError = false;
+            IsEmpty = false;
+            IsInitialLoad = Projects.Count == 0;
+        });
         pl.LogInformation("[ProjectsLoad] t={T}ms IsLoading=true", sw.ElapsedMilliseconds);
 
         // Watchdog: warn every 3s if Latest() still hasn't returned.
@@ -819,7 +879,7 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable, INetwo
             {
                 // A network switch happened while Latest() was in flight: these
                 // results belong to the old network — discard them entirely.
-                if (generation != Volatile.Read(ref loadGeneration))
+                if (!IsCurrent())
                 {
                     pl.LogWarning("[ProjectsLoad] t={T}ms discarding stale results (network switched mid-load, gen {Old} != {New})",
                         sw.ElapsedMilliseconds, generation, Volatile.Read(ref loadGeneration));
@@ -858,8 +918,10 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable, INetwo
                 var uiSw = System.Diagnostics.Stopwatch.StartNew();
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                 {
+                    if (!IsCurrent()) return;
                     // Re-seed paged: show first page immediately, hold rest in _pendingItems
                     SeedPaged(items);
+                    IsEmpty = items.Count == 0;
                     UpdateHasInvestedFlags();
                 });
                 uiSw.Stop();
@@ -873,6 +935,10 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable, INetwo
             {
                 pl.LogWarning("[ProjectsLoad] t={T}ms Latest() failed: {Error}",
                     sw.ElapsedMilliseconds, result.Error);
+                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    if (IsCurrent()) ShowLoadError();
+                });
             }
         }
         catch (Exception ex)
@@ -880,6 +946,10 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable, INetwo
             cts.Cancel();
             pl.LogError(ex, "[ProjectsLoad] t={T}ms exception: {ExType}: {ExMsg}",
                 sw.ElapsedMilliseconds, ex.GetType().Name, ex.Message);
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (IsCurrent()) ShowLoadError();
+            });
             if (ex.InnerException != null)
                 pl.LogError(ex.InnerException, "[ProjectsLoad] inner: {ExType}: {ExMsg}",
                     ex.InnerException.GetType().Name, ex.InnerException.Message);
@@ -887,10 +957,25 @@ public partial class FindProjectsViewModel : ReactiveObject, IDisposable, INetwo
         finally
         {
             cts.Cancel();
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { IsLoading = false; IsInitialLoad = false; });
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (!IsCurrent()) return;
+                IsLoading = false;
+                IsInitialLoad = false;
+            });
 
             pl.LogInformation("[ProjectsLoad] t={T}ms DONE", sw.ElapsedMilliseconds);
         }
+    }
+
+    private void ShowLoadError()
+    {
+        HasLoadError = true;
+        IsEmpty = false;
+        LoadErrorTitle = Projects.Count == 0 ? "Let's get you connected" : "Couldn't refresh projects";
+        LoadErrorMessage = Projects.Count == 0
+            ? "We couldn't reach the project services after trying available connections. Check your connection and try again."
+            : "You can still browse your saved projects. We couldn't get the latest updates. Try again in a moment.";
     }
 
     /// <summary>

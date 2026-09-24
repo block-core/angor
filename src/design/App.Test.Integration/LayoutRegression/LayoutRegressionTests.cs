@@ -215,6 +215,22 @@ public class LayoutRegressionTests
             string.Join("\n", violations));
     }
 
+    [AvaloniaTheory]
+    [MemberData(nameof(Viewports))]
+    public void FindProjects_recovery_has_no_overlaps_or_overflow(double width, double height)
+    {
+        var vm = global::App.App.Services.GetRequiredService<FindProjectsViewModel>();
+        vm.IsInitialLoad = false;
+        vm.HasLoadError = true;
+        vm.LoadErrorTitle = "Let's get you connected";
+        vm.LoadErrorMessage = "We couldn't reach the project services after trying available connections. "
+            + "Check your connection and try again.";
+        vm.Projects.Clear();
+        var view = new FindProjectsView(vm);
+
+        RenderAndAudit(view, width, height).Should().BeEmpty();
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // ProjectDetailView — header, stats, FAQ/members/media accordions
     // ═══════════════════════════════════════════════════════════════════

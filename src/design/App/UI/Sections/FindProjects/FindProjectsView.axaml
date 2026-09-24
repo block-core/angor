@@ -102,10 +102,9 @@
             <StackPanel Spacing="16">
                 <!-- Header with search bar and refresh button -->
                 <Grid Name="FindProjectsHeaderGrid" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto,Auto">
-                    <TextBlock Name="DiscoverProjectsTitle"
+                    <TextBlock Classes="Size-20" Name="DiscoverProjectsTitle"
                                Grid.Row="0" Grid.Column="0"
-                               Text="Discover Projects"
-                               FontSize="20" FontWeight="Bold"
+                               Text="Discover Projects" FontWeight="Bold"
                                VerticalAlignment="Center" />
                     <!-- Search bar -->
                     <Border Name="SearchContainer"
@@ -180,11 +179,10 @@
                                 Foreground="{DynamicResource TextMuted}"
                                 Margin="0,0,6,0"
                                 VerticalAlignment="Center" />
-                        <TextBlock Name="SearchErrorText"
+                        <TextBlock Classes="Size-XS" Name="SearchErrorText"
                                    Grid.Column="1"
                                    Text="{Binding SearchError}"
                                    Foreground="{DynamicResource TextMuted}"
-                                   FontSize="12"
                                    FontWeight="Medium"
                                    TextWrapping="Wrap"
                                    VerticalAlignment="Center" />
@@ -227,13 +225,43 @@
                                     </Style>
                                 </i:Icon.Styles>
                             </i:Icon>
-                            <TextBlock Text="Refresh"
-                                        VerticalAlignment="Center"
-                                        FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-13" Text="Refresh"
+                                        VerticalAlignment="Center" FontWeight="SemiBold"
                                         Foreground="{DynamicResource LightPrimaryButtonForeground}" />
                         </StackPanel>
                     </Button>
                 </Grid>
+
+                <Border IsVisible="{Binding HasLoadError}"
+                        Background="{DynamicResource Surface}"
+                        BorderBrush="{DynamicResource Stroke}"
+                        BorderThickness="1" CornerRadius="16" Padding="24" Margin="0,0,0,16">
+                    <StackPanel Spacing="16" MaxWidth="480" HorizontalAlignment="Center">
+                        <i:Icon Value="fa-solid fa-cloud" FontSize="28"
+                                Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" />
+                        <TextBlock Text="{Binding LoadErrorTitle}" Classes="Size-20"
+                                   FontWeight="SemiBold" TextWrapping="Wrap" TextAlignment="Center"
+                                   Foreground="{DynamicResource TextStrong}" />
+                        <TextBlock Text="{Binding LoadErrorMessage}" Classes="Size-S"
+                                   TextWrapping="Wrap" TextAlignment="Center"
+                                   Foreground="{DynamicResource TextMuted}" />
+                        <Button Name="RetryProjectsButton" Classes="Primary MobileAction"
+                                Content="Try again" HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center" IsEnabled="{Binding !IsLoading}" />
+                        <Button Name="ConnectionSettingsButton" Classes="Secondary MobileAction"
+                                Content="Connection settings" HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center" />
+                    </StackPanel>
+                </Border>
+
+                <StackPanel IsVisible="{Binding IsEmpty}" Spacing="12" Margin="24">
+                    <TextBlock Text="No projects yet" Classes="Size-20" FontWeight="SemiBold"
+                               TextAlignment="Center" TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextStrong}" />
+                    <TextBlock Text="New projects will appear here. You can also search using a project ID."
+                               Classes="Size-S" TextWrapping="Wrap" TextAlignment="Center"
+                               Foreground="{DynamicResource TextMuted}" />
+                </StackPanel>
 
                 <!-- Skeleton placeholder grid — visible until first data arrives -->
                 <ItemsControl IsVisible="{Binding IsInitialLoad}">
@@ -253,32 +281,46 @@
                 </ItemsControl>
 
                 <!-- Project cards in responsive grid -->
-                <ItemsControl ItemsSource="{Binding Projects}"
+                <!-- Virtualized grid: one VirtualizingStackPanel item = one row of cards. -->
+                <!-- Only visible rows are materialized; containers recycle on scroll.    -->
+                <ItemsControl Name="ProjectsItemsControl"
+                              ItemsSource="{Binding ProjectRows}"
                               IsVisible="{Binding !IsInitialLoad}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <controls:ResponsiveGrid MinItemWidth="320"
-                                                     ColumnSpacing="16"
-                                                     RowSpacing="16" />
+                            <VirtualizingStackPanel />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="fp:ProjectItemViewModel">
-                            <controls:ProjectCard
-                                ProjectName="{Binding ProjectName}"
-                                ShortDescription="{Binding ShortDescription}"
-                                InvestorCount="{Binding InvestorCount}"
-                                InvestorLabel="{Binding InvestorLabel}"
-                                Raised="{Binding Raised}"
-                                Target="{Binding Target}"
-                                TargetLabel="{Binding TargetLabel}"
-                                Progress="{Binding Progress}"
-                                ProjectType="{Binding ProjectType}"
-                                Status="{Binding Status}"
-                                HasInvested="{Binding HasInvested}"
-                                Banner="{Binding BannerUrl}"
-                                Avatar="{Binding AvatarUrl}"
-                                CurrencySymbol="{Binding $parent[UserControl].DataContext.CurrencySymbol}" />
+                        <DataTemplate x:DataType="fp:ProjectRowViewModel">
+                            <ItemsControl ItemsSource="{Binding Cards}"
+                                          Margin="0,0,0,16">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <controls:UniformRowPanel ColumnCount="{Binding ColumnCount}"
+                                                                  ColumnSpacing="16" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="fp:ProjectItemViewModel">
+                                        <controls:ProjectCard
+                                            ProjectName="{Binding ProjectName}"
+                                            ShortDescription="{Binding ShortDescription}"
+                                            InvestorCount="{Binding InvestorCount}"
+                                            InvestorLabel="{Binding InvestorLabel}"
+                                            Raised="{Binding Raised}"
+                                            Target="{Binding Target}"
+                                            TargetLabel="{Binding TargetLabel}"
+                                            Progress="{Binding Progress}"
+                                            ProjectType="{Binding ProjectType}"
+                                            Status="{Binding Status}"
+                                            HasInvested="{Binding HasInvested}"
+                                            Banner="{Binding BannerUrl}"
+                                            Avatar="{Binding AvatarUrl}"
+                                            CurrencySymbol="{Binding $parent[UserControl].DataContext.CurrencySymbol}" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
@@ -331,8 +373,7 @@
                                 </Style>
                             </i:Icon.Styles>
                         </i:Icon>
-                        <TextBlock VerticalAlignment="Center"
-                                   FontSize="14" FontWeight="SemiBold"
+                        <TextBlock Classes="Size-S" VerticalAlignment="Center" FontWeight="SemiBold"
                                    Text="Load More" />
                     </StackPanel>
                 </Button>

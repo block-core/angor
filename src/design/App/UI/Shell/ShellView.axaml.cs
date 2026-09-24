@@ -168,6 +168,11 @@ public partial class ShellView : UserControl
         var modalOverlay = this.FindControl<Panel>("ModalOverlay")!;
         var backdrop = this.FindControl<Border>("ShellModalBackdrop")!;
 
+        // Keyboard: Escape mirrors the Android system-back path — closes an open modal,
+        // otherwise navigates back from detail views. Tunnel at the shell root so Escape
+        // works regardless of which child control currently has focus.
+        AddHandler(KeyDownEvent, OnShellKeyDown, Avalonia.Interactivity.RoutingStrategies.Tunnel);
+
         // ── Resolve mobile tab bar controls ──
         _tabHome = this.FindControl<Button>("TabHome")!;
         _tabInvestor = this.FindControl<Button>("TabInvestor")!;
@@ -707,6 +712,15 @@ public partial class ShellView : UserControl
     // MOBILE TAB BAR CLICK HANDLERS
     // Vue: @click="handleMobileTabChange('home')" etc. in App.vue
     // ═══════════════════════════════════════════════════════════════
+
+    private void OnShellKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Escape) return;
+        if (DataContext is ShellViewModel vm && vm.TryHandlePlatformBack())
+        {
+            e.Handled = true;
+        }
+    }
 
     private void OnTabHome(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {

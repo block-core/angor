@@ -50,8 +50,7 @@
                             BorderThickness="0,0,0,1"
                             Padding="24,18">
                         <Panel>
-                            <TextBlock Text="Send"
-                                       FontSize="18" FontWeight="Bold"
+                            <TextBlock Classes="Size-L" Text="Send" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center" />
                             <Button Name="CloseForm" Classes="ModalCloseBtnSmall"
@@ -64,7 +63,7 @@
                         <!-- From wallet info box -->
                         <!-- Vue: rounded-lg border bg-gray-50/bg-[#0A0A0A] p-3 -->
                         <StackPanel Spacing="4">
-                            <TextBlock Text="From" FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-13" Text="From" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextMuted}" />
                             <Border Background="{DynamicResource RecoveryInfoCardBg}"
                                     BorderBrush="{DynamicResource RecoveryInfoCardBorder}"
@@ -72,17 +71,14 @@
                                     CornerRadius="8"
                                     Padding="12">
                                 <DockPanel>
-                                    <TextBlock Name="FromBalance" DockPanel.Dock="Right"
-                                               Text="2.5432 BTC"
-                                               FontSize="14" FontWeight="SemiBold"
+                                    <TextBlock Classes="Size-S" Name="FromBalance" DockPanel.Dock="Right"
+                                               Text="2.5432 BTC" FontWeight="SemiBold"
                                                Foreground="{DynamicResource TextStrong}"
                                                VerticalAlignment="Center" />
                                     <StackPanel Spacing="2">
-                                        <TextBlock Name="FromWalletName" Text="Bitcoin Wallet"
-                                                   FontSize="14" FontWeight="SemiBold"
+                                        <TextBlock Classes="Size-S" Name="FromWalletName" Text="Bitcoin Wallet" FontWeight="SemiBold"
                                                    Foreground="{DynamicResource TextStrong}" />
-                                        <TextBlock Name="FromWalletType" Text="On-Chain"
-                                                   FontSize="12"
+                                        <TextBlock Classes="Size-XS" Name="FromWalletType" Text="On-Chain"
                                                    Foreground="{DynamicResource TextMuted}" />
                                     </StackPanel>
                                 </DockPanel>
@@ -91,7 +87,7 @@
 
                         <!-- Recipient Address -->
                         <StackPanel Spacing="4">
-                            <TextBlock Text="Recipient Address" FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-13" Text="Recipient Address" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextMuted}" />
                             <Grid ColumnDefinitions="*,8,44">
                                 <TextBox Name="AddressInput"
@@ -140,7 +136,7 @@
                                       Foreground="{DynamicResource TextMuted}"
                                       Margin="0,4,0,0" />
                             <!-- Address validation error -->
-                            <TextBlock Name="AddressError" FontSize="13"
+                            <TextBlock Classes="Size-13" Name="AddressError"
                                        Foreground="{DynamicResource ErrorFieldText}"
                                        IsVisible="False" Margin="0,2,0,0" />
 
@@ -167,11 +163,9 @@
                                                Width="28" Height="28" Stretch="Uniform" />
                                     </Panel>
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
-                                        <TextBlock Name="BrantaPlatformName"
-                                                   FontSize="11" FontWeight="Medium"
+                                        <TextBlock Classes="Size-XXS" Name="BrantaPlatformName" FontWeight="Medium"
                                                    Foreground="{DynamicResource TextMuted}" />
-                                        <TextBlock Name="BrantaDescription"
-                                                   FontSize="13" FontWeight="SemiBold"
+                                        <TextBlock Classes="Size-13" Name="BrantaDescription" FontWeight="SemiBold"
                                                    Foreground="{DynamicResource TextStrong}"
                                                    IsVisible="False" />
                                     </StackPanel>
@@ -181,7 +175,7 @@
 
                         <!-- Amount -->
                         <StackPanel Spacing="8">
-                            <TextBlock FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-13" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextMuted}">
                                 <TextBlock.Text>
                                     <MultiBinding StringFormat="Amount ({0})">
@@ -199,7 +193,7 @@
                                      FontSize="14"
                                      Foreground="{DynamicResource TextStrong}" />
                             <!-- Amount validation error -->
-                            <TextBlock Name="AmountError" FontSize="13"
+                            <TextBlock Classes="Size-13" Name="AmountError"
                                        Foreground="{DynamicResource ErrorFieldText}"
                                        IsVisible="False" Margin="0,2,0,0" />
                             <!-- Quick percentage buttons: 25% 50% 75% 100% -->
@@ -246,8 +240,7 @@
                                         FontSize="14"
                                         Foreground="{DynamicResource ErrorBannerText}"
                                         VerticalAlignment="Top" Margin="0,1,10,0" />
-                                <TextBlock Name="SendErrorText" Grid.Column="1"
-                                           FontSize="13" FontWeight="Medium"
+                                <TextBlock Classes="Size-13" Name="SendErrorText" Grid.Column="1" FontWeight="Medium"
                                            Foreground="{DynamicResource ErrorBannerText}"
                                            TextWrapping="Wrap" />
                             </Grid>
@@ -319,14 +312,12 @@
                                Foreground="{DynamicResource CreateWalletGreenIcon}" />
                     </Border>
 
-                    <TextBlock Text="Transaction Sent!"
-                               FontSize="24" FontWeight="Bold"
+                    <TextBlock Classes="Size-24" Text="Transaction Sent!" FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}"
                                HorizontalAlignment="Center"
                                TextAlignment="Center" />
 
-                    <TextBlock Text="Your transaction has been broadcast to the network."
-                               FontSize="14"
+                    <TextBlock Classes="Size-S" Text="Your transaction has been broadcast to the network."
                                Foreground="{DynamicResource TextMuted}"
                                TextWrapping="Wrap"
                                TextAlignment="Center" />
@@ -339,25 +330,25 @@
                             Padding="16">
                         <StackPanel Spacing="12">
                             <DockPanel>
-                                <TextBlock Text="Amount" FontSize="13"
+                                <TextBlock Classes="Size-13" Text="Amount"
                                            Foreground="{DynamicResource TextMuted}" />
-                                <TextBlock Name="SummaryAmount" DockPanel.Dock="Right"
-                                           Text="0.50000000 BTC" FontSize="13" FontWeight="SemiBold"
+                                <TextBlock Classes="Size-13" Name="SummaryAmount" DockPanel.Dock="Right"
+                                           Text="0.50000000 BTC" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextStrong}"
                                            HorizontalAlignment="Right" />
                             </DockPanel>
                             <DockPanel>
-                                <TextBlock Text="Fee" FontSize="13"
+                                <TextBlock Classes="Size-13" Text="Fee"
                                            Foreground="{DynamicResource TextMuted}" />
-                                <TextBlock Name="SummaryFee" DockPanel.Dock="Right"
-                                           Text="0.00001200" FontSize="13" FontWeight="SemiBold"
+                                <TextBlock Classes="Size-13" Name="SummaryFee" DockPanel.Dock="Right"
+                                           Text="0.00001200" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextStrong}"
                                            HorizontalAlignment="Right" />
                             </DockPanel>
                             <Border BorderBrush="{DynamicResource Stroke}"
                                     BorderThickness="0,0,0,1" Margin="0,2" />
                             <StackPanel Spacing="4">
-                                <TextBlock Text="Transaction ID" FontSize="12"
+                                <TextBlock Classes="Size-XS" Text="Transaction ID"
                                            Foreground="{DynamicResource TextMuted}" />
                                 <Border Background="{DynamicResource ModalInputBg}"
                                         CornerRadius="6" Padding="10,8">
@@ -382,9 +373,8 @@
                                                        Foreground="{DynamicResource TextMuted}" />
                                             </Button>
                                         </StackPanel>
-                                        <TextBlock Name="SummaryTxid" Text=""
+                                        <TextBlock Classes="Size-13" Name="SummaryTxid" Text=""
                                AutomationProperties.AutomationId="SummaryTxid"
-                                                   FontSize="13"
                                                    FontFamily="Cascadia Mono, Consolas, monospace"
                                                     Foreground="{DynamicResource PrimaryGreenBrush}"
                                                    VerticalAlignment="Center" />

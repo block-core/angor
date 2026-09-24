@@ -141,7 +141,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable, INetworkSwi
 
     private readonly CompositeDisposable _disposables = new();
 
-    public event Action<string>? ToastRequested;
+    public event Action<string, ToastSeverity>? ToastRequested;
 
     public FundersViewModel(
         IFounderAppService founderAppService,
@@ -397,7 +397,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable, INetworkSwi
                 sig.EventId,
                 sig.ProjectIdentifier,
                 result.Error);
-            ToastRequested?.Invoke("Approval failed. Please try again.");
+            ToastRequested?.Invoke("Approval failed. Please try again.", ToastSeverity.Error);
         }
         catch (Exception ex)
         {
@@ -405,7 +405,7 @@ public partial class FundersViewModel : ReactiveObject, IDisposable, INetworkSwi
                 "Failed to approve investment request {EventId} for project {ProjectId}",
                 sig.EventId,
                 sig.ProjectIdentifier);
-            ToastRequested?.Invoke("Approval failed. Please try again.");
+            ToastRequested?.Invoke("Approval failed. Please try again.", ToastSeverity.Error);
         }
     }
 

@@ -129,8 +129,7 @@
     <!-- ═══════════════════════════════════════ -->
     <StackPanel Spacing="16">
         <!-- Subtitle only — no bold heading (matches reference) -->
-        <TextBlock Text="Choose the type of project you want to launch."
-                   FontSize="14" Foreground="{DynamicResource TextMuted}" />
+        <TextBlock Classes="Size-S" Text="Choose the type of project you want to launch." Foreground="{DynamicResource TextMuted}" />
 
         <!-- Investment card — Border (not Button) to prevent hover chrome -->
         <!-- Vue: rounded-xl (12px), border-2, gradient bg from-[#0A0A0A] to-[#1a1a1a] (dark) -->
@@ -150,10 +149,9 @@
                 <!-- Title + description -->
                 <StackPanel Grid.Column="1" Spacing="6" Margin="20,0,20,0"
                             VerticalAlignment="Center">
-                    <TextBlock Name="TitleInvest" Classes="TypeCardTitle"
-                               Text="I am looking for Investors" FontSize="16" FontWeight="Bold" />
-                    <TextBlock Text="Investors can fund during a funding period and then once the goal is met funds start being released in stages."
-                               FontSize="14" Foreground="{DynamicResource TextMuted}"
+                    <TextBlock Name="TitleInvest" Classes="TypeCardTitle Size-M"
+                               Text="I am looking for Investors" FontWeight="Bold" />
+                    <TextBlock Classes="Size-S" Text="Investors can fund during a funding period and then once the goal is met funds start being released in stages." Foreground="{DynamicResource TextMuted}"
                                TextWrapping="Wrap" LineHeight="20" />
                 </StackPanel>
                 <!-- Radio circle -->
@@ -192,10 +190,9 @@
                 <!-- Title + description -->
                 <StackPanel Grid.Column="1" Spacing="6" Margin="20,0,20,0"
                             VerticalAlignment="Center">
-                    <TextBlock Name="TitleFund" Classes="TypeCardTitle"
-                               Text="I am looking for supporters" FontSize="16" FontWeight="Bold" />
-                    <TextBlock Text="Supporters can fund you at anytime during the project timeline."
-                               FontSize="14" Foreground="{DynamicResource TextMuted}"
+                    <TextBlock Name="TitleFund" Classes="TypeCardTitle Size-M"
+                               Text="I am looking for supporters" FontWeight="Bold" />
+                    <TextBlock Classes="Size-S" Text="Supporters can fund you at anytime during the project timeline." Foreground="{DynamicResource TextMuted}"
                                TextWrapping="Wrap" LineHeight="20" />
                 </StackPanel>
                 <!-- Radio circle -->
@@ -209,7 +206,7 @@
                             <Ellipse Width="400" Height="400" Fill="White"
                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
                             <Path Data="{StaticResource CheckCircleSolid}"
-                                  Fill="#F7931A" Width="512" Height="512" Stretch="Uniform" />
+                                  Fill="{DynamicResource BitcoinAccentBrush}" Width="512" Height="512" Stretch="Uniform" />
                         </Panel>
                     </Viewbox>
                 </Border>
@@ -233,10 +230,9 @@
                 <!-- Title + description -->
                 <StackPanel Grid.Column="1" Spacing="6" Margin="20,0,20,0"
                             VerticalAlignment="Center">
-                    <TextBlock Name="TitleSubscription" Classes="TypeCardTitle"
-                               Text="I am looking for paid subscribers" FontSize="16" FontWeight="Bold" />
-                    <TextBlock Text="Subscribers pay for 3, 6, or 12 months up front and funds are released on the day of your choice"
-                               FontSize="14" Foreground="{DynamicResource TextMuted}"
+                    <TextBlock Name="TitleSubscription" Classes="TypeCardTitle Size-M"
+                               Text="I am looking for paid subscribers" FontWeight="Bold" />
+                    <TextBlock Classes="Size-S" Text="Subscribers pay for 3, 6, or 12 months up front and funds are released on the day of your choice" Foreground="{DynamicResource TextMuted}"
                                TextWrapping="Wrap" LineHeight="20" />
                 </StackPanel>
                 <!-- Radio circle -->

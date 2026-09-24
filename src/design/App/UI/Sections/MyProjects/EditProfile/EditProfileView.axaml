@@ -239,9 +239,8 @@
                                     </i:Icon.Styles>
                                 </i:Icon>
                             </Panel>
-                            <TextBlock Name="SaveButtonText"
-                                       Text="Save Profile"
-                                       FontSize="14" FontWeight="Medium"
+                            <TextBlock Classes="Size-S" Name="SaveButtonText"
+                                       Text="Save Profile" FontWeight="Medium"
                                        Foreground="{DynamicResource PrimaryGreenBrush}"
                                        VerticalAlignment="Center" />
                         </StackPanel>
@@ -280,8 +279,7 @@
                                       Fill="{DynamicResource TextStrong}"
                                       Width="320" Height="512" Stretch="Uniform" />
                             </Viewbox>
-                            <TextBlock Text="Back"
-                                       FontSize="14" FontWeight="Medium"
+                            <TextBlock Classes="Size-S" Text="Back" FontWeight="Medium"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center" />
                         </StackPanel>
@@ -307,12 +305,11 @@
                     </Border.Transitions>
                     <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                         <i:Icon Value="fa-solid fa-pen" FontSize="12" Foreground="{DynamicResource TextStrong}" />
-                        <TextBlock Text="{Binding ProjectName}"
-                                   FontSize="14" FontWeight="SemiBold"
+                        <TextBlock Classes="Size-S" Text="{Binding ProjectName}" FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextStrong}"
                                    VerticalAlignment="Center"
                                    TextTrimming="CharacterEllipsis"
-                                   MaxWidth="400" />
+                                   MaxWidth="400" ToolTip.Tip="{Binding ProjectName}" />
                     </StackPanel>
                 </Border>
             </StackPanel>
@@ -360,9 +357,8 @@
                                 </i:Icon.Styles>
                             </i:Icon>
                         </Panel>
-                        <TextBlock Name="MobileSaveButtonText"
+                        <TextBlock Classes="Size-S" Name="MobileSaveButtonText"
                                    Text="Save Profile"
-                                   FontSize="14"
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource PrimaryGreenBrush}"
                                    VerticalAlignment="Center" />
@@ -420,8 +416,7 @@
                                 </Style>
                             </i:Icon.Styles>
                         </i:Icon>
-                        <TextBlock Text="Loading profile data..."
-                                   FontSize="14"
+                        <TextBlock Classes="Size-S" Text="Loading profile data..."
                                    Foreground="{DynamicResource TextMuted}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
@@ -469,9 +464,8 @@
                                         Height="180"
                                         ClipToBounds="True">
                                     <Panel>
-                                        <TextBlock Text="No image set"
+                                        <TextBlock Classes="Size-13" Text="No image set"
                                                    Foreground="{DynamicResource TextMuted}"
-                                                   FontSize="13"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
                                                    IsVisible="{Binding ProfilePictureBitmap, Converter={x:Static ObjectConverters.IsNull}}" />
@@ -491,8 +485,7 @@
                                         CornerRadius="8"
                                         Padding="12">
                                     <StackPanel Spacing="8">
-                                        <TextBlock Text="Upload to Blossom server"
-                                                   FontSize="12" FontWeight="Medium"
+                                        <TextBlock Classes="Size-XS" Text="Upload to Blossom server" FontWeight="Medium"
                                                    Foreground="{DynamicResource TextMuted}" />
                                         <TextBox Name="PicBlossomServerBox"
                                                  Classes="EditField"
@@ -529,8 +522,7 @@
                                                             </Style>
                                                         </i:Icon.Styles>
                                                     </i:Icon>
-                                                    <TextBlock Text="Upload"
-                                                               FontSize="14"
+                                                    <TextBlock Classes="Size-S" Text="Upload"
                                                                Foreground="{DynamicResource PrimaryButtonForeground}"
                                                                VerticalAlignment="Center" />
                                                 </StackPanel>
@@ -540,17 +532,15 @@
                                                     Classes="RowSecondary RowAction"
                                                     Content="Browse…"
                                                     Cursor="Hand" />
-                                            <TextBlock Name="PicFileNameText"
+                                            <TextBlock Classes="Size-13" Name="PicFileNameText"
                                                        Text="No file selected"
-                                                       FontSize="13"
                                                        Foreground="{DynamicResource TextMuted}"
                                                        VerticalAlignment="Center"
                                                        Margin="2,0,8,0"
                                                        TextTrimming="CharacterEllipsis" />
                                         </DockPanel>
-                                        <TextBlock Name="PicStatusText"
+                                        <TextBlock Classes="Size-XS" Name="PicStatusText"
                                                    IsVisible="False"
-                                                   FontSize="12"
                                                    Foreground="{DynamicResource TextMuted}"
                                                    TextWrapping="Wrap" />
                                     </StackPanel>
@@ -612,9 +602,8 @@
                                     Height="140"
                                     ClipToBounds="True">
                                 <Panel>
-                                    <TextBlock Text="No banner set"
+                                    <TextBlock Classes="Size-13" Text="No banner set"
                                                Foreground="{DynamicResource TextMuted}"
-                                               FontSize="13"
                                                HorizontalAlignment="Center"
                                                VerticalAlignment="Center"
                                                IsVisible="{Binding ProfileBannerBitmap, Converter={x:Static ObjectConverters.IsNull}}" />
@@ -633,8 +622,7 @@
                                     CornerRadius="8"
                                     Padding="12">
                                 <StackPanel Spacing="8">
-                                    <TextBlock Text="Upload to Blossom server"
-                                               FontSize="12" FontWeight="Medium"
+                                    <TextBlock Classes="Size-XS" Text="Upload to Blossom server" FontWeight="Medium"
                                                Foreground="{DynamicResource TextMuted}" />
                                     <TextBox Name="BannerBlossomServerBox"
                                              Classes="EditField"
@@ -671,8 +659,7 @@
                                                         </Style>
                                                     </i:Icon.Styles>
                                                 </i:Icon>
-                                                <TextBlock Text="Upload"
-                                                           FontSize="14"
+                                                <TextBlock Classes="Size-S" Text="Upload"
                                                            Foreground="{DynamicResource PrimaryButtonForeground}"
                                                            VerticalAlignment="Center" />
                                             </StackPanel>
@@ -682,17 +669,15 @@
                                                 Classes="RowSecondary RowAction"
                                                 Content="Browse…"
                                                 Cursor="Hand" />
-                                        <TextBlock Name="BannerFileNameText"
+                                        <TextBlock Classes="Size-13" Name="BannerFileNameText"
                                                    Text="No file selected"
-                                                   FontSize="13"
                                                    Foreground="{DynamicResource TextMuted}"
                                                    VerticalAlignment="Center"
                                                    Margin="2,0,8,0"
                                                    TextTrimming="CharacterEllipsis" />
                                     </DockPanel>
-                                    <TextBlock Name="BannerStatusText"
+                                    <TextBlock Classes="Size-XS" Name="BannerStatusText"
                                                IsVisible="False"
-                                               FontSize="12"
                                                Foreground="{DynamicResource TextMuted}"
                                                TextWrapping="Wrap" />
                                 </StackPanel>
@@ -717,9 +702,8 @@
                                     <TextBox Classes="EditField"
                                              Text="{Binding ProfileNip05}"
                                              Watermark="you@example.com" />
-                                    <TextBlock Text="{Binding Nip05Error}"
+                                    <TextBlock Classes="Size-XS" Text="{Binding Nip05Error}"
                                                IsVisible="{Binding HasNip05Error}"
-                                               FontSize="12"
                                                Foreground="{DynamicResource ErrorFieldText}"
                                                TextWrapping="Wrap" />
                                 </StackPanel>
@@ -731,9 +715,8 @@
                                     <TextBox Classes="EditField"
                                              Text="{Binding ProfileLud16}"
                                              Watermark="your@lightning.address" />
-                                    <TextBlock Text="{Binding Lud16Error}"
+                                    <TextBlock Classes="Size-XS" Text="{Binding Lud16Error}"
                                                IsVisible="{Binding HasLud16Error}"
-                                               FontSize="12"
                                                Foreground="{DynamicResource ErrorFieldText}"
                                                TextWrapping="Wrap" />
                                 </StackPanel>
@@ -745,9 +728,8 @@
                                     <TextBox Name="ProfileWebsiteTextBox" Classes="EditField"
                                              Text="{Binding ProfileWebsite}"
                                              Watermark="https://your-website.com" />
-                                    <TextBlock Text="{Binding WebsiteError}"
+                                    <TextBlock Classes="Size-XS" Text="{Binding WebsiteError}"
                                                IsVisible="{Binding HasWebsiteError}"
-                                               FontSize="12"
                                                Foreground="{DynamicResource ErrorFieldText}"
                                                TextWrapping="Wrap" />
                                 </StackPanel>
@@ -768,8 +750,7 @@
                                 <i:Icon Value="fa-solid fa-file-alt" FontSize="14" Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center" />
                                 <TextBlock Classes="SectionHeader" Text="Project Description" Margin="0" />
                             </StackPanel>
-                            <TextBlock Text="Write a detailed description of your project. This will be displayed as your main project content. Markdown is supported."
-                                       FontSize="13"
+                            <TextBlock Classes="Size-13" Text="Write a detailed description of your project. This will be displayed as your main project content. Markdown is supported."
                                        Foreground="{DynamicResource TextMuted}"
                                        TextWrapping="Wrap" />
 
@@ -873,9 +854,8 @@
                                                       HorizontalScrollBarVisibility="Disabled">
                                             <Panel Margin="12,10">
                                                 <controls:MarkdownTextBlock Name="MdPreviewBlock" BaseFontSize="14" />
-                                                <TextBlock Name="MdPreviewEmptyText"
+                                                <TextBlock Classes="Size-13" Name="MdPreviewEmptyText"
                                                            Text="Nothing to preview yet — switch to Write and start typing."
-                                                           FontSize="13"
                                                            Foreground="{DynamicResource TextMuted}"
                                                            IsVisible="False" />
                                             </Panel>
@@ -897,8 +877,7 @@
                                                 Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
                                         <i:Icon Value="fa-brands fa-markdown" FontSize="13"
                                                 Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center" />
-                                        <TextBlock Text="Markdown quick reference"
-                                                   FontSize="13"
+                                        <TextBlock Classes="Size-13" Text="Markdown quick reference"
                                                    Foreground="{DynamicResource TextMuted}"
                                                    VerticalAlignment="Center" />
                                     </StackPanel>
@@ -1014,8 +993,7 @@
                                 <i:Icon Value="fa-solid fa-users" FontSize="14" Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center" />
                                 <TextBlock Classes="SectionHeader" Text="Team Members" Margin="0" />
                             </StackPanel>
-                            <TextBlock Text="Add Nostr public keys of team members (npub or hex format)."
-                                       FontSize="13"
+                            <TextBlock Classes="Size-13" Text="Add Nostr public keys of team members (npub or hex format)."
                                        Foreground="{DynamicResource TextMuted}"
                                        TextWrapping="Wrap" />
 
@@ -1038,9 +1016,8 @@
                             </Grid>
 
                             <!-- Validation error for the new-member input -->
-                            <TextBlock Text="{Binding MemberError}"
+                            <TextBlock Classes="Size-XS" Text="{Binding MemberError}"
                                        IsVisible="{Binding HasMemberError}"
-                                       FontSize="12"
                                        Foreground="{DynamicResource ErrorFieldText}"
                                        TextWrapping="Wrap"
                                        Margin="0,-8,0,0" />
@@ -1073,8 +1050,7 @@
                                                                 HorizontalAlignment="Center"
                                                                 VerticalAlignment="Center" />
                                                     </Border>
-                                                    <TextBlock Text="{Binding}"
-                                                               FontSize="13"
+                                                    <TextBlock Classes="Size-13" Text="{Binding}"
                                                                FontFamily="Cascadia Code,Consolas,monospace"
                                                                Foreground="{DynamicResource TextStrong}"
                                                                VerticalAlignment="Center"
@@ -1131,9 +1107,8 @@
                             </Grid>
 
                             <!-- Validation error for the new-media URL input -->
-                            <TextBlock Text="{Binding MediaError}"
+                            <TextBlock Classes="Size-XS" Text="{Binding MediaError}"
                                        IsVisible="{Binding HasMediaError}"
-                                       FontSize="12"
                                        Foreground="{DynamicResource ErrorFieldText}"
                                        TextWrapping="Wrap"
                                        Margin="0,-8,0,0" />
@@ -1145,8 +1120,7 @@
                                     CornerRadius="8"
                                     Padding="12">
                                 <StackPanel Spacing="8">
-                                    <TextBlock Text="Upload media to Blossom server"
-                                               FontSize="12" FontWeight="Medium"
+                                    <TextBlock Classes="Size-XS" Text="Upload media to Blossom server" FontWeight="Medium"
                                                Foreground="{DynamicResource TextMuted}" />
                                     <TextBox Name="MediaBlossomServerBox"
                                              Classes="EditField RowField"
@@ -1182,8 +1156,7 @@
                                                         </Style>
                                                     </i:Icon.Styles>
                                                 </i:Icon>
-                                                <TextBlock Text="Upload"
-                                                           FontSize="14"
+                                                <TextBlock Classes="Size-S" Text="Upload"
                                                            Foreground="{DynamicResource PrimaryButtonForeground}"
                                                            VerticalAlignment="Center" />
                                             </StackPanel>
@@ -1193,17 +1166,15 @@
                                                 Classes="RowSecondary RowAction"
                                                 Content="Browse…"
                                                 Cursor="Hand" />
-                                        <TextBlock Name="MediaFileNameText"
+                                        <TextBlock Classes="Size-13" Name="MediaFileNameText"
                                                    Text="No file selected"
-                                                   FontSize="13"
                                                    Foreground="{DynamicResource TextMuted}"
                                                    VerticalAlignment="Center"
                                                    Margin="2,0,8,0"
                                                    TextTrimming="CharacterEllipsis" />
                                     </DockPanel>
-                                    <TextBlock Name="MediaStatusText"
+                                    <TextBlock Classes="Size-XS" Name="MediaStatusText"
                                                IsVisible="False"
-                                               FontSize="12"
                                                Foreground="{DynamicResource TextMuted}"
                                                TextWrapping="Wrap" />
                                 </StackPanel>
@@ -1231,12 +1202,10 @@
                                                     <i:Icon Value="fa-solid fa-image" FontSize="14"
                                                             Foreground="{DynamicResource TextMuted}" />
                                                     <StackPanel>
-                                                        <TextBlock Text="{Binding Url}"
-                                                                   FontSize="13"
+                                                        <TextBlock Classes="Size-13" Text="{Binding Url}"
                                                                    Foreground="{DynamicResource TextStrong}"
-                                                                   TextTrimming="CharacterEllipsis" />
-                                                        <TextBlock Text="{Binding Type}"
-                                                                   FontSize="11"
+                                                                   TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Url}" />
+                                                        <TextBlock Classes="Size-XXS" Text="{Binding Type}"
                                                                    Foreground="{DynamicResource TextMuted}" />
                                                     </StackPanel>
                                                 </StackPanel>
@@ -1261,8 +1230,7 @@
                                 <i:Icon Value="fa-solid fa-network-wired" FontSize="14" Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center" />
                                 <TextBlock Classes="SectionHeader" Text="Nostr Relays" Margin="0" />
                             </StackPanel>
-                            <TextBlock Text="Manage the Nostr relays used for publishing and fetching your project data."
-                                       FontSize="13"
+                            <TextBlock Classes="Size-13" Text="Manage the Nostr relays used for publishing and fetching your project data."
                                        Foreground="{DynamicResource TextMuted}"
                                        TextWrapping="Wrap" />
 
@@ -1305,8 +1273,7 @@
                                                 <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                                                     <i:Icon Value="fa-solid fa-server" FontSize="12"
                                                             Foreground="{DynamicResource PrimaryGreenBrush}" />
-                                                    <TextBlock Text="{Binding}"
-                                                               FontSize="13"
+                                                    <TextBlock Classes="Size-13" Text="{Binding}"
                                                                Foreground="{DynamicResource TextStrong}"
                                                                VerticalAlignment="Center" />
                                                 </StackPanel>
