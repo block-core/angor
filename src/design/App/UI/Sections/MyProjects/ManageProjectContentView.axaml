@@ -491,7 +491,7 @@
 
                 <!-- Claim scan failure — never present an empty stage list as "no funds" -->
                 <Border Background="#33EF4444"
-                        BorderBrush="#EF4444"
+                        BorderBrush="{DynamicResource DangerBrightBrush}"
                         BorderThickness="1"
                         CornerRadius="8"
                         Padding="12"
