@@ -162,7 +162,7 @@
     return;
 }
 
-<div class="container mt-4 invest-view-page" >
+<div class="container mt-4 invest-view-page @(invested ? "hub-completed-page" : "")" >
 
     <div class="hub-invest-navigation">
         <div class="hub-invest-navigation-inner">
@@ -182,28 +182,30 @@
 
     @if (invested)
     {
-        <div class="hub-opportunity mb-4">
-            <div class="mb-3">
-                <Icon IconName="circle-check" Width="48" Height="48" />
-            </div>
-            <h4 class="text-white mb-2">@PaymentNoun Confirmed</h4>
-            <p class="mb-3" style="color: rgba(255,255,255,.9);">
-                Your investment was published to the Bitcoin network.
-                To manage or recover your funds later, import your recovery phrase into the Angor desktop app.
-            </p>
-            @if (!string.IsNullOrEmpty(investedTransactionId))
-            {
-                <a class="btn btn-white mb-2" href="@(_networkService.GetPrimaryExplorer().Url + $"/tx/{investedTransactionId}")" target="_blank" rel="noopener">
-                    View Transaction
-                </a>
-            }
-            <button class="btn btn-white" @onclick="ShowRecoveryPhraseAsync">Show Recovery Phrase</button>
-            <div class="mt-3">
-                <a href="#" class="small" style="color: rgba(255,255,255,.75);"
-                   @onclick="OpenDeleteWalletModal" @onclick:preventDefault>
-                    Using a shared computer? Delete the wallet from this browser
-                </a>
-            </div>
+        <div class="hub-confirmation-region">
+            <section class="hub-confirmation" aria-labelledby="confirmation-title">
+                <div class="hub-confirmation-icon" aria-hidden="true">
+                    <Icon IconName="circle-check" Width="32" Height="32" />
+                </div>
+                <h1 id="confirmation-title">@PaymentNoun Confirmed</h1>
+                <p class="hub-confirmation-description">Your @PaymentNoun.ToLowerInvariant() was published to the Bitcoin network.</p>
+                <div class="hub-confirmation-actions">
+                    @if (!string.IsNullOrEmpty(investedTransactionId))
+                    {
+                        <a class="btn btn-hub-primary" href="@(_networkService.GetPrimaryExplorer().Url + $"/tx/{investedTransactionId}")" target="_blank" rel="noopener">
+                            View Transaction
+                        </a>
+                    }
+                    <button class="btn btn-outline-secondary" @onclick="ShowRecoveryPhraseAsync">Show Recovery Phrase</button>
+                </div>
+                <div class="hub-confirmation-recovery">
+                    <p>Keep your recovery phrase safe</p>
+                    <span>Import it into the Angor desktop app to manage or recover your funds later.</span>
+                </div>
+                <button type="button" class="hub-confirmation-delete" @onclick="OpenDeleteWalletModal">
+                    Using a shared computer? Delete this wallet
+                </button>
+            </section>
         </div>
     }
     else if (project is InvestorProject pendingProject && pendingProject.WaitingForFounderResponse())
