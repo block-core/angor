@@ -1,0 +1,106 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:shell="clr-namespace:App.UI.Shell"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="480"
+             x:Class="App.UI.Shell.IndexerUnreachableModal"
+             x:DataType="shell:IndexerUnreachableModalViewModel">
+
+    <!--
+        Shell-level "indexer unreachable" popup (issue #971).
+        Shown directly (no automatic fallback) when the primary indexer fails to
+        respond, letting the user pick a different configured indexer or add a
+        custom one. Shown via ShellViewModel.ShowModal().
+    -->
+    <Panel>
+        <Border Classes="ModalCard"
+                CornerRadius="16"
+                Background="{DynamicResource DeployModalBackground}"
+                BorderBrush="{DynamicResource DeployModalBorder}"
+                BorderThickness="1"
+                BoxShadow="0 8 32 0 #40000000"
+                ClipToBounds="True">
+            <DockPanel>
+                <!-- Header -->
+                <Border DockPanel.Dock="Top" Padding="24"
+                        BorderThickness="0,0,0,1"
+                        CornerRadius="15,15,0,0"
+                        BorderBrush="{DynamicResource DeployModalBorder}"
+                        Background="{DynamicResource DeployModalBackground}">
+                    <StackPanel Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <i:Icon Value="fa-solid fa-triangle-exclamation" FontSize="18" Foreground="#F59E0B" />
+                            <TextBlock Text="Indexer unreachable"
+                                       FontSize="20" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding Reason}"
+                                   FontSize="13" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource TextMuted}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Footer: custom indexer entry -->
+                <Border DockPanel.Dock="Bottom" Padding="24"
+                        BorderThickness="0,1,0,0"
+                        BorderBrush="{DynamicResource DeployModalBorder}">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Or add a custom indexer URL:"
+                                   FontSize="13" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextStrong}" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBox Grid.Column="0" Watermark="https://your-indexer.example.com"
+                                     Text="{Binding NewIndexerUrl}" />
+                            <Button Grid.Column="1" Name="AddCustomIndexerButton"
+                                    Content="Use" Margin="8,0,0,0"
+                                    IsEnabled="{Binding !IsChecking}" />
+                        </Grid>
+                        <TextBlock Text="{Binding StatusMessage}"
+                                   FontSize="12" TextWrapping="Wrap"
+                                   IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                   Foreground="{DynamicResource TextMuted}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Indexer list -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="320">
+                    <StackPanel Margin="24" Spacing="8">
+                        <ItemsControl ItemsSource="{Binding Indexers}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="shell:IndexerPickerItem">
+                                    <Button Name="IndexerButton" Classes="Unstyled"
+                                            CornerRadius="8" Padding="14"
+                                            BorderThickness="2"
+                                            Cursor="Hand"
+                                            HorizontalContentAlignment="Stretch"
+                                            Background="{DynamicResource DeployWalletItemBg}"
+                                            BorderBrush="{DynamicResource DeployWalletItemBorder}"
+                                            CommandParameter="{Binding}">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel Grid.Column="0" Spacing="2">
+                                                <TextBlock Text="{Binding Url}"
+                                                           FontSize="14" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource TextStrong}"
+                                                           TextWrapping="Wrap" />
+                                                <TextBlock Text="{Binding StatusLabel}"
+                                                           FontSize="12"
+                                                           Foreground="{DynamicResource TextMuted}" />
+                                            </StackPanel>
+                                            <i:Icon Grid.Column="1" Value="fa-solid fa-check"
+                                                    FontSize="16"
+                                                    Foreground="{DynamicResource PrimaryGreenBrush}"
+                                                    IsVisible="{Binding IsPrimary}"
+                                                    VerticalAlignment="Center" />
+                                        </Grid>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+    </Panel>
+</UserControl>

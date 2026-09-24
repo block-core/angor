@@ -62,5 +62,9 @@ public class TestNetworkService : INetworkService
 
     public Task CheckServices(bool checkIndexer) => Task.CompletedTask;
     public void HandleException(Exception ex) { }
+
+    public event EventHandler<IndexerUnreachableEventArgs>? IndexerUnreachable;
+    public void NotifyIndexerUnreachable(string indexerUrl, string reason)
+        => IndexerUnreachable?.Invoke(this, new IndexerUnreachableEventArgs(indexerUrl, reason));
 }
 

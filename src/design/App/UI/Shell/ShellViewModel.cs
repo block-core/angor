@@ -6,6 +6,9 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Investor;
 using Angor.Sdk.Wallet.Application;
 using Angor.Sdk.Wallet.Domain;
+using Angor.Shared;
+using Angor.Shared.Models;
+using Angor.Shared.Services;
 using App.UI.Sections.FindProjects;
 using App.UI.Sections.Funds;
 using App.UI.Sections.MyProjects;
@@ -470,6 +473,10 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
     private readonly ICurrencyService _currencyService;
     private readonly PrototypeSettings _prototypeSettings;
     private readonly FundersMonitor _fundersMonitor;
+    private readonly INetworkService _networkService;
+    private readonly INetworkStorage _networkStorage;
+    private readonly ILogger<ShellViewModel> _logger;
+    private volatile bool _isIndexerUnreachableModalOpen;
 
     [Reactive] private NavItem? selectedNavItem;
     [Reactive] private bool isSettingsOpen;
@@ -623,7 +630,7 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
     /// </summary>
     public string? ProfileName { get; }
 
-    public ShellViewModel(PortfolioViewModel portfolioVm, SignatureStore signatureStore, Func<string, object?> viewFactory, IWalletContext walletContext, IInvestmentAppService investmentAppService, ICurrencyService currencyService, ProfileContext profileContext, PrototypeSettings prototypeSettings, FundersMonitor fundersMonitor)
+    public ShellViewModel(PortfolioViewModel portfolioVm, SignatureStore signatureStore, Func<string, object?> viewFactory, IWalletContext walletContext, IInvestmentAppService investmentAppService, ICurrencyService currencyService, ProfileContext profileContext, PrototypeSettings prototypeSettings, FundersMonitor fundersMonitor, INetworkService networkService, INetworkStorage networkStorage, ILogger<ShellViewModel> logger)
     {
         _portfolioVm = portfolioVm;
         _signatureStore = signatureStore;
@@ -633,6 +640,9 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
         _currencyService = currencyService;
         _prototypeSettings = prototypeSettings;
         _fundersMonitor = fundersMonitor;
+        _networkService = networkService;
+        _networkStorage = networkStorage;
+        _logger = logger;
         _instance = this;
 
         // Mobile perf: pre-warm all tab views after first render so the first
@@ -732,6 +742,35 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
             _fundersMonitor.NotificationRaised -= OnFundersNotification;
         }).DisposeWith(_disposables);
         _fundersMonitor.Start();
+
+        // ── Indexer health: no automatic fallback (issue #971) ──
+        // When the currently selected primary indexer fails to respond, show a
+        // popup directly so the user can pick a different configured indexer.
+        _networkService.IndexerUnreachable += OnIndexerUnreachable;
+        Disposable.Create(() => _networkService.IndexerUnreachable -= OnIndexerUnreachable)
+            .DisposeWith(_disposables);
+    }
+
+    private void OnIndexerUnreachable(object? sender, IndexerUnreachableEventArgs e)
+    {
+        if (_isIndexerUnreachableModalOpen)
+            return;
+
+        _isIndexerUnreachableModalOpen = true;
+
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            void CloseModal()
+            {
+                _isIndexerUnreachableModalOpen = false;
+                HideModal();
+            }
+
+            var modalVm = new IndexerUnreachableModalViewModel(
+                _networkStorage, _networkService, _logger, e.IndexerUrl, e.Reason, CloseModal);
+
+            ShowModal(new IndexerUnreachableModal { DataContext = modalVm });
+        });
     }
 
     /// <summary>Count of funding requests awaiting approval — drives the mobile Founder tab badge.</summary>
