@@ -754,6 +754,12 @@ public partial class InvestPageViewModel : ReactiveObject, IDisposable
     {
         await _walletContext.RefreshAllBalancesAsync();
 
+        WalletInfo? wallet = _walletContext.Wallets.FirstOrDefault(x => x.Id == walletId);
+        if (wallet != null && wallet.AvailableSats < amountSats)
+        {
+            return Result.Failure("Insufficient funds in the selected wallet.");
+        }
+
         var projectId = new ProjectId(Project.ProjectId);
         byte? patternIndex = GetPatternIndex();
 
