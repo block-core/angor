@@ -1,33 +1,67 @@
 # Angor Mainnet Explorer Stack
 #
-# This runs the mempool stack only: MariaDB, mempool backend (API),
-# and mempool frontend (explorer). It connects to a Bitcoin Core node
-# and Fulcrum electrum server running natively on the host.
+# This runs the mempool stack: Fulcrum (Electrum server), MariaDB,
+# mempool backend (API), and mempool frontend (explorer). It uses the
+# standard, unmodified Mempool.space images - no custom fork or
+# Angor-specific flags are required.
+#
+# Fulcrum indexes addresses/UTXOs from a Bitcoin Core node and is
+# required for the mempool backend's address-lookup features. Bitcoin
+# Core itself still runs natively on the host (not in this compose).
 #
 # TLS is handled externally via FRP reverse proxy + Caddy on the VPS.
 #
 # Exposed ports:
 #   - 8189  -> mempool frontend + API  (indexer.angor.io)
 #   - 8999  -> mempool backend API     (internal, proxied by frontend)
+#   - 50001 -> Fulcrum electrum TCP    (internal, only needed if you want
+#              to point other tools/clients at this Fulcrum instance)
 #
 # Prerequisites:
-#   - Bitcoin Core running on the host (RPC on port 8332)
-#   - Fulcrum running on the host (TCP on port 50001)
+#   - Bitcoin Core running on the host, fully synced, with:
+#       - RPC enabled (default port 8332)
+#       - txindex=1 (Fulcrum requires this)
+#       - ZMQ block/tx notifications enabled, e.g. in bitcoin.conf:
+#           zmqpubrawblock=tcp://0.0.0.0:28332
+#           zmqpubrawtx=tcp://0.0.0.0:28333
 #
 # Configuration:
-#   Set CORE_RPC_HOST, ELECTRUM_HOST to the host IP or use
+#   Set CORE_RPC_HOST / CORE_ZMQ_HOST to the host IP, or use
 #   host.docker.internal / 172.17.0.1 (default Docker bridge gateway).
 #
 # Usage:
 #   docker compose up -d
+#   (Fulcrum will take a while to do its initial address index sync -
+#   follow progress with: docker logs -f mainnet-fulcrum)
 
 volumes:
   mempool_api:
     name: mainnet-mempool-cache
   mempool_db:
     name: mainnet-mempool-db
+  fulcrum_data:
+    name: mainnet-fulcrum-data
 
 services:
+
+  fulcrum:
+    container_name: mainnet-fulcrum
+    image: cculianu/fulcrum:latest
+    user: root
+    volumes:
+      - fulcrum_data:/fulcrum_db
+    command: >
+      Fulcrum
+      --bitcoind ${CORE_RPC_HOST:-172.17.0.1}:${CORE_RPC_PORT:-8332}
+      --rpcuser ${CORE_RPC_USERNAME:-rpcuser}
+      --rpcpassword ${CORE_RPC_PASSWORD:-rpcpassword}
+      --tcp 0.0.0.0:50001
+      --stats 0.0.0.0:3003
+    restart: unless-stopped
+    ports:
+      - "50001:50001"
+    networks:
+      - mainnet
 
   db:
     container_name: mainnet-mempool-db
@@ -47,15 +81,16 @@ services:
 
   api:
     container_name: mainnet-mempool-api
-    image: blockcore/mempool-backend:latest
+    image: mempool/backend:latest
     user: "0:0"
     depends_on:
       - db
+      - fulcrum
     environment:
       MEMPOOL_NETWORK: "mainnet"
       MEMPOOL_BACKEND: "electrum"
-      ELECTRUM_HOST: ${ELECTRUM_HOST:-172.17.0.1}
-      ELECTRUM_PORT: ${ELECTRUM_PORT:-50001}
+      ELECTRUM_HOST: "mainnet-fulcrum"
+      ELECTRUM_PORT: "50001"
       ELECTRUM_TLS_ENABLED: "false"
       CORE_RPC_HOST: ${CORE_RPC_HOST:-172.17.0.1}
       CORE_RPC_PORT: ${CORE_RPC_PORT:-8332}
@@ -67,7 +102,6 @@ services:
       DATABASE_USERNAME: "mempool"
       DATABASE_PASSWORD: "mempool"
       STATISTICS_ENABLED: "true"
-      ANGOR_ENABLED: "true"
     restart: unless-stopped
     stop_grace_period: 1m
     command: "./wait-for-it.sh mainnet-mempool-db:3306 --timeout=720 --strict -- ./start.sh"
@@ -80,7 +114,7 @@ services:
 
   web:
     container_name: mainnet-mempool-web
-    image: blockcore/mempool-frontend:latest
+    image: mempool/frontend:latest
     user: "0:0"
     depends_on:
       - api
@@ -89,7 +123,6 @@ services:
       BACKEND_MAINNET_HTTP_HOST: "mainnet-mempool-api"
       MAINNET_ENABLED: "true"
       ROOT_NETWORK: "mainnet"
-      ANGOR_ENABLED: "true"
       LIGHTNING: "false"
     restart: unless-stopped
     stop_grace_period: 1m
