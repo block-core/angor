@@ -64,8 +64,7 @@
                         Background="{DynamicResource DeployModalBackground}">
                     <StackPanel Spacing="16">
                         <Panel>
-                            <TextBlock Text="Use an existing wallet"
-                                       FontSize="20" FontWeight="Bold"
+                            <TextBlock Classes="Size-20" Text="Use an existing wallet" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center" />
                             <Button Name="CloseWalletSelector" Classes="ModalCloseBtn"
@@ -77,14 +76,12 @@
                             <!-- Grid (not Panel) so title and amount can never overlap
                                  on narrow widths (issue #920) -->
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                                <TextBlock Grid.Column="0" Text="{Binding Title}"
-                                           FontSize="14" FontWeight="Medium"
+                                <TextBlock Classes="Size-S" Grid.Column="0" Text="{Binding Title}" FontWeight="Medium"
                                            Foreground="{DynamicResource TextMuted}"
                                            TextWrapping="Wrap"
                                            VerticalAlignment="Center"
                                            HorizontalAlignment="Left" />
-                                <TextBlock Grid.Column="1" Text="{Binding AmountDisplay}"
-                                           FontSize="18" FontWeight="Bold"
+                                <TextBlock Classes="Size-L" Grid.Column="1" Text="{Binding AmountDisplay}" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}"
                                            VerticalAlignment="Center"
                                            HorizontalAlignment="Right" />
@@ -103,13 +100,12 @@
                         <Border IsVisible="{Binding HasError}"
                                 CornerRadius="8" Padding="12"
                                 Background="#1aef4444"
-                                BorderBrush="#ef4444" BorderThickness="1">
+                                BorderBrush="{DynamicResource DangerBrightBrush}" BorderThickness="1">
                             <Grid ColumnDefinitions="Auto,*">
                                 <i:Icon Grid.Column="0" Value="fa-solid fa-circle-exclamation"
-                                        FontSize="16" Foreground="#ef4444"
+                                        FontSize="16" Foreground="{DynamicResource DangerBrightBrush}"
                                         VerticalAlignment="Top" Margin="0,1,8,0" />
-                                <TextBlock Grid.Column="1" Text="{Binding ErrorMessage}"
-                                           FontSize="13" Foreground="#ef4444"
+                                <TextBlock Classes="Size-13" Grid.Column="1" Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrightBrush}"
                                            TextWrapping="Wrap" />
                             </Grid>
                         </Border>
@@ -127,8 +123,7 @@
                                 </LinearGradientBrush>
                             </Button.Background>
                             <Panel>
-                                <TextBlock Text="{Binding PayButtonText}"
-                                           FontSize="14" FontWeight="SemiBold"
+                                <TextBlock Classes="Size-S" Text="{Binding PayButtonText}" FontWeight="SemiBold"
                                            Foreground="White"
                                            IsVisible="{Binding !IsProcessing}"
                                            HorizontalAlignment="Center" />
@@ -166,8 +161,7 @@
                                 Background="Transparent"
                                 BorderBrush="{DynamicResource PrimaryGreenBrush}" BorderThickness="2"
                                 Cursor="Hand">
-                            <TextBlock Text="Or pay an invoice instead"
-                                       FontSize="14" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-S" Text="Or pay an invoice instead" FontWeight="SemiBold"
                                        Foreground="{DynamicResource PrimaryGreenBrush}" />
                         </Button>
                     </StackPanel>
@@ -201,23 +195,19 @@
                                             </Border>
                                             <StackPanel Grid.Column="1" Spacing="2"
                                                         VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Name}"
-                                                           FontSize="14" FontWeight="SemiBold"
+                                                <TextBlock Classes="Size-S" Text="{Binding Name}" FontWeight="SemiBold"
                                                            TextTrimming="CharacterEllipsis"
-                                                           Foreground="{DynamicResource TextStrong}" />
+                                                           Foreground="{DynamicResource TextStrong}" ToolTip.Tip="{Binding Name}" />
                                                 <WrapPanel Orientation="Horizontal" ItemSpacing="8" LineSpacing="2">
-                                                    <TextBlock Text="{Binding WalletType}"
-                                                               FontSize="13"
+                                                    <TextBlock Classes="Size-13" Text="{Binding WalletType}"
                                                                Foreground="{DynamicResource TextMuted}"
                                                                VerticalAlignment="Center" />
-                                                    <TextBlock Text="{Binding Balance}"
-                                                               FontSize="13" FontWeight="SemiBold"
+                                                    <TextBlock Classes="Size-13" Text="{Binding Balance}" FontWeight="SemiBold"
                                                                Foreground="{DynamicResource TextStrong}"
                                                                VerticalAlignment="Center" />
                                                 </WrapPanel>
-                                                <TextBlock Text="{Binding PendingBalance, StringFormat='Pending: {0}'}"
+                                                <TextBlock Classes="Size-XXS" Text="{Binding PendingBalance, StringFormat='Pending: {0}'}"
                                                            IsVisible="{Binding HasPendingBalance}"
-                                                           FontSize="11"
                                                            Foreground="#f59e0b" />
                                             </StackPanel>
                                             <Viewbox Grid.Column="2" Width="20" Height="20"
@@ -258,8 +248,7 @@
             </Border.Transitions>
             <StackPanel Spacing="0">
                 <Panel Margin="0,0,0,16">
-                    <TextBlock Text="{Binding Title}"
-                               FontSize="22" FontWeight="Bold"
+                    <TextBlock Classes="Size-22" Text="{Binding Title}" FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center" />
@@ -270,13 +259,12 @@
                 <Border IsVisible="{Binding HasError}"
                         CornerRadius="8" Padding="12" Margin="0,0,0,16"
                         Background="#1aef4444"
-                        BorderBrush="#ef4444" BorderThickness="1">
+                        BorderBrush="{DynamicResource DangerBrightBrush}" BorderThickness="1">
                     <Grid ColumnDefinitions="Auto,*">
                         <i:Icon Grid.Column="0" Value="fa-solid fa-circle-exclamation"
-                                FontSize="16" Foreground="#ef4444"
+                                FontSize="16" Foreground="{DynamicResource DangerBrightBrush}"
                                 VerticalAlignment="Top" Margin="0,1,8,0" />
-                        <TextBlock Grid.Column="1" Text="{Binding ErrorMessage}"
-                                   FontSize="13" Foreground="#ef4444"
+                        <TextBlock Classes="Size-13" Grid.Column="1" Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrightBrush}"
                                    TextWrapping="Wrap" />
                     </Grid>
                 </Border>
@@ -290,7 +278,7 @@
                             Classes.Selected="{Binding IsOnChainTab}"
                             CornerRadius="12" Padding="12,8" BorderThickness="2" Cursor="Hand"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
-                        <TextBlock Text="On-Chain" FontSize="13" FontWeight="SemiBold"
+                        <TextBlock Classes="Size-13" Text="On-Chain" FontWeight="SemiBold"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Button>
                     <Button Grid.Column="1" Name="LightningTabButton"
@@ -299,7 +287,7 @@
                             Classes.Selected="{Binding IsLightningTab}"
                             CornerRadius="12" Padding="12,8" BorderThickness="2" Cursor="Hand"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
-                        <TextBlock Text="Lightning" FontSize="13" FontWeight="SemiBold"
+                        <TextBlock Classes="Size-13" Text="Lightning" FontWeight="SemiBold"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Button>
                     <Button Grid.Column="2" Name="ImportTabButton"
@@ -307,7 +295,7 @@
                             Classes.Selected="{Binding IsImportTab}"
                             CornerRadius="12" Padding="12,8" BorderThickness="2" Cursor="Hand"
                             HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
-                        <TextBlock Text="Import" FontSize="13" FontWeight="SemiBold"
+                        <TextBlock Classes="Size-13" Text="Import" FontWeight="SemiBold"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Button>
                 </Grid>
@@ -330,7 +318,7 @@
                                        FontSize="48"
                                        Foreground="{DynamicResource DeployQrIconFill}"
                                        HorizontalAlignment="Center" />
-                                <TextBlock Text="QR Code" FontSize="13"
+                                <TextBlock Classes="Size-13" Text="QR Code"
                                            Foreground="{DynamicResource DeployQrIconFill}"
                                            HorizontalAlignment="Center" />
                             </StackPanel>
@@ -362,9 +350,8 @@
                 </Border>
 
                 <!-- Lightning minimum amount hint -->
-                <TextBlock Text="{Binding LightningMinAmountText}"
-                           IsVisible="{Binding IsLightningTab}"
-                           FontSize="11" Foreground="{DynamicResource TextMuted}"
+                <TextBlock Classes="Size-XXS" Text="{Binding LightningMinAmountText}"
+                           IsVisible="{Binding IsLightningTab}" Foreground="{DynamicResource TextMuted}"
                            HorizontalAlignment="Center"
                            Margin="0,-12,0,12" />
 
@@ -372,16 +359,14 @@
                 <Border Margin="0,0,0,12" CornerRadius="8" Padding="12"
                         Background="{DynamicResource DeployModalInputBg}">
                     <StackPanel Spacing="6">
-                        <TextBlock Text="{Binding InvoiceFieldLabel}"
-                                   FontSize="12"
+                        <TextBlock Classes="Size-XS" Text="{Binding InvoiceFieldLabel}"
                                    Foreground="{DynamicResource DeployTabUnselectedText}" />
                         <Grid ColumnDefinitions="*,Auto">
-                            <TextBlock Grid.Column="0" Text="{Binding InvoiceString}"
-                                       AutomationProperties.AutomationId="InvestInvoiceAddress"
-                                       FontSize="11" FontFamily="Consolas,Menlo,monospace"
+                            <TextBlock Classes="Size-XXS" Grid.Column="0" Text="{Binding InvoiceString}"
+                                       AutomationProperties.AutomationId="InvestInvoiceAddress" FontFamily="Consolas,Menlo,monospace"
                                        Foreground="{DynamicResource TextStrong}"
                                        TextTrimming="CharacterEllipsis"
-                                       VerticalAlignment="Center" />
+                                       VerticalAlignment="Center" ToolTip.Tip="{Binding InvoiceString}" />
                             <Button Grid.Column="1" Name="CopyInvoiceButton"
                                     Background="Transparent" Padding="6"
                                     BorderThickness="0" Cursor="Hand" Margin="8,0,0,0"
@@ -399,14 +384,12 @@
                         Background="{DynamicResource DeployFeeBarBg}">
                     <StackPanel Spacing="8">
                         <Grid ColumnDefinitions="*,Auto">
-                            <TextBlock Grid.Column="0"
+                            <TextBlock Classes="Size-XS" Grid.Column="0"
                                        Text="Amount Required"
-                                       FontSize="12"
                                        VerticalAlignment="Center"
                                        Foreground="{DynamicResource DeployFeeLabel}" />
-                            <TextBlock Grid.Column="1"
-                                       Text="{Binding AmountDisplay}"
-                                       FontSize="20" FontWeight="Bold"
+                            <TextBlock Classes="Size-20" Grid.Column="1"
+                                       Text="{Binding AmountDisplay}" FontWeight="Bold"
                                        Foreground="{DynamicResource DeployFeeValue}" />
                         </Grid>
                         <Border HorizontalAlignment="Center"
@@ -437,9 +420,8 @@
                                         </Style>
                                     </i:Icon.Styles>
                                 </i:Icon>
-                                <TextBlock Text="{Binding PaymentStatusText}"
-                                           AutomationProperties.AutomationId="InvestPaymentStatus"
-                                           FontSize="12" FontWeight="Medium"
+                                <TextBlock Classes="Size-XS" Text="{Binding PaymentStatusText}"
+                                           AutomationProperties.AutomationId="InvestPaymentStatus" FontWeight="Medium"
                                            Foreground="{DynamicResource DeployFeePillText}"
                                            VerticalAlignment="Center" />
                             </StackPanel>
@@ -477,16 +459,14 @@
                             VerticalAlignment="Center" />
                 </Border>
 
-                <TextBlock Text="{Binding SuccessTitle}"
-                           AutomationProperties.AutomationId="InvestSuccessTitle"
-                           FontSize="28" FontWeight="Bold"
+                <TextBlock Classes="Size-28" Text="{Binding SuccessTitle}"
+                           AutomationProperties.AutomationId="InvestSuccessTitle" FontWeight="Bold"
                            Foreground="{DynamicResource TextStrong}"
                            HorizontalAlignment="Center"
                            TextAlignment="Center"
                            Margin="0,0,0,12" />
 
-                <TextBlock Text="{Binding SuccessDescription}"
-                           FontSize="14" Foreground="{DynamicResource TextMuted}"
+                <TextBlock Classes="Size-S" Text="{Binding SuccessDescription}" Foreground="{DynamicResource TextMuted}"
                            TextAlignment="Center" TextWrapping="Wrap"
                            HorizontalAlignment="Center"
                            MaxWidth="380"
@@ -506,8 +486,7 @@
                             <GradientStop Color="#3d6a4d" Offset="1" />
                         </LinearGradientBrush>
                     </Button.Background>
-                    <TextBlock Text="{Binding SuccessButtonText}"
-                               FontSize="14" FontWeight="SemiBold"
+                    <TextBlock Classes="Size-S" Text="{Binding SuccessButtonText}" FontWeight="SemiBold"
                                Foreground="White" />
                 </Button>
             </StackPanel>

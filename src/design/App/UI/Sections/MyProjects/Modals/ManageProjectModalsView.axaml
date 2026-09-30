@@ -48,9 +48,8 @@
                             BorderBrush="{DynamicResource ModalHeaderBorder}"
                             BorderThickness="0,0,0,1">
                         <Grid ColumnDefinitions="*,Auto">
-                            <TextBlock Grid.Column="0"
-                                       Text="Select UTXOs to Claim"
-                                       FontSize="20" FontWeight="Bold"
+                            <TextBlock Classes="Size-20" Grid.Column="0"
+                                       Text="Select UTXOs to Claim" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center" />
                             <!-- Close X button -->
@@ -61,8 +60,7 @@
                     <!-- Body: p-6 -->
                     <StackPanel Margin="24" Spacing="16">
                         <!-- Description text -->
-                        <TextBlock Text="Select the UTXOs you want to claim. After selecting, click Claim to proceed."
-                                   FontSize="14"
+                        <TextBlock Classes="Size-S" Text="Select the UTXOs you want to claim. After selecting, click Claim to proceed."
                                    Foreground="{DynamicResource ModalDescriptionText}"
                                    TextWrapping="Wrap" />
 
@@ -83,7 +81,7 @@
                                             <Grid ColumnDefinitions="*,Auto">
                                                 <!-- Left: amount + txid -->
                                                 <StackPanel Grid.Column="0" Spacing="4">
-                                                    <TextBlock FontSize="14" FontWeight="SemiBold"
+                                                    <TextBlock Classes="Size-S" FontWeight="SemiBold"
                                                                Foreground="{DynamicResource TextStrong}">
                                                         <TextBlock.Text>
                                                             <MultiBinding StringFormat="{}{0} {1}">
@@ -93,12 +91,11 @@
                                                         </TextBlock.Text>
                                                     </TextBlock>
                                                     <TextBlock Text="{Binding TxId}"
-                                                               FontSize="12"
                                                                Foreground="{DynamicResource UtxoTxidText}"
                                                                FontFamily="Courier New, monospace"
                                                                TextWrapping="Wrap"
                                                                Cursor="Hand"
-                                                               Classes="ExplorerTxLink" />
+                                                               Classes="ExplorerTxLink Size-XS" />
                                                 </StackPanel>
                                                 <!-- Right: checkbox toggle -->
                                                 <!-- Vue: .settings-toggle-button 24x24, border 2px -->
@@ -187,9 +184,8 @@
                             BorderBrush="{DynamicResource ModalHeaderBorder}"
                             BorderThickness="0,0,0,1">
                         <Grid ColumnDefinitions="*,Auto">
-                            <TextBlock Grid.Column="0"
-                                       Text="Confirm Claim"
-                                       FontSize="20" FontWeight="Bold"
+                            <TextBlock Classes="Size-20" Grid.Column="0"
+                                       Text="Confirm Claim" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center" />
                             <Button Name="PasswordModalCloseBtn" Classes="ModalCloseBtn" Grid.Column="1" />
@@ -198,23 +194,37 @@
 
                     <!-- Body -->
                     <StackPanel Margin="24" Spacing="16">
-                        <TextBlock Text="Please enter your wallet password to confirm claiming funds into your Angor wallet."
-                                   FontSize="14"
+                        <TextBlock Classes="Size-S" Text="Please enter your wallet password to confirm claiming funds into your Angor wallet."
                                    Foreground="{DynamicResource ModalDescriptionText}"
                                    TextWrapping="Wrap" />
 
                         <!-- Password Input -->
                         <!-- Vue: px-4 py-3 rounded-lg border, bg white/#0A0A0A, border gray-300/#404040 -->
-                        <TextBox Name="ClaimPasswordInput"
-                                 PasswordChar="*"
-                                 Watermark="Enter wallet password"
-                                 Padding="16,12"
-                                 CornerRadius="8"
-                                 Background="{DynamicResource ModalInputBg}"
-                                 BorderBrush="{DynamicResource StrokeSubtle}"
-                                 BorderThickness="1"
-                                 FontSize="14"
-                                 Foreground="{DynamicResource TextStrong}" />
+                        <Panel>
+                            <TextBox Name="ClaimPasswordInput"
+                                     PasswordChar="*"
+                                     Watermark="Enter wallet password"
+                                     Padding="16,12,44,12"
+                                     CornerRadius="8"
+                                     Background="{DynamicResource ModalInputBg}"
+                                     BorderBrush="{DynamicResource StrokeSubtle}"
+                                     BorderThickness="1"
+                                     FontSize="14"
+                                     Foreground="{DynamicResource TextStrong}" />
+                            <Button Name="ClaimPasswordRevealBtn"
+                                    Classes="NoPressShift"
+                                    HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    Background="Transparent" BorderThickness="0"
+                                    Padding="10" Margin="0,0,6,0"
+                                    Cursor="Hand"
+                                    ToolTip.Tip="Show password"
+                                    AutomationProperties.Name="Show password">
+                                <i:Icon Name="ClaimPasswordRevealIcon"
+                                        Value="fa-solid fa-eye"
+                                        FontSize="14"
+                                        Foreground="{DynamicResource TextMuted}" />
+                            </Button>
+                        </Panel>
 
                         <!-- Action Buttons -->
                         <Grid ColumnDefinitions="*,12,*">
@@ -297,12 +307,10 @@
                             </Style>
                         </i:Icon.Styles>
                     </i:Icon>
-                    <TextBlock Text="Claiming Funds..."
-                               FontSize="20" FontWeight="Bold"
+                    <TextBlock Classes="Size-20" Text="Claiming Funds..." FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}"
                                HorizontalAlignment="Center" />
-                    <TextBlock Text="Building and broadcasting your transaction. Please wait."
-                               FontSize="14"
+                    <TextBlock Classes="Size-S" Text="Building and broadcasting your transaction. Please wait."
                                Foreground="{DynamicResource ModalDescriptionText}"
                                TextWrapping="Wrap"
                                TextAlignment="Center"
@@ -338,16 +346,14 @@
                     </Border>
 
                     <!-- Title: "Funds Claimed!" -->
-                    <TextBlock Text="Funds Claimed!"
-                               FontSize="30" FontWeight="Bold"
+                    <TextBlock Classes="Size-30" Text="Funds Claimed!" FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}"
                                HorizontalAlignment="Center" />
 
                     <!-- Message -->
-                    <TextBlock HorizontalAlignment="Center"
+                    <TextBlock Classes="Size-M" HorizontalAlignment="Center"
                                TextAlignment="Center"
                                TextWrapping="Wrap"
-                               FontSize="16"
                                Foreground="{DynamicResource ModalDescriptionText}">
                         <Run Text="Successfully claimed " />
                         <Run FontWeight="SemiBold">
@@ -418,9 +424,8 @@
                             BorderBrush="{DynamicResource ModalHeaderBorder}"
                             BorderThickness="0,0,0,1">
                         <Grid ColumnDefinitions="*,Auto">
-                            <TextBlock Grid.Column="0"
-                                       Text="Release Funds Back to Investors"
-                                       FontSize="20" FontWeight="Bold"
+                            <TextBlock Classes="Size-20" Grid.Column="0"
+                                       Text="Release Funds Back to Investors" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center" />
                             <Button Name="ReleaseFundsModalCloseBtn" Classes="ModalCloseBtn" Grid.Column="1" />
@@ -444,7 +449,7 @@
                                                 Opacity="0.75">
                                             <Grid ColumnDefinitions="*,Auto">
                                                 <StackPanel Grid.Column="0" Spacing="4">
-                                                    <TextBlock FontSize="14" FontWeight="SemiBold"
+                                                    <TextBlock Classes="Size-S" FontWeight="SemiBold"
                                                                Foreground="{DynamicResource TextStrong}">
                                                         <TextBlock.Text>
                                                             <MultiBinding StringFormat="{}{0} {1}">
@@ -454,12 +459,11 @@
                                                         </TextBlock.Text>
                                                     </TextBlock>
                                                     <TextBlock Text="{Binding TxId}"
-                                                               FontSize="12"
                                                                Foreground="{DynamicResource UtxoTxidText}"
                                                                FontFamily="Courier New, monospace"
                                                                TextWrapping="Wrap"
                                                                Cursor="Hand"
-                                                               Classes="ExplorerTxLink" />
+                                                               Classes="ExplorerTxLink Size-XS" />
                                                 </StackPanel>
                                                 <!-- Disabled checkbox (always checked, green bg/border) -->
                                                 <Border Grid.Column="1"
@@ -542,9 +546,8 @@
                             BorderBrush="{DynamicResource ModalHeaderBorder}"
                             BorderThickness="0,0,0,1">
                         <Grid ColumnDefinitions="*,Auto">
-                            <TextBlock Grid.Column="0"
-                                       Text="Confirm Release"
-                                       FontSize="20" FontWeight="Bold"
+                            <TextBlock Classes="Size-20" Grid.Column="0"
+                                       Text="Confirm Release" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center" />
                             <Button Name="ReleasePasswordModalCloseBtn" Classes="ModalCloseBtn" Grid.Column="1" />
@@ -553,21 +556,35 @@
 
                     <!-- Body -->
                     <StackPanel Margin="24" Spacing="16">
-                        <TextBlock Text="Please enter your wallet password to confirm releasing funds back to investors."
-                                   FontSize="14"
+                        <TextBlock Classes="Size-S" Text="Please enter your wallet password to confirm releasing funds back to investors."
                                    Foreground="{DynamicResource ModalDescriptionText}"
                                    TextWrapping="Wrap" />
 
-                        <TextBox Name="ReleasePasswordInput"
-                                 PasswordChar="*"
-                                 Watermark="Enter wallet password"
-                                 Padding="16,12"
-                                 CornerRadius="8"
-                                 Background="{DynamicResource ModalInputBg}"
-                                 BorderBrush="{DynamicResource StrokeSubtle}"
-                                 BorderThickness="1"
-                                 FontSize="14"
-                                 Foreground="{DynamicResource TextStrong}" />
+                        <Panel>
+                            <TextBox Name="ReleasePasswordInput"
+                                     PasswordChar="*"
+                                     Watermark="Enter wallet password"
+                                     Padding="16,12,44,12"
+                                     CornerRadius="8"
+                                     Background="{DynamicResource ModalInputBg}"
+                                     BorderBrush="{DynamicResource StrokeSubtle}"
+                                     BorderThickness="1"
+                                     FontSize="14"
+                                     Foreground="{DynamicResource TextStrong}" />
+                            <Button Name="ReleasePasswordRevealBtn"
+                                    Classes="NoPressShift"
+                                    HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    Background="Transparent" BorderThickness="0"
+                                    Padding="10" Margin="0,0,6,0"
+                                    Cursor="Hand"
+                                    ToolTip.Tip="Show password"
+                                    AutomationProperties.Name="Show password">
+                                <i:Icon Name="ReleasePasswordRevealIcon"
+                                        Value="fa-solid fa-eye"
+                                        FontSize="14"
+                                        Foreground="{DynamicResource TextMuted}" />
+                            </Button>
+                        </Panel>
 
                         <Grid ColumnDefinitions="*,12,*">
                             <Button Name="ReleasePasswordCancelBtn" Grid.Column="0"
@@ -648,17 +665,15 @@
                     </Border>
 
                     <!-- Title -->
-                    <TextBlock Text="Funds Returned"
-                               FontSize="24" FontWeight="Bold"
+                    <TextBlock Classes="Size-24" Text="Funds Returned" FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}"
                                HorizontalAlignment="Center"
                                Margin="0,8,0,0" />
 
                     <!-- Message -->
-                    <TextBlock HorizontalAlignment="Center"
+                    <TextBlock Classes="Size-M" HorizontalAlignment="Center"
                                TextAlignment="Center"
                                TextWrapping="Wrap"
-                               FontSize="16"
                                Foreground="{DynamicResource ModalDescriptionText}">
                         <Run FontWeight="SemiBold">
                             <Run.Text>
@@ -713,9 +728,8 @@
                             BorderBrush="{DynamicResource ModalHeaderBorder}"
                             BorderThickness="0,0,0,1">
                         <Grid ColumnDefinitions="*,Auto">
-                            <TextBlock Grid.Column="0"
-                                       Text="Spent UTXOs"
-                                       FontSize="20" FontWeight="Bold"
+                            <TextBlock Classes="Size-20" Grid.Column="0"
+                                       Text="Spent UTXOs" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center" />
                             <Button Name="SpentModalCloseBtn" Classes="ModalCloseBtn" Grid.Column="1" />
@@ -724,8 +738,7 @@
 
                     <!-- Body -->
                     <StackPanel Margin="24" Spacing="16">
-                        <TextBlock Text="These UTXOs have been spent by the founder."
-                                   FontSize="14"
+                        <TextBlock Classes="Size-S" Text="These UTXOs have been spent by the founder."
                                    Foreground="{DynamicResource ModalDescriptionText}"
                                    TextWrapping="Wrap" />
 
@@ -743,7 +756,7 @@
                                                 Margin="0,0,0,12">
                                             <Grid ColumnDefinitions="*,Auto">
                                                 <StackPanel Grid.Column="0" Spacing="4">
-                                                    <TextBlock FontSize="14" FontWeight="SemiBold"
+                                                    <TextBlock Classes="Size-S" FontWeight="SemiBold"
                                                                Foreground="{DynamicResource TextStrong}">
                                                         <TextBlock.Text>
                                                             <MultiBinding StringFormat="{}{0} {1}">
@@ -753,12 +766,11 @@
                                                         </TextBlock.Text>
                                                     </TextBlock>
                                                     <TextBlock Text="{Binding TxId}"
-                                                               FontSize="12"
                                                                Foreground="{DynamicResource UtxoTxidText}"
                                                                FontFamily="Courier New, monospace"
                                                                TextWrapping="Wrap"
                                                                Cursor="Hand"
-                                                               Classes="ExplorerTxLink" />
+                                                               Classes="ExplorerTxLink Size-XS" />
                                                 </StackPanel>
                                                 <!-- Spent badge (amber) -->
                                                 <!-- Vue: text-xs, bg-amber-100/bg-amber-900 bg-opacity-30, text-amber-700/text-amber-300, opacity-60 -->
@@ -768,8 +780,7 @@
                                                         Padding="8,2"
                                                         VerticalAlignment="Center"
                                                         Opacity="0.6">
-                                                    <TextBlock Text="Spent"
-                                                               FontSize="12" FontWeight="Normal"
+                                                    <TextBlock Classes="Size-XS" Text="Spent" FontWeight="Normal"
                                                                Foreground="#92400E" />
                                                 </Border>
                                             </Grid>
@@ -821,8 +832,7 @@
                         <Grid ColumnDefinitions="*,Auto">
                             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                                 <i:Icon Value="fa-solid fa-bug" FontSize="16" Foreground="{DynamicResource TextStrong}" />
-                                <TextBlock Text="Debug: Investment Data"
-                                           FontSize="20" FontWeight="Bold"
+                                <TextBlock Classes="Size-20" Text="Debug: Investment Data" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}"
                                            VerticalAlignment="Center" />
                             </StackPanel>
@@ -832,8 +842,7 @@
 
                     <!-- Body -->
                     <StackPanel Margin="24" Spacing="16">
-                        <TextBlock Text="Decoded OP_RETURN data and per-investment stage schedule. Each investor's timeline starts from their own investment date, so the same displayed stage can contain different per-investment stage indices."
-                                   FontSize="13"
+                        <TextBlock Classes="Size-13" Text="Decoded OP_RETURN data and per-investment stage schedule. Each investor's timeline starts from their own investment date, so the same displayed stage can contain different per-investment stage indices."
                                    Foreground="{DynamicResource ModalDescriptionText}"
                                    TextWrapping="Wrap" />
 
@@ -851,23 +860,19 @@
                                                 <!-- Investment header -->
                                                 <StackPanel Spacing="2">
                                                     <TextBlock Text="{Binding TransactionId, StringFormat=Tx: {0}}"
-                                                               FontSize="12"
                                                                FontFamily="Courier New, monospace"
                                                                Foreground="{DynamicResource TextStrong}"
                                                                TextWrapping="Wrap"
-                                                               Classes="ExplorerTxLink"
+                                                               Classes="ExplorerTxLink Size-XS"
                                                                Cursor="Hand" />
-                                                    <TextBlock Text="{Binding InvestorKey, StringFormat=Investor: {0}}"
-                                                               FontSize="11"
+                                                    <TextBlock Classes="Size-XXS" Text="{Binding InvestorKey, StringFormat=Investor: {0}}"
                                                                FontFamily="Courier New, monospace"
                                                                Foreground="{DynamicResource TransactionStatLabel}"
                                                                TextWrapping="Wrap" />
                                                     <StackPanel Orientation="Horizontal" Spacing="16">
-                                                        <TextBlock Text="{Binding InvestmentStartDate, StringFormat=Start date: {0}}"
-                                                                   FontSize="12" FontWeight="SemiBold"
+                                                        <TextBlock Classes="Size-XS" Text="{Binding InvestmentStartDate, StringFormat=Start date: {0}}" FontWeight="SemiBold"
                                                                    Foreground="{DynamicResource StageCardValue}" />
-                                                        <TextBlock Text="{Binding PatternId, StringFormat=Pattern: {0}}"
-                                                                   FontSize="12" FontWeight="SemiBold"
+                                                        <TextBlock Classes="Size-XS" Text="{Binding PatternId, StringFormat=Pattern: {0}}" FontWeight="SemiBold"
                                                                    Foreground="{DynamicResource StageCardValue}" />
                                                     </StackPanel>
                                                 </StackPanel>
@@ -877,27 +882,22 @@
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate x:DataType="mp:DebugStageRowViewModel">
                                                             <Grid ColumnDefinitions="80,100,110,*,Auto" Margin="0,2,0,2">
-                                                                <TextBlock Grid.Column="0"
-                                                                           Text="{Binding StageLabel}"
-                                                                           FontSize="12" FontWeight="SemiBold"
+                                                                <TextBlock Classes="Size-XS" Grid.Column="0"
+                                                                           Text="{Binding StageLabel}" FontWeight="SemiBold"
                                                                            Foreground="{DynamicResource TextStrong}" />
-                                                                <TextBlock Grid.Column="1"
+                                                                <TextBlock Classes="Size-XS" Grid.Column="1"
                                                                            Text="{Binding ReleaseDate}"
-                                                                           FontSize="12"
                                                                            FontFamily="Courier New, monospace"
                                                                            Foreground="{DynamicResource StageCardValue}" />
-                                                                <TextBlock Grid.Column="2"
+                                                                <TextBlock Classes="Size-XS" Grid.Column="2"
                                                                            Text="{Binding Amount}"
-                                                                           FontSize="12"
                                                                            FontFamily="Courier New, monospace"
                                                                            Foreground="{DynamicResource StageCardValue}" />
-                                                                <TextBlock Grid.Column="3"
+                                                                <TextBlock Classes="Size-XXS" Grid.Column="3"
                                                                            Text="{Binding DisplayBucket}"
-                                                                           FontSize="11"
                                                                            Foreground="{DynamicResource TransactionStatLabel}" />
-                                                                <TextBlock Grid.Column="4"
-                                                                           Text="{Binding Status}"
-                                                                           FontSize="12" FontWeight="SemiBold"
+                                                                <TextBlock Classes="Size-XS" Grid.Column="4"
+                                                                           Text="{Binding Status}" FontWeight="SemiBold"
                                                                            Foreground="{DynamicResource StagePillText}" />
                                                             </Grid>
                                                         </DataTemplate>

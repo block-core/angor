@@ -102,12 +102,10 @@
                 <!-- Left: Label + value -->
                 <StackPanel x:Name="ProjectIdInfo" Grid.Column="0" Spacing="4" VerticalAlignment="Center">
                     <!-- Vue: .project-id-label — font-size 13px -->
-                    <TextBlock Text="Project ID"
-                               FontSize="13" FontWeight="Medium"
+                    <TextBlock Classes="Size-13" Text="Project ID" FontWeight="Medium"
                                Foreground="{DynamicResource ProjectIdLabel}" />
                     <!-- Vue: .project-id-value — font-size 14px, monospace, word-break -->
-                    <TextBlock Text="{Binding ProjectId}"
-                               FontSize="14" FontWeight="Normal"
+                    <TextBlock Classes="Size-S" Text="{Binding ProjectId}" FontWeight="Normal"
                                Foreground="{DynamicResource ProjectIdValue}"
                                FontFamily="Courier New, monospace"
                                TextWrapping="Wrap" />
@@ -135,8 +133,7 @@
                             <i:Icon Value="fa-solid fa-pen"
                                    FontSize="14"
                                    Foreground="{DynamicResource ProjectActionBtnText}" />
-                            <TextBlock Text="Edit Project"
-                                       FontSize="13" FontWeight="Medium"
+                            <TextBlock Classes="Size-13" Text="Edit Project" FontWeight="Medium"
                                        Foreground="{DynamicResource ProjectActionBtnText}"
                                        TextTrimming="CharacterEllipsis"
                                        VerticalAlignment="Center" />
@@ -157,8 +154,7 @@
                             <i:Icon Value="fa-solid fa-eye"
                                    FontSize="14"
                                    Foreground="{DynamicResource ProjectActionBtnText}" />
-                            <TextBlock Text="See Live Project"
-                                       FontSize="13" FontWeight="Medium"
+                            <TextBlock Classes="Size-13" Text="See Live Project" FontWeight="Medium"
                                        Foreground="{DynamicResource ProjectActionBtnText}"
                                        TextTrimming="CharacterEllipsis"
                                        VerticalAlignment="Center" />
@@ -201,7 +197,7 @@
                     <Border Width="40" Height="40" CornerRadius="20">
                         <Border.Background>
                             <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                <GradientStop Color="#F7931A" Offset="0" />
+                                <GradientStop Color="{StaticResource BitcoinOrange}" Offset="0" />
                                 <GradientStop Color="#E08116" Offset="1" />
                             </LinearGradientBrush>
                         </Border.Background>
@@ -210,8 +206,7 @@
                                Foreground="White" />
                     </Border>
                     <!-- Vue: .stats-card-title — font-size 18, font-weight 600, color #92400e/#fdba74 -->
-                    <TextBlock Text="Project Statistics"
-                               FontSize="18" FontWeight="SemiBold"
+                    <TextBlock Classes="Size-L" Text="Project Statistics" FontWeight="SemiBold"
                                Foreground="{DynamicResource StatsCardTitle}"
                                VerticalAlignment="Center" />
                 </StackPanel>
@@ -229,10 +224,9 @@
                             Padding="20"
                             Margin="0,0,8,0">
                         <StackPanel Spacing="12">
-                            <TextBlock Text="Total Investment"
-                                       FontSize="13" FontWeight="Medium"
+                            <TextBlock Classes="Size-13" Text="Total Investment" FontWeight="Medium"
                                        Foreground="{DynamicResource StatsCardTitle}" />
-                            <TextBlock FontSize="20" FontWeight="Bold"
+                            <TextBlock Classes="Size-20" FontWeight="Bold"
                                        Foreground="{DynamicResource StatsCardTitle}">
                                 <TextBlock.Text>
                                     <MultiBinding StringFormat="{}{0} {1}">
@@ -253,10 +247,9 @@
                             Padding="20"
                             Margin="8,0,8,0">
                         <StackPanel Spacing="12">
-                            <TextBlock Text="Available Balance"
-                                       FontSize="13" FontWeight="Medium"
+                            <TextBlock Classes="Size-13" Text="Available Balance" FontWeight="Medium"
                                        Foreground="{DynamicResource StatsCardTitle}" />
-                            <TextBlock FontSize="20" FontWeight="Bold"
+                            <TextBlock Classes="Size-20" FontWeight="Bold"
                                        Foreground="{DynamicResource StatsCardTitle}">
                                 <TextBlock.Text>
                                     <MultiBinding StringFormat="{}{0} {1}">
@@ -277,10 +270,9 @@
                             Padding="20"
                             Margin="8,0,8,0">
                         <StackPanel Spacing="12">
-                            <TextBlock Text="Withdrawable"
-                                       FontSize="13" FontWeight="Medium"
+                            <TextBlock Classes="Size-13" Text="Withdrawable" FontWeight="Medium"
                                        Foreground="{DynamicResource StatsCardTitle}" />
-                            <TextBlock FontSize="20" FontWeight="Bold"
+                            <TextBlock Classes="Size-20" FontWeight="Bold"
                                        Foreground="{DynamicResource StatsCardTitle}">
                                 <TextBlock.Text>
                                     <MultiBinding StringFormat="{}{0} {1}">
@@ -301,11 +293,9 @@
                             Padding="20"
                             Margin="8,0,0,0">
                         <StackPanel Spacing="12">
-                            <TextBlock Text="Total Stages"
-                                       FontSize="13" FontWeight="Medium"
+                            <TextBlock Classes="Size-13" Text="Total Stages" FontWeight="Medium"
                                        Foreground="{DynamicResource StatsCardTitle}" />
-                            <TextBlock Text="{Binding TotalStages}"
-                                       FontSize="20" FontWeight="Bold"
+                            <TextBlock Classes="Size-20" Text="{Binding TotalStages}" FontWeight="Bold"
                                        Foreground="{DynamicResource StatsCardTitle}" />
                         </StackPanel>
                     </Border>
@@ -328,8 +318,7 @@
                 <StackPanel Spacing="16">
                     <!-- Header: title only -->
                     <!-- Vue: .next-stage-title — color #4B7C5A/#5FAF78 -->
-                    <TextBlock Text="Next Stage"
-                               FontSize="20" FontWeight="Bold"
+                    <TextBlock Classes="Size-20" Text="Next Stage" FontWeight="Bold"
                                Foreground="{DynamicResource BrandGreenText}" />
 
                     <!-- 3-col countdown grid -->
@@ -346,13 +335,11 @@
                             <StackPanel HorizontalAlignment="Center"
                                         VerticalAlignment="Center" Spacing="8">
                                 <!-- Vue: .next-stage-value — 32px, 700, #4B7C5A/#5FAF78 -->
-                                <TextBlock Text="{Binding CountdownDays}"
-                                           FontSize="32" FontWeight="Bold"
+                                <TextBlock Classes="Size-XXL" Text="{Binding CountdownDays}" FontWeight="Bold"
                                            Foreground="{DynamicResource BrandGreenText}"
                                            HorizontalAlignment="Center" />
                                 <!-- Vue: .next-stage-label — 14px, 500 -->
-                                <TextBlock Text="days"
-                                           FontSize="14" FontWeight="Medium"
+                                <TextBlock Classes="Size-S" Text="days" FontWeight="Medium"
                                            Foreground="{DynamicResource BrandGreenText}"
                                            HorizontalAlignment="Center" />
                             </StackPanel>
@@ -368,12 +355,10 @@
                                 Margin="8,0,8,0">
                             <StackPanel HorizontalAlignment="Center"
                                         VerticalAlignment="Center" Spacing="8">
-                                <TextBlock Text="{Binding CountdownHours}"
-                                           FontSize="32" FontWeight="Bold"
+                                <TextBlock Classes="Size-XXL" Text="{Binding CountdownHours}" FontWeight="Bold"
                                            Foreground="{DynamicResource BrandGreenText}"
                                            HorizontalAlignment="Center" />
-                                <TextBlock Text="hours"
-                                           FontSize="14" FontWeight="Medium"
+                                <TextBlock Classes="Size-S" Text="hours" FontWeight="Medium"
                                            Foreground="{DynamicResource BrandGreenText}"
                                            HorizontalAlignment="Center" />
                             </StackPanel>
@@ -389,12 +374,10 @@
                                 Margin="8,0,0,0">
                             <StackPanel HorizontalAlignment="Center"
                                         VerticalAlignment="Center" Spacing="8">
-                                <TextBlock Text="{Binding CountdownMins}"
-                                           FontSize="32" FontWeight="Bold"
+                                <TextBlock Classes="Size-XXL" Text="{Binding CountdownMins}" FontWeight="Bold"
                                            Foreground="{DynamicResource BrandGreenText}"
                                            HorizontalAlignment="Center" />
-                                <TextBlock Text="mins"
-                                           FontSize="14" FontWeight="Medium"
+                                <TextBlock Classes="Size-S" Text="mins" FontWeight="Medium"
                                            Foreground="{DynamicResource BrandGreenText}"
                                            HorizontalAlignment="Center" />
                             </StackPanel>
@@ -415,8 +398,7 @@
                 <StackPanel Spacing="16">
                     <!-- Header -->
                     <!-- Vue: .card-title — 20px, 700, #1a1a1a (light) / #fafafa (dark) -->
-                    <TextBlock Text="Transaction Statistics"
-                               FontSize="20" FontWeight="Bold"
+                    <TextBlock Classes="Size-20" Text="Transaction Statistics" FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}" />
 
                     <!-- 3-col transaction stats grid -->
@@ -433,13 +415,11 @@
                             <StackPanel HorizontalAlignment="Center"
                                         VerticalAlignment="Center" Spacing="8">
                                 <!-- Vue: .transaction-stat-value — 32px, 700, #1a1a1a/#fafafa -->
-                                <TextBlock Text="{Binding TransactionTotal}"
-                                           FontSize="32" FontWeight="Bold"
+                                <TextBlock Classes="Size-XXL" Text="{Binding TransactionTotal}" FontWeight="Bold"
                                            Foreground="{DynamicResource TransactionStatValue}"
                                            HorizontalAlignment="Center" />
                                 <!-- Vue: .transaction-stat-label — 14px, 500, #6b7280/#9ca3af -->
-                                <TextBlock Text="Total"
-                                           FontSize="14" FontWeight="Medium"
+                                <TextBlock Classes="Size-S" Text="Total" FontWeight="Medium"
                                            Foreground="{DynamicResource TransactionStatLabel}"
                                            HorizontalAlignment="Center" />
                             </StackPanel>
@@ -455,12 +435,10 @@
                                 Margin="8,0,8,0">
                             <StackPanel HorizontalAlignment="Center"
                                         VerticalAlignment="Center" Spacing="8">
-                                <TextBlock Text="{Binding TransactionSpent}"
-                                           FontSize="32" FontWeight="Bold"
+                                <TextBlock Classes="Size-XXL" Text="{Binding TransactionSpent}" FontWeight="Bold"
                                            Foreground="{DynamicResource TransactionStatValue}"
                                            HorizontalAlignment="Center" />
-                                <TextBlock Text="Spent"
-                                           FontSize="14" FontWeight="Medium"
+                                <TextBlock Classes="Size-S" Text="Spent" FontWeight="Medium"
                                            Foreground="{DynamicResource TransactionStatLabel}"
                                            HorizontalAlignment="Center" />
                             </StackPanel>
@@ -476,12 +454,10 @@
                                 Margin="8,0,0,0">
                             <StackPanel HorizontalAlignment="Center"
                                         VerticalAlignment="Center" Spacing="8">
-                                <TextBlock Text="{Binding TransactionAvailable}"
-                                           FontSize="32" FontWeight="Bold"
+                                <TextBlock Classes="Size-XXL" Text="{Binding TransactionAvailable}" FontWeight="Bold"
                                            Foreground="{DynamicResource TransactionStatValue}"
                                            HorizontalAlignment="Center" />
-                                <TextBlock Text="Available"
-                                           FontSize="14" FontWeight="Medium"
+                                <TextBlock Classes="Size-S" Text="Available" FontWeight="Medium"
                                            Foreground="{DynamicResource TransactionStatLabel}"
                                            HorizontalAlignment="Center" />
                             </StackPanel>
@@ -501,15 +477,13 @@
                 BoxShadow="0 2 8 0 #1A000000">
             <StackPanel Spacing="0">
                 <!-- Header -->
-                <TextBlock Text="Stages"
-                           FontSize="20" FontWeight="Bold"
+                <TextBlock Classes="Size-20" Text="Stages" FontWeight="Bold"
                            Foreground="{DynamicResource TextStrong}"
                            Margin="0,0,0,12" />
 
                 <!-- Instruction text -->
                 <!-- Vue: .stages-instruction — font-size 14, color #6b7280/#9ca3af, mb 20, line-height 1.5 -->
-                <TextBlock Text="Use the Claim button to view and select UTXOs. After selecting UTXOs, click Claim Selected to proceed with claiming them into your Angor wallet."
-                           FontSize="14"
+                <TextBlock Classes="Size-S" Text="Use the Claim button to view and select UTXOs. After selecting UTXOs, click Claim Selected to proceed with claiming them into your Angor wallet."
                            Foreground="{DynamicResource TransactionStatLabel}"
                            TextWrapping="Wrap"
                            LineHeight="21"
@@ -517,7 +491,7 @@
 
                 <!-- Claim scan failure — never present an empty stage list as "no funds" -->
                 <Border Background="#33EF4444"
-                        BorderBrush="#EF4444"
+                        BorderBrush="{DynamicResource DangerBrightBrush}"
                         BorderThickness="1"
                         CornerRadius="8"
                         Padding="12"
@@ -553,8 +527,7 @@
                                             <StackPanel Classes="StageHeaderLeft" Grid.Column="0"
                                                         VerticalAlignment="Center">
                                                 <!-- Vue: .stage-number — 16px, 600, #1a1a1a/#fafafa -->
-                                                <TextBlock Text="{Binding Number, StringFormat=Stage {0}}"
-                                                           FontSize="16" FontWeight="SemiBold"
+                                                <TextBlock Classes="Size-M" Text="{Binding Number, StringFormat=Stage {0}}" FontWeight="SemiBold"
                                                            Foreground="{DynamicResource StageCardNumber}"
                                                            VerticalAlignment="Center" />
 
@@ -569,7 +542,7 @@
                                                             BorderThickness="1"
                                                             CornerRadius="16"
                                                             Padding="12,4">
-                                                        <TextBlock FontSize="12" FontWeight="SemiBold"
+                                                        <TextBlock Classes="Size-XS" FontWeight="SemiBold"
                                                                    Foreground="{DynamicResource StagePillText}">
                                                             <TextBlock.Text>
                                                                 <MultiBinding StringFormat="{}{0} {1}">
@@ -586,8 +559,7 @@
                                                             BorderThickness="1"
                                                             CornerRadius="16"
                                                             Padding="12,4">
-                                                        <TextBlock Text="{Binding UtxoCount, StringFormat={}{0} utxo}"
-                                                                   FontSize="12" FontWeight="SemiBold"
+                                                        <TextBlock Classes="Size-XS" Text="{Binding UtxoCount, StringFormat={}{0} utxo}" FontWeight="SemiBold"
                                                                    Foreground="{DynamicResource StagePillText}" />
                                                     </Border>
                                                 </StackPanel>
@@ -606,8 +578,7 @@
                                                         BorderThickness="1"
                                                         CornerRadius="6"
                                                         Padding="16,8">
-                                                    <TextBlock Text="Spent by founder"
-                                                               FontSize="13" FontWeight="SemiBold"
+                                                    <TextBlock Classes="Size-13" Text="Spent by founder" FontWeight="SemiBold"
                                                                Foreground="#F59E0B" />
                                                 </Border>
 
@@ -619,8 +590,7 @@
                                                         BorderThickness="1"
                                                         CornerRadius="6"
                                                         Padding="16,8">
-                                                    <TextBlock Text="{Binding ClaimableInfoText, FallbackValue='Funds Available'}"
-                                                               FontSize="13" FontWeight="SemiBold"
+                                                    <TextBlock Classes="Size-13" Text="{Binding ClaimableInfoText, FallbackValue='Funds Available'}" FontWeight="SemiBold"
                                                                Foreground="{DynamicResource PrimaryGreenBrush}" />
                                                 </Border>
                                             </StackPanel>
@@ -633,12 +603,10 @@
                                         <!-- Vue: .stage-card-item — .stage-card-label + .stage-card-value inline -->
                                         <StackPanel Orientation="Horizontal">
                                             <!-- Vue: .stage-card-label — 13px, #666/#a0a0a0, 500 -->
-                                            <TextBlock Text="Estimated completion: "
-                                                       FontSize="13" FontWeight="Medium"
+                                            <TextBlock Classes="Size-13" Text="Estimated completion: " FontWeight="Medium"
                                                        Foreground="{DynamicResource StageCardLabel}" />
                                             <!-- Vue: .stage-card-value — 13px, #333/#fafafa, 600 -->
-                                            <TextBlock Text="{Binding CompletionDate}"
-                                                       FontSize="13" FontWeight="SemiBold"
+                                            <TextBlock Classes="Size-13" Text="{Binding CompletionDate}" FontWeight="SemiBold"
                                                        Foreground="{DynamicResource StageCardValue}" />
                                         </StackPanel>
                                     </StackPanel>
@@ -713,8 +681,7 @@
                                                     CornerRadius="8"
                                                     Padding="16,12"
                                                     HorizontalAlignment="Stretch">
-                                                <TextBlock Text="{Binding ClaimableInfoText, FallbackValue='Funds Available'}"
-                                                           FontSize="13" FontWeight="SemiBold"
+                                                <TextBlock Classes="Size-13" Text="{Binding ClaimableInfoText, FallbackValue='Funds Available'}" FontWeight="SemiBold"
                                                            HorizontalAlignment="Center"
                                                            Foreground="{DynamicResource PrimaryGreenBrush}" />
                                             </Border>

@@ -126,8 +126,7 @@
     <!-- ═══════════════════════════════════════ -->
     <StackPanel Spacing="24">
         <!-- Subtitle -->
-        <TextBlock Text="{Binding Step5Subtitle}"
-                   FontSize="14" Foreground="{DynamicResource TextMuted}" />
+        <TextBlock Classes="Size-S" Text="{Binding Step5Subtitle}" Foreground="{DynamicResource TextMuted}" />
 
         <!-- NOTE: the stage/date error message is rendered once by the parent
              CreateProjectView's shared FormError banner (above this content).
@@ -152,7 +151,7 @@
                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
                             <i:Icon Value="fa-solid fa-plus" FontSize="16"
                                     Foreground="{DynamicResource Accent}" />
-                             <TextBlock Text="Regenerate Stages" FontSize="14" FontWeight="SemiBold"
+                             <TextBlock Classes="Size-S" Text="Regenerate Stages" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextStrong}" />
                         </StackPanel>
                     </Button>
@@ -166,12 +165,12 @@
                         Background="{DynamicResource Surface}" ClipToBounds="True">
                     <StackPanel>
                         <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24">
-                            <TextBlock Text="How long will the project take?" FontSize="16" FontWeight="Bold"
+                            <TextBlock Classes="Size-M" Text="How long will the project take?" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
                         </Border>
                         <StackPanel Spacing="16" Margin="24">
                             <!-- Project Length label -->
-                            <TextBlock Text="Project Length" FontSize="14" FontWeight="Bold"
+                            <TextBlock Classes="Size-S" Text="Project Length" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
 
                             <!-- Duration input + unit dropdown — Vue: flex gap-2, input w-1/2 + select w-1/2.
@@ -224,7 +223,7 @@
                         Background="{DynamicResource Surface}" ClipToBounds="True">
                     <StackPanel>
                         <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24">
-                            <TextBlock Text="How would you like the payments to be split up?" FontSize="16" FontWeight="Bold"
+                            <TextBlock Classes="Size-M" Text="How would you like the payments to be split up?" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
                         </Border>
                         <StackPanel Spacing="16" Margin="24">
@@ -232,16 +231,16 @@
                                      ItemContainerTheme="{StaticResource ButtonizedAccentListBoxItem}"
                                      SelectionMode="Single" Background="Transparent">
                                 <ListBoxItem Tag="Weekly">
-                                    <TextBlock Text="Weekly" FontWeight="Bold" FontSize="13" TextAlignment="Center" />
+                                    <TextBlock Classes="Size-13" Text="Weekly" FontWeight="Bold" TextAlignment="Center" />
                                 </ListBoxItem>
                                 <ListBoxItem Tag="Monthly">
-                                    <TextBlock Text="Monthly" FontWeight="Bold" FontSize="13" TextAlignment="Center" />
+                                    <TextBlock Classes="Size-13" Text="Monthly" FontWeight="Bold" TextAlignment="Center" />
                                 </ListBoxItem>
                                 <ListBoxItem Tag="Bi-Monthly">
-                                    <TextBlock Text="Bi-Monthly" FontWeight="Bold" FontSize="13" TextAlignment="Center" />
+                                    <TextBlock Classes="Size-13" Text="Bi-Monthly" FontWeight="Bold" TextAlignment="Center" />
                                 </ListBoxItem>
                                 <ListBoxItem Tag="Quarterly">
-                                    <TextBlock Text="Quarterly" FontWeight="Bold" FontSize="13" TextAlignment="Center" />
+                                    <TextBlock Classes="Size-13" Text="Quarterly" FontWeight="Bold" TextAlignment="Center" />
                                 </ListBoxItem>
                             </ListBox>
                         </StackPanel>
@@ -288,7 +287,7 @@
                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
                             <i:Icon Value="fa-solid fa-plus" FontSize="16"
                                     Foreground="{DynamicResource Accent}" />
-                             <TextBlock Text="Regenerate Payouts" FontSize="14" FontWeight="SemiBold"
+                             <TextBlock Classes="Size-S" Text="Regenerate Payouts" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextStrong}" />
                         </StackPanel>
                     </Button>
@@ -302,7 +301,7 @@
                         Background="{DynamicResource Surface}" ClipToBounds="True">
                     <StackPanel>
                         <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24">
-                            <TextBlock Text="How often would you like to receive payments" FontSize="16" FontWeight="Bold"
+                            <TextBlock Classes="Size-M" Text="How often would you like to receive payments" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
                         </Border>
                         <StackPanel Spacing="12" Margin="24">
@@ -314,8 +313,8 @@
                                     Background="{DynamicResource SurfaceHover}"
                                     Cursor="Hand">
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Name="PayoutFreqMonthlyText" Classes="PayoutFreqText"
-                                               Text="Monthly" FontWeight="Bold" FontSize="14"
+                                    <TextBlock Name="PayoutFreqMonthlyText" Classes="PayoutFreqText Size-S"
+                                               Text="Monthly" FontWeight="Bold"
                                                Foreground="{DynamicResource TextStrong}"
                                                VerticalAlignment="Center" />
                                     <!-- Radio indicator: 20x20 rounded-full, border-2, with 12x12 filled circle when selected -->
@@ -337,8 +336,8 @@
                                     Background="{DynamicResource SurfaceHover}"
                                     Cursor="Hand">
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Name="PayoutFreqWeeklyText" Classes="PayoutFreqText"
-                                               Text="Weekly" FontWeight="Bold" FontSize="14"
+                                    <TextBlock Name="PayoutFreqWeeklyText" Classes="PayoutFreqText Size-S"
+                                               Text="Weekly" FontWeight="Bold"
                                                Foreground="{DynamicResource TextStrong}"
                                                VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Name="RadioOuterWeekly" Classes="RadioOuter"
@@ -362,7 +361,7 @@
                         Background="{DynamicResource Surface}" ClipToBounds="True">
                     <StackPanel>
                         <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24">
-                            <TextBlock Text="What options would you like to give supporters?" FontSize="16" FontWeight="Bold"
+                            <TextBlock Classes="Size-M" Text="What options would you like to give supporters?" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
                         </Border>
                         <StackPanel Spacing="12" Margin="24">
@@ -373,8 +372,8 @@
                                     Background="{DynamicResource SurfaceHover}"
                                     Cursor="Hand">
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Name="InstallmentText3" Classes="InstallmentText"
-                                               Text="3 Installments" FontSize="14" FontWeight="Bold"
+                                    <TextBlock Name="InstallmentText3" Classes="InstallmentText Size-S"
+                                               Text="3 Installments" FontWeight="Bold"
                                                Foreground="{DynamicResource TextStrong}"
                                                VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Name="Check3" Classes="CheckboxIndicator" Width="24" Height="24" CornerRadius="4"
@@ -393,8 +392,8 @@
                                     Background="{DynamicResource SurfaceHover}"
                                     Cursor="Hand">
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Name="InstallmentText6" Classes="InstallmentText"
-                                               Text="6 Installments" FontSize="14" FontWeight="Bold"
+                                    <TextBlock Name="InstallmentText6" Classes="InstallmentText Size-S"
+                                               Text="6 Installments" FontWeight="Bold"
                                                Foreground="{DynamicResource TextStrong}"
                                                VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Name="Check6" Classes="CheckboxIndicator" Width="24" Height="24" CornerRadius="4"
@@ -413,8 +412,8 @@
                                     Background="{DynamicResource SurfaceHover}"
                                     Cursor="Hand">
                                 <Grid ColumnDefinitions="*,Auto">
-                                    <TextBlock Name="InstallmentText9" Classes="InstallmentText"
-                                               Text="9 Installments" FontSize="14" FontWeight="Bold"
+                                    <TextBlock Name="InstallmentText9" Classes="InstallmentText Size-S"
+                                               Text="9 Installments" FontWeight="Bold"
                                                Foreground="{DynamicResource TextStrong}"
                                                VerticalAlignment="Center" />
                                     <Border Grid.Column="1" Name="Check9" Classes="CheckboxIndicator" Width="24" Height="24" CornerRadius="4"
@@ -436,7 +435,7 @@
                         IsVisible="{Binding IsPayoutMonthly}">
                     <StackPanel>
                         <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24">
-                            <TextBlock Text="What date do you want to receive funds each month?" FontSize="16" FontWeight="Bold"
+                            <TextBlock Classes="Size-M" Text="What date do you want to receive funds each month?" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
                         </Border>
                         <StackPanel Margin="16">
@@ -449,35 +448,35 @@
                                     </ItemsPanelTemplate>
                                 </ListBox.ItemsPanel>
                                 <!-- Days 1-29 -->
-                                <ListBoxItem Tag="1"><TextBlock Text="1" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="2"><TextBlock Text="2" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="3"><TextBlock Text="3" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="4"><TextBlock Text="4" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="5"><TextBlock Text="5" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="6"><TextBlock Text="6" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="7"><TextBlock Text="7" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="8"><TextBlock Text="8" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="9"><TextBlock Text="9" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="10"><TextBlock Text="10" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="11"><TextBlock Text="11" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="12"><TextBlock Text="12" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="13"><TextBlock Text="13" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="14"><TextBlock Text="14" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="15"><TextBlock Text="15" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="16"><TextBlock Text="16" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="17"><TextBlock Text="17" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="18"><TextBlock Text="18" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="19"><TextBlock Text="19" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="20"><TextBlock Text="20" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="21"><TextBlock Text="21" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="22"><TextBlock Text="22" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="23"><TextBlock Text="23" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="24"><TextBlock Text="24" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="25"><TextBlock Text="25" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="26"><TextBlock Text="26" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="27"><TextBlock Text="27" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="28"><TextBlock Text="28" TextAlignment="Center" FontSize="13" /></ListBoxItem>
-                                <ListBoxItem Tag="29"><TextBlock Text="29" TextAlignment="Center" FontSize="13" /></ListBoxItem>
+                                <ListBoxItem Tag="1"><TextBlock Classes="Size-13" Text="1" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="2"><TextBlock Classes="Size-13" Text="2" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="3"><TextBlock Classes="Size-13" Text="3" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="4"><TextBlock Classes="Size-13" Text="4" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="5"><TextBlock Classes="Size-13" Text="5" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="6"><TextBlock Classes="Size-13" Text="6" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="7"><TextBlock Classes="Size-13" Text="7" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="8"><TextBlock Classes="Size-13" Text="8" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="9"><TextBlock Classes="Size-13" Text="9" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="10"><TextBlock Classes="Size-13" Text="10" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="11"><TextBlock Classes="Size-13" Text="11" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="12"><TextBlock Classes="Size-13" Text="12" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="13"><TextBlock Classes="Size-13" Text="13" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="14"><TextBlock Classes="Size-13" Text="14" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="15"><TextBlock Classes="Size-13" Text="15" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="16"><TextBlock Classes="Size-13" Text="16" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="17"><TextBlock Classes="Size-13" Text="17" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="18"><TextBlock Classes="Size-13" Text="18" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="19"><TextBlock Classes="Size-13" Text="19" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="20"><TextBlock Classes="Size-13" Text="20" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="21"><TextBlock Classes="Size-13" Text="21" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="22"><TextBlock Classes="Size-13" Text="22" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="23"><TextBlock Classes="Size-13" Text="23" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="24"><TextBlock Classes="Size-13" Text="24" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="25"><TextBlock Classes="Size-13" Text="25" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="26"><TextBlock Classes="Size-13" Text="26" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="27"><TextBlock Classes="Size-13" Text="27" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="28"><TextBlock Classes="Size-13" Text="28" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="29"><TextBlock Classes="Size-13" Text="29" TextAlignment="Center" /></ListBoxItem>
                             </ListBox>
                         </StackPanel>
                     </StackPanel>
@@ -489,7 +488,7 @@
                         IsVisible="{Binding IsPayoutWeekly}">
                     <StackPanel>
                         <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24">
-                            <TextBlock Text="What day do you want to receive funds each week?" FontSize="16" FontWeight="Bold"
+                            <TextBlock Classes="Size-M" Text="What day do you want to receive funds each week?" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
                         </Border>
                         <StackPanel Margin="16">
@@ -501,13 +500,13 @@
                                         <UniformGrid Columns="7" ColumnSpacing="6" RowSpacing="6" />
                                     </ItemsPanelTemplate>
                                 </ListBox.ItemsPanel>
-                                <ListBoxItem Tag="Mon"><TextBlock Text="Mon" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
-                                <ListBoxItem Tag="Tue"><TextBlock Text="Tue" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
-                                <ListBoxItem Tag="Wed"><TextBlock Text="Wed" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
-                                <ListBoxItem Tag="Thu"><TextBlock Text="Thu" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
-                                <ListBoxItem Tag="Fri"><TextBlock Text="Fri" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
-                                <ListBoxItem Tag="Sat"><TextBlock Text="Sat" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
-                                <ListBoxItem Tag="Sun"><TextBlock Text="Sun" FontWeight="Bold" FontSize="13" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="Mon"><TextBlock Classes="Size-13" Text="Mon" FontWeight="Bold" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="Tue"><TextBlock Classes="Size-13" Text="Tue" FontWeight="Bold" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="Wed"><TextBlock Classes="Size-13" Text="Wed" FontWeight="Bold" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="Thu"><TextBlock Classes="Size-13" Text="Thu" FontWeight="Bold" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="Fri"><TextBlock Classes="Size-13" Text="Fri" FontWeight="Bold" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="Sat"><TextBlock Classes="Size-13" Text="Sat" FontWeight="Bold" TextAlignment="Center" /></ListBoxItem>
+                                <ListBoxItem Tag="Sun"><TextBlock Classes="Size-13" Text="Sun" FontWeight="Bold" TextAlignment="Center" /></ListBoxItem>
                             </ListBox>
                         </StackPanel>
                     </StackPanel>
@@ -534,7 +533,7 @@
             <StackPanel Spacing="0">
                 <!-- Header -->
                 <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="20,16">
-                    <TextBlock Text="Edit Stage Schedule" FontSize="16" FontWeight="Bold"
+                    <TextBlock Classes="Size-M" Text="Edit Stage Schedule" FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}" />
                 </Border>
 
@@ -553,7 +552,7 @@
                                         <!-- Stage number badge -->
                                         <Border Grid.Column="0" Width="36" Height="36" CornerRadius="18"
                                                 Background="{DynamicResource Accent}" VerticalAlignment="Top" Margin="0,4,0,0">
-                                            <TextBlock Text="{Binding StageNumber}" FontSize="14" FontWeight="Bold"
+                                            <TextBlock Classes="Size-S" Text="{Binding StageNumber}" FontWeight="Bold"
                                                        Foreground="White"
                                                        HorizontalAlignment="Center" VerticalAlignment="Center" />
                                         </Border>
@@ -561,26 +560,26 @@
                                         <StackPanel Grid.Column="1" Spacing="10">
                                             <!-- Percentage — NumericUpDown bound to decimal? bridge (avoids double↔decimal? mismatch) -->
                                             <StackPanel Spacing="4">
-                                                <TextBlock Text="Percentage %" FontSize="11" FontWeight="SemiBold"
+                                                <TextBlock Classes="Size-XXS" Text="Percentage %" FontWeight="SemiBold"
                                                            Foreground="{DynamicResource TextMuted}" />
                                                 <NumericUpDown Value="{Binding PercentageDecimal, Mode=TwoWay}"
                                                                Minimum="0" Maximum="100"
                                                                Increment="1" FormatString="0"
                                                                FontSize="14" />
-                                                <TextBlock Text="Must be greater than 0" FontSize="11"
-                                                           Foreground="#ef4444"
+                                                <TextBlock Classes="Size-XXS" Text="Must be greater than 0"
+                                                           Foreground="{DynamicResource DangerBrightBrush}"
                                                            IsVisible="{Binding HasPercentageError}" />
                                             </StackPanel>
 
                                             <!-- Release date picker + inline error -->
                                             <StackPanel Spacing="4">
-                                                <TextBlock Text="Release Date" FontSize="11" FontWeight="SemiBold"
+                                                <TextBlock Classes="Size-XXS" Text="Release Date" FontWeight="SemiBold"
                                                            Foreground="{DynamicResource TextMuted}" />
                                                 <CalendarDatePicker
                                                     SelectedDate="{Binding ReleaseDateAsDateTime, Mode=TwoWay}"
                                                     FontSize="14" HorizontalAlignment="Stretch" />
-                                                <TextBlock Text="{Binding ReleaseDateError}" FontSize="11"
-                                                           Foreground="#ef4444" TextWrapping="Wrap"
+                                                <TextBlock Classes="Size-XXS" Text="{Binding ReleaseDateError}"
+                                                           Foreground="{DynamicResource DangerBrightBrush}" TextWrapping="Wrap"
                                                            IsVisible="{Binding HasDateError}" />
                                             </StackPanel>
                                         </StackPanel>
@@ -614,7 +613,7 @@
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <i:Icon Value="fa-solid fa-circle-check" FontSize="14" Foreground="{DynamicResource PillGreenText}"
                                     VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding AdvancedEditorTotalLabel}" FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-13" Text="{Binding AdvancedEditorTotalLabel}" FontWeight="SemiBold"
                                        Foreground="{DynamicResource PillGreenText}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Border>
@@ -625,7 +624,7 @@
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <i:Icon Value="fa-solid fa-circle-exclamation" FontSize="14" Foreground="{DynamicResource PillAmberText}"
                                     VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding AdvancedEditorTotalLabel}" FontSize="13" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-13" Text="{Binding AdvancedEditorTotalLabel}" FontWeight="SemiBold"
                                        Foreground="{DynamicResource PillAmberText}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Border>
@@ -642,7 +641,7 @@
                         Foreground="{DynamicResource TextMuted}">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <i:Icon Value="fa-solid fa-plus" FontSize="14" />
-                        <TextBlock Text="Add Another Stage" FontSize="14" />
+                        <TextBlock Classes="Size-S" Text="Add Another Stage" />
                     </StackPanel>
                 </Button>
 
@@ -653,7 +652,7 @@
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <i:Icon Value="fa-solid fa-triangle-exclamation" FontSize="14" Foreground="{DynamicResource PillAmberText}"
                                 VerticalAlignment="Top" Margin="0,2,0,0" />
-                        <TextBlock FontSize="12" Foreground="{DynamicResource PillAmberText}" TextWrapping="Wrap"
+                        <TextBlock Classes="Size-XS" Foreground="{DynamicResource PillAmberText}" TextWrapping="Wrap"
                                    Text="Each release date must be after the funding end date." />
                     </StackPanel>
                 </Border>
@@ -678,7 +677,7 @@
                                 <i:Icon Value="fa-solid fa-trash"
                                        FontSize="14"
                                        Foreground="{DynamicResource Accent}" />
-                                <TextBlock Text="Delete" FontSize="13" FontWeight="Bold"
+                                <TextBlock Classes="Size-13" Text="Delete" FontWeight="Bold"
                                            Foreground="{DynamicResource Accent}" />
                             </StackPanel>
                         </Button>
@@ -689,7 +688,7 @@
                                         Foreground="White"
                                         HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
-                            <TextBlock FontSize="16" FontWeight="Bold"
+                            <TextBlock Classes="Size-M" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center">
                                 <Run Text="{Binding ScheduleTitle, Mode=OneWay}" />
@@ -708,11 +707,11 @@
                                         BorderBrush="{DynamicResource Accent}" BorderThickness="1"
                                         Background="{DynamicResource PrimaryGreenBrush04}">
                                     <DockPanel>
-                                        <TextBlock FontSize="14" Foreground="{DynamicResource Accent}"
+                                        <TextBlock Classes="Size-S" Foreground="{DynamicResource Accent}"
                                                    FontWeight="SemiBold" DockPanel.Dock="Left">
                                             <Run Text="{Binding StageLabel, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding StageNumber, Mode=OneWay}" />
                                         </TextBlock>
-                                        <TextBlock FontSize="14" Foreground="{DynamicResource Accent}"
+                                        <TextBlock Classes="Size-S" Foreground="{DynamicResource Accent}"
                                                    FontWeight="Bold" HorizontalAlignment="Right"
                                                    Text="{Binding DisplayText, Mode=OneWay}" />
                                     </DockPanel>

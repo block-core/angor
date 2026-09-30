@@ -91,8 +91,7 @@
                 <!-- Vue: relative mb-6, text-2xl font-bold centered     -->
                 <!-- ═══════════════════════════════════════════════════ -->
                 <Panel Margin="0,0,0,24">
-                    <TextBlock Text="Share Project"
-                               FontSize="24" FontWeight="Bold"
+                    <TextBlock Classes="Size-24" Text="Share Project" FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center" />
@@ -122,15 +121,13 @@
                         <StackPanel VerticalAlignment="Center" Spacing="2"
                                     HorizontalAlignment="Left"
                                     Width="320">
-                            <TextBlock Name="ProjectTitle"
-                                       Text="Project Name"
-                                       FontSize="15" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-15" Name="ProjectTitle"
+                                       Text="Project Name" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextStrong}"
                                        TextTrimming="CharacterEllipsis"
                                        MaxLines="1" />
-                            <TextBlock Name="ProjectDescription"
+                            <TextBlock Classes="Size-S" Name="ProjectDescription"
                                        Text="Project description goes here"
-                                       FontSize="14"
                                        Foreground="{DynamicResource TextMuted}"
                                        TextTrimming="CharacterEllipsis"
                                        MaxLines="1" />
@@ -143,8 +140,7 @@
                 <!-- Vue: label + flex row with input + Copy button      -->
                 <!-- ═══════════════════════════════════════════════════ -->
                 <StackPanel Spacing="8" Margin="0,0,0,24">
-                    <TextBlock Text="Share Link"
-                               FontSize="13" FontWeight="Medium"
+                    <TextBlock Classes="Size-13" Text="Share Link" FontWeight="Medium"
                                Foreground="{DynamicResource TextMuted}" />
                     <DockPanel>
                         <Button Name="CopyButton" DockPanel.Dock="Right"
@@ -170,8 +166,7 @@
                 <!-- Vue: grid-cols-2 gap-3 (12px), 6 social buttons    -->
                 <!-- ═══════════════════════════════════════════════════ -->
                 <StackPanel Spacing="12">
-                    <TextBlock Text="Share on Social Media"
-                               FontSize="13" FontWeight="Medium"
+                    <TextBlock Classes="Size-13" Text="Share on Social Media" FontWeight="Medium"
                                Foreground="{DynamicResource TextMuted}" />
 
                     <UniformGrid Columns="2" Rows="3">
@@ -180,7 +175,7 @@
                             <StackPanel Orientation="Horizontal" Spacing="8"
                                         HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <i:Icon Value="fa-brands fa-twitter" FontSize="16" Foreground="#1DA1F2" />
-                                <TextBlock Text="Twitter" FontSize="14" FontWeight="Medium"
+                                <TextBlock Classes="Size-S" Text="Twitter" FontWeight="Medium"
                                            Foreground="#1DA1F2" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
@@ -190,7 +185,7 @@
                             <StackPanel Orientation="Horizontal" Spacing="8"
                                         HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <i:Icon Value="fa-brands fa-facebook" FontSize="16" Foreground="#1877F2" />
-                                <TextBlock Text="Facebook" FontSize="14" FontWeight="Medium"
+                                <TextBlock Classes="Size-S" Text="Facebook" FontWeight="Medium"
                                            Foreground="#1877F2" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
@@ -200,7 +195,7 @@
                             <StackPanel Orientation="Horizontal" Spacing="8"
                                         HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <i:Icon Value="fa-brands fa-linkedin" FontSize="16" Foreground="#0A66C2" />
-                                <TextBlock Text="LinkedIn" FontSize="14" FontWeight="Medium"
+                                <TextBlock Classes="Size-S" Text="LinkedIn" FontWeight="Medium"
                                            Foreground="#0A66C2" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
@@ -210,7 +205,7 @@
                             <StackPanel Orientation="Horizontal" Spacing="8"
                                         HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <i:Icon Value="fa-brands fa-telegram" FontSize="16" Foreground="#0088CC" />
-                                <TextBlock Text="Telegram" FontSize="14" FontWeight="Medium"
+                                <TextBlock Classes="Size-S" Text="Telegram" FontWeight="Medium"
                                            Foreground="#0088CC" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
@@ -220,7 +215,7 @@
                             <StackPanel Orientation="Horizontal" Spacing="8"
                                         HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <i:Icon Value="fa-brands fa-whatsapp" FontSize="16" Foreground="#25D366" />
-                                <TextBlock Text="WhatsApp" FontSize="14" FontWeight="Medium"
+                                <TextBlock Classes="Size-S" Text="WhatsApp" FontWeight="Medium"
                                            Foreground="#25D366" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
@@ -230,7 +225,7 @@
                             <StackPanel Orientation="Horizontal" Spacing="8"
                                         HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <i:Icon Value="fa-brands fa-reddit" FontSize="16" Foreground="#FF4500" />
-                                <TextBlock Text="Reddit" FontSize="14" FontWeight="Medium"
+                                <TextBlock Classes="Size-S" Text="Reddit" FontWeight="Medium"
                                            Foreground="#FF4500" VerticalAlignment="Center" />
                             </StackPanel>
                         </Button>
@@ -246,7 +241,7 @@
                                 HorizontalAlignment="Center" VerticalAlignment="Center">
                         <i:Icon Value="fa-regular fa-envelope" FontSize="16"
                                 Foreground="{DynamicResource TextStrong}" />
-                        <TextBlock Text="Share via Email" FontSize="14" FontWeight="Medium"
+                        <TextBlock Classes="Size-S" Text="Share via Email" FontWeight="Medium"
                                    Foreground="{DynamicResource TextStrong}"
                                    VerticalAlignment="Center" />
                     </StackPanel>

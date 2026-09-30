@@ -115,12 +115,10 @@
                                 </Border>
                                 <StackPanel Spacing="2" VerticalAlignment="Center">
                                     <!-- Vue: text-xl font-bold -->
-                                    <TextBlock Name="HeaderWalletName" Text="Bitcoin Wallet"
-                                               FontSize="20" FontWeight="Bold"
+                                    <TextBlock Classes="Size-20" Name="HeaderWalletName" Text="Bitcoin Wallet" FontWeight="Bold"
                                                Foreground="{DynamicResource TextStrong}" />
                                     <!-- Vue: text-sm text-gray-400/text-gray-600 -->
-                                    <TextBlock Name="HeaderWalletType" Text="On-Chain"
-                                               FontSize="14"
+                                    <TextBlock Classes="Size-S" Name="HeaderWalletType" Text="On-Chain"
                                                Foreground="{DynamicResource TextMuted}" />
                                 </StackPanel>
                             </StackPanel>
@@ -131,10 +129,9 @@
                              screens, and the buttons can take the full width side-by-side. -->
                         <StackPanel Spacing="12">
                             <StackPanel Spacing="2">
-                                <TextBlock Text="Balance" FontSize="14"
+                                <TextBlock Classes="Size-S" Text="Balance"
                                            Foreground="{DynamicResource TextMuted}" />
-                                <TextBlock Name="HeaderBalance" Text="2.5431 BTC"
-                                           FontSize="26" FontWeight="Bold"
+                                <TextBlock Classes="Size-26" Name="HeaderBalance" Text="2.5431 BTC" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}"
                                            TextWrapping="NoWrap"
                                            TextTrimming="CharacterEllipsis" />
@@ -206,12 +203,10 @@
                             </Border>
                             <StackPanel Spacing="2" VerticalAlignment="Center">
                                 <!-- Vue: text-lg font-semibold mb-1 -->
-                                <TextBlock Text="UTXOs"
-                                           FontSize="18" FontWeight="SemiBold"
+                                <TextBlock Classes="Size-L" Text="UTXOs" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextStrong}" />
                                 <!-- Vue: text-sm text-gray-400/text-gray-600 -->
-                                <TextBlock Text="Manage your individual coins"
-                                           FontSize="13"
+                                <TextBlock Classes="Size-13" Text="Manage your individual coins"
                                            Foreground="{DynamicResource TextMuted}" />
                             </StackPanel>
                         </StackPanel>
@@ -227,8 +222,7 @@
                         <!-- Empty state (hidden when UTXOs exist) -->
                         <Border Name="EmptyUtxoState" IsVisible="False"
                                 Padding="0,32">
-                            <TextBlock Text="No UTXOs available"
-                                       FontSize="14"
+                            <TextBlock Classes="Size-S" Text="No UTXOs available"
                                        Foreground="{DynamicResource TextMuted}"
                                        HorizontalAlignment="Center" />
                         </Border>

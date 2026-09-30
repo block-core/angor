@@ -37,8 +37,7 @@
                         BorderThickness="0,0,0,1"
                         Padding="24,18">
                     <Panel>
-                        <TextBlock Text="Receive"
-                                   FontSize="18" FontWeight="Bold"
+                        <TextBlock Classes="Size-L" Text="Receive" FontWeight="Bold"
                                    Foreground="{DynamicResource TextStrong}"
                                    VerticalAlignment="Center" />
                         <Button Name="CloseBtn" Classes="ModalCloseBtnSmall"
@@ -50,7 +49,7 @@
                 <StackPanel Spacing="20" Margin="24">
                     <!-- To wallet info box -->
                     <StackPanel Spacing="4">
-                        <TextBlock Text="To" FontSize="13" FontWeight="SemiBold"
+                        <TextBlock Classes="Size-13" Text="To" FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextMuted}" />
                         <Border Background="{DynamicResource RecoveryInfoCardBg}"
                                 BorderBrush="{DynamicResource RecoveryInfoCardBorder}"
@@ -58,11 +57,9 @@
                                 CornerRadius="8"
                                 Padding="12">
                             <StackPanel Spacing="2">
-                                <TextBlock Name="ToWalletName" Text="Bitcoin Wallet"
-                                           FontSize="14" FontWeight="SemiBold"
+                                <TextBlock Classes="Size-S" Name="ToWalletName" Text="Bitcoin Wallet" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextStrong}" />
-                                <TextBlock Name="ToWalletType" Text="On-Chain"
-                                           FontSize="12"
+                                <TextBlock Classes="Size-XS" Name="ToWalletType" Text="On-Chain"
                                            Foreground="{DynamicResource TextMuted}" />
                             </StackPanel>
                         </Border>
@@ -93,8 +90,7 @@
                                            FontSize="80"
                                            Foreground="{DynamicResource TextMuted}"
                                            HorizontalAlignment="Center" />
-                                    <TextBlock Text="QR Code"
-                                               FontSize="11"
+                                    <TextBlock Classes="Size-XXS" Text="QR Code"
                                                Foreground="{DynamicResource TextMuted}"
                                                HorizontalAlignment="Center" />
                                 </StackPanel>
@@ -103,8 +99,7 @@
                     </Border>
 
                     <!-- Address type label -->
-                    <TextBlock Name="AddressTypeLabel" Text="On-Chain Address"
-                               FontSize="13"
+                    <TextBlock Classes="Size-13" Name="AddressTypeLabel" Text="On-Chain Address"
                                Foreground="{DynamicResource TextMuted}"
                                HorizontalAlignment="Center" />
 
@@ -124,10 +119,9 @@
                                        FontSize="14"
                                        Foreground="{DynamicResource TextMuted}" />
                             </Button>
-                            <TextBlock Name="AddressText"
+                            <TextBlock Classes="Size-13" Name="AddressText"
                                        AutomationProperties.AutomationId="ReceiveAddressText"
                                        Text="Loading..."
-                                       FontSize="13"
                                        FontFamily="Cascadia Mono, Consolas, monospace"
                                         Foreground="{DynamicResource PrimaryGreenBrush}"
                                        TextTrimming="CharacterEllipsis"

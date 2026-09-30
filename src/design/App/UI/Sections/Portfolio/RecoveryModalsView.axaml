@@ -58,7 +58,7 @@
                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
                             <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="20"
                                     Foreground="{DynamicResource PrimaryGreenBrush}" />
-                            <TextBlock Text="Recovery" FontSize="24" FontWeight="Bold"
+                            <TextBlock Classes="Size-24" Text="Recovery" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
                         </StackPanel>
                         <Button Name="CloseRecoveryModal" Classes="ModalBtn ModalCloseBtn"
@@ -79,7 +79,7 @@
                                 HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
                             <Border CornerRadius="8" Padding="24,12" HorizontalAlignment="Stretch"
                                     Background="{DynamicResource ModalCancelBg}">
-                                <TextBlock Text="Cancel" FontSize="14" FontWeight="SemiBold"
+                                <TextBlock Classes="Size-S" Text="Cancel" FontWeight="SemiBold"
                                            Foreground="{DynamicResource ModalCancelFg}"
                                            HorizontalAlignment="Center"
                                            VerticalAlignment="Center"
@@ -94,7 +94,7 @@
                                     ClipToBounds="True"
                                     Background="{DynamicResource GreenGradient}">
                                 <Panel>
-                                    <TextBlock Text="Confirm" FontSize="14" FontWeight="SemiBold"
+                                    <TextBlock Classes="Size-S" Text="Confirm" FontWeight="SemiBold"
                                                Foreground="White"
                                                IsVisible="{Binding !IsProcessing}"
                                                HorizontalAlignment="Center"
@@ -124,7 +124,7 @@
                                                 </Style>
                                             </i:Icon.Styles>
                                         </i:Icon>
-                                        <TextBlock Text="Processing..." FontSize="14" FontWeight="SemiBold"
+                                        <TextBlock Classes="Size-S" Text="Processing..." FontWeight="SemiBold"
                                                    Foreground="White" />
                                     </StackPanel>
                                 </Panel>
@@ -148,8 +148,7 @@
                                 <i:Icon Value="fa-solid fa-triangle-exclamation" FontSize="18"
                                         Foreground="#F59E0B" VerticalAlignment="Top"
                                         Margin="0,2,12,0" DockPanel.Dock="Left" />
-                                <TextBlock Text="When you recover funds, they will be locked in a penalty period. During this time, you will not be able to access them until the penalty period expires."
-                                           FontSize="14" TextWrapping="Wrap"
+                                <TextBlock Classes="Size-S" Text="When you recover funds, they will be locked in a penalty period. During this time, you will not be able to access them until the penalty period expires." TextWrapping="Wrap"
                                            Foreground="{DynamicResource RecoveryWarningText}" />
                             </DockPanel>
                         </Border>
@@ -166,9 +165,9 @@
                                     BorderBrush="{DynamicResource RecoveryInfoCardBorder}"
                                     BorderThickness="1">
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="Stages to Recover" FontSize="13"
+                                    <TextBlock Classes="Size-13" Text="Stages to Recover"
                                                Foreground="{DynamicResource TextMuted}" />
-                                    <TextBlock Text="{Binding StagesToRecover}" FontSize="20" FontWeight="Bold"
+                                    <TextBlock Classes="Size-20" Text="{Binding StagesToRecover}" FontWeight="Bold"
                                                Foreground="{DynamicResource TextStrong}" />
                                 </StackPanel>
                             </Border>
@@ -179,9 +178,9 @@
                                     BorderBrush="{DynamicResource RecoveryInfoCardBorder}"
                                     BorderThickness="1">
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="Amount to Recover" FontSize="13"
+                                    <TextBlock Classes="Size-13" Text="Amount to Recover"
                                                Foreground="{DynamicResource TextMuted}" />
-                                    <TextBlock FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryGreenBrush}">
+                                    <TextBlock Classes="Size-20" FontWeight="Bold" Foreground="{DynamicResource PrimaryGreenBrush}">
                                         <Run Text="{Binding AmountToRecover, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" />
                                     </TextBlock>
                                 </StackPanel>
@@ -193,10 +192,10 @@
                                     BorderBrush="{DynamicResource RecoveryInfoCardBorder}"
                                     BorderThickness="1">
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="Penalty Duration" FontSize="13"
+                                    <TextBlock Classes="Size-13" Text="Penalty Duration"
                                                Foreground="{DynamicResource TextMuted}" />
-                                    <TextBlock Text="{Binding PenaltyDuration}" FontSize="20" FontWeight="Bold"
-                                               Foreground="#F7931A" />
+                                    <TextBlock Classes="Size-20" Text="{Binding PenaltyDuration}" FontWeight="Bold"
+                                               Foreground="{DynamicResource BitcoinAccentBrush}" />
                                 </StackPanel>
                             </Border>
 
@@ -206,9 +205,9 @@
                                     BorderBrush="{DynamicResource RecoveryInfoCardBorder}"
                                     BorderThickness="1">
                                 <StackPanel Spacing="4">
-                                    <TextBlock Text="Miner Fee" FontSize="13"
+                                    <TextBlock Classes="Size-13" Text="Miner Fee"
                                                Foreground="{DynamicResource TextMuted}" />
-                                    <TextBlock FontSize="20" FontWeight="Bold" Foreground="#F7931A">
+                                    <TextBlock Classes="Size-20" FontWeight="Bold" Foreground="{DynamicResource BitcoinAccentBrush}">
                                         <Run Text="{Binding MinerFee, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" />
                                     </TextBlock>
                                 </StackPanel>
@@ -228,15 +227,13 @@
                                 <i:Icon Value="fa-solid fa-circle-exclamation" FontSize="18"
                                         Foreground="{DynamicResource ErrorFieldBorder}" VerticalAlignment="Top"
                                         Margin="0,2,12,0" DockPanel.Dock="Left" />
-                                <TextBlock Text="{Binding ErrorMessage}"
-                                            FontSize="14" TextWrapping="Wrap"
+                                <TextBlock Classes="Size-S" Text="{Binding ErrorMessage}" TextWrapping="Wrap"
                                            Foreground="{DynamicResource ErrorBannerText}" />
                             </DockPanel>
                         </Border>
 
                         <!-- Confirmation question -->
-                        <TextBlock Text="Are you sure you want to recover these funds?"
-                                   FontSize="15" FontWeight="SemiBold"
+                        <TextBlock Classes="Size-15" Text="Are you sure you want to recover these funds?" FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextStrong}"
                                    HorizontalAlignment="Center"
                                    Margin="0,4,0,0" />
@@ -267,7 +264,7 @@
                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
                             <i:Icon Value="fa-solid fa-lock" FontSize="20"
                                     Foreground="{DynamicResource TextMuted}" />
-                            <TextBlock Text="Penalties Details" FontSize="24" FontWeight="Bold"
+                            <TextBlock Classes="Size-24" Text="Penalties Details" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
                         </StackPanel>
                         <Button Name="CloseClaimModal" Classes="ModalBtn ModalCloseBtn"
@@ -277,7 +274,7 @@
 
                 <!-- ── Project ID field container ── -->
                 <StackPanel Margin="24,24,24,0" Spacing="6">
-                    <TextBlock Text="Project ID" FontSize="13" FontWeight="SemiBold"
+                    <TextBlock Classes="Size-13" Text="Project ID" FontWeight="SemiBold"
                                Foreground="{DynamicResource TextMuted}" />
                     <Border Background="{DynamicResource SurfaceMedium}"
                             BorderBrush="{DynamicResource Stroke}"
@@ -294,12 +291,11 @@
                                     Margin="8,0,0,0">
                                 <i:Icon Value="fa-solid fa-copy" FontSize="14" Foreground="{DynamicResource TextMuted}" />
                             </Button>
-                            <TextBlock Text="{Binding RecoveryProjectId}"
-                                       FontSize="13"
+                            <TextBlock Classes="Size-13" Text="{Binding RecoveryProjectId}"
                                        FontFamily="Cascadia Code,Consolas,monospace"
                                        Foreground="{DynamicResource TextStrong}"
                                        TextTrimming="CharacterEllipsis"
-                                       VerticalAlignment="Center" />
+                                       VerticalAlignment="Center" ToolTip.Tip="{Binding RecoveryProjectId}" />
                         </DockPanel>
                     </Border>
                 </StackPanel>
@@ -311,10 +307,10 @@
                             BorderThickness="0,0,0,1"
                             BorderBrush="{DynamicResource RecoveryTableHeaderBorder}">
                         <Grid ColumnDefinitions="*,*,Auto">
-                            <TextBlock Grid.Column="0" Text="AMOUNT IN PENALTY" FontSize="12"
+                            <TextBlock Classes="Size-XS" Grid.Column="0" Text="AMOUNT IN PENALTY"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextMuted}" />
-                            <TextBlock Grid.Column="1" Text="DAYS REMAINING" FontSize="12"
+                            <TextBlock Classes="Size-XS" Grid.Column="1" Text="DAYS REMAINING"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextMuted}" />
                             <TextBlock Grid.Column="2" Text="" Width="130" />
@@ -327,12 +323,12 @@
                             BorderBrush="{DynamicResource RecoveryTableRowBorder}">
                         <Grid ColumnDefinitions="*,*,Auto">
                             <!-- Amount in penalty -->
-                            <TextBlock Grid.Column="0" FontSize="14" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-S" Grid.Column="0" FontWeight="SemiBold"
                                        Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Center">
                                 <Run Text="{Binding PenaltyAmount, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" />
                             </TextBlock>
                             <!-- Days remaining -->
-                            <TextBlock Grid.Column="1" FontSize="14"
+                            <TextBlock Classes="Size-S" Grid.Column="1"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center">
                                 <Run Text="{Binding PenaltyDaysRemaining, Mode=OneWay}" /><Run Text=" days" />
@@ -344,7 +340,7 @@
                                 <Border CornerRadius="8" Padding="16,8"
                                         Background="{DynamicResource GreenGradient}">
                                     <Panel>
-                                        <TextBlock Text="Claim Penalty" FontSize="13" FontWeight="SemiBold"
+                                        <TextBlock Classes="Size-13" Text="Claim Penalty" FontWeight="SemiBold"
                                                    Foreground="White"
                                                    IsVisible="{Binding !IsProcessing}"
                                                    HorizontalAlignment="Center" />
@@ -371,7 +367,7 @@
                                                     </Style>
                                                 </i:Icon.Styles>
                                             </i:Icon>
-                                            <TextBlock Text="Processing..." FontSize="13" FontWeight="SemiBold"
+                                            <TextBlock Classes="Size-13" Text="Processing..." FontWeight="SemiBold"
                                                        Foreground="White" />
                                         </StackPanel>
                                     </Panel>
@@ -391,8 +387,7 @@
                         <i:Icon Value="fa-solid fa-circle-exclamation" FontSize="18"
                                 Foreground="{DynamicResource ErrorFieldBorder}" VerticalAlignment="Top"
                                 Margin="0,2,12,0" DockPanel.Dock="Left" />
-                        <TextBlock Text="{Binding ErrorMessage}"
-                                   FontSize="14" TextWrapping="Wrap"
+                        <TextBlock Classes="Size-S" Text="{Binding ErrorMessage}" TextWrapping="Wrap"
                                    Foreground="{DynamicResource ErrorBannerText}" />
                     </DockPanel>
                 </Border>
@@ -423,7 +418,7 @@
                         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
                             <i:Icon Value="fa-solid fa-circle-check" FontSize="20"
                                     Foreground="{DynamicResource PrimaryGreenBrush}" />
-                            <TextBlock Text="Release Recovery Confirmation" FontSize="24" FontWeight="Bold"
+                            <TextBlock Classes="Size-24" Text="Release Recovery Confirmation" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
                         </StackPanel>
                         <Button Name="CloseReleaseModal" Classes="ModalBtn ModalCloseBtn"
@@ -442,7 +437,7 @@
                                 HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
                             <Border CornerRadius="8" Padding="24,12" HorizontalAlignment="Stretch"
                                     Background="{DynamicResource ModalCancelBg}">
-                                <TextBlock Text="Cancel" FontSize="14" FontWeight="SemiBold"
+                                <TextBlock Classes="Size-S" Text="Cancel" FontWeight="SemiBold"
                                            Foreground="{DynamicResource ModalCancelFg}"
                                            HorizontalAlignment="Center"
                                            VerticalAlignment="Center"
@@ -456,7 +451,7 @@
                                     ClipToBounds="True"
                                     Background="{DynamicResource GreenGradient}">
                                 <Panel>
-                                    <TextBlock Text="Confirm" FontSize="14" FontWeight="SemiBold"
+                                    <TextBlock Classes="Size-S" Text="Confirm" FontWeight="SemiBold"
                                                Foreground="White"
                                                IsVisible="{Binding !IsProcessing}"
                                                HorizontalAlignment="Center"
@@ -486,7 +481,7 @@
                                                 </Style>
                                             </i:Icon.Styles>
                                         </i:Icon>
-                                        <TextBlock Text="Processing..." FontSize="14" FontWeight="SemiBold"
+                                        <TextBlock Classes="Size-S" Text="Processing..." FontWeight="SemiBold"
                                                    Foreground="White" />
                                     </StackPanel>
                                 </Panel>
@@ -509,8 +504,7 @@
                                 <i:Icon Value="fa-solid fa-circle-info" FontSize="18"
                                         Foreground="{DynamicResource PrimaryGreenBrush}" VerticalAlignment="Top"
                                         Margin="0,2,12,0" DockPanel.Dock="Left" />
-                                <TextBlock Text="The penalty period has ended and your funds are now available for release. Please confirm the details below to release your recovered funds."
-                                           FontSize="14" TextWrapping="Wrap"
+                                <TextBlock Classes="Size-S" Text="The penalty period has ended and your funds are now available for release. Please confirm the details below to release your recovered funds." TextWrapping="Wrap"
                                            Foreground="{DynamicResource RecoveryWarningText}" />
                             </DockPanel>
                         </Border>
@@ -521,9 +515,9 @@
                                 BorderBrush="{DynamicResource RecoveryInfoCardBorder}"
                                 BorderThickness="1">
                             <StackPanel Spacing="4">
-                                <TextBlock Text="Amount to Release" FontSize="13"
+                                <TextBlock Classes="Size-13" Text="Amount to Release"
                                            Foreground="{DynamicResource TextMuted}" />
-                                <TextBlock FontSize="20" FontWeight="Bold" Foreground="{DynamicResource PrimaryGreenBrush}">
+                                <TextBlock Classes="Size-20" FontWeight="Bold" Foreground="{DynamicResource PrimaryGreenBrush}">
                                     <Run Text="{Binding AmountToRecover, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" />
                                 </TextBlock>
                             </StackPanel>
@@ -535,10 +529,9 @@
                                 BorderBrush="{DynamicResource RecoveryInfoCardBorder}"
                                 BorderThickness="1">
                             <StackPanel Spacing="4">
-                                <TextBlock Text="Destination Address" FontSize="13"
+                                <TextBlock Classes="Size-13" Text="Destination Address"
                                            Foreground="{DynamicResource TextMuted}" />
-                                <TextBlock Text="{Binding DestinationAddress}"
-                                           FontSize="14" FontWeight="SemiBold"
+                                <TextBlock Classes="Size-S" Text="{Binding DestinationAddress}" FontWeight="SemiBold"
                                            FontFamily="Consolas,Menlo,monospace"
                                            Foreground="{DynamicResource TextStrong}"
                                            TextWrapping="Wrap" />
@@ -551,9 +544,9 @@
                                 BorderBrush="{DynamicResource RecoveryInfoCardBorder}"
                                 BorderThickness="1">
                             <StackPanel Spacing="4">
-                                <TextBlock Text="Miner Fee" FontSize="13"
+                                <TextBlock Classes="Size-13" Text="Miner Fee"
                                            Foreground="{DynamicResource TextMuted}" />
-                                <TextBlock FontSize="20" FontWeight="Bold" Foreground="#F7931A">
+                                <TextBlock Classes="Size-20" FontWeight="Bold" Foreground="{DynamicResource BitcoinAccentBrush}">
                                     <Run Text="{Binding MinerFee, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" />
                                 </TextBlock>
                             </StackPanel>
@@ -572,8 +565,7 @@
                                 <i:Icon Value="fa-solid fa-circle-exclamation" FontSize="18"
                                         Foreground="{DynamicResource ErrorFieldBorder}" VerticalAlignment="Top"
                                         Margin="0,2,12,0" DockPanel.Dock="Left" />
-                                <TextBlock Text="{Binding ErrorMessage}"
-                                            FontSize="14" TextWrapping="Wrap"
+                                <TextBlock Classes="Size-S" Text="{Binding ErrorMessage}" TextWrapping="Wrap"
                                            Foreground="{DynamicResource ErrorBannerText}" />
                             </DockPanel>
                         </Border>
@@ -614,14 +606,13 @@
                 </Border>
 
                 <!-- Title -->
-                <TextBlock Text="Funds Released" FontSize="24" FontWeight="Bold"
+                <TextBlock Classes="Size-24" Text="Funds Released" FontWeight="Bold"
                            Foreground="{DynamicResource TextStrong}"
                            HorizontalAlignment="Center"
                            Margin="0,0,0,12" />
 
                 <!-- Message -->
-                <TextBlock Text="Your funds have been successfully released to your wallet."
-                           FontSize="14"
+                <TextBlock Classes="Size-S" Text="Your funds have been successfully released to your wallet."
                            Foreground="{DynamicResource TextMuted}"
                            TextAlignment="Center" TextWrapping="Wrap"
                            HorizontalAlignment="Center"
@@ -634,7 +625,7 @@
                     <Border CornerRadius="8" Padding="24,12"
                             HorizontalAlignment="Stretch"
                             Background="{DynamicResource GreenGradient}">
-                        <TextBlock Text="Go to Funds Tab" FontSize="14" FontWeight="SemiBold"
+                        <TextBlock Classes="Size-S" Text="Go to Funds Tab" FontWeight="SemiBold"
                                    Foreground="White" HorizontalAlignment="Center" />
                     </Border>
                 </Button>

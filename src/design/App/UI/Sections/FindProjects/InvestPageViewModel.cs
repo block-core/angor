@@ -218,7 +218,6 @@ public partial class InvestPageViewModel : ReactiveObject, IDisposable
 
     public string ThresholdStatusText => IsAbovePenaltyThreshold ? "Requires Approval" : "No Approval Needed";
 
-    public double SubmitOpacity => CanSubmit ? 1.0 : 0.35;
 
     // Vue ref: footer-summary stages/payments count
     private ProjectType TypeEnum => ProjectTypeExtensions.FromDisplayString(Project.ProjectType);
@@ -300,7 +299,6 @@ public partial class InvestPageViewModel : ReactiveObject, IDisposable
                 this.RaisePropertyChanged(nameof(FormattedAmount));
                 this.RaisePropertyChanged(nameof(AngorFeeAmount));
                 this.RaisePropertyChanged(nameof(CanSubmit));
-                this.RaisePropertyChanged(nameof(SubmitOpacity));
                 this.RaisePropertyChanged(nameof(StagesSummary));
                 this.RaisePropertyChanged(nameof(TransactionAmountValue));
                 this.RaisePropertyChanged(nameof(IsAbovePenaltyThreshold));
@@ -314,7 +312,6 @@ public partial class InvestPageViewModel : ReactiveObject, IDisposable
             .Subscribe(_ =>
             {
                 this.RaisePropertyChanged(nameof(CanSubmit));
-                this.RaisePropertyChanged(nameof(SubmitOpacity));
             })
             .DisposeWith(_disposables);
 
@@ -756,6 +753,12 @@ public partial class InvestPageViewModel : ReactiveObject, IDisposable
     private async Task<Result> InvestWithWalletAsync(WalletId walletId, long amountSats, long feeRate)
     {
         await _walletContext.RefreshAllBalancesAsync();
+
+        WalletInfo? wallet = _walletContext.Wallets.FirstOrDefault(x => x.Id == walletId);
+        if (wallet != null && wallet.AvailableSats < amountSats)
+        {
+            return Result.Failure("Insufficient funds in the selected wallet.");
+        }
 
         var projectId = new ProjectId(Project.ProjectId);
         byte? patternIndex = GetPatternIndex();

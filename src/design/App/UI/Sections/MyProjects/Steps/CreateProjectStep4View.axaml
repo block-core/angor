@@ -16,8 +16,7 @@
         <!-- ─── INVESTMENT TYPE: Step 4 ─── -->
         <Panel IsVisible="{Binding IsInvestment}">
             <StackPanel Spacing="24">
-                <TextBlock Text="Configure your funding target, window, and project nature."
-                           FontSize="14" Foreground="{DynamicResource TextMuted}" />
+                <TextBlock Classes="Size-S" Text="Configure your funding target, window, and project nature." Foreground="{DynamicResource TextMuted}" />
 
                 <!-- Card 1: Set your target funding amount (Bitcoin accent) -->
                 <Border CornerRadius="12" BorderBrush="{DynamicResource BitcoinAccent}" BorderThickness="1"
@@ -26,14 +25,13 @@
                         <!-- Header with Bitcoin icon -->
                         <Border Padding="24" CornerRadius="11,11,0,0">
                             <Border.Background>
-                                <SolidColorBrush Color="#F7931A" Opacity="0.08" />
+                                <SolidColorBrush Color="{StaticResource BitcoinOrange}" Opacity="0.08" />
                             </Border.Background>
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <i:Icon Value="fa-brands fa-bitcoin"
                                        FontSize="18"
                                        Foreground="{DynamicResource BitcoinAccent}" />
-                                <TextBlock Text="Set your target funding amount"
-                                           FontSize="16" FontWeight="Bold"
+                                <TextBlock Classes="Size-M" Text="Set your target funding amount" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}"
                                            VerticalAlignment="Center" />
                             </StackPanel>
@@ -41,7 +39,7 @@
                         <StackPanel Spacing="16" Margin="24">
                             <!-- Target Amount field -->
                             <StackPanel Spacing="8">
-                                <TextBlock Text="{Binding TargetAmountLabel}" FontSize="14" FontWeight="Bold"
+                                <TextBlock Classes="Size-S" Text="{Binding TargetAmountLabel}" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" />
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBox Name="InvestTargetAmountInput"
@@ -49,14 +47,13 @@
                                              Watermark="0.00000000"
                                              FontSize="20" FontWeight="Bold"
                                              Padding="12,12,16,12" CornerRadius="8" />
-                                    <TextBlock Grid.Column="1" Text="{Binding CurrencySymbol}" FontSize="14" FontWeight="Bold"
+                                    <TextBlock Classes="Size-S" Grid.Column="1" Text="{Binding CurrencySymbol}" FontWeight="Bold"
                                                Foreground="{DynamicResource TextMuted}"
                                                VerticalAlignment="Center" Margin="12,0,0,0" />
                                 </Grid>
-                                <TextBlock Text="The minimum amount your project needs to raise"
-                                           FontSize="12" Foreground="{DynamicResource BitcoinAccent}" />
+                                <TextBlock Classes="Size-XS" Text="The minimum amount your project needs to raise" Foreground="{DynamicResource BitcoinAccent}" />
                                 <!-- Vue: targetAmountError — red text below amount input -->
-                                <TextBlock Text="{Binding TargetAmountError}" FontSize="13"
+                                <TextBlock Classes="Size-13" Text="{Binding TargetAmountError}"
                                            Foreground="{DynamicResource ErrorFieldText}"
                                            IsVisible="{Binding HasTargetAmountError}" />
                             </StackPanel>
@@ -67,20 +64,20 @@
                                      SelectionMode="Single">
                                 <ListBoxItem Tag="0.5">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                        <TextBlock Text="0.5" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                        <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Classes="Size-S" Text="0.5" FontWeight="Bold" HorizontalAlignment="Center" />
+                                        <TextBlock Classes="Size-XXS" Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" HorizontalAlignment="Center" Opacity="0.8" />
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Tag="1">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                        <TextBlock Text="1" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                        <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Classes="Size-S" Text="1" FontWeight="Bold" HorizontalAlignment="Center" />
+                                        <TextBlock Classes="Size-XXS" Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" HorizontalAlignment="Center" Opacity="0.8" />
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Tag="2.5">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                        <TextBlock Text="2.5" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                        <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Classes="Size-S" Text="2.5" FontWeight="Bold" HorizontalAlignment="Center" />
+                                        <TextBlock Classes="Size-XXS" Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" HorizontalAlignment="Center" Opacity="0.8" />
                                     </StackPanel>
                                 </ListBoxItem>
                             </ListBox>
@@ -94,38 +91,36 @@
                     <StackPanel>
                         <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24">
                             <StackPanel Orientation="Horizontal" Spacing="10">
-                                <TextBlock Text="Fundraising Window" FontSize="16" FontWeight="Bold"
+                                <TextBlock Classes="Size-M" Text="Fundraising Window" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" VerticalAlignment="Center" />
                                 <Border Background="{DynamicResource BitcoinAccent}" CornerRadius="6" Padding="8,3">
-                                    <TextBlock Text="Help" FontSize="11" FontWeight="Bold" Foreground="White" />
+                                    <TextBlock Classes="Size-XXS" Text="Help" FontWeight="Bold" Foreground="White" />
                                 </Border>
                             </StackPanel>
                         </Border>
                         <Grid Name="FundraisingDatesGrid" ColumnDefinitions="*,24,*" RowDefinitions="Auto,Auto" Margin="24">
                             <!-- Start Date -->
                             <StackPanel Name="StartDatePanel" Grid.Column="0" Grid.Row="0" Spacing="8">
-                                <TextBlock Text="Start Date" FontSize="14" FontWeight="Bold"
+                                <TextBlock Classes="Size-S" Text="Start Date" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" />
                                 <CalendarDatePicker Name="InvestStartDatePicker"
                                                     SelectedDate="{Binding InvestStartDate, Mode=TwoWay}"
                                                     Watermark="dd/mm/yyyy"
                                                     HorizontalAlignment="Stretch" />
-                                <TextBlock Text="When the fundraising campaign begins"
-                                           FontSize="12" Foreground="{DynamicResource TextMuted}" />
+                                <TextBlock Classes="Size-XS" Text="When the fundraising campaign begins" Foreground="{DynamicResource TextMuted}" />
                             </StackPanel>
 
                             <!-- End Date -->
                             <StackPanel Name="EndDatePanel" Grid.Column="2" Grid.Row="0" Spacing="8">
-                                <TextBlock Text="End Date *" FontSize="14" FontWeight="Bold"
+                                <TextBlock Classes="Size-S" Text="End Date *" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" />
                                 <CalendarDatePicker Name="InvestEndDatePicker"
                                                     SelectedDate="{Binding InvestEndDate, Mode=TwoWay}"
                                                     Watermark="dd/mm/yyyy"
                                                     HorizontalAlignment="Stretch" />
-                                <TextBlock Text="Must be before first stage (chosen on next screen)"
-                                           FontSize="12" Foreground="{DynamicResource TextMuted}" />
+                                <TextBlock Classes="Size-XS" Text="Must be before first stage (chosen on next screen)" Foreground="{DynamicResource TextMuted}" />
                                 <!-- Vue: endDateError — red text below date picker -->
-                                <TextBlock Text="{Binding EndDateError}" FontSize="13" FontWeight="Medium"
+                                <TextBlock Classes="Size-13" Text="{Binding EndDateError}" FontWeight="Medium"
                                            Foreground="{DynamicResource ErrorFieldText}"
                                            IsVisible="{Binding HasEndDateError}"
                                            Margin="0,4,0,0" />
@@ -151,8 +146,7 @@
         <!-- ─── FUND TYPE: Step 4 ─── -->
         <Panel IsVisible="{Binding IsFund}">
             <StackPanel Spacing="24">
-                <TextBlock Text="Configure your funding goal and project nature."
-                           FontSize="14" Foreground="{DynamicResource TextMuted}" />
+                <TextBlock Classes="Size-S" Text="Configure your funding goal and project nature." Foreground="{DynamicResource TextMuted}" />
 
                 <!-- Card 1: Goal (Bitcoin accent) -->
                 <Border CornerRadius="12" BorderBrush="{DynamicResource BitcoinAccent}" BorderThickness="1"
@@ -161,20 +155,20 @@
                         <!-- Header with Bitcoin icon -->
                         <Border Padding="24" CornerRadius="11,11,0,0">
                             <Border.Background>
-                                <SolidColorBrush Color="#F7931A" Opacity="0.08" />
+                                <SolidColorBrush Color="{StaticResource BitcoinOrange}" Opacity="0.08" />
                             </Border.Background>
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <i:Icon Value="fa-brands fa-bitcoin"
                                        FontSize="18"
                                        Foreground="{DynamicResource BitcoinAccent}" />
-                                <TextBlock Text="Goal" FontSize="16" FontWeight="Bold"
+                                <TextBlock Classes="Size-M" Text="Goal" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" VerticalAlignment="Center" />
                             </StackPanel>
                         </Border>
                         <StackPanel Spacing="16" Margin="24">
                             <!-- Goal Amount field -->
                             <StackPanel Spacing="8">
-                                <TextBlock Text="{Binding GoalLabel}" FontSize="14" FontWeight="Bold"
+                                <TextBlock Classes="Size-S" Text="{Binding GoalLabel}" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" />
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBox Name="FundTargetAmountInput"
@@ -182,14 +176,13 @@
                                              Watermark="0.00000000"
                                              FontSize="20" FontWeight="Bold"
                                              Padding="12,12,16,12" CornerRadius="8" />
-                                    <TextBlock Grid.Column="1" Text="{Binding CurrencySymbol}" FontSize="14" FontWeight="Bold"
+                                    <TextBlock Classes="Size-S" Grid.Column="1" Text="{Binding CurrencySymbol}" FontWeight="Bold"
                                                Foreground="{DynamicResource TextMuted}"
                                                VerticalAlignment="Center" Margin="12,0,0,0" />
                                 </Grid>
-                                <TextBlock Text="The amount you want to get funded"
-                                           FontSize="12" Foreground="{DynamicResource BitcoinAccent}" />
+                                <TextBlock Classes="Size-XS" Text="The amount you want to get funded" Foreground="{DynamicResource BitcoinAccent}" />
                                 <!-- Vue: goalAmountError — red text below goal input -->
-                                <TextBlock Text="{Binding TargetAmountError}" FontSize="13"
+                                <TextBlock Classes="Size-13" Text="{Binding TargetAmountError}"
                                            Foreground="{DynamicResource ErrorFieldText}"
                                            IsVisible="{Binding HasTargetAmountError}" />
                             </StackPanel>
@@ -200,20 +193,20 @@
                                      SelectionMode="Single">
                                 <ListBoxItem Tag="0.5">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                        <TextBlock Text="0.5" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                        <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Classes="Size-S" Text="0.5" FontWeight="Bold" HorizontalAlignment="Center" />
+                                        <TextBlock Classes="Size-XXS" Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" HorizontalAlignment="Center" Opacity="0.8" />
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Tag="1">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                        <TextBlock Text="1" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                        <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Classes="Size-S" Text="1" FontWeight="Bold" HorizontalAlignment="Center" />
+                                        <TextBlock Classes="Size-XXS" Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" HorizontalAlignment="Center" Opacity="0.8" />
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Tag="2.5">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                        <TextBlock Text="2.5" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                        <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Classes="Size-S" Text="2.5" FontWeight="Bold" HorizontalAlignment="Center" />
+                                        <TextBlock Classes="Size-XXS" Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" HorizontalAlignment="Center" Opacity="0.8" />
                                     </StackPanel>
                                 </ListBoxItem>
                             </ListBox>
@@ -233,12 +226,12 @@
                                 <i:Icon Value="fa-solid fa-shield"
                                        FontSize="20"
                                        Foreground="#3B82F6" />
-                                <TextBlock Text="Threshold for Approval" FontSize="16" FontWeight="Bold"
+                                <TextBlock Classes="Size-M" Text="Threshold for Approval" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" VerticalAlignment="Center" />
                             </StackPanel>
                         </Border>
                         <StackPanel Spacing="12" Margin="24">
-                            <TextBlock Text="Threshold" FontSize="14" FontWeight="Bold"
+                            <TextBlock Classes="Size-S" Text="Threshold" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}" />
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBox Name="ApprovalThresholdInput"
@@ -246,11 +239,11 @@
                                          Watermark="0.001"
                                          FontSize="20" FontWeight="Bold"
                                          Padding="12,12,16,12" CornerRadius="8" />
-                                <TextBlock Grid.Column="1" Text="{Binding CurrencySymbol}" FontSize="14" FontWeight="Bold"
+                                <TextBlock Classes="Size-S" Grid.Column="1" Text="{Binding CurrencySymbol}" FontWeight="Bold"
                                            Foreground="{DynamicResource TextMuted}"
                                            VerticalAlignment="Center" Margin="12,0,0,0" />
                             </Grid>
-                            <TextBlock FontSize="12" Foreground="#3B82F6" TextWrapping="Wrap">
+                            <TextBlock Classes="Size-XS" Foreground="#3B82F6" TextWrapping="Wrap">
                                 <Run Text="Supporters who contribute over " />
                                 <Run Text="{Binding ApprovalThreshold, Mode=OneWay}" FontWeight="SemiBold" />
                                 <Run Text=" " /><Run Text="{Binding CurrencySymbol, Mode=OneWay}" /><Run Text=" will require approval by you" />
@@ -264,8 +257,7 @@
         <!-- ─── SUBSCRIPTION TYPE: Step 4 ─── -->
         <Panel IsVisible="{Binding IsSubscription}">
             <StackPanel Spacing="24">
-                <TextBlock Text="Set your subscription pricing."
-                           FontSize="14" Foreground="{DynamicResource TextMuted}" />
+                <TextBlock Classes="Size-S" Text="Set your subscription pricing." Foreground="{DynamicResource TextMuted}" />
 
                 <!-- Card 1: Subscription Price (Bitcoin accent) -->
                 <Border CornerRadius="12" BorderBrush="{DynamicResource BitcoinAccent}" BorderThickness="1"
@@ -273,33 +265,32 @@
                     <StackPanel>
                         <Border Padding="24" CornerRadius="11,11,0,0">
                             <Border.Background>
-                                <SolidColorBrush Color="#F7931A" Opacity="0.08" />
+                                <SolidColorBrush Color="{StaticResource BitcoinOrange}" Opacity="0.08" />
                             </Border.Background>
                             <StackPanel Orientation="Horizontal" Spacing="12">
                                 <i:Icon Value="fa-brands fa-bitcoin"
                                        FontSize="18"
                                        Foreground="{DynamicResource BitcoinAccent}" />
-                                <TextBlock Text="Subscription Price" FontSize="16" FontWeight="Bold"
+                                <TextBlock Classes="Size-M" Text="Subscription Price" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" VerticalAlignment="Center" />
                             </StackPanel>
                         </Border>
                         <StackPanel Spacing="16" Margin="24">
                             <StackPanel Spacing="8">
-                                <TextBlock Text="{Binding PricePerPeriodLabel}" FontSize="14" FontWeight="Bold"
+                                <TextBlock Classes="Size-S" Text="{Binding PricePerPeriodLabel}" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" />
                                 <Grid ColumnDefinitions="*,Auto">
                                     <TextBox Text="{Binding SubscriptionPrice, Mode=TwoWay}"
                                              Watermark="0.00000000"
                                              FontSize="20" FontWeight="Bold"
                                              Padding="12,12,16,12" CornerRadius="8" />
-                                    <TextBlock Grid.Column="1" Text="{Binding CurrencySymbol}" FontSize="14" FontWeight="Bold"
+                                    <TextBlock Classes="Size-S" Grid.Column="1" Text="{Binding CurrencySymbol}" FontWeight="Bold"
                                                Foreground="{DynamicResource TextMuted}"
                                                VerticalAlignment="Center" Margin="12,0,0,0" />
                                 </Grid>
-                                <TextBlock Text="Amount charged per subscription period"
-                                           FontSize="12" Foreground="{DynamicResource BitcoinAccent}" />
+                                <TextBlock Classes="Size-XS" Text="Amount charged per subscription period" Foreground="{DynamicResource BitcoinAccent}" />
                                 <!-- Vue: subscription price error — red text below price input -->
-                                <TextBlock Text="{Binding TargetAmountError}" FontSize="13"
+                                <TextBlock Classes="Size-13" Text="{Binding TargetAmountError}"
                                            Foreground="{DynamicResource ErrorFieldText}"
                                            IsVisible="{Binding HasTargetAmountError}" />
                             </StackPanel>
@@ -310,26 +301,26 @@
                                      SelectionMode="Single">
                                 <ListBoxItem Tag="0.00001">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                        <TextBlock Text="0.00001" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                        <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Classes="Size-S" Text="0.00001" FontWeight="Bold" HorizontalAlignment="Center" />
+                                        <TextBlock Classes="Size-XXS" Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" HorizontalAlignment="Center" Opacity="0.8" />
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Tag="0.00005">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                        <TextBlock Text="0.00005" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                        <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Classes="Size-S" Text="0.00005" FontWeight="Bold" HorizontalAlignment="Center" />
+                                        <TextBlock Classes="Size-XXS" Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" HorizontalAlignment="Center" Opacity="0.8" />
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Tag="0.0001">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                        <TextBlock Text="0.0001" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                        <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Classes="Size-S" Text="0.0001" FontWeight="Bold" HorizontalAlignment="Center" />
+                                        <TextBlock Classes="Size-XXS" Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" HorizontalAlignment="Center" Opacity="0.8" />
                                     </StackPanel>
                                 </ListBoxItem>
                                 <ListBoxItem Tag="0.0005">
                                     <StackPanel Spacing="2" HorizontalAlignment="Center">
-                                        <TextBlock Text="0.0005" FontWeight="Bold" FontSize="14" HorizontalAlignment="Center" />
-                                        <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" FontSize="11" HorizontalAlignment="Center" Opacity="0.8" />
+                                        <TextBlock Classes="Size-S" Text="0.0005" FontWeight="Bold" HorizontalAlignment="Center" />
+                                        <TextBlock Classes="Size-XXS" Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}" HorizontalAlignment="Center" Opacity="0.8" />
                                     </StackPanel>
                                 </ListBoxItem>
                             </ListBox>

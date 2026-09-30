@@ -8,16 +8,31 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-JAVA_HOME="${JAVA_HOME:-/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home}"
-export JAVA_HOME
-
 ANDROID_PROJ=src/design/App.Android/App.Android.csproj
 DESKTOP_PROJ=src/design/App.Desktop/App.Desktop.csproj
 TFM=net10.0-android
 APK=src/design/App.Android/bin/Debug/$TFM/io.angor.app-Signed.apk
 
 if [[ "${1:-}" != "--skip-android" ]]; then
-    if adb devices 2>/dev/null | awk 'NR>1 && $2=="device"' | grep -q .; then
+    if [[ -z "${JAVA_HOME:-}" ]]; then
+        if [[ -d /opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home ]]; then
+            JAVA_HOME=/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home
+        elif command -v javac >/dev/null 2>&1; then
+            JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(command -v javac)")")")"
+        else
+            echo "Java 17 JDK not found. Set JAVA_HOME or install OpenJDK 17." >&2
+            exit 1
+        fi
+    fi
+    export JAVA_HOME
+
+    if [[ ! -x "$JAVA_HOME/bin/javac" ]]; then
+        echo "JAVA_HOME does not point to a JDK: $JAVA_HOME" >&2
+        exit 1
+    fi
+
+    if command -v adb >/dev/null 2>&1 &&
+        adb devices 2>/dev/null | awk 'NR>1 && $2=="device"' | grep -q .; then
         echo "── Android device connected: build + install + launch ──"
         dotnet build "$ANDROID_PROJ" -t:Install -f $TFM -c Debug \
             -p:JavaSdkDirectory="$JAVA_HOME" -p:AndroidAttachDebugger=false

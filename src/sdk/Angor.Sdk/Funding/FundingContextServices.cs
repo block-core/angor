@@ -47,6 +47,9 @@ public static class FundingContextServices
         services.TryAddSingleton<INetworkStorage, NetworkStorage>();
         //TODO change the call to use the factory
         services.TryAddScoped<HttpClient>(x => x.GetRequiredService<IHttpClientFactory>().CreateClient());
+        services.AddTransient<IndexerFailoverHandler>();
+        services.AddHttpClient(IndexerFailoverHandler.ClientName)
+            .AddHttpMessageHandler<IndexerFailoverHandler>();
         services.TryAddSingleton<IIndexerService,MempoolSpaceIndexerApi>();
         services.TryAddSingleton<MempoolIndexerMappers>();
         services.TryAddSingleton<IAngorIndexerService, MempoolIndexerAngorApi>();

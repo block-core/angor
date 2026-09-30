@@ -25,8 +25,7 @@
                     CornerRadius="8"
                     Cursor="Hand"
                     VerticalAlignment="Center" />
-            <TextBlock Text="Tell us about your project and what you're building."
-                       FontSize="14" Foreground="{DynamicResource TextMuted}"
+            <TextBlock Classes="Size-S" Text="Tell us about your project and what you're building." Foreground="{DynamicResource TextMuted}"
                        VerticalAlignment="Center" />
         </DockPanel>
 
@@ -35,11 +34,11 @@
                 Background="{DynamicResource Surface}" ClipToBounds="True">
             <StackPanel>
                 <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24">
-                    <TextBlock Text="What's the project called?" FontSize="16" FontWeight="Bold"
+                    <TextBlock Classes="Size-M" Text="What's the project called?" FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}" />
                 </Border>
                 <StackPanel Spacing="8" Margin="24">
-                    <TextBlock Text="Project Name *" FontSize="14" FontWeight="Bold"
+                    <TextBlock Classes="Size-S" Text="Project Name *" FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}" />
                     <TextBox Name="ProjectNameTextBox" MaxLength="200"
                              Text="{Binding ProjectName, Mode=TwoWay}"
@@ -48,11 +47,10 @@
                     <!-- Vue: char counter {n}/200 positioned below input, right-aligned -->
                     <Grid ColumnDefinitions="*,Auto">
                         <!-- Vue: nameError — red text below input -->
-                        <TextBlock Text="{Binding NameError}" FontSize="13"
+                        <TextBlock Classes="Size-13" Text="{Binding NameError}"
                                    Foreground="{DynamicResource ErrorFieldText}"
                                    IsVisible="{Binding HasNameError}" />
-                        <TextBlock Grid.Column="1" Text="{Binding ProjectNameCharCount}"
-                                   FontSize="12"
+                        <TextBlock Classes="Size-XS" Grid.Column="1" Text="{Binding ProjectNameCharCount}"
                                    Foreground="{DynamicResource TextMuted}"
                                    HorizontalAlignment="Right" />
                     </Grid>
@@ -65,11 +63,11 @@
                 Background="{DynamicResource Surface}" ClipToBounds="True">
             <StackPanel>
                 <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24">
-                    <TextBlock Text="Tell us about the project" FontSize="16" FontWeight="Bold"
+                    <TextBlock Classes="Size-M" Text="Tell us about the project" FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}" />
                 </Border>
                 <StackPanel Spacing="8" Margin="24">
-                    <TextBlock Text="About *" FontSize="14" FontWeight="Bold"
+                    <TextBlock Classes="Size-S" Text="About *" FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}" />
                     <TextBox Name="AboutTextBox" MaxLength="400"
                              Text="{Binding ProjectAbout, Mode=TwoWay}"
@@ -79,11 +77,10 @@
                              Padding="12,12,16,12" FontSize="16" CornerRadius="8" />
                     <!-- Vue: char counter {n}/400 + aboutError -->
                     <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Text="{Binding AboutError}" FontSize="13"
+                        <TextBlock Classes="Size-13" Text="{Binding AboutError}"
                                    Foreground="{DynamicResource ErrorFieldText}"
                                    IsVisible="{Binding HasAboutError}" />
-                        <TextBlock Grid.Column="1" Text="{Binding ProjectAboutCharCount}"
-                                   FontSize="12"
+                        <TextBlock Classes="Size-XS" Grid.Column="1" Text="{Binding ProjectAboutCharCount}"
                                    Foreground="{DynamicResource TextMuted}"
                                    HorizontalAlignment="Right" />
                     </Grid>
@@ -96,11 +93,11 @@
                 Background="{DynamicResource Surface}" ClipToBounds="True">
             <StackPanel>
                 <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24">
-                    <TextBlock Text="What's the project website?" FontSize="16" FontWeight="Bold"
+                    <TextBlock Classes="Size-M" Text="What's the project website?" FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}" />
                 </Border>
                 <StackPanel Spacing="8" Margin="24">
-                    <TextBlock Text="Project Website" FontSize="14" FontWeight="Bold"
+                    <TextBlock Classes="Size-S" Text="Project Website" FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}" />
                     <TextBox Text="{Binding ProjectWebsite, Mode=TwoWay}"
                              Watermark="https://example.com"

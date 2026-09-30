@@ -38,6 +38,8 @@ public partial class SettingsView : UserControl, ISectionView
         _logger = App.Services.GetRequiredService<ILoggerFactory>().CreateLogger<SettingsView>();
         DataContext = vm;
         DataContextChanged += (_, _) => SubscribeToVmEvents();
+        // Escape closes locally-hosted modals (network switch, wipe data).
+        AddHandler(KeyDownEvent, OnSettingsKeyDown, Avalonia.Interactivity.RoutingStrategies.Tunnel);
         SubscribeToVmEvents();
 
         _scrollableView = this.GetLogicalDescendants().OfType<ScrollableView>().FirstOrDefault();
@@ -211,10 +213,10 @@ public partial class SettingsView : UserControl, ISectionView
             _subscribedVm.ToastRequested += OnToastRequested;
     }
 
-    private void OnToastRequested(string message)
+    private void OnToastRequested(string message, ToastSeverity severity)
     {
         var shellVm = this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
-        shellVm?.ShowToast(message);
+        shellVm?.ShowToast(message, severity);
     }
 
     // ── Network ──
@@ -302,6 +304,21 @@ public partial class SettingsView : UserControl, ISectionView
     }
 
     // ── Wipe Data Modal ──
+    private void OnSettingsKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Escape || Vm == null) return;
+        if (Vm.IsWipeDataModalOpen)
+        {
+            Vm.CloseWipeDataModal();
+            e.Handled = true;
+        }
+        else if (Vm.IsNetworkModalOpen)
+        {
+            Vm.CloseNetworkModal();
+            e.Handled = true;
+        }
+    }
+
     private void OnWipeDataClick(object? sender, RoutedEventArgs e) =>
         Vm?.OpenWipeDataModal();
 

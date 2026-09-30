@@ -36,9 +36,8 @@
                                 FontSize="20"
                                 Foreground="{DynamicResource TextMuted}"
                                 VerticalAlignment="Center" />
-                        <TextBlock Grid.Column="2"
-                                   Text="Penalties Details"
-                                   FontSize="22" FontWeight="Bold"
+                        <TextBlock Classes="Size-22" Grid.Column="2"
+                                   Text="Penalties Details" FontWeight="Bold"
                                    Foreground="{DynamicResource TextStrong}"
                                    VerticalAlignment="Center" />
                         <Button Name="CloseButton" Classes="ModalCloseBtn" Grid.Column="3"
@@ -65,21 +64,18 @@
                                         BorderThickness="0,0,0,2"
                                         Padding="0">
                                     <Grid ColumnDefinitions="3*,2*,2*">
-                                        <TextBlock Grid.Column="0"
-                                                   Text="PROJECT"
-                                                   FontSize="12" FontWeight="SemiBold"
+                                        <TextBlock Classes="Size-XS" Grid.Column="0"
+                                                   Text="PROJECT" FontWeight="SemiBold"
                                                    Foreground="{DynamicResource PenaltyTableHeaderText}"
                                                    Padding="16,12"
                                                    VerticalAlignment="Center" />
-                                        <TextBlock Grid.Column="1"
-                                                   Text="AMOUNT IN PENALTY"
-                                                   FontSize="12" FontWeight="SemiBold"
+                                        <TextBlock Classes="Size-XS" Grid.Column="1"
+                                                   Text="AMOUNT IN PENALTY" FontWeight="SemiBold"
                                                    Foreground="{DynamicResource PenaltyTableHeaderText}"
                                                    Padding="16,12"
                                                    VerticalAlignment="Center" />
-                                        <TextBlock Grid.Column="2"
-                                                   Text="DAYS REMAINING"
-                                                   FontSize="12" FontWeight="SemiBold"
+                                        <TextBlock Classes="Size-XS" Grid.Column="2"
+                                                   Text="DAYS REMAINING" FontWeight="SemiBold"
                                                    Foreground="{DynamicResource PenaltyTableHeaderText}"
                                                    Padding="16,12"
                                                    VerticalAlignment="Center" />
@@ -110,8 +106,7 @@
                                                 </Style>
                                             </i:Icon.Styles>
                                         </i:Icon>
-                                        <TextBlock Text="Checking for penalties…"
-                                                   FontSize="14"
+                                        <TextBlock Classes="Size-S" Text="Checking for penalties…"
                                                    Foreground="{DynamicResource TextMuted}" />
                                     </StackPanel>
                                 </Border>
@@ -119,8 +114,7 @@
                                 <!-- Empty state -->
                                 <Border Padding="24"
                                         IsVisible="{Binding ShowEmptyPenaltiesState}">
-                                    <TextBlock Text="No investments currently in penalty."
-                                               FontSize="14"
+                                    <TextBlock Classes="Size-S" Text="No investments currently in penalty."
                                                Foreground="{DynamicResource TextMuted}"
                                                HorizontalAlignment="Center" />
                                 </Border>
@@ -137,21 +131,18 @@
                                                             Padding="16,16"
                                                             VerticalAlignment="Center">
                                                         <StackPanel Spacing="2">
-                                                            <TextBlock Text="{Binding ProjectName}"
-                                                                       IsVisible="{Binding HasProjectName}"
-                                                                       FontSize="14" FontWeight="SemiBold"
+                                                            <TextBlock Classes="Size-S" Text="{Binding ProjectName}"
+                                                                       IsVisible="{Binding HasProjectName}" FontWeight="SemiBold"
                                                                        Foreground="{DynamicResource PenaltyTableText}"
-                                                                       TextTrimming="CharacterEllipsis" />
-                                                            <TextBlock Text="{Binding ProjectIdentifier}"
-                                                                       FontSize="12"
+                                                                       TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding ProjectName}" />
+                                                            <TextBlock Classes="Size-XS" Text="{Binding ProjectIdentifier}"
                                                                        FontFamily="Cascadia Mono, Consolas, monospace"
                                                                        Foreground="{DynamicResource TextMuted}"
-                                                                       TextTrimming="CharacterEllipsis" />
+                                                                       TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding ProjectIdentifier}" />
                                                         </StackPanel>
                                                     </Border>
-                                                    <TextBlock Grid.Column="1"
-                                                               Text="{Binding AmountLabel}"
-                                                               FontSize="13" FontWeight="SemiBold"
+                                                    <TextBlock Classes="Size-13" Grid.Column="1"
+                                                               Text="{Binding AmountLabel}" FontWeight="SemiBold"
                                                                Foreground="{DynamicResource PenaltyAmountText}"
                                                                Padding="16,16"
                                                                VerticalAlignment="Center" />
@@ -164,8 +155,7 @@
                                                                 CornerRadius="12"
                                                                 Padding="12,6"
                                                                 HorizontalAlignment="Left">
-                                                            <TextBlock Text="{Binding StatusText}"
-                                                                       FontSize="12" FontWeight="SemiBold"
+                                                            <TextBlock Classes="Size-XS" Text="{Binding StatusText}" FontWeight="SemiBold"
                                                                        Foreground="{DynamicResource PenaltyPillText}" />
                                                         </Border>
                                                     </Border>

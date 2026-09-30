@@ -70,8 +70,7 @@
                     <StackPanel Spacing="16">
                         <!-- Title row: flex items-center justify-between mb-4 -->
                         <Panel>
-                            <TextBlock Text="Use an existing wallet"
-                                       FontSize="20" FontWeight="Bold"
+                            <TextBlock Classes="Size-20" Text="Use an existing wallet" FontWeight="Bold"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center" />
                             <Button Name="CloseWalletSelector" Classes="ModalCloseBtn"
@@ -82,13 +81,11 @@
                                 Background="{DynamicResource DeployModalInputBg}"
                                 BorderBrush="{DynamicResource DeployModalBorder}" BorderThickness="1">
                             <Panel>
-                                <TextBlock Text="Fee to Deploy"
-                                           FontSize="14" FontWeight="Medium"
+                                <TextBlock Classes="Size-S" Text="Fee to Deploy" FontWeight="Medium"
                                            Foreground="{DynamicResource TextMuted}"
                                            VerticalAlignment="Center"
                                            HorizontalAlignment="Left" />
-                                <TextBlock Text="{Binding DeployFee}"
-                                           FontSize="18" FontWeight="Bold"
+                                <TextBlock Classes="Size-L" Text="{Binding DeployFee}" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}"
                                            VerticalAlignment="Center"
                                            HorizontalAlignment="Right" />
@@ -118,8 +115,7 @@
                             </Button.Background>
                             <Panel>
                                 <!-- Normal state: wallet text -->
-                                <TextBlock Text="{Binding PayButtonText}"
-                                           FontSize="14" FontWeight="SemiBold"
+                                <TextBlock Classes="Size-S" Text="{Binding PayButtonText}" FontWeight="SemiBold"
                                            Foreground="White"
                                            IsVisible="{Binding !IsDeploying}"
                                            HorizontalAlignment="Center" />
@@ -156,8 +152,7 @@
                                  Background="Transparent"
                                  BorderBrush="{DynamicResource PrimaryGreenBrush}" BorderThickness="2"
                                 Cursor="Hand">
-                            <TextBlock Text="Or pay an invoice instead"
-                                       FontSize="14" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-S" Text="Or pay an invoice instead" FontWeight="SemiBold"
                                        Foreground="{DynamicResource PrimaryGreenBrush}" />
                         </Button>
                     </StackPanel>
@@ -180,9 +175,8 @@
                                         Foreground="{DynamicResource ErrorBannerText}"
                                         VerticalAlignment="Top"
                                         Margin="0,1,10,0" />
-                                <TextBlock Grid.Column="1"
+                                <TextBlock Classes="Size-13" Grid.Column="1"
                                            Text="{Binding DeployErrorMessage}"
-                                           FontSize="13"
                                            FontWeight="Medium"
                                            Foreground="{DynamicResource ErrorBannerText}"
                                            TextWrapping="Wrap" />
@@ -215,19 +209,16 @@
                                             <!-- Name + type label -->
                                             <StackPanel Grid.Column="1" Spacing="2"
                                                         VerticalAlignment="Center" Margin="12,0,0,0">
-                                                <TextBlock Text="{Binding Name}"
-                                                           FontSize="14" FontWeight="SemiBold"
+                                                <TextBlock Classes="Size-S" Text="{Binding Name}" FontWeight="SemiBold"
                                                            Foreground="{DynamicResource TextStrong}" />
-                                                <TextBlock Text="{Binding WalletType}"
-                                                           FontSize="13"
+                                                <TextBlock Classes="Size-13" Text="{Binding WalletType}"
                                                            Foreground="{DynamicResource TextMuted}" />
                                             </StackPanel>
 
                                             <!-- Balance + checkmark -->
                                             <StackPanel Grid.Column="2" Orientation="Horizontal"
                                                         Spacing="8" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Balance}"
-                                                           FontSize="14" FontWeight="SemiBold"
+                                                <TextBlock Classes="Size-S" Text="{Binding Balance}" FontWeight="SemiBold"
                                                            Foreground="{DynamicResource TextStrong}"
                                                            VerticalAlignment="Center" />
                                                 <!-- Vue checkmark: w-5 h-5 text-[#4B7C5A] fill SVG -->
@@ -274,8 +265,7 @@
             <StackPanel Spacing="0">
                 <!-- Title: text-xl font-bold text-center, close button absolute top-right -->
                 <Panel Margin="0,0,0,16">
-                    <TextBlock Text="Pay Fee to Deploy"
-                               FontSize="22" FontWeight="Bold"
+                    <TextBlock Classes="Size-22" Text="Pay Fee to Deploy" FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center" />
@@ -290,7 +280,7 @@
                     <Border Grid.Column="0" CornerRadius="12" Padding="12,8"
                             BorderThickness="2" BorderBrush="{DynamicResource PrimaryGreenBrush}"
                             Background="{DynamicResource DeployTabSelectedBg}">
-                        <TextBlock Text="Lightning" FontSize="13" FontWeight="SemiBold"
+                        <TextBlock Classes="Size-13" Text="Lightning" FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextStrong}"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
@@ -298,7 +288,7 @@
                     <Border Grid.Column="1" CornerRadius="12" Padding="12,8"
                             BorderThickness="2" BorderBrush="{DynamicResource Border}"
                             Background="{DynamicResource DeployTabUnselectedBg}">
-                        <TextBlock Text="On-Chain" FontSize="13" FontWeight="SemiBold"
+                        <TextBlock Classes="Size-13" Text="On-Chain" FontWeight="SemiBold"
                                    Foreground="{DynamicResource DeployTabUnselectedText}"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
@@ -306,7 +296,7 @@
                     <Border Grid.Column="2" CornerRadius="12" Padding="12,8"
                             BorderThickness="2" BorderBrush="{DynamicResource Border}"
                             Background="{DynamicResource DeployTabUnselectedBg}">
-                        <TextBlock Text="Liquid" FontSize="13" FontWeight="SemiBold"
+                        <TextBlock Classes="Size-13" Text="Liquid" FontWeight="SemiBold"
                                    Foreground="{DynamicResource DeployTabUnselectedText}"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
@@ -314,7 +304,7 @@
                     <Border Grid.Column="3" CornerRadius="12" Padding="12,8"
                             BorderThickness="2" BorderBrush="{DynamicResource Border}"
                             Background="{DynamicResource DeployTabUnselectedBg}">
-                        <TextBlock Text="Import" FontSize="13" FontWeight="SemiBold"
+                        <TextBlock Classes="Size-13" Text="Import" FontWeight="SemiBold"
                                    Foreground="{DynamicResource DeployTabUnselectedText}"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
@@ -333,7 +323,7 @@
                                    FontSize="48"
                                    Foreground="{DynamicResource DeployQrIconFill}"
                                    HorizontalAlignment="Center" />
-                            <TextBlock Text="QR Code" FontSize="13"
+                            <TextBlock Classes="Size-13" Text="QR Code"
                                        Foreground="{DynamicResource DeployQrIconFill}"
                                        HorizontalAlignment="Center" />
                         </StackPanel>
@@ -345,8 +335,7 @@
                         BorderThickness="2"
                         BorderBrush="{DynamicResource DeployInfoBannerBorder}"
                         Background="{DynamicResource DeployInfoBannerBg}">
-                    <TextBlock Text="A new wallet will be created for the project"
-                               FontSize="14"
+                    <TextBlock Classes="Size-S" Text="A new wallet will be created for the project"
                                Foreground="{DynamicResource DeployInfoBannerText}"
                                TextAlignment="Center" TextWrapping="Wrap"
                                HorizontalAlignment="Center" />
@@ -366,9 +355,8 @@
                                 Foreground="{DynamicResource ErrorBannerText}"
                                 VerticalAlignment="Top"
                                 Margin="0,1,10,0" />
-                        <TextBlock Grid.Column="1"
+                        <TextBlock Classes="Size-13" Grid.Column="1"
                                    Text="{Binding DeployErrorMessage}"
-                                   FontSize="13"
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource ErrorBannerText}"
                                    TextWrapping="Wrap" />
@@ -379,15 +367,13 @@
                 <Border Margin="0,0,0,12" CornerRadius="8" Padding="12"
                         Background="{DynamicResource DeployModalInputBg}">
                     <StackPanel Spacing="6">
-                        <TextBlock Text="Lightning Invoice"
-                                   FontSize="12"
+                        <TextBlock Classes="Size-XS" Text="Lightning Invoice"
                                    Foreground="{DynamicResource DeployTabUnselectedText}" />
                         <Grid ColumnDefinitions="*,Auto">
-                            <TextBlock Grid.Column="0" Text="{Binding InvoiceString}"
-                                       FontSize="11" FontFamily="Consolas,Menlo,monospace"
+                            <TextBlock Classes="Size-XXS" Grid.Column="0" Text="{Binding InvoiceString}" FontFamily="Consolas,Menlo,monospace"
                                        Foreground="{DynamicResource TextStrong}"
                                        TextTrimming="CharacterEllipsis"
-                                       VerticalAlignment="Center" />
+                                       VerticalAlignment="Center" ToolTip.Tip="{Binding InvoiceString}" />
                             <Button Grid.Column="1" Name="CopyInvoiceButton"
                                     Background="Transparent" Padding="6"
                                     BorderThickness="0" Cursor="Hand" Margin="8,0,0,0"
@@ -407,11 +393,9 @@
                         <!-- Left: fee label + amount -->
                         <StackPanel Spacing="2" VerticalAlignment="Center"
                                     HorizontalAlignment="Left">
-                            <TextBlock Text="Fee to deploy"
-                                       FontSize="12"
+                            <TextBlock Classes="Size-XS" Text="Fee to deploy"
                                        Foreground="{DynamicResource DeployFeeLabel}" />
-                            <TextBlock Text="{Binding DeployFee}"
-                                       FontSize="20" FontWeight="Bold"
+                            <TextBlock Classes="Size-20" Text="{Binding DeployFee}" FontWeight="Bold"
                                        Foreground="{DynamicResource DeployFeeValue}" />
                         </StackPanel>
                         <!-- Right: status pill -->
@@ -424,8 +408,7 @@
                                 <i:Icon Value="fa-solid fa-arrows-rotate" FontSize="11"
                                         Foreground="{DynamicResource DeployFeePillText}"
                                         VerticalAlignment="Center" />
-                                <TextBlock Text="{Binding DeployStatusText}"
-                                           FontSize="12" FontWeight="Medium"
+                                <TextBlock Classes="Size-XS" Text="{Binding DeployStatusText}" FontWeight="Medium"
                                            Foreground="{DynamicResource DeployFeePillText}"
                                            VerticalAlignment="Center" />
                             </StackPanel>
@@ -467,9 +450,8 @@
                 </Border>
 
                 <!-- Title: text-3xl font-bold text-center mb-3 -->
-                <TextBlock Text="{Binding ProjectName, StringFormat='{}{0} Deployed!'}"
-                           AutomationProperties.AutomationId="DeploySuccessProjectName"
-                           FontSize="28" FontWeight="Bold"
+                <TextBlock Classes="Size-28" Text="{Binding ProjectName, StringFormat='{}{0} Deployed!'}"
+                           AutomationProperties.AutomationId="DeploySuccessProjectName" FontWeight="Bold"
                            Foreground="{DynamicResource TextStrong}"
                            TextAlignment="Center" TextWrapping="Wrap"
                            HorizontalAlignment="Center"
@@ -477,8 +459,7 @@
                            Margin="0,0,0,12" />
 
                 <!-- Description: text-gray-300, mb-8 (32px) -->
-                <TextBlock Text="Your project has been successfully deployed. Investors can now discover and fund your project."
-                           FontSize="14" Foreground="{DynamicResource TextMuted}"
+                <TextBlock Classes="Size-S" Text="Your project has been successfully deployed. Investors can now discover and fund your project." Foreground="{DynamicResource TextMuted}"
                            TextAlignment="Center" TextWrapping="Wrap"
                            HorizontalAlignment="Center"
                            MaxWidth="380"
@@ -506,8 +487,7 @@
                                       StrokeLineCap="Round" StrokeJoin="Round"
                                       Width="24" Height="24" Stretch="Uniform" />
                             </Viewbox>
-                            <TextBlock Text="Go to My Projects"
-                                       FontSize="14" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-S" Text="Go to My Projects" FontWeight="SemiBold"
                                        Foreground="White"
                                        VerticalAlignment="Center" />
                         </StackPanel>
@@ -526,8 +506,7 @@
                                     FontSize="20"
                                     Foreground="{DynamicResource TextStrong}"
                                     VerticalAlignment="Center" />
-                            <TextBlock Text="Complete Profile"
-                                       FontSize="14" FontWeight="SemiBold"
+                            <TextBlock Classes="Size-S" Text="Complete Profile" FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center" />
                         </StackPanel>

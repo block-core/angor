@@ -101,10 +101,9 @@
         <StackPanel Spacing="12">
             <!-- Title row: step title + close button -->
             <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Name="MobileStepTitle"
+                <TextBlock Classes="Size-M" Name="MobileStepTitle"
                            Grid.Column="0"
-                           Text="Project Type"
-                           FontSize="16" FontWeight="Bold"
+                           Text="Project Type" FontWeight="Bold"
                            Foreground="{DynamicResource TextStrong}"
                            VerticalAlignment="Center" />
                 <!-- Vue: close button — p-2 -mr-2 rounded-lg hover:bg-gray-100 -->
@@ -175,12 +174,12 @@
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <Border Name="StepCircle1" Classes="StepCircle StepCurrent"
                                     Width="40" Height="40" CornerRadius="20">
-                                <TextBlock Name="StepNum1" Classes="StepNum StepCurrent"
-                                           Text="1" FontSize="13" FontWeight="SemiBold"
+                                <TextBlock Name="StepNum1" Classes="StepNum StepCurrent Size-13"
+                                           Text="1" FontWeight="SemiBold"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
-                            <TextBlock Name="StepLabel1" Classes="StepLabel StepCurrent"
-                                       Text="Project Type" FontSize="14"
+                            <TextBlock Name="StepLabel1" Classes="StepLabel StepCurrent Size-S"
+                                       Text="Project Type"
                                        VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
@@ -195,12 +194,12 @@
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <Border Name="StepCircle2" Classes="StepCircle"
                                     Width="40" Height="40" CornerRadius="20">
-                                <TextBlock Name="StepNum2" Classes="StepNum"
-                                           Text="2" FontSize="13" FontWeight="SemiBold"
+                                <TextBlock Name="StepNum2" Classes="StepNum Size-13"
+                                           Text="2" FontWeight="SemiBold"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
-                            <TextBlock Name="StepLabel2" Classes="StepLabel"
-                                       Text="Project Profile" FontSize="14"
+                            <TextBlock Name="StepLabel2" Classes="StepLabel Size-S"
+                                       Text="Project Profile"
                                        VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
@@ -215,12 +214,12 @@
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <Border Name="StepCircle3" Classes="StepCircle"
                                     Width="40" Height="40" CornerRadius="20">
-                                <TextBlock Name="StepNum3" Classes="StepNum"
-                                           Text="3" FontSize="13" FontWeight="SemiBold"
+                                <TextBlock Name="StepNum3" Classes="StepNum Size-13"
+                                           Text="3" FontWeight="SemiBold"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
-                            <TextBlock Name="StepLabel3" Classes="StepLabel"
-                                       Text="Project Images" FontSize="14"
+                            <TextBlock Name="StepLabel3" Classes="StepLabel Size-S"
+                                       Text="Project Images"
                                        VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
@@ -235,12 +234,12 @@
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <Border Name="StepCircle4" Classes="StepCircle"
                                     Width="40" Height="40" CornerRadius="20">
-                                <TextBlock Name="StepNum4" Classes="StepNum"
-                                           Text="4" FontSize="13" FontWeight="SemiBold"
+                                <TextBlock Name="StepNum4" Classes="StepNum Size-13"
+                                           Text="4" FontWeight="SemiBold"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
-                            <TextBlock Name="StepLabel4" Classes="StepLabel"
-                                       Text="Configuration" FontSize="14"
+                            <TextBlock Name="StepLabel4" Classes="StepLabel Size-S"
+                                       Text="Configuration"
                                        VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
@@ -255,12 +254,12 @@
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <Border Name="StepCircle5" Classes="StepCircle"
                                     Width="40" Height="40" CornerRadius="20">
-                                <TextBlock Name="StepNum5" Classes="StepNum"
-                                           Text="5" FontSize="13" FontWeight="SemiBold"
+                                <TextBlock Name="StepNum5" Classes="StepNum Size-13"
+                                           Text="5" FontWeight="SemiBold"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
-                            <TextBlock Name="StepLabel5" Classes="StepLabel"
-                                       Text="Stages" FontSize="14"
+                            <TextBlock Name="StepLabel5" Classes="StepLabel Size-S"
+                                       Text="Stages"
                                        VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
@@ -275,12 +274,12 @@
                         <StackPanel Orientation="Horizontal" Spacing="12">
                             <Border Name="StepCircle6" Classes="StepCircle"
                                     Width="40" Height="40" CornerRadius="20">
-                                <TextBlock Name="StepNum6" Classes="StepNum"
-                                           Text="6" FontSize="13" FontWeight="SemiBold"
+                                <TextBlock Name="StepNum6" Classes="StepNum Size-13"
+                                           Text="6" FontWeight="SemiBold"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
-                            <TextBlock Name="StepLabel6" Classes="StepLabel"
-                                       Text="Review &amp; Deploy" FontSize="14"
+                            <TextBlock Name="StepLabel6" Classes="StepLabel Size-S"
+                                       Text="Review &amp; Deploy"
                                        VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
@@ -386,8 +385,7 @@
                                     FontSize="13"
                                     Foreground="White"
                                     VerticalAlignment="Center" />
-                            <TextBlock Text="Auto saved"
-                                       FontSize="13" FontWeight="Medium"
+                            <TextBlock Classes="Size-13" Text="Auto saved" FontWeight="Medium"
                                        Foreground="White"
                                        VerticalAlignment="Center" />
                         </StackPanel>
@@ -415,12 +413,11 @@
                                            Foreground="{DynamicResource PrimaryGreenBrush}" />
                                 </Border>
 
-                                <TextBlock Text="Welcome" FontSize="24" FontWeight="Bold"
+                                <TextBlock Classes="Size-24" Text="Welcome" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}"
                                            TextAlignment="Center" HorizontalAlignment="Center" />
 
-                                <TextBlock Text="Create and launch your project to raise funding from the Bitcoin community."
-                                           FontSize="15" Foreground="{DynamicResource TextMuted}"
+                                <TextBlock Classes="Size-15" Text="Create and launch your project to raise funding from the Bitcoin community." Foreground="{DynamicResource TextMuted}"
                                            TextAlignment="Center" HorizontalAlignment="Center"
                                            TextWrapping="Wrap" MaxWidth="400" />
 
@@ -429,7 +426,7 @@
                                         BorderThickness="1"
                                         BorderBrush="{DynamicResource WarningBoxBorder}"
                                         Background="{DynamicResource WarningBoxBackground}">
-                                    <TextBlock FontSize="13" Foreground="{DynamicResource WarningBoxText}"
+                                    <TextBlock Classes="Size-13" Foreground="{DynamicResource WarningBoxText}"
                                                TextWrapping="Wrap" TextAlignment="Center"
                                                Text="A small fee is required to prevent spam and will be paid when you submit your project for deployment." />
                                 </Border>
@@ -477,12 +474,12 @@
                                 </Border>
 
                                 <!-- Title — bound to type-specific text -->
-                                <TextBlock Text="{Binding Step5WelcomeTitle}" FontSize="24" FontWeight="Bold"
+                                <TextBlock Classes="Size-24" Text="{Binding Step5WelcomeTitle}" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}"
                                            TextAlignment="Center" HorizontalAlignment="Center" />
 
                                 <!-- Subtitle — only shown for Fund/Subscription (empty for Investment) -->
-                                <TextBlock Text="{Binding Step5WelcomeSubtitle}" FontSize="15"
+                                <TextBlock Classes="Size-15" Text="{Binding Step5WelcomeSubtitle}"
                                            Foreground="{DynamicResource TextMuted}"
                                            TextAlignment="Center" HorizontalAlignment="Center"
                                            TextWrapping="Wrap" MaxWidth="400"
@@ -493,7 +490,7 @@
                                         BorderThickness="1"
                                         BorderBrush="{DynamicResource WarningBoxBorder}"
                                         Background="{DynamicResource WarningBoxBackground}">
-                                    <TextBlock FontSize="13" Foreground="{DynamicResource WarningBoxText}"
+                                    <TextBlock Classes="Size-13" Foreground="{DynamicResource WarningBoxText}"
                                                TextWrapping="Wrap" TextAlignment="Center"
                                                Text="{Binding Step5WelcomeInfo}" />
                                 </Border>
@@ -540,8 +537,7 @@
                                        FontSize="16"
                                        Foreground="{DynamicResource ErrorBannerText}"
                                        VerticalAlignment="Center" />
-                                <TextBlock Text="{Binding FormError}"
-                                           FontSize="14" FontWeight="Medium"
+                                <TextBlock Classes="Size-S" Text="{Binding FormError}" FontWeight="Medium"
                                            Foreground="{DynamicResource ErrorBannerText}"
                                            TextWrapping="Wrap"
                                            VerticalAlignment="Center" />

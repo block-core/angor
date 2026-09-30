@@ -36,9 +36,9 @@ public class MempoolIndexerAngorApi : IAngorIndexerService
     private HttpClient GetIndexerClient()
     {
         var indexer = _networkService.GetPrimaryIndexer();
-        var client = _clientFactory.CreateClient();
+        var client = _clientFactory.CreateClient(IndexerFailoverHandler.ClientName);
         client.BaseAddress = new Uri(indexer.Url);
-        client.Timeout = TimeSpan.FromSeconds(10);
+        client.Timeout = TimeSpan.FromSeconds(60);
         return client;
     }
 
@@ -73,16 +73,9 @@ public class MempoolIndexerAngorApi : IAngorIndexerService
                 return allTransactions;
             }
 
-            List<MempoolSpaceIndexerApi.MempoolTransaction>? page;
-            try
-            {
-                page = await response.Content.ReadFromJsonAsync<List<MempoolSpaceIndexerApi.MempoolTransaction>>(jsonOptions);
-            }
-            catch (JsonException ex)
-            {
-                _logger.LogWarning(ex, "Failed to deserialize transactions for address {Address}, treating as empty", projectAddress);
-                break;
-            }
+            response.EnsureSuccessStatusCode();
+            List<MempoolSpaceIndexerApi.MempoolTransaction>? page =
+                await response.Content.ReadFromJsonAsync<List<MempoolSpaceIndexerApi.MempoolTransaction>>(jsonOptions);
 
             if (page == null || page.Count == 0)
             {
@@ -215,6 +208,10 @@ public class MempoolIndexerAngorApi : IAngorIndexerService
 
             // Convert transactions to ProjectIndexerData using the mapper
             return _mappers.ConvertTransactionsToProjectIndexerData(projectId, trxs);
+        }
+        catch (HttpRequestException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
