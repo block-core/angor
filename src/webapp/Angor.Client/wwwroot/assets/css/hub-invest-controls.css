@@ -1,0 +1,613 @@
+/* Shared investment controls copied from angor-hub/src/app/pages/invest/invest.component.css.
+   Scoped to the payment form so Bootstrap dialogs retain their functional layout. */
+@media (max-width: 1240px) {
+
+  .hub-page .hub-invest-grid .transaction-details-card {
+    grid-column: 1 / -1;
+  }
+}
+.hub-page .hub-invest-grid .invest-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+.hub-page .hub-invest-grid .invest-amount-card {
+  background: linear-gradient(to bottom right, #fff7ed, #fef3c7);
+  border: 1px solid #fed7aa;
+}
+
+.hub-page .hub-invest-grid .bitcoin-icon-circle {
+  width: 40px;
+  height: 40px;
+  background: #f97316;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.hub-page .hub-invest-grid .amount-card-title {
+  color: #7c2d12 !important;
+}
+
+.hub-page .hub-invest-grid .invest-amount-card .form-label {
+  color: #92400e;
+  font-weight: 600;
+}
+
+.hub-page .hub-invest-grid .card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  color: #4a4a4a;
+}
+
+.hub-page .hub-invest-grid .card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+.hub-page .hub-invest-grid .form-group {
+  margin-bottom: 4px;
+}
+
+.hub-page .hub-invest-grid .form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4a4a4a;
+  margin-bottom: 8px;
+}
+
+.hub-page .hub-invest-grid .form-input {
+  width: 100%;
+  padding: 12px 16px;
+  padding-right: 60px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  color: #1a1a1a;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.hub-page .hub-invest-grid .form-input:focus {
+  outline: none;
+  border-color: #2d5a3d;
+  box-shadow: 0 0 0 3px rgba(45, 90, 61, 0.1);
+}
+
+.hub-page .hub-invest-grid .form-input.error {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.hub-page .hub-invest-grid .input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.hub-page .hub-invest-grid .form-input.with-icon {
+  padding-left: 44px;
+}
+
+.hub-page .hub-invest-grid .input-suffix {
+  position: absolute;
+  right: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  pointer-events: none;
+}
+
+.hub-page .hub-invest-grid .helper-text {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+.hub-page .hub-invest-grid .fund-options-section {
+  margin-top: 20px;
+}
+
+.hub-page .hub-invest-grid .fund-frequency-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.hub-page .hub-invest-grid .fund-installments-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.hub-page .hub-invest-grid .fund-option-btn {
+  padding: 12px 16px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.hub-page .hub-invest-grid .fund-option-btn:hover {
+  border-color: #2d5a3d;
+  background: #f9fafb;
+}
+
+.hub-page .hub-invest-grid .fund-option-btn.selected {
+  border-color: #2d5a3d;
+  background: #2d5a3d;
+  color: white;
+}
+
+.hub-page .hub-invest-grid .fund-option-btn.error-border {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.hub-page .hub-invest-grid .option-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.hub-page .hub-invest-grid .fund-option-btn.selected .option-label {
+  color: white;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .fund-option-btn {
+  background: var(--surface-card);
+  border-color: #404040;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .fund-option-btn:hover {
+  border-color: #2d5a3d;
+  background: #2a2a2a;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .fund-option-btn.selected {
+  border-color: #2d5a3d;
+  background: #2d5a3d;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .fund-option-btn.error-border {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .option-label {
+  color: #fafafa;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .fund-option-btn.selected .option-label {
+  color: white;
+}
+
+.hub-page .hub-invest-grid .fund-card .form-label {
+  color: #92400e;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .fund-card .form-label {
+  color: #fdba74;
+}
+.hub-page .hub-invest-grid .quick-amounts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.hub-page .hub-invest-grid .quick-amount-btn {
+  padding: 10px 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4a4a4a;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.hub-page .hub-invest-grid .quick-amount-btn .amount-value {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.hub-page .hub-invest-grid .quick-amount-btn .amount-label {
+  font-size: 11px;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+.hub-page .hub-invest-grid .quick-amount-btn:hover {
+  background: #2d5a3d;
+  border-color: #2d5a3d;
+  color: white;
+}
+
+.hub-page .hub-invest-grid .quick-amount-btn.selected {
+  background: #2d5a3d;
+  border-color: #2d5a3d;
+  color: white;
+}
+.hub-page .hub-invest-grid .summary-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 20px 0;
+}
+.hub-page .hub-invest-grid .transaction-details-card {
+  display: block;
+}
+
+.hub-page .hub-invest-grid .transaction-detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.hub-page .hub-invest-grid .transaction-detail-row:last-child {
+  border-bottom: none;
+}
+
+.hub-page .hub-invest-grid .transaction-label {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.hub-page .hub-invest-grid .transaction-value {
+  font-size: 14px;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.hub-page .hub-invest-grid .transaction-value-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.hub-page .hub-invest-grid .transaction-copy-button {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #9ca3af;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+
+.hub-page .hub-invest-grid .transaction-copy-button:hover {
+  color: #4b5563;
+}
+.hub-page .hub-invest-grid .stages-card {
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+}
+
+.hub-page .hub-invest-grid .stages-description {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+}
+
+.hub-page .hub-invest-grid .stages-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.hub-page .hub-invest-grid .stage-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s;
+}
+
+.hub-page .hub-invest-grid .stage-breakdown-row:hover {
+  border-color: #2d5a3d;
+  box-shadow: 0 2px 8px rgba(45, 90, 61, 0.1);
+}
+
+.hub-page .hub-invest-grid .stage-breakdown-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hub-page .hub-invest-grid .stage-breakdown-number {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.hub-page .hub-invest-grid .stage-breakdown-date {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.hub-page .hub-invest-grid .stage-breakdown-amount {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.hub-page .hub-invest-grid .stage-breakdown-percentage {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2d5a3d;
+  background: #d4edda;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.hub-page .hub-invest-grid .stage-breakdown-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .invest-card {
+  background: var(--surface-card);
+  border-color: #333;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .invest-amount-card {
+  background: linear-gradient(to bottom right, rgba(234, 88, 12, 0.15), rgba(251, 191, 36, 0.15));
+  border-color: rgba(234, 88, 12, 0.3);
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .amount-card-title {
+  color: #fb923c !important;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .invest-amount-card .form-label {
+  color: #fdba74;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .card-header {
+  color: #a0a0a0;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .card-title {
+  color: #fafafa;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .form-label {
+  color: #fafafa;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .form-input {
+  background: #2a2a2a;
+  border-color: #333;
+  color: #fafafa;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .form-input:focus {
+  border-color: #5FAF78;
+  box-shadow: 0 0 0 3px rgba(95, 175, 120, 0.2);
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .form-input.error {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .input-suffix {
+  color: #a0a0a0;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .helper-text {
+  color: #9ca3af;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .quick-amount-btn {
+  background: #2a2a2a;
+  border-color: #333;
+  color: #fafafa;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .quick-amount-btn:hover {
+  background: #2d5a3d;
+  border-color: #2d5a3d;
+  color: white;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .quick-amount-btn.selected {
+  background: #2d5a3d;
+  border-color: #2d5a3d;
+  color: white;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .summary-title {
+  color: #fafafa;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .transaction-detail-row {
+  border-bottom-color: #333;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .transaction-label {
+  color: #9ca3af;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .transaction-value {
+  color: #fafafa;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .transaction-value-container {
+  background: #0A0A0A;
+  border-color: #404040;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .transaction-copy-button {
+  color: #6b7280;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .transaction-copy-button:hover {
+  color: #9ca3af;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .stages-card {
+  background: var(--surface-card);
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .stages-description {
+  color: #9ca3af;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .stage-breakdown-row {
+  background: var(--surface-card);
+  border-color: #333;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .stage-breakdown-row:hover {
+  border-color: #2d5a3d;
+  box-shadow: 0 2px 8px rgba(45, 90, 61, 0.3);
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .stage-breakdown-number {
+  color: #fafafa;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .stage-breakdown-date {
+  color: #9ca3af;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .stage-breakdown-percentage {
+  background: #2d5a3d;
+  color: #a8e6b4;
+}
+
+.hub-page[data-theme="dark"] .hub-invest-grid .stage-breakdown-value {
+  color: #fafafa;
+}
+@media (max-width: 768px) {
+  .hub-page .hub-invest-grid .invest-amount-card {
+    order: 1;
+  }
+
+  .hub-page .hub-invest-grid .stages-card {
+    order: 2;
+  }
+
+  .hub-page .hub-invest-grid .transaction-details-card {
+    order: 3;
+  }
+
+  .hub-page .hub-invest-grid .invest-card {
+    padding: 16px;
+  }
+
+  .hub-page .hub-invest-grid .card-title {
+    font-size: 16px;
+  }
+
+  .hub-page .hub-invest-grid .quick-amounts {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .hub-page .hub-invest-grid .fund-frequency-options {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .hub-page .hub-invest-grid .fund-installments-options {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .hub-page .hub-invest-grid .fund-option-btn {
+    padding: 10px 8px;
+  }
+
+  .hub-page .hub-invest-grid .option-label {
+    font-size: 12px;
+  }
+
+  .hub-page .hub-invest-grid .stage-breakdown-row {
+    padding: 12px;
+  }
+
+  .hub-page .hub-invest-grid .stage-breakdown-number {
+    font-size: 13px;
+  }
+
+  .hub-page .hub-invest-grid .stage-breakdown-date {
+    font-size: 11px;
+  }
+
+  .hub-page .hub-invest-grid .stage-breakdown-percentage {
+    font-size: 11px;
+    padding: 2px 6px;
+  }
+
+  .hub-page .hub-invest-grid .stage-breakdown-value {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hub-page .hub-invest-grid .card-header {
+    gap: 8px;
+  }
+
+  .hub-page .hub-invest-grid .card-header svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .hub-page .hub-invest-grid .stage-breakdown-row {
+    padding: 10px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .hub-page .hub-invest-grid .stage-breakdown-amount {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .hub-page .hub-invest-grid .stages-description {
+    font-size: 12px;
+  }
+}
+
+/* Neutralize legacy card chrome around the reused Hub controls. */
+.hub-page .hub-invest-grid .card-header { padding: 0; min-height: 0; border: 0; background: transparent; }
+.hub-page .hub-invest-grid .hub-form-body { display: contents; }
+.hub-page .hub-invest-grid .bitcoin-icon-circle { color: white; font-size: 26px; }
+.hub-page .hub-invest-grid #payment-amount { padding: 12px 60px 12px 16px; border-radius: 8px; }
+.hub-page .hub-invest-grid .input-suffix { background: transparent; border: 0; padding: 0; }
+.hub-page .hub-invest-grid .quick-amounts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.hub-page .hub-invest-grid .quick-amount-btn { min-width: 0; width: auto; padding-left: 4px; padding-right: 4px; }
+.hub-page .hub-invest-grid .fund-installments-options { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }

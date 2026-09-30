@@ -38,6 +38,7 @@
 @inject NostrConversionHelper NostrHelper
 @inject IInvestorTransactionActions _InvestorTransactionActions
 @inject ISerializer serializer
+@inject WalletKeyService walletKeyService
 @inject IEncryptionService encryption
 @inject IAddressPollingService _addressPollingService
 @inject IWalletStorage _walletStorage
@@ -49,28 +50,87 @@
 <NotificationComponent @ref="notificationComponent" />
 <PasswordComponent @ref="passwordComponent" />
 
-<!-- Standalone header (no app navigation) -->
-<header class="hub-header">
-    <a class="hub-brand" href="https://angor.io" target="_blank" rel="noopener">
-        <img src="/assets/img/angor-logo.svg" alt="Angor" />
-        <span>Angor Invest</span>
-    </a>
-    <span class="d-flex align-items-center gap-3">
-        <span class="hub-network-badge @(network.IsMainnet ? "" : "testnet")">@network.Name</span>
-        <a class="hub-link" href="/settings" title="Relay and indexer settings">
-            <Icon IconName="settings" Width="18" Height="18" />
-            <span class="d-none d-sm-inline ms-1">Settings</span>
-        </a>
-    </span>
-</header>
+<HubPaymentHeader IsMainnet="@network.IsMainnet" NetworkName="@network.Name" OnSettingsRequested="OpenConnectionModal" OnHelpRequested="() => showHelpModal = true" HelpAvailable="@(project != null && !founder)" />
+
+<!-- Connection Settings Modal (indexers + relays) -->
+@if (showConnectionModal && connectionSettings != null)
+{
+    <div class="modal fade show d-block" role="dialog" aria-modal="true" tabindex="-1" style="background: rgba(0,0,0,0.7);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title d-flex align-items-center gap-2">
+                        <Icon IconName="settings" Width="24" Height="24" />
+                        Connection Settings
+                    </h5>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="() => showConnectionModal = false"></button>
+                </div>
+                <div class="modal-body">
+
+                    <h6 class="mb-2">Indexers</h6>
+                    <p class="text-muted small mb-2">The indexer used to look up projects and broadcast transactions.</p>
+                    @foreach (var indexer in connectionSettings.Indexers)
+                    {
+                        <div class="d-flex align-items-center gap-2 bg-light rounded p-2 mb-2">
+                            <input type="radio" name="primary-indexer" checked="@indexer.IsPrimary"
+                                   @onchange="() => SetPrimaryIndexerUrl(indexer)" />
+                            <span class="badge @(indexer.Status == UrlStatus.Online ? "bg-success" : "bg-secondary")">
+                                @(indexer.Status == UrlStatus.Online ? "online" : indexer.Status == UrlStatus.Offline ? "offline" : "?")
+                            </span>
+                            <span class="text-break small flex-grow-1" style="word-break: break-all;">@indexer.Url</span>
+                            <button class="btn btn-sm btn-outline-danger flex-shrink-0" title="Remove"
+                                    @onclick="() => RemoveIndexerUrl(indexer)" disabled="@(connectionSettings.Indexers.Count <= 1)">
+                                <Icon IconName="delete" Width="14" Height="14" />
+                            </button>
+                        </div>
+                    }
+                    <div class="input-group mb-4">
+                        <input type="text" class="form-control" placeholder="https://indexer.example.com"
+                               @bind="newIndexerUrl" />
+                        <button class="btn btn-outline-success" @onclick="AddIndexerUrl"
+                                disabled="@string.IsNullOrWhiteSpace(newIndexerUrl)">Add</button>
+                    </div>
+
+                    <h6 class="mb-2">Nostr Relays</h6>
+                    <p class="text-muted small mb-2">Relays used to fetch project data and exchange messages with the founder.</p>
+                    @foreach (var relay in connectionSettings.Relays)
+                    {
+                        <div class="d-flex align-items-center gap-2 bg-light rounded p-2 mb-2">
+                            <span class="badge @(relay.Status == UrlStatus.Online ? "bg-success" : "bg-secondary")">
+                                @(relay.Status == UrlStatus.Online ? "online" : relay.Status == UrlStatus.Offline ? "offline" : "?")
+                            </span>
+                            <span class="text-break small flex-grow-1" style="word-break: break-all;">@relay.Url</span>
+                            <button class="btn btn-sm btn-outline-danger flex-shrink-0" title="Remove"
+                                    @onclick="() => RemoveRelayUrl(relay)" disabled="@(connectionSettings.Relays.Count <= 1)">
+                                <Icon IconName="delete" Width="14" Height="14" />
+                            </button>
+                        </div>
+                    }
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="wss://relay.example.com"
+                               @bind="newRelayUrl" />
+                        <button class="btn btn-outline-success" @onclick="AddRelayUrl"
+                                disabled="@string.IsNullOrWhiteSpace(newRelayUrl)">Add</button>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-success btn-sm" @onclick="() => showConnectionModal = false">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 
 @if (loadingProject)
 {
-    <div class="container mt-5 text-center">
-        <div class="spinner-border text-success" role="status"></div>
-        <p class="mt-3" style="color: var(--text-secondary);">Loading project...</p>
+    <div class="hub-loading-state" role="status" aria-live="polite">
+        <div class="hub-loading-mark"><img src="/assets/img/app-icon.png" alt="" /><span class="hub-loading-ring"></span></div>
+        <h1>Loading your project</h1>
+        <p>Preparing your payment details...</p>
         <p class="small text-muted">
-            Taking too long? Check your <a class="hub-link" href="/settings">relay and indexer settings</a>.
+            Taking too long? Check your <button type="button" class="hub-inline-link" @onclick="OpenConnectionModal">relay and indexer settings</button>.
         </p>
     </div>
     return;
@@ -84,8 +144,8 @@
             <span>@(loadError ?? "The project was not found.")</span>
         </div>
         <div class="text-center mt-3 d-flex justify-content-center gap-3 flex-wrap">
-            <a class="hub-link" href="https://angor.io" target="_blank" rel="noopener">Browse projects on angor.io</a>
-            <a class="hub-link" href="/settings">Check relay &amp; indexer settings</a>
+            <a class="hub-link" href="@HubBaseUrl">Browse projects</a>
+            <button type="button" class="hub-inline-link" @onclick="OpenConnectionModal">Check relay &amp; indexer settings</button>
         </div>
     </div>
     return;
@@ -102,84 +162,50 @@
     return;
 }
 
-<div class="container mt-4 invest-view-page" style="max-width: 1000px;">
+<div class="container mt-4 invest-view-page @(invested ? "hub-completed-page" : "")" >
 
-    <!-- Project summary card -->
-    <div class="card hub-project-hero mb-4">
-        @if (!string.IsNullOrEmpty(project.Metadata?.Banner))
-        {
-            <img class="hub-project-banner" src="@project.Metadata.Banner" alt="" />
-        }
-        <div class="card-body">
-            <div class="d-flex align-items-start gap-3">
-                @if (!string.IsNullOrEmpty(project.Metadata?.Picture))
-                {
-                    <img class="hub-project-logo" src="@project.Metadata.Picture" alt="" />
-                }
-                <div class="flex-grow-1">
-                    <h4 class="mb-1">@(project.Metadata?.Name ?? project.ProjectInfo.ProjectIdentifier)</h4>
-                    @if (!string.IsNullOrEmpty(project.Metadata?.About))
-                    {
-                        <p class="text-muted mb-2">@TruncateAbout(project.Metadata.About)</p>
-                    }
-                    <a class="hub-link" href="https://angor.io/project/@ProjectId" target="_blank" rel="noopener">
-                        View full project details on angor.io
-                        <Icon IconName="link" Width="14" Height="14" />
-                    </a>
-                </div>
+    <div class="hub-invest-navigation">
+        <div class="hub-invest-navigation-inner">
+            <div class="hub-invest-navigation-left">
+                <a class="hub-back-button" href="@(HubBaseUrl + "/project/" + ProjectId)"><span aria-hidden="true">←</span> Back</a>
+                <span class="hub-project-label">@(project.Metadata?.Name ?? project.ProjectInfo.ProjectIdentifier)</span>
             </div>
-
-            <!-- Funding progress -->
-            <div class="mt-4">
-                <div class="d-flex justify-content-between mb-1">
-                    <span class="text-muted small">Raised</span>
-                    <span class="fw-bold" style="color: var(--accent);">@fundingProgressPercent%</span>
-                </div>
-                <div class="hub-progress-track">
-                    <div class="hub-progress-fill" style="width: @(Math.Min(fundingProgressPercent, 100))%"></div>
-                </div>
-                <div class="d-flex justify-content-between mt-2">
-                    <span class="small">
-                        <span class="fw-bold">@Money.Satoshis(totalRaisedSats).ToUnit(MoneyUnit.BTC)</span>
-                        <span class="text-muted">of @Money.Satoshis(project.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker</span>
-                    </span>
-                    <span class="small text-muted">@totalInvestors investors</span>
-                </div>
+            <div class="hub-invest-navigation-actions">
+            <div class="hub-invest-navigation-stats">
+                <span>Total Raised <strong>@Money.Satoshis(totalRaisedSats).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong></span>
+                <span>Progress <strong>@fundingProgressPercent%</strong></span>
             </div>
-
-            <div class="d-flex flex-wrap gap-3 mt-3 small text-muted">
-                <span>Starts: <span class="fw-bold" style="color: var(--text);">@project.ProjectInfo.StartDate.ToString("dd MMM yyyy")</span></span>
-                <span>Expires: <span class="fw-bold" style="color: var(--text);">@project.ProjectInfo.ExpiryDate.ToString("dd MMM yyyy")</span></span>
-                <span>Stages: <span class="fw-bold" style="color: var(--text);">@((project.ProjectInfo.AllowDynamicStages ? SelectedPattern?.StageCount : project.ProjectInfo.Stages?.Count) ?? 0)</span></span>
-                <span>Penalty: <span class="fw-bold" style="color: var(--text);">@project.ProjectInfo.PenaltyDays days</span></span>
+            <button type="button" class="hub-help-button" @onclick="() => showHelpModal = true">Help</button>
             </div>
         </div>
     </div>
 
     @if (invested)
     {
-        <div class="hub-opportunity mb-4">
-            <div class="mb-3">
-                <Icon IconName="circle-check" Width="48" Height="48" />
-            </div>
-            <h4 class="text-white mb-2">Investment Confirmed</h4>
-            <p class="mb-3" style="color: rgba(255,255,255,.9);">
-                Your investment was published to the Bitcoin network.
-                To manage or recover your funds later, import your recovery phrase into the Angor desktop app.
-            </p>
-            @if (!string.IsNullOrEmpty(investedTransactionId))
-            {
-                <a class="btn btn-white mb-2" href="@(_networkService.GetPrimaryExplorer().Url + $"/tx/{investedTransactionId}")" target="_blank" rel="noopener">
-                    View Transaction
-                </a>
-            }
-            <button class="btn btn-white" @onclick="ShowRecoveryPhraseAsync">Show Recovery Phrase</button>
-            <div class="mt-3">
-                <a href="#" class="small" style="color: rgba(255,255,255,.75);"
-                   @onclick="OpenDeleteWalletModal" @onclick:preventDefault>
-                    Using a shared computer? Delete the wallet from this browser
-                </a>
-            </div>
+        <div class="hub-confirmation-region">
+            <section class="hub-confirmation" aria-labelledby="confirmation-title">
+                <div class="hub-confirmation-icon" aria-hidden="true">
+                    <Icon IconName="circle-check" Width="32" Height="32" />
+                </div>
+                <h1 id="confirmation-title">@PaymentNoun Confirmed</h1>
+                <p class="hub-confirmation-description">Your @PaymentNoun.ToLowerInvariant() was published to the Bitcoin network.</p>
+                <div class="hub-confirmation-actions">
+                    @if (!string.IsNullOrEmpty(investedTransactionId))
+                    {
+                        <a class="btn btn-hub-primary" href="@(_networkService.GetPrimaryExplorer().Url + $"/tx/{investedTransactionId}")" target="_blank" rel="noopener">
+                            View Transaction
+                        </a>
+                    }
+                    <button class="btn btn-outline-secondary" @onclick="ShowRecoveryPhraseAsync">Show Recovery Phrase</button>
+                </div>
+                <div class="hub-confirmation-recovery">
+                    <p>Keep your recovery phrase safe</p>
+                    <span>Import it into the Angor desktop app to manage or recover your funds later.</span>
+                </div>
+                <button type="button" class="hub-confirmation-delete" @onclick="OpenDeleteWalletModal">
+                    Using a shared computer? Delete this wallet
+                </button>
+            </section>
         </div>
     }
     else if (project is InvestorProject pendingProject && pendingProject.WaitingForFounderResponse())
@@ -243,41 +269,50 @@
     }
     else
     {
-        <div class="row g-4">
+        <div class="hub-mobile-stats">
+            @if (project.ProjectInfo.ProjectType != ProjectType.Subscribe)
+            {
+                <div><span>Target Amount</span><strong>@Money.Satoshis(project.ProjectInfo.TargetAmount).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong></div>
+            }
+            @if (!project.ProjectInfo.AllowDynamicStages)
+            {
+                <div><span>Total Raised</span><strong>@Money.Satoshis(totalRaisedSats).ToUnit(MoneyUnit.BTC) @network.CoinTicker</strong></div>
+                <div><span>Progress</span><strong>@fundingProgressPercent%</strong></div>
+            }
+        </div>
+        <div class="hub-invest-grid">
 
             <!-- Investment Amount Card -->
-            <div class="col-md-6">
-                <div class="card h-100">
-                    <div class="card-header bg-transparent d-flex align-items-center gap-2">
-                        <Icon IconName="bitcoin" Width="20" Height="20" />
-                        <h5 class="mb-0">Investment Amount</h5>
+            <div class="hub-amount-column">
+                <div class="invest-card invest-amount-card">
+                    <div class="card-header amount-card-header">
+                        <span class="bitcoin-icon-circle">₿</span>
+                        <h3 class="card-title amount-card-title">@PaymentNoun Amount</h3>
                     </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Amount (@network.CoinTicker)</label>
-                            <div class="input-group">
-                                <input type="number"
-                                       class="form-control"
+                    <div class="hub-form-body">
+                        <div class="form-group">
+                            <label for="payment-amount" class="form-label">Amount (@network.CoinTicker)</label>
+                            <div class="input-with-icon">
+                                <input id="payment-amount" type="number"
+                                       class="form-input"
                                        step="0.00000001"
                                        min="0.001"
                                        placeholder="0.00"
                                        value="@Investment.InvestmentAmountBtc"
                                        @oninput="OnAmountChanged" />
-                                <span class="input-group-text fw-bold">@network.CoinTicker</span>
+                                <span class="input-suffix">@network.CoinTicker</span>
                             </div>
-                            <small class="text-muted">Minimum investment: 0.001 @network.CoinTicker</small>
+                            <p class="helper-text">Minimum investment: 0.001 @network.CoinTicker</p>
                         </div>
 
-                        <div class="d-flex flex-wrap gap-2 justify-content-end">
+                        <div class="quick-amounts">
                             @foreach (var preset in AmountPresets)
                             {
                                 <button type="button"
-                                        class="btn btn-sm @(Investment.InvestmentAmountBtc == preset ? "btn-warning" : "btn-outline-warning")"
+                                        class="quick-amount-btn @(Investment.InvestmentAmountBtc == preset ? "selected" : "")"
                                         @onclick="() => SelectPreset(preset)">
-                                    <div class="text-center">
-                                        <div class="fw-bold">@preset</div>
-                                        <div class="small">@network.CoinTicker</div>
-                                    </div>
+                                    <span class="amount-value">@preset</span>
+                                    <span class="amount-label">@network.CoinTicker</span>
                                 </button>
                             }
                         </div>
@@ -309,87 +344,119 @@
                         }
                     </div>
                 </div>
-            </div>
-
-            <!-- Funding Pattern Card (conditionally shown) -->
-            @if (ShowPatternSelector && AvailablePatterns?.Any() == true)
-            {
-                <div class="col-md-6">
-                    <div class="card h-100">
-                        <div class="card-header bg-transparent">
-                            <h5 class="mb-0">Funding Pattern</h5>
+                @if (ShowPatternSelector && AvailablePatterns?.Any() == true)
+                {
+                    <div class="invest-card invest-amount-card hub-pattern-card">
+                        <div class="card-header amount-card-header">
+                            <span class="bitcoin-icon-circle"><Icon IconName="calendar" Width="24" Height="24" /></span>
+                            <h3 class="card-title amount-card-title">Funding Pattern</h3>
                         </div>
-                        <div class="card-body">
-                            <p class="text-muted mb-3">Choose a funding pattern for your investment:</p>
-                            <div class="list-group">
-                                @foreach (var pattern in AvailablePatterns)
-                                {
-                                    <button type="button"
-                                            class="list-group-item list-group-item-action @(SelectedPattern == pattern ? "active" : "")"
-                                            @onclick="() => SelectPattern(pattern)">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <h6 class="mb-1 fw-bold">@pattern.Name</h6>
-                                                <small class="@(SelectedPattern == pattern ? "text-white-50" : "text-muted")">@pattern.Description</small>
-                                            </div>
-                                            <span class="badge bg-success rounded-pill">@pattern.StageCount stages</span>
-                                        </div>
-                                        <small class="@(SelectedPattern == pattern ? "text-white-50" : "text-muted")">
-                                            Frequency: @pattern.Frequency
-                                        </small>
-                                    </button>
-                                }
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-
-            <!-- Release Schedule Card -->
-            <div class="col-md-6">
-                <div class="card h-100">
-                    <div class="card-header bg-transparent">
-                        <h5 class="mb-0">Release Schedule</h5>
-                    </div>
-                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
-                        <p class="text-muted mb-3">Your investment will be released in stages:</p>
-                        @if (StagesBreakdown?.Any() == true)
+                        <p class="helper-text">Select which installment schedule to use:</p>
+                        @if (handoffPlanNeedsSelection)
                         {
-                            int stageIndex = 0;
-                            @foreach (var stage in StagesBreakdown)
+                            <p class="alert alert-warning small" role="status">The selected plan is not offered by this project. Choose an available funding pattern below.</p>
+                        }
+                        <div class="hub-plan-options">
+                            @foreach (var pattern in AvailablePatterns)
                             {
-                                stageIndex++;
-                                <div class="card mb-2 border-0 invest-stage-card">
-                                    <div class="card-body p-3">
-                                        <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <span class="fw-bold small">Stage @stageIndex</span>
-                                            <span class="badge bg-success">
-                                                @(project?.ProjectInfo?.Stages?.ElementAtOrDefault(stageIndex - 1)?.AmountToRelease.ToString("F1"))%
-                                            </span>
-                                        </div>
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <small class="text-muted">@stage.StageDateTime.FormatDate()</small>
-                                            <span class="fw-bold small">@stage.AmountBtc.ToString("0.00000000") @network.CoinTicker</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                <button type="button" class="hub-plan-option @(SelectedPattern == pattern ? "active" : "")"
+                                        aria-pressed="@(SelectedPattern == pattern ? "true" : "false")" @onclick="() => SelectPattern(pattern)">
+                                    <span class="hub-plan-heading">
+                                        <strong>@pattern.Name</strong>
+                                        <span class="hub-plan-count">@pattern.StageCount stages</span>
+                                        <span class="hub-plan-frequency">@pattern.Frequency</span>
+                                    </span>
+                                    <span class="hub-plan-description">@pattern.Description</span>
+                                </button>
                             }
-                        }
-                        else
-                        {
-                            <p class="text-muted text-center">Enter an amount to see the stage breakdown.</p>
-                        }
+                        </div>
                     </div>
+                }
+            </div>
+
+            <div class="invest-card stages-card">
+                <h3 class="summary-title">@(project.ProjectInfo.AllowDynamicStages ? "Payment Schedule" : "Release Schedule")</h3>
+                <p class="stages-description">Your @(project.ProjectInfo.AllowDynamicStages ? "payments" : "investment will be released in stages"):</p>
+                <div class="stages-breakdown">
+                    @if (StagesBreakdown?.Any() == true)
+                    {
+                        int stageIndex = 0;
+                        @foreach (var stage in StagesBreakdown)
+                        {
+                            stageIndex++;
+                            <div class="stage-breakdown-row">
+                                <div class="stage-breakdown-info">
+                                    <span class="stage-breakdown-number">@(project.ProjectInfo.AllowDynamicStages ? "Payment" : "Stage") @stageIndex</span>
+                                    <span class="stage-breakdown-date">@stage.StageDateTime.FormatDate()</span>
+                                </div>
+                                <div class="stage-breakdown-amount">
+                                    @if (!project.ProjectInfo.AllowDynamicStages)
+                                    {
+                                        <span class="stage-breakdown-percentage">@(project.ProjectInfo.Stages?.ElementAtOrDefault(stageIndex - 1)?.AmountToRelease.ToString("F1"))%</span>
+                                    }
+                                    <span class="stage-breakdown-value">@stage.AmountBtc.ToString("0.00000000") @network.CoinTicker</span>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="stages-description">Enter an amount to see the stage breakdown.</p>
+                    }
                 </div>
             </div>
 
+            <div class="invest-card transaction-details-card">
+                <h3 class="summary-title">Transaction Details</h3>
+                <div class="hub-form-body">
+                    <div class="transaction-detail-row"><span class="transaction-label">Project ID</span><div class="transaction-value-container"><code class="transaction-value transaction-value-code">@ProjectId</code><button type="button" class="transaction-copy-button" @onclick="() => CopyToClipboard(ProjectId)" aria-label="Copy Project ID"><Icon IconName="copy" Width="16" Height="16" /></button></div></div>
+                    <div class="transaction-detail-row"><span class="transaction-label">Amount to @PaymentAction</span><span class="transaction-value transaction-value-amount">@Investment.InvestmentAmountBtc @network.CoinTicker</span></div>
+                    <div class="transaction-detail-row"><span class="transaction-label">Miner Fee</span><span class="transaction-value">Calculated with invoice</span></div>
+                    <div class="transaction-detail-row"><span class="transaction-label">Angor Fee</span><span class="transaction-value">Included in invoice total</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Button -->
+        <div class="hub-payment-footer">
+            <div class="hub-payment-footer-inner">
+                <a class="hub-mobile-back" href="@(HubBaseUrl + "/project/" + ProjectId)">Back</a>
+                <div class="hub-payment-footer-summary"><span>Amount to @PaymentAction</span><strong>@Investment.InvestmentAmountBtc @network.CoinTicker</strong></div>
+                <button @ref="paymentButton" type="button" class="btn btn-success w-100 btn-lg" @onclick="HandleInvestClick" disabled="@(buildSpinner || handoffPlanNeedsSelection)">
+                    @if (buildSpinner)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        <span>Preparing...</span>
+                    }
+                    else
+                    {
+                        <Icon IconName="shield-star" Width="18" Height="18" class="me-1" />
+                        <span>@PaymentAction @Investment.InvestmentAmountBtc @network.CoinTicker</span>
+                    }
+                </button>
+            </div>
+        </div>
+    }
+
+    <div class="hub-footer">
+        Powered by <a href="@HubBaseUrl">Angor</a> — a decentralized crowdfunding protocol on Bitcoin
+        <span class="mx-2">·</span>
+        <a href="#" @onclick="OpenConnectionModal" @onclick:preventDefault>Connection settings</a>
+    </div>
+
+</div>
+
+@if (showHelpModal)
+{
             <!-- How it works / wallet info card -->
-            <div class="col-md-6">
-                <div class="card h-100">
-                    <div class="card-header bg-transparent">
-                        <h5 class="mb-0">How It Works</h5>
+            <div class="modal fade show d-block" role="dialog" aria-modal="true" aria-labelledby="hub-help-title" tabindex="-1" style="background: rgba(0,0,0,0.7);">
+                <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 id="hub-help-title" class="modal-title">How It Works</h5>
+                        <button type="button" class="btn-close" aria-label="Close help" @onclick="() => showHelpModal = false"></button>
                     </div>
-                    <div class="card-body">
+                    <div class="modal-body">
                         @if (!walletAvailable)
                         {
                             <ol class="text-muted small ps-3 mb-3">
@@ -400,7 +467,7 @@
                             </ol>
                             <div class="alert alert-warning small mb-0">
                                 <strong>Keep your recovery phrase.</strong> You can import it into the
-                                <a class="hub-link" href="https://angor.io" target="_blank" rel="noopener">Angor desktop app</a>
+                                <a class="hub-link" href="@HubBaseUrl">Angor desktop app</a>
                                 at any time to manage or recover your funds.
                             </div>
                         }
@@ -447,39 +514,20 @@
                 </div>
             </div>
 
-        </div>
-
-        <!-- Action Button -->
-        <div class="row mt-4 mb-4">
-            <div class="col-12">
-                <button type="button" class="btn btn-success w-100 btn-lg" @onclick="HandleInvestClick" disabled="@buildSpinner">
-                    @if (buildSpinner)
-                    {
-                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                        <span>Preparing...</span>
-                    }
-                    else
-                    {
-                        <Icon IconName="shield-star" Width="18" Height="18" class="me-1" />
-                        <span>Invest @Investment.InvestmentAmountBtc @network.CoinTicker</span>
-                    }
-                </button>
-            </div>
-        </div>
-    }
-
-    <div class="hub-footer">
-        Powered by <a href="https://angor.io" target="_blank" rel="noopener">Angor</a> — a decentralized crowdfunding protocol on Bitcoin
-        <span class="mx-2">·</span>
-        <a href="#" @onclick="OpenConnectionModal" @onclick:preventDefault>Connection settings</a>
     </div>
+}
 
-</div>
+@if (showAppDownloadModal)
+{
+    <AppDownloadModal DownloadUrl="@(HubBaseUrl + "/app")"
+                      OnClose="CloseAppDownloadModal"
+                      OnContinue="ContinueWithWeb" />
+}
 
 <!-- Use Available Funds Modal — shown when the browser wallet already covers the amount -->
 @if (showUseFundsModal)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.7);">
+    <div class="modal fade show d-block" role="dialog" aria-modal="true" tabindex="-1" style="background: rgba(0,0,0,0.7);">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -487,7 +535,7 @@
                         <Icon IconName="wallet" Width="24" Height="24" />
                         You Already Have Funds
                     </h5>
-                    <button type="button" class="btn-close" @onclick="() => showUseFundsModal = false"></button>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="() => showUseFundsModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <p class="text-muted">
@@ -533,47 +581,26 @@
 <!-- Payment Method Choice Modal -->
 @if (showPaymentMethodModal)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.7);">
+    <div class="modal fade show d-block" role="dialog" aria-modal="true" tabindex="-1" style="background: rgba(0,0,0,0.7);">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title d-flex align-items-center gap-2">
                         <Icon IconName="wallet" Width="24" Height="24" />
-                        Choose Payment Method
+                        Pay Invoice to @PaymentAction
                     </h5>
-                    <button type="button" class="btn-close" @onclick="() => showPaymentMethodModal = false"></button>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="() => showPaymentMethodModal = false"></button>
                 </div>
                 <div class="modal-body">
                     <div class="bg-light rounded p-3 mb-3">
-                        <small class="text-muted">Amount to Invest</small>
+                        <small class="text-muted">Amount to @PaymentAction</small>
                         <div class="fw-bold text-success fs-5">@Investment.InvestmentAmountBtc @network.CoinTicker</div>
                     </div>
-                    <div class="d-grid gap-3">
-                        <button class="btn btn-outline-success btn-lg" @onclick="PayWithAddress">
-                            <div class="d-flex align-items-center justify-content-between w-100">
-                                <div class="d-flex align-items-center gap-2">
-                                    <Icon IconName="qr-code" Width="24" Height="24" />
-                                    <div class="text-start">
-                                        <div class="fw-bold">Send to Address</div>
-                                        <small class="opacity-75">Send from an external wallet</small>
-                                    </div>
-                                </div>
-                                <Icon IconName="arrow-right" Width="18" Height="18" />
-                            </div>
-                        </button>
-                        <button class="btn btn-outline-warning btn-lg" @onclick="PayWithLightning">
-                            <div class="d-flex align-items-center justify-content-between w-100">
-                                <div class="d-flex align-items-center gap-2">
-                                    <Icon IconName="bitcoin" Width="24" Height="24" />
-                                    <div class="text-start">
-                                        <div class="fw-bold">Pay with Lightning</div>
-                                        <small class="opacity-75">Pay via Lightning Network</small>
-                                    </div>
-                                </div>
-                                <Icon IconName="arrow-right" Width="18" Height="18" />
-                            </div>
-                        </button>
+                    <div class="hub-payment-tabs" role="group" aria-label="Payment method">
+                        <button type="button" @onclick="PayWithAddress">Bitcoin</button>
+                        <button type="button" @onclick="PayWithLightning">Lightning</button>
                     </div>
+                    <p class="hub-payment-choice-hint">Choose Bitcoin to send from an external wallet, or Lightning to pay an invoice.</p>
                 </div>
             </div>
         </div>
@@ -583,17 +610,19 @@
 <!-- On-Chain Invoice Modal -->
 @if (showInvoiceModal)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.7);">
+    <div class="modal fade show d-block" role="dialog" aria-modal="true" tabindex="-1" style="background: rgba(0,0,0,0.7);">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title d-flex align-items-center gap-2">
                         <Icon IconName="receive" Width="24" Height="24" />
-                        Fund Investment
+                        Pay Invoice to @PaymentAction
                     </h5>
-                    <button type="button" class="btn-close" @onclick="CloseInvoiceModal"></button>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="CloseInvoiceModal"></button>
                 </div>
                 <div class="modal-body text-center">
+                    <div class="hub-payment-tabs" role="group" aria-label="Payment method"><button type="button" class="active" aria-pressed="true" disabled>Bitcoin</button><button type="button" @onclick="ChangeToLightningPayment" disabled="@(onChainRequiredSats == 0 || invoiceProcessing || paymentReceived)">Lightning</button></div>
+
                     <div class="bg-light rounded p-3 mb-3">
                         <small class="text-muted">Amount Required</small>
                         <div class="fw-bold text-success fs-4">@((onChainRequiredSats > 0 ? onChainRequiredSats.ToUnitBtc() : Investment.InvestmentAmountBtc)) @network.CoinTicker</div>
@@ -616,9 +645,8 @@
                         <small class="text-muted d-block mb-1">On-Chain Address</small>
                         <div class="d-flex align-items-center justify-content-center gap-2">
                             <span class="text-break fw-bold small" style="word-break: break-all;">@invoiceAddress</span>
-                            <button class="btn btn-sm btn-outline-secondary flex-shrink-0" @onclick="() => CopyToClipboard(invoiceAddress)">
-                                <Icon IconName="copy" Width="16" Height="16" />
-                            </button>
+                            <CopyButton @key="invoiceAddress" Value="@invoiceAddress" Label="Copy Bitcoin address"
+                                        CssClass="btn btn-sm btn-outline-secondary flex-shrink-0" IconOnly="true" />
                         </div>
                     </div>
 
@@ -656,17 +684,19 @@
 <!-- Lightning Invoice Modal -->
 @if (showLightningInvoiceModal)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.7);">
+    <div class="modal fade show d-block" role="dialog" aria-modal="true" tabindex="-1" style="background: rgba(0,0,0,0.7);">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title d-flex align-items-center gap-2">
                         <Icon IconName="bitcoin" Width="24" Height="24" />
-                        Lightning Invoice
+                        Pay Invoice to @PaymentAction
                     </h5>
-                    <button type="button" class="btn-close" @onclick="CloseLightningModal"></button>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="CloseLightningModal"></button>
                 </div>
                 <div class="modal-body text-center">
+                    <div class="hub-payment-tabs" role="group" aria-label="Payment method"><button type="button" @onclick="ChangeToBitcoinPayment" disabled="@(lightningLoading || invoiceProcessing || paymentReceived)">Bitcoin</button><button type="button" class="active" aria-pressed="true" disabled>Lightning</button></div>
+
                     <div class="bg-light rounded p-3 mb-3">
                         <small class="text-muted">Amount Required</small>
                         <div class="fw-bold text-success fs-4">@Investment.InvestmentAmountBtc @network.CoinTicker</div>
@@ -693,9 +723,8 @@
                                 <span class="text-break small" style="word-break: break-all; max-height: 80px; overflow-y: auto;">
                                     @lightningInvoiceString
                                 </span>
-                                <button class="btn btn-sm btn-outline-secondary flex-shrink-0" @onclick="() => CopyToClipboard(lightningInvoiceString!)">
-                                    <Icon IconName="copy" Width="16" Height="16" />
-                                </button>
+                                <CopyButton @key="lightningInvoiceString" Value="@lightningInvoiceString" Label="Copy Lightning invoice"
+                                            CssClass="btn btn-sm btn-outline-secondary flex-shrink-0" IconOnly="true" />
                             </div>
                         </div>
 
@@ -734,7 +763,7 @@
 <!-- Wallet Backup Modal — shown BEFORE any payment is requested -->
 @if (showBackupModal && !string.IsNullOrEmpty(autoCreatedSeedWords))
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.7);">
+    <div class="modal fade show d-block" role="dialog" aria-modal="true" tabindex="-1" style="background: rgba(0,0,0,0.7);">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -763,10 +792,7 @@
                         </div>
                     </div>
                     <div class="d-flex gap-2 mb-2">
-                        <button class="btn btn-outline-secondary flex-grow-1" @onclick="CopyBackupSeed">
-                            <Icon IconName="copy" Width="16" Height="16" class="me-1" />
-                            Copy
-                        </button>
+                        <SeedPhraseCopyButton Phrase="@autoCreatedSeedWords" />
                         <button class="btn btn-outline-secondary flex-grow-1" @onclick="DownloadBackupSeed">
                             <Icon IconName="receive" Width="16" Height="16" class="me-1" />
                             Download
@@ -781,80 +807,10 @@
     </div>
 }
 
-<!-- Connection Settings Modal (indexers + relays) -->
-@if (showConnectionModal && connectionSettings != null)
-{
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.7);">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title d-flex align-items-center gap-2">
-                        <Icon IconName="settings" Width="24" Height="24" />
-                        Connection Settings
-                    </h5>
-                    <button type="button" class="btn-close" @onclick="() => showConnectionModal = false"></button>
-                </div>
-                <div class="modal-body">
-
-                    <h6 class="mb-2">Indexers</h6>
-                    <p class="text-muted small mb-2">The indexer used to look up projects and broadcast transactions.</p>
-                    @foreach (var indexer in connectionSettings.Indexers)
-                    {
-                        <div class="d-flex align-items-center gap-2 bg-light rounded p-2 mb-2">
-                            <input type="radio" name="primary-indexer" checked="@indexer.IsPrimary"
-                                   @onchange="() => SetPrimaryIndexerUrl(indexer)" />
-                            <span class="badge @(indexer.Status == UrlStatus.Online ? "bg-success" : "bg-secondary")">
-                                @(indexer.Status == UrlStatus.Online ? "online" : indexer.Status == UrlStatus.Offline ? "offline" : "?")
-                            </span>
-                            <span class="text-break small flex-grow-1" style="word-break: break-all;">@indexer.Url</span>
-                            <button class="btn btn-sm btn-outline-danger flex-shrink-0" title="Remove"
-                                    @onclick="() => RemoveIndexerUrl(indexer)" disabled="@(connectionSettings.Indexers.Count <= 1)">
-                                <Icon IconName="delete" Width="14" Height="14" />
-                            </button>
-                        </div>
-                    }
-                    <div class="input-group mb-4">
-                        <input type="text" class="form-control" placeholder="https://indexer.example.com"
-                               @bind="newIndexerUrl" />
-                        <button class="btn btn-outline-success" @onclick="AddIndexerUrl"
-                                disabled="@string.IsNullOrWhiteSpace(newIndexerUrl)">Add</button>
-                    </div>
-
-                    <h6 class="mb-2">Nostr Relays</h6>
-                    <p class="text-muted small mb-2">Relays used to fetch project data and exchange messages with the founder.</p>
-                    @foreach (var relay in connectionSettings.Relays)
-                    {
-                        <div class="d-flex align-items-center gap-2 bg-light rounded p-2 mb-2">
-                            <span class="badge @(relay.Status == UrlStatus.Online ? "bg-success" : "bg-secondary")">
-                                @(relay.Status == UrlStatus.Online ? "online" : relay.Status == UrlStatus.Offline ? "offline" : "?")
-                            </span>
-                            <span class="text-break small flex-grow-1" style="word-break: break-all;">@relay.Url</span>
-                            <button class="btn btn-sm btn-outline-danger flex-shrink-0" title="Remove"
-                                    @onclick="() => RemoveRelayUrl(relay)" disabled="@(connectionSettings.Relays.Count <= 1)">
-                                <Icon IconName="delete" Width="14" Height="14" />
-                            </button>
-                        </div>
-                    }
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="wss://relay.example.com"
-                               @bind="newRelayUrl" />
-                        <button class="btn btn-outline-success" @onclick="AddRelayUrl"
-                                disabled="@string.IsNullOrWhiteSpace(newRelayUrl)">Add</button>
-                    </div>
-
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-success btn-sm" @onclick="() => showConnectionModal = false">Done</button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
 <!-- Delete Wallet Modal — shows the seed one last time, requires explicit confirmation -->
 @if (showDeleteWalletModal)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.7);">
+    <div class="modal fade show d-block" role="dialog" aria-modal="true" tabindex="-1" style="background: rgba(0,0,0,0.7);">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -862,7 +818,7 @@
                         <Icon IconName="delete" Width="24" Height="24" />
                         Delete Wallet From This Browser
                     </h5>
-                    <button type="button" class="btn-close" @onclick="CloseDeleteWalletModal"></button>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="CloseDeleteWalletModal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-danger mb-3">
@@ -886,10 +842,7 @@
                             </div>
                         </div>
                         <div class="d-flex gap-2 mb-3">
-                            <button class="btn btn-outline-secondary flex-grow-1" @onclick="CopyDeleteWalletSeed">
-                                <Icon IconName="copy" Width="16" Height="16" class="me-1" />
-                                Copy
-                            </button>
+                            <SeedPhraseCopyButton Phrase="@deleteWalletSeedWords" />
                             <button class="btn btn-outline-secondary flex-grow-1" @onclick="DownloadDeleteWalletSeed">
                                 <Icon IconName="receive" Width="16" Height="16" class="me-1" />
                                 Download
@@ -920,9 +873,34 @@
 }
 
 @code {
+    private string HubBaseUrl => new Uri(NavigationManager.BaseUri).IsLoopback
+        ? "http://localhost:4200" : "https://angor.io";
+
 
     [Parameter]
     public string ProjectId { get; set; }
+
+    [SupplyParameterFromQuery(Name = "amount")]
+    public string? RequestedAmount { get; set; }
+    [SupplyParameterFromQuery(Name = "installments")]
+    public string? RequestedInstallments { get; set; }
+    [SupplyParameterFromQuery(Name = "frequency")]
+    public string? RequestedFrequency { get; set; }
+    private bool amountFromHubApplied;
+    private bool handoffPlanNeedsSelection;
+
+    private string PaymentAction => project?.ProjectInfo.ProjectType switch
+    {
+        ProjectType.Fund => "Fund",
+        ProjectType.Subscribe => "Subscribe",
+        _ => "Invest"
+    };
+    private string PaymentNoun => project?.ProjectInfo.ProjectType switch
+    {
+        ProjectType.Fund => "Funding",
+        ProjectType.Subscribe => "Subscription",
+        _ => "Investment"
+    };
 
     private const string EphemeralKeyStorageKey = "angor-ephemeral-wallet-key";
 
@@ -934,6 +912,9 @@
     private bool investSpinner;
     private bool publishSpinner;
     private bool refreshSpinner;
+    private const long AppThresholdSats = 1_000_000; // Same 0.01 BTC threshold as the Hub.
+    private bool showAppDownloadModal;
+    private ElementReference paymentButton;
     private bool showUseFundsModal;
     private bool founder;
     private bool invested;
@@ -995,7 +976,7 @@
     public InvestmentModel Investment { get; set; } = new() { InvestmentAmountBtc = 0.01m };
     private List<StageBreakdown> StagesBreakdown { get; set; } = new();
 
-    private decimal[] AmountPresets = { 0.001m, 0.005m, 0.01m, 0.05m, 0.1m };
+    private decimal[] AmountPresets = { 0.005m, 0.01m, 0.05m, 0.1m };
 
     /// <summary>
     /// Whether the current amount will need the founder to sign before publishing.
@@ -1027,6 +1008,7 @@
     private string? newRelayUrl;
 
     // Delete-wallet flow
+    private bool showHelpModal;
     private bool showDeleteWalletModal;
     private bool deleteWalletConfirmed;
     private string? deleteWalletSeedWords;
@@ -1034,6 +1016,10 @@
     protected override async Task OnInitializedAsync()
     {
         // Network/settings initialization is done by EmptyLayout before this runs.
+        // A returning visitor may still have the other network stored locally.
+        // Resolve that before applying the network-specific indexer from the Hub.
+        if (!ApplyNetworkFromQueryString())
+            return;
 
         // Allow the linking site (e.g. angor hub) to hand over a known-good indexer:
         // /invest/{id}?indexer=https://indexer.example.com — added as primary and persisted.
@@ -1342,6 +1328,22 @@
         }
 
         LoadAvailablePatterns();
+        if (!amountFromHubApplied && project.ProjectInfo.AllowDynamicStages
+            && int.TryParse(RequestedInstallments, out int requestedCount) && RequestedFrequency != null)
+        {
+            var requestedPattern = AvailablePatterns?.FirstOrDefault(p => p.StageCount == requestedCount
+                && p.Frequency.ToString().Equals(RequestedFrequency, StringComparison.OrdinalIgnoreCase));
+            if (requestedPattern != null) SelectPattern(requestedPattern);
+            else handoffPlanNeedsSelection = true;
+        }
+        if (!amountFromHubApplied && SelectedPattern?.HasFixedAmount != true
+            && decimal.TryParse(RequestedAmount, System.Globalization.NumberStyles.AllowDecimalPoint,
+                System.Globalization.CultureInfo.InvariantCulture, out decimal requestedAmount)
+            && requestedAmount > 0)
+        {
+            Investment.InvestmentAmountBtc = requestedAmount;
+        }
+        amountFromHubApplied = true;
         UpdateStagesBreakdown();
         _ = LoadProjectStats();
 
@@ -1466,6 +1468,7 @@
 
     private void SelectPattern(DynamicStagePattern pattern)
     {
+        handoffPlanNeedsSelection = false;
         SelectedPattern = pattern;
 
         // Subscribe patterns may fix the investment amount.
@@ -1615,6 +1618,26 @@
     {
         if (!ValidateInvestmentAmount()) return;
 
+        if (Investment.InvestmentAmountBtc.ToUnitSatoshi() >= AppThresholdSats)
+        {
+            showAppDownloadModal = true;
+            return;
+        }
+
+        await ContinueWithWeb();
+    }
+
+    private async Task CloseAppDownloadModal()
+    {
+        showAppDownloadModal = false;
+        await paymentButton.FocusAsync();
+    }
+
+    private async Task ContinueWithWeb()
+    {
+        showAppDownloadModal = false;
+        if (!ValidateInvestmentAmount()) return;
+
         if (!walletAvailable)
         {
             await AutoCreateWallet();
@@ -1740,16 +1763,23 @@
             // Random throwaway encryption key instead of a user password
             var ephemeralKey = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
 
-            var walletWords = new WalletWords { Words = seedWords };
+            using var walletWords = new WalletWords { Words = seedWords };
+            await walletKeyService.PrepareAsync(walletWords);
+            // Yield between CPU-bound key/address batches so the spinner can repaint.
+            await Task.Delay(1);
             var accountInfo = _WalletOperations.BuildAccountInfoForWalletWords(walletWords);
+            await Task.Delay(1);
             await _WalletOperations.UpdateAccountInfoWithNewAddressesAsync(accountInfo);
 
             var encrypted = await encryption.EncryptData(walletWords.ConvertToString(), ephemeralKey);
-            _walletStorage.SaveWalletWords(new Angor.Shared.Models.Wallet { EncryptedData = encrypted });
+            // This temporary wallet only invests. Founder keys are derived by the
+            // full app when the recovery phrase is imported for project creation.
+            _walletStorage.SaveWalletWords(new Angor.Shared.Models.Wallet
+            {
+                EncryptedData = encrypted,
+                FounderKeys = new FounderKeyCollection()
+            });
             storage.SetAccountInfo(network.Name, accountInfo);
-
-            var founderKeyCollection = _derivationOperations.DeriveProjectKeys(walletWords, _networkConfiguration.GetAngorKey());
-            _walletStorage.SetFounderKeys(founderKeyCollection);
 
             // Persist the key alongside the wallet and prime the password cache
             await JS.InvokeVoidAsync("localStorage.setItem", EphemeralKeyStorageKey, ephemeralKey);
@@ -1789,6 +1819,18 @@
         }
 
         StateHasChanged();
+    }
+
+    private async Task ChangeToBitcoinPayment()
+    {
+        CloseLightningModal();
+        await PayWithAddress();
+    }
+
+    private async Task ChangeToLightningPayment()
+    {
+        CloseInvoiceModal();
+        await PayWithLightning();
     }
 
     private async Task PayWithAddress()
@@ -2828,6 +2870,25 @@
 
     // --- Connection settings (indexers/relays) ---
 
+    private bool ApplyNetworkFromQueryString()
+    {
+        var query = System.Web.HttpUtility.ParseQueryString(new Uri(NavigationManager.Uri).Query);
+        string? requestedNetwork = query["network"] is "Main" or "Angornet" ? query["network"] : null;
+        if (requestedNetwork == null || requestedNetwork == network.Name)
+            return true;
+
+        if (hasWallet)
+        {
+            loadError = $"This link is for {requestedNetwork}, but this browser has a wallet on {network.Name}. " +
+                        "Open this link in a different browser profile, or change the network in the Angor app settings.";
+            loadingProject = false;
+            return false;
+        }
+
+        SwitchNetwork(requestedNetwork);
+        return true;
+    }
+
     /// <summary>
     /// If the URL carries an ?indexer= parameter (e.g. passed by angor hub, which already
     /// knows a working indexer for this project), add it as the primary indexer and persist it.
@@ -3097,15 +3158,6 @@
         StateHasChanged();
     }
 
-    private async Task CopyDeleteWalletSeed()
-    {
-        if (!string.IsNullOrEmpty(deleteWalletSeedWords))
-        {
-            await JS.InvokeVoidAsync("navigator.clipboard.writeText", deleteWalletSeedWords);
-            notificationComponent.ShowNotificationMessage("Recovery phrase copied to clipboard", 3);
-        }
-    }
-
     private async Task DownloadDeleteWalletSeed()
     {
         if (!string.IsNullOrEmpty(deleteWalletSeedWords))
@@ -3165,15 +3217,6 @@
         finally
         {
             StateHasChanged();
-        }
-    }
-
-    private async Task CopyBackupSeed()
-    {
-        if (!string.IsNullOrEmpty(autoCreatedSeedWords))
-        {
-            await JS.InvokeVoidAsync("navigator.clipboard.writeText", autoCreatedSeedWords);
-            notificationComponent.ShowNotificationMessage("Recovery phrase copied to clipboard", 3);
         }
     }
 

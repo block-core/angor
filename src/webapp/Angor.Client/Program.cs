@@ -29,6 +29,7 @@ builder.Services.AddBlazoredSessionStorage();
 builder.Services.AddSingleton<ISerializer, Serializer>();
 builder.Services.AddSingleton<INetworkConfiguration, NetworkConfiguration>();
 builder.Services.AddTransient<IHdOperations, HdOperations>();
+builder.Services.AddScoped<WalletKeyService>();
 builder.Services.AddTransient<IClientStorage, ClientStorage>();
 builder.Services.AddTransient<INetworkStorage, ClientStorage>();
 builder.Services.AddTransient<IWalletStorage, WalletStorage>();
