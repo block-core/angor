@@ -21,4 +21,7 @@ public interface INostrCommunicationFactory
     /// The argument is the disconnected relay name.
     /// </summary>
     event Action<string>? RelayDisconnected;
+
+    /// <summary>Raised when a multi-relay client is (re)built, e.g. after a network switch. Args: isDiscovery, client.</summary>
+    event Action<bool, INostrClient>? ClientRecreated;
 }

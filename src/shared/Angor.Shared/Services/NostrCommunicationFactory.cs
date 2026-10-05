@@ -20,6 +20,7 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
     private ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> _okCalledOnSubscriptionClients;
 
     public event Action<string>? RelayDisconnected;
+    public event Action<bool, INostrClient>? ClientRecreated;
 
     public NostrCommunicationFactory(ILogger<NostrWebsocketClient> clientLogger, ILogger<NostrCommunicationFactory> logger)
     {
@@ -62,9 +63,11 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
     
     public INostrClient GetOrCreateDiscoveryClients(INetworkService networkService)
     {
+        var discoveryCreated = false;
         if (_nostrMultiWebsocketClientDiscovery == null)
         {
             _nostrMultiWebsocketClientDiscovery = new NostrMultiWebsocketClient(_clientLogger);
+            discoveryCreated = true;
         }
 
         foreach (var url in networkService.GetDiscoveryRelays()
@@ -102,6 +105,9 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
             communicator.StartOrFail();
         }
 
+        if (discoveryCreated)
+            ClientRecreated?.Invoke(true, _nostrMultiWebsocketClientDiscovery);
+
         return _nostrMultiWebsocketClientDiscovery;
     }
 
@@ -134,6 +140,8 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
             _serviceSubscriptions.Add(_nostrMultiWebsocketClient.Streams.UnknownRawStream.Subscribe(_ =>
                 _logger.LogError($"UnknownRawStream {_.Message}")));
         //}
+
+        ClientRecreated?.Invoke(false, _nostrMultiWebsocketClient);
 
         return _nostrMultiWebsocketClient;
     }
@@ -324,6 +332,9 @@ public class NostrCommunicationFactory : IDisposable , INostrCommunicationFactor
         _serviceSubscriptions.Clear();
         _nostrMultiWebsocketClient?.Dispose();
         _nostrMultiWebsocketClient = null;
+        _nostrMultiWebsocketClientDiscovery?.Dispose();
+        _nostrMultiWebsocketClientDiscovery = null;
         _eoseCalledOnSubscriptionClients = new();
+        _okCalledOnSubscriptionClients = new();
     }
 }

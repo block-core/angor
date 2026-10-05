@@ -75,6 +75,30 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
         _eoseHandlingDiscoverySubscription = discoveryClient.Streams.EoseStream.Synchronize().Subscribe(HandleEoseMessages);
 
         _communicationFactory.RelayDisconnected += OnRelayDisconnected;
+        _communicationFactory.ClientRecreated += OnClientRecreated;
+    }
+
+    // After a network switch the factory disposes and rebuilds its clients; the old streams are dead,
+    // so OK/EOSE handling must be re-attached or no acknowledgement is ever observed.
+    private void OnClientRecreated(bool isDiscovery, Nostr.Client.Client.INostrClient client)
+    {
+        var ok = client.Streams.OkStream.Synchronize().Subscribe(HandleOkMessages);
+        var eose = client.Streams.EoseStream.Synchronize().Subscribe(HandleEoseMessages);
+
+        if (isDiscovery)
+        {
+            _okHandlingDiscoverySubscription?.Dispose();
+            _eoseHandlingDiscoverySubscription?.Dispose();
+            _okHandlingDiscoverySubscription = ok;
+            _eoseHandlingDiscoverySubscription = eose;
+        }
+        else
+        {
+            _okHandlingSubscription?.Dispose();
+            _eoseHandlingSubscription?.Dispose();
+            _okHandlingSubscription = ok;
+            _eoseHandlingSubscription = eose;
+        }
     }
 
     private void OnRelayDisconnected(string relayName)
