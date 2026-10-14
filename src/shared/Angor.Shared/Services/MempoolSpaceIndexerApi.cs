@@ -125,14 +125,16 @@ public class MempoolSpaceIndexerApi : IIndexerService
     private HttpClient GetIndexerClient()
     {
         var indexer = _networkService.GetPrimaryIndexer();
-        var key = indexer.Url;
+        var key = string.IsNullOrEmpty(indexer.Name) ? indexer.Url : indexer.Name;
         if (_clients.TryGetValue(key, out var indexerClient))
             return indexerClient;
 
-        var client = _clientFactory.CreateClient(IndexerFailoverHandler.ClientName);
+        var client = _clientFactory.CreateClient(key);
         client.BaseAddress = new Uri(indexer.Url);
-        // Allow bounded attempts against the configured fallback servers.
-        client.Timeout = TimeSpan.FromSeconds(60);
+        // 30s rather than 10s: cold indexers (Fulcrum/electrs) can be slow to answer
+        // address queries, and the wallet gap-scan fans out many requests at once —
+        // a single slow response would otherwise fail receive-address generation.
+        client.Timeout = TimeSpan.FromSeconds(30);
 
         _clients.TryAdd(key, client);
 
