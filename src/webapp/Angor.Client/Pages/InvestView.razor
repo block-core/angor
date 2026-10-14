@@ -38,7 +38,6 @@
 @inject NostrConversionHelper NostrHelper
 @inject IInvestorTransactionActions _InvestorTransactionActions
 @inject ISerializer serializer
-@inject WalletKeyService walletKeyService
 @inject IEncryptionService encryption
 @inject IAddressPollingService _addressPollingService
 @inject IWalletStorage _walletStorage
@@ -1336,10 +1335,9 @@
             if (requestedPattern != null) SelectPattern(requestedPattern);
             else handoffPlanNeedsSelection = true;
         }
-        if (!amountFromHubApplied && SelectedPattern?.HasFixedAmount != true
-            && decimal.TryParse(RequestedAmount, System.Globalization.NumberStyles.AllowDecimalPoint,
-                System.Globalization.CultureInfo.InvariantCulture, out decimal requestedAmount)
-            && requestedAmount > 0)
+        if (!amountFromHubApplied
+            && InvestHandoff.ParseRequestedAmount(RequestedAmount, SelectedPattern?.HasFixedAmount == true)
+                is decimal requestedAmount)
         {
             Investment.InvestmentAmountBtc = requestedAmount;
         }
@@ -1764,7 +1762,6 @@
             var ephemeralKey = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
 
             using var walletWords = new WalletWords { Words = seedWords };
-            await walletKeyService.PrepareAsync(walletWords);
             // Yield between CPU-bound key/address batches so the spinner can repaint.
             await Task.Delay(1);
             var accountInfo = _WalletOperations.BuildAccountInfoForWalletWords(walletWords);
@@ -2872,12 +2869,12 @@
 
     private bool ApplyNetworkFromQueryString()
     {
-        var query = System.Web.HttpUtility.ParseQueryString(new Uri(NavigationManager.Uri).Query);
-        string? requestedNetwork = query["network"] is "Main" or "Angornet" ? query["network"] : null;
-        if (requestedNetwork == null || requestedNetwork == network.Name)
+        var decision = InvestHandoff.EvaluateNetwork(NavigationManager.Uri, network.Name, hasWallet);
+        if (decision.Action == NetworkHandoffAction.None)
             return true;
 
-        if (hasWallet)
+        string requestedNetwork = decision.RequestedNetwork!;
+        if (decision.Action == NetworkHandoffAction.Reject)
         {
             loadError = $"This link is for {requestedNetwork}, but this browser has a wallet on {network.Name}. " +
                         "Open this link in a different browser profile, or change the network in the Angor app settings.";

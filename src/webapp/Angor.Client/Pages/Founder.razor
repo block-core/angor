@@ -1,4 +1,4 @@
-﻿@page "/founder"
+@page "/founder"
 @using Angor.Client.Models
 @using Angor.Client.Storage
 @using Angor.Shared.Models
@@ -22,6 +22,12 @@
 @if (!hasWallet)
 {
     NavigationManager.NavigateTo("/wallet");
+    return;
+}
+
+@if (!hasFounderKeys)
+{
+    <InvestorOnlyNotice />
     return;
 }
 
@@ -107,6 +113,7 @@
     private List<FounderProject> founderProjects = new();
     private bool hasWallet;
     bool scanningForProjects;
+    private bool hasFounderKeys;
 
     private NotificationComponent notificationComponent;
 
@@ -118,6 +125,8 @@
         
         hasWallet = _walletStorage.HasWallet();
 
+        hasFounderKeys = FounderKeyAccess.HasFounderKeys(_walletStorage);
+
         if (hasWallet)
         {
             founderProjects = storage.GetFounderProjects().Where(_ => !string.IsNullOrEmpty(_.CreationTransactionId)).ToList();
@@ -128,8 +137,14 @@
     {
         scanningForProjects = true;
 
-    var keys = _walletStorage.GetFounderKeys();
-      var founderProjectsToLookup = new Dictionary<string, ProjectIndexerData>();
+        var keys = _walletStorage.GetFounderKeys();
+        if (keys?.Keys is not { Count: > 0 })
+        {
+            scanningForProjects = false;
+            return;
+        }
+
+        var founderProjectsToLookup = new Dictionary<string, ProjectIndexerData>();
 
         foreach (var key in keys.Keys)
         {
