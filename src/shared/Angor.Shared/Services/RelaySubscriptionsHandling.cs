@@ -337,6 +337,7 @@ public class RelaySubscriptionsHandling : IDisposable, IRelaySubscriptionsHandli
     public void Dispose()
     {
         _communicationFactory.RelayDisconnected -= OnRelayDisconnected;
+        _communicationFactory.ClientRecreated -= OnClientRecreated;
         relaySubscriptions.Values.ToList().ForEach(_ => _.Dispose());
         subscriptionTimeoutTimers.Values.ToList().ForEach(timer => timer.Dispose());
         subscriptionTimeoutTimers.Clear();
