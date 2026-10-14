@@ -54,7 +54,13 @@ public static class RequestInvestmentSignatures
 
             var existingInvestment = await Result.Try(() => angorIndexerService.GetInvestmentAsync(request.ProjectId.Value, investorKey));
 
-            if (existingInvestment is { IsSuccess: true, Value: not null })
+            // Fail closed: if the indexer cannot answer we cannot tell whether this investment already exists,
+            // so do not continue to signing or send anything to the founder.
+            if (existingInvestment.IsFailure)
+                return Result.Failure<RequestFounderSignaturesResponse>(
+                    $"Could not verify whether this investment already exists. The indexer may be unavailable: {existingInvestment.Error}");
+
+            if (existingInvestment.Value != null)
                 return Result.Failure<RequestFounderSignaturesResponse>("An investment with the same key already exists on the blockchain.");
 
             var sensitiveDataResult = await seedwordsProvider.GetSensitiveData(request.WalletId.Value);

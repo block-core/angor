@@ -62,7 +62,7 @@
                                         ClipToBounds="True">
                                     <Border.Background>
                                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                                            <GradientStop Color="#F7931A" Offset="0" />
+                                            <GradientStop Color="{StaticResource BitcoinOrange}" Offset="0" />
                                             <GradientStop Color="#FFA500" Offset="1" />
                                         </LinearGradientBrush>
                                     </Border.Background>
@@ -70,8 +70,7 @@
                                            FontSize="20"
                                            Foreground="White" />
                                 </Border>
-                                <TextBlock Text="Balance Summary"
-                                           FontSize="20" FontWeight="Bold"
+                                <TextBlock Classes="Size-20" Text="Balance Summary" FontWeight="Bold"
                                            Foreground="{DynamicResource StatsDetailLabel}"
                                            VerticalAlignment="Center" />
                             </StackPanel>
@@ -100,17 +99,14 @@
                                                       Opacity="0.7"
                                                       Stretch="Uniform" />
                                             </Viewbox>
-                                            <TextBlock Text="Total Balance"
-                                                       FontSize="13" FontWeight="SemiBold"
+                                            <TextBlock Classes="Size-13" Text="Total Balance" FontWeight="SemiBold"
                                                        Foreground="{DynamicResource StatsDetailLabel}" />
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <TextBlock Text="{Binding TotalBalance}"
-                                                       AutomationProperties.AutomationId="FundsTotalBalanceText"
-                                                       FontSize="20" FontWeight="Bold"
+                                            <TextBlock Classes="Size-20" Text="{Binding TotalBalance}"
+                                                       AutomationProperties.AutomationId="FundsTotalBalanceText" FontWeight="Bold"
                                                        Foreground="{DynamicResource StatsDetailValue}" />
-                                            <TextBlock Text="{Binding CurrencySymbol}"
-                                                       FontSize="13"
+                                            <TextBlock Classes="Size-13" Text="{Binding CurrencySymbol}"
                                                        Foreground="{DynamicResource StatsDetailSubtext}"
                                                        VerticalAlignment="Bottom" Margin="0,0,0,2" />
                                         </StackPanel>
@@ -133,16 +129,13 @@
                                                    Foreground="{DynamicResource BitcoinAccent}"
                                                    Opacity="0.7"
                                                    VerticalAlignment="Center" />
-                                            <TextBlock Text="Bitcoin"
-                                                       FontSize="13" FontWeight="SemiBold"
+                                            <TextBlock Classes="Size-13" Text="Bitcoin" FontWeight="SemiBold"
                                                        Foreground="{DynamicResource StatsDetailLabel}" />
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <TextBlock Text="{Binding BitcoinBalance}"
-                                                       FontSize="20" FontWeight="Bold"
+                                            <TextBlock Classes="Size-20" Text="{Binding BitcoinBalance}" FontWeight="Bold"
                                                        Foreground="{DynamicResource StatsDetailValue}" />
-                                            <TextBlock Text="{Binding CurrencySymbol}"
-                                                       FontSize="13"
+                                            <TextBlock Classes="Size-13" Text="{Binding CurrencySymbol}"
                                                        Foreground="{DynamicResource StatsDetailSubtext}"
                                                        VerticalAlignment="Bottom" Margin="0,0,0,2" />
                                         </StackPanel>
@@ -166,16 +159,13 @@
                                                         Foreground="{DynamicResource BitcoinAccent}"
                                                         Opacity="0.7" />
                                             </Viewbox>
-                                            <TextBlock Text="Liquid"
-                                                       FontSize="13" FontWeight="SemiBold"
+                                            <TextBlock Classes="Size-13" Text="Liquid" FontWeight="SemiBold"
                                                        Foreground="{DynamicResource StatsDetailLabel}" />
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" Spacing="4">
-                                            <TextBlock Text="{Binding LiquidBalance}"
-                                                       FontSize="20" FontWeight="Bold"
+                                            <TextBlock Classes="Size-20" Text="{Binding LiquidBalance}" FontWeight="Bold"
                                                        Foreground="{DynamicResource StatsDetailValue}" />
-                                            <TextBlock Text="{Binding CurrencySymbol}"
-                                                       FontSize="13"
+                                            <TextBlock Classes="Size-13" Text="{Binding CurrencySymbol}"
                                                        Foreground="{DynamicResource StatsDetailSubtext}"
                                                        VerticalAlignment="Bottom" Margin="0,0,0,2" />
                                         </StackPanel>
@@ -223,8 +213,7 @@
                                                     <i:Icon Value="fa-solid fa-lock"
                                                            FontSize="20"
                                                            Foreground="{DynamicResource PrimaryGreenBrush}" />
-                                                    <TextBlock Text="{Binding GroupName}"
-                                                               FontSize="18"
+                                                    <TextBlock Classes="Size-L" Text="{Binding GroupName}"
                                                                FontWeight="Bold"
                                                                Foreground="{DynamicResource TextStrong}"
                                                                VerticalAlignment="Center" />
@@ -232,11 +221,9 @@
                                                 <StackPanel Grid.Column="2"
                                                             Orientation="Horizontal" Spacing="4"
                                                             VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding GroupBalance}"
-                                                               FontSize="16" FontWeight="SemiBold"
+                                                    <TextBlock Classes="Size-M" Text="{Binding GroupBalance}" FontWeight="SemiBold"
                                                                Foreground="{DynamicResource TextStrong}" />
-                                                    <TextBlock Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}"
-                                                               FontSize="13"
+                                                    <TextBlock Classes="Size-13" Text="{Binding $parent[UserControl].DataContext.CurrencySymbol}"
                                                                Foreground="{DynamicResource TextMuted}"
                                                                VerticalAlignment="Bottom" Margin="0,0,0,1" />
                                                 </StackPanel>

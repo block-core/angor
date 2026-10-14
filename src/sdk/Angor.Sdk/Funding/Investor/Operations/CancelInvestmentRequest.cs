@@ -40,7 +40,13 @@ public static class CancelInvestmentRequest
                 return Result.Failure<CancelInvestmentRequestResponse>("Investment record not found.");
 
             // Check if this specific transaction is already published on-chain; if so, cancellation is not allowed
-            var publishedInvestment = await angorIndexerService.GetInvestmentAsync(request.ProjectId.Value, record.InvestorPubKey);
+            var publishedInvestmentResult = await Result.Try(() =>
+                angorIndexerService.GetInvestmentAsync(request.ProjectId.Value, record.InvestorPubKey));
+            if (publishedInvestmentResult.IsFailure)
+                return Result.Failure<CancelInvestmentRequestResponse>(
+                    $"Could not verify whether the investment was already published. The indexer may be unavailable: {publishedInvestmentResult.Error}");
+
+            var publishedInvestment = publishedInvestmentResult.Value;
             if (publishedInvestment != null && publishedInvestment.TransactionId == record.InvestmentTransactionHash)
                 return Result.Failure<CancelInvestmentRequestResponse>("Cannot cancel investment: the transaction has already been published to the blockchain.");
 

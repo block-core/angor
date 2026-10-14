@@ -37,8 +37,16 @@ public static class CreateProjectKeys
             {
                 if (cancellationToken.IsCancellationRequested)
                     break;
-                var existing = await angorIndexerService.GetProjectByIdAsync(fk.ProjectIdentifier);
-                if (existing != null) continue;
+                var existingResult = await Result.Try(() => angorIndexerService.GetProjectByIdAsync(fk.ProjectIdentifier));
+                if (existingResult.IsFailure)
+                {
+                    // Not knowing whether a slot is used is not the same as the slot being free.
+                    logger.LogWarning("Could not check project slot {ProjectId}: {Error}", fk.ProjectIdentifier, existingResult.Error);
+                    return Result.Failure<CreateProjectKeysResponse>(
+                        $"Could not check which project slots are free. The indexer may be unavailable: {existingResult.Error}");
+                }
+
+                if (existingResult.Value != null) continue;
                 available = fk;
                 break;
             }

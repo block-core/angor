@@ -83,8 +83,7 @@
                             <i:Icon Value="fa-solid fa-hand-holding-dollar"
                                    FontSize="16"
                                    Foreground="#4B7C5A" />
-                            <TextBlock Text="Release Funds"
-                                       FontSize="14" FontWeight="Medium"
+                            <TextBlock Classes="Size-S" Text="Release Funds" FontWeight="Medium"
                                        Foreground="#4B7C5A"
                                        VerticalAlignment="Center" />
                         </StackPanel>
@@ -115,8 +114,7 @@
                             <i:Icon Value="fa-solid fa-lock"
                                    FontSize="16"
                                    Foreground="{DynamicResource PrivateKeysBtnText}" />
-                            <TextBlock Text="View Private Keys"
-                                       FontSize="14" FontWeight="Medium"
+                            <TextBlock Classes="Size-S" Text="View Private Keys" FontWeight="Medium"
                                        Foreground="{DynamicResource PrivateKeysBtnText}"
                                        VerticalAlignment="Center" />
                         </StackPanel>
@@ -172,8 +170,7 @@
                                     </Style>
                                 </i:Icon.Styles>
                             </i:Icon>
-                            <TextBlock Text="Refresh"
-                                       FontSize="14"
+                            <TextBlock Classes="Size-S" Text="Refresh"
                                        FontWeight="Medium"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center" />
@@ -262,8 +259,7 @@
                                       Fill="{DynamicResource TextStrong}"
                                       Width="320" Height="512" Stretch="Uniform" />
                             </Viewbox>
-                            <TextBlock Text="Back"
-                                       FontSize="14" FontWeight="Medium"
+                            <TextBlock Classes="Size-S" Text="Back" FontWeight="Medium"
                                        Foreground="{DynamicResource TextStrong}"
                                        VerticalAlignment="Center" />
                         </StackPanel>
@@ -287,12 +283,11 @@
                             <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2" />
                         </Transitions>
                     </Border.Transitions>
-                    <TextBlock Text="{Binding Project.Name}"
-                               FontSize="14" FontWeight="SemiBold"
+                    <TextBlock Classes="Size-S" Text="{Binding Project.Name}" FontWeight="SemiBold"
                                Foreground="{DynamicResource TextStrong}"
                                VerticalAlignment="Center"
                                TextTrimming="CharacterEllipsis"
-                               MaxWidth="400" />
+                               MaxWidth="400" ToolTip.Tip="{Binding Project.Name}" />
                 </Border>
             </StackPanel>
         </DockPanel>
@@ -360,8 +355,7 @@
                                             </Style>
                                         </i:Icon.Styles>
                                     </i:Icon>
-                                    <TextBlock Text="Refresh"
-                                               FontSize="14" FontWeight="Medium"
+                                    <TextBlock Classes="Size-S" Text="Refresh" FontWeight="Medium"
                                                Foreground="{DynamicResource TextStrong}"
                                                VerticalAlignment="Center" />
                                 </StackPanel>
@@ -383,8 +377,7 @@
                                     <i:Icon Value="fa-solid fa-lock"
                                             FontSize="14"
                                             Foreground="{DynamicResource PrivateKeysBtnText}" />
-                                    <TextBlock Text="View Private Keys"
-                                               FontSize="14" FontWeight="Medium"
+                                    <TextBlock Classes="Size-S" Text="View Private Keys" FontWeight="Medium"
                                                Foreground="{DynamicResource PrivateKeysBtnText}"
                                                VerticalAlignment="Center" />
                                 </StackPanel>

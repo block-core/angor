@@ -47,6 +47,10 @@ public partial class PrivateKeysPasswordModal : UserControl, IBackdropCloseable
         var viewKeysBtn = this.FindControl<Button>("ViewKeysButton");
         if (viewKeysBtn != null) viewKeysBtn.Click += OnViewKeysClick;
 
+        // Reveal toggle — swaps masked '*' for plain text and back
+        var revealBtn = this.FindControl<Button>("RevealPasswordBtn");
+        if (revealBtn != null) revealBtn.Click += OnRevealPasswordClick;
+
         // Clear password error on typing (Vue: @input clears errors)
         var passwordInput = this.FindControl<TextBox>("PasswordInput");
         if (passwordInput != null)
@@ -61,6 +65,21 @@ public partial class PrivateKeysPasswordModal : UserControl, IBackdropCloseable
         this.FindAncestorOfType<ShellView>()?.DataContext as ShellViewModel;
 
     public void OnBackdropCloseRequested() { }
+
+    private void OnRevealPasswordClick(object? sender, RoutedEventArgs e)
+    {
+        var passwordInput = this.FindControl<TextBox>("PasswordInput");
+        var icon = this.FindControl<Optris.Icons.Avalonia.Icon>("RevealPasswordIcon");
+        var btn = this.FindControl<Button>("RevealPasswordBtn");
+        if (passwordInput == null || icon == null) return;
+
+        var revealing = passwordInput.PasswordChar == '*';
+        passwordInput.PasswordChar = revealing ? '\0' : '*';
+        icon.Value = revealing ? "fa-solid fa-eye-slash" : "fa-solid fa-eye";
+        ToolTip.SetTip(btn, revealing ? "Hide password" : "Show password");
+        Avalonia.Automation.AutomationProperties.SetName(btn, revealing ? "Hide password" : "Show password");
+        passwordInput.Focus();
+    }
 
     private void OnCloseClick(object? sender, RoutedEventArgs e)
     {

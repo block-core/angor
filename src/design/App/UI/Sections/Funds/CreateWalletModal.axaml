@@ -16,6 +16,19 @@
           Step 3 "success":  Wallet Created! (green checkmark) + Done
     -->
 
+    <UserControl.Styles>
+        <!-- Seed word-count hint colours (theme-aware) -->
+        <Style Selector="TextBlock#SeedWordCountHint">
+            <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+        </Style>
+        <Style Selector="TextBlock#SeedWordCountHint.Valid">
+            <Setter Property="Foreground" Value="{DynamicResource SuccessText}" />
+        </Style>
+        <Style Selector="TextBlock#SeedWordCountHint.Invalid">
+            <Setter Property="Foreground" Value="{DynamicResource ErrorForeground}" />
+        </Style>
+    </UserControl.Styles>
+
     <Panel>
         <!-- ════════════════════════════════════════════════════════════ -->
         <!-- MODAL CARD                                                   -->
@@ -47,8 +60,7 @@
                     <!-- Header: "Add Wallet" centered, close X top-right -->
                     <!-- Vue: mb-6, text-xl font-bold text-center -->
                     <Panel>
-                        <TextBlock Text="Add Wallet"
-                                   FontSize="20" FontWeight="Bold"
+                        <TextBlock Classes="Size-20" Text="Add Wallet" FontWeight="Bold"
                                    Foreground="{DynamicResource TextStrong}"
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center" />
@@ -114,8 +126,7 @@
                     <!-- Header: "Import Wallet" centered + close X -->
                     <!-- Vue: mb-4, text-xl font-bold text-center -->
                     <Panel>
-                        <TextBlock Text="Import Wallet"
-                                   FontSize="20" FontWeight="Bold"
+                        <TextBlock Classes="Size-20" Text="Import Wallet" FontWeight="Bold"
                                    Foreground="{DynamicResource TextStrong}"
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center" />
@@ -125,8 +136,7 @@
 
                     <!-- Description -->
                     <!-- Vue: text-sm mb-4, text-gray-300/text-gray-600 -->
-                    <TextBlock Text="Enter your BIP-39 seed words separated by spaces to import an external wallet."
-                               FontSize="14"
+                    <TextBlock Classes="Size-S" Text="Enter your BIP-39 seed words separated by spaces to import an external wallet."
                                Foreground="{DynamicResource TextMuted}"
                                TextWrapping="Wrap" />
 
@@ -143,8 +153,7 @@
                                            FontSize="13"
                                            Foreground="{DynamicResource TextMuted}"
                                            VerticalAlignment="Center" />
-                                    <TextBlock Text="Restore from backup"
-                                               FontSize="13"
+                                    <TextBlock Classes="Size-13" Text="Restore from backup"
                                                Foreground="{DynamicResource TextMuted}"
                                                VerticalAlignment="Center" />
                                 </StackPanel>
@@ -201,11 +210,9 @@
                                                         <StackPanel Grid.Column="1" Spacing="1"
                                                                     VerticalAlignment="Center"
                                                                     Margin="10,0,0,0">
-                                                            <TextBlock Text="{Binding Name}"
-                                                                       FontSize="13" FontWeight="SemiBold"
+                                                            <TextBlock Classes="Size-13" Text="{Binding Name}" FontWeight="SemiBold"
                                                                        Foreground="{DynamicResource TextStrong}" />
-                                                            <TextBlock Text="{Binding ShortId}"
-                                                                       FontSize="11"
+                                                            <TextBlock Classes="Size-XXS" Text="{Binding ShortId}"
                                                                        Foreground="{DynamicResource TextMuted}" />
                                                         </StackPanel>
                                                     </Grid>
@@ -225,8 +232,7 @@
                                            Foreground="{DynamicResource PrimaryGreenBrush}"
                                            VerticalAlignment="Center"
                                            Classes="spin" />
-                                    <TextBlock Text="Restoring wallet..."
-                                               FontSize="13"
+                                    <TextBlock Classes="Size-13" Text="Restoring wallet..."
                                                Foreground="{DynamicResource TextMuted}"
                                                VerticalAlignment="Center" />
                                 </StackPanel>
@@ -248,15 +254,18 @@
                              FontSize="14"
                              Foreground="{DynamicResource TextStrong}" />
 
+                    <!-- Live word-count hint — updates as the user types -->
+                    <TextBlock Classes="Size-XS" Name="SeedWordCountHint"
+                               Text=""
+                               IsVisible="False" />
+
                     <!-- Error/Success messages -->
-                    <TextBlock Name="SeedError"
-                               FontSize="13"
+                    <TextBlock Classes="Size-13" Name="SeedError"
                                Foreground="{DynamicResource ErrorForeground}"
                                IsVisible="False"
                                TextWrapping="Wrap" />
-                    <TextBlock Name="SeedSuccess"
+                    <TextBlock Classes="Size-13" Name="SeedSuccess"
                                Text="Seed phrase verified successfully."
-                               FontSize="13"
                                Foreground="#16A34A"
                                IsVisible="False" />
 
@@ -329,16 +338,14 @@
 
                     <!-- Title -->
                     <!-- Vue: text-3xl font-bold text-center mb-3 -->
-                    <TextBlock Text="Backup Your Wallet"
-                               FontSize="28" FontWeight="Bold"
+                    <TextBlock Classes="Size-28" Text="Backup Your Wallet" FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}"
                                HorizontalAlignment="Center"
                                TextAlignment="Center" />
 
                     <!-- Description -->
                     <!-- Vue: text-center mb-6, text-gray-300/text-gray-600 -->
-                    <TextBlock Text="Download your seed phrase and keep it safe. You'll need this to recover your wallet if you lose access."
-                               FontSize="14"
+                    <TextBlock Classes="Size-S" Text="Download your seed phrase and keep it safe. You'll need this to recover your wallet if you lose access."
                                Foreground="{DynamicResource TextMuted}"
                                TextWrapping="Wrap"
                                TextAlignment="Center" />
@@ -350,9 +357,8 @@
                             BorderThickness="1"
                             CornerRadius="8"
                             Padding="16">
-                        <SelectableTextBlock Name="SeedPhraseDisplay"
+                        <SelectableTextBlock Classes="Size-S" Name="SeedPhraseDisplay"
                                    Text="abandon ability able about above absent absorb abstract absurd abuse access accident"
-                                   FontSize="14"
                                    FontFamily="Cascadia Mono, Consolas, monospace"
                                    Foreground="{DynamicResource CreateWalletSeedText}"
                                    TextWrapping="Wrap"
@@ -362,6 +368,25 @@
                     <!-- Buttons -->
                     <!-- Vue: flex flex-col gap-3 -->
                     <StackPanel Spacing="12">
+                        <!-- Plaintext-file warning: the download is NOT encrypted -->
+                        <Border Background="{DynamicResource WarningSoftBrush}"
+                                BorderBrush="{DynamicResource WarningBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="12">
+                            <Grid ColumnDefinitions="Auto,*">
+                                <i:Icon Value="fa-solid fa-triangle-exclamation"
+                                       FontSize="16"
+                                       Foreground="{DynamicResource WarningBrightBrush}"
+                                       VerticalAlignment="Top" Margin="0,1,10,0" />
+                                <TextBlock Grid.Column="1" Classes="Size-XS" Foreground="{DynamicResource TextMuted}"
+                                           TextWrapping="Wrap"
+                                           LineHeight="18">
+                                    The downloaded file is <Run FontWeight="SemiBold" Foreground="{DynamicResource TextStrong}">not encrypted</Run> — anyone who gets it can spend your funds. Never keep it in Downloads or synced folders; write the words down on paper and delete the file instead.
+                                </TextBlock>
+                            </Grid>
+                        </Border>
+
                         <!-- Download Seed (amber) -->
                         <!-- Vue: bg-amber-800/bg-amber-500, text-white -->
                         <Button Name="BtnDownloadSeed" Classes="MobileAction" AutomationProperties.AutomationId="BtnDownloadSeed" HorizontalAlignment="Stretch"
@@ -442,16 +467,14 @@
 
                     <!-- Title -->
                     <!-- Vue: text-3xl font-bold text-center mb-3 -->
-                    <TextBlock Text="Wallet Created!"
-                               FontSize="28" FontWeight="Bold"
+                    <TextBlock Classes="Size-28" Text="Wallet Created!" FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}"
                                HorizontalAlignment="Center"
                                TextAlignment="Center" />
 
                     <!-- Description -->
                     <!-- Vue: text-center mb-8, text-gray-300/text-gray-600 -->
-                    <TextBlock Text="Your new wallet has been successfully created. You can now use it to fund or launch projects."
-                               FontSize="14"
+                    <TextBlock Classes="Size-S" Text="Your new wallet has been successfully created. You can now use it to fund or launch projects."
                                Foreground="{DynamicResource TextMuted}"
                                TextWrapping="Wrap"
                                TextAlignment="Center"
