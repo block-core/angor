@@ -68,7 +68,16 @@ public static class SpendStageFunds
                 return (hex, stageNumber: x.InvestmentStageIndex + 1);
             });
 
-            var stageInputResults = await Task.WhenAll(stageInputTasks);
+            (string hex, int stageNumber)[] stageInputResults;
+            try
+            {
+                stageInputResults = await Task.WhenAll(stageInputTasks);
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<SpendStageFundsResponse>(
+                    $"Could not look up the investment transactions. The indexer may be unavailable: {ex.Message}");
+            }
 
             var stageTransactionInputs = stageInputResults
                 .Where(r => r.hex != string.Empty)

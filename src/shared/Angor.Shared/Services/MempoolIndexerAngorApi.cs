@@ -36,9 +36,9 @@ public class MempoolIndexerAngorApi : IAngorIndexerService
     private HttpClient GetIndexerClient()
     {
         var indexer = _networkService.GetPrimaryIndexer();
-        var client = _clientFactory.CreateClient(IndexerFailoverHandler.ClientName);
+        var client = _clientFactory.CreateClient();
         client.BaseAddress = new Uri(indexer.Url);
-        client.Timeout = TimeSpan.FromSeconds(60);
+        client.Timeout = TimeSpan.FromSeconds(10);
         return client;
     }
 
@@ -73,6 +73,8 @@ public class MempoolIndexerAngorApi : IAngorIndexerService
                 return allTransactions;
             }
 
+            // An unavailable or misbehaving indexer must surface as an error. Returning an empty list here
+            // would make callers report "no investments" / "project does not exist" during an outage.
             response.EnsureSuccessStatusCode();
             List<MempoolSpaceIndexerApi.MempoolTransaction>? page =
                 await response.Content.ReadFromJsonAsync<List<MempoolSpaceIndexerApi.MempoolTransaction>>(jsonOptions);
@@ -136,6 +138,14 @@ public class MempoolIndexerAngorApi : IAngorIndexerService
 
         return allTransactions;
     }
+
+    /// <summary>
+    /// True for failures that mean the indexer could not answer (HTTP error, timeout, malformed body).
+    /// These propagate from the blockchain-based lookups so callers can report them instead of treating
+    /// them as "nothing found".
+    /// </summary>
+    private static bool IsIndexerFailure(Exception ex) =>
+        ex is HttpRequestException or JsonException or TaskCanceledException;
 
     public async Task<List<ProjectIndexerData>> GetProjectsAsync(int? offset, int limit)
     {
@@ -209,11 +219,7 @@ public class MempoolIndexerAngorApi : IAngorIndexerService
             // Convert transactions to ProjectIndexerData using the mapper
             return _mappers.ConvertTransactionsToProjectIndexerData(projectId, trxs);
         }
-        catch (HttpRequestException)
-        {
-            throw;
-        }
-        catch (Exception ex)
+        catch (Exception ex) when (!IsIndexerFailure(ex))
         {
             _logger.LogError(ex, $"Error fetching project by ID {projectId}: {ex.Message}");
             return null;
@@ -268,7 +274,7 @@ public class MempoolIndexerAngorApi : IAngorIndexerService
 
             return (projectId, stats);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (!IsIndexerFailure(ex))
         {
             _logger.LogError(ex, $"Error fetching project stats for ID {projectId}: {ex.Message}");
             return (projectId, null);
@@ -316,7 +322,7 @@ public class MempoolIndexerAngorApi : IAngorIndexerService
             // Use the mapper to convert transactions to investments
             return _mappers.ConvertTransactionsToInvestments(projectId, trxs);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (!IsIndexerFailure(ex))
         {
             _logger.LogError(ex, $"Error fetching investments for project {projectId}: {ex.Message}");
             return new List<ProjectInvestment>();
@@ -364,7 +370,7 @@ public class MempoolIndexerAngorApi : IAngorIndexerService
 
             return investment;
         }
-        catch (Exception ex)
+        catch (Exception ex) when (!IsIndexerFailure(ex))
         {
             _logger.LogError(ex, $"Error fetching investment for project {projectId} and investor {investorPubKey}: {ex.Message}");
             return null;

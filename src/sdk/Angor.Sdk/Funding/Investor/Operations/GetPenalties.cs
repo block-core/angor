@@ -86,7 +86,15 @@ public class GetPenalties
 
             var investmentsDictionary = investments.Value.ProjectIdentifiers.ToDictionary(i => i.InvestorPubKey);
             
-            await Task.WhenAll(investmentTasks);
+            try
+            {
+                await Task.WhenAll(investmentTasks);
+            }
+            catch (Exception ex)
+            {
+                return Result.Failure<IEnumerable<LookupInvestment>>(
+                    $"Could not load investments from the indexer: {ex.Message}");
+            }
 
             var lookups = investmentTasks
                           .Where(t => t is { IsCompletedSuccessfully: true, Result: not null })
