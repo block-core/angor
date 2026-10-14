@@ -750,7 +750,7 @@ public partial class InvestPageViewModel : ReactiveObject, IDisposable
     }
 
     /// <summary>Callback for PaymentFlowViewModel: build + publish investment from wallet UTXOs.</summary>
-    private async Task<Result> InvestWithWalletAsync(WalletId walletId, long amountSats, long feeRate)
+    internal async Task<Result> InvestWithWalletAsync(WalletId walletId, long amountSats, long feeRate)
     {
         await _walletContext.RefreshAllBalancesAsync();
 

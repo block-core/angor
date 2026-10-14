@@ -286,27 +286,14 @@ public class DocumentProjectService(
 
                     return indexerData != null ? new ProjectId(eventInfo.Data.ProjectIdentifier) : null;
                 }
-                catch (HttpRequestException)
-                {
-                    // An unavailable server is not evidence that a project does not exist.
-                    throw;
-                }
                 catch
                 {
+                    // Skip projects that fail validation
                     return null;
                 }
             });
 
-        ProjectId?[] results;
-        try
-        {
-            results = await Task.WhenAll(validationTasks);
-        }
-        catch (HttpRequestException ex)
-        {
-            logger.LogWarning(ex, "Could not validate discovered projects");
-            return Result.Failure<IEnumerable<Project>>("Project servers are unavailable. Please try again shortly.");
-        }
+        var results = await Task.WhenAll(validationTasks);
         var validatedProjectIds = results.Where(id => id != null).Select(id => id!).ToList();
 
         if (!validatedProjectIds.Any())
