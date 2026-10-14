@@ -38,6 +38,12 @@
     return;
 }
 
+@if (!hasFounderKeys)
+{
+    <InvestorOnlyNotice />
+    return;
+}
+
 @if (!isValid)
 {
     <div class="alert alert-danger">
@@ -1182,6 +1188,8 @@
         };
     }
 
+    private bool hasFounderKeys = true;
+
     protected override async Task OnInitializedAsync()
     {
         NavMenuState.SetActivePage("founder");
@@ -1189,6 +1197,12 @@
         isTestnet = network?.IsMainnet == false;
 
         if (!hasWallet)
+        {
+            return;
+        }
+
+        hasFounderKeys = FounderKeyAccess.HasFounderKeys(_walletStorage);
+        if (!hasFounderKeys)
         {
             return;
         }

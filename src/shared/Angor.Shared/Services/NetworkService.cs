@@ -99,6 +99,7 @@ namespace Angor.Shared.Services
 
         public async Task CheckServices(bool force = false)
         {
+            string checkedNetwork = _networkStorage.GetNetwork();
             var settings = _networkStorage.GetSettings();
 
             foreach (var indexerUrl  in settings.Indexers)
@@ -173,7 +174,32 @@ namespace Angor.Shared.Services
             }
 
             client.DefaultRequestHeaders.Accept.Remove(nostrHeaderMediaType);
-            _networkStorage.SetSettings(settings);
+            // Connection checks can outlive a network switch or a Hub handoff.
+            // Merge only status information into the latest settings, never the
+            // old primary selections or lists captured before the HTTP requests.
+            if (_networkStorage.GetNetwork() != checkedNetwork)
+                return;
+
+            SettingsInfo currentSettings = _networkStorage.GetSettings();
+            MergeConnectionStatuses(currentSettings.Indexers, settings.Indexers);
+            MergeConnectionStatuses(currentSettings.Relays, settings.Relays);
+            _networkStorage.SetSettings(currentSettings);
+            OnStatusChanged?.Invoke();
+        }
+
+        private static void MergeConnectionStatuses(List<SettingsUrl> current, List<SettingsUrl> checkedUrls)
+        {
+            foreach (SettingsUrl entry in current)
+            {
+                SettingsUrl? result = checkedUrls.FirstOrDefault(candidate => candidate.Url == entry.Url);
+                if (result == null || result.LastCheck < entry.LastCheck)
+                    continue;
+
+                entry.LastCheck = result.LastCheck;
+                entry.Status = result.Status;
+                if (string.IsNullOrEmpty(entry.Name))
+                    entry.Name = result.Name;
+            }
         }
 
         public SettingsUrl GetPrimaryIndexer()

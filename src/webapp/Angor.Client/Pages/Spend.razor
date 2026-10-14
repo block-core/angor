@@ -42,6 +42,13 @@
     NavigationManager.NavigateTo($"/wallet");
     return;
 }
+
+@if (!hasFounderKeys)
+{
+    <InvestorOnlyNotice />
+    return;
+}
+
 <div class="header-container slide-in">
     <div class="card card-body">
         <div class="header-content">
@@ -620,10 +627,14 @@
 
     private long amount;
 
+    private bool hasFounderKeys;
+
     protected override async Task OnInitializedAsync()
     {
         // Set active menu for founder page
         NavMenuState.SetActivePage("founder");
+
+        hasFounderKeys = FounderKeyAccess.HasFounderKeys(_walletStorage);
 
         founderProject = storage.GetFounderProjects().FirstOrDefault(p => p.ProjectInfo.ProjectIdentifier == ProjectId);
         project = founderProject?.ProjectInfo;
@@ -631,6 +642,13 @@
         firstTimeRefreshSpinner = true;
 
         CalculateTotalValues();
+    }
+
+    private FounderKeys GetFounderKeysForProject()
+    {
+        var founderKeys = _walletStorage.GetFounderKeys()?.Keys?.FirstOrDefault(k => k.ProjectIdentifier == project.ProjectIdentifier);
+
+        return founderKeys ?? throw new InvalidOperationException(FounderKeyAccess.InvestorOnlyMessage);
     }
 
     private void CalculateTotalValues()
@@ -676,7 +694,7 @@
     {
         if (firstRender)
         {
-            if (hasWallet)
+            if (hasWallet && hasFounderKeys)
             {
                 await RefreshBalance();
             }
@@ -900,7 +918,7 @@
             var address = accountInfo.GetNextReceiveAddress();
             var addressScript = BitcoinWitPubKeyAddress.Create(address, network.BitcoinNetwork).ScriptPubKey;
 
-            var keys = _walletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
+            var keys = GetFounderKeysForProject();
 
             var key = _derivationOperations.DeriveFounderPrivateKey(words, keys.Index);
 
@@ -946,7 +964,7 @@
             var addressScript = BitcoinWitPubKeyAddress.Create(address, network.BitcoinNetwork).ScriptPubKey;
             
             var words = await passwordComponent.GetWalletAsync();
-            var keys = _walletStorage.GetFounderKeys().Keys.First(k => k.ProjectIdentifier == project.ProjectIdentifier);
+            var keys = GetFounderKeysForProject();
             var key = _derivationOperations.DeriveFounderPrivateKey(words, keys.Index);
             
             signedTransaction = _founderTransactionActions.SpendFounderStage(

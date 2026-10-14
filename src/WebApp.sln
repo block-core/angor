@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Shared", "shared\Ango
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Shared.Tests", "shared\Angor.Shared.Tests\Angor.Shared.Tests.csproj", "{7795C1E7-F4A7-4456-98A9-07633F4E92E1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Angor.Client.Tests", "webapp\Angor.Client.Tests\Angor.Client.Tests.csproj", "{D0F6EE69-085C-46FC-AFB5-4234C167B7FE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +59,18 @@ Global
 		{7795C1E7-F4A7-4456-98A9-07633F4E92E1}.Release|x64.Build.0 = Release|Any CPU
 		{7795C1E7-F4A7-4456-98A9-07633F4E92E1}.Release|x86.ActiveCfg = Release|Any CPU
 		{7795C1E7-F4A7-4456-98A9-07633F4E92E1}.Release|x86.Build.0 = Release|Any CPU
+		{D0F6EE69-085C-46FC-AFB5-4234C167B7FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0F6EE69-085C-46FC-AFB5-4234C167B7FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0F6EE69-085C-46FC-AFB5-4234C167B7FE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D0F6EE69-085C-46FC-AFB5-4234C167B7FE}.Debug|x64.Build.0 = Debug|Any CPU
+		{D0F6EE69-085C-46FC-AFB5-4234C167B7FE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D0F6EE69-085C-46FC-AFB5-4234C167B7FE}.Debug|x86.Build.0 = Debug|Any CPU
+		{D0F6EE69-085C-46FC-AFB5-4234C167B7FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0F6EE69-085C-46FC-AFB5-4234C167B7FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D0F6EE69-085C-46FC-AFB5-4234C167B7FE}.Release|x64.ActiveCfg = Release|Any CPU
+		{D0F6EE69-085C-46FC-AFB5-4234C167B7FE}.Release|x64.Build.0 = Release|Any CPU
+		{D0F6EE69-085C-46FC-AFB5-4234C167B7FE}.Release|x86.ActiveCfg = Release|Any CPU
+		{D0F6EE69-085C-46FC-AFB5-4234C167B7FE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -65,5 +79,6 @@ Global
 		{540E79E4-2D55-467F-9875-1F64AC42F997} = {7E50A06F-A38B-7BE7-1137-409223B8AEF0}
 		{44676341-EFC2-4362-88C9-DB6ABFE63D3C} = {7E50A06F-A38B-7BE7-1137-409223B8AEF0}
 		{7795C1E7-F4A7-4456-98A9-07633F4E92E1} = {7E50A06F-A38B-7BE7-1137-409223B8AEF0}
+		{D0F6EE69-085C-46FC-AFB5-4234C167B7FE} = {7E50A06F-A38B-7BE7-1137-409223B8AEF0}
 	EndGlobalSection
 EndGlobal

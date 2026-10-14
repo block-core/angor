@@ -1,0 +1,57 @@
+@implements IDisposable
+@inject IJSRuntime JS
+
+<button type="button" class="@CssClass" aria-label="@(copied ? "Copied" : copyFailed ? "Copy failed — retry" : Label)" @onclick="CopyValue"
+        disabled="@(copying || copied || string.IsNullOrEmpty(Value))" aria-live="polite">
+    <Icon IconName="@(copied ? "circle-check" : "copy")" Width="16" Height="16" class="@(IconOnly ? string.Empty : "me-1")" />
+    @if (!IconOnly)
+    {
+        @(copied ? "Copied" : copyFailed ? "Copy failed — retry" : "Copy")
+    }
+</button>
+
+@code {
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public string Label { get; set; } = "Copy";
+    [Parameter] public string CssClass { get; set; } = "btn btn-outline-secondary flex-grow-1";
+    [Parameter] public bool IconOnly { get; set; }
+
+    private bool copying;
+    private bool copied;
+    private bool copyFailed;
+    private readonly CancellationTokenSource lifetime = new();
+
+    private async Task CopyValue()
+    {
+        if (copying || copied || string.IsNullOrEmpty(Value))
+            return;
+
+        copying = true;
+        copyFailed = false;
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", Value);
+            copied = true;
+            StateHasChanged();
+            await Task.Delay(2000, lifetime.Token);
+            copied = false;
+        }
+        catch (OperationCanceledException) when (lifetime.IsCancellationRequested)
+        {
+        }
+        catch (JSException)
+        {
+            copyFailed = true;
+        }
+        finally
+        {
+            copying = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        lifetime.Cancel();
+        lifetime.Dispose();
+    }
+}
