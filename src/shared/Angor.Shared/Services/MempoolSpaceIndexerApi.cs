@@ -204,6 +204,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
         catch (Exception ex)
         {
             _logger.LogWarning("Address balance request to indexer {IndexerHost} failed: {Message}", IndexerHost(client), ex.Message);
+            _networkService.NotifyIndexerUnreachable(IndexerHost(client), ex.Message);
             throw new InvalidOperationException($"Indexer {IndexerHost(client)} did not respond: {ex.Message}", ex);
         }
 
@@ -276,13 +277,17 @@ public class MempoolSpaceIndexerApi : IIndexerService
         catch (Exception ex)
         {
             _logger.LogWarning("UTXO request to indexer {IndexerHost} failed: {Message}", IndexerHost(client), ex.Message);
+            _networkService.NotifyIndexerUnreachable(IndexerHost(client), ex.Message);
             throw new InvalidOperationException($"Indexer {IndexerHost(client)} did not respond: {ex.Message}", ex);
         }
 
         _networkService.CheckAndHandleError(response);
 
         if (!response.IsSuccessStatusCode)
+        {
+            _networkService.NotifyIndexerUnreachable(IndexerHost(client), response.ReasonPhrase ?? "error");
             throw new InvalidOperationException($"Indexer {IndexerHost(client)} returned an error: {response.ReasonPhrase}");
+        }
 
         var trx = await response.Content.ReadFromJsonAsync<List<MempoolTransaction>>(new JsonSerializerOptions()
         { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
@@ -358,7 +363,10 @@ public class MempoolSpaceIndexerApi : IIndexerService
         _networkService.CheckAndHandleError(response);
 
         if (!response.IsSuccessStatusCode)
+        {
+            _networkService.NotifyIndexerUnreachable(response.RequestMessage?.RequestUri?.Host ?? "unknown", response.ReasonPhrase ?? "error");
             throw new InvalidOperationException(response.ReasonPhrase);
+        }
 
         var trx = await response.Content.ReadFromJsonAsync<List<MempoolTransaction>>(new JsonSerializerOptions()
         { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
@@ -376,6 +384,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogError($"Error code {response.StatusCode}, {response.ReasonPhrase}");
+            _networkService.NotifyIndexerUnreachable(response.RequestMessage?.RequestUri?.Host ?? "unknown", response.ReasonPhrase ?? "error");
             return null;
         }
 
@@ -405,7 +414,10 @@ public class MempoolSpaceIndexerApi : IIndexerService
         _networkService.CheckAndHandleError(response);
 
         if (!response.IsSuccessStatusCode)
+        {
+            _networkService.NotifyIndexerUnreachable(response.RequestMessage?.RequestUri?.Host ?? "unknown", response.ReasonPhrase ?? "error");
             throw new InvalidOperationException(response.ReasonPhrase);
+        }
 
         return await response.Content.ReadAsStringAsync();
     }
@@ -449,7 +461,10 @@ public class MempoolSpaceIndexerApi : IIndexerService
         _networkService.CheckAndHandleError(response);
 
         if (!response.IsSuccessStatusCode)
+        {
+            _networkService.NotifyIndexerUnreachable(IndexerHost(client), response.ReasonPhrase ?? "error");
             throw new InvalidOperationException(response.ReasonPhrase);
+        }
 
         var options = new JsonSerializerOptions()
         {
@@ -464,7 +479,10 @@ public class MempoolSpaceIndexerApi : IIndexerService
         _networkService.CheckAndHandleError(responseSpent);
 
         if (!responseSpent.IsSuccessStatusCode)
+        {
+            _networkService.NotifyIndexerUnreachable(IndexerHost(client), responseSpent.ReasonPhrase ?? "error");
             throw new InvalidOperationException(responseSpent.ReasonPhrase);
+        }
 
         var spends = await responseSpent.Content.ReadFromJsonAsync<List<Outspent>>(options);
 
@@ -550,7 +568,10 @@ public class MempoolSpaceIndexerApi : IIndexerService
                     _networkService.CheckAndHandleError(response);
 
                     if (!response.IsSuccessStatusCode)
+                    {
+                        _networkService.NotifyIndexerUnreachable(IndexerHost(client), response.ReasonPhrase ?? "error");
                         throw new InvalidOperationException(response.ReasonPhrase);
+                    }
 
                     var trx = await response.Content.ReadFromJsonAsync<List<MempoolTransaction>>(new JsonSerializerOptions()
                     { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
