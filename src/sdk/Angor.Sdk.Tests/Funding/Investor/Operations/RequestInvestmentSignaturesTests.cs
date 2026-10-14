@@ -237,6 +237,93 @@ public class RequestInvestmentSignaturesTests
             Times.Once);
     }
 
+    [Fact]
+    public async Task Handle_WhenIndexerThrowsHttpRequestException_FailsBeforeSeedwordsOrSigning()
+    {
+        // Arrange
+        var request = CreateRequest();
+        SetupNetwork();
+        SetupProject();
+
+        _mockProjectScriptsBuilder
+            .Setup(x => x.GetInvestmentDataFromOpReturnScript(It.IsAny<Script>()))
+            .Returns(("investor-key", (uint256?)null));
+
+        _mockAngorIndexerService
+            .Setup(x => x.GetInvestmentAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ThrowsAsync(new HttpRequestException("indexer offline"));
+
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Contain("Could not verify whether this investment already exists");
+        result.Error.Should().Contain("indexer offline");
+        _mockSeedwordsProvider.Verify(x => x.GetSensitiveData(It.IsAny<string>()), Times.Never);
+        _mockSignService.Verify(
+            x => x.RequestInvestmentSigs(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Action<NostrOkResponse>>()),
+            Times.Never);
+        _mockPortfolioService.Verify(x => x.AddOrUpdate(It.IsAny<string>(), It.IsAny<InvestmentRecord>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_WhenExistingInvestmentFound_DoesNotAccessSeedwordsOrSend()
+    {
+        // Arrange
+        var request = CreateRequest();
+        SetupNetwork();
+        SetupProject();
+
+        _mockProjectScriptsBuilder
+            .Setup(x => x.GetInvestmentDataFromOpReturnScript(It.IsAny<Script>()))
+            .Returns(("investor-key", (uint256?)null));
+
+        _mockAngorIndexerService
+            .Setup(x => x.GetInvestmentAsync("project-1", "investor-key"))
+            .ReturnsAsync(new ProjectInvestment { TransactionId = "existing-tx" });
+
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be("An investment with the same key already exists on the blockchain.");
+        _mockSeedwordsProvider.Verify(x => x.GetSensitiveData(It.IsAny<string>()), Times.Never);
+        _mockSignService.Verify(
+            x => x.RequestInvestmentSigs(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Action<NostrOkResponse>>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_WhenIndexerReturnsNull_ContinuesToSeedwordsLookup()
+    {
+        // Arrange
+        var request = CreateRequest();
+        SetupNetwork();
+        SetupProject();
+
+        _mockProjectScriptsBuilder
+            .Setup(x => x.GetInvestmentDataFromOpReturnScript(It.IsAny<Script>()))
+            .Returns(("investor-key", (uint256?)null));
+
+        _mockAngorIndexerService
+            .Setup(x => x.GetInvestmentAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync((ProjectInvestment?)null);
+
+        _mockSeedwordsProvider
+            .Setup(x => x.GetSensitiveData("wallet-1"))
+            .ReturnsAsync(Result.Failure<(string Words, Maybe<string> Passphrase)>("Wallet locked"));
+
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert - not-found proceeds past the existence check (fails later, on the wallet lookup)
+        result.Error.Should().Be("Wallet locked");
+        _mockSeedwordsProvider.Verify(x => x.GetSensitiveData("wallet-1"), Times.Once);
+    }
     private static RequestInvestmentSignatures.RequestFounderSignaturesRequest CreateRequest()
     {
         // The handler accesses Outputs[1].ScriptPubKey, so we need a transaction with at least 2 outputs

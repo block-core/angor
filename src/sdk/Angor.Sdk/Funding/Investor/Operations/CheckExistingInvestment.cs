@@ -66,6 +66,9 @@ public static class CheckExistingInvestment
             var indexerResult = await Result.Try(() =>
                 angorIndexerService.GetInvestmentAsync(request.ProjectId.Value, investorKey));
 
+            // Intentionally fails open: this step only auto-recovers a portfolio record that is missing locally.
+            // If the indexer is unreachable we simply report 'no existing investment' and skip recovery; nothing is
+            // signed or published here, so a false negative is harmless (RequestInvestmentSignatures fails closed).
             if (indexerResult.IsFailure || indexerResult.Value == null)
                 return Result.Success(new CheckExistingInvestmentResponse(false, 0, null, false));
 
