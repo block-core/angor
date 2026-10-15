@@ -432,6 +432,42 @@
         </Border>
 
         <!-- ════════════════════════════════════════════════════════════ -->
+        <!-- MODAL: Payment arrived in parts -> pay from wallet           -->
+        <!-- ════════════════════════════════════════════════════════════ -->
+        <Border IsVisible="{Binding IsPaidInParts}"
+                AutomationProperties.AutomationId="PaidInPartsModal"
+                Classes="ModalCard"
+                CornerRadius="16"
+                Background="{DynamicResource DeploySuccessBg}"
+                BoxShadow="0 8 32 0 #40000000"
+                Padding="32">
+            <StackPanel Spacing="0">
+                <TextBlock Classes="Size-28" Text="Your funds are in your wallet" FontWeight="Bold"
+                           Foreground="{DynamicResource TextStrong}"
+                           HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"
+                           Margin="0,0,0,12" />
+                <TextBlock Classes="Size-S" Text="{Binding PaidInPartsMessage}"
+                           Foreground="{DynamicResource TextMuted}"
+                           TextAlignment="Center" TextWrapping="Wrap"
+                           HorizontalAlignment="Center" MaxWidth="380"
+                           Margin="0,0,0,24" />
+                <Button Name="PaidInPartsPayFromWalletButton"
+                        Classes="MobileAction"
+                        AutomationProperties.AutomationId="PaidInPartsPayFromWalletButton"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                        Background="{DynamicResource PrimaryGreenBrush}"
+                        CornerRadius="8" Padding="24,12" Cursor="Hand" BorderThickness="0"
+                        Margin="0,0,0,8">
+                    <TextBlock Classes="Size-S" Text="Pay from my wallet" FontWeight="SemiBold" Foreground="White" />
+                </Button>
+                <Button Name="PaidInPartsClose"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                        Background="Transparent" Padding="24,10" Cursor="Hand">
+                    <TextBlock Classes="Size-S" Text="Close" Foreground="{DynamicResource TextMuted}" />
+                </Button>
+            </StackPanel>
+        </Border>
+        <!-- ════════════════════════════════════════════════════════════ -->
         <!-- MODAL: Success                                               -->
         <!-- ════════════════════════════════════════════════════════════ -->
         <Border IsVisible="{Binding IsSuccess}"
