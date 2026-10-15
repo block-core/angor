@@ -760,6 +760,18 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
 
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
+            // ShowModal() is a single-slot host: it would silently destroy whatever
+            // modal is currently open (e.g. an in-flight invest/deploy payment flow,
+            // which is unrecoverable once removed). If any modal is open, skip the
+            // popup — the active flow surfaces the indexer error itself, and
+            // NetworkService re-raises IndexerUnreachable after its cooldown so the
+            // popup appears once the slot is free.
+            if (ModalContent != null)
+            {
+                _isIndexerUnreachableModalOpen = false;
+                return;
+            }
+
             void CloseModal()
             {
                 _isIndexerUnreachableModalOpen = false;

@@ -339,7 +339,21 @@ public partial class InvestPageView : UserControl
     private void ShowShellModal(InvestPageViewModel vm)
     {
         var shellVm = GetShellVm();
-        if (shellVm == null || shellVm.IsModalOpen || vm.PaymentFlow == null) return;
+        if (shellVm == null || vm.PaymentFlow == null) return;
+
+        // The "Indexer unreachable" popup (issue #971) can open at any moment from a
+        // background event. If it holds the modal slot when the user submits an
+        // investment, the explicit payment action wins: close the popup through its
+        // own Close path (resets the shell's reopen latch) and mount the payment flow.
+        // Otherwise PaymentFlow VM exists but its view is never shown — the invest
+        // flow dead-ends (UAT: "WalletButton not found").
+        if (shellVm.ModalContent is IndexerUnreachableModal popup &&
+            popup.DataContext is IndexerUnreachableModalViewModel popupVm)
+        {
+            popupVm.Close();
+        }
+
+        if (shellVm.IsModalOpen) return;
 
         // Subscribe to invest completion — navigate to Funded section
         vm.InvestCompleted += () =>
