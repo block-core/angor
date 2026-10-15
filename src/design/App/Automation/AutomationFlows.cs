@@ -428,6 +428,7 @@ public static class AutomationFlows
             {
                 var wizardVm = myProjectsVm.CreateProjectVm;
                 wizardVm.TargetAmount = "1.0";
+                wizardVm.PenaltyDays = req.PenaltyDays;
                 Dispatcher.UIThread.RunJobs();
             });
             await ClickByNameAsync(window, "NextStepButton");
@@ -1080,6 +1081,7 @@ public static class AutomationFlows
 
             // Wait for recovery status to load and RecoverFundsButton to appear
             var recoveryDeadline = DateTime.UtcNow + IndexerLag;
+            string? lastActionKey = null;
             while (DateTime.UtcNow < recoveryDeadline)
             {
                 var actionKey = await Dispatcher.UIThread.InvokeAsync(async () =>
@@ -1095,6 +1097,7 @@ public static class AutomationFlows
                     return currentInvestment.RecoveryState.ActionKey;
                 });
 
+                lastActionKey = actionKey;
                 if (string.Equals(actionKey, req.Action, StringComparison.OrdinalIgnoreCase))
                 {
                     break;
@@ -1105,6 +1108,17 @@ public static class AutomationFlows
                 catch (TimeoutException) { /* button may not exist */ }
 
                 await Task.Delay(PollInterval);
+            }
+
+            // Fail fast instead of silently exercising a different recovery path.
+            if (!string.Equals(lastActionKey, req.Action, StringComparison.OrdinalIgnoreCase))
+            {
+                return new RecoveryResponse
+                {
+                    Success = false,
+                    ActionKey = lastActionKey,
+                    Error = $"Expected recovery action '{req.Action}' but the investment offers '{lastActionKey}'"
+                };
             }
 
             // Click RecoverFundsButton to launch recovery modals

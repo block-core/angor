@@ -106,6 +106,75 @@ public sealed class AutomationServer : IDisposable
         listener.Start();
         Console.WriteLine($"[AutomationServer] Listening on http://127.0.0.1:{port}");
         listenTask = Task.Run(() => AcceptLoop(cts.Token));
+        _ = Task.Run(() => IndexerUnreachablePopupWatcher(cts.Token));
+    }
+
+    /// <summary>
+    /// The shell shows a blocking "Indexer unreachable" popup when the indexer fails to respond
+    /// (issue #971). Signet/Angornet indexers are flaky, and the popup covers the controls the
+    /// automation flows are waiting for. This watcher notices the popup, waits with exponential
+    /// backoff (5s, 10s, 20s ... capped at 60s) so the indexer can recover, then dismisses it
+    /// WITHOUT switching indexer so the flow's own polling retries against the same indexer.
+    /// The backoff resets once the popup has stayed away for a while.
+    /// </summary>
+    private async Task IndexerUnreachablePopupWatcher(CancellationToken ct)
+    {
+        var consecutive = 0;
+        var lastSeen = DateTime.MinValue;
+
+        while (!ct.IsCancellationRequested)
+        {
+            try
+            {
+                await Task.Delay(500, ct);
+
+                var popup = await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    var shellVm = GetMainWindow()?.GetVisualDescendants().OfType<ShellView>()
+                        .FirstOrDefault()?.DataContext as ShellViewModel;
+                    return shellVm?.ModalContent as IndexerUnreachableModal;
+                });
+
+                if (popup == null)
+                {
+                    if (consecutive > 0 && DateTime.UtcNow - lastSeen > TimeSpan.FromMinutes(2))
+                    {
+                        consecutive = 0;
+                    }
+
+                    continue;
+                }
+
+                var delay = TimeSpan.FromSeconds(Math.Min(60, 5 * Math.Pow(2, consecutive)));
+                consecutive++;
+                lastSeen = DateTime.UtcNow;
+                Console.WriteLine(
+                    $"[AutomationServer] Indexer unreachable popup shown (occurrence {consecutive}); " +
+                    $"backing off {delay.TotalSeconds:0}s before dismissing and retrying.");
+
+                await Task.Delay(delay, ct);
+
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    // Only dismiss if it is still the indexer popup (the user/flow may have closed it).
+                    var shellVm = GetMainWindow()?.GetVisualDescendants().OfType<ShellView>()
+                        .FirstOrDefault()?.DataContext as ShellViewModel;
+                    if (shellVm?.ModalContent is IndexerUnreachableModal current)
+                    {
+                        current.OnBackdropCloseRequested();
+                    }
+                });
+                lastSeen = DateTime.UtcNow;
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[AutomationServer] Indexer popup watcher error: {ex.Message}");
+            }
+        }
     }
 
     private async Task AcceptLoop(CancellationToken ct)

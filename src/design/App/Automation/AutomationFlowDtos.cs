@@ -137,6 +137,13 @@ public static class AutomationFlowDtos
         [JsonPropertyName("profileUrl")]
         public string ProfileUrl { get; init; } = "";
 
+        /// <summary>
+        /// Penalty period in days. Defaults to the wizard default (90). Values below the
+        /// 10-day minimum (e.g. 0) require debug mode.
+        /// </summary>
+        [JsonPropertyName("penaltyDays")]
+        public int PenaltyDays { get; init; } = 90;
+
         [JsonPropertyName("runId")]
         public string RunId { get; init; } = "";
     }
