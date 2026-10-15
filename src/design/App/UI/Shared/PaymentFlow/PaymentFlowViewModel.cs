@@ -23,6 +23,7 @@ public enum PaymentFlowScreen
 {
     WalletSelector,
     Invoice,
+    PaidInParts,
     Success
 }
 
@@ -69,11 +70,13 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
     [Reactive] private bool isGeneratingLightningInvoice;
     [Reactive] private string? errorMessage;
     [Reactive] private long selectedFeeRate;
+    [Reactive] private string? paidInPartsMessage;
 
     // ── Derived visibility ──
     public bool IsWalletSelector => CurrentScreen == PaymentFlowScreen.WalletSelector;
     public bool IsInvoice => CurrentScreen == PaymentFlowScreen.Invoice;
     public bool IsSuccess => CurrentScreen == PaymentFlowScreen.Success;
+    public bool IsPaidInParts => CurrentScreen == PaymentFlowScreen.PaidInParts;
     public bool HasSelectedWallet => SelectedWallet != null;
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
     public bool ShowPayWithWallet => _config.OnPayWithWallet != null;
@@ -202,6 +205,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             this.RaisePropertyChanged(nameof(IsWalletSelector));
             this.RaisePropertyChanged(nameof(IsInvoice));
             this.RaisePropertyChanged(nameof(IsSuccess));
+            this.RaisePropertyChanged(nameof(IsPaidInParts));
         }).DisposeWith(_disposables);
         this.WhenAnyValue(x => x.SelectedWallet).Subscribe(_ =>
         {
@@ -719,6 +723,7 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
                 new Amount(_config.OnChainRequiredSats),
                 TimeSpan.FromMinutes(30));
 
+            var balanceBefore = wallet.AvailableSats;
             var monitorResult = await _investmentAppService.MonitorAddressForFunds(
                 monitorRequest, cts.Token);
 
@@ -730,8 +735,27 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
                     return;
                 }
                 _logger.LogError("On-chain payment monitor failed: {Error}", monitorResult.Error);
+
+                // The poller only counts mempool UTXOs, so a partial payment that confirmed mid-wait
+                // vanishes from the monitor even though the funds are already in the wallet.
+                if (await HasWalletBalanceIncreasedAsync(wallet, balanceBefore))
+                {
+                    ShowPaidInParts();
+                    return;
+                }
+
                 ErrorMessage = "We stopped watching for this payment because the connection to the network failed. Your funds are safe — reopen to resume watching.";
                 IsProcessing = false;
+                return;
+            }
+
+            // Investing from the funding address spends every coin on it and sizes the fee for a single
+            // input. If the payment arrived in several parts, hand over to the wallet payment path,
+            // which selects coins and computes the fee from the real inputs.
+            if (monitorResult.Value.DetectedUtxos.Count > 1)
+            {
+                await _walletContext.RefreshBalanceAsync(walletId);
+                ShowPaidInParts();
                 return;
             }
 
@@ -755,6 +779,43 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
         }
     }
 
+    private async Task<bool> HasWalletBalanceIncreasedAsync(WalletInfo wallet, long balanceBefore)
+    {
+        try
+        {
+            await _walletContext.RefreshBalanceAsync(wallet.Id);
+            return wallet.AvailableSats > balanceBefore;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Balance refresh after monitor failure failed");
+            return false;
+        }
+    }
+
+    // Called after awaits on the UI context, so reactive updates stay on the UI thread.
+    private void ShowPaidInParts()
+    {
+        _logger.LogInformation("On-chain payment arrived in multiple parts or partially; redirecting to pay from wallet");
+        ErrorMessage = null;
+        PaidInPartsMessage = "Your payment arrived in multiple parts, so it can't be used directly. " +
+                             "The funds are now in your wallet. Complete your payment by paying from your wallet. " +
+                             "If your wallet balance isn't enough yet, add funds to your wallet " +
+                             "- don't send more to the payment address.";
+        IsProcessing = false;
+        CurrentScreen = PaymentFlowScreen.PaidInParts;
+    }
+
+    /// <summary>Leaves the "paid in parts" screen and returns to wallet selection.</summary>
+    public void ReturnToWalletSelector()
+    {
+        _monitorCts?.Cancel();
+        _monitorCts = null;
+        ErrorMessage = null;
+        IsProcessing = false;
+        PaymentStatusText = "Awaiting payment...";
+        CurrentScreen = PaymentFlowScreen.WalletSelector;
+    }
     // ═══════════════════════════════════════════════════════════════════
     // Lightning Payment (Boltz swap)
     // ═══════════════════════════════════════════════════════════════════

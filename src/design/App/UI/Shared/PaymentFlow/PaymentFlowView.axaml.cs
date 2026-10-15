@@ -78,6 +78,15 @@ public partial class PaymentFlowView : UserControl, IBackdropCloseable
                 ClipboardHelper.CopyToClipboard(this, Vm?.InvoiceString);
                 break;
 
+            case "PaidInPartsClose":
+                Vm?.Reset();
+                GetShellVm()?.HideModal();
+                break;
+
+            case "PaidInPartsPayFromWalletButton":
+                Vm?.ReturnToWalletSelector();
+                break;
+
             case "SuccessActionButton":
                 GetShellVm()?.HideModal();
                 Vm?.OnSuccessButtonClicked();
