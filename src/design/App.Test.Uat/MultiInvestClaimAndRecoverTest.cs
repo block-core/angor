@@ -6,18 +6,21 @@ using Xunit;
 namespace App.Test.Uat;
 
 /// <summary>
-/// Invest project: 1 founder + 4 investors.
-/// Covers cancel-before-approval, cancel-after-approval with reinvest,
-/// founder claim stage 1, founder release remaining, all investors unfundedRelease.
+/// Invest project (PenaltyDays = 0): 1 founder + 4 investors.
+/// Covers cancel-before-approval, cancel-after-approval with reinvest, founder claim stage 1,
+/// the investor penalty path (recovery -> penaltyRelease), founder release with penalty-spent
+/// outputs, and unfundedRelease.
 ///
-/// Investor1: invest → cancel before approval (Step 1) → reinvest
-/// Investor2: invest → founder approves just this one (manual path) → cancel after approval (Step 2) → reinvest
-/// Investor3: invest normally (0.02 BTC)
-/// Investor4: invest normally (0.03 BTC)
+/// Investor1: invest, cancel before approval (Step 1), reinvest; later recovery -> penaltyRelease
+/// Investor2: invest, founder approves just this one (manual path), cancel after approval (Step 2), reinvest;
+///            later recovery -> penaltyRelease
+/// Investor3: invest normally (0.02 BTC); later unfundedRelease
+/// Investor4: invest normally (0.03 BTC); later unfundedRelease
 /// Founder enables the auto-approve toggle; FundersMonitor approves all 4 remaining
 /// investments unattended, all investors confirm.
-/// Founder claims stage 1, releases remaining stages.
-/// All 4 investors claim via unfundedRelease.
+/// Founder claims stage 1. Investors 1 and 2 run recovery (Penalties popup verified, ActionKey asserted)
+/// then penaltyRelease. Founder then releases remaining stages (must skip outputs already spent via
+/// penalty). Investors 3 and 4 claim via unfundedRelease. Founder re-checks the claim view.
 /// </summary>
 public class MultiInvestClaimAndRecoverTest
 {
@@ -59,6 +62,7 @@ public class MultiInvestClaimAndRecoverTest
             BannerUrl = bannerImageUrl,
             ProfileUrl = profileImageUrl,
             RunId = runId,
+            PenaltyDays = 0, // debug mode bypasses the 10-day minimum; lets penaltyRelease be claimed immediately
         });
         createdProject.Success.Should().BeTrue(createdProject.Error);
         var projectId = createdProject.ProjectIdentifier!;
@@ -68,24 +72,28 @@ public class MultiInvestClaimAndRecoverTest
         await using var investor1Host = await TestProcessHost.LaunchAsync(Investor1Profile);
         await investor1Host.Client.WipeDataAsync();
         await investor1Host.Client.SwitchNetworkAsync("Angornet");
+        await investor1Host.Client.EnableDebugModeAsync(); // zero timelock buffer: penaltyRelease must not wait 2h for MTP
         var wallet1 = await investor1Host.Client.CreateWalletAndFundAsync(new CreateWalletAndFundRequest { ProfileName = Investor1Profile });
         wallet1.Success.Should().BeTrue(wallet1.Error);
 
         await using var investor2Host = await TestProcessHost.LaunchAsync(Investor2Profile);
         await investor2Host.Client.WipeDataAsync();
         await investor2Host.Client.SwitchNetworkAsync("Angornet");
+        await investor2Host.Client.EnableDebugModeAsync(); // zero timelock buffer: penaltyRelease must not wait 2h for MTP
         var wallet2 = await investor2Host.Client.CreateWalletAndFundAsync(new CreateWalletAndFundRequest { ProfileName = Investor2Profile });
         wallet2.Success.Should().BeTrue(wallet2.Error);
 
         await using var investor3Host = await TestProcessHost.LaunchAsync(Investor3Profile);
         await investor3Host.Client.WipeDataAsync();
         await investor3Host.Client.SwitchNetworkAsync("Angornet");
+        await investor3Host.Client.EnableDebugModeAsync(); // zero timelock buffer: penaltyRelease must not wait 2h for MTP
         var wallet3 = await investor3Host.Client.CreateWalletAndFundAsync(new CreateWalletAndFundRequest { ProfileName = Investor3Profile });
         wallet3.Success.Should().BeTrue(wallet3.Error);
 
         await using var investor4Host = await TestProcessHost.LaunchAsync(Investor4Profile);
         await investor4Host.Client.WipeDataAsync();
         await investor4Host.Client.SwitchNetworkAsync("Angornet");
+        await investor4Host.Client.EnableDebugModeAsync(); // zero timelock buffer: penaltyRelease must not wait 2h for MTP
         var wallet4 = await investor4Host.Client.CreateWalletAndFundAsync(new CreateWalletAndFundRequest { ProfileName = Investor4Profile });
         wallet4.Success.Should().BeTrue(wallet4.Error);
 
@@ -243,31 +251,52 @@ public class MultiInvestClaimAndRecoverTest
         claim.AvailableUtxoCount.Should().Be(4, "4 investors funded this project");
         claim.SuccessModalShown.Should().BeTrue("a claim that does not reach the success modal has not claimed anything");
 
-        // ── Founder releases remaining stages ──
-        Log(FounderProfile, "Releasing remaining stages...");
+        // -- Investors 1 and 2: recovery -> penaltyRelease (project created with PenaltyDays = 0) --
+        Log(Investor1Profile, "Recovering via recovery (penalty path)...");
+        var recovery1 = await investor1Host.Client.ExecuteRecoveryAsync(new RecoveryRequest
+        {
+            ProjectIdentifier = projectId,
+            Action = "recovery",
+        });
+        recovery1.Success.Should().BeTrue(recovery1.Error);
+        recovery1.ActionKey.Should().Be("recovery");
+        await PenaltiesPopupHelper.VerifyPenaltiesPopupAsync(investor1Host, Investor1Profile, projectId, projectName);
+
+        Log(Investor2Profile, "Recovering via recovery (penalty path)...");
+        var recovery2 = await investor2Host.Client.ExecuteRecoveryAsync(new RecoveryRequest
+        {
+            ProjectIdentifier = projectId,
+            Action = "recovery",
+        });
+        recovery2.Success.Should().BeTrue(recovery2.Error);
+        recovery2.ActionKey.Should().Be("recovery");
+        await PenaltiesPopupHelper.VerifyPenaltiesPopupAsync(investor2Host, Investor2Profile, projectId, projectName);
+
+        Log(Investor1Profile, "Claiming via penaltyRelease...");
+        var penalty1 = await investor1Host.Client.ExecuteRecoveryAsync(new RecoveryRequest
+        {
+            ProjectIdentifier = projectId,
+            Action = "penaltyRelease",
+        });
+        penalty1.Success.Should().BeTrue(penalty1.Error);
+
+        Log(Investor2Profile, "Claiming via penaltyRelease...");
+        var penalty2 = await investor2Host.Client.ExecuteRecoveryAsync(new RecoveryRequest
+        {
+            ProjectIdentifier = projectId,
+            Action = "penaltyRelease",
+        });
+        penalty2.Success.Should().BeTrue(penalty2.Error);
+
+        // -- Founder releases remaining stages: must skip the outputs already spent via penalty --
+        Log(FounderProfile, "Releasing remaining stages (two investors already spent via penalty)...");
         var release = await founderHost.Client.ReleaseFundsToInvestorsAsync(new ReleaseFundsRequest
         {
             ProjectIdentifier = projectId,
         });
         release.Success.Should().BeTrue(release.Error);
 
-        // ── All 4 investors claim via unfundedRelease ──
-        Log(Investor1Profile, "Recovering via unfundedRelease...");
-        var recovery1 = await investor1Host.Client.ExecuteRecoveryAsync(new RecoveryRequest
-        {
-            ProjectIdentifier = projectId,
-            Action = "unfundedRelease",
-        });
-        recovery1.Success.Should().BeTrue(recovery1.Error);
-
-        Log(Investor2Profile, "Recovering via unfundedRelease...");
-        var recovery2 = await investor2Host.Client.ExecuteRecoveryAsync(new RecoveryRequest
-        {
-            ProjectIdentifier = projectId,
-            Action = "unfundedRelease",
-        });
-        recovery2.Success.Should().BeTrue(recovery2.Error);
-
+        // -- Investors 3 and 4: unfundedRelease after founder release --
         Log(Investor3Profile, "Recovering via unfundedRelease...");
         var recovery3 = await investor3Host.Client.ExecuteRecoveryAsync(new RecoveryRequest
         {
@@ -284,7 +313,7 @@ public class MultiInvestClaimAndRecoverTest
         });
         recovery4.Success.Should().BeTrue(recovery4.Error);
 
-        // ── Founder re-opens the claim view now that all investors have released ──
+        // -- Founder re-opens the claim view: outputs now spent via penalty AND via release --
         // See MultiFundClaimAndRecoverTest: WithdrawByInvestor / Pending statuses are only
         // reachable here, and dropped UTXO rows look exactly like lost funds to the founder.
         Log(FounderProfile, "Re-inspecting claim view after investor releases...");
