@@ -14,6 +14,14 @@
     <link href="/assets/css/dashboard.css" rel="stylesheet" />
     <link href="/assets/css/app.css" rel="stylesheet" />
     <link href="/assets/css/invest.css" rel="stylesheet" />
+    <link href="/assets/css/hub-invest-controls.css" rel="stylesheet" />
+    <script>
+        // Apply the payment theme before the first frame and before WASM starts.
+        if (/^\/invest(?:view)?\//i.test(location.pathname)) {
+            document.documentElement.classList.add('hub-payment-page');
+            document.documentElement.dataset.paymentTheme = new URLSearchParams(location.search).get('theme') === 'light' ? 'light' : 'dark';
+        }
+    </script>
     <meta name="description" content="A P2P funding protocol built on Bitcoin and Nostr">
     <meta name="keywords" content="Angor, blockchain, crowdfunding, smart contracts, blockchain technology, bitcoin, nostr, decentralized applications, dApps, development, easy to use, secure">
     <meta name="author" content="Angor Team">
@@ -35,6 +43,11 @@
     <div id="app">
         <div class="loader-wrapper">
             <div class="loader"></div>
+            <div class="hub-boot-content" role="status" aria-live="polite">
+                <div class="hub-loading-mark"><img src="/assets/img/app-icon.png" alt="" /><span class="hub-loading-ring"></span></div>
+                <h1>Getting your payment ready</h1>
+                <p>Loading Angor...</p>
+            </div>
             <script>
                 (function() {
                     const theme = localStorage.getItem('theme');
@@ -60,6 +73,7 @@
     <script src="nostr-tools-methods.js?v=1" type="module"></script>
     <script src="/assets/js/appUpdate.js?v=1"></script>
     <script src="/assets/js/app.js?v=1"></script>
+    <script src="/assets/js/hub-payment.js?v=1"></script>
     <script src="_framework/blazor.webassembly.js?v=1"></script>
 </body>
 
