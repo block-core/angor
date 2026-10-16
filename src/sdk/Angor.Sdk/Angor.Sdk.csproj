@@ -23,6 +23,7 @@
         <PackageReference Include="Serilog" />
         <PackageReference Include="Serilog.Extensions.Logging" />
         <PackageReference Include="System.Security.Cryptography.ProtectedData" />
+        <PackageReference Include="Konscious.Security.Cryptography.Argon2" />
     </ItemGroup>
     
     <ItemGroup>
