@@ -1,3 +1,4 @@
+using FluentAssertions;
 using Angor.Shared;
 using Angor.Shared.Models;
 using Angor.Shared.Networks;
@@ -450,5 +451,75 @@ public class WalletOperationsTest : AngorTestData
         Assert.Equal((uint)0, signingCoins[0].Coin.Outpoint.N);
         Assert.Equal(1500000, signingCoins[0].Coin.Amount.Satoshi);
         Assert.Equal(expectedExtKey.Derive(new KeyPath("m/0/0")).PrivateKey, signingCoins[0].Key);
+    }
+
+    private (WalletWords words, AccountInfo account) SingleUtxoWallet(long amount)
+    {
+        var words = new WalletWords { Words = "sorry poet adapt sister barely loud praise spray option oxygen hero surround" };
+        AccountInfo accountInfo = _sut.BuildAccountInfoForWalletWords(words);
+        AddCoins(accountInfo, 1, amount); // populates addresses; then keep exactly one UTXO
+        foreach (var a in accountInfo.AllAddresses())
+            a.UtxoData.Clear();
+        var network = _networkConfiguration.Object.GetNetwork();
+        var addressInfo = accountInfo.AddressesInfo.First();
+        var addr = addressInfo.Address;
+        addressInfo.UtxoData.Add(new UtxoData
+        {
+            address = addr,
+            value = amount,
+            outpoint = new Outpoint(uint256.One.ToString(), 0),
+            scriptHex = BitcoinAddress.Create(addr, network.BitcoinNetwork).ScriptPubKey.ToHex()
+        });
+        return (words, accountInfo);
+    }
+
+    private Transaction RequestedOutput(AccountInfo accountInfo, long sats)
+    {
+        var network = _networkConfiguration.Object.GetNetwork();
+        var tx = network.CreateTransaction();
+        tx.Outputs.Add(new TxOut(Money.Satoshis(sats), BitcoinAddress.Create(accountInfo.AddressesInfo.Last().Address, network.BitcoinNetwork).ScriptPubKey));
+        return tx;
+    }
+
+    [Fact]
+    public void AddInputsAndSignTransaction_WhenChangeIsDust_FoldsChangeIntoFee()
+    {
+        var (words, account) = SingleUtxoWallet(10241);
+        var requested = RequestedOutput(account, 10001);
+
+        // ~1700 sat/kvB gives an estimated fee of roughly 240 sats for a 1-in/2-out tx
+        var result = _sut.AddInputsAndSignTransaction(account.AddressesInfo.First().Address, requested, words, account, 1700);
+
+        result.Transaction.Outputs.Should().NotContain(o => o.Value.Satoshi > 0 && o.Value.Satoshi < 546);
+        result.Transaction.Outputs.Should().HaveCount(1);
+        result.Transaction.Outputs[0].Value.Satoshi.Should().Be(10001);
+        result.TransactionFee.Should().Be(10241 - 10001);
+    }
+
+    [Fact]
+    public void AddInputsAndSignTransaction_WhenChangeIsNormal_KeepsChangeOutput()
+    {
+        var (words, account) = SingleUtxoWallet(50000);
+        var requested = RequestedOutput(account, 10001);
+
+        var result = _sut.AddInputsAndSignTransaction(account.AddressesInfo.First().Address, requested, words, account, 1700);
+
+        result.Transaction.Outputs.Should().HaveCount(2);
+        result.Transaction.Outputs[0].Value.Satoshi.Should().Be(10001);
+        result.Transaction.Outputs[1].Value.Satoshi.Should().BeGreaterThan(546);
+        result.TransactionFee.Should().Be(50000 - result.Transaction.Outputs.Sum(o => o.Value.Satoshi));
+        result.TransactionFee.Should().BeInRange(100, 400);
+    }
+
+    [Fact]
+    public void AddInputsAndSignTransaction_WhenSpendAllLeavesSubDustRemainder_Throws()
+    {
+        var (words, account) = SingleUtxoWallet(10000);
+        var requested = RequestedOutput(account, 10000);
+
+        // 1-in/1-out is ~110 vB, so 87,000 sat/kvB costs 9,570 sats and leaves a positive sub-dust remainder (430)
+        var act = () => _sut.AddInputsAndSignTransaction(account.AddressesInfo.First().Address, requested, words, account, 87000);
+
+        act.Should().Throw<ApplicationException>().WithMessage("*9570*430*10000*dust limit*");
     }
 }
