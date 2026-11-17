@@ -153,6 +153,15 @@ public class MempoolSpaceIndexerApi : IIndexerService
 
         const int maxAttempts = 3;
         string lastError = "Unknown broadcast error";
+        string txIdForLog;
+        try
+        {
+            txIdForLog = NBitcoin.Transaction.Parse(trxHex, NBitcoin.Network.Main).GetHash().ToString();
+        }
+        catch (Exception)
+        {
+            txIdForLog = "unknown";
+        }
 
         for (int attempt = 1; attempt <= maxAttempts; attempt++)
         {
@@ -179,7 +188,7 @@ public class MempoolSpaceIndexerApi : IIndexerService
             }
 
             lastError = errorMessage;
-            _logger.LogError("Broadcast attempt {Attempt}/{Max} failed: {Message}", attempt, maxAttempts, errorMessage);
+            _logger.LogError("Broadcast attempt {Attempt}/{Max} failed for {TxId}: {Message}", attempt, maxAttempts, txIdForLog, errorMessage);
 
             if (attempt < maxAttempts)
             {

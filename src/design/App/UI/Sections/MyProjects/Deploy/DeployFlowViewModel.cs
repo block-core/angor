@@ -283,11 +283,60 @@ public partial class DeployFlowViewModel : ReactiveObject
             new PublishFounderTransaction.PublishFounderTransactionRequest(txResult.Value.TransactionDraft));
         if (publishResult.IsFailure)
         {
-            _logger.LogError("Deploy: publish transaction failed: {Error}", publishResult.Error);
-            return Result.Failure("The deployment transaction was prepared, but the network rejected the broadcast. Please try again in a moment.");
+            _logger.LogError("Deploy: publish transaction failed for {TxId}: {Error}",
+                txResult.Value.TransactionDraft.TransactionId, publishResult.Error);
+            return Result.Failure(BuildBroadcastFailureMessage(publishResult.Error));
         }
 
         return Result.Success();
+    }
+
+    private const int MaxBroadcastReasonLength = 200;
+
+    internal static string BuildBroadcastFailureMessage(string? rawError)
+    {
+        return "The deployment transaction was rejected by the Bitcoin network.\n" +
+               $"Reason: {ExtractBroadcastReason(rawError ?? string.Empty)}\n" +
+               "Please try again in a moment. If the problem persists, export your logs from Settings.";
+    }
+
+    internal static string ExtractBroadcastReason(string rawError)
+    {
+        string reason = (rawError ?? string.Empty).Trim();
+        if (reason.Length == 0)
+        {
+            return "Unknown error";
+        }
+
+        // Typical: <ReasonPhrase>{"error":"sendrawtransaction RPC error: {\"code\":-26,\"message\":\"...\"}"}
+        System.Text.RegularExpressions.Match match = System.Text.RegularExpressions.Regex.Match(
+            reason, "\\\\?\"message\\\\?\"\\s*:\\s*\\\\?\"(?<m>(?:\\\\.|[^\"\\\\])*?)\\\\?\"\\s*[,}]");
+        if (match.Success && match.Groups["m"].Value.Trim().Length > 0)
+        {
+            reason = match.Groups["m"].Value.Trim().TrimEnd('\\');
+        }
+
+        if (reason.Length > MaxBroadcastReasonLength)
+        {
+            reason = reason[..MaxBroadcastReasonLength].TrimEnd() + "...";
+        }
+
+        string? advice = null;
+        string lower = reason.ToLowerInvariant();
+        if (lower.Contains("missingorspent") || lower.Contains("txn-mempool-conflict"))
+        {
+            advice = "Your wallet's coin data may be out of date. Restart the app and wait for recent transactions to confirm, then retry.";
+        }
+        else if (lower.Contains("min relay fee") || lower.Contains("insufficient fee"))
+        {
+            advice = "Try a higher fee rate.";
+        }
+        else if (lower.Contains("dust"))
+        {
+            advice = "One of the outputs is below the network dust limit.";
+        }
+
+        return advice is null ? reason : $"{reason}. {advice}";
     }
 
     /// <summary>Close the overlay without completing.
@@ -407,9 +456,10 @@ public partial class DeployFlowViewModel : ReactiveObject
                 new PublishFounderTransaction.PublishFounderTransactionRequest(transactionDraft));
             if (publishResult.IsFailure)
             {
-                _logger.LogError("Deploy: publish transaction failed: {Error}", publishResult.Error);
+                _logger.LogError("Deploy: publish transaction failed for {TxId}: {Error}",
+                    transactionDraft.TransactionId, publishResult.Error);
                 DeployStatusText = "Couldn't broadcast the transaction.";
-                DeployErrorMessage = "The deployment transaction was prepared, but the network rejected the broadcast. Please try again in a moment.";
+                DeployErrorMessage = BuildBroadcastFailureMessage(publishResult.Error);
                 IsDeploying = false;
                 return;
             }
@@ -539,9 +589,10 @@ public partial class DeployFlowViewModel : ReactiveObject
                 new PublishFounderTransaction.PublishFounderTransactionRequest(txResult.Value.TransactionDraft));
             if (publishResult.IsFailure)
             {
-                _logger.LogError("Deploy: publish transaction failed: {Error}", publishResult.Error);
+                _logger.LogError("Deploy: publish transaction failed for {TxId}: {Error}",
+                    txResult.Value.TransactionDraft.TransactionId, publishResult.Error);
                 DeployStatusText = "Couldn't broadcast the transaction.";
-                DeployErrorMessage = "The deployment transaction was prepared, but the network rejected the broadcast. Please try again in a moment.";
+                DeployErrorMessage = BuildBroadcastFailureMessage(publishResult.Error);
                 IsDeploying = false;
                 return;
             }
