@@ -144,7 +144,7 @@ public class NetworkConfiguration : INetworkConfiguration
         new()
         {
             new SettingsUrl { Name = "wss://purplerelay.com", Url = "wss://purplerelay.com" },
-            new SettingsUrl { Name = "wss://indexer.openresist.com", Url = "wss://indexer.openresist.com" },
+            new SettingsUrl { Name = "wss://purplepag.es", Url = "wss://purplepag.es" },
         };
 
     public string GetGenesisBlockHash()

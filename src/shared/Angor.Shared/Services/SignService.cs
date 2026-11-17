@@ -133,7 +133,7 @@ namespace Angor.Shared.Services
             Action<string, string, string, DateTime> action, Action onAllMessagesReceived)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
-            var subscriptionKey = nostrPubKey + "sig_req";
+            var subscriptionKey = nostrPubKey.Substring(0, 20) + "sig_req"; // NIP-01: subscription ids are limited to 64 chars; a full hex pubkey is already 64
 
             if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
             {
@@ -169,7 +169,7 @@ namespace Angor.Shared.Services
             Action<string, string, string, DateTime> action, Action onAllMessagesReceived)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
-            var subscriptionKey = nostrPubKey + "inv_notif";
+            var subscriptionKey = nostrPubKey.Substring(0, 20) + "inv_notif";
 
             if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
             {
@@ -230,7 +230,7 @@ namespace Angor.Shared.Services
             Action<string, string, string, DateTime> action, Action onAllMessagesReceived)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
-            var subscriptionKey = nostrPubKey + "inv_cancel";
+            var subscriptionKey = nostrPubKey.Substring(0, 20) + "inv_cancel";
 
             if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
             {
@@ -265,7 +265,7 @@ namespace Angor.Shared.Services
         public void LookupInvestmentRequestApprovals(string nostrPubKey, Action<string, DateTime, string> action, Action onAllMessagesReceived)
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
-            var subscriptionKey = nostrPubKey + "sig_res";
+            var subscriptionKey = nostrPubKey.Substring(0, 20) + "sig_res";
 
             if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
             {
