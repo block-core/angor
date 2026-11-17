@@ -92,8 +92,10 @@ public class WalletOperations : IWalletOperations
             // Step 4: Select the last output to remove the fee from
             var lastOutput = clonedTransaction.Outputs.Last();
 
-            if (totalFee >= lastOutput.Value.Satoshi)
-                throw new ApplicationException($"The fee {totalFee} is greater then the last output {lastOutput.Value}");
+            if (lastOutput.Value.Satoshi - totalFee < DustThresholdSatoshis)
+                throw new ApplicationException(
+                    $"The fee {totalFee} sats would leave {lastOutput.Value.Satoshi - totalFee} sats in the last output " +
+                    $"({lastOutput.Value.Satoshi} sats), below the dust limit of {DustThresholdSatoshis} sats");
 
             // Step 5: remove the fee from the last output
             lastOutput.Value -= Money.Satoshis(totalFee);
@@ -130,7 +132,8 @@ public class WalletOperations : IWalletOperations
             }
 
 
-            var signTransaction = builder.BuildTransaction(true);
+            var changeScript = BitcoinAddress.Create(changeAddress, network.BitcoinNetwork).ScriptPubKey;
+            var signTransaction = FoldDustChangeIntoFee(builder, builder.BuildTransaction(true), changeScript, transaction.Outputs.Count);
 
             // find the coins used
             long totaInInputs = 0;
@@ -152,10 +155,37 @@ public class WalletOperations : IWalletOperations
                 return new TransactionInfo { Transaction = signTransaction, TransactionFee = minerFee };
             
             builder.SendFees(Money.Satoshis(minimumFee));
-            signTransaction = builder.BuildTransaction(true);
+            signTransaction = FoldDustChangeIntoFee(builder, builder.BuildTransaction(true), changeScript, transaction.Outputs.Count);
 
-            return new TransactionInfo { Transaction = signTransaction, TransactionFee = minimumFee  };
+            long finalInputs = signTransaction.Inputs.Sum(i =>
+                signingCoins.First(sc => sc.Coin.Outpoint == i.PrevOut).Coin.Amount.Satoshi);
+            long finalFee = finalInputs - signTransaction.Outputs.Sum(o => o.Value.Satoshi);
+
+            return new TransactionInfo { Transaction = signTransaction, TransactionFee = finalFee };
         }
+    }
+
+    private const long DustThresholdSatoshis = 546;
+
+    /// <summary>
+    /// DustPrevention is off (it would also touch intentional small outputs), so a sub-dust change output
+    /// must be removed explicitly; its value then goes to the miner fee. Bitcoind rejects dust outputs.
+    /// </summary>
+    private static Transaction FoldDustChangeIntoFee(TransactionBuilder builder, Transaction built,
+        Script changeScript, int requestedOutputCount)
+    {
+        if (built.Outputs.Count <= requestedOutputCount)
+            return built;
+
+        var change = built.Outputs.Last();
+        if (change.ScriptPubKey != changeScript || change.Value.Satoshi >= DustThresholdSatoshis)
+            return built;
+
+        built.Outputs.RemoveAt(built.Outputs.Count - 1);
+        foreach (var input in built.Inputs)
+            input.WitScript = WitScript.Empty;
+
+        return builder.SignTransactionInPlace(built);
     }
 
     public TransactionInfo AddInputsFromAddressAndSignTransaction(string fundingAddress, string changeAddress,
