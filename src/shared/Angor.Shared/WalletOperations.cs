@@ -325,8 +325,10 @@ public class WalletOperations : IWalletOperations
         // Handle cases where change is below "dust threshold" for SegWit
         if (totalSats <= ProtocolConstants.DustThresholdSats)
         {
-            // Absorb small change into the transaction fee
-            changeOutput.Value = Money.Zero;
+            // Absorb small change into the transaction fee. The output must be removed
+            // (not just zeroed): a zero-value output to a standard script is dust by
+            // definition and bitcoind rejects the broadcast with 'dust' (code -26).
+            clonedTransaction.Outputs.Remove(changeOutput);
             totalFee += totalSats; // Add leftover to fee
         }
         else

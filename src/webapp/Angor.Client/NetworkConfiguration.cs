@@ -82,6 +82,7 @@ public class NetworkConfiguration : INetworkConfiguration
                 return new List<SettingsUrl>
                 {
                     new SettingsUrl { Name = "", Url = "https://test.indexer.angor.io", IsPrimary = true },
+                    new SettingsUrl { Name = "", Url = "https://test2.indexer.angor.io", IsPrimary = false},
                     new SettingsUrl { Name = "", Url = "https://signet.angor.online", IsPrimary = false},
                     new SettingsUrl { Name = "", Url = "https://signet2.angor.online", IsPrimary = false},
                 };
