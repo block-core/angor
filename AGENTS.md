@@ -384,6 +384,23 @@ Transient test failures must be investigated — they may indicate race conditio
 
 - **OneClickInvestLightning*Test, OneClickInvestOnChain*Test** — require ThunderHub/LND infrastructure
 
+## Investigating User-Reported Errors (Exported Logs)
+
+When a user reports an error, they usually send logs via **Settings → Export Logs** in the app
+(`LogExportService.ExportAndSendAsync`). Key facts for investigation:
+
+- The export is a **zip file named `angor-log-YYYY-MM-DD-HH-mm-ss.zip`** containing the **full
+  latest daily log file** (`angor-YYYYMMDD.log`). **Always look for and extract the zip first** —
+  loose `.log`/`.logs` files alongside it are usually hand-pasted snippets that omit the actual
+  error lines. (A past investigation was initially misled by analyzing only the snippets.)
+- Grep the extracted log for the failure, e.g.: `Broadcast attempt`, `failed`, `[ERR]`,
+  `sendrawtransaction`, `publish transaction failed`.
+- Broadcast rejections include bitcoind's real reason in JSON:
+  `{"error":"sendrawtransaction RPC error: {"code":-26,"message":"dust"}"}`.
+- The export only includes the latest daily file — if the error happened on a previous day,
+  ask the user to reproduce and export again immediately after the failure.
+- Local log location on desktop: `%LOCALAPPDATA%\Angor\logs\angor-YYYYMMDD.log`.
+
 ## Common Pitfalls
 
 - **Thread affinity**: Pushing to `BehaviorSubject` from background threads will crash Avalonia. Use `RxApp.MainThreadScheduler.Schedule(() => subject.OnNext(value))`.
