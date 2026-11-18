@@ -81,7 +81,8 @@ namespace Angor.Shared.Services
         {
             var nostrClient = _communicationFactory.GetOrCreateClient(_networkService);
 
-            // NOTE: the subscription key is deliberately the bare projectNostrPubKey.
+            // NOTE: the subscription key is deliberately shared per-project (a truncated
+            // projectNostrPubKey prefix, keeping within NIP-01's 64-char subscription id limit).
             //
             // A unique-per-lookup key looks more correct (it would avoid the collision described
             // below) but it regresses badly in practice: subscriptions are only closed by
@@ -97,10 +98,11 @@ namespace Angor.Shared.Services
             // resolve as "no signatures". Fixing that properly needs explicit per-lookup
             // subscription lifetimes (close on completion rather than on EOSE), which is a
             // larger change than this bugfix.
-            if (!_subscriptionsHanding.RelaySubscriptionAdded(projectNostrPubKey))
+            var subscriptionKey = projectNostrPubKey.Substring(0, 20) + "inv_sig";
+            if (!_subscriptionsHanding.RelaySubscriptionAdded(subscriptionKey))
             {
                 var subscription = nostrClient.Streams.EventStream
-                    .Where(_ => _.Subscription == projectNostrPubKey)
+                    .Where(_ => _.Subscription == subscriptionKey)
                     .Where(_ => _.Event.Kind == NostrKind.EncryptedDm)
                     .Where(_ => _.Event.Tags.FindFirstTagValue("subject") == "Re:Investment offer")
                     .Subscribe(_ =>
@@ -112,13 +114,13 @@ namespace Angor.Shared.Services
                             .ContinueWith(t => { var observed = t.Exception; }, TaskContinuationOptions.OnlyOnFaulted);
                     });
 
-                _subscriptionsHanding.TryAddRelaySubscription(projectNostrPubKey, subscription);
+                _subscriptionsHanding.TryAddRelaySubscription(subscriptionKey, subscription);
             }
 
             if (onAllMessagesReceived != null)
-                _subscriptionsHanding.TryAddEoseAction(projectNostrPubKey, onAllMessagesReceived);
+                _subscriptionsHanding.TryAddEoseAction(subscriptionKey, onAllMessagesReceived);
 
-            nostrClient.Send(new NostrRequest(projectNostrPubKey, new NostrFilter
+            nostrClient.Send(new NostrRequest(subscriptionKey, new NostrFilter
             {
                 Authors = new[] { projectNostrPubKey }, //From founder
                 P = new[] { investorNostrPubKey }, // To investor
