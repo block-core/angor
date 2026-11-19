@@ -522,4 +522,37 @@ public class WalletOperationsTest : AngorTestData
 
         act.Should().Throw<ApplicationException>().WithMessage("*9570*430*10000*dust limit*");
     }
+
+    [Fact]
+    public void AddFeeAndSignTransaction_WhenFeeLeftoverIsDust_RemovesChangeOutput()
+    {
+        // The wallet UTXO funds only the fee; size it so the leftover after the fee is sub-dust.
+        // At 3000 sat/kvB a 1-in/2-out tx costs ~423 sats, so a 700-sat UTXO leaves ~277 sats,
+        // below ProtocolConstants.DustThresholdSats (330).
+        var (words, account) = SingleUtxoWallet(700);
+        var baseTransaction = RequestedOutput(account, 10000);
+
+        var result = _sut.AddFeeAndSignTransaction(account.AddressesInfo.First().Address, baseTransaction, words, account, 3000);
+
+        // The zero-value change output must be REMOVED, not left in the transaction —
+        // a zero/sub-dust output makes bitcoind reject the broadcast with 'dust' (code -26).
+        result.Transaction.Outputs.Should().HaveCount(1);
+        result.Transaction.Outputs[0].Value.Satoshi.Should().Be(10000);
+        result.Transaction.Outputs.Should().NotContain(o => o.Value.Satoshi < 330);
+        result.TransactionFee.Should().Be(700); // entire fee UTXO absorbed into the fee
+    }
+
+    [Fact]
+    public void AddFeeAndSignTransaction_WhenFeeLeftoverIsNormal_KeepsChangeOutput()
+    {
+        var (words, account) = SingleUtxoWallet(50000);
+        var baseTransaction = RequestedOutput(account, 10000);
+
+        var result = _sut.AddFeeAndSignTransaction(account.AddressesInfo.First().Address, baseTransaction, words, account, 3000);
+
+        result.Transaction.Outputs.Should().HaveCount(2);
+        result.Transaction.Outputs[0].Value.Satoshi.Should().Be(10000);
+        result.Transaction.Outputs[1].Value.Satoshi.Should().BeGreaterThan(330);
+        result.TransactionFee.Should().Be(50000 - result.Transaction.Outputs[1].Value.Satoshi);
+    }
 }
