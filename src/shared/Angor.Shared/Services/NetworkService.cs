@@ -136,6 +136,9 @@ namespace Angor.Shared.Services
                     catch (Exception ex)
                     {
                         indexerUrl.Status = UrlStatus.Offline;
+                        // Allow the next successful data call to reconcile this host back to Online.
+                        if (Uri.TryCreate(indexerUrl.Url, UriKind.Absolute, out var offlineUri))
+                            _healthReconciled.TryRemove(offlineUri.Host, out _);
                         _logger.LogError(ex, $"Failed to check indexer status url = {indexerUrl.Url}");
                     }
                 }
