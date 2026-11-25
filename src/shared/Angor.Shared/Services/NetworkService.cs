@@ -17,6 +17,8 @@ namespace Angor.Shared.Services
         public event EventHandler<IndexerUnreachableEventArgs>? IndexerUnreachable;
 
         private readonly Dictionary<string, DateTime> _lastUnreachableNotification = new();
+        // Hosts whose persisted status was already reconciled after a successful response.
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<string, bool> _healthReconciled = new();
         private static readonly TimeSpan UnreachableNotificationCooldown = TimeSpan.FromSeconds(20);
 
 
@@ -134,6 +136,9 @@ namespace Angor.Shared.Services
                     catch (Exception ex)
                     {
                         indexerUrl.Status = UrlStatus.Offline;
+                        // Allow the next successful data call to reconcile this host back to Online.
+                        if (Uri.TryCreate(indexerUrl.Url, UriKind.Absolute, out var offlineUri))
+                            _healthReconciled.TryRemove(offlineUri.Host, out _);
                         _logger.LogError(ex, $"Failed to check indexer status url = {indexerUrl.Url}");
                     }
                 }
@@ -274,15 +279,28 @@ namespace Angor.Shared.Services
             return ret;
         }
 
+        /// <summary>
+        /// A missing transaction/address (404) is not an unavailable server.
+        /// </summary>
+        public static bool IsServerUnavailable(HttpResponseMessage response) =>
+            !response.IsSuccessStatusCode &&
+            ((int)response.StatusCode >= 500
+             || response.StatusCode is HttpStatusCode.Forbidden
+                 or HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests);
+
         public void CheckAndHandleError(HttpResponseMessage httpResponseMessage)
         {
-            if (!httpResponseMessage.IsSuccessStatusCode)
+            if (httpResponseMessage.IsSuccessStatusCode)
             {
-                // A missing transaction/address is not an unavailable server.
-                if ((int)httpResponseMessage.StatusCode >= 500
-                    || httpResponseMessage.StatusCode is HttpStatusCode.Forbidden
-                        or HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests)
+                MarkIndexerHealthy(httpResponseMessage.RequestMessage?.RequestUri?.Host);
+            }
+            else
+            {
+                if (IsServerUnavailable(httpResponseMessage))
                 {
+                    if (httpResponseMessage.RequestMessage?.RequestUri?.Host is { } offlineHost)
+                        _healthReconciled.TryRemove(offlineHost, out _);
+
                     var settings = _networkStorage.GetSettings();
 
                     var host = settings.Indexers.FirstOrDefault(a =>
@@ -294,6 +312,33 @@ namespace Angor.Shared.Services
                         _networkStorage.SetSettings(settings);
                     }
                 }
+            }
+        }
+
+        // A 2xx proves the indexer is up: clear a stale persisted Offline status. Storage is touched
+        // at most once per host per outage/process, not on every response.
+        private void MarkIndexerHealthy(string? host)
+        {
+            if (string.IsNullOrEmpty(host) || !_healthReconciled.TryAdd(host, true))
+                return;
+
+            try
+            {
+                var settings = _networkStorage.GetSettings();
+                var indexer = settings.Indexers.FirstOrDefault(a =>
+                    Uri.TryCreate(a.Url, UriKind.Absolute, out var uri) &&
+                    string.Equals(uri.Host, host, StringComparison.OrdinalIgnoreCase));
+
+                if (indexer is { Status: UrlStatus.Offline })
+                {
+                    indexer.Status = UrlStatus.Online;
+                    indexer.LastCheck = DateTime.UtcNow;
+                    _networkStorage.SetSettings(settings);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to mark indexer {Host} online", host);
             }
         }
 
@@ -326,6 +371,7 @@ namespace Angor.Shared.Services
                 }
 
                 _lastUnreachableNotification[indexerUrl] = DateTime.UtcNow;
+                _healthReconciled.TryRemove(indexerUrl, out _);
             }
 
             try

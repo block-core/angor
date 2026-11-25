@@ -920,7 +920,11 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable, INetworkS
             var result = await _investmentAppService.GetRecoveryStatus(request);
             if (result.IsFailure)
             {
-                _logger.LogWarning("GetRecoveryStatus failed for project {ProjectId}: {Error}", investment.ProjectIdentifier, result.Error);
+                // "not found" is expected for investments that were never broadcast (drafts / awaiting signature)
+                if (result.Error.Contains("not found", StringComparison.OrdinalIgnoreCase))
+                    _logger.LogDebug("GetRecoveryStatus: {Error} for project {ProjectId}", result.Error, investment.ProjectIdentifier);
+                else
+                    _logger.LogWarning("GetRecoveryStatus failed for project {ProjectId}: {Error}", investment.ProjectIdentifier, result.Error);
                 return;
             }
 
