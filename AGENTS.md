@@ -380,9 +380,32 @@ docker exec angor-ubuntu-runner dotnet test ... 2>&1 | Out-File "C:\Users\dan\Ap
 
 Transient test failures must be investigated — they may indicate race conditions or thread-safety bugs in the app, not just signet/indexer lag. Always preserve the full assertion message and stack trace.
 
+### Lightning tests (App.Test.Integration)
+
+These are NOT skip-by-default; they run against our own hosted test infrastructure and can be used to validate
+Boltz/Lightning changes end-to-end:
+
+- **`OneClickInvestLightningTest`** — invoice-tab state machine. Creates a real reverse swap on
+  `https://test.boltz.angor.io/` (testnet Boltz, `BoltzConfiguration.TestnetUrl`) but never pays it; tolerates
+  a Boltz error. Needs only the testnet indexer/relays and at least one open project.
+- **`OneClickInvestLightningFundedTest`** — full flow: Boltz swap → **pays the BOLT11 invoice via our testnet LND**
+  (`https://thunderhub.thedude.cloud/lnd1-pay`, LND REST `v2/router/send`) → claim → Success screen. Requires the
+  `LND1_PAY_MACAROON` secret (hex), read via `TestSecrets.Get`: env var or
+  `dotnet user-secrets set LND1_PAY_MACAROON <hex> --project src/design/App.Test.Integration`. Without it the test
+  prints the invoice and waits 5 min for a manual payment, then fails. Also needs an open Fund-type project with a
+  penalty threshold on testnet.
+- Optional: `BOLTZ_API_URL` overrides the Boltz base URL (`FundingContextServices.cs`).
+
+```powershell
+dotnet test src/design/App.Test.Integration/App.Test.Integration.csproj --filter "FullyQualifiedName~OneClickInvestLightningFundedTest" 2>&1 | Out-File "C:\Users\dan\AppData\Local\Temp\opencode\test-LightningFunded.log" -Encoding utf8
+```
+
+The UAT project's `OneClickInvestInvoiceTest` pays via ThunderHub (`https://test.thub2.angor.io`, account `lnd-2`,
+hardcoded public test credentials) and likewise needs no private infrastructure, only network access.
+
 ### Tests to skip
 
-- **OneClickInvestLightning*Test, OneClickInvestOnChain*Test** — require ThunderHub/LND infrastructure
+- **OneClickInvestOnChain*Test** — long-running real on-chain funding; skip for routine validation.
 
 ## Investigating User-Reported Errors (Exported Logs)
 

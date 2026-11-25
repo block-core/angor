@@ -13,12 +13,12 @@ namespace App.Test.Integration;
 
 /// <summary>
 /// End-to-end headless integration test for the 1-click invest Lightning flow
-/// with real Lightning payment via ThunderHub.
+/// with real Lightning payment via our testnet LND (REST).
 ///
 /// Flow:
 ///   Navigate to project → set amount → Submit → "Pay invoice instead" →
 ///   switch to Lightning tab → Boltz creates reverse swap → BOLT11 invoice displayed →
-///   ThunderHub LND wallet pays the invoice → Boltz claims on-chain →
+///   LND pays the invoice → Boltz claims on-chain →
 ///   payment detected → BuildInvestmentDraft → threshold check → publish → Success screen.
 ///
 /// All assertions are against UI controls (AutomationIds) to verify what
@@ -27,7 +27,8 @@ namespace App.Test.Integration;
 /// Requires:
 ///   - Real testnet infrastructure (indexer + Nostr relays)
 ///   - Boltz testnet API (test.boltz.angor.io or env BOLTZ_API_URL)
-///   - ThunderHub LND wallet (env THUNDERHUB_URL)
+///   - LND1_PAY_MACAROON secret (hex) for https://thunderhub.thedude.cloud/lnd1-pay, via env var or
+///     `dotnet user-secrets set LND1_PAY_MACAROON <hex>`; without it the invoice must be paid manually within 5 min
 /// </summary>
 public class OneClickInvestLightningFundedTest
 {
