@@ -24,13 +24,18 @@ public static class CreateLightningSwap
     /// <param name="ReceivingAddress">On-chain address to receive the swapped funds</param>
     /// <param name="StageCount">Number of stage outputs in the spending transaction (drives tx size estimate)</param>
     /// <param name="EstimatedFeeRateSatsPerVbyte">Estimated fee rate for the spending transaction</param>
+    /// <param name="OnChainTargetSats">
+    /// When set (deploy flow), the exact amount the receiving address must end up with. The handler then
+    /// only adds the claim tx fee to it and does not add the investment-specific 1% angor fee or spend-tx fee.
+    /// </param>
     public record CreateLightningSwapRequest(
         WalletId WalletId,
         string ClaimPublicKey,
         Amount Amount,
         string ReceivingAddress,
         int StageCount,
-        int EstimatedFeeRateSatsPerVbyte = 2) : IRequest<Result<CreateLightningSwapResponse>>;
+        int EstimatedFeeRateSatsPerVbyte = 2,
+        long? OnChainTargetSats = null) : IRequest<Result<CreateLightningSwapResponse>>;
 
     public record CreateLightningSwapResponse(BoltzSubmarineSwap Swap);
 
@@ -70,8 +75,11 @@ public static class CreateLightningSwap
                 long estimatedClaimTxFee = request.EstimatedFeeRateSatsPerVbyte * EstimatedClaimTxVbytes;
 
                 long investmentAmount = request.Amount.Sats;
-                long angorFee = (investmentAmount * AngorFeePercentage) / 100;
-                long totalOnChainNeeded = investmentAmount + angorFee + estimatedSpendingTxFee + estimatedClaimTxFee;
+                long angorFee = request.OnChainTargetSats.HasValue ? 0 : (investmentAmount * AngorFeePercentage) / 100;
+                long totalOnChainNeeded = request.OnChainTargetSats.HasValue
+                    // Deploy flow: one fixed budget (target) plus the claim fee; no 1% fee, no spend tx.
+                    ? request.OnChainTargetSats.Value + estimatedClaimTxFee
+                    : investmentAmount + angorFee + estimatedSpendingTxFee + estimatedClaimTxFee;
 
                 logger.LogInformation(
                     "Total on-chain amount needed: {Total} sats (amount: {Amount} + angorFee: {AngorFee} + spendTxFee: {SpendTxFee} [{SpendVbytes} vB] + claimTxFee: {ClaimTxFee} [{ClaimVbytes} vB] @ {FeeRate} sat/vb, {Stages} stages)",
@@ -122,6 +130,30 @@ public static class CreateLightningSwap
                 }
 
                 var swap = swapResult.Value;
+
+                // Boltz computes the on-chain amount itself. If it delivers less than we need, abandon this
+                // (unpaid) swap and create one with a bigger invoice instead of letting the user overpay into a shortfall.
+                if (swap.ExpectedAmount < totalOnChainNeeded)
+                {
+                    long shortfall = totalOnChainNeeded - swap.ExpectedAmount;
+                    logger.LogWarning(
+                        "Boltz onchainAmount {Actual} < needed {Needed} (short {Short}); recreating with bumped invoice",
+                        swap.ExpectedAmount, totalOnChainNeeded, shortfall);
+
+                    var bumpedResult = await boltzSwapService.CreateSubmarineSwapAsync(
+                        request.ReceivingAddress,
+                        invoiceAmount + shortfall + 10,
+                        claimPubKey);
+
+                    if (bumpedResult.IsFailure || bumpedResult.Value.ExpectedAmount < totalOnChainNeeded)
+                    {
+                        logger.LogError("Boltz cannot deliver the required on-chain amount {Needed}", totalOnChainNeeded);
+                        return Result.Failure<CreateLightningSwapResponse>(
+                            "Lightning provider cannot deliver the required on-chain amount. Please pay on-chain instead.");
+                    }
+
+                    swap = bumpedResult.Value;
+                }
 
                 // Save the swap to storage
                 var saveResult = await swapStorageService.SaveSwapAsync(

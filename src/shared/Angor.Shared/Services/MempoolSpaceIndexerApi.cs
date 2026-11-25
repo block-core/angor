@@ -156,13 +156,15 @@ public class MempoolSpaceIndexerApi : IIndexerService
             _networkService.NotifyIndexerUnreachable(host, response.ReasonPhrase ?? "error");
     }
 
-    public async Task<string> PublishTransactionAsync(string trxHex)
+    public Task<string> PublishTransactionAsync(string trxHex) => PublishTransactionAsync(trxHex, 3);
+
+    public async Task<string> PublishTransactionAsync(string trxHex, int maxAttempts)
     {
         var guardError = TransactionGuard.RejectAllZeroP2trOutputs(trxHex);
         if (guardError != null)
             return guardError;
 
-        const int maxAttempts = 3;
+        maxAttempts = Math.Max(1, maxAttempts);
         string lastError = "Unknown broadcast error";
         string txIdForLog;
         try
@@ -199,7 +201,16 @@ public class MempoolSpaceIndexerApi : IIndexerService
             }
 
             lastError = errorMessage;
-            _logger.LogError("Broadcast attempt {Attempt}/{Max} failed for {TxId}: {Message}", attempt, maxAttempts, txIdForLog, errorMessage);
+
+            // Parent not (yet) known to this node, or already spent: expected when relaying a tx that was broadcast
+            // elsewhere, so it is a warning rather than an error. A normal broadcast still retries in case the
+            // parent propagates.
+            bool inputsMissing = errorMessage.Contains("missingorspent", StringComparison.OrdinalIgnoreCase) ||
+                                 errorMessage.Contains("missing-inputs", StringComparison.OrdinalIgnoreCase);
+            if (inputsMissing)
+                _logger.LogWarning("Broadcast attempt {Attempt}/{Max} failed for {TxId} (inputs missing or spent): {Message}", attempt, maxAttempts, txIdForLog, errorMessage);
+            else
+                _logger.LogError("Broadcast attempt {Attempt}/{Max} failed for {TxId}: {Message}", attempt, maxAttempts, txIdForLog, errorMessage);
 
             if (attempt < maxAttempts)
             {

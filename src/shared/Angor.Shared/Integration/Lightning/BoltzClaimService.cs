@@ -321,7 +321,7 @@ public class BoltzClaimService : IBoltzClaimService
         // and it needs to know about the parent tx.
         try
         {
-            var indexerError = await _indexerService.PublishTransactionAsync(signedTxHex);
+            var indexerError = await _indexerService.PublishTransactionAsync(signedTxHex, maxAttempts: 1);
             if (!string.IsNullOrEmpty(indexerError))
                 _logger.LogWarning("Relay claim tx to indexer returned: {Error} (non-fatal)", indexerError);
             else
@@ -502,7 +502,7 @@ public class BoltzClaimService : IBoltzClaimService
             // and it needs to know about the parent tx.
             try
             {
-                var indexerError = await _indexerService.PublishTransactionAsync(signedClaimHex);
+                var indexerError = await _indexerService.PublishTransactionAsync(signedClaimHex, maxAttempts: 1);
                 if (!string.IsNullOrEmpty(indexerError))
                     _logger.LogWarning("Relay claim tx to indexer returned: {Error} (non-fatal)", indexerError);
                 else

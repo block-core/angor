@@ -29,6 +29,19 @@ public record PaymentFlowConfig
     public long? OnChainRequiredSatsOverride { get; init; }
 
     /// <summary>
+    /// Lowest on-chain amount that still lets the consumer finish (e.g. deploy without change headroom).
+    /// The address monitor completes once this much arrives instead of spinning on a few-sats shortfall.
+    /// Null = only <see cref="OnChainRequiredSats"/> is acceptable.
+    /// </summary>
+    public long? OnChainMinimumAcceptableSats { get; init; }
+
+    /// <summary>
+    /// If true, the Lightning swap is sized to deliver exactly <see cref="OnChainRequiredSats"/> (plus the claim fee)
+    /// instead of using the investment fee model (1% fee + spend tx fee). Used by the deploy flow.
+    /// </summary>
+    public bool LightningTargetsRequiredSats { get; init; }
+
+    /// <summary>
     /// Effective on-chain required amount: uses the explicit override if provided,
     /// otherwise falls back to <see cref="AmountSats"/>.
     /// </summary>

@@ -403,14 +403,16 @@ public class BoltzSwapService : IBoltzSwapService
             var fees = new BoltzSwapFees
             {
                 Percentage = btcInfo.Fees.Percentage,
-                MinerFees = btcInfo.Fees.MinerFees.Claim,
+                // Boltz deducts the LOCKUP miner fee from the on-chain amount; the claim fee is paid by us.
+                MinerFees = btcInfo.Fees.MinerFees.Lockup,
+                ClaimMinerFee = btcInfo.Fees.MinerFees.Claim,
                 MinAmount = btcInfo.Limits.Minimal,
                 MaxAmount = btcInfo.Limits.Maximal
             };
 
             _logger.LogDebug(
-                "Reverse swap fees: {Percentage}% + {MinerFees} sats, limits: {Min}-{Max}",
-                fees.Percentage, fees.MinerFees, fees.MinAmount, fees.MaxAmount);
+                "Reverse swap fees: {Percentage}% + {MinerFees} sats lockup (claim {ClaimFee}), limits: {Min}-{Max}",
+                fees.Percentage, fees.MinerFees, fees.ClaimMinerFee, fees.MinAmount, fees.MaxAmount);
 
             return Result.Success(fees);
         }

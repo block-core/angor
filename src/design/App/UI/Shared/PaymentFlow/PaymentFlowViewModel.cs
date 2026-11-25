@@ -588,7 +588,8 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             var monitorAddressRequest = new MonitorOp.MonitorAddressForFundsRequest(
                 walletId, receivingAddress,
                 new Amount(_config.OnChainRequiredSats),
-                TimeSpan.FromMinutes(30));
+                TimeSpan.FromMinutes(30),
+                MinimumAcceptable());
 
             var monitorAddressResult = await _investmentAppService.MonitorAddressForFunds(
                 monitorAddressRequest, cts.Token);
@@ -721,7 +722,8 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
                 walletId,
                 OnChainAddress,
                 new Amount(_config.OnChainRequiredSats),
-                TimeSpan.FromMinutes(30));
+                TimeSpan.FromMinutes(30),
+                MinimumAcceptable());
 
             var balanceBefore = wallet.AvailableSats;
             var monitorResult = await _investmentAppService.MonitorAddressForFunds(
@@ -778,6 +780,9 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             IsProcessing = false;
         }
     }
+
+    private Amount? MinimumAcceptable() =>
+        _config.OnChainMinimumAcceptableSats is { } min ? new Amount(min) : null;
 
     private async Task<bool> HasWalletBalanceIncreasedAsync(WalletInfo wallet, long balanceBefore)
     {
@@ -883,6 +888,15 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
                 return;
             }
 
+            // Re-entering the Lightning tab must not create a second swap for the same payment.
+            var existingSwap = await CheckForPendingSwapAsync(walletId);
+            if (existingSwap != null)
+            {
+                IsGeneratingLightningInvoice = false;
+                await ResumeLightningSwapAsync(walletId, existingSwap);
+                return;
+            }
+
             PaymentStatusText = "Creating Lightning invoice...";
             var swapRequest = new CreateLightningSwap.CreateLightningSwapRequest(
                 walletId,
@@ -890,7 +904,8 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
                 new Amount(_config.AmountSats),
                 receivingAddress,
                 StageCount: _config.StageCount,
-                EstimatedFeeRateSatsPerVbyte: _config.FeeRateSatsPerVbyte);
+                EstimatedFeeRateSatsPerVbyte: _config.FeeRateSatsPerVbyte,
+                OnChainTargetSats: _config.LightningTargetsRequiredSats ? _config.OnChainRequiredSats : null);
 
             Result<CreateLightningSwap.CreateLightningSwapResponse> swapResult;
             try
@@ -937,8 +952,10 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             var monitorAddressRequest = new MonitorOp.MonitorAddressForFundsRequest(
                 walletId, receivingAddress,
                 new Amount(_config.OnChainRequiredSats),
-                TimeSpan.FromMinutes(30));
+                TimeSpan.FromMinutes(30),
+                MinimumAcceptable());
 
+            var lightningBalanceBefore = wallet.AvailableSats;
             var monitorAddressResult = await _investmentAppService.MonitorAddressForFunds(
                 monitorAddressRequest, cts.Token);
             if (monitorAddressResult.IsFailure)
@@ -946,6 +963,13 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
                 if (cts.IsCancellationRequested)
                 {
                     _logger.LogInformation("Lightning on-chain monitoring cancelled — suppressing error");
+                    return;
+                }
+
+                // Funds may already be in the wallet (claim confirmed, or arrived short of the budget).
+                if (await HasWalletBalanceIncreasedAsync(wallet, lightningBalanceBefore))
+                {
+                    ShowPaidInParts();
                     return;
                 }
                 ErrorMessage = "The Lightning payment couldn't be confirmed on-chain. If you already paid, your funds are safe and will be claimed automatically.";
@@ -1000,14 +1024,53 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
 
     public void CancelMonitor()
     {
+        AbandonUnpaidSwap();
         _monitorCts?.Cancel();
         _monitorCts = null;
+    }
+
+    /// <summary>
+    /// Marks the current Lightning swap as expired in local storage when the user walks away before paying,
+    /// so it is not monitored/reconnected for hours and is not offered for resume. Swaps whose invoice was
+    /// already paid (funds locked) are left alone so the claim can still complete.
+    /// </summary>
+    private void AbandonUnpaidSwap()
+    {
+        var swapId = LightningSwapId;
+        var walletId = SelectedWallet?.Id;
+        if (string.IsNullOrEmpty(swapId) || walletId is null || PaymentReceived)
+            return;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var status = await _boltzSwapService.GetSwapStatusAsync(swapId);
+                if (status.IsSuccess)
+                {
+                    var live = status.Value.Status;
+                    bool fundsLocked = live is SwapState.InvoicePaid
+                        or SwapState.TransactionMempool
+                        or SwapState.TransactionConfirmed;
+                    if (fundsLocked || live.IsComplete())
+                        return;
+                }
+
+                await _swapStorageService.UpdateSwapStatusAsync(swapId, walletId.Value, SwapState.SwapExpired.ToString());
+                _logger.LogInformation("Abandoned unpaid Lightning swap {SwapId}", swapId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to mark swap {SwapId} as abandoned", swapId);
+            }
+        });
     }
 
     public void OnSuccessButtonClicked() => _config.OnSuccessButtonClicked();
 
     public void Reset()
     {
+        AbandonUnpaidSwap();
         _monitorCts?.Cancel();
         _monitorCts = null;
         CurrentScreen = PaymentFlowScreen.WalletSelector;

@@ -80,6 +80,29 @@ public class MonitorAddressForFundsTests
     }
 
     [Fact]
+    public async Task Handle_WhenMinimumAcceptableSet_MonitorsForMinimumNotRequired()
+    {
+        // Arrange - Lightning claim landed 11055 sats against an 11087 budget; 10757 is enough to deploy
+        var walletId = new WalletId(Guid.NewGuid().ToString());
+        var address = "tb1qtest123address";
+        SetupAccountBalanceMock(CreateAccountInfoWithAddress(address));
+
+        _mockMempoolMonitoringService
+            .Setup(x => x.MonitorAddressForFundsAsync(address, 10757, It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<UtxoData> { CreateUtxoData(address, 11055, "txid1", 0) });
+
+        var request = new MonitorAddressForFunds.MonitorAddressForFundsRequest(
+            walletId, address, new Amount(11087), TimeSpan.FromMinutes(5), new Amount(10757));
+
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal(11055, result.Value.TotalAmount.Sats);
+    }
+
+    [Fact]
     public async Task Handle_WhenMultipleUtxosDetected_ReturnsAllUtxos()
     {
         // Arrange
