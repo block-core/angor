@@ -1046,15 +1046,21 @@ public partial class PaymentFlowViewModel : ReactiveObject, IDisposable
             try
             {
                 var status = await _boltzSwapService.GetSwapStatusAsync(swapId);
-                if (status.IsSuccess)
+                if (status.IsFailure)
                 {
-                    var live = status.Value.Status;
-                    bool fundsLocked = live is SwapState.InvoicePaid
-                        or SwapState.TransactionMempool
-                        or SwapState.TransactionConfirmed;
-                    if (fundsLocked || live.IsComplete())
-                        return;
+                    // Fail closed: if we cannot confirm the invoice is unpaid, keep the swap resumable so a
+                    // paid-but-unclaimed swap is never hidden from the claim/resume logic.
+                    _logger.LogWarning("Could not verify status of swap {SwapId} ({Error}); leaving it resumable",
+                        swapId, status.Error);
+                    return;
                 }
+
+                var live = status.Value.Status;
+                bool fundsLocked = live is SwapState.InvoicePaid
+                    or SwapState.TransactionMempool
+                    or SwapState.TransactionConfirmed;
+                if (fundsLocked || live.IsComplete())
+                    return;
 
                 await _swapStorageService.UpdateSwapStatusAsync(swapId, walletId.Value, SwapState.SwapExpired.ToString());
                 _logger.LogInformation("Abandoned unpaid Lightning swap {SwapId}", swapId);
