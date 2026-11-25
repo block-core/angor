@@ -137,6 +137,49 @@ public class CreateProjectTests
         result.Value.TransactionDraft.TransactionId.Should().NotBeNullOrEmpty();
     }
 
+    [Fact]
+    public async Task Handle_WhenWalletHasInsufficientFunds_ReturnsFriendlyFailure()
+    {
+        // Arrange
+        var request = CreateValidRequest();
+        SetupSuccessfulFlow();
+        _mockWalletOperations
+            .Setup(x => x.AddInputsAndSignTransaction(
+                It.IsAny<string>(), It.IsAny<Transaction>(), It.IsAny<WalletWords>(),
+                It.IsAny<AccountInfo>(), It.IsAny<long>()))
+            .Throws(new ApplicationException("Not enough funds, expected 0.00010001 BTC, found 0 BTC"));
+
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be(CreateProjectConstants.CreateProject.InsufficientFundsMessage);
+        result.Error.Should().NotStartWith("Angor API failed");
+        _mockFounderProjectsService.Verify(
+            x => x.Add(It.IsAny<string>(), It.IsAny<FounderProjectRecord>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_WhenBuilderThrowsNotEnoughFunds_ReturnsFriendlyFailure()
+    {
+        // Arrange
+        var request = CreateValidRequest();
+        SetupSuccessfulFlow();
+        _mockWalletOperations
+            .Setup(x => x.AddInputsAndSignTransaction(
+                It.IsAny<string>(), It.IsAny<Transaction>(), It.IsAny<WalletWords>(),
+                It.IsAny<AccountInfo>(), It.IsAny<long>()))
+            .Throws(new NotEnoughFundsException("short", null, Money.Satoshis(24)));
+
+        // Act
+        var result = await _sut.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be(CreateProjectConstants.CreateProject.InsufficientFundsMessage);
+    }
+
     private static CreateProjectConstants.CreateProject.CreateProjectRequest CreateValidRequest()
     {
         return new CreateProjectConstants.CreateProject.CreateProjectRequest(

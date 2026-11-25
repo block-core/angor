@@ -101,11 +101,14 @@
                         BorderBrush="{DynamicResource DeployModalBorder}"
                         Background="{DynamicResource DeployModalBackground}">
                     <StackPanel Spacing="12">
+                        <TextBlock Classes="Size-S" Text="{Binding InsufficientFundsText}"
+                                   IsVisible="{Binding HasInsufficientFunds}"
+                                   TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}" />
                         <!-- Primary: gradient #4B7C5A -> #3d6448 -->
                         <Button Name="PayWithWalletButton" HorizontalAlignment="Stretch"
                                  HorizontalContentAlignment="Center"
                                  CornerRadius="8" Padding="12,14"
-                                 IsEnabled="{Binding HasSelectedWallet}"
+                                 IsEnabled="{Binding CanPayWithWallet}"
                                  Cursor="Hand" BorderThickness="0">
                             <Button.Background>
                                 <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
