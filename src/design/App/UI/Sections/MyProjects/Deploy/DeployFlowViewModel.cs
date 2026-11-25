@@ -77,8 +77,12 @@ public partial class DeployFlowViewModel : ReactiveObject
     public bool IsSuccess => CurrentScreen == DeployScreen.Success;
     public bool HasSelectedWallet => SelectedWallet != null;
 
-    /// <summary>Sats the wallet must hold to pay the deploy fee on-chain (miner fee is added by the SDK).</summary>
-    private static long RequiredWalletSats => NetworkConfiguration.AngorCreateFeeSats;
+    /// <summary>
+    /// Sats the wallet must hold to deploy on-chain at the selected fee rate: create fee + miner fee for the
+    /// base tx + change headroom above dust. Same budget the on-chain funding screen asks the user to send,
+    /// so a wallet that passes this gate can actually build the transaction.
+    /// </summary>
+    private long RequiredWalletSats => OnChainBudget.DeployRequiredSats(SelectedFeeRate);
 
     public bool CanPayWithWallet => SelectedWallet != null && SelectedWallet.AvailableSats >= RequiredWalletSats;
 
@@ -86,7 +90,7 @@ public partial class DeployFlowViewModel : ReactiveObject
 
     public string InsufficientFundsText => SelectedWallet == null
         ? string.Empty
-        : $"Wallet has {SelectedWallet.AvailableSats} sats, {RequiredWalletSats} sats needed plus miner fee. " +
+        : $"Wallet has {SelectedWallet.AvailableSats:N0} sats, {RequiredWalletSats:N0} sats needed (deploy fee plus miner fee). " +
           "Fund the address below or pay with Lightning.";
 
     private void RaiseWalletFundingChanged()
@@ -191,6 +195,10 @@ public partial class DeployFlowViewModel : ReactiveObject
                 this.RaisePropertyChanged(nameof(PayButtonText));
                 RaiseWalletFundingChanged();
             });
+
+        // The required budget depends on the fee rate, so re-evaluate the gate when it changes.
+        this.WhenAnyValue(x => x.SelectedFeeRate)
+            .Subscribe(_ => RaiseWalletFundingChanged());
     }
 
     /// <summary>Show the deploy flow starting at wallet selector.</summary>
