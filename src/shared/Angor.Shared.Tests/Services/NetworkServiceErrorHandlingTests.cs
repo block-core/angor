@@ -103,4 +103,33 @@ public class NetworkServiceErrorHandlingTests
         Assert.Equal(UrlStatus.Online, settings.Indexers.Single().Status);
         storage.Verify(s => s.SetSettings(It.IsAny<SettingsInfo>()), Times.Never);
     }
+
+    [Theory]
+    [InlineData(HttpStatusCode.OK, false)]
+    [InlineData(HttpStatusCode.NotFound, false)]
+    [InlineData(HttpStatusCode.BadRequest, false)]
+    [InlineData(HttpStatusCode.Forbidden, true)]
+    [InlineData(HttpStatusCode.RequestTimeout, true)]
+    [InlineData(HttpStatusCode.TooManyRequests, true)]
+    [InlineData(HttpStatusCode.InternalServerError, true)]
+    [InlineData(HttpStatusCode.ServiceUnavailable, true)]
+    public void IsServerUnavailable_ClassifiesStatusCodes(HttpStatusCode status, bool expected)
+    {
+        Assert.Equal(expected, NetworkService.IsServerUnavailable(Response(status)));
+    }
+
+    [Fact]
+    public void CheckAndHandleError_WhenSuccessAfterOffline_MarksIndexerOnline()
+    {
+        // Arrange
+        var (service, storage, settings) = Create();
+        service.CheckAndHandleError(Response(HttpStatusCode.ServiceUnavailable));
+        Assert.Equal(UrlStatus.Offline, settings.Indexers.Single().Status);
+
+        // Act
+        service.CheckAndHandleError(Response(HttpStatusCode.OK));
+
+        // Assert
+        Assert.Equal(UrlStatus.Online, settings.Indexers.Single().Status);
+    }
 }
