@@ -5,6 +5,7 @@ using Angor.Sdk.Common;
 using Angor.Sdk.Funding.Founder;
 using Angor.Sdk.Funding.Founder.Operations;
 using Angor.Sdk.Funding.Projects;
+using Angor.Sdk.Funding.Shared;
 using Angor.Sdk.Funding.Projects.Dtos;
 using Angor.Sdk.Wallet.Application;
 using Angor.Sdk.Funding.Investor;
@@ -206,9 +207,9 @@ public partial class DeployFlowViewModel : ReactiveObject
                 // fee, and must leave enough over that the change output clears the dust
                 // threshold — otherwise the node rejects the broadcast with "dust".
                 // Same tx shape as the investment base tx with no stage outputs.
-                OnChainRequiredSatsOverride = deployFeeSats
-                    + InvestmentFeeEstimator.EstimateInvestmentTxFee(0, SelectedFeeRate)
-                    + ProtocolConstants.DustThresholdSats,
+                OnChainRequiredSatsOverride = OnChainBudget.DeployRequiredSats(SelectedFeeRate),
+                OnChainMinimumAcceptableSats = OnChainBudget.DeployMinimumAcceptableSats(SelectedFeeRate),
+                LightningTargetsRequiredSats = true,
                 Title = "Fund Deployment",
                 SuccessTitle = $"{projectName} Deployed!",
                 SuccessDescription = "Your project has been successfully deployed to the blockchain.",

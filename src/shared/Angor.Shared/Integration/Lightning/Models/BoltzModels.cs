@@ -99,8 +99,14 @@ public class BoltzSwapFees
     /// <summary>Percentage fee (e.g., 0.5 means 0.5%)</summary>
     public decimal Percentage { get; set; }
 
-    /// <summary>Fixed miner fee in satoshis</summary>
+    /// <summary>Fixed miner fee (Boltz lockup tx) in satoshis, deducted from the on-chain amount</summary>
     public long MinerFees { get; set; }
+
+    /// <summary>Boltz's estimate of the claim tx miner fee in satoshis (paid by the claimer, informational)</summary>
+    public long ClaimMinerFee { get; set; }
+
+    /// <summary>Safety margin (sats) added to the invoice to absorb Boltz-side integer rounding.</summary>
+    public const long InvoiceRoundingGuardSats = 2;
 
     /// <summary>Minimum swap amount in satoshis</summary>
     public long MinAmount { get; set; }
@@ -116,7 +122,7 @@ public class BoltzSwapFees
     {
         var percentageMultiplier = 1m - (Percentage / 100m);
         var invoiceAmount = (desiredOnChainAmount + MinerFees) / percentageMultiplier;
-        return (long)Math.Ceiling(invoiceAmount);
+        return (long)Math.Ceiling(invoiceAmount) + InvoiceRoundingGuardSats;
     }
 
     /// <summary>Calculates the on-chain amount that will be received for a given invoice amount.</summary>

@@ -21,11 +21,16 @@ public static class MonitorAddressForFunds
     /// <param name="Address">The address to monitor for incoming funds</param>
     /// <param name="RequiredAmount">The minimum amount in satoshis required</param>
     /// <param name="Timeout">Maximum time to wait for funds (if null, uses default timeout)</param>
+    /// <param name="MinimumAcceptable">
+    /// Optional lower threshold: monitoring completes once this much arrives, even if less than
+    /// <paramref name="RequiredAmount"/> (e.g. a Lightning claim that lands a few sats short of the budget).
+    /// </param>
     public record MonitorAddressForFundsRequest(
         WalletId WalletId,
         string Address,
         Amount RequiredAmount,
-        TimeSpan? Timeout = null) : IRequest<Result<MonitorAddressForFundsResponse>>;
+        TimeSpan? Timeout = null,
+        Amount? MinimumAcceptable = null) : IRequest<Result<MonitorAddressForFundsResponse>>;
 
     /// <summary>
     /// Response containing the detected UTXOs on the monitored address.
@@ -90,7 +95,7 @@ public static class MonitorAddressForFunds
                 // Monitor the address for incoming funds
                 var detectedUtxos = await mempoolMonitoringService.MonitorAddressForFundsAsync(
                     request.Address,
-                    request.RequiredAmount.Sats,
+                    EffectiveThresholdSats(request),
                     timeout,
                     cancellationToken);
 
@@ -140,6 +145,11 @@ public static class MonitorAddressForFunds
                 return Result.Failure<MonitorAddressForFundsResponse>($"Error monitoring address: {ex.Message}");
             }
         }
+
+        internal static long EffectiveThresholdSats(MonitorAddressForFundsRequest request) =>
+            request.MinimumAcceptable is { } min && min.Sats > 0 && min.Sats < request.RequiredAmount.Sats
+                ? min.Sats
+                : request.RequiredAmount.Sats;
 
         private async Task<Result> SaveAccountInfo(WalletId walletId, AccountBalanceInfo accountBalanceInfo)
         {

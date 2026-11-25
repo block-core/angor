@@ -48,7 +48,7 @@ public class CreateLightningSwapTests
             Id = "swap-123",
             Invoice = "lnbc1000n1...",
             Address = address,
-            ExpectedAmount = 99000,
+            ExpectedAmount = 150000, // delivers more than the ~102k the handler needs
             Status = SwapState.Created
         };
 
@@ -182,6 +182,7 @@ public class CreateLightningSwapTests
             Id = "swap-generic",
             Invoice = "lnbc1000n1...",
             Address = address,
+            ExpectedAmount = 150000,
             Status = SwapState.Created
         };
 
@@ -201,6 +202,82 @@ public class CreateLightningSwapTests
 
         // Assert — handler has no IProjectService, ISeedwordsProvider, or IDerivationOperations
         Assert.True(result.IsSuccess);
+    }
+
+    private void SetupFees(long invoiceAmount)
+    {
+        _mockBoltzService
+            .Setup(x => x.GetReverseSwapFeesAsync())
+            .ReturnsAsync(Result.Success(new BoltzSwapFees { MinAmount = 1000, MaxAmount = 25000000 }));
+        _mockBoltzService
+            .Setup(x => x.CalculateInvoiceAmountAsync(It.IsAny<long>()))
+            .ReturnsAsync(invoiceAmount);
+        _mockSwapStorageService
+            .Setup(x => x.SaveSwapAsync(It.IsAny<BoltzSubmarineSwap>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long>()))
+            .ReturnsAsync(Result.Success());
+    }
+
+    [Fact]
+    public async Task CreateSwap_WhenBoltzDeliversLessThanNeeded_RecreatesWithBiggerInvoice()
+    {
+        // Arrange - deploy flow: target 11322 + claim fee 155*3 = 11787 needed on-chain
+        const string address = "bc1qtest123";
+        SetupFees(11515);
+        var short1 = new BoltzSubmarineSwap { Id = "short", Invoice = "ln1", Address = address, ExpectedAmount = 11787 - 47 };
+        var ok = new BoltzSubmarineSwap { Id = "ok", Invoice = "ln2", Address = address, ExpectedAmount = 11900 };
+        _mockBoltzService.Setup(x => x.CreateSubmarineSwapAsync(address, 11515, It.IsAny<string>()))
+            .ReturnsAsync(Result.Success(short1));
+        _mockBoltzService.Setup(x => x.CreateSubmarineSwapAsync(address, 11515 + 47 + 10, It.IsAny<string>()))
+            .ReturnsAsync(Result.Success(ok));
+
+        var request = new CreateLightningSwap.CreateLightningSwapRequest(
+            new WalletId("w"), "02abc", new Amount(10001), address, StageCount: 0,
+            EstimatedFeeRateSatsPerVbyte: 3, OnChainTargetSats: 11322);
+
+        // Act
+        var result = await _handler.Handle(request, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal("ok", result.Value.Swap.Id);
+        _mockBoltzService.Verify(x => x.CreateSubmarineSwapAsync(address, It.IsAny<long>(), It.IsAny<string>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task CreateSwap_WhenBoltzStillShortAfterBump_ReturnsFailure()
+    {
+        const string address = "bc1qtest123";
+        SetupFees(11515);
+        var shortSwap = new BoltzSubmarineSwap { Id = "short", Invoice = "ln1", Address = address, ExpectedAmount = 1000 };
+        _mockBoltzService.Setup(x => x.CreateSubmarineSwapAsync(address, It.IsAny<long>(), It.IsAny<string>()))
+            .ReturnsAsync(Result.Success(shortSwap));
+
+        var request = new CreateLightningSwap.CreateLightningSwapRequest(
+            new WalletId("w"), "02abc", new Amount(10001), address, StageCount: 0,
+            EstimatedFeeRateSatsPerVbyte: 3, OnChainTargetSats: 11322);
+
+        var result = await _handler.Handle(request, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Contains("pay on-chain", result.Error);
+    }
+
+    [Fact]
+    public async Task CreateSwap_WithOnChainTarget_UsesTargetPlusClaimFeeWithoutAngorFee()
+    {
+        const string address = "bc1qtest123";
+        SetupFees(20000);
+        _mockBoltzService.Setup(x => x.CreateSubmarineSwapAsync(address, 20000, It.IsAny<string>()))
+            .ReturnsAsync(Result.Success(new BoltzSubmarineSwap { Id = "s", Invoice = "ln", Address = address, ExpectedAmount = 99999 }));
+
+        var request = new CreateLightningSwap.CreateLightningSwapRequest(
+            new WalletId("w"), "02abc", new Amount(10001), address, StageCount: 0,
+            EstimatedFeeRateSatsPerVbyte: 3, OnChainTargetSats: 11322);
+
+        await _handler.Handle(request, CancellationToken.None);
+
+        // 11322 + 155 vB * 3 sat/vB = 11787; the 1% angor fee (100) and spend tx fee must not be added
+        _mockBoltzService.Verify(x => x.CalculateInvoiceAmountAsync(11787), Times.Once);
     }
 }
 
