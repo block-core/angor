@@ -59,9 +59,44 @@ public class WalletOperations : IWalletOperations
     public TransactionInfo AddInputsAndSignTransaction(string changeAddress, Transaction transaction,
         WalletWords walletWords, AccountInfo accountInfo, long feeRate)
     {
+        // Coin selection must cover outputs AND the miner fee. Selecting on outputs alone stops at the first
+        // coin >= outputs and the builder then fails by the fee amount even though the wallet has more coins.
+        long outputsTotal = transaction.Outputs.Sum(o => o.Value.Satoshi);
+        var candidates = GetSpendableUtxos(accountInfo);
+        var selected = new List<UtxoDataWithPath>();
+        long total = 0;
+
+        for (int i = 0; i < candidates.Count; i++)
+        {
+            selected.Add(candidates[i]);
+            total += candidates[i].UtxoData.value;
+
+            if (total < outputsTotal)
+                continue;
+
+            try
+            {
+                return AddInputsAndSignTransactionCore(changeAddress, transaction, walletWords, selected.ToList(), feeRate);
+            }
+            catch (NotEnoughFundsException) when (i < candidates.Count - 1)
+            {
+                // inputs do not cover the fee yet - add another coin
+            }
+            catch (NotEnoughFundsException)
+            {
+                throw new ApplicationException(
+                    $"Not enough funds to cover the outputs ({outputsTotal.ToUnitBtc()} BTC) plus fees, wallet has {total.ToUnitBtc()} BTC");
+            }
+        }
+
+        throw new ApplicationException($"Not enough funds, expected {outputsTotal.ToUnitBtc()} BTC, found {total.ToUnitBtc()} BTC");
+    }
+
+    private TransactionInfo AddInputsAndSignTransactionCore(string changeAddress, Transaction transaction,
+        WalletWords walletWords, List<UtxoDataWithPath> utxoDataWithPaths, long feeRate)
+    {
         AngorNetwork network = _networkConfiguration.GetNetwork();
 
-        var utxoDataWithPaths = FindOutputsForTransaction(transaction.Outputs.Sum(_ => _.Value.Satoshi), accountInfo);
         var signingCoins = GetUnspentOutputsForTransaction(walletWords, utxoDataWithPaths);
 
         if (signingCoins == null || !signingCoins.Any())
@@ -457,24 +492,27 @@ public class WalletOperations : IWalletOperations
         return list;
     }
 
+    private static List<UtxoDataWithPath> GetSpendableUtxos(AccountInfo accountInfo) =>
+        accountInfo.AllAddresses().SelectMany(_ => _.UtxoData
+                .Where(utxow => utxow.PendingSpent == false)
+                .Select(u => new { path = _.HdPath, utxo = u }))
+            .OrderBy(o => o.utxo.blockIndex)
+            .ThenByDescending(o => o.utxo.value)
+            .Where(o => !accountInfo.UtxoReservedForInvestment.Contains(o.utxo.outpoint.ToString()))
+            .Select(o => new UtxoDataWithPath { HdPath = o.path, UtxoData = o.utxo })
+            .ToList();
+
     public List<UtxoDataWithPath> 
         FindOutputsForTransaction(long sendAmountat, AccountInfo accountInfo)
     {
         var utxosToSpend = new List<UtxoDataWithPath>();
 
         long total = 0;
-        foreach (var utxoData in accountInfo.AllAddresses().SelectMany(_ => _.UtxoData
-                         .Where(utxow => utxow.PendingSpent == false)
-                         .Select(u => new { path = _.HdPath, utxo = u }))
-                     .OrderBy(o => o.utxo.blockIndex)
-                     .ThenByDescending(o => o.utxo.value))
+        foreach (var utxo in GetSpendableUtxos(accountInfo))
         {
-            if (accountInfo.UtxoReservedForInvestment.Contains(utxoData.utxo.outpoint.ToString()))
-                continue;
+            utxosToSpend.Add(utxo);
 
-            utxosToSpend.Add(new UtxoDataWithPath { HdPath = utxoData.path, UtxoData = utxoData.utxo });
-
-            total += utxoData.utxo.value;
+            total += utxo.UtxoData.value;
 
             if (total >= sendAmountat)
             {

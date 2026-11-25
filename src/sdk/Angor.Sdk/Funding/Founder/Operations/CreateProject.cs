@@ -31,6 +31,9 @@ public static class CreateProjectConstants
 
         public record CreateProjectResponse(TransactionDraft TransactionDraft);
 
+        public const string InsufficientFundsMessage =
+                "Insufficient funds in this wallet to deploy the project (deploy fee plus miner fee).";
+
         public class CreateProjectHandler(
                 ISeedwordsProvider seedwordsProvider,
                 IDerivationOperations derivationOperations,
@@ -119,14 +122,27 @@ public static class CreateProjectConstants
                         NetworkConfiguration.NostrEventIdKeyType,
                         projectInfoEventId);
 
-                var signedTransaction = walletOperations.AddInputsAndSignTransaction(
-                        accountInfo.GetNextChangeReceiveAddress()!,
-                        unsignedTransaction,
-                        words,
-                        accountInfo,
-                        selectedFee);
+                try
+                {
+                    var signedTransaction = walletOperations.AddInputsAndSignTransaction(
+                            accountInfo.GetNextChangeReceiveAddress()!,
+                            unsignedTransaction,
+                            words,
+                            accountInfo,
+                            selectedFee);
 
-                return Result.Success(signedTransaction);
+                    return Result.Success(signedTransaction);
+                }
+                catch (ApplicationException ex) when (ex.Message.StartsWith("Not enough funds", StringComparison.OrdinalIgnoreCase))
+                {
+                    logger.LogDebug(ex, "Insufficient funds to create project transaction for WalletId {WalletId}", walletId);
+                    return Result.Failure<TransactionInfo>(InsufficientFundsMessage);
+                }
+                catch (NBitcoin.NotEnoughFundsException ex)
+                {
+                    logger.LogDebug(ex, "Insufficient funds to create project transaction for WalletId {WalletId}", walletId);
+                    return Result.Failure<TransactionInfo>(InsufficientFundsMessage);
+                }
             }
         }
     }

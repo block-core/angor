@@ -76,6 +76,30 @@ public partial class DeployFlowViewModel : ReactiveObject
     public bool IsPayFee => CurrentScreen == DeployScreen.PayFee;
     public bool IsSuccess => CurrentScreen == DeployScreen.Success;
     public bool HasSelectedWallet => SelectedWallet != null;
+
+    /// <summary>Sats the wallet must hold to pay the deploy fee on-chain (miner fee is added by the SDK).</summary>
+    private static long RequiredWalletSats => NetworkConfiguration.AngorCreateFeeSats;
+
+    public bool CanPayWithWallet => SelectedWallet != null && SelectedWallet.AvailableSats >= RequiredWalletSats;
+
+    public bool HasInsufficientFunds => SelectedWallet != null && !CanPayWithWallet;
+
+    public string InsufficientFundsText => SelectedWallet == null
+        ? string.Empty
+        : $"Wallet has {SelectedWallet.AvailableSats} sats, {RequiredWalletSats} sats needed plus miner fee. " +
+          "Fund the address below or pay with Lightning.";
+
+    private void RaiseWalletFundingChanged()
+    {
+        this.RaisePropertyChanged(nameof(CanPayWithWallet));
+        this.RaisePropertyChanged(nameof(HasInsufficientFunds));
+        this.RaisePropertyChanged(nameof(InsufficientFundsText));
+    }
+
+    internal static string BuildPrepareFailureMessage(string? error) =>
+        error == CreateProjectConstants.CreateProject.InsufficientFundsMessage
+            ? error
+            : "We could not prepare the on-chain deployment transaction. Check your wallet balance, fee rate, and spendable funds, then try again.";
     public bool HasDeployError => !string.IsNullOrWhiteSpace(DeployErrorMessage);
     public string PayButtonText => SelectedWallet != null
         ? $"Pay with {SelectedWallet.Name}"
@@ -165,6 +189,7 @@ public partial class DeployFlowViewModel : ReactiveObject
             {
                 this.RaisePropertyChanged(nameof(HasSelectedWallet));
                 this.RaisePropertyChanged(nameof(PayButtonText));
+                RaiseWalletFundingChanged();
             });
     }
 
@@ -276,7 +301,7 @@ public partial class DeployFlowViewModel : ReactiveObject
         if (txResult.IsFailure)
         {
             _logger.LogError("Deploy: create blockchain transaction failed: {Error}", txResult.Error);
-            return Result.Failure("We could not prepare the on-chain deployment transaction. Check your wallet balance, fee rate, and spendable funds, then try again.");
+            return Result.Failure(BuildPrepareFailureMessage(txResult.Error));
         }
 
         // Step 5: Publish to blockchain
@@ -391,6 +416,17 @@ public partial class DeployFlowViewModel : ReactiveObject
         // that haven't been synced to local LiteDB yet.
         DeployStatusText = "Refreshing wallet...";
         await _walletContext.RefreshAllBalancesAsync();
+        RaiseWalletFundingChanged();
+
+        // Defensive: the button is gated, but this can be invoked programmatically. Fail before any Nostr
+        // events are published so an unfunded deploy leaves no orphan profile/project events.
+        if (!CanPayWithWallet)
+        {
+            DeployStatusText = "Wallet balance too low.";
+            DeployErrorMessage = InsufficientFundsText;
+            IsDeploying = false;
+            return;
+        }
 
         try
         {
@@ -444,7 +480,7 @@ public partial class DeployFlowViewModel : ReactiveObject
             {
                 _logger.LogError("Deploy: create blockchain transaction failed: {Error}", txResult.Error);
                 DeployStatusText = "Couldn't prepare the transaction.";
-                DeployErrorMessage = "We could not prepare the on-chain deployment transaction. Check your wallet balance, fee rate, and spendable funds, then try again.";
+                DeployErrorMessage = BuildPrepareFailureMessage(txResult.Error);
                 IsDeploying = false;
                 return;
             }
@@ -579,7 +615,7 @@ public partial class DeployFlowViewModel : ReactiveObject
             {
                 _logger.LogError("Deploy: create blockchain transaction failed: {Error}", txResult.Error);
                 DeployStatusText = "Couldn't prepare the transaction.";
-                DeployErrorMessage = "We could not prepare the on-chain deployment transaction. Check your wallet balance, fee rate, and spendable funds, then try again.";
+                DeployErrorMessage = BuildPrepareFailureMessage(txResult.Error);
                 IsDeploying = false;
                 return;
             }
