@@ -51,13 +51,16 @@
                             HorizontalAlignment="Left"
                             Cursor="Hand"
                             ToolTip.Tip="Click to upload profile picture">
+                        <!-- Border.ClipToBounds only clips to the bounding rect, not the rounded
+                             shape (Avalonia quirk — see AvaloniaUI/Avalonia#2105), so without an
+                             explicit circular Clip here the hover overlay below renders as a square
+                             and pokes out past the circular border at top/bottom/left/right. -->
                         <Panel>
+                            <Panel.Clip>
+                                <EllipseGeometry Center="52,52" RadiusX="52" RadiusY="52" />
+                            </Panel.Clip>
                             <Image Name="AvatarPreviewImage" Stretch="UniformToFill"
-                                   Width="104" Height="104" IsVisible="False">
-                                <Image.Clip>
-                                    <EllipseGeometry Center="52,52" RadiusX="52" RadiusY="52" />
-                                </Image.Clip>
-                            </Image>
+                                   Width="104" Height="104" IsVisible="False" />
                             <i:Icon Value="fa-solid fa-user" FontSize="36"
                                     Foreground="{DynamicResource TextMuted}"
                                     HorizontalAlignment="Center" VerticalAlignment="Center" />

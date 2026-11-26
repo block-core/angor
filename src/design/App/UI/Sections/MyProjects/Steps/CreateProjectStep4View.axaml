@@ -91,17 +91,38 @@
                     <StackPanel>
                         <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="11,11,0,0" Padding="24">
                             <StackPanel Orientation="Horizontal" Spacing="10">
-                                <TextBlock Classes="Size-M" Text="Fundraising Window" FontWeight="Bold"
+                                <TextBlock Classes="Size-M" Text="Fundraising Dates" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" VerticalAlignment="Center" />
-                                <Border Background="{DynamicResource BitcoinAccent}" CornerRadius="6" Padding="8,3">
+                                <!-- Was a static, non-interactive Border mimicking a button (no Button
+                                     element, no handler) — hence it looked clickable but did nothing.
+                                     Now a real Button with a Flyout, matching the pattern used by
+                                     ErrorSummary.axaml. -->
+                                <Button Background="{DynamicResource BitcoinAccent}" BorderThickness="0"
+                                        CornerRadius="6" Padding="8,3" FontWeight="Bold">
                                     <TextBlock Classes="Size-XXS" Text="Help" FontWeight="Bold" Foreground="White" />
-                                </Border>
+                                    <Button.Flyout>
+                                        <Flyout Placement="BottomEdgeAlignedLeft">
+                                            <TextBlock Classes="Size-13" MaxWidth="280" TextWrapping="Wrap"
+                                                       Text="The fundraising window only controls how long people can invest. It is not your project timeline — the project's actual duration is set by the stages you configure on the next screen." />
+                                        </Flyout>
+                                    </Button.Flyout>
+                                </Button>
                             </StackPanel>
                         </Border>
-                        <Grid Name="FundraisingDatesGrid" ColumnDefinitions="*,24,*" RowDefinitions="Auto,Auto" Margin="24">
+                        <StackPanel Margin="24,24,24,0">
+                            <Border Background="{DynamicResource SurfaceMedium}" CornerRadius="8" Padding="12,10">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <i:Icon Value="fa-solid fa-circle-info" FontSize="14"
+                                           Foreground="{DynamicResource TextMuted}" VerticalAlignment="Top" Margin="0,2,0,0" />
+                                    <TextBlock Classes="Size-13" Text="This is not the project timeline, only the fundraising window"
+                                               Foreground="{DynamicResource TextMuted}" FontWeight="Medium" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                        <Grid Name="FundraisingDatesGrid" ColumnDefinitions="*,24,*" RowDefinitions="Auto,Auto" Margin="24,16,24,24">
                             <!-- Start Date -->
                             <StackPanel Name="StartDatePanel" Grid.Column="0" Grid.Row="0" Spacing="8">
-                                <TextBlock Classes="Size-S" Text="Start Date" FontWeight="Bold"
+                                <TextBlock Classes="Size-S" Text="Fundraising Open" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" />
                                 <CalendarDatePicker Name="InvestStartDatePicker"
                                                     SelectedDate="{Binding InvestStartDate, Mode=TwoWay}"
@@ -112,7 +133,7 @@
 
                             <!-- End Date -->
                             <StackPanel Name="EndDatePanel" Grid.Column="2" Grid.Row="0" Spacing="8">
-                                <TextBlock Classes="Size-S" Text="End Date *" FontWeight="Bold"
+                                <TextBlock Classes="Size-S" Text="Fundraising Close *" FontWeight="Bold"
                                            Foreground="{DynamicResource TextStrong}" />
                                 <CalendarDatePicker Name="InvestEndDatePicker"
                                                     SelectedDate="{Binding InvestEndDate, Mode=TwoWay}"

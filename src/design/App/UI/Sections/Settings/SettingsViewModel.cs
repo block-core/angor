@@ -263,6 +263,23 @@ public partial class SettingsViewModel : ReactiveObject, IDisposable
 
     public void CloseNetworkModal() => IsNetworkModalOpen = false;
 
+    /// <summary>True when any inner Settings modal is open (used by the Android physical back button).</summary>
+    public bool HasOpenPlatformBackModal => IsNetworkModalOpen || IsWipeDataModalOpen;
+
+    /// <summary>
+    /// Closes whichever inner modal is currently open, in priority order. Used by the
+    /// Android physical back button so it dismisses just the open modal instead of
+    /// exiting the app — these are inline overlays, not shell-level modals (see
+    /// ShellViewModel's back ladder / PlatformBackRegressionTests).
+    /// Returns true if a modal was closed.
+    /// </summary>
+    public bool TryClosePlatformBackModal()
+    {
+        if (IsNetworkModalOpen) { CloseNetworkModal(); return true; }
+        if (IsWipeDataModalOpen) { CloseWipeDataModal(); return true; }
+        return false;
+    }
+
     public void SelectNetworkOption(string network) => SelectedNetworkToSwitch = network;
 
     public async Task ConfirmNetworkSwitchAsync()

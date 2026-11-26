@@ -4,6 +4,7 @@ using FluentAssertions;
 using App.UI.Sections.FindProjects;
 using App.UI.Sections.MyProjects;
 using App.UI.Sections.Portfolio;
+using App.UI.Sections.Settings;
 using App.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
@@ -39,6 +40,7 @@ public class PlatformBackRegressionTests
         shell.EnsureViewCreated("Find Projects");
         shell.EnsureViewCreated("Funded");
         shell.EnsureViewCreated("My Projects");
+        shell.EnsureViewCreated("Settings");
         return shell;
     }
 
@@ -47,6 +49,9 @@ public class PlatformBackRegressionTests
 
     private static MyProjectsViewModel MyProjectsVm(ShellViewModel shell) =>
         (MyProjectsViewModel)((Control)shell.ViewCache["My Projects"]).DataContext!;
+
+    private static SettingsViewModel SettingsVm(ShellViewModel shell) =>
+        (SettingsViewModel)((Control)shell.ViewCache["Settings"]).DataContext!;
 
     private static PortfolioViewModel PortfolioVm() =>
         global::App.App.Services.GetRequiredService<PortfolioViewModel>();
@@ -62,6 +67,9 @@ public class PlatformBackRegressionTests
         mp.CancelCreateWizard();
         mp.CloseEditProfile();
         mp.CloseManageProject();
+        SettingsVm(shell).CloseNetworkModal();
+        SettingsVm(shell).CloseWipeDataModal();
+        shell.IsSettingsOpen = false;
         shell.SyncDetailStateFromCachedViews();
     }
 
@@ -262,6 +270,79 @@ public class PlatformBackRegressionTests
             shell.TryHandlePlatformBack().Should().BeTrue();
             MyProjectsVm(shell).SelectedManageProject.Should().BeNull();
             shell.TryHandlePlatformBack().Should().BeFalse();
+        }
+        finally
+        {
+            ResetToRoot(shell);
+        }
+    }
+
+    /// <summary>
+    /// Manage Project's claim/release/debug modals are inline overlays bound directly
+    /// to ManageProjectViewModel flags (ManageProjectModalsView's own ZIndex=200 backdrop),
+    /// not shell-level ShowModal() calls — so they need their own back-ladder entry.
+    /// Before this fix, back would skip past the open modal straight to closing the
+    /// entire Manage Project screen.
+    /// </summary>
+    [AvaloniaFact]
+    public void Back_closes_manage_funds_inner_modal_before_manage_funds_itself()
+    {
+        var shell = GetShell();
+        ResetToRoot(shell);
+        try
+        {
+            var mp = MyProjectsVm(shell);
+            mp.OpenManageProject(new MyProjectItemViewModel
+            {
+                Name = "P",
+                ProjectType = "fund",
+                ProjectIdentifier = "angor1qtest000000000000000000000000000000000",
+            });
+            mp.SelectedManageProject!.ShowReleaseFundsPasswordModal = true;
+
+            shell.CanHandlePlatformBack().Should().BeTrue();
+
+            shell.TryHandlePlatformBack().Should().BeTrue();
+            mp.SelectedManageProject!.ShowReleaseFundsPasswordModal.Should().BeFalse("first back closes the inner modal, not Manage Project");
+            mp.SelectedManageProject.Should().NotBeNull("Manage Project must survive the inner-modal close");
+
+            shell.TryHandlePlatformBack().Should().BeTrue();
+            mp.SelectedManageProject.Should().BeNull("second back closes Manage Project itself");
+
+            shell.TryHandlePlatformBack().Should().BeFalse();
+        }
+        finally
+        {
+            ResetToRoot(shell);
+        }
+    }
+
+    // ────────────────────────────────────────────────────────────
+    // Settings inner modals
+    // ────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Settings' network-switch and wipe-data confirmations are inline overlays bound
+    /// directly to SettingsViewModel flags (SettingsView.axaml IsVisible bindings), not
+    /// shell-level ShowModal() calls, and Settings itself is a root-level destination
+    /// (like Home) that CanHandlePlatformBack correctly ignores — so without this entry
+    /// back would fall through to Android's default (minimize/exit) while one of these
+    /// modals was open.
+    /// </summary>
+    [AvaloniaFact]
+    public void Back_closes_settings_inner_modal()
+    {
+        var shell = GetShell();
+        ResetToRoot(shell);
+        try
+        {
+            shell.IsSettingsOpen = true;
+            SettingsVm(shell).OpenWipeDataModal();
+
+            shell.CanHandlePlatformBack().Should().BeTrue();
+            shell.TryHandlePlatformBack().Should().BeTrue();
+            SettingsVm(shell).IsWipeDataModalOpen.Should().BeFalse();
+            shell.TryHandlePlatformBack().Should().BeFalse("Settings itself is a root destination, like Home");
         }
         finally
         {
