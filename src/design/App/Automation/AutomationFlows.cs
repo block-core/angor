@@ -822,9 +822,9 @@ public static class AutomationFlows
                         TimeSpan.FromSeconds(2));
                     if (confirmed != null) break;
 
+                    // SelectedInvestment is the VM bound to the detail view (not replaced by reloads)
                     var processing = await Dispatcher.UIThread.InvokeAsync(() =>
-                        portfolioVm.Investments.FirstOrDefault(i => i.ProjectIdentifier == req.ProjectIdentifier)
-                            ?.IsProcessing == true);
+                        portfolioVm.SelectedInvestment?.IsProcessing == true);
                     if (processing) attemptDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(300);
                 }
             }
