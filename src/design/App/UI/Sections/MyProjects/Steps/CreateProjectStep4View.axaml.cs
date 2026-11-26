@@ -140,7 +140,15 @@ public partial class CreateProjectStep4View : UserControl
         if (lb.SelectedItem is not ListBoxItem item) return;
         if (item.Tag is string tag && int.TryParse(tag, out var months) && Vm != null)
         {
-            Vm.InvestEndDate = DateTime.UtcNow.AddMonths(months);
+            // Anchor to the chosen Fundraising Open date (not a fresh "now"): using
+            // DateTime.UtcNow here independently of InvestStartDate let the "3 Months"
+            // preset drift past CheckFundraisingWindowLength's 3-month threshold
+            // (computed from InvestStartDate) whenever the start date wasn't exactly
+            // "this instant" — e.g. the CalendarDatePicker normalizing to local midnight,
+            // or the user picking a different start date — spuriously triggering the
+            // "long fundraising window" warning on an exact 3-month preset.
+            var baseDate = Vm.InvestStartDate ?? DateTime.UtcNow;
+            Vm.InvestEndDate = baseDate.AddMonths(months);
         }
     }
 

@@ -182,6 +182,13 @@ public partial class CreateProjectViewModel : ReactiveObject
     [Reactive] private DateTime? investStartDate;
     [Reactive] private DateTime? investEndDate;
 
+    // Last InvestEndDate the user actually confirmed (used to roll back when they
+    // dismiss the "this isn't your project length" warning via "No").
+    private DateTime? _lastConfirmedEndDate;
+    // Set while we're programmatically reassigning InvestEndDate (reverting on "No",
+    // or re-applying after "Yes") so the warning check below doesn't re-trigger itself.
+    private bool _suppressEndDateWarningCheck;
+
     // ── Step 5: Stages/Payouts ──
     // Investment type: duration-based
     [Reactive] private string durationValue = "0"; // numeric input
@@ -347,6 +354,13 @@ public partial class CreateProjectViewModel : ReactiveObject
                 UpdateAllStageDateErrors();
             });
 
+        // ── Fundraising window sanity check (not project duration) ──────────────
+        // Users keep setting the fundraising *end date* to their whole project length
+        // (e.g. 2 years) instead of just the funding deadline. Nudge them with a
+        // confirm/cancel warning whenever the window exceeds 3 months.
+        this.WhenAnyValue(x => x.InvestEndDate)
+            .Subscribe(CheckFundraisingWindowLength);
+
         // ── Advanced Editor: subscribe to Stages collection to enable live % total and date validation ──
         Stages.CollectionChanged += OnStagesCollectionChanged;
 
@@ -441,6 +455,66 @@ public partial class CreateProjectViewModel : ReactiveObject
     public bool HasTargetAmountError => !string.IsNullOrEmpty(TargetAmountError);
     public bool HasEndDateError => !string.IsNullOrEmpty(EndDateError);
     public bool HasStagesError => !string.IsNullOrEmpty(StagesError);
+
+    /// <summary>
+    /// Warns (confirm/cancel) when the fundraising window itself — not the project's
+    /// overall duration, which is set later via Stages — is set to more than 3 months.
+    /// Users repeatedly mistake "Fundraising Close" for the project's end date and
+    /// put e.g. 2 years in it. "No" rolls the date back to the last accepted value.
+    /// </summary>
+    private void CheckFundraisingWindowLength(DateTime? endDate)
+    {
+        if (_suppressEndDateWarningCheck) return;
+        if (!endDate.HasValue) { _lastConfirmedEndDate = null; return; }
+
+        var start = InvestStartDate ?? DateTime.UtcNow;
+        // Compare calendar dates only (not time-of-day) so the preset buttons never
+        // spuriously trigger this: InvestStartDate is fixed at wizard-open time while
+        // DurationPresets.OnDurationPresetSelected calls DateTime.UtcNow again at click
+        // time, so a straight DateTime comparison could put the "3 Months" preset a few
+        // milliseconds past the threshold and wrongly warn on exactly 3 months.
+        if (endDate.Value.Date <= start.Date.AddMonths(3))
+        {
+            _lastConfirmedEndDate = endDate;
+            return;
+        }
+
+        var candidate = endDate.Value;
+        var previous = _lastConfirmedEndDate;
+        var durationText = DescribeDuration(start, candidate);
+
+        var modal = new Modals.FundraisingWindowWarningModal(
+            durationText,
+            onConfirm: () =>
+            {
+                _lastConfirmedEndDate = candidate;
+                ShellService.HideModal();
+            },
+            onCancel: () =>
+            {
+                _suppressEndDateWarningCheck = true;
+                InvestEndDate = previous;
+                _suppressEndDateWarningCheck = false;
+                ShellService.HideModal();
+            });
+        ShellService.ShowModal(modal);
+    }
+
+    /// <summary>Friendly "X months" / "X years" / "X years Y months" duration label.</summary>
+    private static string DescribeDuration(DateTime start, DateTime end)
+    {
+        var months = ((end.Year - start.Year) * 12) + end.Month - start.Month;
+        if (end.Day < start.Day) months--;
+        if (months < 1) months = 1;
+
+        var years = months / 12;
+        var remMonths = months % 12;
+        if (years <= 0) return months == 1 ? "1 month" : $"{months} months";
+        if (remMonths == 0) return years == 1 ? "1 year" : $"{years} years";
+        var yearsText = years == 1 ? "1 year" : $"{years} years";
+        var monthsText = remMonths == 1 ? "1 month" : $"{remMonths} months";
+        return $"{yearsText} {monthsText}";
+    }
 
     // ── Char count displays (Vue: {n}/200, {n}/400) ──
     public string ProjectNameCharCount => $"{ProjectName?.Length ?? 0}/200";

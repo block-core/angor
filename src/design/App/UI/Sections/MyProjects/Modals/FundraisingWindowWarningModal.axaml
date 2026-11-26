@@ -1,0 +1,98 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:i="https://github.com/projektanker/icons.avalonia"
+             mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="320"
+             x:Class="App.UI.Sections.MyProjects.Modals.FundraisingWindowWarningModal">
+
+    <!--
+        Confirms the fundraising window length when a user sets "Fundraising Close"
+        to more than 3 months out \u2014 commonly confused with the project's
+        overall duration (which is actually set later via Stages).
+        Shell modal pattern: card content only, shell provides blur + backdrop.
+        Structure mirrors PrivateKeysPasswordModal (header+close, body, Cancel/Confirm
+        footer); the warning box reuses the same WarningBox* tokens as the fee/info
+        callouts in CreateProjectView (Step 1/5 welcome screens).
+    -->
+
+    <Panel>
+        <Border Classes="ModalCard"
+                CornerRadius="16"
+                Background="{DynamicResource Surface}"
+                BorderBrush="{DynamicResource Stroke}"
+                BorderThickness="1"
+                BoxShadow="0 25 50 0 #40000000">
+            <StackPanel>
+                <!-- Header: title + close -->
+                <Border Padding="24"
+                        BorderBrush="{DynamicResource ModalHeaderBorder}"
+                        BorderThickness="0,0,0,1">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                            <i:Icon Value="fa-solid fa-triangle-exclamation" FontSize="16"
+                                    Foreground="{DynamicResource WarningBoxText}"
+                                    VerticalAlignment="Center" />
+                            <TextBlock Classes="Size-20" Text="Long Fundraising Window" FontWeight="Bold"
+                                       Foreground="{DynamicResource TextStrong}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                        <Button Name="CloseButton" Classes="ModalCloseBtn" Grid.Column="1"
+                                VerticalAlignment="Center" />
+                    </Grid>
+                </Border>
+
+                <!-- Body -->
+                <StackPanel Margin="24" Spacing="20">
+                    <TextBlock Classes="Size-13" TextWrapping="Wrap"
+                               Foreground="{DynamicResource TextMuted}">
+                        <Run Text="This is just your " /><Run Text="fundraising window" FontWeight="Bold" Foreground="{DynamicResource TextStrong}" /><Run Text=" &#8212; how long people have to invest &#8212; not your project's overall length. The project's duration is set separately via its stages." />
+                    </TextBlock>
+
+                    <!-- Warning info box \u2014 same style as the fee/info callouts in CreateProjectView -->
+                    <Border CornerRadius="10" Padding="16,14"
+                            BorderThickness="1"
+                            BorderBrush="{DynamicResource WarningBoxBorder}"
+                            Background="{DynamicResource WarningBoxBackground}">
+                        <TextBlock Classes="Size-13" Name="QuestionText" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource WarningBoxText}" FontWeight="SemiBold" />
+                    </Border>
+
+                    <!-- Buttons row -->
+                    <Grid ColumnDefinitions="*,12,*">
+                        <!-- No -->
+                        <Button Name="NoButton" Grid.Column="0"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Height="48"
+                                Background="Transparent"
+                                BorderBrush="{DynamicResource StrokeSubtle}"
+                                BorderThickness="2"
+                                CornerRadius="8"
+                                Foreground="{DynamicResource ModalCancelBtnText}"
+                                FontSize="16" FontWeight="SemiBold"
+                                Cursor="Hand">
+                            No, let me fix it
+                        </Button>
+
+                        <!-- Yes -->
+                        <Button Name="YesButton" Grid.Column="2"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Center"
+                                VerticalContentAlignment="Center"
+                                Height="48"
+                                Background="{DynamicResource BitcoinAccent}"
+                                BorderThickness="0"
+                                CornerRadius="8"
+                                Foreground="White"
+                                FontSize="16" FontWeight="SemiBold"
+                                Cursor="Hand">
+                            Yes, I'm sure
+                        </Button>
+                    </Grid>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Panel>
+</UserControl>
