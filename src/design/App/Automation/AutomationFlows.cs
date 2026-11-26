@@ -807,11 +807,28 @@ public static class AutomationFlows
             await ClickManageButtonByProjectAsync(window, req.ProjectIdentifier);
             await Task.Delay(500);
 
-            // Click ConfirmInvestmentButton in the InvestmentDetailView
-            await ClickByNameAsync(window, "ConfirmInvestmentButton", TimeSpan.FromSeconds(30));
+            // Click ConfirmInvestmentButton in the InvestmentDetailView. The click can be silently
+            // dropped (e.g. DataContext not yet swapped), so re-click until the investment is
+            // processing or has reached step 3.
+            var confirmed = (InvestmentViewModel?)null;
+            for (var attempt = 1; attempt <= 3 && confirmed == null; attempt++)
+            {
+                await ClickByNameAsync(window, "ConfirmInvestmentButton", TimeSpan.FromSeconds(30));
 
-            // Wait for investment to reach step 3
-            var confirmed = await WaitForInvestmentAsync(portfolioVm, req.ProjectIdentifier, i => i.Step == 3);
+                var attemptDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(attempt == 3 ? 300 : 20);
+                while (DateTime.UtcNow < attemptDeadline && confirmed == null)
+                {
+                    confirmed = await WaitForInvestmentAsync(portfolioVm, req.ProjectIdentifier, i => i.Step == 3,
+                        TimeSpan.FromSeconds(2));
+                    if (confirmed != null) break;
+
+                    var processing = await Dispatcher.UIThread.InvokeAsync(() =>
+                        portfolioVm.Investments.FirstOrDefault(i => i.ProjectIdentifier == req.ProjectIdentifier)
+                            ?.IsProcessing == true);
+                    if (processing) attemptDeadline = DateTime.UtcNow + TimeSpan.FromSeconds(300);
+                }
+            }
+
             if (confirmed == null)
             {
                 return new ConfirmInvestmentResponse { Success = false, Error = "Investment did not become active in time" };
@@ -1512,9 +1529,10 @@ public static class AutomationFlows
     private static async Task<InvestmentViewModel?> WaitForInvestmentAsync(
         PortfolioViewModel portfolioVm,
         string projectIdentifier,
-        Func<InvestmentViewModel, bool> predicate)
+        Func<InvestmentViewModel, bool> predicate,
+        TimeSpan? timeout = null)
     {
-        var deadline = DateTime.UtcNow + IndexerLag;
+        var deadline = DateTime.UtcNow + (timeout ?? IndexerLag);
         while (DateTime.UtcNow < deadline)
         {
             var match = await Dispatcher.UIThread.InvokeAsync(async () =>
