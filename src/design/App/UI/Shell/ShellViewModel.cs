@@ -13,6 +13,7 @@ using App.UI.Sections.FindProjects;
 using App.UI.Sections.Funds;
 using App.UI.Sections.MyProjects;
 using App.UI.Sections.Portfolio;
+using App.UI.Sections.Settings;
 using App.UI.Shared;
 using App.UI.Shared.Helpers;
 using App.UI.Shared.Services;
@@ -553,12 +554,29 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
             IsCreatingProject = myProjectsVm.ShowCreateWizard;
             IsManageFundsOpen = myProjectsVm.SelectedManageProject != null;
             IsEditProfileOpen = myProjectsVm.SelectedEditProject != null;
+            // Manage Project's claim/release/debug modals are inline overlays (ZIndex=200
+            // backdrop inside ManageProjectView), not shell-level ShowModal() calls, so they
+            // need their own back-ladder entry (see PlatformBackRegressionTests).
+            IsManageFundsInnerModalOpen = myProjectsVm.SelectedManageProject?.HasOpenPlatformBackModal ?? false;
         }
         else
         {
             IsCreatingProject = false;
             IsManageFundsOpen = false;
             IsEditProfileOpen = false;
+            IsManageFundsInnerModalOpen = false;
+        }
+
+        if (_viewCache.TryGetValue("Settings", out var settingsView)
+            && settingsView is SettingsView { DataContext: SettingsViewModel settingsVm })
+        {
+            // Settings' network/wipe-data confirmations are also inline overlays bound
+            // directly to SettingsViewModel flags, not shell-level ShowModal() calls.
+            IsSettingsInnerModalOpen = IsSettingsOpen && settingsVm.HasOpenPlatformBackModal;
+        }
+        else
+        {
+            IsSettingsInnerModalOpen = false;
         }
     }
 
@@ -568,6 +586,11 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
     /// </summary>
     [Reactive] private bool isModalOpen;
     [Reactive] private object? modalContent;
+
+    // Inline (non-ShowModal) overlay states that also need back-button coverage —
+    // see SyncDetailStateFromCachedViews / TryHandlePlatformBack / PlatformBackRegressionTests.
+    [Reactive] private bool isManageFundsInnerModalOpen;
+    [Reactive] private bool isSettingsInnerModalOpen;
 
     /// <summary>
     /// Toast notification message. Set by ShowToast(), auto-cleared after timeout.
@@ -1188,7 +1211,9 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
                || IsInvestmentDetailOpen
                || IsCreatingProject
                || IsManageFundsOpen
-               || IsEditProfileOpen;
+               || IsEditProfileOpen
+               || IsManageFundsInnerModalOpen
+               || IsSettingsInnerModalOpen;
     }
 
     /// <summary>
@@ -1209,6 +1234,31 @@ public partial class ShellViewModel : ReactiveObject, IDisposable
             }
             HideModal();
             return true;
+        }
+
+        // Inline (non-ShowModal) overlays take priority over the screen that hosts them,
+        // same reasoning as "modal wins over detail" above: the first back dismisses the
+        // innermost thing on screen.
+        if (IsManageFundsInnerModalOpen)
+        {
+            if (_viewCache.TryGetValue("My Projects", out var mpv)
+                && mpv is MyProjectsView { DataContext: MyProjectsViewModel mpVmForModal }
+                && mpVmForModal.SelectedManageProject?.TryClosePlatformBackModal() == true)
+            {
+                IsManageFundsInnerModalOpen = false;
+                return true;
+            }
+        }
+
+        if (IsSettingsInnerModalOpen)
+        {
+            if (_viewCache.TryGetValue("Settings", out var sv)
+                && sv is SettingsView { DataContext: SettingsViewModel settingsVmForModal }
+                && settingsVmForModal.TryClosePlatformBackModal())
+            {
+                IsSettingsInnerModalOpen = false;
+                return true;
+            }
         }
 
         if (IsInvestPageOpen || IsProjectDetailOpen)

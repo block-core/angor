@@ -243,6 +243,32 @@ public partial class ManageProjectViewModel : ReactiveObject
     private List<ClaimableTransactionDto> lastClaimableTransactions = new();
 
     /// <summary>
+    /// Closes whichever inner modal (claim/release/debug flow) is currently open, in
+    /// priority order. Used by the Android physical back button so it dismisses
+    /// just the open modal instead of jumping straight out of Manage Project
+    /// (these are inline overlays, not shell-level modals — see ShellViewModel's
+    /// back ladder / PlatformBackRegressionTests).
+    /// Returns true if a modal was closed.
+    /// </summary>
+    public bool TryClosePlatformBackModal()
+    {
+        if (ShowPasswordModal) { ShowPasswordModal = false; return true; }
+        if (ShowReleaseFundsPasswordModal) { ShowReleaseFundsPasswordModal = false; return true; }
+        if (ShowClaimModal) { ShowClaimModal = false; return true; }
+        if (ShowReleaseFundsModal) { ShowReleaseFundsModal = false; return true; }
+        if (ShowSuccessModal) { ShowSuccessModal = false; return true; }
+        if (ShowReleaseFundsSuccessModal) { ShowReleaseFundsSuccessModal = false; return true; }
+        if (ShowSpentModal) { ShowSpentModal = false; return true; }
+        if (ShowDebugModal) { ShowDebugModal = false; return true; }
+        return false;
+    }
+
+    /// <summary>True when any inner modal (see <see cref="TryClosePlatformBackModal"/>) is open.</summary>
+    public bool HasOpenPlatformBackModal =>
+        ShowPasswordModal || ShowReleaseFundsPasswordModal || ShowClaimModal || ShowReleaseFundsModal
+        || ShowSuccessModal || ShowReleaseFundsSuccessModal || ShowSpentModal || ShowDebugModal;
+
+    /// <summary>
     /// Builds the debug info (per-investment decoded OP_RETURN data + stage schedule)
     /// from the last loaded claimable transactions and opens the Debug Info modal.
     /// </summary>
