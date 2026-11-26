@@ -1293,7 +1293,14 @@ public partial class PortfolioViewModel : ReactiveObject, IDisposable, INetworkS
     {
         if (string.IsNullOrEmpty(investment.ProjectIdentifier) ||
             string.IsNullOrEmpty(investment.InvestmentWalletId) ||
-            string.IsNullOrEmpty(investment.InvestmentTransactionId)) return false;
+            string.IsNullOrEmpty(investment.InvestmentTransactionId))
+        {
+            _logger.LogError(
+                "ConfirmInvestment aborted: missing data (ProjectId='{ProjectId}', WalletId='{WalletId}', TxId='{TxId}')",
+                investment.ProjectIdentifier, investment.InvestmentWalletId, investment.InvestmentTransactionId);
+            ToastRequested?.Invoke("Failed to confirm investment. Please refresh and try again.", ToastSeverity.Error);
+            return false;
+        }
 
         try
         {

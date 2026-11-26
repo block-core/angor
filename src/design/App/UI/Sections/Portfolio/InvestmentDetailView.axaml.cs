@@ -9,6 +9,7 @@ using App.UI.Shared;
 using App.UI.Shell;
 using App.UI.Shared.Helpers;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 
 namespace App.UI.Sections.Portfolio;
@@ -354,18 +355,36 @@ public partial class InvestmentDetailView : UserControl
     /// </summary>
     private async Task ConfirmInvestmentAsync()
     {
-        if (DataContext is not InvestmentViewModel investVm) return;
-        if (investVm.IsProcessing) return;
+        var logger = App.Services.GetService<Microsoft.Extensions.Logging.ILogger<InvestmentDetailView>>();
+
+        if (DataContext is not InvestmentViewModel investVm)
+        {
+            logger?.LogWarning("ConfirmInvestment click ignored: DataContext is {Type}, not InvestmentViewModel",
+                DataContext?.GetType().Name ?? "null");
+            return;
+        }
+
+        if (investVm.IsProcessing)
+        {
+            logger?.LogWarning("ConfirmInvestment click ignored: already processing {ProjectId}",
+                investVm.ProjectIdentifier);
+            return;
+        }
 
         investVm.IsProcessing = true;
 
-        var portfolioVm = App.Services.GetService<PortfolioViewModel>();
-        if (portfolioVm != null)
+        try
         {
-            await portfolioVm.ConfirmInvestmentAsync(investVm);
+            var portfolioVm = App.Services.GetService<PortfolioViewModel>();
+            if (portfolioVm != null)
+            {
+                await portfolioVm.ConfirmInvestmentAsync(investVm);
+            }
         }
-
-        investVm.IsProcessing = false;
+        finally
+        {
+            investVm.IsProcessing = false;
+        }
     }
 
      /// <summary>
