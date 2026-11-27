@@ -2014,6 +2014,7 @@
                 FounderRecoveryKey = projectsKeys.FounderRecoveryKey,
                 ProjectIdentifier = projectsKeys.ProjectIdentifier,
                 NostrPubKey = projectsKeys.NostrPubKey,
+                NetworkName = _networkConfiguration.GetNetwork().Name,
                 StartDate = DateTime.UtcNow.Date.AddMinutes(2), // to allow testing and spending immediately
                 PenaltyDays = 90,
                 ExpiryDate = DateTime.UtcNow.Date.AddDays(120),

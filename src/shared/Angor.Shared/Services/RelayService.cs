@@ -22,6 +22,12 @@ namespace Angor.Shared.Services
         // https://github.com/block-core/nips/blob/peer-to-peer-decentralized-funding/3030.md
         public const NostrKind Nip3030NostrKind = (NostrKind)3030;
 
+        /// <summary>
+        /// Single-letter tag carrying the (lower-cased) Bitcoin network name of a kind 3030 project event.
+        /// Single-letter tags are indexed by relays (NIP-01) so they can be used in <c>#n</c> filters.
+        /// </summary>
+        public const string NetworkTagName = "n";
+
         public RelayService(ILogger<RelayService> logger, INostrCommunicationFactory communicationFactory, INetworkService networkService, IRelaySubscriptionsHandling subscriptionsHanding, ISerializer serializer)
         {
             _logger = logger;
@@ -240,7 +246,7 @@ namespace Angor.Shared.Services
 
             var content = _serializer.Serialize(project);
 
-            var signed = GetNip3030NostrEvent(content, project.ProjectIdentifier)
+            var signed = GetNip3030NostrEvent(content, project.ProjectIdentifier, project.NetworkName)
                 .Sign(key);
 
             _subscriptionsHandling.TryAddOKAction(signed.Id, action);
@@ -505,7 +511,7 @@ namespace Angor.Shared.Services
             return span.Length > 0 && span[0] == '{';
         }
 
-        private static NostrEvent GetNip3030NostrEvent(string content, string? projectIdentifier = null)
+        private static NostrEvent GetNip3030NostrEvent(string content, string? projectIdentifier = null, string? networkName = null)
         {
             // https://github.com/block-core/nips/blob/peer-to-peer-decentralized-funding/3030.md
 
@@ -515,11 +521,31 @@ namespace Angor.Shared.Services
                 Kind = Nip3030NostrKind,
                 CreatedAt = DateTime.UtcNow,
                 Content = content,
-                Tags = string.IsNullOrEmpty(projectIdentifier)
-                    ? new NostrEventTags()
-                    : new NostrEventTags(new NostrEventTag("d", projectIdentifier))
+                Tags = BuildNip3030Tags(projectIdentifier, networkName)
             };
             return ev;
+        }
+
+        /// <summary>
+        /// Builds the tags for a kind 3030 project event:
+        /// <list type="bullet">
+        /// <item><c>d</c> - the project identifier (makes the event addressable/replaceable).</item>
+        /// <item><c>n</c> - the Bitcoin network the project lives on (lower-cased, e.g. <c>main</c>, <c>angornet</c>).
+        /// Mainnet and testnet share relays, so a single-letter tag lets relays pre-filter <c>#n</c> queries
+        /// server-side instead of clients fetching the newest N events across all networks and discarding most of them.</item>
+        /// </list>
+        /// </summary>
+        internal static NostrEventTags BuildNip3030Tags(string? projectIdentifier, string? networkName)
+        {
+            var tags = new List<NostrEventTag>();
+
+            if (!string.IsNullOrEmpty(projectIdentifier))
+                tags.Add(new NostrEventTag("d", projectIdentifier));
+
+            if (!string.IsNullOrWhiteSpace(networkName))
+                tags.Add(new NostrEventTag(NetworkTagName, networkName.Trim().ToLowerInvariant()));
+
+            return new NostrEventTags(tags.ToArray());
         }
 
         private static NostrEvent GetNip99NostrEvent(ProjectInfo project, string content)

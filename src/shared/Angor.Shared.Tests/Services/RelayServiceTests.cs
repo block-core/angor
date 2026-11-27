@@ -56,4 +56,43 @@ public class RelayServiceTests
     {
         RelayService.LooksLikeJsonObject(content).Should().BeFalse();
     }
+
+    // Kind 3030 project events carry a single-letter "n" tag with the lower-cased network name so relays
+    // can pre-filter by network (#n). Mainnet and testnet share relays, so without this a "latest N"
+    // query is dominated by whichever network has been more active recently.
+
+    [Theory]
+    [InlineData("Main", "main")]
+    [InlineData("Angornet", "angornet")]
+    [InlineData("Liquid", "liquid")]
+    [InlineData("  Testnet ", "testnet")]
+    public void BuildNip3030Tags_AddsDTagAndLowerCasedNetworkTag(string networkName, string expectedTagValue)
+    {
+        var tags = RelayService.BuildNip3030Tags("angor1test", networkName);
+
+        tags.Should().HaveCount(2);
+
+        var dTag = tags.Single(t => t.TagIdentifier == "d");
+        dTag.AdditionalData.Should().ContainSingle().Which.Should().Be("angor1test");
+
+        var networkTag = tags.Single(t => t.TagIdentifier == RelayService.NetworkTagName);
+        networkTag.AdditionalData.Should().ContainSingle().Which.Should().Be(expectedTagValue);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void BuildNip3030Tags_OmitsNetworkTag_WhenNetworkNameMissing(string? networkName)
+    {
+        var tags = RelayService.BuildNip3030Tags("angor1test", networkName);
+
+        tags.Should().ContainSingle().Which.TagIdentifier.Should().Be("d");
+    }
+
+    [Fact]
+    public void BuildNip3030Tags_ReturnsEmpty_WhenNothingProvided()
+    {
+        RelayService.BuildNip3030Tags(null, null).Should().BeEmpty();
+    }
 }
