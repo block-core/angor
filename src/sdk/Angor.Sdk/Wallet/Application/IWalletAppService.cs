@@ -18,6 +18,10 @@ public interface IWalletAppService
     Task<Result<FeeAndSize>> EstimateFeeAndSize(WalletId walletId, Amount amount, Address address, DomainFeeRate feeRate);
     Task<Result<Address>> GetNextReceiveAddress(WalletId id);
     Task<Result<IEnumerable<FeeEstimation>>> GetFeeEstimates();
+    /// <summary>
+    /// Creates or restores a wallet locally without scanning the network for its balance.
+    /// Call <see cref="RefreshAndGetAccountBalanceInfo"/> separately to discover existing funds.
+    /// </summary>
     Task<Result<WalletId>> CreateWallet(string name, string seedwords, Maybe<string> passphrase, BitcoinNetwork network);
     Task<Result<WalletId>> CreateWallet(string name, BitcoinNetwork network);
     public string GenerateRandomSeedwords();

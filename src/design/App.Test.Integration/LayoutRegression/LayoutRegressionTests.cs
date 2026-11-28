@@ -554,6 +554,21 @@ public class LayoutRegressionTests
             string.Join("\n", violations));
     }
 
+    [AvaloniaTheory]
+    [MemberData(nameof(Viewports))]
+    public void CreateWalletModal_success_with_balance_refresh_hint_fits_viewport(double width, double height)
+    {
+        var view = new CreateWalletModal();
+        view.FindControl<StackPanel>("ChoicePanel")!.IsVisible = false;
+        view.FindControl<StackPanel>("SuccessPanel")!.IsVisible = true;
+
+        var violations = RenderAndAudit(view, width, height);
+
+        violations.Should().BeEmpty(
+            $"Wallet success and its balance refresh hint must fit at {width}x{height}:\n" +
+            string.Join("\n", violations));
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // Harness
     // ═══════════════════════════════════════════════════════════════════
