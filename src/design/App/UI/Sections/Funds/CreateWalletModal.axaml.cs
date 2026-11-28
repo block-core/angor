@@ -213,6 +213,12 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         }
     }
 
+    internal void ShowSuccess(bool imported)
+    {
+        SuccessTitle.Text = imported ? "Wallet Imported!" : "Wallet Created!";
+        ShowStep("success");
+    }
+
     private async Task LoadStoredWalletsAsync()
     {
         if (Vm == null) return;
@@ -275,7 +281,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
             {
                 _walletCreated = true;
                 _logger.LogInformation("Wallet restored from backup: {ShortId}", wallet.ShortId);
-                ShowStep("success");
+                ShowSuccess(imported: true);
             }
             else
             {
@@ -360,7 +366,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         {
             _walletCreated = true;
             _logger.LogInformation("Wallet '{WalletName}' imported successfully", walletName);
-            ShowStep("success");
+            ShowSuccess(imported: true);
         }
         else
         {
@@ -405,7 +411,7 @@ public partial class CreateWalletModal : UserControl, IBackdropCloseable
         {
             _walletCreated = true;
             _logger.LogInformation("Wallet '{WalletName}' created successfully (generate flow)", walletName);
-            ShowStep("success");
+            ShowSuccess(imported: false);
         }
         else
         {

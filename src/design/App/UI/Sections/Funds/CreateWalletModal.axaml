@@ -467,14 +467,14 @@
 
                     <!-- Title -->
                     <!-- Vue: text-3xl font-bold text-center mb-3 -->
-                    <TextBlock Classes="Size-28" Text="Wallet Created!" FontWeight="Bold"
+                    <TextBlock Name="SuccessTitle" Classes="Size-28" Text="Wallet Created!" FontWeight="Bold"
                                Foreground="{DynamicResource TextStrong}"
                                HorizontalAlignment="Center"
                                TextAlignment="Center" />
 
                     <!-- Description -->
                     <!-- Vue: text-center mb-8, text-gray-300/text-gray-600 -->
-                    <TextBlock Classes="Size-S" Text="Your wallet is saved on this device. To load an imported wallet's balance, refresh its card in Funds. Balance updates need a working connection."
+                    <TextBlock Classes="Size-S" Text="Refresh in Funds to load your balance."
                                Foreground="{DynamicResource TextMuted}"
                                TextWrapping="Wrap"
                                TextAlignment="Center"
