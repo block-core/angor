@@ -554,6 +554,54 @@ public class LayoutRegressionTests
             string.Join("\n", violations));
     }
 
+    [AvaloniaTheory]
+    [MemberData(nameof(Viewports))]
+    public void CreateWalletModal_success_titles_and_refresh_hint_fit_viewport(double width, double height)
+    {
+        LayoutModeService.Instance.UpdateWidth(width);
+        var view = new CreateWalletModal();
+        var window = new Window
+        {
+            Width = width,
+            Height = height,
+            SizeToContent = SizeToContent.Manual,
+            Content = new ScrollViewer
+            {
+                HorizontalScrollBarVisibility = Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled,
+                Content = view,
+            },
+        };
+
+        try
+        {
+            window.Show();
+            // Reuse the same host while switching outcomes; a closed host still owns its content.
+            foreach (bool imported in new[] { true, false, true })
+            {
+                view.ShowSuccess(imported);
+                Dispatcher.UIThread.RunJobs();
+                window.UpdateLayout();
+                Dispatcher.UIThread.RunJobs();
+
+                view.FindControl<TextBlock>("SuccessTitle")!.Text.Should()
+                    .Be(imported ? "Wallet Imported!" : "Wallet Created!");
+                view.FindControl<StackPanel>("SuccessPanel")!.IsVisible.Should().BeTrue();
+                view.FindControl<StackPanel>("ChoicePanel")!.IsVisible.Should().BeFalse();
+
+                var violations = LayoutAsserts.FindViolations(view);
+                violations.Should().BeEmpty(
+                    $"Wallet success (imported={imported}) and its refresh hint must fit at {width}x{height}:\n" +
+                    string.Join("\n", violations));
+            }
+        }
+        finally
+        {
+            window.Close();
+            LayoutModeService.Instance.UpdateWidth(1280);
+            Dispatcher.UIThread.RunJobs();
+        }
+    }
+
     // ═══════════════════════════════════════════════════════════════════
     // Harness
     // ═══════════════════════════════════════════════════════════════════

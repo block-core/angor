@@ -298,15 +298,10 @@ public class WalletAppService(
             if (wallet.IsFailure)
                 return Result.Failure<WalletId>(wallet.Error);
 
-            // The wallet is fully persisted at this point. The initial gap-limit balance
-            // scan is best-effort: on flaky mobile connections (or an unreachable indexer)
-            // it must not fail the import — balances refresh on the next explicit refresh.
-            var accountInfoResult = await accountBalanceService.RefreshAccountBalanceInfoAsync(wallet.Value.Id);
-
-            if (accountInfoResult.IsFailure)
-                logger.LogWarning("Initial balance scan failed for wallet {WalletId} (import still succeeds): {Error}",
-                    wallet.Value.Id.Value, accountInfoResult.Error);
-
+            // Local creation is complete. Import must not wait for the network gap-limit scan:
+            // an unreachable indexer can leave it pending indefinitely after the wallet is saved.
+            // Do not start a detached scan either; it cannot be cancelled and could overlap a
+            // refresh or wallet deletion. Balance discovery belongs to the explicit refresh path.
             return Result.Success(wallet.Value.Id);
         }
         catch (Exception ex)
